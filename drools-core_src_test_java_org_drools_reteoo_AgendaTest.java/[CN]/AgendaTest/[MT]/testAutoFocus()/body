@@ -1,0 +1,28 @@
+{
+  RuleBase ruleBase=new RuleBaseImpl();
+  WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
+  final Agenda agenda=workingMemory.getAgenda();
+  ModuleImpl module=new ModuleImpl("module",ruleBase.getConflictResolver());
+  agenda.addModule(module);
+  Consequence consequence=new Consequence(){
+    public void invoke(    Activation activation){
+    }
+  }
+;
+  ReteTuple tuple=new ReteTuple(0,new FactHandleImpl(1),workingMemory);
+  Rule rule=new Rule("test-rule","module");
+  rule.setConsequence(consequence);
+  PropagationContext context=new PropagationContextImpl(PropagationContext.ASSERTION,rule,new AgendaItem(tuple,initContext,rule));
+  rule.setAutoFocus(false);
+  agenda.addToAgenda(tuple,context,rule);
+  assertEquals(1,module.getActivationQueue().size());
+  agenda.fireNextItem(null);
+  assertEquals(1,module.getActivationQueue().size());
+  agenda.clearAgenda();
+  assertEquals(0,module.getActivationQueue().size());
+  rule.setAutoFocus(true);
+  agenda.addToAgenda(tuple,context,rule);
+  assertEquals(1,module.getActivationQueue().size());
+  agenda.fireNextItem(null);
+  assertEquals(0,module.getActivationQueue().size());
+}

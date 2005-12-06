@@ -1,0 +1,60 @@
+{
+  FactHandle handle=(FactHandle)this.identityMap.get(object);
+  if ((handle != null) && (logical)) {
+    return handle;
+  }
+  Object logicalState=this.equalsMap.get(object);
+  if ((handle != null) && (!logical) && logicalState == STATED) {
+    return handle;
+  }
+  if (!logical) {
+    if (logicalState instanceof FactHandleImpl) {
+      handle=(FactHandleImpl)logicalState;
+      Set activationList=(Set)this.justified.remove(((FactHandleImpl)handle).getId());
+      Iterator it=activationList.iterator();
+      Activation eachActivation;
+      while (it.hasNext()) {
+        eachActivation=(Activation)it.next();
+        Set handles=(Set)this.justifiers.get(eachActivation);
+        handles.remove(handle);
+        if (handles.isEmpty()) {
+          this.justifiers.remove(eachActivation);
+        }
+      }
+    }
+ else {
+      handle=newFactHandle();
+    }
+    putObject(handle,object);
+    equalsMap.put(object,STATED);
+    if (dynamic) {
+      addPropertyChangeListener(object);
+    }
+  }
+ else {
+    if (logicalState == STATED) {
+      return null;
+    }
+    handle=(FactHandleImpl)logicalState;
+    if (handle == null) {
+      handle=(FactHandleImpl)newFactHandle();
+      putObject(handle,object);
+      this.equalsMap.put(object,handle);
+    }
+    Set activationList=(Set)this.justified.get(((FactHandleImpl)handle).getId());
+    if (activationList == null) {
+      activationList=new HashSet();
+      this.justified.put(((FactHandleImpl)handle).getId(),activationList);
+    }
+    activationList.add(activation);
+    Set handles=(Set)this.justifiers.get(activation);
+    if (handles == null) {
+      handles=new HashSet();
+      this.justifiers.put(activation,handles);
+    }
+    handles.add(handle);
+  }
+  ruleBase.assertObject(handle,object,new PropagationContextImpl(PropagationContext.ASSERTION,rule,activation),this);
+  this.workingMemoryEventSupport.fireObjectAsserted(handle,object);
+  return handle;
+}

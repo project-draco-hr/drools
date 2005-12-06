@@ -1,0 +1,30 @@
+{
+  Rete rete=new Rete();
+  ObjectTypeNode objectTypeNode=rete.getOrCreateObjectTypeNode(new ClassObjectType(String.class));
+  MockObjectSink sink=new MockObjectSink();
+  objectTypeNode.addObjectSink(sink);
+  RuleBase ruleBase=new RuleBaseImpl();
+  WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
+  final Agenda agenda=workingMemory.getAgenda();
+  Consequence consequence=new Consequence(){
+    public void invoke(    Activation activation){
+    }
+  }
+;
+  final Rule rule1=new Rule("test-rule1");
+  rule1.setConsequence(consequence);
+  FactHandleImpl handle1=new FactHandleImpl(1);
+  ReteTuple tuple1=new ReteTuple(0,handle1,workingMemory);
+  final PropagationContext context1=new PropagationContextImpl(PropagationContext.ASSERTION,null,null);
+  agenda.addToAgenda(tuple1,context1,rule1);
+  ModuleImpl main=(ModuleImpl)agenda.getFocus();
+  Activation activation1=(Activation)main.getActivationQueue().get();
+  String logicalString1=new String("logical");
+  FactHandle logicalHandle1=workingMemory.assertObject(logicalString1,false,true,rule1,activation1);
+  String logicalString2=new String("logical");
+  FactHandle logicalHandle2=workingMemory.assertObject(logicalString2,false,true,rule1,activation1);
+  assertSame(logicalHandle1,logicalHandle2);
+  logicalHandle1=workingMemory.assertObject(logicalString1);
+  logicalHandle2=workingMemory.assertObject(logicalString2);
+  assertNotSame(logicalHandle1,logicalHandle2);
+}

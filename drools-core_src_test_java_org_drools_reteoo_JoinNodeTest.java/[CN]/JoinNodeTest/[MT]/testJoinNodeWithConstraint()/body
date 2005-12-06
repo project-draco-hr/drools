@@ -1,0 +1,50 @@
+{
+  ObjectType stringObjectType=new ClassObjectType(String.class);
+  Extractor stringExtractor=new Extractor(){
+    public Object getValue(    Object object){
+      return object;
+    }
+  }
+;
+  Declaration string1Declaration=new Declaration(0,"string1",stringObjectType,stringExtractor,3);
+  Declaration string2Declaration=new Declaration(0,"string2",stringObjectType,stringExtractor,9);
+  BooleanExpressionConstraint checkString=new BooleanExpressionConstraint(){
+    public boolean isAllowed(    Object object,    FactHandle handle,    Declaration declaration,    Declaration[] declarations,    Tuple tuple){
+      String string1=(String)object;
+      String string2=(String)tuple.get(declarations[0]);
+      return "string1string2".equals(string1 + string2);
+    }
+  }
+;
+  BooleanConstraint constraint=new BooleanConstraint(checkString,string1Declaration,new Declaration[]{string2Declaration});
+  this.node=new JoinNode(15,new MockTupleSource(5),new MockObjectSource(8),3,new BetaNodeBinder(constraint));
+  node.addTupleSink(sink);
+  this.memory=(BetaMemory)workingMemory.getNodeMemory(node);
+  FactHandleImpl f0=new FactHandleImpl(0);
+  workingMemory.putObject(f0,"string2");
+  ReteTuple tuple1=new ReteTuple(9,f0,workingMemory);
+  node.assertTuple(tuple1,context,workingMemory);
+  FactHandleImpl f1=new FactHandleImpl(1);
+  String string1="string1";
+  workingMemory.putObject(f1,string1);
+  node.assertObject(string1,f1,context,workingMemory);
+  assertLength(1,sink.getAsserted());
+  Object[] list=(Object[])sink.getAsserted().get(0);
+  ReteTuple joinedTuple=(ReteTuple)list[0];
+  assertEquals("string1",joinedTuple.get(3));
+  assertEquals("string2",joinedTuple.get(9));
+  FactHandleImpl f2=new FactHandleImpl(2);
+  workingMemory.putObject(f1,"string22");
+  ReteTuple tuple2=new ReteTuple(9,f2,workingMemory);
+  node.assertTuple(tuple2,context,workingMemory);
+  assertLength(1,sink.getAsserted());
+  assertEquals(2,memory.leftMemorySize());
+  assertEquals(1,memory.rightMemorySize());
+  FactHandleImpl f3=new FactHandleImpl(3);
+  String stringx="stringx";
+  workingMemory.putObject(f3,stringx);
+  node.assertObject(stringx,f3,context,workingMemory);
+  assertLength(1,sink.getAsserted());
+  assertEquals(2,memory.leftMemorySize());
+  assertEquals(2,memory.rightMemorySize());
+}

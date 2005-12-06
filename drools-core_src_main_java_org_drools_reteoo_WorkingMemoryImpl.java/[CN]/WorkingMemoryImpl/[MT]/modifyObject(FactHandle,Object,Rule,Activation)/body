@@ -1,0 +1,15 @@
+{
+  Object originalObject=removeObject(handle);
+  if (originalObject == null) {
+    throw new NoSuchFactObjectException(handle);
+  }
+  putObject(handle,object);
+  FactHandleImpl handleImpl=(FactHandleImpl)handle;
+  if (this.justified.get(handleImpl.getId()) != null) {
+    this.equalsMap.remove(originalObject);
+    this.equalsMap.put(object,handle);
+  }
+  this.ruleBase.retractObject(handle,new PropagationContextImpl(PropagationContext.MODIFICATION,rule,activation),this);
+  this.ruleBase.assertObject(handle,object,new PropagationContextImpl(PropagationContext.MODIFICATION,rule,activation),this);
+  this.workingMemoryEventSupport.fireObjectModified(handle,originalObject,object);
+}

@@ -1,0 +1,20 @@
+{
+  if (rule.getNoLoop() && rule.equals(context.getRuleOrigin())) {
+    return;
+  }
+  Duration dur=rule.getDuration();
+  AgendaItem item=new AgendaItem(tuple,context,rule);
+  if (rule.getAutoFocus()) {
+    setFocus(rule.getModule());
+  }
+  if (dur != null && dur.getDuration(tuple) > 0) {
+    this.scheduledItems.put(item.getKey(),item);
+    scheduleItem(item);
+    this.workingMemory.getAgendaEventSupport().fireActivationCreated(rule,tuple);
+  }
+ else {
+    ModuleImpl module=(ModuleImpl)modules.get(rule.getModule());
+    module.getActivationQueue().add(item);
+    this.workingMemory.getAgendaEventSupport().fireActivationCreated(rule,tuple);
+  }
+}

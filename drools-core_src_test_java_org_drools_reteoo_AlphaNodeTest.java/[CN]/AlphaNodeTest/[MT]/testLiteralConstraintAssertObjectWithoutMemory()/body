@@ -1,0 +1,35 @@
+{
+  WorkingMemoryImpl workingMemory=new WorkingMemoryImpl(new RuleBaseImpl());
+  Rule rule=new Rule("test-rule");
+  PropagationContext context=new PropagationContextImpl(PropagationContext.ASSERTION,null,null);
+  MockObjectSource source=new MockObjectSource(15);
+  LiteralExpressionConstraint isCheddar=new LiteralExpressionConstraint(){
+    public boolean isAllowed(    Object object,    ConstraintComparator comparator){
+      Cheese cheese=(Cheese)object;
+      return comparator.compare(cheese.getType(),"cheddar");
+    }
+  }
+;
+  LiteralConstraint constraint0=new LiteralConstraint(isCheddar,new StringConstraintComparator(ConstraintComparator.EQUAL));
+  AlphaNode alphaNode=new AlphaNode(2,constraint0,false,source);
+  MockObjectSink sink=new MockObjectSink();
+  alphaNode.addObjectSink(sink);
+  Cheese cheddar=new Cheese("cheddar",5);
+  FactHandleImpl f0=new FactHandleImpl(0);
+  workingMemory.putObject(f0,cheddar);
+  assertLength(0,sink.getAsserted());
+  Set memory=(Set)workingMemory.getNodeMemory(alphaNode);
+  assertLength(0,memory);
+  alphaNode.assertObject(cheddar,f0,context,workingMemory);
+  assertLength(1,sink.getAsserted());
+  assertLength(0,memory);
+  Object[] list=(Object[])sink.getAsserted().get(0);
+  assertSame(cheddar,list[0]);
+  FactHandleImpl f1=new FactHandleImpl(0);
+  Cheese stilton=new Cheese("stilton",6);
+  alphaNode.assertObject(stilton,f1,context,workingMemory);
+  assertLength(1,sink.getAsserted());
+  assertLength(0,memory);
+  list=(Object[])sink.getAsserted().get(0);
+  assertSame(cheddar,list[0]);
+}

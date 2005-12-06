@@ -1,0 +1,22 @@
+{
+  removePropertyChangeListener(handle);
+  ruleBase.retractObject(handle,new PropagationContextImpl(PropagationContext.RETRACTION,rule,activation),this);
+  Object oldObject=removeObject(handle);
+  if (removeLogical) {
+    FactHandleImpl handleImpl=(FactHandleImpl)handle;
+    Set activations=(Set)this.justified.remove(handleImpl.getId());
+    if (activations != null) {
+      Iterator it=activations.iterator();
+      while (it.hasNext()) {
+        this.justifiers.remove(it.next());
+      }
+    }
+    this.equalsMap.remove(oldObject);
+  }
+  if (updateEqualsMap) {
+    this.equalsMap.remove(oldObject);
+  }
+  factHandlePool.push(((FactHandleImpl)handle).getId());
+  this.workingMemoryEventSupport.fireObjectRetracted(handle,oldObject);
+  ((FactHandleImpl)handle).invalidate();
+}

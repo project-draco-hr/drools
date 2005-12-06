@@ -1,0 +1,44 @@
+{
+  Rete rete=new Rete();
+  ObjectTypeNode objectTypeNode=rete.getOrCreateObjectTypeNode(new ClassObjectType(String.class));
+  MockObjectSink sink=new MockObjectSink();
+  objectTypeNode.addObjectSink(sink);
+  RuleBase ruleBase=new RuleBaseImpl();
+  WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
+  final Agenda agenda=workingMemory.getAgenda();
+  Consequence consequence=new Consequence(){
+    public void invoke(    Activation activation){
+    }
+  }
+;
+  final Rule rule1=new Rule("test-rule1");
+  rule1.setConsequence(consequence);
+  FactHandleImpl handle1=new FactHandleImpl(1);
+  ReteTuple tuple1=new ReteTuple(0,handle1,workingMemory);
+  final PropagationContext context1=new PropagationContextImpl(PropagationContext.ASSERTION,null,null);
+  agenda.addToAgenda(tuple1,context1,rule1);
+  final Rule rule2=new Rule("test-rule2");
+  rule2.setConsequence(consequence);
+  FactHandleImpl handle2=new FactHandleImpl(2);
+  ReteTuple tuple2=new ReteTuple(0,handle2,workingMemory);
+  final PropagationContext context2=new PropagationContextImpl(PropagationContext.ASSERTION,null,null);
+  agenda.addToAgenda(tuple2,context2,rule2);
+  ModuleImpl main=(ModuleImpl)agenda.getFocus();
+  Activation[] activations=(Activation[])main.getActivationQueue().toArray(new Activation[]{});
+  String logicalString1=new String("logical");
+  Activation activation1=activations[0];
+  FactHandle logicalHandle1=workingMemory.assertObject(logicalString1,false,true,activation1.getRule(),activation1);
+  String logicalString2=new String("logical");
+  Activation activation2=activations[1];
+  FactHandle logicalHandle2=workingMemory.assertObject(logicalString2,false,true,activation2.getRule(),activation2);
+  assertLength(1,workingMemory.getJustified().values());
+  assertLength(2,workingMemory.getJustifiers().values());
+  agenda.removeFromAgenda(((ReteTuple)activation2.getTuple()).getKey(),context2,activation2.getRule());
+  assertLength(0,sink.getRetracted());
+  assertLength(1,workingMemory.getJustified().values());
+  assertLength(1,workingMemory.getJustifiers().values());
+  agenda.removeFromAgenda(((ReteTuple)activation1.getTuple()).getKey(),context1,activation1.getRule());
+  assertLength(1,sink.getRetracted());
+  assertLength(0,workingMemory.getJustified().values());
+  assertLength(0,workingMemory.getJustifiers().values());
+}

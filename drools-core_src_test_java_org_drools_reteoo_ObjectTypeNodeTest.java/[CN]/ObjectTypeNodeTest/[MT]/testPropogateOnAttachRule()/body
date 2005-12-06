@@ -1,0 +1,29 @@
+{
+  PropagationContext context=new PropagationContextImpl(PropagationContext.ASSERTION,null,null);
+  WorkingMemoryImpl workingMemory=new WorkingMemoryImpl(new RuleBaseImpl(new Rete()));
+  MockObjectSource source=new MockObjectSource(15);
+  ObjectTypeNode objectTypeNode=new ObjectTypeNode(1,new ClassObjectType(String.class),source);
+  Object string1="cheese";
+  Object string2="bread";
+  FactHandleImpl handle1=new FactHandleImpl(1);
+  FactHandleImpl handle2=new FactHandleImpl(2);
+  workingMemory.putObject(handle1,string1);
+  workingMemory.putObject(handle2,string2);
+  objectTypeNode.assertObject(string1,handle1,context,workingMemory);
+  objectTypeNode.assertObject(string2,handle2,context,workingMemory);
+  MockObjectSink sink1=new MockObjectSink();
+  objectTypeNode.addObjectSink(sink1);
+  objectTypeNode.updateNewRule(workingMemory,context);
+  objectTypeNode.ruleAttached();
+  assertLength(2,sink1.getAsserted());
+  Object string3="water";
+  FactHandleImpl handle3=new FactHandleImpl(3);
+  workingMemory.putObject(handle3,string3);
+  objectTypeNode.assertObject(string3,handle3,context,workingMemory);
+  MockObjectSink sink2=new MockObjectSink();
+  objectTypeNode.addObjectSink(sink2);
+  objectTypeNode.updateNewRule(workingMemory,context);
+  objectTypeNode.ruleAttached();
+  assertLength(3,sink1.getAsserted());
+  assertLength(3,sink2.getAsserted());
+}

@@ -1,0 +1,24 @@
+{
+  Rule rule=new Rule("test-rule");
+  PropagationContext context=new PropagationContextImpl(PropagationContext.ASSERTION,null,null);
+  WorkingMemoryImpl memory=new WorkingMemoryImpl(new RuleBaseImpl());
+  MockObjectSource source=new MockObjectSource(15);
+  LeftInputAdapterNode liaNode=new LeftInputAdapterNode(1,0,source);
+  MockTupleSink sink=new MockTupleSink();
+  liaNode.addTupleSink(sink);
+  Object string1="cheese";
+  Object object1=new Object();
+  FactHandleImpl handle1=new FactHandleImpl(1);
+  FactHandleImpl handle2=new FactHandleImpl(2);
+  memory.putObject(handle1,string1);
+  memory.putObject(handle2,object1);
+  liaNode.retractObject(handle1,context,memory);
+  List retracted=sink.getRetracted();
+  assertLength(1,retracted);
+  liaNode.retractObject(handle2,context,memory);
+  assertLength(2,retracted);
+  TupleKey key=(TupleKey)((Object[])retracted.get(0))[0];
+  assertSame(handle1,key.get(0));
+  key=(TupleKey)((Object[])retracted.get(1))[0];
+  assertSame(handle2,key.get(0));
+}

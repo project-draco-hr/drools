@@ -1,0 +1,46 @@
+{
+  Rule rule=new Rule("test-rule");
+  PropagationContext context=new PropagationContextImpl(PropagationContext.ASSERTION,null,null);
+  WorkingMemoryImpl workingMemory=new WorkingMemoryImpl(new RuleBaseImpl(new Rete()));
+  MockObjectSource source=new MockObjectSource(15);
+  MockObjectSink sink1=new MockObjectSink();
+  source.addObjectSink(sink1);
+  source.ruleAttached();
+  assertLength(0,sink1.getAsserted());
+  source.propagateAssertObject(new Integer(1),new FactHandleImpl(2),context,workingMemory);
+  assertLength(1,sink1.getAsserted());
+  Object[] list=(Object[])sink1.getAsserted().get(0);
+  assertEquals(new Integer(1),list[0]);
+  assertEquals(new FactHandleImpl(2),list[1]);
+  MockObjectSink sink2=new MockObjectSink();
+  source.addObjectSink(sink2);
+  source.ruleAttached();
+  source.propagateAssertObject(new Integer(2),new FactHandleImpl(3),context,workingMemory);
+  assertLength(2,sink1.getAsserted());
+  assertLength(1,sink2.getAsserted());
+  list=(Object[])sink1.getAsserted().get(0);
+  assertEquals(new Integer(1),list[0]);
+  assertEquals(new FactHandleImpl(2),list[1]);
+  assertSame(context,list[2]);
+  assertSame(workingMemory,list[3]);
+  list=(Object[])sink1.getAsserted().get(1);
+  assertEquals(new Integer(2),list[0]);
+  assertEquals(new FactHandleImpl(3),list[1]);
+  assertSame(context,list[2]);
+  assertSame(workingMemory,list[3]);
+  list=(Object[])sink2.getAsserted().get(0);
+  assertEquals(new Integer(2),list[0]);
+  assertEquals(new FactHandleImpl(3),list[1]);
+  assertSame(context,list[2]);
+  assertSame(workingMemory,list[3]);
+  try {
+    sink1.setAssertionException(new AssertionException("test"));
+    source.propagateAssertObject(new Integer(2),new FactHandleImpl(3),context,workingMemory);
+    fail("Should have thrown 'AssertionException'");
+  }
+ catch (  AssertionException e) {
+  }
+catch (  Exception e) {
+    fail("Should have thrown 'AssertionException' and not '" + e.getClass() + "'");
+  }
+}

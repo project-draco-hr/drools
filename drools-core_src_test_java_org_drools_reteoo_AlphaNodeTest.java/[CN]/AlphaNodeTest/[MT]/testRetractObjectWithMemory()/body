@@ -1,0 +1,34 @@
+{
+  WorkingMemoryImpl workingMemory=new WorkingMemoryImpl(new RuleBaseImpl());
+  Rule rule=new Rule("test-rule");
+  PropagationContext context=new PropagationContextImpl(PropagationContext.ASSERTION,null,null);
+  MockObjectSource source=new MockObjectSource(15);
+  LiteralExpressionConstraint isCheddar=new LiteralExpressionConstraint(){
+    public boolean isAllowed(    Object object,    ConstraintComparator comparator){
+      Cheese cheese=(Cheese)object;
+      return comparator.compare(cheese.getType(),"cheddar");
+    }
+  }
+;
+  LiteralConstraint constraint0=new LiteralConstraint(isCheddar,new StringConstraintComparator(ConstraintComparator.EQUAL));
+  AlphaNode alphaNode=new AlphaNode(2,constraint0,true,source);
+  MockObjectSink sink=new MockObjectSink();
+  alphaNode.addObjectSink(sink);
+  Cheese cheddar=new Cheese("cheddar",5);
+  FactHandleImpl f0=new FactHandleImpl(0);
+  workingMemory.putObject(f0,cheddar);
+  Set memory=(Set)workingMemory.getNodeMemory(alphaNode);
+  assertLength(0,memory);
+  alphaNode.assertObject(cheddar,f0,context,workingMemory);
+  assertLength(1,memory);
+  FactHandleImpl f1=new FactHandleImpl(1);
+  alphaNode.retractObject(f1,context,workingMemory);
+  assertLength(0,sink.getRetracted());
+  assertLength(1,memory);
+  assertTrue("Should contain 'cheddar handle'",memory.contains(f0));
+  alphaNode.retractObject(f0,context,workingMemory);
+  assertLength(1,sink.getRetracted());
+  assertLength(0,memory);
+  Object[] list=(Object[])sink.getRetracted().get(0);
+  assertSame(f0,list[0]);
+}

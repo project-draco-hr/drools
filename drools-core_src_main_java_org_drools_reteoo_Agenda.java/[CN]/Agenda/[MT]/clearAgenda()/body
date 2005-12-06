@@ -1,0 +1,22 @@
+{
+  AgendaItem eachItem;
+  ModuleImpl module;
+  Iterator queueIterator;
+  Iterator moduleIterator=modules.values().iterator();
+  while (moduleIterator.hasNext()) {
+    module=(ModuleImpl)moduleIterator.next();
+    queueIterator=module.getActivationQueue().iterator();
+    while (queueIterator.hasNext()) {
+      eachItem=(AgendaItem)queueIterator.next();
+      queueIterator.remove();
+      this.workingMemory.getAgendaEventSupport().fireActivationCancelled(eachItem.getRule(),eachItem.getTuple());
+    }
+  }
+  Iterator iter=this.scheduledItems.values().iterator();
+  while (iter.hasNext()) {
+    eachItem=(AgendaItem)iter.next();
+    cancelItem(eachItem);
+    iter.remove();
+    this.workingMemory.getAgendaEventSupport().fireActivationCancelled(eachItem.getRule(),eachItem.getTuple());
+  }
+}

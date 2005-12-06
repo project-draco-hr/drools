@@ -1,0 +1,27 @@
+{
+  RuleBase ruleBase=new RuleBaseImpl(new Rete());
+  WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
+  final Scheduler scheduler=Scheduler.getInstance();
+  final Rule rule=new Rule("test-rule");
+  final List data=new ArrayList();
+  rule.setConsequence(new org.drools.spi.Consequence(){
+    public void invoke(    Activation activation){
+      data.add("tested");
+    }
+  }
+);
+  Duration duration=new Duration(){
+    public long getDuration(    Tuple tuple){
+      return 100;
+    }
+  }
+;
+  rule.setDuration(duration);
+  PropagationContext context=new PropagationContextImpl(PropagationContext.ASSERTION,null,null);
+  ReteTuple tuple=new ReteTuple(0,new FactHandleImpl(1),workingMemory);
+  assertEquals(0,data.size());
+  Agenda agenda=workingMemory.getAgenda();
+  agenda.addToAgenda(tuple,context,rule);
+  Thread.sleep(300);
+  assertEquals(1,data.size());
+}

@@ -1,0 +1,25 @@
+{
+  Rule rule=new Rule("test-rule");
+  PropagationContext context=new PropagationContextImpl(PropagationContext.ASSERTION,null,null);
+  WorkingMemoryImpl workingMemory=new WorkingMemoryImpl(new RuleBaseImpl(new Rete()));
+  MockObjectSource source=new MockObjectSource(15);
+  ObjectTypeNode objectTypeNode=new ObjectTypeNode(1,new ClassObjectType(String.class),source);
+  MockObjectSink sink=new MockObjectSink();
+  objectTypeNode.addObjectSink(sink);
+  Object string1="cheese";
+  Object object1=new Object();
+  FactHandleImpl handle1=new FactHandleImpl(1);
+  FactHandleImpl handle2=new FactHandleImpl(2);
+  workingMemory.putObject(handle1,string1);
+  workingMemory.putObject(handle2,object1);
+  objectTypeNode.assertObject(string1,handle1,context,workingMemory);
+  PrimitiveLongMap memory=(PrimitiveLongMap)workingMemory.getNodeMemory(objectTypeNode);
+  assertEquals(1,memory.size());
+  objectTypeNode.retractObject(handle2,context,workingMemory);
+  assertEquals(1,memory.size());
+  objectTypeNode.retractObject(handle1,context,workingMemory);
+  assertEquals(0,memory.size());
+  List retracted=sink.getRetracted();
+  assertLength(1,retracted);
+  assertSame(handle1,((Object[])retracted.get(0))[0]);
+}

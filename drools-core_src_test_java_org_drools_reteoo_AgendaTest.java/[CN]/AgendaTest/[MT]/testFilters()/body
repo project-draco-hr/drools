@@ -1,0 +1,42 @@
+{
+  RuleBase ruleBase=new RuleBaseImpl();
+  WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
+  final Agenda agenda=workingMemory.getAgenda();
+  final Rule rule=new Rule("test-rule");
+  final Map results=new HashMap();
+  rule.setConsequence(new org.drools.spi.Consequence(){
+    public void invoke(    Activation activation){
+      results.put("fired",new Boolean(true));
+    }
+  }
+);
+  ReteTuple tuple=new ReteTuple(0,new FactHandleImpl(1),workingMemory);
+  final PropagationContext context=new PropagationContextImpl(PropagationContext.ASSERTION,rule,new AgendaItem(tuple,initContext,rule));
+  assertEquals(0,agenda.focusSize());
+  AgendaFilter filterTrue=new AgendaFilter(){
+    public boolean accept(    Activation item){
+      return true;
+    }
+  }
+;
+  rule.setNoLoop(false);
+  agenda.addToAgenda(tuple,context,rule);
+  assertEquals(1,agenda.focusSize());
+  agenda.fireNextItem(filterTrue);
+  assertEquals(0,agenda.focusSize());
+  assertEquals(new Boolean(true),results.get("fired"));
+  agenda.clearAgenda();
+  results.clear();
+  AgendaFilter filterFalse=new AgendaFilter(){
+    public boolean accept(    Activation item){
+      return false;
+    }
+  }
+;
+  rule.setNoLoop(false);
+  agenda.addToAgenda(tuple,context,rule);
+  assertEquals(1,agenda.focusSize());
+  agenda.fireNextItem(filterFalse);
+  assertEquals(0,agenda.focusSize());
+  assertNull(results.get("fired"));
+}
