@@ -1,15 +1,36 @@
 {
   for (Iterator it=and.getChildren().iterator(); it.hasNext(); ) {
     Object object=it.next();
-    if (object instanceof Not) {
-      Not not=(Not)object;
-      Object child=not.getChild();
-      if (child instanceof Column) {
-        Column column=(Column)child;
-        if (!hasDependencies(column.getConstraints())) {
-        }
+    BetaNodeBinder binder;
+    Column column;
+    if (object instanceof Column) {
+      column=(Column)object;
+      binder=attachColumn((Column)object,and);
+      if (this.tupleSource == null) {
+        this.tupleSource=attachNode(new LeftInputAdapterNode(this.id++,column.getIndex(),this.objectSource));
+        this.objectSource=null;
       }
-      new NotNode();
+    }
+ else {
+      ConditionalElement ce=(ConditionalElement)object;
+      while (!(ce.getChildren().get(0) instanceof Column)) {
+        ce=(ConditionalElement)ce.getChildren().get(0);
+      }
+      column=(Column)ce.getChildren().get(0);
+      binder=attachColumn((Column)object,and);
+      if (this.tupleSource == null) {
+        ObjectSource objectSource=attachNode(new ObjectTypeNode(this.id++,new ClassObjectType(InitialFact.class),this.rete));
+        this.tupleSource=attachNode(new LeftInputAdapterNode(this.id++,column.getIndex(),objectSource));
+      }
+    }
+    if (object instanceof Not) {
+      attachNot(this.tupleSource,(Not)object,this.objectSource,binder,column);
+    }
+ else     if (object instanceof Exists) {
+      attachExists(this.tupleSource,(Exists)object,this.objectSource,binder,column);
+    }
+ else     if (this.objectSource != null) {
+      this.tupleSource=attachNode(new JoinNode(this.id++,this.tupleSource,this.objectSource,column.getIndex(),binder));
     }
   }
 }

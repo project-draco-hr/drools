@@ -1,0 +1,16 @@
+{
+  NotNode notNode=(NotNode)attachNode(new NotNode(this.id++,tupleSource,ObjectSource,column.getIndex(),binder));
+  RightInputAdapterNode adapter=(RightInputAdapterNode)attachNode(new RightInputAdapterNode(this.id++,column.getIndex(),notNode));
+  notNode=(NotNode)attachNode(new NotNode(this.id++,tupleSource,adapter,column.getIndex(),new BetaNodeBinder()));
+  if (exists.getChild() instanceof Not) {
+    adapter=(RightInputAdapterNode)attachNode(new RightInputAdapterNode(this.id++,column.getIndex(),notNode));
+    attachNot(tupleSource,(Not)exists.getChild(),adapter,new BetaNodeBinder(),column);
+  }
+ else   if (exists.getChild() instanceof Exists) {
+    adapter=(RightInputAdapterNode)attachNode(new RightInputAdapterNode(this.id++,column.getIndex(),notNode));
+    attachExists(tupleSource,(Exists)exists.getChild(),adapter,new BetaNodeBinder(),column);
+  }
+ else {
+    this.tupleSource=notNode;
+  }
+}
