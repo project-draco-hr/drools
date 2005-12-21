@@ -1,0 +1,29 @@
+{
+  SubstitutionNode today=new SubstitutionNode("Today","new Date()");
+  LeftRightNode before=new LeftRightNode("before","${left}.before(${right})",1,1);
+  RightOnlyNode dateOf=new RightOnlyNode("date of","parseDate(${right}",1);
+  LiteralNode myBirthday=new LiteralNode("10-Jul-1974");
+  LiteralNode irrelevant=new LiteralNode("something irrelevant");
+  today.next=before;
+  before.prev=today;
+  before.next=dateOf;
+  dateOf.prev=before;
+  dateOf.next=myBirthday;
+  myBirthday.prev=dateOf;
+  myBirthday.next=irrelevant;
+  irrelevant.prev=myBirthday;
+  assertFalse(today.isAllSatisfied(RightOnlyNode.class));
+  assertFalse(today.isAllSatisfied(LeftRightNode.class));
+  today.processLeftToRight(RightOnlyNode.class);
+  today.processLeftToRight(LeftRightNode.class);
+  assertTrue(today.isAllSatisfied(RightOnlyNode.class));
+  assertTrue(today.isAllSatisfied(LeftRightNode.class));
+  assertEquals(null,today.next);
+  assertEquals(irrelevant,before.next);
+  assertEquals(today,before.getArgumentsLeft().get(0));
+  assertEquals(dateOf,before.getArgumentsRight().get(0));
+  assertEquals(myBirthday,dateOf.getArguments().get(0));
+  assertEquals(before,myBirthday.findStartNode());
+  assertEquals(before,irrelevant.findStartNode());
+  assertEquals(before,today.findStartNode());
+}
