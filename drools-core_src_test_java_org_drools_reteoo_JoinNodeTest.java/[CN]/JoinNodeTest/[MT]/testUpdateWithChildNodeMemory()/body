@@ -1,0 +1,19 @@
+{
+  WorkingMemoryImpl workingMemory=new WorkingMemoryImpl(new RuleBaseImpl());
+  JoinNode joinNode=new JoinNode(1,tupleSource,objectSource,1);
+  MockTupleSink sink1=new MockTupleSink(2);
+  sink1.setHasMemory(true);
+  FactHandleImpl f0=new FactHandleImpl(0);
+  workingMemory.putObject(f0,"string2");
+  ReteTuple tuple1=new ReteTuple(9,f0,workingMemory);
+  sink1.assertTuple(tuple1,context,workingMemory);
+  Map map=(Map)workingMemory.getNodeMemory(sink1);
+  assertLength(1,map.keySet());
+  assertLength(1,sink1.getAsserted());
+  joinNode.addTupleSink(sink1);
+  MockTupleSink sink2=new MockTupleSink(3);
+  joinNode.addTupleSink(sink2);
+  assertLength(0,sink2.getAsserted());
+  joinNode.updateNewNode(workingMemory,context);
+  assertLength(1,sink2.getAsserted());
+}
