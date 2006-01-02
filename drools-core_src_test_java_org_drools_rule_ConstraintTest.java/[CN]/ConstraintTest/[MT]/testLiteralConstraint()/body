@@ -1,14 +1,11 @@
 {
-  LiteralExpressionConstraint isCheddar=new LiteralExpressionConstraint(){
-    public boolean isAllowed(    Object object,    ConstraintComparator comparator){
-      Cheese cheese=(Cheese)object;
-      return comparator.compare(cheese.getType(),"cheddar");
-    }
-  }
-;
-  LiteralConstraint constraint0=new LiteralConstraint(isCheddar,new StringConstraintComparator(ConstraintComparator.EQUAL));
+  int index=Cheese.getIndex(Cheese.class,"type");
+  Field field=new MockField("type","cheddar",index);
+  FieldExtractor extractor=new ClassFieldExtractor(Cheese.class,field.getIndex());
+  Evaluator evaluator=EvaluatorFactory.getInstance().getEvaluator(Evaluator.OBJECT_TYPE,Evaluator.EQUAL);
+  LiteralConstraint constraint=new LiteralConstraint(field,extractor,evaluator);
   Cheese cheddar=new Cheese("cheddar",5);
-  assertTrue(constraint0.isAllowed(cheddar));
+  assertTrue(constraint.isAllowed(cheddar));
   Cheese stilton=new Cheese("stilton",5);
-  assertFalse(constraint0.isAllowed(stilton));
+  assertFalse(constraint.isAllowed(stilton));
 }

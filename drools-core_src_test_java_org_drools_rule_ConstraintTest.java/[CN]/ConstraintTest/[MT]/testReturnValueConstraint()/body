@@ -1,22 +1,15 @@
 {
   InstrumentedWorkingMemoryImpl workingMemory=new InstrumentedWorkingMemoryImpl();
-  ObjectType integerObjectType=new ClassObjectType(Integer.class);
-  Extractor priceOfCheeseExtractor=new Extractor(){
-    public Object getValue(    Object object){
-      return new Integer(((Cheese)object).getPrice());
+  FieldExtractor priceExtractor=new ClassFieldExtractor(Cheese.class,Cheese.getIndex(Cheese.class,"price"));
+  Declaration priceDeclaration=new Declaration(0,"price1",priceExtractor,0);
+  ReturnValueEvaluator isDoubleThePrice=new ReturnValueEvaluator(){
+    public Object evaluate(    Tuple tuple,    Declaration[] declarations){
+      return new Integer(2 * ((Integer)tuple.get(declarations[0])).intValue());
     }
   }
 ;
-  Declaration priceDeclaration=new Declaration(0,"price",integerObjectType,priceOfCheeseExtractor,0);
-  ReturnValueExpressionConstraint isDoubleThePrice=new ReturnValueExpressionConstraint(){
-    public boolean isAllowed(    Object object,    FactHandle handle,    Declaration[] declarations,    Tuple tuple,    ConstraintComparator comparator){
-      int price=((Integer)tuple.get(declarations[0])).intValue();
-      return comparator.compare(new Integer(((Cheese)object).getPrice()),new Integer(2 * price));
-    }
-  }
-;
-  ReturnValueConstraint constraint1=new ReturnValueConstraint(isDoubleThePrice,new Declaration[]{priceDeclaration},new NumericConstraintComparator(ConstraintComparator.EQUAL));
-  ReturnValueConstraint constraint2=new ReturnValueConstraint(isDoubleThePrice,new Declaration[]{priceDeclaration},new NumericConstraintComparator(ConstraintComparator.GREATER));
+  ReturnValueConstraint constraint1=new ReturnValueConstraint(priceExtractor,isDoubleThePrice,new Declaration[]{priceDeclaration},EvaluatorFactory.getInstance().getEvaluator(Evaluator.INTEGER_TYPE,Evaluator.EQUAL));
+  ReturnValueConstraint constraint2=new ReturnValueConstraint(priceExtractor,isDoubleThePrice,new Declaration[]{priceDeclaration},EvaluatorFactory.getInstance().getEvaluator(Evaluator.INTEGER_TYPE,Evaluator.GREATER));
   Cheese cheddar0=new Cheese("cheddar",5);
   FactHandle f0=workingMemory.createFactHandle(0);
   workingMemory.putObject(f0,cheddar0);
@@ -27,4 +20,7 @@
   tuple=new InstrumentedReteTuple(tuple,new InstrumentedReteTuple(0,f1,workingMemory));
   assertTrue(constraint1.isAllowed(cheddar1,f1,tuple));
   assertFalse(constraint2.isAllowed(cheddar1,f1,tuple));
+  cheddar1=new Cheese("cheddar",11);
+  workingMemory.putObject(f1,cheddar1);
+  assertTrue(constraint2.isAllowed(cheddar1,f1,tuple));
 }

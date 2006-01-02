@@ -3,21 +3,19 @@
   Rule rule=new Rule("test-rule");
   PropagationContext context=new PropagationContextImpl(PropagationContext.ASSERTION,null,null);
   MockObjectSource source=new MockObjectSource(1);
-  LiteralExpressionConstraint mockConstraint0=new LiteralExpressionConstraint(){
-    public boolean isAllowed(    Object object,    ConstraintComparator comparator){
-      return true;
-    }
-  }
-;
-  LiteralConstraint constraint0=new LiteralConstraint(mockConstraint0,new StringConstraintComparator(ConstraintComparator.EQUAL));
-  AlphaNode alphaNode=new AlphaNode(2,constraint0,true,source);
+  int index=Cheese.getIndex(Cheese.class,"type");
+  Field field=new MockField("type","cheddar",index);
+  FieldExtractor extractor=new ClassFieldExtractor(Cheese.class,field.getIndex());
+  Evaluator evaluator=EvaluatorFactory.getInstance().getEvaluator(Evaluator.OBJECT_TYPE,Evaluator.EQUAL);
+  LiteralConstraint constraint=new LiteralConstraint(field,extractor,evaluator);
+  AlphaNode alphaNode=new AlphaNode(2,constraint,true,source);
   alphaNode.attach();
   MockObjectSink sink1=new MockObjectSink();
   alphaNode.addObjectSink(sink1);
-  String object1="string";
+  Cheese cheese=new Cheese("cheddar",0);
   FactHandleImpl handle1=new FactHandleImpl(1);
-  workingMemory.putObject(handle1,object1);
-  source.propagateAssertObject(object1,handle1,context,workingMemory);
+  workingMemory.putObject(handle1,cheese);
+  source.propagateAssertObject(cheese,handle1,context,workingMemory);
   assertLength(1,sink1.getAsserted());
   MockObjectSink sink2=new MockObjectSink();
   alphaNode.addObjectSink(sink2);

@@ -2,24 +2,18 @@
   this.rule=new Rule("test-rule");
   this.context=new PropagationContextImpl(PropagationContext.ASSERTION,null,null);
   this.workingMemory=new WorkingMemoryImpl(new RuleBaseImpl());
-  ObjectType stringObjectType=new ClassObjectType(String.class);
-  Extractor stringExtractor=new Extractor(){
-    public Object getValue(    Object object){
-      return object;
+  FieldExtractor priceExtractor=new ClassFieldExtractor(Cheese.class,Cheese.getIndex(Cheese.class,"price"));
+  Declaration string1Declaration=new Declaration(0,"cheese1",priceExtractor,3);
+  Declaration string2Declaration=new Declaration(0,"cheese2",priceExtractor,9);
+  PredicateEvaluator evaluator=new PredicateEvaluator(){
+    public boolean evaluate(    Tuple tuple,    Object object,    FactHandle handle,    Declaration declaration,    Declaration[] declarations){
+      int price1=((Integer)tuple.get(declarations[0])).intValue();
+      int price2=((Integer)declaration.getValue(object)).intValue();
+      return price1 == price2;
     }
   }
 ;
-  Declaration string1Declaration=new Declaration(0,"string1",stringObjectType,stringExtractor,3);
-  Declaration string2Declaration=new Declaration(0,"string2",stringObjectType,stringExtractor,9);
-  PredicateExpressionConstraint checkString=new PredicateExpressionConstraint(){
-    public boolean isAllowed(    Object object,    FactHandle handle,    Declaration declaration,    Declaration[] declarations,    Tuple tuple){
-      String string1=(String)object;
-      String string2=(String)tuple.get(declarations[0]);
-      return "string1string2".equals(string1 + string2);
-    }
-  }
-;
-  PredicateConstraint constraint=new PredicateConstraint(checkString,string1Declaration,new Declaration[]{string2Declaration});
+  PredicateConstraint constraint=new PredicateConstraint(evaluator,string2Declaration,new Declaration[]{string1Declaration});
   this.node=new NotNode(15,new MockTupleSource(5),new MockObjectSource(8),3,new BetaNodeBinder(constraint));
   this.sink=new MockTupleSink();
   this.node.addTupleSink(this.sink);

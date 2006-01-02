@@ -3,19 +3,12 @@
   Rule rule=new Rule("test-rule");
   PropagationContext context=new PropagationContextImpl(PropagationContext.ASSERTION,null,null);
   MockObjectSource source=new MockObjectSource(15);
-  ReturnValueExpressionConstraint isCheddar=new ReturnValueExpressionConstraint(){
-    public boolean isAllowed(    Object object,    ConstraintComparator comparator){
-      Cheese cheese=(Cheese)object;
-      return comparator.compare(cheese.getType(),"cheddar");
-    }
-    public boolean isAllowed(    Object object,    FactHandle handle,    Declaration[] declarations,    Tuple tuple,    ConstraintComparator comparator){
-      Cheese cheese=(Cheese)object;
-      return comparator.compare(cheese.getType(),"cheddar");
-    }
-  }
-;
-  ReturnValueConstraint constraint0=new ReturnValueConstraint(isCheddar,null,new StringConstraintComparator(ConstraintComparator.EQUAL));
-  AlphaNode alphaNode=new AlphaNode(2,constraint0,true,source);
+  int index=Cheese.getIndex(Cheese.class,"type");
+  Field field=new MockField("type","cheddar",index);
+  FieldExtractor extractor=new ClassFieldExtractor(Cheese.class,field.getIndex());
+  Evaluator evaluator=EvaluatorFactory.getInstance().getEvaluator(Evaluator.OBJECT_TYPE,Evaluator.EQUAL);
+  LiteralConstraint constraint=new LiteralConstraint(field,extractor,evaluator);
+  AlphaNode alphaNode=new AlphaNode(2,constraint,true,source);
   MockObjectSink sink=new MockObjectSink();
   alphaNode.addObjectSink(sink);
   Cheese cheddar=new Cheese("cheddar",5);
