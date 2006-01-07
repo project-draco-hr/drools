@@ -1,0 +1,32 @@
+{
+  final Rule rule=new Rule("pathDone");
+  Column contextColumn=new Column(0,contextType);
+  contextColumn.addConstraint(getLiteralConstraint(contextColumn,"state",new Integer(Context.MAKE_PATH),this.integerEqualEvaluator));
+  rule.addPattern(contextColumn);
+  final Declaration contextDeclaration=rule.getDeclaration("context");
+  Column seatingColumn=new Column(1,seatingType,"seating");
+  seatingColumn.addConstraint(getLiteralConstraint(seatingColumn,"pathDone",new Boolean(false),booleanEqualEvaluator));
+  rule.addPattern(seatingColumn);
+  final Declaration seatingDeclaration=rule.getDeclaration("seating");
+  Consequence consequence=new Consequence(){
+    public void invoke(    Activation activation) throws ConsequenceException {
+      try {
+        Rule rule=activation.getRule();
+        Tuple tuple=activation.getTuple();
+        KnowledgeHelper drools=new DefaultKnowledgeHelper(rule,tuple);
+        Context context=(Context)tuple.get(contextDeclaration);
+        Seating seating=(Seating)tuple.get(seatingDeclaration);
+        seating.setPathDone(true);
+        drools.modifyObject(tuple.getFactHandleForDeclaration(seatingDeclaration),seating);
+        context.setState(Context.CHECK_DONE);
+        drools.modifyObject(tuple.getFactHandleForDeclaration(contextDeclaration),context);
+      }
+ catch (      Exception e) {
+        throw new ConsequenceException(e);
+      }
+    }
+  }
+;
+  rule.setConsequence(consequence);
+  return rule;
+}
