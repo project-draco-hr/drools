@@ -1,0 +1,75 @@
+{
+  final Rule rule=new Rule("makePath");
+  Column contextColumn=new Column(0,contextType,"context");
+  contextColumn.addConstraint(getLiteralConstraint(contextColumn,"state",new Integer(Context.ASSIGN_SEATS),this.integerEqualEvaluator));
+  rule.addPattern(contextColumn);
+  final Declaration contextDeclaration=rule.getDeclaration("context");
+  Column seatingColumn=new Column(1,seatingType);
+  seatingColumn.addConstraint(getFieldBinding(seatingColumn,"id","seatingId"));
+  seatingColumn.addConstraint(getFieldBinding(seatingColumn,"pid","seatingPid"));
+  seatingColumn.addConstraint(getLiteralConstraint(seatingColumn,"pathDone",new Boolean(true),this.booleanEqualEvaluator));
+  seatingColumn.addConstraint(getFieldBinding(seatingColumn,"rightSeat","seatingRightSeat"));
+  seatingColumn.addConstraint(getFieldBinding(seatingColumn,"rightGuestName","seatingRightGuestName"));
+  rule.addPattern(seatingColumn);
+  final Declaration seatingIdDeclaration=rule.getDeclaration("seatingId");
+  final Declaration seatingPidDeclaration=rule.getDeclaration("seatingPid");
+  final Declaration seatingRightGuestNameDeclaration=rule.getDeclaration("seatingRightGuestName");
+  final Declaration seatingRightSeatDeclaration=rule.getDeclaration("seatingRightSeat");
+  Column rightGuestColumn=new Column(2,guestType);
+  rightGuestColumn.addConstraint(getBoundVariableConstraint(rightGuestColumn,"name",seatingRightGuestNameDeclaration,objectEqualEvaluator));
+  rightGuestColumn.addConstraint(getFieldBinding(rightGuestColumn,"sex","rightGuestSex"));
+  rightGuestColumn.addConstraint(getFieldBinding(rightGuestColumn,"hobby","rightGuestHobby"));
+  rule.addPattern(rightGuestColumn);
+  final Declaration rightGuestSexDeclaration=rule.getDeclaration("rightGuestSex");
+  final Declaration rightGuestHobbyDeclaration=rule.getDeclaration("rightGuestHobby");
+  Column leftGuestColumn=new Column(3,guestType);
+  leftGuestColumn.addConstraint(getFieldBinding(leftGuestColumn,"name","leftGuestHobby"));
+  leftGuestColumn.addConstraint(getBoundVariableConstraint(leftGuestColumn,"sex",rightGuestSexDeclaration,objectEqualEvaluator));
+  leftGuestColumn.addConstraint(getBoundVariableConstraint(rightGuestColumn,"hobby",rightGuestHobbyDeclaration,objectEqualEvaluator));
+  rule.addPattern(leftGuestColumn);
+  final Declaration leftGuestNameDeclaration=rule.getDeclaration("lefttGuestName");
+  Column count=new Column(2,countType,"count");
+  rule.addPattern(count);
+  final Declaration countDeclaration=rule.getDeclaration("count");
+  Column notPathColumn=new Column(3,pathType);
+  notPathColumn.addConstraint(getBoundVariableConstraint(notPathColumn,"id",seatingIdDeclaration,integerEqualEvaluator));
+  notPathColumn.addConstraint(getBoundVariableConstraint(notPathColumn,"guestName",leftGuestNameDeclaration,objectEqualEvaluator));
+  Not not=new Not();
+  not.addChild(notPathColumn);
+  notPathColumn.addConstraint(not);
+  Column notChosenColumn=new Column(4,chosenType);
+  notChosenColumn.addConstraint(getBoundVariableConstraint(notChosenColumn,"id",seatingIdDeclaration,integerEqualEvaluator));
+  notChosenColumn.addConstraint(getBoundVariableConstraint(notChosenColumn,"guestName",leftGuestNameDeclaration,objectEqualEvaluator));
+  notChosenColumn.addConstraint(getBoundVariableConstraint(notChosenColumn,"hobby",rightGuestHobbyDeclaration,objectEqualEvaluator));
+  notChosenColumn.addConstraint(notChosenColumn);
+  rule.addPattern(notChosenColumn);
+  Consequence consequence=new Consequence(){
+    public void invoke(    Activation activation) throws ConsequenceException {
+      try {
+        Rule rule=activation.getRule();
+        Tuple tuple=activation.getTuple();
+        KnowledgeHelper drools=new DefaultKnowledgeHelper(rule,tuple);
+        Context context=(Context)tuple.get(contextDeclaration);
+        Count count=(Count)tuple.get(countDeclaration);
+        int seatId=((Integer)tuple.get(seatingIdDeclaration)).intValue();
+        int seatingRightSeat=((Integer)tuple.get(seatingRightSeatDeclaration)).intValue();
+        String leftGuestName=(String)tuple.get(leftGuestNameDeclaration);
+        String rightGuestName=(String)tuple.get(seatingRightGuestNameDeclaration);
+        Hobby rightGuestHobby=(Hobby)tuple.get(rightGuestHobbyDeclaration);
+        drools.assertObject(new Seating(count.getValue(),seatId,false,seatingRightSeat,leftGuestName,seatingRightSeat + 1,rightGuestName));
+        drools.assertObject(new Path(count.getValue(),seatingRightSeat + 1,leftGuestName));
+        drools.assertObject(new Chosen(seatId,leftGuestName,rightGuestHobby));
+        count.setValue(count.getValue() + 1);
+        drools.modifyObject(tuple.getFactHandleForDeclaration(countDeclaration),count);
+        context.setState(Context.MAKE_PATH);
+        drools.modifyObject(tuple.getFactHandleForDeclaration(contextDeclaration),context);
+      }
+ catch (      Exception e) {
+        throw new ConsequenceException(e);
+      }
+    }
+  }
+;
+  rule.setConsequence(consequence);
+  return rule;
+}
