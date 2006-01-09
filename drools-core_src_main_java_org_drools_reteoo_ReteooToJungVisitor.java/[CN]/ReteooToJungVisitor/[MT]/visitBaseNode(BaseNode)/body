@@ -1,0 +1,36 @@
+{
+  Vertex vertex=(Vertex)this.visitedNodes.get(dotId(node));
+  if (vertex == null) {
+    try {
+      String name=node.getClass().getName();
+      name=name.substring(name.lastIndexOf('.') + 1) + "Vertex";
+      Class clazz=Class.forName("org.drools.reteoo.ReteooToJungVisitor$" + name);
+      vertex=(Vertex)clazz.getConstructor(new Class[]{node.getClass()}).newInstance(new Object[]{node});
+    }
+ catch (    Exception e) {
+      throw new RuntimeException("problem visiting node " + node.getClass().getName(),e);
+    }
+    this.graph.addVertex(vertex);
+    this.visitedNodes.put(dotId(node),vertex);
+    this.graph.addEdge(new DroolsDirectedEdge(this.parentVertex,vertex));
+    Vertex oldParentVertex=this.parentVertex;
+    this.parentVertex=vertex;
+    List list=null;
+    if (node instanceof ObjectSource) {
+      list=((ObjectSource)node).getObjectSinks();
+    }
+ else     if (node instanceof TupleSource) {
+      list=((TupleSource)node).getTupleSinks();
+    }
+    if (list != null) {
+      for (Iterator it=list.iterator(); it.hasNext(); ) {
+        Object nextNode=it.next();
+        visitNode(nextNode);
+      }
+    }
+    this.parentVertex=oldParentVertex;
+  }
+ else {
+    this.graph.addEdge(new DroolsDirectedEdge(this.parentVertex,vertex));
+  }
+}
