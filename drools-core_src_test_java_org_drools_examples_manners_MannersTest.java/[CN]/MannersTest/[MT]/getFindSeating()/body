@@ -36,7 +36,7 @@
   notPathColumn.addConstraint(getBoundVariableConstraint(notPathColumn,"guestName",leftGuestNameDeclaration,objectEqualEvaluator));
   Not notPath=new Not();
   notPath.addChild(notPathColumn);
-  notPathColumn.addConstraint(notPath);
+  rule.addPattern(notPath);
   Column notChosenColumn=new Column(4,chosenType);
   notChosenColumn.addConstraint(getBoundVariableConstraint(notChosenColumn,"id",seatingIdDeclaration,integerEqualEvaluator));
   notChosenColumn.addConstraint(getBoundVariableConstraint(notChosenColumn,"guestName",leftGuestNameDeclaration,objectEqualEvaluator));
@@ -57,13 +57,15 @@
         String leftGuestName=(String)tuple.get(leftGuestNameDeclaration);
         String rightGuestName=(String)tuple.get(seatingRightGuestNameDeclaration);
         Hobby rightGuestHobby=(Hobby)tuple.get(rightGuestHobbyDeclaration);
-        drools.assertObject(new Seating(count.getValue(),seatId,false,seatingRightSeat,leftGuestName,seatingRightSeat + 1,rightGuestName));
+        Seating seating=new Seating(count.getValue(),seatId,false,seatingRightSeat,leftGuestName,seatingRightSeat + 1,rightGuestName);
+        drools.assertObject(seating);
         drools.assertObject(new Path(count.getValue(),seatingRightSeat + 1,leftGuestName));
         drools.assertObject(new Chosen(seatId,leftGuestName,rightGuestHobby));
         count.setValue(count.getValue() + 1);
         drools.modifyObject(tuple.getFactHandleForDeclaration(countDeclaration),count);
         context.setState(Context.MAKE_PATH);
         drools.modifyObject(tuple.getFactHandleForDeclaration(contextDeclaration),context);
+        System.out.println(seating);
       }
  catch (      Exception e) {
         throw new ConsequenceException(e);
