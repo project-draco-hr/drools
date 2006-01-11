@@ -31,13 +31,13 @@
   Column count=new Column(4,countType,"count");
   rule.addPattern(count);
   final Declaration countDeclaration=rule.getDeclaration("count");
-  Column notPathColumn=new Column(3,pathType);
+  Column notPathColumn=new Column(5,pathType);
   notPathColumn.addConstraint(getBoundVariableConstraint(notPathColumn,"id",seatingIdDeclaration,integerEqualEvaluator));
   notPathColumn.addConstraint(getBoundVariableConstraint(notPathColumn,"guestName",leftGuestNameDeclaration,objectEqualEvaluator));
   Not notPath=new Not();
   notPath.addChild(notPathColumn);
   rule.addPattern(notPath);
-  Column notChosenColumn=new Column(5,chosenType);
+  Column notChosenColumn=new Column(6,chosenType);
   notChosenColumn.addConstraint(getBoundVariableConstraint(notChosenColumn,"id",seatingIdDeclaration,integerEqualEvaluator));
   notChosenColumn.addConstraint(getBoundVariableConstraint(notChosenColumn,"guestName",leftGuestNameDeclaration,objectEqualEvaluator));
   notChosenColumn.addConstraint(getBoundVariableConstraint(notChosenColumn,"hobby",rightGuestHobbyDeclaration,objectEqualEvaluator));
@@ -57,15 +57,17 @@
         String leftGuestName=(String)tuple.get(leftGuestNameDeclaration);
         String rightGuestName=(String)tuple.get(seatingRightGuestNameDeclaration);
         Hobby rightGuestHobby=(Hobby)tuple.get(rightGuestHobbyDeclaration);
-        Seating seating=new Seating(count.getValue(),seatId,false,seatingRightSeat,leftGuestName,seatingRightSeat + 1,rightGuestName);
+        Seating seating=new Seating(count.getValue(),seatId,false,seatingRightSeat,rightGuestName,seatingRightSeat + 1,leftGuestName);
         drools.assertObject(seating);
-        drools.assertObject(new Path(count.getValue(),seatingRightSeat + 1,leftGuestName));
-        drools.assertObject(new Chosen(seatId,leftGuestName,rightGuestHobby));
+        Path path=new Path(count.getValue(),seatingRightSeat + 1,leftGuestName);
+        drools.assertObject(path);
+        Chosen chosen=new Chosen(seatId,leftGuestName,rightGuestHobby);
+        drools.assertObject(chosen);
         count.setValue(count.getValue() + 1);
         drools.modifyObject(tuple.getFactHandleForDeclaration(countDeclaration),count);
         context.setState(Context.MAKE_PATH);
         drools.modifyObject(tuple.getFactHandleForDeclaration(contextDeclaration),context);
-        System.out.println("assign seating : " + seating);
+        System.out.println("find seating : " + seating + " : "+ path+ " : "+ chosen);
       }
  catch (      Exception e) {
         throw new ConsequenceException(e);
