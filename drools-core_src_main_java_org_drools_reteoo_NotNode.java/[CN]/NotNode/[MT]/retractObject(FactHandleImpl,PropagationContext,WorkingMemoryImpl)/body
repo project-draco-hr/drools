@@ -1,17 +1,21 @@
 {
   BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
   if (memory.contains(handle)) {
-    TupleMatches tupleMatches=null;
-    TupleSet tupleSet=new TupleSet();
+    TupleSet tupleSet=null;
     memory.remove(handle);
-    Iterator it=memory.getLeftMemory().values().iterator();
-    while (it.hasNext()) {
-      tupleMatches=(TupleMatches)it.next();
+    for (Iterator it=memory.getLeftMemory().values().iterator(); it.hasNext(); ) {
+      TupleMatches tupleMatches=(TupleMatches)it.next();
+      int previousSize=tupleMatches.getMatches().size();
       tupleMatches.removeMatch(handle);
-      if (tupleMatches.getMatches().size() == 0) {
+      if (previousSize != 0 && tupleMatches.getMatches().size() == 0) {
+        if (tupleSet == null) {
+          tupleSet=new TupleSet();
+        }
         tupleSet.addTuple(tupleMatches.getTuple());
       }
     }
-    propagateAssertTuples(tupleSet,context,workingMemory);
+    if (tupleSet != null) {
+      propagateAssertTuples(tupleSet,context,workingMemory);
+    }
   }
 }

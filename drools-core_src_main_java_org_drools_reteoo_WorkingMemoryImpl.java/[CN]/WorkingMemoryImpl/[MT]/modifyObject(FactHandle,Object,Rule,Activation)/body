@@ -3,13 +3,14 @@
   if (originalObject == null) {
     throw new NoSuchFactObjectException(handle);
   }
+  this.handleFactory.increaseFactHandleRecency(handle);
   putObject(handle,object);
   FactHandleImpl handleImpl=(FactHandleImpl)handle;
   if (this.justified.get(handleImpl.getId()) != null) {
     this.equalsMap.remove(originalObject);
     this.equalsMap.put(object,handle);
   }
-  PropagationContext propagationContext=new PropagationContextImpl(PropagationContext.MODIFICATION,rule,activation);
+  PropagationContext propagationContext=new PropagationContextImpl(++this.propagationIdCounter,PropagationContext.MODIFICATION,rule,activation);
   this.ruleBase.retractObject(handle,propagationContext,this);
   this.ruleBase.assertObject(handle,object,propagationContext,this);
   this.workingMemoryEventSupport.fireObjectModified(propagationContext,handle,originalObject,object);

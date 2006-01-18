@@ -2,7 +2,6 @@
   BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
   if (!memory.contains(handle)) {
     memory.add(handle);
-    TupleSet assertTupleSet=null;
     List retractKeyList=null;
     BetaNodeBinder binder=getJoinNodeBinder();
     for (Iterator it=memory.getLeftMemory().values().iterator(); it.hasNext(); ) {
@@ -13,21 +12,12 @@
         tupleMatches.addMatch(handle);
       }
       int size=tupleMatches.getMatches().size();
-      if (size == 0) {
-        if (assertTupleSet == null) {
-          assertTupleSet=new TupleSet();
-        }
-        assertTupleSet.addTuple(leftTuple);
-      }
- else       if (previousSize == 0 && size == 1) {
+      if (previousSize == 0 && size != 0) {
         if (retractKeyList == null) {
           retractKeyList=new ArrayList();
         }
         retractKeyList.add(leftTuple.getKey());
       }
-    }
-    if (assertTupleSet != null) {
-      propagateAssertTuples(assertTupleSet,context,workingMemory);
     }
     if (retractKeyList != null) {
       propagateRetractTuples(retractKeyList,context,workingMemory);
