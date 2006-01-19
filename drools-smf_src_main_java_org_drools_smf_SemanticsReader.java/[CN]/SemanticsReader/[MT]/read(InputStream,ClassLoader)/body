@@ -1,0 +1,78 @@
+{
+  Properties props=new Properties();
+  props.load(in);
+  String uri=props.getProperty("module.uri");
+  if (uri == null || uri.trim().equals("")) {
+    throw new SemanticsReaderException("module.uri must be specified");
+  }
+  SimpleSemanticModule module=new SimpleSemanticModule(uri.trim());
+  for (Enumeration propNames=props.propertyNames(); propNames.hasMoreElements(); ) {
+    String key=(String)propNames.nextElement();
+    if (key.equals("module.uri")) {
+      continue;
+    }
+    String className=props.getProperty(key);
+    Class factoryClass;
+    try {
+      factoryClass=cl.loadClass(className);
+    }
+ catch (    ClassNotFoundException e) {
+      throw new SemanticsReaderException(e);
+    }
+    if (key.indexOf("(") < 0 || key.indexOf(")") < 0) {
+      throw new SemanticsReaderException("invalid key: " + key);
+    }
+    String type=parseType(key);
+    if (type == null || type.equals("")) {
+      throw new SemanticsReaderException("no type specified");
+    }
+    String componentName=parseName(key);
+    if (componentName == null || componentName.equals("")) {
+      throw new SemanticsReaderException("no component name specified");
+    }
+    try {
+      if ("Rule".equals(type)) {
+        RuleFactory factory=(RuleFactory)factoryClass.newInstance();
+        module.addRuleFactory(componentName,factory);
+      }
+ else       if ("ObjectType".equals(type)) {
+        ObjectTypeFactory factory=(ObjectTypeFactory)factoryClass.newInstance();
+        module.addObjectTypeFactory(componentName,factory);
+      }
+ else       if ("Condition".equals(type)) {
+        ConditionFactory factory=(ConditionFactory)factoryClass.newInstance();
+        module.addConditionFactory(componentName,factory);
+      }
+ else       if ("Consequence".equals(type)) {
+        ConsequenceFactory factory=(ConsequenceFactory)factoryClass.newInstance();
+        module.addConsequenceFactory(componentName,factory);
+      }
+ else       if ("Duration".equals(type)) {
+        DurationFactory factory=(DurationFactory)factoryClass.newInstance();
+        module.addDurationFactory(componentName,factory);
+      }
+ else       if ("ImportEntry".equals(type)) {
+        ImportEntryFactory factory=(ImportEntryFactory)factoryClass.newInstance();
+        module.addImportEntryFactory(componentName,factory);
+      }
+ else       if ("ApplicationData".equals(type)) {
+        ApplicationDataFactory factory=(ApplicationDataFactory)factoryClass.newInstance();
+        module.addApplicationDataFactory(componentName,factory);
+      }
+ else       if ("Functions".equals(type)) {
+        FunctionsFactory factory=(FunctionsFactory)factoryClass.newInstance();
+        module.addFunctionsFactory(componentName,factory);
+      }
+ else {
+        throw new SemanticsReaderException("unknown type '" + type + "'");
+      }
+    }
+ catch (    InstantiationException e) {
+      throw new SemanticsReaderException(e);
+    }
+catch (    IllegalAccessException e) {
+      throw new SemanticsReaderException(e);
+    }
+  }
+  return module;
+}

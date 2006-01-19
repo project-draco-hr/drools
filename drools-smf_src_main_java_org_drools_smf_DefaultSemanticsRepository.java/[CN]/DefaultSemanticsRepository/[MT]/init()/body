@@ -1,0 +1,24 @@
+{
+  ClassLoaderHelper clh=new CurrentThreadClassLoaderHelper();
+  if (clh.getClassLoader() == null) {
+    clh=new CurrentClassLoaderHelper();
+  }
+  Enumeration configUrls=clh.getClassLoader().getResources("META-INF/drools.conf");
+  if (!configUrls.hasMoreElements()) {
+    clh=new CurrentClassLoaderHelper();
+    configUrls=clh.getClassLoader().getResources("META-INF/drools.conf");
+  }
+  if (!configUrls.hasMoreElements()) {
+    clh=new SystemClassLoaderHelper();
+    configUrls=clh.getClassLoader().getResources("META-INF/drools.conf");
+  }
+  this.clHelper=clh;
+  while (configUrls.hasMoreElements()) {
+    URL configUrl=(URL)configUrls.nextElement();
+    loadConfig(configUrl);
+  }
+  String droolsConfigProp=System.getProperty("drools.conf");
+  if (droolsConfigProp != null) {
+    loadConfig(droolsConfigProp);
+  }
+}

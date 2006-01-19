@@ -1,0 +1,50 @@
+{
+  Map functionMap=this.ruleSet.getFunctions();
+  Iterator it=functionMap.values().iterator();
+  SemanticFunctions functions=null;
+  SemanticFunctionsCompiler compiler=null;
+  String functionClassName=null;
+  String name=null;
+  String semanticPackageName=null;
+  ClassLoader parentClassLoader=Thread.currentThread().getContextClassLoader();
+  if (parentClassLoader == null) {
+    parentClassLoader=this.getClass().getClassLoader();
+  }
+  ResourceStoreClassLoader classLoader=new ResourceStoreClassLoader(parentClassLoader,new ResourceStore[]{dst});
+  Map parents=new HashMap();
+  Map files=new HashMap();
+  Object object=null;
+  while (it.hasNext()) {
+    object=it.next();
+    if (!(object instanceof SemanticFunctions)) {
+      continue;
+    }
+    functions=(SemanticFunctions)object;
+    name=functions.getName();
+    Set imports=new HashSet();
+    imports.addAll(this.ruleSet.getImporter().getImports());
+    compiler=functions.getSemanticFunctionsCompiler();
+    semanticPackageName=this.packageName + "." + this.ruleSetValidFileName+ "_"+ System.currentTimeMillis()+ "."+ compiler.getSemanticType();
+    functionClassName=generateUniqueLegalName(semanticPackageName,src,name.toUpperCase().charAt(0) + name.substring(1),"." + compiler.getSemanticType());
+    compiler.generate((Functions)functions,imports,semanticPackageName,functionClassName,null,src,files);
+    parents.put(compiler.getSemanticType(),semanticPackageName + "." + functionClassName);
+  }
+  it=files.keySet().iterator();
+  object=null;
+  List list=null;
+  while (it.hasNext()) {
+    object=it.next();
+    if (object instanceof SemanticFunctionsCompiler) {
+      compiler=(SemanticFunctionsCompiler)object;
+      list=(List)files.get(compiler);
+      compiler.compile((String[])list.toArray(new String[list.size()]),src,dst,classLoader);
+    }
+  }
+  Rule[] rules=this.ruleSet.getRules();
+  String rulePackageName=this.packageName + "." + this.ruleSetValidFileName+ "_"+ System.currentTimeMillis();
+  Map ruleNameMap=new HashMap();
+  for (int i=0; i < rules.length; i++) {
+    compileRule(rules[i],rulePackageName,parents,ruleNameMap,this.knowledgeHelper,src,dst,classLoader);
+  }
+  setInvokers(this.ruleSet,rulePackageName,ruleNameMap,classLoader);
+}
