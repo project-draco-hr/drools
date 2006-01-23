@@ -1,0 +1,18 @@
+{
+  Properties props=new Properties();
+  for (int i=0; i < 1000; i++) {
+    props.put("some {0} grammar" + i,"some mapping{0}");
+    if (i == 42) {
+      props.put("{0} likes cheese","{0}.likesCheese()");
+      props.put("{0} is happy","{0}.isHappy()");
+    }
+  }
+  NLGrammar grammar=new NLGrammar();
+  grammar.loadFromProperties(props);
+  NLExpressionCompiler compiler=new NLExpressionCompiler(grammar);
+  long start=System.currentTimeMillis();
+  String result=compiler.compile("michael likes cheese and michael is happy");
+  long runtime=System.currentTimeMillis() - start;
+  System.out.println("Runtime for compile: " + runtime + "ms");
+  assertEquals("michael.likesCheese() and michael.isHappy()",result);
+}
