@@ -1,0 +1,26 @@
+{
+  String line=laDiscard();
+  if (line == null) {
+    return false;
+  }
+  Matcher matcher=RULE_DECL.matcher(line);
+  if (matcher.matches()) {
+    consumeDiscard();
+    String ruleName=matcher.group(1);
+    for (Iterator ruleIter=rules.iterator(); ruleIter.hasNext(); ) {
+      Rule rule=(Rule)ruleIter.next();
+      if (rule.getName().equals(ruleName)) {
+        throw new DuplicateRuleNameException(null,rule,null);
+      }
+    }
+    rules.add(new Rule(ruleName));
+  }
+  ruleConditions();
+  ruleConsequence();
+  line=laDiscard();
+  if (!line.trim().equals("end")) {
+    throw new ParseException("end expected");
+  }
+  consumeDiscard();
+  return true;
+}
