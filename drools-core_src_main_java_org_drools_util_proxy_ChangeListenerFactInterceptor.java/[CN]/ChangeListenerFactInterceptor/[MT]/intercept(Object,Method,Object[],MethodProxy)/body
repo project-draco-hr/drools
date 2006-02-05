@@ -1,0 +1,26 @@
+{
+  Class decClass=method.getDeclaringClass();
+  if (decClass == indexAccessor.getDeclaringClass()) {
+    Integer arg=(Integer)args[0];
+    return targetFields[arg.intValue() - 1].invoke(target,null);
+  }
+ else   if (decClass == targetAccessor.getDeclaringClass()) {
+    return target;
+  }
+ else   if (decClass == addListener.getDeclaringClass()) {
+    addListener(args[0]);
+    return null;
+  }
+ else   if (decClass == removeListenerMethod.getDeclaringClass()) {
+    removeListener(args[0]);
+    return null;
+  }
+ else {
+    PropertyTuple prop=(PropertyTuple)properties.get(method);
+    if (prop != null) {
+      Object old=prop.getter.invoke(target,null);
+      changes.firePropertyChange(prop.name,old,args[0]);
+    }
+    return method.invoke(target,args);
+  }
+}
