@@ -1,0 +1,53 @@
+{
+  if (!this.firing) {
+    try {
+      this.firing=true;
+      Token token;
+      boolean done;
+      try {
+        while (!this.isStackEmpty()) {
+          token=this.getTopLeapsTokenFromStack();
+          done=false;
+          while (!done) {
+            if (!token.isResume()) {
+              if (token.hasNextRuleHandle()) {
+                token.nextRuleHandle();
+              }
+ else {
+                this.popTopTokenFromStack(token);
+                done=true;
+              }
+            }
+            if (!done) {
+              try {
+                this.seek(token);
+                token.setResume(true);
+                done=true;
+              }
+ catch (              NoMatchesFoundException ex) {
+                token.setResume(false);
+              }
+catch (              Exception e) {
+                e.printStackTrace();
+                System.out.println("exception - " + e);
+              }
+            }
+          }
+        }
+      }
+ catch (      TableOutOfBoundException e) {
+        new RuntimeException(e);
+      }
+      if (this.addedRulesAfterLastFire) {
+        this.addedRulesAfterLastFire=false;
+        this.idLastFireAllAt=this.getNextId();
+        for (Enumeration e=this.tables.elements(); e.hasMoreElements(); ) {
+          ((FactTable)e.nextElement()).setReseededStack(true);
+        }
+      }
+    }
+  finally {
+      this.firing=false;
+    }
+  }
+}

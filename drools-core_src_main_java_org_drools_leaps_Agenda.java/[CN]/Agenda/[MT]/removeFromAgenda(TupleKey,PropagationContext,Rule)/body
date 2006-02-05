@@ -1,0 +1,23 @@
+{
+  ModuleImpl module=(ModuleImpl)this.modules.get(rule.getModule());
+  for (Iterator it=module.getActivationQueue().iterator(); it.hasNext(); ) {
+    AgendaItem eachItem=(AgendaItem)it.next();
+    if (eachItem.getRule() == rule && eachItem.getKey().containsAll(key)) {
+      it.remove();
+      it=module.getActivationQueue().iterator();
+      this.workingMemory.getAgendaEventSupport().fireActivationCancelled(eachItem);
+      this.workingMemory.removeLogicalAssertions(eachItem,context,rule);
+    }
+  }
+  for (Iterator it=this.scheduledItems.values().iterator(); it.hasNext(); ) {
+    AgendaItem eachItem=(AgendaItem)it.next();
+    if (eachItem.getRule() == rule && eachItem.getKey().containsAll(key)) {
+      Tuple tuple=eachItem.getTuple();
+      cancelItem(eachItem);
+      it.remove();
+      this.workingMemory.getAgendaEventSupport().fireActivationCancelled(eachItem);
+      this.workingMemory.removeLogicalAssertions(eachItem,context,rule);
+    }
+  }
+  this.workingMemory.removeLogicalAssertions(key,context,rule);
+}

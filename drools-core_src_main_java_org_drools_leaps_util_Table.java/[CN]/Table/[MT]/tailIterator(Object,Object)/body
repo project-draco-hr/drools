@@ -1,0 +1,40 @@
+{
+  if (this.map.comparator().compare(objectAtStart,objectAtPosition) > 0) {
+    throw new TableOutOfBoundException("object at position is out of upper bound");
+  }
+  TableIterator iterator=null;
+  TableRecord startRecord=null;
+  TableRecord currentRecord=null;
+  TableRecord lastRecord=this.tailRecord;
+  if (!this.empty) {
+    if (this.map.comparator().compare(objectAtStart,this.tailRecord.object) <= 0) {
+      SortedMap bufMap=this.map.tailMap(objectAtStart);
+      if (!bufMap.isEmpty()) {
+        startRecord=(TableRecord)bufMap.get(bufMap.firstKey());
+        if (this.map.comparator().compare(objectAtStart,objectAtPosition) == 0) {
+          currentRecord=startRecord;
+        }
+ else {
+          bufMap=bufMap.tailMap(objectAtPosition);
+          if (!bufMap.isEmpty()) {
+            currentRecord=((TableRecord)bufMap.get(bufMap.firstKey()));
+          }
+ else {
+            currentRecord=startRecord;
+          }
+        }
+        iterator=new TableIterator(startRecord,currentRecord,lastRecord);
+      }
+ else {
+        iterator=new TableIterator();
+      }
+    }
+ else {
+      iterator=new TableIterator();
+    }
+  }
+ else {
+    iterator=new TableIterator();
+  }
+  return iterator;
+}

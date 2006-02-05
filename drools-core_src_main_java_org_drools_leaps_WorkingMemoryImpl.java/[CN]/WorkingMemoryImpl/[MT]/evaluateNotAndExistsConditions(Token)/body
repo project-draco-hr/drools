@@ -1,0 +1,34 @@
+{
+  if (!token.getCurrentRuleHandle().getLeapsRule().containsNotColumns() && !token.getCurrentRuleHandle().getLeapsRule().containsExistsColumns()) {
+    return true;
+  }
+ else {
+    ColumnConstraints constraints;
+    boolean checkSucceed=true;
+    if (token.getTokenType() == Token.RETRACTED) {
+      checkSucceed=checkConstraints(token,token.getCurrentRuleHandle().getLeapsRule().getNotColumnConstraintsAtPosition(token.getCurrentRuleHandle().getDominantPosition()),token.getDominantFactHandle());
+    }
+    TableIterator tableIterator;
+    if (checkSucceed) {
+      boolean done=false;
+      for (Iterator it=token.getCurrentRuleHandle().getLeapsRule().getNotColumnsIterator(); it.hasNext() && !done; ) {
+        constraints=(ColumnConstraints)it.next();
+        tableIterator=this.getFactTable(((ClassObjectType)constraints.getColumn().getObjectType()).getClassType()).iterator();
+        done=this.matchingFactExists(constraints,token,tableIterator);
+        if (!done) {
+          tableIterator=this.getShadowFactTable(((ClassObjectType)constraints.getColumn().getObjectType()).getClassType()).headIterator(token.getDominantFactHandle());
+          done=this.matchingFactExists(constraints,token,tableIterator);
+        }
+      }
+      if (!done) {
+        for (Iterator it=token.getCurrentRuleHandle().getLeapsRule().getExistsColumnsIterator(); it.hasNext() && !done; ) {
+          constraints=(ColumnConstraints)it.next();
+          tableIterator=this.getFactTable(((ClassObjectType)constraints.getColumn().getObjectType()).getClassType()).iterator();
+          done=!this.matchingFactExists(constraints,token,tableIterator);
+        }
+      }
+      checkSucceed=!done;
+    }
+    return checkSucceed;
+  }
+}

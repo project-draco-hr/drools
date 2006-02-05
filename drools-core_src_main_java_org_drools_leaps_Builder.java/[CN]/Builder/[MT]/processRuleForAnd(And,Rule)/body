@@ -1,0 +1,28 @@
+{
+  ArrayList leapsRules=new ArrayList();
+  ArrayList cols=new ArrayList();
+  ArrayList notCols=new ArrayList();
+  ArrayList existsCols=new ArrayList();
+  for (Iterator it=and.getChildren().iterator(); it.hasNext(); ) {
+    Object object=it.next();
+    if (object instanceof Column) {
+      cols.add(this.processColumn((Column)object,and));
+    }
+ else {
+      ConditionalElement ce=(ConditionalElement)object;
+      if (!(ce.getChildren().get(0) instanceof Column)) {
+        ce=(ConditionalElement)ce.getChildren().get(0);
+      }
+      if (object instanceof Not) {
+        notCols.add(this.processColumn((Column)ce.getChildren().get(0),and));
+      }
+ else       if (object instanceof Exists) {
+        existsCols.add(this.processColumn((Column)ce.getChildren().get(0),and));
+      }
+ else {
+      }
+    }
+  }
+  leapsRules.add(new LeapsRule(rule,cols,notCols,existsCols));
+  return leapsRules;
+}
