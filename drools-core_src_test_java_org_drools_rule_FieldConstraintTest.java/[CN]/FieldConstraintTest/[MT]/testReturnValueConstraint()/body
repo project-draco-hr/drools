@@ -1,0 +1,26 @@
+{
+  RuleBaseImpl ruleBase=new RuleBaseImpl();
+  WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  FieldExtractor priceExtractor=new ClassFieldExtractor(Cheese.class,Cheese.getIndex(Cheese.class,"price"));
+  Declaration priceDeclaration=new Declaration(0,"price1",priceExtractor,0);
+  ReturnValueExpression isDoubleThePrice=new ReturnValueExpression(){
+    public Object evaluate(    Tuple tuple,    Declaration[] declarations,    WorkingMemory workingMemory){
+      int price=((Integer)declarations[0].getValue(workingMemory.getObject(tuple.get(declarations[0])))).intValue();
+      return new Integer(2 * price);
+    }
+  }
+;
+  ReturnValueConstraint constraint1=new ReturnValueConstraint(priceExtractor,isDoubleThePrice,new Declaration[]{priceDeclaration},EvaluatorFactory.getInstance().getEvaluator(Evaluator.INTEGER_TYPE,Evaluator.EQUAL));
+  ReturnValueConstraint constraint2=new ReturnValueConstraint(priceExtractor,isDoubleThePrice,new Declaration[]{priceDeclaration},EvaluatorFactory.getInstance().getEvaluator(Evaluator.INTEGER_TYPE,Evaluator.GREATER));
+  Cheese cheddar0=new Cheese("cheddar",5);
+  FactHandle f0=workingMemory.assertObject(cheddar0);
+  InstrumentedReteTuple tuple=new InstrumentedReteTuple(0,f0,workingMemory);
+  Cheese cheddar1=new Cheese("cheddar",10);
+  FactHandle f1=workingMemory.assertObject(cheddar1);
+  tuple=new InstrumentedReteTuple(tuple,f1);
+  assertTrue(constraint1.isAllowed(f1,tuple,workingMemory));
+  assertFalse(constraint2.isAllowed(f1,tuple,workingMemory));
+  Cheese cheddar2=new Cheese("cheddar",11);
+  FactHandle f2=workingMemory.assertObject(cheddar2);
+  assertTrue(constraint2.isAllowed(f2,tuple,workingMemory));
+}

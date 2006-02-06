@@ -1,0 +1,18 @@
+{
+  BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  memory.remove(leftTuple);
+  Map matches=leftTuple.getTupleMatches();
+  if (!matches.isEmpty()) {
+    for (Iterator it=matches.values().iterator(); it.hasNext(); ) {
+      TupleMatch tupleMatch=(TupleMatch)it.next();
+      tupleMatch.getObjectMatches().remove(tupleMatch);
+    }
+  }
+  LinkedList list=leftTuple.getLinkedTuples();
+  if (list != null && !list.isEmpty()) {
+    int i=0;
+    for (LinkedListNode node=list.removeFirst(); node != null; node=list.removeFirst()) {
+      ((TupleSink)getTupleSinks().get(i++)).retractTuple((ReteTuple)((LinkedListNodeWrapper)node).getNode(),context,workingMemory);
+    }
+  }
+}

@@ -45,18 +45,18 @@
   notChosen.addChild(notChosenColumn);
   rule.addPattern(notChosen);
   Consequence consequence=new Consequence(){
-    public void invoke(    Activation activation) throws ConsequenceException {
+    public void invoke(    Activation activation,    WorkingMemory workingMemory) throws ConsequenceException {
       try {
         Rule rule=activation.getRule();
         Tuple tuple=activation.getTuple();
-        KnowledgeHelper drools=new DefaultKnowledgeHelper(rule,tuple);
-        Context context=(Context)tuple.get(contextDeclaration);
-        Count count=(Count)tuple.get(countDeclaration);
-        int seatId=((Integer)tuple.get(seatingIdDeclaration)).intValue();
-        int seatingRightSeat=((Integer)tuple.get(seatingRightSeatDeclaration)).intValue();
-        String leftGuestName=(String)tuple.get(leftGuestNameDeclaration);
-        String rightGuestName=(String)tuple.get(seatingRightGuestNameDeclaration);
-        Hobby rightGuestHobby=(Hobby)tuple.get(rightGuestHobbyDeclaration);
+        KnowledgeHelper drools=new DefaultKnowledgeHelper(rule,tuple,workingMemory);
+        Context context=(Context)drools.get(contextDeclaration);
+        Count count=(Count)drools.get(countDeclaration);
+        int seatId=((Integer)drools.get(seatingIdDeclaration)).intValue();
+        int seatingRightSeat=((Integer)drools.get(seatingRightSeatDeclaration)).intValue();
+        String leftGuestName=(String)drools.get(leftGuestNameDeclaration);
+        String rightGuestName=(String)drools.get(seatingRightGuestNameDeclaration);
+        Hobby rightGuestHobby=(Hobby)drools.get(rightGuestHobbyDeclaration);
         Seating seating=new Seating(count.getValue(),seatId,false,seatingRightSeat,rightGuestName,seatingRightSeat + 1,leftGuestName);
         drools.assertObject(seating);
         Path path=new Path(count.getValue(),seatingRightSeat + 1,leftGuestName);
@@ -64,12 +64,13 @@
         Chosen chosen=new Chosen(seatId,leftGuestName,rightGuestHobby);
         drools.assertObject(chosen);
         count.setValue(count.getValue() + 1);
-        drools.modifyObject(tuple.getFactHandleForDeclaration(countDeclaration),count);
+        drools.modifyObject(tuple.get(countDeclaration),count);
         context.setState(Context.MAKE_PATH);
-        drools.modifyObject(tuple.getFactHandleForDeclaration(contextDeclaration),context);
+        drools.modifyObject(tuple.get(contextDeclaration),context);
         System.err.println("find seating : " + seating + " : "+ path+ " : "+ chosen);
       }
  catch (      Exception e) {
+        e.printStackTrace();
         throw new ConsequenceException(e);
       }
     }

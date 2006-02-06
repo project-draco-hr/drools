@@ -1,12 +1,24 @@
 {
   FactHandleImpl f0=new FactHandleImpl(0);
   ReteTuple tuple1=new ReteTuple(0,f0,this.workingMemory);
-  this.node.retractTuples(tuple1.getKey(),this.context,this.workingMemory);
-  assertLength(0,this.sink.getRetracted());
   this.node.assertTuple(tuple1,this.context,this.workingMemory);
-  assertEquals(1,this.memory.leftMemorySize());
-  this.node.retractTuples(tuple1.getKey(),this.context,this.workingMemory);
-  assertLength(0,this.sink.getRetracted());
-  assertEquals(0,this.memory.leftMemorySize());
-  assertEquals(0,this.memory.rightMemorySize());
+  FactHandleImpl f1=new FactHandleImpl(0);
+  ReteTuple tuple2=new ReteTuple(1,f1,this.workingMemory);
+  this.node.assertTuple(tuple2,this.context,this.workingMemory);
+  FactHandleImpl f2=(FactHandleImpl)this.workingMemory.assertObject("test1");
+  this.node.assertObject(f2,this.context,this.workingMemory);
+  FactHandleImpl f4=(FactHandleImpl)this.workingMemory.assertObject("test2");
+  this.node.assertObject(f4,this.context,this.workingMemory);
+  BetaMemory betaMemory=(BetaMemory)this.workingMemory.getNodeMemory(this.node);
+  ObjectMatches matches1=(ObjectMatches)betaMemory.rightObjectIterator().next();
+  assertEquals(2,iteratorSize(betaMemory.leftTupleIterator(this.context,this.workingMemory)));
+  assertEquals(2,iteratorSize(matches1.iterator(context,workingMemory)));
+  assertLength(2,tuple1.getTupleMatches().values());
+  assertLength(2,tuple2.getTupleMatches().values());
+  assertLength(4,this.sink.getAsserted());
+  tuple1.remove(this.context,this.workingMemory);
+  assertEquals(1,iteratorSize(betaMemory.leftTupleIterator(this.context,this.workingMemory)));
+  assertEquals(1,iteratorSize(matches1.iterator(context,workingMemory)));
+  assertEquals(tuple2,betaMemory.leftTupleIterator(this.context,this.workingMemory).next());
+  assertLength(2,tuple2.getTupleMatches().values());
 }

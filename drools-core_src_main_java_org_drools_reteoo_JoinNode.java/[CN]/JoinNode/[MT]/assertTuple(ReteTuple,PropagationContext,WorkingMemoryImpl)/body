@@ -1,20 +1,18 @@
 {
   BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  TupleMatches tupleMatches=new TupleMatches(leftTuple);
-  memory.put(leftTuple.getKey(),tupleMatches);
-  int column=getColumn();
-  FactHandleImpl handle=null;
-  ReteTuple merged=null;
-  TupleSet tupleSet=new TupleSet();
+  memory.add(leftTuple);
   BetaNodeBinder binder=getJoinNodeBinder();
-  Iterator it=memory.getRightMemory().iterator();
-  while (it.hasNext()) {
-    handle=(FactHandleImpl)it.next();
+  for (Iterator it=memory.rightObjectIterator(); it.hasNext(); ) {
+    ObjectMatches objectMatches=(ObjectMatches)it.next();
+    FactHandleImpl handle=objectMatches.getFactHandle();
     if (binder.isAllowed(handle,leftTuple,workingMemory)) {
-      tupleMatches.addMatch(handle);
-      merged=new ReteTuple(leftTuple,new ReteTuple(column,handle,workingMemory));
-      tupleSet.addTuple(merged);
+      TupleMatch tupleMatch=objectMatches.add(leftTuple);
+      leftTuple.addMatch(handle,tupleMatch);
+      for (int i=0, size=getTupleSinks().size(); i < size; i++) {
+        ReteTuple joined=new ReteTuple(leftTuple,handle);
+        tupleMatch.addJoinedTuple(joined);
+        ((TupleSink)getTupleSinks().get(i)).assertTuple(joined,context,workingMemory);
+      }
     }
   }
-  propagateAssertTuples(tupleSet,context,workingMemory);
 }

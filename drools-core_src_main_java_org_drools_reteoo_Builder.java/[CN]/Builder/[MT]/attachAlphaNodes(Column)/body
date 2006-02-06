@@ -3,12 +3,16 @@
   this.objectSource=attachNode(new ObjectTypeNode(this.id++,column.getObjectType(),this.rete));
   List predicateConstraints=new ArrayList();
   for (Iterator it=constraints.iterator(); it.hasNext(); ) {
-    Constraint constraint=(Constraint)it.next();
-    if (constraint instanceof LiteralConstraint) {
-      this.objectSource=attachNode(new AlphaNode(this.id++,(LiteralConstraint)constraint,true,objectSource));
+    Object object=it.next();
+    if (!(object instanceof FieldConstraint)) {
+      continue;
     }
- else     if (constraint instanceof BetaNodeConstraint) {
-      predicateConstraints.add(constraint);
+    FieldConstraint fieldConstraint=(FieldConstraint)object;
+    if (fieldConstraint.getRequiredDeclarations().length == 0) {
+      this.objectSource=attachNode(new AlphaNode(this.id++,fieldConstraint,true,objectSource));
+    }
+ else {
+      predicateConstraints.add(fieldConstraint);
     }
   }
   return predicateConstraints;

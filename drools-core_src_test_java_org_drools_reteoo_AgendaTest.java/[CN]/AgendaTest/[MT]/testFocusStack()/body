@@ -2,14 +2,14 @@
   RuleBase ruleBase=new RuleBaseImpl();
   WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
   final Agenda agenda=workingMemory.getAgenda();
-  ModuleImpl module1=new ModuleImpl("module1",ruleBase.getConflictResolver());
-  agenda.addModule(module1);
-  ModuleImpl module2=new ModuleImpl("module2",ruleBase.getConflictResolver());
-  agenda.addModule(module2);
-  ModuleImpl module3=new ModuleImpl("module3",ruleBase.getConflictResolver());
-  agenda.addModule(module3);
+  AgendaGroupImpl agendaGroup1=new AgendaGroupImpl("agendaGroup1",ruleBase.getConflictResolver());
+  agenda.addAgendaGroup(agendaGroup1);
+  AgendaGroupImpl agendaGroup2=new AgendaGroupImpl("agendaGroup2",ruleBase.getConflictResolver());
+  agenda.addAgendaGroup(agendaGroup2);
+  AgendaGroupImpl agendaGroup3=new AgendaGroupImpl("agendaGroup3",ruleBase.getConflictResolver());
+  agenda.addAgendaGroup(agendaGroup3);
   Consequence consequence=new Consequence(){
-    public void invoke(    Activation activation){
+    public void invoke(    Activation activation,    WorkingMemory workingMemory){
     }
   }
 ;
@@ -17,31 +17,31 @@
   Rule rule0=new Rule("test-rule0");
   rule0.setConsequence(consequence);
   PropagationContext context0=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule0,new AgendaItem(0,tuple,this.initContext,rule0));
-  Rule rule1=new Rule("test-rule1","module1");
+  Rule rule1=new Rule("test-rule1","agendaGroup1");
   rule1.setConsequence(consequence);
   PropagationContext context1=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule1,new AgendaItem(0,tuple,this.initContext,rule0));
-  Rule rule2=new Rule("test-rule2","module2");
+  Rule rule2=new Rule("test-rule2","agendaGroup2");
   rule2.setConsequence(consequence);
   PropagationContext context2=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule2,new AgendaItem(0,tuple,this.initContext,rule0));
-  Rule rule3=new Rule("test-rule3","module3");
+  Rule rule3=new Rule("test-rule3","agendaGroup3");
   rule3.setConsequence(consequence);
   PropagationContext context3=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule3,new AgendaItem(0,tuple,this.initContext,rule0));
   assertEquals(0,agenda.focusSize());
   agenda.addToAgenda(tuple,context0,rule0);
-  ModuleImpl main=(ModuleImpl)agenda.getModule(Module.MAIN);
+  AgendaGroupImpl main=(AgendaGroupImpl)agenda.getAgendaGroup(AgendaGroup.MAIN);
   assertEquals(agenda.getFocus(),main);
   assertEquals(1,agenda.focusSize());
   agenda.addToAgenda(tuple,context2,rule2);
   assertEquals(1,agenda.focusSize());
-  assertEquals(1,module2.getActivationQueue().size());
+  assertEquals(1,agendaGroup2.getPriorityQueue().size());
   assertEquals(2,agenda.totalAgendaSize());
   agenda.addToAgenda(tuple,context2,rule2);
   assertEquals(1,agenda.focusSize());
-  assertEquals(2,module2.getActivationQueue().size());
+  assertEquals(2,agendaGroup2.getPriorityQueue().size());
   assertEquals(3,agenda.totalAgendaSize());
-  agenda.setFocus("module1");
-  agenda.setFocus("module2");
-  agenda.setFocus("module3");
+  agenda.setFocus("agendaGroup1");
+  agenda.setFocus("agendaGroup2");
+  agenda.setFocus("agendaGroup3");
   assertEquals(0,agenda.focusSize());
   agenda.addToAgenda(tuple,context3,rule3);
   assertEquals(1,agenda.focusSize());
@@ -49,19 +49,19 @@
   assertEquals(2,agenda.focusSize());
   assertEquals(5,agenda.totalAgendaSize());
   agenda.fireNextItem(null);
-  assertEquals(agenda.getFocus(),module3);
+  assertEquals(agenda.getFocus(),agendaGroup3);
   assertEquals(1,agenda.focusSize());
   assertEquals(4,agenda.totalAgendaSize());
   agenda.fireNextItem(null);
-  assertEquals(agenda.getFocus(),module3);
+  assertEquals(agenda.getFocus(),agendaGroup3);
   assertEquals(0,agenda.focusSize());
   assertEquals(3,agenda.totalAgendaSize());
   agenda.fireNextItem(null);
-  assertEquals(agenda.getFocus(),module2);
+  assertEquals(agenda.getFocus(),agendaGroup2);
   assertEquals(1,agenda.focusSize());
   assertEquals(2,agenda.totalAgendaSize());
   agenda.fireNextItem(null);
-  assertEquals(agenda.getFocus(),module2);
+  assertEquals(agenda.getFocus(),agendaGroup2);
   assertEquals(0,agenda.focusSize());
   assertEquals(1,agenda.totalAgendaSize());
   agenda.fireNextItem(null);

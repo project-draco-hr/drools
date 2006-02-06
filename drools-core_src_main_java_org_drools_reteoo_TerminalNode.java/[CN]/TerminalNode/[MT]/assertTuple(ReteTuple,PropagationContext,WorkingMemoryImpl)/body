@@ -1,3 +1,42 @@
 {
-  workingMemory.getAgenda().addToAgenda(tuple,context,this.rule);
+  if (rule.getNoLoop() && rule.equals(context.getRuleOrigin())) {
+    return;
+  }
+  Agenda agenda=workingMemory.getAgenda();
+  Duration dur=rule.getDuration();
+  if (dur != null && dur.getDuration(tuple) > 0) {
+    ScheduledAgendaItem item=new ScheduledAgendaItem(context.getPropagationNumber(),tuple,workingMemory,context,rule);
+    agenda.scheduleItem(item);
+    tuple.setActivation(item);
+    workingMemory.getAgendaEventSupport().fireActivationCreated(item);
+  }
+ else {
+    TerminalNodeMemory memory=(TerminalNodeMemory)workingMemory.getNodeMemory(this);
+    AgendaGroupImpl agendaGroup=memory.getAgendaGroup();
+    if (agendaGroup == null) {
+      if (rule.getAgendaGroup() == null || rule.getAgendaGroup().equals("") || rule.getAgendaGroup().equals(AgendaGroup.MAIN)) {
+        agendaGroup=(AgendaGroupImpl)agenda.getAgendaGroup(AgendaGroup.MAIN);
+      }
+ else {
+        agendaGroup=(AgendaGroupImpl)agenda.getAgendaGroup(rule.getAgendaGroup());
+      }
+      if (agendaGroup == null) {
+        agendaGroup=new AgendaGroupImpl(rule.getAgendaGroup());
+        workingMemory.getAgenda().addAgendaGroup(agendaGroup);
+      }
+      memory.setAgendaGroup(agendaGroup);
+    }
+    if (rule.getAutoFocus()) {
+      agenda.setFocus(agendaGroup);
+    }
+    if (memory.getLifo() == null) {
+      memory.setLifo(agendaGroup.getActivationQueue(this.rule.getSalience()));
+    }
+    ActivationQueue queue=memory.getLifo();
+    AgendaItem item=new AgendaItem(context.getPropagationNumber(),tuple,context,rule,queue);
+    queue.add(item);
+    agendaGroup.addToAgenda(memory.getLifo());
+    tuple.setActivation(item);
+    workingMemory.getAgendaEventSupport().fireActivationCreated(item);
+  }
 }

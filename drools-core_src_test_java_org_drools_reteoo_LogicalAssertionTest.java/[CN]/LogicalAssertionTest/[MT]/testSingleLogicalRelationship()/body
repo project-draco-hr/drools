@@ -1,14 +1,14 @@
 {
   RuleBaseImpl ruleBase=new RuleBaseImpl();
   Rete rete=ruleBase.getRete();
-  ObjectTypeNode objectTypeNode=new ObjectTypeNode(0,new ClassObjectType(String.class),rete);
+  ObjectTypeNode objectTypeNode=new ObjectTypeNode(1,new ClassObjectType(String.class),rete);
   objectTypeNode.attach();
   MockObjectSink sink=new MockObjectSink();
   objectTypeNode.addObjectSink(sink);
   WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
   final Agenda agenda=workingMemory.getAgenda();
   Consequence consequence=new Consequence(){
-    public void invoke(    Activation activation){
+    public void invoke(    Activation activation,    WorkingMemory workingMemory){
     }
   }
 ;
@@ -18,8 +18,8 @@
   ReteTuple tuple1=new ReteTuple(0,handle1,workingMemory);
   final PropagationContext context1=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
   agenda.addToAgenda(tuple1,context1,rule1);
-  ModuleImpl main=(ModuleImpl)agenda.getFocus();
-  Activation activation1=(Activation)main.getActivationQueue().get();
+  AgendaGroupImpl main=(AgendaGroupImpl)agenda.getFocus();
+  Activation activation1=(Activation)main.getPriorityQueue().get();
   String logicalString=new String("logical");
   FactHandle logicalHandle=workingMemory.assertObject(logicalString,false,true,rule1,activation1);
   agenda.removeFromAgenda(tuple1.getKey(),context1,rule1);
@@ -27,7 +27,7 @@
   Object[] values=(Object[])sink.getRetracted().get(0);
   assertSame(logicalHandle,values[0]);
   agenda.addToAgenda(tuple1,context1,rule1);
-  activation1=(Activation)main.getActivationQueue().get();
+  activation1=(Activation)main.getPriorityQueue().get();
   logicalHandle=workingMemory.assertObject(logicalString,false,true,rule1,activation1);
   agenda.fireNextItem(null);
   agenda.removeFromAgenda(tuple1.getKey(),context1,rule1);

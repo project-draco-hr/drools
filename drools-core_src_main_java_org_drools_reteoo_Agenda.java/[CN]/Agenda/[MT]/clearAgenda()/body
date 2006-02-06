@@ -1,22 +1,15 @@
 {
-  AgendaItem eachItem;
-  ModuleImpl module;
-  Iterator queueIterator;
-  Iterator moduleIterator=this.modules.values().iterator();
-  while (moduleIterator.hasNext()) {
-    module=(ModuleImpl)moduleIterator.next();
-    queueIterator=module.getActivationQueue().iterator();
-    while (queueIterator.hasNext()) {
-      eachItem=(AgendaItem)queueIterator.next();
-      queueIterator.remove();
-      this.workingMemory.getAgendaEventSupport().fireActivationCancelled(eachItem);
+  for (Iterator agendaGroupIterator=this.agendaGroups.values().iterator(); agendaGroupIterator.hasNext(); ) {
+    AgendaGroupImpl group=(AgendaGroupImpl)agendaGroupIterator.next();
+    for (Iterator queueIterator=group.getPriorityQueue().iterator(); queueIterator.hasNext(); ) {
+      AgendaItem item=(AgendaItem)queueIterator.next();
+      item.remove();
+      this.workingMemory.getAgendaEventSupport().fireActivationCancelled(item);
     }
   }
-  Iterator iter=this.scheduledItems.values().iterator();
-  while (iter.hasNext()) {
-    eachItem=(AgendaItem)iter.next();
-    cancelItem(eachItem);
-    iter.remove();
-    this.workingMemory.getAgendaEventSupport().fireActivationCancelled(eachItem);
+  for (ScheduledAgendaItem item=this.firstScheduledTask; item.getNext() != null; ) {
+    item=item.getNext();
+    item.remove();
+    this.workingMemory.getAgendaEventSupport().fireActivationCancelled(item);
   }
 }

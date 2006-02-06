@@ -1,18 +1,13 @@
 {
   BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  if (memory.contains(handle)) {
-    TupleMatches tupleMatches=null;
-    List keys=new ArrayList();
-    memory.remove(handle);
-    Iterator it=memory.getLeftMemory().values().iterator();
-    TupleKey rightKey=new TupleKey(getColumn(),handle);
-    while (it.hasNext()) {
-      tupleMatches=(TupleMatches)it.next();
-      if (tupleMatches.matched(handle)) {
-        tupleMatches.removeMatch(handle);
-        keys.add(new TupleKey(tupleMatches.getKey(),rightKey));
-      }
+  ObjectMatches objectMatches=memory.remove(handle);
+  for (TupleMatch tupleMatch=objectMatches.getFirstTupleMatch(); tupleMatch != null; tupleMatch=(TupleMatch)tupleMatch.getNext()) {
+    ReteTuple leftTuple=tupleMatch.getTuple();
+    leftTuple.removeMatch(handle);
+    List tuples=tupleMatch.getJoinedTuples();
+    for (int i=0; i < tuples.size(); i++) {
+      ReteTuple joined=(ReteTuple)tuples.get(i);
+      ((TupleSink)getTupleSinks().get(i)).retractTuple(joined,context,workingMemory);
     }
-    propagateRetractTuples(keys,context,workingMemory);
   }
 }

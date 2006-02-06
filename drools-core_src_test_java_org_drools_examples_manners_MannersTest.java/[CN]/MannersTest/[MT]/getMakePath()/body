@@ -24,18 +24,19 @@
   not.addChild(notPathColumn);
   rule.addPattern(not);
   Consequence consequence=new Consequence(){
-    public void invoke(    Activation activation) throws ConsequenceException {
+    public void invoke(    Activation activation,    WorkingMemory workingMemory) throws ConsequenceException {
       try {
         Rule rule=activation.getRule();
         Tuple tuple=activation.getTuple();
-        KnowledgeHelper drools=new DefaultKnowledgeHelper(rule,tuple);
-        int id=((Integer)tuple.get(seatingIdDeclaration)).intValue();
-        int seat=((Integer)tuple.get(pathSeatDeclaration)).intValue();
-        String guestName=(String)tuple.get(pathGuestNameDeclaration);
+        KnowledgeHelper drools=new DefaultKnowledgeHelper(rule,tuple,workingMemory);
+        int id=((Integer)drools.get(seatingIdDeclaration)).intValue();
+        int seat=((Integer)drools.get(pathSeatDeclaration)).intValue();
+        String guestName=(String)drools.get(pathGuestNameDeclaration);
         Path path=new Path(id,seat,guestName);
         drools.assertObject(path);
       }
  catch (      Exception e) {
+        e.printStackTrace();
         throw new ConsequenceException(e);
       }
     }

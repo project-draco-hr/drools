@@ -1,13 +1,18 @@
 {
-  FactHandleImpl f0=new FactHandleImpl(0);
-  this.node.assertObject("test2",f0,this.context,this.workingMemory);
-  assertEquals(0,this.memory.leftMemorySize());
-  assertEquals(1,this.memory.rightMemorySize());
-  this.node.assertObject("test0",f0,this.context,this.workingMemory);
-  assertEquals(1,this.memory.rightMemorySize());
-  FactHandleImpl f1=new FactHandleImpl(1);
-  this.node.assertObject("test1",f1,this.context,this.workingMemory);
-  assertEquals(2,this.memory.rightMemorySize());
-  assertEquals(0,this.memory.leftMemorySize());
+  FactHandleImpl f0=(FactHandleImpl)this.workingMemory.assertObject("test0");
+  this.node.assertObject(f0,this.context,this.workingMemory);
+  assertEquals(0,iteratorSize(this.memory.leftTupleIterator(this.context,this.workingMemory)));
+  assertEquals(1,iteratorSize(this.memory.rightObjectIterator()));
+  FactHandleImpl f1=(FactHandleImpl)this.workingMemory.assertObject("test1");
+  this.node.assertObject(f1,this.context,this.workingMemory);
+  assertEquals(2,iteratorSize(this.memory.rightObjectIterator()));
+  Iterator it=this.memory.rightObjectIterator();
+  Set set=new HashSet();
+  set.add(((ObjectMatches)it.next()).getFactHandle());
+  set.add(((ObjectMatches)it.next()).getFactHandle());
+  assertFalse(it.hasNext());
+  assertContains(f0,set);
+  assertContains(f1,set);
+  assertEquals(0,iteratorSize(this.memory.leftTupleIterator(this.context,this.workingMemory)));
   assertLength(0,this.sink.getAsserted());
 }

@@ -1,0 +1,16 @@
+{
+  BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  ObjectMatches objectMatches=memory.add(handle);
+  BetaNodeBinder binder=getJoinNodeBinder();
+  for (ReteTuple leftTuple=memory.getFirstTuple(); leftTuple != null; leftTuple=(ReteTuple)leftTuple.getNext()) {
+    if (binder.isAllowed(handle,leftTuple,workingMemory)) {
+      TupleMatch tupleMatch=objectMatches.add(leftTuple);
+      leftTuple.addMatch(handle,tupleMatch);
+      for (int i=0, size=getTupleSinks().size(); i < size; i++) {
+        ReteTuple joined=new ReteTuple(leftTuple,handle);
+        tupleMatch.addJoinedTuple(joined);
+        ((TupleSink)getTupleSinks().get(i)).assertTuple(joined,context,workingMemory);
+      }
+    }
+  }
+}

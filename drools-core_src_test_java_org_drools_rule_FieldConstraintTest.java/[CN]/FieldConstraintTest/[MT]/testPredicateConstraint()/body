@@ -1,0 +1,23 @@
+{
+  RuleBaseImpl ruleBase=new RuleBaseImpl();
+  WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  FieldExtractor priceExtractor=new ClassFieldExtractor(Cheese.class,Cheese.getIndex(Cheese.class,"price"));
+  Declaration price1Declaration=new Declaration(0,"price1",priceExtractor,0);
+  Declaration price2Declaration=new Declaration(1,"price2",priceExtractor,1);
+  PredicateExpression evaluator=new PredicateExpression(){
+    public boolean evaluate(    Tuple tuple,    FactHandle factHandle,    Declaration declaration,    Declaration[] declarations,    WorkingMemory workingMemory){
+      int price1=((Integer)declarations[0].getValue(workingMemory.getObject(tuple.get(declarations[0])))).intValue();
+      int price2=((Integer)declaration.getValue(workingMemory.getObject(factHandle))).intValue();
+      return (price2 == (price1 * 2));
+    }
+  }
+;
+  PredicateConstraint constraint1=new PredicateConstraint(evaluator,price2Declaration,new Declaration[]{price1Declaration});
+  Cheese cheddar0=new Cheese("cheddar",5);
+  FactHandle f0=workingMemory.assertObject(cheddar0);
+  InstrumentedReteTuple tuple=new InstrumentedReteTuple(0,f0,workingMemory);
+  Cheese cheddar1=new Cheese("cheddar",10);
+  FactHandle f1=workingMemory.assertObject(cheddar1);
+  tuple=new InstrumentedReteTuple(tuple,f1);
+  assertTrue(constraint1.isAllowed(f1,tuple,workingMemory));
+}
