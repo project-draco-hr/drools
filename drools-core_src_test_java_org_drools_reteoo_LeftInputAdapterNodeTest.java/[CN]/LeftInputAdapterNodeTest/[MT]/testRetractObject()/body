@@ -2,21 +2,14 @@
   PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
   WorkingMemoryImpl workingMemory=new WorkingMemoryImpl(new RuleBaseImpl());
   MockObjectSource source=new MockObjectSource(15);
-  LeftInputAdapterNode liaNode=new LeftInputAdapterNode(1,0,source);
+  LeftInputAdapterNode liaNode=new LeftInputAdapterNode(1,source);
   MockTupleSink sink=new MockTupleSink();
   liaNode.addTupleSink(sink);
-  Object string1="cheese";
-  FactHandleImpl handle1=new FactHandleImpl(1);
-  workingMemory.putObject(handle1,string1);
-  liaNode.assertObject(handle1,context,workingMemory);
+  FactHandleImpl f0=(FactHandleImpl)workingMemory.assertObject("f1");
+  liaNode.assertObject(f0,context,workingMemory);
   ReteTuple tuple=(ReteTuple)((Object[])sink.getAsserted().get(0))[0];
-  ReteTuple previous=new ReteTuple(0,handle1,workingMemory);
-  ReteTuple next=new ReteTuple(0,handle1,workingMemory);
-  tuple.setPrevious(previous);
-  tuple.setNext(next);
-  tuple.remove(context,workingMemory);
-  assertSame(previous.getNext(),next);
-  assertSame(next.getPrevious(),previous);
-  assertNull(tuple.getPrevious());
-  assertNull(tuple.getNext());
+  liaNode.retractObject(f0,context,workingMemory);
+  Map map=(Map)workingMemory.getNodeMemory(liaNode);
+  assertNull(map.get(f0));
+  assertSame(tuple,(ReteTuple)((Object[])sink.getRetracted().get(0))[0]);
 }
