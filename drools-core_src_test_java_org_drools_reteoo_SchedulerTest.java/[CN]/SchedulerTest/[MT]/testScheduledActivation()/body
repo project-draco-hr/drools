@@ -1,8 +1,8 @@
 {
   RuleBase ruleBase=new RuleBaseImpl();
   WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
-  final Scheduler scheduler=Scheduler.getInstance();
   final Rule rule=new Rule("test-rule");
+  final TerminalNode node=new TerminalNode(1,new MockTupleSource(2),rule);
   final List data=new ArrayList();
   rule.setConsequence(new org.drools.spi.Consequence(){
     public void invoke(    Activation activation,    WorkingMemory workingMemory){
@@ -18,10 +18,9 @@
 ;
   rule.setDuration(duration);
   PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
-  ReteTuple tuple=new ReteTuple(0,new FactHandleImpl(1),workingMemory);
+  ReteTuple tuple=new ReteTuple(new FactHandleImpl(1));
   assertEquals(0,data.size());
-  Agenda agenda=workingMemory.getAgenda();
-  agenda.addToAgenda(tuple,context,rule);
+  node.assertTuple(tuple,context,(WorkingMemoryImpl)workingMemory);
   Thread.sleep(300);
   assertEquals(1,data.size());
 }

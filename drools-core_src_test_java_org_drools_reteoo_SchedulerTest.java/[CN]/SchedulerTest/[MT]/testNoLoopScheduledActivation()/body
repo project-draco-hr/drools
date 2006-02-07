@@ -2,9 +2,9 @@
   RuleBase ruleBase=new RuleBaseImpl();
   final WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
   final Agenda agenda=workingMemory.getAgenda();
-  final Scheduler scheduler=Scheduler.getInstance();
   final Rule rule=new Rule("test-rule");
   final List data=new ArrayList();
+  final TerminalNode node=new TerminalNode(1,new MockTupleSource(2),rule);
   Duration duration=new Duration(){
     public long getDuration(    Tuple tuple){
       return 100;
@@ -17,19 +17,17 @@
     public void invoke(    Activation activation,    WorkingMemory workingMemory){
       if (data.size() < 5) {
         PropagationContext context2=new PropagationContextImpl(0,0,rule,activation);
-        ReteTuple tuple2=new ReteTuple(0,new FactHandleImpl(2),workingMemory);
-        agenda.addToAgenda(tuple2,context2,rule);
+        ReteTuple tuple2=new ReteTuple(new FactHandleImpl(2));
+        node.assertTuple(tuple2,context2,(WorkingMemoryImpl)workingMemory);
       }
       data.add("tested");
     }
   }
 );
   PropagationContext context1=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
-  ReteTuple tuple1=new ReteTuple(0,new FactHandleImpl(1),workingMemory);
-  agenda.addToAgenda(tuple1,context1,rule);
-  final AgendaItem item=(AgendaItem)agenda.getScheduledItems().values().toArray()[0];
+  ReteTuple tuple1=new ReteTuple(new FactHandleImpl(1));
+  node.assertTuple(tuple1,context1,(WorkingMemoryImpl)workingMemory);
   assertEquals(0,data.size());
-  scheduler.scheduleAgendaItem(item,workingMemory);
   Thread.sleep(500);
-  assertEquals(2,data.size());
+  assertEquals(1,data.size());
 }
