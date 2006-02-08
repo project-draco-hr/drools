@@ -1,0 +1,30 @@
+{
+  removePropertyChangeListener(handle);
+  PropagationContext propagationContext=new PropagationContextImpl(++this.propagationIdCounter,PropagationContext.RETRACTION,rule,activation);
+  Object object=((FactHandleImpl)handle).getObject();
+  FactHandleImpl retractedFactHandle=new FactHandleImpl(this.handleFactory.getNextId(),object);
+  for (Iterator it=this.getFactTablesList(object.getClass()).iterator(); it.hasNext(); ) {
+    ((FactTable)it.next()).remove(handle);
+  }
+  for (Iterator it=this.getShadowFactTablesList(object.getClass()).iterator(); it.hasNext(); ) {
+    ((FactTable)it.next()).add(retractedFactHandle);
+  }
+  this.removeLeapsTokenFromStack(new Token(this,(FactHandleImpl)handle,Token.ASSERTED));
+  Token token=new Token(this,retractedFactHandle,Token.RETRACTED);
+  this.pushTokenOnStack(token);
+  Object oldObject=removeObject(handle);
+  if (removeLogical) {
+    FactHandleImpl handleImpl=(FactHandleImpl)handle;
+    Set activations=(Set)this.justified.remove(handleImpl.getId());
+    if (activations != null) {
+      for (Iterator it=activations.iterator(); it.hasNext(); ) {
+        this.justifiers.remove(it.next());
+      }
+    }
+    this.equalsMap.remove(oldObject);
+  }
+  if (updateEqualsMap) {
+    this.equalsMap.remove(oldObject);
+  }
+  this.workingMemoryEventSupport.fireObjectRetracted(propagationContext,handle,oldObject);
+}

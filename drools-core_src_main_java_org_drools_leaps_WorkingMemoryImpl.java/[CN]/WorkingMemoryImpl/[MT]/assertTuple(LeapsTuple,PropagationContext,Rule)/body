@@ -1,0 +1,35 @@
+{
+  if (rule.getNoLoop() && rule.equals(context.getRuleOrigin())) {
+    return;
+  }
+  Agenda agenda=this.getAgenda();
+  Duration dur=rule.getDuration();
+  if (dur != null && dur.getDuration(tuple) > 0) {
+    ScheduledAgendaItem item=new ScheduledAgendaItem(context.getPropagationNumber(),tuple,this.getAgenda(),context,rule);
+    agenda.scheduleItem(item);
+    tuple.setActivation(item);
+    this.getAgendaEventSupport().fireActivationCreated(item);
+  }
+ else {
+    AgendaGroupImpl agendaGroup=null;
+    if (rule.getAgendaGroup() == null || rule.getAgendaGroup().equals("") || rule.getAgendaGroup().equals(AgendaGroup.MAIN)) {
+      agendaGroup=(AgendaGroupImpl)agenda.getAgendaGroup(AgendaGroup.MAIN);
+    }
+ else {
+      agendaGroup=(AgendaGroupImpl)agenda.getAgendaGroup(rule.getAgendaGroup());
+    }
+    if (agendaGroup == null) {
+      agendaGroup=new AgendaGroupImpl(rule.getAgendaGroup());
+      this.getAgenda().addAgendaGroup(agendaGroup);
+    }
+    if (rule.getAutoFocus()) {
+      agenda.setFocus(agendaGroup);
+    }
+    ActivationQueue queue=agendaGroup.getActivationQueue(rule.getSalience());
+    AgendaItem item=new AgendaItem(context.getPropagationNumber(),tuple,context,rule,queue);
+    agendaGroup.getActivationQueue(rule.getSalience()).add(item);
+    agendaGroup.addToAgenda(queue);
+    tuple.setActivation(item);
+    this.getAgendaEventSupport().fireActivationCreated(item);
+  }
+}

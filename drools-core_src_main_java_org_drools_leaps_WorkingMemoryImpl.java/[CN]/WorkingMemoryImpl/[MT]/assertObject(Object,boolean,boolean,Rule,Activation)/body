@@ -1,0 +1,64 @@
+{
+  FactHandleImpl handle=(FactHandleImpl)this.identityMap.get(object);
+  if ((handle != null) && (logical)) {
+    return handle;
+  }
+  Object logicalState=this.equalsMap.get(object);
+  if ((handle != null) && (!logical) && logicalState == WorkingMemoryImpl.STATED) {
+    return handle;
+  }
+  if (!logical) {
+    if (logicalState instanceof FactHandleImpl) {
+      handle=(FactHandleImpl)logicalState;
+      Set activationList=(Set)this.justified.remove(((FactHandleImpl)handle).getId());
+      for (Iterator it=activationList.iterator(); it.hasNext(); ) {
+        Activation eachActivation=(Activation)it.next();
+        Set handles=(Set)this.justifiers.get(eachActivation);
+        handles.remove(handle);
+        if (handles.isEmpty()) {
+          this.justifiers.remove(eachActivation);
+        }
+      }
+    }
+ else {
+      handle=(FactHandleImpl)newFactHandle(object);
+    }
+    putObject(handle,object);
+    this.equalsMap.put(object,WorkingMemoryImpl.STATED);
+    if (dynamic) {
+      addPropertyChangeListener(object);
+    }
+  }
+ else {
+    if (logicalState == WorkingMemoryImpl.STATED) {
+      return null;
+    }
+    handle=(FactHandleImpl)logicalState;
+    if (handle == null) {
+      handle=(FactHandleImpl)newFactHandle(object);
+      putObject(handle,object);
+      this.equalsMap.put(object,handle);
+    }
+    Set activationList=(Set)this.justified.get(((FactHandleImpl)handle).getId());
+    if (activationList == null) {
+      activationList=new HashSet();
+      this.justified.put(((FactHandleImpl)handle).getId(),activationList);
+    }
+    activationList.add(activation);
+    Set handles=(Set)this.justifiers.get(activation);
+    if (handles == null) {
+      handles=new HashSet();
+      this.justifiers.put(activation,handles);
+    }
+    handles.add(handle);
+  }
+  PropagationContext propagationContext=new PropagationContextImpl(++this.propagationIdCounter,PropagationContext.ASSERTION,rule,activation);
+  List tablesList=this.getFactTablesList(object.getClass());
+  for (Iterator it=tablesList.iterator(); it.hasNext(); ) {
+    ((FactTable)it.next()).add(handle);
+  }
+  Token token=new Token(this,(FactHandleImpl)handle,Token.ASSERTED);
+  this.pushTokenOnStack(token);
+  this.workingMemoryEventSupport.fireObjectAsserted(propagationContext,handle,object);
+  return handle;
+}
