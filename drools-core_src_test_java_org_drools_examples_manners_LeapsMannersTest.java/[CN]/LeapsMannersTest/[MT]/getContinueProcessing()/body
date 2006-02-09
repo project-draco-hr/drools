@@ -1,0 +1,26 @@
+{
+  final Rule rule=new Rule("continueProcessng");
+  Column contextColumn=new Column(0,contextType,"context");
+  contextColumn.addConstraint(getLiteralConstraint(contextColumn,"state",new Integer(Context.CHECK_DONE),this.integerEqualEvaluator));
+  rule.addPattern(contextColumn);
+  final Declaration contextDeclaration=rule.getDeclaration("context");
+  Consequence consequence=new Consequence(){
+    public void invoke(    Activation activation,    WorkingMemory workingMemory) throws ConsequenceException {
+      try {
+        Rule rule=activation.getRule();
+        Tuple tuple=activation.getTuple();
+        KnowledgeHelper drools=new DefaultKnowledgeHelper(rule,tuple,workingMemory);
+        Context context=(Context)drools.get(contextDeclaration);
+        context.setState(Context.ASSIGN_SEATS);
+        drools.modifyObject(tuple.get(contextDeclaration),context);
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        throw new ConsequenceException(e);
+      }
+    }
+  }
+;
+  rule.setConsequence(consequence);
+  return rule;
+}

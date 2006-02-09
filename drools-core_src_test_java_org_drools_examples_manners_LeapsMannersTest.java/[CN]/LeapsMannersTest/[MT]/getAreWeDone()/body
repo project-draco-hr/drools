@@ -1,0 +1,33 @@
+{
+  final Rule rule=new Rule("areWeDone");
+  Column contextColumn=new Column(0,contextType,"context");
+  contextColumn.addConstraint(getLiteralConstraint(contextColumn,"state",new Integer(Context.CHECK_DONE),this.integerEqualEvaluator));
+  rule.addPattern(contextColumn);
+  final Declaration contextDeclaration=rule.getDeclaration("context");
+  Column lastSeatColumn=new Column(1,lastSeatType);
+  lastSeatColumn.addConstraint(getFieldBinding(lastSeatColumn,"seat","lastSeat"));
+  rule.addPattern(lastSeatColumn);
+  final Declaration lastSeatDeclaration=rule.getDeclaration("lastSeat");
+  Column seatingColumn=new Column(2,seatingType,null);
+  seatingColumn.addConstraint(getBoundVariableConstraint(seatingColumn,"rightSeat",lastSeatDeclaration,integerEqualEvaluator));
+  rule.addPattern(seatingColumn);
+  Consequence consequence=new Consequence(){
+    public void invoke(    Activation activation,    WorkingMemory workingMemory) throws ConsequenceException {
+      try {
+        Rule rule=activation.getRule();
+        Tuple tuple=activation.getTuple();
+        KnowledgeHelper drools=new DefaultKnowledgeHelper(rule,tuple,workingMemory);
+        Context context=(Context)drools.get(contextDeclaration);
+        context.setState(Context.PRINT_RESULTS);
+        drools.modifyObject(tuple.get(contextDeclaration),context);
+        System.err.println("We Are Done!!!");
+      }
+ catch (      Exception e) {
+        throw new ConsequenceException(e);
+      }
+    }
+  }
+;
+  rule.setConsequence(consequence);
+  return rule;
+}
