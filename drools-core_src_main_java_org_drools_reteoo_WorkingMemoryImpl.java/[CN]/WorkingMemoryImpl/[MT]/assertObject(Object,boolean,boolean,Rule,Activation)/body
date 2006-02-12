@@ -10,15 +10,7 @@
   if (!logical) {
     if (logicalState instanceof FactHandleImpl) {
       handle=(FactHandleImpl)logicalState;
-      Set activationList=(Set)this.justified.remove(((FactHandleImpl)handle).getId());
-      for (Iterator it=activationList.iterator(); it.hasNext(); ) {
-        Activation eachActivation=(Activation)it.next();
-        Set handles=(Set)this.justifiers.get(eachActivation);
-        handles.remove(handle);
-        if (handles.isEmpty()) {
-          this.justifiers.remove(eachActivation);
-        }
-      }
+      removeLogicalDependencies(handle);
     }
  else {
       handle=(FactHandleImpl)newFactHandle();
@@ -39,18 +31,7 @@
       putObject(handle,object);
       this.equalsMap.put(object,handle);
     }
-    Set activationList=(Set)this.justified.get(((FactHandleImpl)handle).getId());
-    if (activationList == null) {
-      activationList=new HashSet();
-      this.justified.put(((FactHandleImpl)handle).getId(),activationList);
-    }
-    activationList.add(activation);
-    Set handles=(Set)this.justifiers.get(activation);
-    if (handles == null) {
-      handles=new HashSet();
-      this.justifiers.put(activation,handles);
-    }
-    handles.add(handle);
+    addLogicalDependency(handle,activation,activation.getPropagationContext(),rule);
   }
   handle.setObject(object);
   PropagationContext propagationContext=new PropagationContextImpl(++this.propagationIdCounter,PropagationContext.ASSERTION,rule,activation);

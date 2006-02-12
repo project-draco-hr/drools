@@ -3,6 +3,7 @@
   WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
   final Agenda agenda=workingMemory.getAgenda();
   final Rule rule=new Rule("test-rule");
+  TerminalNode node=new TerminalNode(3,new MockTupleSource(2),rule);
   final Map results=new HashMap();
   rule.setConsequence(new org.drools.spi.Consequence(){
     public void invoke(    Activation activation,    WorkingMemory workingMemory){
@@ -10,9 +11,9 @@
     }
   }
 );
-  ReteTuple tuple=new ReteTuple(0,new FactHandleImpl(1),workingMemory);
-  final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule,new AgendaItem(0,tuple,this.initContext,rule));
-  assertEquals(0,agenda.focusSize());
+  ReteTuple tuple=new ReteTuple(new FactHandleImpl(1));
+  final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule,null);
+  assertEquals(0,agenda.getFocus().size());
   AgendaFilter filterTrue=new AgendaFilter(){
     public boolean accept(    Activation item){
       return true;
@@ -20,10 +21,10 @@
   }
 ;
   rule.setNoLoop(false);
-  agenda.addToAgenda(tuple,context,rule);
-  assertEquals(1,agenda.focusSize());
+  node.assertTuple(tuple,context,workingMemory);
+  assertEquals(1,agenda.getFocus().size());
   agenda.fireNextItem(filterTrue);
-  assertEquals(0,agenda.focusSize());
+  assertEquals(0,agenda.getFocus().size());
   assertEquals(new Boolean(true),results.get("fired"));
   agenda.clearAgenda();
   results.clear();
@@ -34,9 +35,9 @@
   }
 ;
   rule.setNoLoop(false);
-  agenda.addToAgenda(tuple,context,rule);
-  assertEquals(1,agenda.focusSize());
+  node.assertTuple(tuple,context,workingMemory);
+  assertEquals(1,agenda.getFocus().size());
   agenda.fireNextItem(filterFalse);
-  assertEquals(0,agenda.focusSize());
+  assertEquals(0,agenda.getFocus().size());
   assertNull(results.get("fired"));
 }

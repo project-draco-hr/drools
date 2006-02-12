@@ -1,20 +1,12 @@
 {
   AgendaGroupImpl group=(AgendaGroupImpl)getNextFocus();
-  if (group.getPriorityQueue().isEmpty()) {
+  if (group == null) {
     return false;
   }
   ActivationQueue queue=(ActivationQueue)group.getPriorityQueue().get();
-  while (!group.getPriorityQueue().isEmpty() && queue.isEmpty()) {
-    queue=(ActivationQueue)group.getPriorityQueue().remove();
-    queue.setActivate(false);
+  Activation item=queue.remove();
+  if (filter == null || filter.accept(item)) {
+    fireActivation(item);
   }
-  boolean fired=false;
-  if (!queue.isEmpty()) {
-    Activation item=queue.remove();
-    if (filter == null || filter.accept(item)) {
-      fireActivation(item);
-    }
-    fired=true;
-  }
-  return fired;
+  return true;
 }

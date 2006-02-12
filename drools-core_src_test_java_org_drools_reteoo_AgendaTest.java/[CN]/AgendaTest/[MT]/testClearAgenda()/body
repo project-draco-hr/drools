@@ -3,17 +3,18 @@
   WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
   final Agenda agenda=workingMemory.getAgenda();
   final Rule rule1=new Rule("test-rule1");
-  ReteTuple tuple=new ReteTuple(0,new FactHandleImpl(1),workingMemory);
-  final PropagationContext context1=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule1,new AgendaItem(0,tuple,this.initContext,rule1));
+  TerminalNode node1=new TerminalNode(3,new MockTupleSource(2),rule1);
+  ReteTuple tuple=new ReteTuple(new FactHandleImpl(1));
+  final PropagationContext context1=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule1,null);
   rule1.setConsequence(new org.drools.spi.Consequence(){
     public void invoke(    Activation activation,    WorkingMemory workingMemory){
     }
   }
 );
-  assertEquals(0,agenda.focusSize());
+  assertEquals(0,agenda.getFocus().size());
   rule1.setNoLoop(false);
-  agenda.addToAgenda(tuple,context1,rule1);
-  assertEquals(1,agenda.focusSize());
+  node1.assertTuple(tuple,context1,workingMemory);
+  assertEquals(1,agenda.getFocus().size());
   agenda.clearAgenda();
-  assertEquals(0,agenda.focusSize());
+  assertEquals(0,agenda.getFocus().size());
 }

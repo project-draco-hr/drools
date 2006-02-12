@@ -5,14 +5,9 @@
   for (Iterator it=memory.rightObjectIterator(); it.hasNext(); ) {
     ObjectMatches objectMatches=(ObjectMatches)it.next();
     FactHandleImpl handle=objectMatches.getFactHandle();
-    if (binder.isAllowed(handle,leftTuple,workingMemory)) {
-      TupleMatch tupleMatch=objectMatches.add(leftTuple);
-      leftTuple.addMatch(handle,tupleMatch);
-      for (int i=0, size=getTupleSinks().size(); i < size; i++) {
-        ReteTuple joined=new ReteTuple(leftTuple,handle);
-        tupleMatch.addJoinedTuple(joined);
-        ((TupleSink)getTupleSinks().get(i)).assertTuple(joined,context,workingMemory);
-      }
+    TupleMatch tupleMatch=attemptJoin(leftTuple,handle,objectMatches,binder,workingMemory);
+    if (tupleMatch != null) {
+      propagateAssertTuple(new ReteTuple(leftTuple,handle),tupleMatch,context,workingMemory);
     }
   }
 }

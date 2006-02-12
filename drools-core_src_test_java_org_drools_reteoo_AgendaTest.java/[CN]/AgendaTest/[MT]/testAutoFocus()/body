@@ -2,27 +2,29 @@
   RuleBase ruleBase=new RuleBaseImpl();
   WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
   final Agenda agenda=workingMemory.getAgenda();
-  AgendaGroupImpl agendaGroup=new AgendaGroupImpl("agendaGroup",ruleBase.getConflictResolver());
+  AgendaGroupImpl agendaGroup=new AgendaGroupImpl("agendaGroup");
   agenda.addAgendaGroup(agendaGroup);
+  ActivationQueue queue=agendaGroup.getActivationQueue(0);
   Consequence consequence=new Consequence(){
     public void invoke(    Activation activation,    WorkingMemory workingMemory){
     }
   }
 ;
-  ReteTuple tuple=new ReteTuple(0,new FactHandleImpl(1),workingMemory);
+  ReteTuple tuple=new ReteTuple(new FactHandleImpl(1));
   Rule rule=new Rule("test-rule","agendaGroup");
+  final TerminalNode node=new TerminalNode(2,new MockTupleSource(2),rule);
   rule.setConsequence(consequence);
-  PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule,new AgendaItem(0,tuple,this.initContext,rule));
+  PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule,null);
   rule.setAutoFocus(false);
-  agenda.addToAgenda(tuple,context,rule);
-  assertEquals(1,agendaGroup.getPriorityQueue().size());
+  node.assertTuple(tuple,context,workingMemory);
+  assertEquals(1,queue.size());
   agenda.fireNextItem(null);
-  assertEquals(1,agendaGroup.getPriorityQueue().size());
+  assertEquals(1,queue.size());
   agenda.clearAgenda();
-  assertEquals(0,agendaGroup.getPriorityQueue().size());
+  assertEquals(0,queue.size());
   rule.setAutoFocus(true);
-  agenda.addToAgenda(tuple,context,rule);
-  assertEquals(1,agendaGroup.getPriorityQueue().size());
+  node.assertTuple(tuple,context,workingMemory);
+  assertEquals(1,queue.size());
   agenda.fireNextItem(null);
-  assertEquals(0,agendaGroup.getPriorityQueue().size());
+  assertEquals(0,queue.size());
 }

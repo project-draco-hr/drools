@@ -1,0 +1,26 @@
+{
+  BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  ObjectMatches objectMatches=(ObjectMatches)memory.getRightFactHandleMemory().remove(handle);
+  memory.getRightFactHandleMemory().put(handle,objectMatches);
+  TupleMatch tupleMatch=objectMatches.getFirstTupleMatch();
+  BetaNodeBinder binder=getJoinNodeBinder();
+  for (ReteTuple leftTuple=memory.getFirstTuple(); leftTuple != null; leftTuple=(ReteTuple)leftTuple.getNext()) {
+    if (tupleMatch != null && tupleMatch.getTuple() == leftTuple) {
+      if (binder.isAllowed(handle,leftTuple,workingMemory)) {
+        propagateModifyTuple(tupleMatch,context,workingMemory);
+      }
+ else {
+        leftTuple.removeMatch(handle);
+        objectMatches.remove(tupleMatch);
+        propagateRetractTuple(tupleMatch,context,workingMemory);
+      }
+      tupleMatch=(TupleMatch)tupleMatch.getNext();
+    }
+ else {
+      TupleMatch newTupleMatch=attemptJoin(leftTuple,handle,objectMatches,binder,workingMemory);
+      if (newTupleMatch != null) {
+        propagateAssertTuple(new ReteTuple(leftTuple,handle),newTupleMatch,context,workingMemory);
+      }
+    }
+  }
+}

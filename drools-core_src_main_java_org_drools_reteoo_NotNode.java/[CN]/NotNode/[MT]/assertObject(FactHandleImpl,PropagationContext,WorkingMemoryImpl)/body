@@ -3,19 +3,10 @@
   ObjectMatches objectMatches=memory.add(handle);
   BetaNodeBinder binder=getJoinNodeBinder();
   for (ReteTuple leftTuple=memory.getFirstTuple(); leftTuple != null; leftTuple=(ReteTuple)leftTuple.getNext()) {
-    if (binder.isAllowed(handle,leftTuple,workingMemory)) {
-      TupleMatch tupleMatch=objectMatches.add(leftTuple);
-      int previousSize=leftTuple.matchesSize();
-      leftTuple.addMatch(handle,tupleMatch);
-      if (previousSize == 0 && leftTuple.matchesSize() != 0) {
-        LinkedList list=leftTuple.getLinkedTuples();
-        if (list != null) {
-          int i=0;
-          for (LinkedListNode node=list.removeFirst(); node != null; node=list.removeFirst()) {
-            ((TupleSink)getTupleSinks().get(i++)).retractTuple((ReteTuple)((LinkedListNodeWrapper)node).getNode(),context,workingMemory);
-          }
-        }
-      }
+    int previousSize=leftTuple.matchesSize();
+    attemptJoin(leftTuple,handle,objectMatches,binder,workingMemory);
+    if (previousSize == 0 && leftTuple.matchesSize() != 0) {
+      propagateRetractTuple(leftTuple,context,workingMemory);
     }
   }
 }
