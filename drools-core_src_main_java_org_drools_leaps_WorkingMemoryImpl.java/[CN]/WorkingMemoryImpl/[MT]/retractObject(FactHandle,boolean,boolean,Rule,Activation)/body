@@ -1,17 +1,36 @@
 {
   removePropertyChangeListener(handle);
   PropagationContext propagationContext=new PropagationContextImpl(++this.propagationIdCounter,PropagationContext.RETRACTION,rule,activation);
-  Object object=((FactHandleImpl)handle).getObject();
-  FactHandleImpl retractedFactHandle=new FactHandleImpl(this.handleFactory.getNextId(),object);
-  for (Iterator it=this.getFactTablesList(object.getClass()).iterator(); it.hasNext(); ) {
-    ((FactTable)it.next()).remove(handle);
+  Set pendingActivations=(Set)this.blockingFactHandles.remove(handle);
+  if (pendingActivations != null) {
+    for (Iterator it=pendingActivations.iterator(); it.hasNext(); ) {
+      PendingActivation item=(PendingActivation)it.next();
+      item.decrementBlockingFactsCount();
+      if (!item.containsBlockingFacts()) {
+        boolean allPresent=true;
+        FactHandleImpl[] factHandles=(FactHandleImpl[])item.getTuple().getFactHandles();
+        for (int i=0; i < factHandles.length && allPresent; i++) {
+          allPresent=this.objects.containsKey(factHandles[i].getId());
+        }
+        if (allPresent) {
+          this.assertTuple(item.getTuple(),new HashSet(),item.getContext(),item.getRule());
+        }
+      }
+    }
   }
-  for (Iterator it=this.getShadowFactTablesList(object.getClass()).iterator(); it.hasNext(); ) {
-    ((FactTable)it.next()).add(retractedFactHandle);
+  Set postedActivations=(Set)this.factHandlesWithActivations.remove(handle);
+  if (postedActivations != null) {
+    for (Iterator it=postedActivations.iterator(); it.hasNext(); ) {
+      PostedActivation item=(PostedActivation)it.next();
+      if (!item.isWasRemoved()) {
+        if (!((LeapsTuple)((AgendaItem)item.getActivation()).getTuple()).isActivationNull()) {
+          item.getActivation().remove();
+        }
+        item.setWasRemoved(true);
+      }
+    }
   }
-  this.removeLeapsTokenFromStack(new Token(this,(FactHandleImpl)handle,Token.ASSERTED));
-  Token token=new Token(this,retractedFactHandle,Token.RETRACTED);
-  this.pushTokenOnStack(token);
+  this.stack.remove(new Token(this,(FactHandleImpl)handle));
   Object oldObject=removeObject(handle);
   if (removeLogical) {
     FactHandleImpl handleImpl=(FactHandleImpl)handle;

@@ -1,16 +1,13 @@
 {
-synchronized (lock) {
+synchronized (this.lock) {
     this.addedRulesAfterLastFire=true;
     LeapsRule rule;
     RuleHandle ruleHandle;
     for (Iterator it=rules.iterator(); it.hasNext(); ) {
       rule=(LeapsRule)it.next();
       for (int i=0; i < rule.getNumberOfColumns(); i++) {
-        ruleHandle=new RuleHandle(this.handleFactory.getNextId(),rule,i,(ClassObjectType)((ColumnConstraints)rule.getColumnConstraintsAtPosition(i)).getColumn().getObjectType(),true);
-        this.addRuleHandle(ruleHandle);
-      }
-      for (int i=0; i < rule.getNumberOfNotColumns(); i++) {
-        ruleHandle=new RuleHandle(this.handleFactory.getNextId(),rule,i,(ClassObjectType)((ColumnConstraints)rule.getNotColumnConstraintsAtPosition(i)).getColumn().getObjectType(),false);
+        ruleHandle=new RuleHandle(this.handleFactory.getNextId(),rule,i);
+        this.getFactTable(((ClassObjectType)((ColumnConstraints)rule.getColumnConstraintsAtPosition(i)).getColumn().getObjectType()).getClassType()).addRule(this,ruleHandle);
       }
     }
   }

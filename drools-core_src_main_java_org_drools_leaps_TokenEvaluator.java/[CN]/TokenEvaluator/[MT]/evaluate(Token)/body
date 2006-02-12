@@ -1,0 +1,87 @@
+{
+  WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)token.getWorkingMemory();
+  RuleHandle ruleHandle=token.getCurrentRuleHandle();
+  TableIterator[] iterators=new TableIterator[ruleHandle.getLeapsRule().getNumberOfColumns()];
+  int numberOfColumns=ruleHandle.getLeapsRule().getNumberOfColumns();
+  for (int i=0; i < numberOfColumns; i++) {
+    if (i == ruleHandle.getDominantPosition()) {
+      iterators[i]=TableIterator.baseFactIterator(token.getDominantFactHandle());
+    }
+ else {
+      iterators[i]=workingMemory.getFactTable(ruleHandle.getLeapsRule().getColumnClassObjectTypeAtPosition(i).getClassType()).tailIterator(token.getDominantFactHandle(),(token.isResume() ? token.getFactHandleAtPosition(i) : token.getDominantFactHandle()));
+    }
+  }
+  boolean someIteratorsEmpty=false;
+  boolean doReset=false;
+  boolean skip=token.isResume();
+  TableIterator currentIterator;
+  for (int i=0; i < numberOfColumns && !someIteratorsEmpty; i++) {
+    currentIterator=iterators[i];
+    if (currentIterator.isEmpty()) {
+      someIteratorsEmpty=true;
+    }
+ else {
+      if (!doReset) {
+        if (skip && currentIterator.hasNext() && !currentIterator.peekNext().equals(token.getFactHandleAtPosition(i))) {
+          skip=false;
+          doReset=true;
+        }
+      }
+ else {
+        currentIterator.reset();
+      }
+    }
+  }
+  if (someIteratorsEmpty) {
+    throw new NoMatchesFoundException();
+  }
+  int jj=0;
+  boolean found=false;
+  boolean done=false;
+  while (!done) {
+    currentIterator=iterators[jj];
+    if (!currentIterator.hasNext()) {
+      if (jj == 0) {
+        done=true;
+      }
+ else {
+        currentIterator.reset();
+        token.setCurrentFactHandleAtPosition(jj,(FactHandleImpl)null);
+        jj=jj - 1;
+        if (skip) {
+          skip=false;
+        }
+      }
+    }
+ else {
+      currentIterator.next();
+      token.setCurrentFactHandleAtPosition(jj,(FactHandleImpl)iterators[jj].current());
+      if (TokenEvaluator.evaluatePositiveConditions(token,jj,workingMemory)) {
+        if (jj == (numberOfColumns - 1)) {
+          if (!skip) {
+            if (TokenEvaluator.evaluateExistsConditions(token,workingMemory)) {
+              PropagationContextImpl propagationContext=new PropagationContextImpl(workingMemory.increamentPropagationIdCounter(),PropagationContext.ASSERTION,(Rule)null,(Activation)null);
+              workingMemory.assertTuple(token.getTuple(),TokenEvaluator.evaluateNotConditions(token,workingMemory),propagationContext,token.getCurrentRuleHandle().getLeapsRule().getRule());
+              done=true;
+              found=true;
+            }
+          }
+ else {
+            skip=false;
+          }
+        }
+ else {
+          jj=jj + 1;
+        }
+      }
+ else {
+        if (skip) {
+          skip=false;
+        }
+      }
+    }
+  }
+  if (!found) {
+    throw new NoMatchesFoundException();
+  }
+}

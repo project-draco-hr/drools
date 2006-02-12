@@ -2,25 +2,23 @@
   if (!this.firing) {
     try {
       this.firing=true;
-      Token token;
-      boolean done;
       try {
-        while (!this.isStackEmpty()) {
-          token=this.getTopLeapsTokenFromStack();
-          done=false;
+        while (!this.stack.isEmpty()) {
+          Token token=(Token)this.stack.peek();
+          boolean done=false;
           while (!done) {
             if (!token.isResume()) {
               if (token.hasNextRuleHandle()) {
                 token.nextRuleHandle();
               }
  else {
-                this.popTopTokenFromStack(token);
+                this.stack.remove(token);
                 done=true;
               }
             }
             if (!done) {
               try {
-                this.seek(token);
+                TokenEvaluator.evaluate(token);
                 token.setResume(true);
                 done=true;
               }
@@ -44,7 +42,7 @@ catch (              Exception e) {
       if (this.addedRulesAfterLastFire) {
         this.addedRulesAfterLastFire=false;
         this.idLastFireAllAt=this.handleFactory.getNextId();
-        for (Enumeration e=this.tables.elements(); e.hasMoreElements(); ) {
+        for (Enumeration e=this.factTables.elements(); e.hasMoreElements(); ) {
           ((FactTable)e.nextElement()).setReseededStack(true);
         }
       }

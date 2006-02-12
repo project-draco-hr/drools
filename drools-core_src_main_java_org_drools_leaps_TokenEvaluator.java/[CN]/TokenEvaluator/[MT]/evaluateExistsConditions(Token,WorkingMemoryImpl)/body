@@ -1,0 +1,22 @@
+{
+  if (!token.getCurrentRuleHandle().getLeapsRule().containsExistsColumns()) {
+    return true;
+  }
+ else {
+    boolean found=false;
+    ColumnConstraints constraints;
+    TableIterator tableIterator;
+    FactHandleImpl factHandle;
+    for (Iterator it=token.getCurrentRuleHandle().getLeapsRule().getExistsColumnsIterator(); it.hasNext() && !found; ) {
+      constraints=(ColumnConstraints)it.next();
+      tableIterator=workingMemory.getFactTable(((ClassObjectType)constraints.getColumn().getObjectType()).getClassType()).iterator();
+      while (tableIterator.hasNext() && !found) {
+        factHandle=(FactHandleImpl)tableIterator.next();
+        if (constraints.evaluateAlphas(factHandle,token,workingMemory)) {
+          found=constraints.getBeta().isAllowed(factHandle,token,workingMemory);
+        }
+      }
+    }
+    return found;
+  }
+}

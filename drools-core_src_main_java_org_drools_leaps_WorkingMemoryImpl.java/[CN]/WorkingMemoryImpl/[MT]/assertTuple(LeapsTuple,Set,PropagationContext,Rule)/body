@@ -1,0 +1,62 @@
+{
+  if (rule.getNoLoop() && rule.equals(context.getRuleOrigin())) {
+    return;
+  }
+  if (blockingFactHandles.size() != 0) {
+    FactHandleImpl factHandle;
+    PendingActivation item=new PendingActivation(tuple,blockingFactHandles.size(),context,rule);
+    Set pendingActivations;
+    for (Iterator it=blockingFactHandles.iterator(); it.hasNext(); ) {
+      factHandle=(FactHandleImpl)it.next();
+      pendingActivations=(Set)this.blockingFactHandles.get(factHandle);
+      if (pendingActivations == null) {
+        pendingActivations=new HashSet();
+        this.blockingFactHandles.put(factHandle,pendingActivations);
+      }
+      pendingActivations.add(item);
+    }
+    return;
+  }
+  Duration dur=rule.getDuration();
+  if (dur != null && dur.getDuration(tuple) > 0) {
+    ScheduledAgendaItem item=new ScheduledAgendaItem(context.getPropagationNumber(),tuple,this.agenda,context,rule);
+    this.agenda.scheduleItem(item);
+    tuple.setActivation(item);
+    this.getAgendaEventSupport().fireActivationCreated(item);
+  }
+ else {
+    AgendaGroupImpl agendaGroup=null;
+    if (rule.getAgendaGroup() == null || rule.getAgendaGroup().equals("") || rule.getAgendaGroup().equals(AgendaGroup.MAIN)) {
+      agendaGroup=(AgendaGroupImpl)this.agenda.getAgendaGroup(AgendaGroup.MAIN);
+    }
+ else {
+      agendaGroup=(AgendaGroupImpl)this.agenda.getAgendaGroup(rule.getAgendaGroup());
+    }
+    if (agendaGroup == null) {
+      agendaGroup=new AgendaGroupImpl(rule.getAgendaGroup());
+      this.agenda.addAgendaGroup(agendaGroup);
+    }
+    if (rule.getAutoFocus()) {
+      this.agenda.setFocus(agendaGroup);
+    }
+    ActivationQueue queue=agendaGroup.getActivationQueue(rule.getSalience());
+    AgendaItem item=new AgendaItem(context.getPropagationNumber(),tuple,context,rule,queue);
+    FactHandleImpl factHandle;
+    PostedActivation postedActivation=new PostedActivation(item);
+    Set postedActivations;
+    FactHandleImpl[] factHandles=(FactHandleImpl[])tuple.getFactHandles();
+    for (int i=0; i < factHandles.length; i++) {
+      factHandle=factHandles[i];
+      postedActivations=(Set)this.factHandlesWithActivations.get(factHandle);
+      if (postedActivations == null) {
+        postedActivations=new HashSet();
+        this.factHandlesWithActivations.put(factHandle,postedActivations);
+      }
+      postedActivations.add(postedActivation);
+    }
+    queue.add(item);
+    agendaGroup.addToAgenda(queue);
+    tuple.setActivation(item);
+    this.getAgendaEventSupport().fireActivationCreated(item);
+  }
+}
