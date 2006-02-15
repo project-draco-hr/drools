@@ -1,0 +1,32 @@
+{
+  String line=laDiscard();
+  if (line == null) {
+    return;
+  }
+  Matcher matcher=FUNCTION_DECL.matcher(line);
+  if (matcher.matches()) {
+    consumeDiscard();
+  }
+ else {
+    return;
+  }
+  StringBuffer buffer=new StringBuffer();
+  while (true) {
+    line=laDiscard();
+    if (line == null) {
+      throw new ParseException("end of functions expected",lineNumber);
+    }
+    String trimLine=line.trim();
+    if (trimLine.equals("end")) {
+      break;
+    }
+    consumeDiscard();
+    line=maybeExpand(trimLine);
+    buffer.append(line + "\n");
+  }
+  if (!line.trim().equals("end")) {
+    throw new ParseException("[end] of functions expected. But instead got: [" + line.trim() + "]",lineNumber);
+  }
+  this.functions=buffer.toString();
+  consumeDiscard();
+}
