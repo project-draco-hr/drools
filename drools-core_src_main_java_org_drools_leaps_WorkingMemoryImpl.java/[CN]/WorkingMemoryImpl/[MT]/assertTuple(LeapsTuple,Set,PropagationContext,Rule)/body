@@ -2,11 +2,11 @@
   if (rule.getNoLoop() && rule.equals(context.getRuleOrigin())) {
     return;
   }
-  if (blockingFactHandles.size() != 0) {
+  if (tupleBlockingFactHandles.size() != 0) {
     FactHandleImpl factHandle;
-    PendingActivation item=new PendingActivation(tuple,blockingFactHandles.size(),context,rule);
+    PendingActivation item=new PendingActivation(tuple,tupleBlockingFactHandles.size(),context,rule);
     Set pendingActivations;
-    for (Iterator it=blockingFactHandles.iterator(); it.hasNext(); ) {
+    for (Iterator it=tupleBlockingFactHandles.iterator(); it.hasNext(); ) {
       factHandle=(FactHandleImpl)it.next();
       pendingActivations=(Set)this.blockingFactHandles.get(factHandle);
       if (pendingActivations == null) {
@@ -22,6 +22,7 @@
     ScheduledAgendaItem item=new ScheduledAgendaItem(context.getPropagationNumber(),tuple,this.agenda,context,rule);
     this.agenda.scheduleItem(item);
     tuple.setActivation(item);
+    item.setActivated(true);
     this.getAgendaEventSupport().fireActivationCreated(item);
   }
  else {
@@ -41,22 +42,23 @@
     }
     ActivationQueue queue=agendaGroup.getActivationQueue(rule.getSalience());
     AgendaItem item=new AgendaItem(context.getPropagationNumber(),tuple,context,rule,queue);
-    FactHandleImpl factHandle;
+    FactHandle factHandle;
     PostedActivation postedActivation=new PostedActivation(item);
     Set postedActivations;
-    FactHandleImpl[] factHandles=(FactHandleImpl[])tuple.getFactHandles();
+    FactHandle[] factHandles=tuple.getFactHandles();
     for (int i=0; i < factHandles.length; i++) {
       factHandle=factHandles[i];
-      postedActivations=(Set)this.factHandlesWithActivations.get(factHandle);
+      postedActivations=(Set)this.factHandleActivations.get(factHandle);
       if (postedActivations == null) {
         postedActivations=new HashSet();
-        this.factHandlesWithActivations.put(factHandle,postedActivations);
+        this.factHandleActivations.put(factHandle,postedActivations);
       }
       postedActivations.add(postedActivation);
     }
     queue.add(item);
     agendaGroup.addToAgenda(queue);
     tuple.setActivation(item);
+    item.setActivated(true);
     this.getAgendaEventSupport().fireActivationCreated(item);
   }
 }

@@ -18,28 +18,23 @@
       }
     }
   }
-  Set postedActivations=(Set)this.factHandlesWithActivations.remove(handle);
+  Set postedActivations=(Set)this.factHandleActivations.remove(handle);
   if (postedActivations != null) {
     for (Iterator it=postedActivations.iterator(); it.hasNext(); ) {
       PostedActivation item=(PostedActivation)it.next();
-      if (!item.isWasRemoved()) {
-        if (!((LeapsTuple)((AgendaItem)item.getActivation()).getTuple()).isActivationNull()) {
+      if (!item.isRemoved()) {
+        Activation itemActivation=(AgendaItem)item.getActivation();
+        if (!((LeapsTuple)itemActivation.getTuple()).isActivationNull() && itemActivation.isActivated()) {
           item.getActivation().remove();
         }
-        item.setWasRemoved(true);
+        item.setRemoved();
       }
     }
   }
   this.stack.remove(new Token(this,(FactHandleImpl)handle));
   Object oldObject=removeObject(handle);
   if (removeLogical) {
-    FactHandleImpl handleImpl=(FactHandleImpl)handle;
-    Set activations=(Set)this.justified.remove(handleImpl.getId());
-    if (activations != null) {
-      for (Iterator it=activations.iterator(); it.hasNext(); ) {
-        this.justifiers.remove(it.next());
-      }
-    }
+    removeLogicalDependencies(handle);
     this.equalsMap.remove(oldObject);
   }
   if (updateEqualsMap) {
