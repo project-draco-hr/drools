@@ -1,0 +1,20 @@
+{
+  Map props=(Map)propertyInfoCache.get(target.getClass());
+  if (props == null) {
+    props=new HashMap();
+    BeanInfo info=Introspector.getBeanInfo(target.getClass());
+    PropertyDescriptor[] desc=info.getPropertyDescriptors();
+    for (int i=0; i < desc.length; i++) {
+      PropertyDescriptor d=desc[i];
+      PropertyTuple tup=new PropertyTuple();
+      if (d.getReadMethod() != null && d.getReadMethod().getParameterTypes().length == 0 && d.getWriteMethod() != null && d.getWriteMethod().getParameterTypes().length == 1) {
+        tup.name=d.getName();
+        tup.getter=d.getReadMethod();
+        tup.setter=d.getWriteMethod();
+        props.put(tup.setter,tup);
+      }
+    }
+    propertyInfoCache.put(target.getClass(),props);
+  }
+  return props;
+}

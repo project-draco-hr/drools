@@ -1,0 +1,11 @@
+{
+  ClassFieldInspector inspector=new ClassFieldInspector(cls);
+  Method[] getters=(Method[])inspector.getPropertyGetters().toArray(new Method[]{});
+  String generatedClassName=GEN_PACKAGE_PREFIX + cls.getName();
+  byte[] generatedClass=AccessorClassFactory.generateClass(getters,cls,generatedClassName);
+  ByteArrayClassLoader cl=new ByteArrayClassLoader(Thread.currentThread().getContextClassLoader());
+  cl.addByteArray(generatedClassName,generatedClass);
+  FieldAccessor accessor=(FieldAccessor)cl.loadClass(generatedClassName).newInstance();
+  FieldAccessorMap map=new FieldAccessorMap(accessor,inspector.getFieldNames());
+  return map;
+}
