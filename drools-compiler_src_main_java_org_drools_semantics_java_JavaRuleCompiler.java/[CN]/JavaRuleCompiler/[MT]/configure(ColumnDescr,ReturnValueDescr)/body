@@ -1,10 +1,13 @@
 {
-  StringWriter string=new StringWriter();
   Map root=new HashMap();
   List usedDeclarations=this.analyzer.analyze(returnValue.getText(),this.bindings.keySet());
+  returnValue.setDeclarations((String[])usedDeclarations.toArray(new String[usedDeclarations.size()]));
   root.put("declarations",usedDeclarations);
-  Template template=this.cfg.getTemplate("returnValueMethod");
+  root.put("globals",getUsedGlobals(returnValue.getText()));
+  Template template=this.cfg.getTemplate("returnValueMethod.ftl");
+  StringWriter string=new StringWriter();
   template.process(root,string);
   string.flush();
   this.invokerMethods.put(returnValue,string);
+  System.out.println(string);
 }
