@@ -1,7 +1,7 @@
 {
   removePropertyChangeListener(handle);
-  PropagationContext propagationContext=new PropagationContextImpl(++this.propagationIdCounter,PropagationContext.RETRACTION,rule,activation);
-  Set pendingActivations=(Set)this.blockingFactHandles.remove(handle);
+  PropagationContextImpl context=new PropagationContextImpl(++this.propagationIdCounter,PropagationContext.RETRACTION,rule,activation);
+  Set pendingActivations=(Set)this.blockingFactHandles.remove(((FactHandleImpl)handle).getId());
   if (pendingActivations != null) {
     for (Iterator it=pendingActivations.iterator(); it.hasNext(); ) {
       PendingActivation item=(PendingActivation)it.next();
@@ -18,7 +18,7 @@
       }
     }
   }
-  Set postedActivations=(Set)this.factHandleActivations.remove(handle);
+  Set postedActivations=(Set)this.factHandleActivations.remove(((FactHandleImpl)handle).getId());
   if (postedActivations != null) {
     for (Iterator it=postedActivations.iterator(); it.hasNext(); ) {
       PostedActivation item=(PostedActivation)it.next();
@@ -26,7 +26,9 @@
         Activation itemActivation=(AgendaItem)item.getActivation();
         if (!((LeapsTuple)itemActivation.getTuple()).isActivationNull() && itemActivation.isActivated()) {
           item.getActivation().remove();
+          getAgendaEventSupport().fireActivationCancelled(item.getActivation());
         }
+        removeLogicalDependencies(item.getActivation(),context,rule);
         item.setRemoved();
       }
     }
@@ -40,5 +42,5 @@
   if (updateEqualsMap) {
     this.equalsMap.remove(oldObject);
   }
-  this.workingMemoryEventSupport.fireObjectRetracted(propagationContext,handle,oldObject);
+  this.workingMemoryEventSupport.fireObjectRetracted(context,handle,oldObject);
 }

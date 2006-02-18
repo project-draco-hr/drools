@@ -1,0 +1,28 @@
+{
+  RuleBase ruleBase=new RuleBaseImpl();
+  WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
+  final Rule rule=new Rule("test-rule");
+  final List data=new ArrayList();
+  rule.setConsequence(new org.drools.spi.Consequence(){
+    public void invoke(    Activation activation,    WorkingMemory workingMemory){
+      data.add("tested");
+    }
+  }
+);
+  Duration duration=new Duration(){
+    public long getDuration(    Tuple tuple){
+      return 100;
+    }
+  }
+;
+  rule.setDuration(duration);
+  PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
+  FactHandleImpl tupleFactHandle=(FactHandleImpl)workingMemory.assertObject("tuple object");
+  FactHandleImpl[] factHandlesTuple=new FactHandleImpl[1];
+  factHandlesTuple[0]=tupleFactHandle;
+  LeapsTuple tuple=new LeapsTuple(factHandlesTuple);
+  assertEquals(0,data.size());
+  workingMemory.assertTuple(tuple,new HashSet(),context,rule);
+  Thread.sleep(300);
+  assertEquals(1,data.size());
+}
