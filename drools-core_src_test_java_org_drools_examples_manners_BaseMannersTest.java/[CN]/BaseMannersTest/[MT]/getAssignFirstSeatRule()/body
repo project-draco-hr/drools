@@ -1,0 +1,42 @@
+{
+  final Rule rule=new Rule("assignFirstSeat");
+  Column contextColumn=new Column(0,contextType,"context");
+  contextColumn.addConstraint(getLiteralConstraint(contextColumn,"state",new Integer(Context.START_UP),this.integerEqualEvaluator));
+  rule.addPattern(contextColumn);
+  final Declaration contextDeclaration=rule.getDeclaration("context");
+  Column guestColumn=new Column(1,guestType,"guest");
+  rule.addPattern(guestColumn);
+  final Declaration guestDeclaration=rule.getDeclaration("guest");
+  Column countColumn=new Column(2,countType,"count");
+  rule.addPattern(countColumn);
+  final Declaration countDeclaration=rule.getDeclaration("count");
+  Consequence consequence=new Consequence(){
+    public void invoke(    Activation activation,    WorkingMemory workingMemory) throws ConsequenceException {
+      try {
+        Rule rule=activation.getRule();
+        Tuple tuple=activation.getTuple();
+        KnowledgeHelper drools=new DefaultKnowledgeHelper(rule,tuple,workingMemory);
+        Guest guest=(Guest)drools.get(guestDeclaration);
+        Context context=(Context)drools.get(contextDeclaration);
+        Count count=(Count)drools.get(countDeclaration);
+        String guestName=guest.getName();
+        Seating seating=new Seating(count.getValue(),0,true,1,guestName,1,guestName);
+        drools.assertObject(seating);
+        Path path=new Path(count.getValue(),1,guestName);
+        drools.assertObject(path);
+        count.setValue(count.getValue() + 1);
+        drools.modifyObject(tuple.get(countDeclaration),count);
+        context.setState(Context.ASSIGN_SEATS);
+        drools.modifyObject(tuple.get(contextDeclaration),context);
+        System.out.println("assign first seat :  " + seating + " : "+ path);
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        throw new ConsequenceException(e);
+      }
+    }
+  }
+;
+  rule.setConsequence(consequence);
+  return rule;
+}
