@@ -1,0 +1,21 @@
+{
+  Map root=new HashMap();
+  String classMethodName="returnValue" + counter++;
+  returnValueDescr.setClassMethodName(classMethodName);
+  root.put("methodName",classMethodName);
+  List usedDeclarations=this.analyzer.analyze(returnValueDescr.getText(),this.declarations.keySet());
+  Declaration[] declarations=new Declaration[usedDeclarations.size()];
+  for (int i=0, size=usedDeclarations.size(); i < size; i++) {
+    declarations[i]=(Declaration)this.declarations.get((String)usedDeclarations.get(i));
+  }
+  root.put("declarations",declarations);
+  root.put("globals",getUsedGlobals(returnValueDescr.getText()));
+  root.put("globalTypes",this.pkg.getGlobals());
+  root.put("text",returnValueDescr.getText());
+  ClassFieldExtractor extractor=new ClassFieldExtractor(((ClassObjectType)column.getObjectType()).getClass(),returnValueDescr.getFieldName());
+  Template template=this.cfg.getTemplate("returnValueMethod.ftl");
+  StringWriter string=new StringWriter();
+  template.process(root,string);
+  string.flush();
+  this.invokerMethods.put(returnValueDescr,string);
+}
