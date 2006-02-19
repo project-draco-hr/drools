@@ -1,12 +1,31 @@
 {
   Map root=new HashMap();
-  List usedDeclarations=this.analyzer.analyze(eval.getText(),this.declarations.keySet());
-  eval.setDeclarations((String[])usedDeclarations.toArray(new String[usedDeclarations.size()]));
-  root.put("declarations",usedDeclarations);
-  root.put("globals",getUsedGlobals(eval.getText()));
-  Template template=this.cfg.getTemplate("evalMethod");
+  String classMethodName="returnValue" + counter++;
+  evalDescr.setClassMethodName(classMethodName);
+  root.put("package",this.pkg.getName());
+  root.put("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
+  root.put("invokerClassName",ucFirst(classMethodName) + "Invoker");
+  root.put("methodName",classMethodName);
+  List usedDeclarations=this.analyzer.analyze(evalDescr.getText(),this.declarations.keySet());
+  Declaration[] declarations=new Declaration[usedDeclarations.size()];
+  for (int i=0, size=usedDeclarations.size(); i < size; i++) {
+    declarations[i]=(Declaration)this.declarations.get((String)usedDeclarations.get(i));
+  }
+  root.put("declarations",declarations);
+  root.put("globals",getUsedGlobals(evalDescr.getText()));
+  root.put("globalTypes",this.pkg.getGlobals());
+  root.put("text",evalDescr.getText());
+  EvalCondition eval=new EvalCondition(declarations);
+  rule.addPattern(eval);
+  Template template=this.cfg.getTemplate("returnValueMethod.ftl");
   StringWriter string=new StringWriter();
   template.process(root,string);
   string.flush();
-  this.invokerMethods.put(eval,string);
+  System.out.println(string);
+  this.invokerMethods.put(evalDescr,string);
+  template=this.cfg.getTemplate("returnValueInvoker.ftl");
+  string=new StringWriter();
+  template.process(root,string);
+  string.flush();
+  System.out.println(string);
 }

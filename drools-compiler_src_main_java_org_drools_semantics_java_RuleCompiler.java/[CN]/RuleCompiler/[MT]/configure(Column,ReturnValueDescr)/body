@@ -2,6 +2,9 @@
   Map root=new HashMap();
   String classMethodName="returnValue" + counter++;
   returnValueDescr.setClassMethodName(classMethodName);
+  root.put("package",this.pkg.getName());
+  root.put("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
+  root.put("invokerClassName",ucFirst(classMethodName) + "Invoker");
   root.put("methodName",classMethodName);
   List usedDeclarations=this.analyzer.analyze(returnValueDescr.getText(),this.declarations.keySet());
   Declaration[] declarations=new Declaration[usedDeclarations.size()];
@@ -12,10 +15,19 @@
   root.put("globals",getUsedGlobals(returnValueDescr.getText()));
   root.put("globalTypes",this.pkg.getGlobals());
   root.put("text",returnValueDescr.getText());
-  ClassFieldExtractor extractor=new ClassFieldExtractor(((ClassObjectType)column.getObjectType()).getClass(),returnValueDescr.getFieldName());
+  ClassFieldExtractor extractor=new ClassFieldExtractor(((ClassObjectType)column.getObjectType()).getClassType(),returnValueDescr.getFieldName());
+  Evaluator evaluator=EvaluatorFactory.getEvaluator(extractor.getObjectType().getValueType(),returnValueDescr.getEvaluator());
+  ReturnValueConstraint returnValueConstraint=new ReturnValueConstraint(extractor,declarations,evaluator);
+  column.addConstraint(returnValueConstraint);
   Template template=this.cfg.getTemplate("returnValueMethod.ftl");
   StringWriter string=new StringWriter();
   template.process(root,string);
   string.flush();
+  System.out.println(string);
   this.invokerMethods.put(returnValueDescr,string);
+  template=this.cfg.getTemplate("returnValueInvoker.ftl");
+  string=new StringWriter();
+  template.process(root,string);
+  string.flush();
+  System.out.println(string);
 }
