@@ -1,20 +1,8 @@
 {
-  HashSet blockingFactHandles=new HashSet();
+  List blockingFactHandles=new LinkedList();
   if (token.getCurrentRuleHandle().getLeapsRule().containsNotColumns()) {
-    ColumnConstraints constraints;
-    TableIterator tableIterator;
     for (Iterator it=token.getCurrentRuleHandle().getLeapsRule().getNotColumnsIterator(); it.hasNext(); ) {
-      constraints=(ColumnConstraints)it.next();
-      tableIterator=workingMemory.getFactTable(((ClassObjectType)constraints.getColumn().getObjectType()).getClassType()).iterator();
-      FactHandleImpl factHandle;
-      while (tableIterator.hasNext()) {
-        factHandle=(FactHandleImpl)tableIterator.next();
-        if (constraints.evaluateAlphas(factHandle,token,workingMemory)) {
-          if (constraints.getBeta().isAllowed(factHandle,token,workingMemory)) {
-            blockingFactHandles.add(factHandle);
-          }
-        }
-      }
+      blockingFactHandles.addAll(TokenEvaluator.getExistsEnablingFacts(token,workingMemory,(ColumnConstraints)it.next()));
     }
   }
   return blockingFactHandles;

@@ -1,0 +1,27 @@
+{
+  final Rule rule=new Rule("done_detecting");
+  rule.setSalience(-10);
+  Column stageColumn=new Column(0,stageType,"stage");
+  stageColumn.addConstraint(getLiteralConstraint(stageColumn,"value",new Integer(Stage.DETECT_JUNCTIONS),this.integerEqualEvaluator));
+  rule.addPattern(stageColumn);
+  final Declaration stageDeclaration=rule.getDeclaration("stage");
+  Consequence consequence=new Consequence(){
+    public void invoke(    Activation activation,    WorkingMemory workingMemory) throws ConsequenceException {
+      try {
+        Rule rule=activation.getRule();
+        Tuple tuple=activation.getTuple();
+        KnowledgeHelper drools=new DefaultKnowledgeHelper(rule,tuple,workingMemory);
+        Stage stage=(Stage)drools.get(stageDeclaration);
+        stage.setValue(Stage.FIND_INITIAL_BOUNDARY);
+        drools.modifyObject(tuple.get(stageDeclaration),stage);
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        throw new ConsequenceException(e);
+      }
+    }
+  }
+;
+  rule.setConsequence(consequence);
+  return rule;
+}

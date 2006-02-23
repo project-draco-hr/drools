@@ -2,42 +2,37 @@
   if (!this.firing) {
     try {
       this.firing=true;
-      try {
-        while (!this.stack.isEmpty()) {
-          Token token=(Token)this.stack.peek();
-          boolean done=false;
-          while (!done) {
-            if (!token.isResume()) {
-              if (token.hasNextRuleHandle()) {
-                token.nextRuleHandle();
-              }
+      while (!this.stack.isEmpty()) {
+        Token token=(Token)this.stack.peek();
+        boolean done=false;
+        while (!done) {
+          if (!token.isResume()) {
+            if (token.hasNextRuleHandle()) {
+              token.nextRuleHandle();
+            }
  else {
-                this.stack.remove(token);
-                done=true;
-              }
-            }
-            if (!done) {
-              try {
-                TokenEvaluator.evaluate(token);
-                token.setResume(true);
-                done=true;
-              }
- catch (              NoMatchesFoundException ex) {
-                token.setResume(false);
-              }
-catch (              Exception e) {
-                e.printStackTrace();
-                System.out.println("exception - " + e);
-              }
-            }
-            while (this.agenda.fireNextItem(agendaFilter)) {
-              ;
+              this.stack.remove(token);
+              done=true;
             }
           }
+          if (!done) {
+            try {
+              TokenEvaluator.evaluate(token);
+              token.setResume(true);
+              done=true;
+            }
+ catch (            NoMatchesFoundException ex) {
+              token.setResume(false);
+            }
+catch (            Exception e) {
+              e.printStackTrace();
+              System.out.println("exception - " + e);
+            }
+          }
+          while (this.agenda.fireNextItem(agendaFilter)) {
+            ;
+          }
         }
-      }
- catch (      TableOutOfBoundException e) {
-        new RuntimeException(e);
       }
       this.idLastFireAllAt=((HandleFactory)this.handleFactory).getNextId();
       for (Enumeration e=this.factTables.elements(); e.hasMoreElements(); ) {

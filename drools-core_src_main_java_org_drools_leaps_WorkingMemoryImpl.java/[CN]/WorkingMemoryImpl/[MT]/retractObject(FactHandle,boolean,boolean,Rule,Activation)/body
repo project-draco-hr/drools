@@ -1,35 +1,61 @@
 {
   removePropertyChangeListener(handle);
   PropagationContextImpl context=new PropagationContextImpl(++this.propagationIdCounter,PropagationContext.RETRACTION,rule,activation);
-  Set pendingActivations=(Set)this.blockingFactHandles.remove(((FactHandleImpl)handle).getId());
-  if (pendingActivations != null) {
-    for (Iterator it=pendingActivations.iterator(); it.hasNext(); ) {
-      PendingActivation item=(PendingActivation)it.next();
-      item.decrementBlockingFactsCount();
-      if (!item.containsBlockingFacts()) {
-        boolean allPresent=true;
-        FactHandleImpl[] factHandles=(FactHandleImpl[])item.getTuple().getFactHandles();
-        for (int i=0; i < factHandles.length && allPresent; i++) {
-          allPresent=this.objects.containsKey(factHandles[i].getId());
-        }
-        if (allPresent) {
-          this.assertTuple(item.getTuple(),new HashSet(),item.getContext(),item.getRule());
+  Iterator it;
+  RetractAssembly info=(RetractAssembly)this.retracts.remove(((FactHandleImpl)handle).getId());
+  if (info != null) {
+    PendingTuple pendingTuple;
+    for (it=info.getPendingTuples(); it.hasNext(); ) {
+      pendingTuple=(PendingTuple)it.next();
+      if (pendingTuple.isValid()) {
+        invalidatePendingTuple(pendingTuple);
+      }
+    }
+    for (it=info.getPendingExists(); it.hasNext(); ) {
+      pendingTuple=(PendingTuple)it.next();
+      if (pendingTuple.isValid()) {
+        pendingTuple.decrementExistsCount();
+        if (!pendingTuple.isValid()) {
+          invalidatePendingTuple(pendingTuple);
         }
       }
     }
-  }
-  Set postedActivations=(Set)this.factHandleActivations.remove(((FactHandleImpl)handle).getId());
-  if (postedActivations != null) {
-    for (Iterator it=postedActivations.iterator(); it.hasNext(); ) {
-      PostedActivation item=(PostedActivation)it.next();
-      if (!item.isRemoved()) {
-        Activation itemActivation=(AgendaItem)item.getActivation();
-        if (!((LeapsTuple)itemActivation.getTuple()).isActivationNull() && itemActivation.isActivated()) {
-          item.getActivation().remove();
-          getAgendaEventSupport().fireActivationCancelled(item.getActivation());
+    for (it=info.getPendingNots(); it.hasNext(); ) {
+      pendingTuple=(PendingTuple)it.next();
+      if (pendingTuple.isValid()) {
+        pendingTuple.decrementNotCount();
+        if (!pendingTuple.isValid()) {
+          invalidatePendingTuple(pendingTuple);
         }
-        removeLogicalDependencies(item.getActivation(),context,rule);
-        item.setRemoved();
+ else {
+          assertTuple(pendingTuple.getTuple(),new ArrayList(),pendingTuple.getExistsQualifiers(),pendingTuple.getContext(),pendingTuple.getRule());
+          pendingTuple.setSubmited();
+        }
+      }
+    }
+    PostedActivation postedActivation;
+    for (it=info.getPostedActivations(); it.hasNext(); ) {
+      postedActivation=(PostedActivation)it.next();
+      if (postedActivation.isValid()) {
+        invalidatePostedActivation(postedActivation);
+      }
+    }
+    for (it=info.getPostedExists(); it.hasNext(); ) {
+      postedActivation=(PostedActivation)it.next();
+      if (postedActivation.isValid()) {
+        postedActivation.decrementExistsCount();
+        if (!postedActivation.isValid()) {
+          invalidatePostedActivation(postedActivation);
+        }
+      }
+    }
+    for (it=info.getPostedNots(); it.hasNext(); ) {
+      postedActivation=(PostedActivation)it.next();
+      if (postedActivation.isValid()) {
+        postedActivation.decrementNotCount();
+        if (!postedActivation.isValid()) {
+          invalidatePostedActivation(postedActivation);
+        }
       }
     }
   }
