@@ -1,0 +1,66 @@
+{
+  final Rule rule=new Rule("second_boundary_junction_arrow");
+  Column stageColumn=new Column(0,stageType,"stage");
+  stageColumn.addConstraint(getLiteralConstraint(stageColumn,"value",new Integer(Stage.FIND_INITIAL_BOUNDARY),this.integerEqualEvaluator));
+  rule.addPattern(stageColumn);
+  final Declaration stageDeclaration=rule.getDeclaration("stage");
+  Column junctionColumn=new Column(1,junctionType);
+  junctionColumn.addConstraint(getLiteralConstraint(junctionColumn,"type",Junction.ARROW,this.objectEqualEvaluator));
+  setFieldDeclaration(junctionColumn,"basePoint","junctionBasePoint");
+  setFieldDeclaration(junctionColumn,"p1","junctionP1");
+  setFieldDeclaration(junctionColumn,"p2","junctionP2");
+  setFieldDeclaration(junctionColumn,"p3","junctionP3");
+  rule.addPattern(junctionColumn);
+  final Declaration junctionBasePointDeclaration=rule.getDeclaration("junctionBasePoint");
+  final Declaration junctionP1Declaration=rule.getDeclaration("junctionP1");
+  final Declaration junctionP2Declaration=rule.getDeclaration("junctionP2");
+  final Declaration junctionP3Declaration=rule.getDeclaration("junctionP3");
+  Column edgeColumn1=new Column(2,edgeType,"edge1");
+  rule.addPattern(edgeColumn1);
+  final Declaration edge1Declaration=rule.getDeclaration("edge1");
+  edgeColumn1.addConstraint(getBoundVariableConstraint(edgeColumn1,"p1",junctionBasePointDeclaration,integerEqualEvaluator));
+  edgeColumn1.addConstraint(getBoundVariableConstraint(edgeColumn1,"p2",junctionP1Declaration,integerEqualEvaluator));
+  Column edgeColumn2=new Column(3,edgeType,"edge2");
+  rule.addPattern(edgeColumn2);
+  final Declaration edge2Declaration=rule.getDeclaration("edge2");
+  edgeColumn2.addConstraint(getBoundVariableConstraint(edgeColumn2,"p1",junctionBasePointDeclaration,integerEqualEvaluator));
+  edgeColumn2.addConstraint(getBoundVariableConstraint(edgeColumn2,"p2",junctionP2Declaration,integerEqualEvaluator));
+  Column edgeColumn3=new Column(4,edgeType,"edge3");
+  rule.addPattern(edgeColumn3);
+  final Declaration edge3Declaration=rule.getDeclaration("edge3");
+  edgeColumn3.addConstraint(getBoundVariableConstraint(edgeColumn3,"p1",junctionBasePointDeclaration,integerEqualEvaluator));
+  edgeColumn3.addConstraint(getBoundVariableConstraint(edgeColumn3,"p2",junctionP3Declaration,integerEqualEvaluator));
+  Column notJunctionColumn=new Column(5,junctionType);
+  notJunctionColumn.addConstraint(getBoundVariableConstraint(notJunctionColumn,"basePoint",junctionBasePointDeclaration,integerLessEvaluator));
+  Not notJunction=new Not();
+  notJunction.addChild(notJunctionColumn);
+  rule.addPattern(notJunction);
+  Consequence consequence=new Consequence(){
+    public void invoke(    Activation activation,    WorkingMemory workingMemory) throws ConsequenceException {
+      try {
+        Rule rule=activation.getRule();
+        Tuple tuple=activation.getTuple();
+        KnowledgeHelper drools=new DefaultKnowledgeHelper(rule,tuple,workingMemory);
+        Edge edge1=(Edge)drools.get(edge1Declaration);
+        edge1.setLabel(Edge.B);
+        Edge edge2=(Edge)drools.get(edge2Declaration);
+        edge2.setLabel(Edge.PLUS);
+        Edge edge3=(Edge)drools.get(edge3Declaration);
+        edge3.setLabel(Edge.B);
+        Stage stage=(Stage)drools.get(stageDeclaration);
+        stage.setValue(Stage.LABELING);
+        drools.modifyObject(tuple.get(stageDeclaration),stage);
+        drools.modifyObject(tuple.get(edge1Declaration),edge1);
+        drools.modifyObject(tuple.get(edge2Declaration),edge2);
+        drools.modifyObject(tuple.get(edge3Declaration),edge3);
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        throw new ConsequenceException(e);
+      }
+    }
+  }
+;
+  rule.setConsequence(consequence);
+  return rule;
+}
