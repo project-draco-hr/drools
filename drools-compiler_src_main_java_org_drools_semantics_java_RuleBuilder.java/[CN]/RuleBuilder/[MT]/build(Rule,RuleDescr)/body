@@ -1,0 +1,29 @@
+{
+  Map root=new HashMap();
+  String classMethodName="consequence";
+  root.put("package",this.pkg.getName());
+  root.put("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
+  root.put("invokerClassName",ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker");
+  root.put("methodName",classMethodName);
+  root.put("declarations",this.declarations.values());
+  root.put("globals",getUsedGlobals(ruleDescr.getConsequence()));
+  root.put("globalTypes",this.pkg.getGlobals());
+  root.put("text",ruleDescr.getConsequence());
+  Template template=this.cfg.getTemplate("consequenceMethod.ftl");
+  StringWriter string=new StringWriter();
+  template.process(root,string);
+  string.flush();
+  this.methods.add(string.toString());
+  template=this.cfg.getTemplate("consequenceInvoker.ftl");
+  string=new StringWriter();
+  template.process(root,string);
+  string.flush();
+  this.invokers.put(ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker",string.toString());
+  template=this.cfg.getTemplate("ruleClass.ftl");
+  root.put("imports",this.pkg.getImports());
+  root.put("methods",this.methods);
+  string=new StringWriter();
+  template.process(root,string);
+  string.flush();
+  this.ruleClass=string.toString();
+}
