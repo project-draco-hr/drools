@@ -6,6 +6,10 @@
   root.put("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
   root.put("invokerClassName",ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker");
   root.put("methodName",classMethodName);
+  Class clazz=((ClassObjectType)column.getObjectType()).getClassType();
+  FieldExtractor extractor=new ClassFieldExtractor(clazz,predicateDescr.getFieldName());
+  Declaration declaration=column.addDeclaration(predicateDescr.getDeclaration(),extractor);
+  this.declarations.put(declaration.getIdentifier(),declaration);
   List usedDeclarations=this.analyzer.analyze(predicateDescr.getText(),this.declarations.keySet());
   usedDeclarations.remove(predicateDescr.getDeclaration());
   Declaration[] declarations=new Declaration[usedDeclarations.size()];
@@ -13,7 +17,6 @@
     declarations[i]=(Declaration)this.declarations.get((String)usedDeclarations.get(i));
   }
   root.put("declarations",declarations);
-  Declaration declaration=(Declaration)this.declarations.get(predicateDescr.getDeclaration());
   root.put("declaration",declaration);
   root.put("globals",getUsedGlobals(predicateDescr.getText()));
   root.put("globalTypes",this.pkg.getGlobals());
