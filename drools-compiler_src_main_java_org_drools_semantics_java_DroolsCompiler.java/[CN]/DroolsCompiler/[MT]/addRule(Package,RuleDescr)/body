@@ -4,13 +4,45 @@
   RuleBuilder builder=new RuleBuilder();
   builder.build(pkg,ruleDescr);
   Rule rule=builder.getRule();
-  pkg.addRule(rule);
   System.out.println(ruleDescr.getClassName() + ":\n" + builder.getRuleClass());
   compile(pkg.getName() + "." + ruleDescr.getClassName(),builder.getRuleClass());
-  for (Iterator it=builder.getInvokers().keySet().iterator(); it.hasNext(); ) {
+  for (Iterator it=builder.getInvokeables().keySet().iterator(); it.hasNext(); ) {
     String className=(String)it.next();
-    String text=(String)builder.getInvokers().get(className);
+    String text=(String)builder.getInvokeables().get(className);
     System.out.println(className + ":\n" + text);
     compile(pkg.getName() + "." + className,text);
   }
+  Map lookups=builder.getReferenceLookups();
+  try {
+    for (Iterator it=lookups.keySet().iterator(); it.hasNext(); ) {
+      String className=(String)it.next();
+      Class clazz=this.classLoader.loadClass(className);
+      Object invokeable=lookups.get(className);
+      if (invokeable instanceof ReturnValueConstraint) {
+        ((ReturnValueConstraint)invokeable).setReturnValueExpression((ReturnValueExpression)clazz.newInstance());
+      }
+ else       if (invokeable instanceof PredicateConstraint) {
+        ((PredicateConstraint)invokeable).setPredicateExpression((PredicateExpression)clazz.newInstance());
+      }
+ else       if (invokeable instanceof EvalCondition) {
+        ((EvalCondition)invokeable).setEvalExpression((EvalExpression)clazz.newInstance());
+      }
+ else       if (invokeable instanceof Rule) {
+        ((Rule)invokeable).setConsequence((Consequence)clazz.newInstance());
+      }
+    }
+  }
+ catch (  ClassNotFoundException e) {
+    throw new CheckedDroolsException(e);
+  }
+catch (  InstantiationError e) {
+    throw new CheckedDroolsException(e);
+  }
+catch (  IllegalAccessException e) {
+    throw new CheckedDroolsException(e);
+  }
+catch (  InstantiationException e) {
+    throw new CheckedDroolsException(e);
+  }
+  pkg.addRule(rule);
 }
