@@ -1,0 +1,42 @@
+{
+  PropagationContext context=tuple.getContext();
+  if (rule.getNoLoop() && rule.equals(context.getRuleOrigin())) {
+    return;
+  }
+  Duration dur=rule.getDuration();
+  Activation agendaItem;
+  if (dur != null && dur.getDuration(tuple) > 0) {
+    agendaItem=new ScheduledAgendaItem(context.getPropagationNumber(),tuple,this.agenda,context,rule);
+    this.agenda.scheduleItem((ScheduledAgendaItem)agendaItem);
+    tuple.setActivation(agendaItem);
+    agendaItem.setActivated(true);
+    this.getAgendaEventSupport().fireActivationCreated(agendaItem);
+  }
+ else {
+    AgendaGroupImpl agendaGroup=null;
+    if (rule.getAgendaGroup() == null || rule.getAgendaGroup().equals("") || rule.getAgendaGroup().equals(AgendaGroup.MAIN)) {
+      agendaGroup=(AgendaGroupImpl)this.agenda.getAgendaGroup(AgendaGroup.MAIN);
+    }
+ else {
+      agendaGroup=(AgendaGroupImpl)this.agenda.getAgendaGroup(rule.getAgendaGroup());
+    }
+    if (agendaGroup == null) {
+      agendaGroup=new AgendaGroupImpl(rule.getAgendaGroup());
+      this.agenda.addAgendaGroup(agendaGroup);
+    }
+    if (rule.getAutoFocus()) {
+      this.agenda.setFocus(agendaGroup);
+    }
+    ActivationQueue queue=agendaGroup.getActivationQueue(rule.getSalience());
+    agendaItem=new AgendaItem(context.getPropagationNumber(),tuple,context,rule,queue);
+    queue.add(agendaItem);
+    agendaGroup.addToAgenda(queue);
+    tuple.setActivation(agendaItem);
+    agendaItem.setActivated(true);
+    this.getAgendaEventSupport().fireActivationCreated(agendaItem);
+    FactHandleImpl[] factHandles=(FactHandleImpl[])tuple.getFactHandles();
+    for (int i=0; i < factHandles.length; i++) {
+      factHandles[i].addActivatedTuple(tuple);
+    }
+  }
+}

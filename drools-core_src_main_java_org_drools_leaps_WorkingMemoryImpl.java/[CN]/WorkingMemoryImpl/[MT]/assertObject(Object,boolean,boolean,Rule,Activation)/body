@@ -10,7 +10,7 @@
   if (!logical) {
     if (logicalState instanceof FactHandleImpl) {
       handle=(FactHandleImpl)logicalState;
-      removeLogicalDependencies(handle);
+      handle.removeAllLogicalDependencies();
     }
  else {
       handle=(FactHandleImpl)newFactHandle(object);
@@ -31,14 +31,43 @@
       putObject(handle,object);
       this.equalsMap.put(object,handle);
     }
-    addLogicalDependency(handle,activation,activation.getPropagationContext(),rule);
+    LeapsTuple tuple=(LeapsTuple)activation.getTuple();
+    tuple.addLogicalDependency(handle);
+    handle.addLogicalDependency(tuple);
   }
-  List tablesList=this.getFactTablesList(object.getClass());
-  for (Iterator it=tablesList.iterator(); it.hasNext(); ) {
-    ((FactTable)it.next()).add(handle);
+  Class objectClass=object.getClass();
+  for (Iterator tables=this.getFactTablesList(objectClass).iterator(); tables.hasNext(); ) {
+    FactTable factTable=(FactTable)tables.next();
+    factTable.add(handle);
+    LeapsTuple tuple;
+    ColumnConstraints constraint;
+    ColumnConstraints[] constraints;
+    for (Iterator tuples=factTable.getTuplesIterator(); tuples.hasNext(); ) {
+      tuple=(LeapsTuple)tuples.next();
+      constraints=tuple.getNotConstraints();
+      for (int i=0; i < constraints.length; i++) {
+        constraint=constraints[i];
+        if (objectClass.isAssignableFrom(((ClassObjectType)constraint.getColumn().getObjectType()).getClassType()) && constraint.isAllowed(handle,tuple,this)) {
+          tuple.addNotFactHandle(handle,i);
+          handle.addNotTuple(tuple,i);
+        }
+      }
+      constraints=tuple.getExistsConstraints();
+      for (int i=0; i < constraints.length; i++) {
+        if (constraints[i].isAllowed(handle,tuple,this)) {
+          tuple.addExistsFactHandle(handle,i);
+          handle.addExistsTuple(tuple,i);
+        }
+      }
+      if (tuple.isReadyForActivation() && tuple.isActivationNull()) {
+        this.assertTuple(tuple,rule);
+      }
+ else       if (!tuple.isReadyForActivation() && !tuple.isActivationNull()) {
+        this.invalidateActivation(tuple);
+      }
+    }
   }
-  Token token=new Token(this,handle);
-  this.pushTokenOnStack(token);
+  this.pushTokenOnStack(new Token(this,handle));
   this.workingMemoryEventSupport.fireObjectAsserted(new PropagationContextImpl(++this.propagationIdCounter,PropagationContext.ASSERTION,rule,activation),handle,object);
   return handle;
 }

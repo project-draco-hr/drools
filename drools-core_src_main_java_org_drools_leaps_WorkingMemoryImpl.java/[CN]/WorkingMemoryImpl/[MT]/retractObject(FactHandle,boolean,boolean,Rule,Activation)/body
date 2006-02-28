@@ -1,59 +1,51 @@
 {
   removePropertyChangeListener(handle);
   PropagationContextImpl context=new PropagationContextImpl(++this.propagationIdCounter,PropagationContext.RETRACTION,rule,activation);
+  for (Iterator it=this.getFactTablesList(((FactHandleImpl)handle).getObject().getClass()).iterator(); it.hasNext(); ) {
+    ((FactTable)it.next()).remove(handle);
+  }
+  Iterator tuples=((FactHandleImpl)handle).getActivatedTuples();
+  for (; tuples != null && tuples.hasNext(); ) {
+    this.invalidateActivation((LeapsTuple)tuples.next());
+  }
+  FactHandleTupleAssembly assembly;
   Iterator it;
-  RetractAssembly info=(RetractAssembly)this.retracts.remove(((FactHandleImpl)handle).getId());
-  if (info != null) {
-    PendingTuple pendingTuple;
-    for (it=info.getPendingTuples(); it.hasNext(); ) {
-      pendingTuple=(PendingTuple)it.next();
-      if (pendingTuple.isValid()) {
-        invalidatePendingTuple(pendingTuple);
-      }
+  it=((FactHandleImpl)handle).getNotTuples();
+  if (it != null) {
+    for (; it.hasNext(); ) {
+      assembly=(FactHandleTupleAssembly)it.next();
+      assembly.getTuple().removeNotFactHandle(handle,assembly.getIndex());
     }
-    for (it=info.getPendingExists(); it.hasNext(); ) {
-      pendingTuple=(PendingTuple)it.next();
-      if (pendingTuple.isValid()) {
-        pendingTuple.decrementExistsCount();
-        if (!pendingTuple.isValid()) {
-          invalidatePendingTuple(pendingTuple);
-        }
-      }
+  }
+  it=((FactHandleImpl)handle).getExistsTuples();
+  if (it != null) {
+    for (; it.hasNext(); ) {
+      assembly=(FactHandleTupleAssembly)it.next();
+      assembly.getTuple().removeExistsFactHandle(handle,assembly.getIndex());
     }
-    for (it=info.getPendingNots(); it.hasNext(); ) {
-      pendingTuple=(PendingTuple)it.next();
-      if (pendingTuple.isValid()) {
-        pendingTuple.decrementNotCount();
-        if (!pendingTuple.isValid()) {
-          invalidatePendingTuple(pendingTuple);
-        }
+  }
+  LeapsTuple tuple;
+  IteratorChain chain=new IteratorChain();
+  it=((FactHandleImpl)handle).getNotTuples();
+  if (it != null) {
+    chain.addIterator(it);
+  }
+  it=((FactHandleImpl)handle).getExistsTuples();
+  if (it != null) {
+    chain.addIterator(it);
+  }
+  for (; chain.hasNext(); ) {
+    tuple=((FactHandleTupleAssembly)chain.next()).getTuple();
+    if (tuple.isReadyForActivation() && tuple.isActivationNull()) {
+      this.assertTuple(tuple,rule);
+    }
  else {
-          assertTuple(pendingTuple.getTuple(),new ArrayList(),pendingTuple.getExistsQualifiers(),pendingTuple.getContext(),pendingTuple.getRule());
-          pendingTuple.setSubmited();
-        }
-      }
-    }
-    PostedActivation postedActivation;
-    for (it=info.getPostedActivations(); it.hasNext(); ) {
-      postedActivation=(PostedActivation)it.next();
-      if (postedActivation.isValid()) {
-        invalidatePostedActivation(postedActivation);
-      }
-    }
-    for (it=info.getPostedExists(); it.hasNext(); ) {
-      postedActivation=(PostedActivation)it.next();
-      if (postedActivation.isValid()) {
-        postedActivation.decrementExistsCount();
-        if (!postedActivation.isValid()) {
-          invalidatePostedActivation(postedActivation);
-        }
-      }
+      this.invalidateActivation(tuple);
     }
   }
   this.stack.remove(new Token(this,(FactHandleImpl)handle));
   Object oldObject=removeObject(handle);
   if (removeLogical) {
-    removeLogicalDependencies(handle);
     this.equalsMap.remove(oldObject);
   }
   if (updateEqualsMap) {

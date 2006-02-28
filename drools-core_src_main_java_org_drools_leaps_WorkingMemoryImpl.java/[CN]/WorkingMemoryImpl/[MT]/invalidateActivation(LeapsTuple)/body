@@ -1,0 +1,21 @@
+{
+  if (!tuple.isReadyForActivation() && !tuple.isActivationNull()) {
+    Activation activation=tuple.getActivation();
+    if (activation.isActivated()) {
+      activation.remove();
+      getAgendaEventSupport().fireActivationCancelled(activation);
+    }
+    tuple.setActivation(null);
+  }
+  FactHandleImpl factHandle;
+  Iterator it=tuple.getLogicalDependencies();
+  if (it != null) {
+    for (; it.hasNext(); ) {
+      factHandle=(FactHandleImpl)it.next();
+      factHandle.removeLogicalDependency(tuple);
+      if (!factHandle.isLogicalyValid()) {
+        this.retractObject(factHandle);
+      }
+    }
+  }
+}

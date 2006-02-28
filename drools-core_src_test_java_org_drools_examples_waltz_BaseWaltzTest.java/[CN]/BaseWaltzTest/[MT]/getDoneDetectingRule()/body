@@ -1,10 +1,14 @@
 {
   final Rule rule=new Rule("done_detecting");
-  rule.setSalience(-10);
   Column stageColumn=new Column(0,stageType,"stage");
   stageColumn.addConstraint(getLiteralConstraint(stageColumn,"value",new Integer(Stage.DETECT_JUNCTIONS),this.integerEqualEvaluator));
   rule.addPattern(stageColumn);
   final Declaration stageDeclaration=rule.getDeclaration("stage");
+  Column notEdgeColumn=new Column(1,edgeType);
+  notEdgeColumn.addConstraint(getLiteralConstraint(notEdgeColumn,"joined",new Boolean(false),this.booleanEqualEvaluator));
+  Not notEdge=new Not();
+  notEdge.addChild(notEdgeColumn);
+  rule.addPattern(notEdge);
   Consequence consequence=new Consequence(){
     public void invoke(    Activation activation,    WorkingMemory workingMemory) throws ConsequenceException {
       try {

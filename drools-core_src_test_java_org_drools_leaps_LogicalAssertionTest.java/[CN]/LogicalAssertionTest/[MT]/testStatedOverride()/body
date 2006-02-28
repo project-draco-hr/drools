@@ -1,42 +1,34 @@
 {
-  RuleBaseImpl ruleBase=new RuleBaseImpl();
   final Rule rule1=new Rule("test-rule1");
-  WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
-  final Agenda agenda=workingMemory.getAgenda();
-  Consequence consequence=new Consequence(){
-    public void invoke(    Activation activation,    WorkingMemory workingMemory){
-    }
-  }
-;
-  rule1.setConsequence(consequence);
+  final Agenda agenda=this.workingMemory.getAgenda();
+  rule1.setConsequence(this.consequence);
   FactHandleImpl[] factHandles=new FactHandleImpl[1];
   PropagationContext context1;
   LeapsTuple tuple1;
   String logicalString1=new String("logical");
   FactHandle handle1=((HandleFactory)ruleBase.getFactHandleFactory()).newFactHandle(logicalString1);
-  context1=new PropagationContextImpl(1,PropagationContext.ASSERTION,null,null);
+  context1=new PropagationContextImpl(1,PropagationContext.ASSERTION,rule1,null);
   factHandles[0]=(FactHandleImpl)handle1;
-  tuple1=new LeapsTuple(factHandles);
-  workingMemory.assertTuple(tuple1,new ArrayList(),new ArrayList(),context1,rule1);
-  Iterator activations=workingMemory.getFactHandleActivations(handle1);
-  FactHandle logicalHandle1=workingMemory.assertObject(logicalString1,false,true,null,(activations != null) ? ((PostedActivation)activations.next()).getAgendaItem() : null);
+  tuple1=new LeapsTuple(factHandles,null,null,context1);
+  this.workingMemory.assertTuple(tuple1,rule1);
+  FactHandle logicalHandle1=this.workingMemory.assertObject(logicalString1,false,true,null,this.workingMemory.getAgenda().getActivations()[0]);
   String logicalString2=new String("logical");
-  FactHandle logicalHandle2=workingMemory.assertObject(logicalString2);
+  FactHandle logicalHandle2=this.workingMemory.assertObject(logicalString2);
   assertSame(logicalHandle1,logicalHandle2);
-  assertEquals(logicalString1,workingMemory.getObject(logicalHandle2));
-  assertSame(logicalString1,workingMemory.getObject(logicalHandle2));
+  assertEquals(logicalString1,this.workingMemory.getObject(logicalHandle2));
+  assertSame(logicalString1,this.workingMemory.getObject(logicalHandle2));
   factHandles[0]=(FactHandleImpl)logicalHandle2;
-  tuple1=new LeapsTuple(factHandles);
-  workingMemory.assertTuple(tuple1,new ArrayList(),new ArrayList(),context1,rule1);
+  tuple1=new LeapsTuple(factHandles,null,null,context1);
+  this.workingMemory.assertTuple(tuple1,rule1);
   logicalString2=new String("logical");
-  logicalHandle2=workingMemory.assertObject(logicalString2);
+  logicalHandle2=this.workingMemory.assertObject(logicalString2);
   logicalString1=new String("logical");
-  logicalHandle1=workingMemory.assertObject(logicalString1,false,true,null,((PostedActivation)workingMemory.getFactHandleActivations(handle1).next()).getAgendaItem());
+  logicalHandle1=this.workingMemory.assertObject(logicalString1,false,true,null,this.workingMemory.getAgenda().getActivations()[0]);
   assertNull(logicalHandle1);
-  logicalHandle1=workingMemory.assertObject(logicalString2,false,true,null,((PostedActivation)workingMemory.getFactHandleActivations(handle1).next()).getAgendaItem());
+  logicalHandle1=this.workingMemory.assertObject(logicalString2,false,true,null,this.workingMemory.getAgenda().getActivations()[0]);
   assertSame(logicalHandle2,logicalHandle1);
-  workingMemory.retractObject(handle1);
+  this.workingMemory.retractObject(handle1);
   assertSame(logicalHandle1,logicalHandle2);
-  assertEquals(logicalString1,workingMemory.getObject(logicalHandle2));
-  assertNotSame(logicalString1,workingMemory.getObject(logicalHandle2));
+  assertEquals(logicalString1,this.workingMemory.getObject(logicalHandle2));
+  assertNotSame(logicalString1,this.workingMemory.getObject(logicalHandle2));
 }

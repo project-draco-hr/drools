@@ -56,13 +56,18 @@
  else {
       currentIterator.next();
       token.setCurrentFactHandleAtPosition(jj,(FactHandleImpl)iterators[jj].current());
-      if (TokenEvaluator.evaluatePositiveConditions(token,jj,workingMemory)) {
+      if (token.getCurrentRuleHandle().getLeapsRule().getColumnConstraintsAtPosition(jj).isAllowed(token.getFactHandleAtPosition(jj),token,workingMemory)) {
         if (jj == (numberOfColumns - 1)) {
           if (!skip) {
-            List existsEnablingFacts=TokenEvaluator.evaluateExistsConditions(token,workingMemory);
-            if (existsEnablingFacts == null || existsEnablingFacts.size() > 0) {
-              PropagationContextImpl propagationContext=new PropagationContextImpl(workingMemory.increamentPropagationIdCounter(),PropagationContext.ASSERTION,token.getCurrentRuleHandle().getLeapsRule().getRule(),(Activation)null);
-              workingMemory.assertTuple(token.getTuple(),TokenEvaluator.evaluateNotConditions(token,workingMemory),existsEnablingFacts,propagationContext,token.getCurrentRuleHandle().getLeapsRule().getRule());
+            LeapsTuple tuple=token.getTuple(new PropagationContextImpl(workingMemory.increamentPropagationIdCounter(),PropagationContext.ASSERTION,token.getCurrentRuleHandle().getLeapsRule().getRule(),(Activation)null));
+            if (tuple.isExistsConstraintsPresent()) {
+              TokenEvaluator.evaluateExistsConditions(tuple,workingMemory);
+            }
+            if (tuple.isNotConstraintsPresent()) {
+              TokenEvaluator.evaluateNotConditions(tuple,workingMemory);
+            }
+            if (tuple.isReadyForActivation()) {
+              workingMemory.assertTuple(tuple,ruleHandle.getLeapsRule().getRule());
               done=true;
               found=true;
             }
