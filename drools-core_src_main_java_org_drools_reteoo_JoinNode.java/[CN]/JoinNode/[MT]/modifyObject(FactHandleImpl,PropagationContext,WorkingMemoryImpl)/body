@@ -1,10 +1,11 @@
 {
   BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  ObjectMatches objectMatches=(ObjectMatches)memory.getRightFactHandleMemory().remove(handle);
-  memory.getRightFactHandleMemory().put(handle,objectMatches);
+  ObjectMatches objectMatches=memory.remove(workingMemory,handle);
+  memory.add(workingMemory,objectMatches);
   TupleMatch tupleMatch=objectMatches.getFirstTupleMatch();
   BetaNodeBinder binder=getJoinNodeBinder();
-  for (ReteTuple leftTuple=memory.getFirstTuple(); leftTuple != null; leftTuple=(ReteTuple)leftTuple.getNext()) {
+  for (Iterator it=memory.leftTupleIterator(workingMemory,handle); it.hasNext(); ) {
+    ReteTuple leftTuple=(ReteTuple)it.next();
     if (tupleMatch != null && tupleMatch.getTuple() == leftTuple) {
       if (binder.isAllowed(handle,leftTuple,workingMemory)) {
         propagateModifyTuple(tupleMatch,context,workingMemory);
