@@ -1,5 +1,16 @@
 {
-  Class clazz=Class.forName(columnDescr.getObjectType());
+  if (columnDescr.getObjectType() == null || columnDescr.getObjectType().equals("")) {
+    this.results.add(new BuilderResult(columnDescr,null,"ObjectType not correctly defined"));
+    return;
+  }
+  Class clazz=null;
+  try {
+    clazz=Class.forName(columnDescr.getObjectType());
+  }
+ catch (  ClassNotFoundException e) {
+    this.results.add(new BuilderResult(columnDescr,null,"Unable to resolve ObjectType '" + columnDescr.getObjectType() + "'"));
+    return;
+  }
   Column column;
   if (columnDescr.getIdentifier() != null && !columnDescr.getIdentifier().equals("")) {
     column=new Column(columnCounter++,new ClassObjectType(clazz),columnDescr.getIdentifier());

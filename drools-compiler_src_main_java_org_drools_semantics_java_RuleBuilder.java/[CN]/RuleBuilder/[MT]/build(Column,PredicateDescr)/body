@@ -1,38 +1,42 @@
 {
-  Map root=new HashMap();
   String classMethodName="predicate" + counter++;
   predicateDescr.setClassMethodName(classMethodName);
-  root.put("package",this.pkg.getName());
-  root.put("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
-  root.put("invokerClassName",ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker");
-  root.put("methodName",classMethodName);
   Class clazz=((ClassObjectType)column.getObjectType()).getClassType();
-  FieldExtractor extractor=new ClassFieldExtractor(clazz,predicateDescr.getFieldName());
+  FieldExtractor extractor=getFieldExtractor(predicateDescr,clazz,predicateDescr.getFieldName());
+  if (extractor == null) {
+    return;
+  }
   Declaration declaration=column.addDeclaration(predicateDescr.getDeclaration(),extractor);
   this.declarations.put(declaration.getIdentifier(),declaration);
-  List usedDeclarations=this.analyzer.analyze(predicateDescr.getText(),this.declarations.keySet());
+  List usedDeclarations=getUsedDeclarations(predicateDescr,predicateDescr.getText());
+  if (usedDeclarations == null) {
+    return;
+  }
   usedDeclarations.remove(predicateDescr.getDeclaration());
   Declaration[] declarations=new Declaration[usedDeclarations.size()];
   for (int i=0, size=usedDeclarations.size(); i < size; i++) {
     declarations[i]=(Declaration)this.declarations.get((String)usedDeclarations.get(i));
   }
-  root.put("declarations",declarations);
-  root.put("declaration",declaration);
-  root.put("globals",getUsedGlobals(predicateDescr.getText()));
-  root.put("globalTypes",this.pkg.getGlobals());
-  root.put("text",predicateDescr.getText());
   PredicateConstraint predicateConstraint=new PredicateConstraint(declaration,declarations);
   column.addConstraint(predicateConstraint);
-  Template template=this.cfg.getTemplate("predicateMethod.ftl");
-  StringWriter string=new StringWriter();
-  template.process(root,string);
-  string.flush();
-  this.methods.add(string.toString());
-  template=this.cfg.getTemplate("predicateInvoker.ftl");
-  string=new StringWriter();
-  template.process(root,string);
-  string.flush();
+  StringTemplate st=ruleGroup.getInstanceOf("predicateMethod");
+  st.setAttribute("declaration",declaration);
+  st.setAttribute("declarationType",((ClassObjectType)declaration.getObjectType()).getClassType().getName().replace('$','.'));
+  setStringTemplateAttributes(st,declarations,predicateDescr.getText());
+  st.setAttribute("methodName",classMethodName);
+  st.setAttribute("text",predicateDescr.getText());
+  this.methods.add(st.toString());
+  st=invokerGroup.getInstanceOf("predicateInvoker");
+  st.setAttribute("package",this.pkg.getName());
+  st.setAttribute("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
+  st.setAttribute("invokerClassName",ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker");
+  st.setAttribute("methodName",classMethodName);
+  st.setAttribute("declaration",declaration);
+  st.setAttribute("declarationType",((ClassObjectType)declaration.getObjectType()).getClassType().getName().replace('$','.'));
+  setStringTemplateAttributes(st,declarations,predicateDescr.getText());
+  st.setAttribute("methodName",classMethodName);
+  st.setAttribute("text",predicateDescr.getText());
   String invokerClassName=ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker";
-  this.invokeables.put(invokerClassName,string.toString());
-  this.referenceLookups.put(this.pkg.getName() + "." + invokerClassName,predicateConstraint);
+  this.invokers.put(invokerClassName,st.toString());
+  this.invokerLookups.put(this.pkg.getName() + "." + invokerClassName,predicateConstraint);
 }

@@ -1,32 +1,30 @@
 {
-  Map root=new HashMap();
   String classMethodName="eval" + counter++;
   evalDescr.setClassMethodName(classMethodName);
-  root.put("package",this.pkg.getName());
-  root.put("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
-  root.put("invokerClassName",ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker");
-  root.put("methodName",classMethodName);
-  List usedDeclarations=this.analyzer.analyze(evalDescr.getText(),this.declarations.keySet());
+  List usedDeclarations=getUsedDeclarations(evalDescr,evalDescr.getText());
+  if (usedDeclarations == null) {
+    return;
+  }
   Declaration[] declarations=new Declaration[usedDeclarations.size()];
   for (int i=0, size=usedDeclarations.size(); i < size; i++) {
     declarations[i]=(Declaration)this.declarations.get((String)usedDeclarations.get(i));
   }
-  root.put("declarations",declarations);
-  root.put("globals",getUsedGlobals(evalDescr.getText()));
-  root.put("globalTypes",this.pkg.getGlobals());
-  root.put("text",evalDescr.getText());
   EvalCondition eval=new EvalCondition(declarations);
   ce.addChild(eval);
-  Template template=this.cfg.getTemplate("evalMethod.ftl");
-  StringWriter string=new StringWriter();
-  template.process(root,string);
-  string.flush();
-  this.methods.add(string.toString());
-  template=this.cfg.getTemplate("evalInvoker.ftl");
-  string=new StringWriter();
-  template.process(root,string);
-  string.flush();
+  StringTemplate st=ruleGroup.getInstanceOf("evalMethod");
+  setStringTemplateAttributes(st,declarations,evalDescr.getText());
+  st.setAttribute("methodName",classMethodName);
+  st.setAttribute("text",evalDescr.getText());
+  this.methods.add(st.toString());
+  st=invokerGroup.getInstanceOf("evalInvoker");
+  st.setAttribute("package",this.pkg.getName());
+  st.setAttribute("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
+  st.setAttribute("invokerClassName",ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker");
+  st.setAttribute("methodName",classMethodName);
+  setStringTemplateAttributes(st,declarations,evalDescr.getText());
+  st.setAttribute("methodName",classMethodName);
+  st.setAttribute("text",evalDescr.getText());
   String invokerClassName=ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker";
-  this.invokeables.put(invokerClassName,string.toString());
-  this.referenceLookups.put(this.pkg.getName() + "." + invokerClassName,eval);
+  this.invokers.put(invokerClassName,st.toString());
+  this.invokerLookups.put(this.pkg.getName() + "." + invokerClassName,eval);
 }

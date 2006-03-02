@@ -1,34 +1,39 @@
 {
-  Map root=new HashMap();
   String classMethodName="returnValue" + counter++;
   returnValueDescr.setClassMethodName(classMethodName);
-  root.put("package",this.pkg.getName());
-  root.put("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
-  root.put("invokerClassName",ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker");
-  root.put("methodName",classMethodName);
-  List usedDeclarations=this.analyzer.analyze(returnValueDescr.getText(),this.declarations.keySet());
+  List usedDeclarations=getUsedDeclarations(returnValueDescr,returnValueDescr.getText());
+  if (usedDeclarations == null) {
+    return;
+  }
   Declaration[] declarations=new Declaration[usedDeclarations.size()];
   for (int i=0, size=usedDeclarations.size(); i < size; i++) {
     declarations[i]=(Declaration)this.declarations.get((String)usedDeclarations.get(i));
   }
-  root.put("declarations",declarations);
-  root.put("globals",getUsedGlobals(returnValueDescr.getText()));
-  root.put("globalTypes",this.pkg.getGlobals());
-  root.put("text",returnValueDescr.getText());
-  ClassFieldExtractor extractor=new ClassFieldExtractor(((ClassObjectType)column.getObjectType()).getClassType(),returnValueDescr.getFieldName());
-  Evaluator evaluator=EvaluatorFactory.getEvaluator(extractor.getObjectType().getValueType(),returnValueDescr.getEvaluator());
+  Class clazz=((ClassObjectType)column.getObjectType()).getClassType();
+  FieldExtractor extractor=getFieldExtractor(returnValueDescr,clazz,returnValueDescr.getFieldName());
+  if (extractor == null) {
+    return;
+  }
+  Evaluator evaluator=getEvaluator(returnValueDescr,extractor.getObjectType().getValueType(),returnValueDescr.getEvaluator());
+  if (evaluator == null) {
+    return;
+  }
   ReturnValueConstraint returnValueConstraint=new ReturnValueConstraint(extractor,declarations,evaluator);
   column.addConstraint(returnValueConstraint);
-  Template template=this.cfg.getTemplate("returnValueMethod.ftl");
-  StringWriter string=new StringWriter();
-  template.process(root,string);
-  string.flush();
-  this.methods.add(string.toString());
-  template=this.cfg.getTemplate("returnValueInvoker.ftl");
-  string=new StringWriter();
-  template.process(root,string);
-  string.flush();
+  StringTemplate st=ruleGroup.getInstanceOf("returnValueMethod");
+  setStringTemplateAttributes(st,declarations,returnValueDescr.getText());
+  st.setAttribute("methodName",classMethodName);
+  st.setAttribute("text",returnValueDescr.getText());
+  this.methods.add(st.toString());
+  st=invokerGroup.getInstanceOf("returnValueInvoker");
+  st.setAttribute("package",this.pkg.getName());
+  st.setAttribute("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
+  st.setAttribute("invokerClassName",ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker");
+  st.setAttribute("methodName",classMethodName);
+  setStringTemplateAttributes(st,declarations,returnValueDescr.getText());
+  st.setAttribute("methodName",classMethodName);
+  st.setAttribute("text",returnValueDescr.getText());
   String invokerClassName=ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker";
-  this.invokeables.put(invokerClassName,string.toString());
-  this.referenceLookups.put(this.pkg.getName() + "." + invokerClassName,returnValueConstraint);
+  this.invokers.put(invokerClassName,st.toString());
+  this.invokerLookups.put(this.pkg.getName() + "." + invokerClassName,returnValueConstraint);
 }

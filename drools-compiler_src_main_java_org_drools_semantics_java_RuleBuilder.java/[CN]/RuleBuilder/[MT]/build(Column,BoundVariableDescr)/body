@@ -1,8 +1,21 @@
 {
-  boundVariable.getDeclarationIdentifier();
+  if (boundVariableDescr.getDeclarationIdentifier() == null || boundVariableDescr.getDeclarationIdentifier().equals("")) {
+    this.results.add(new BuilderResult(boundVariableDescr,null,"Identifier not defined for binding field '" + boundVariableDescr.getFieldName()) + "'");
+    return;
+  }
   Class clazz=((ClassObjectType)column.getObjectType()).getClassType();
-  FieldExtractor extractor=new ClassFieldExtractor(clazz,boundVariable.getFieldName());
-  Declaration declaration=(Declaration)this.declarations.get(boundVariable.getDeclarationIdentifier());
-  Evaluator evaluator=EvaluatorFactory.getEvaluator(declaration.getObjectType().getValueType(),boundVariable.getEvaluator());
+  FieldExtractor extractor=getFieldExtractor(boundVariableDescr,clazz,boundVariableDescr.getFieldName());
+  if (extractor == null) {
+    return;
+  }
+  Declaration declaration=(Declaration)this.declarations.get(boundVariableDescr.getDeclarationIdentifier());
+  if (declaration == null) {
+    this.results.add(new BuilderResult(boundVariableDescr,null,"Unable to return Declaration for identifier '" + boundVariableDescr.getDeclarationIdentifier()) + "'");
+    return;
+  }
+  Evaluator evaluator=getEvaluator(boundVariableDescr,declaration.getObjectType().getValueType(),boundVariableDescr.getEvaluator());
+  if (evaluator == null) {
+    return;
+  }
   column.addConstraint(new BoundVariableConstraint(extractor,declaration,evaluator));
 }
