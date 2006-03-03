@@ -1,10 +1,14 @@
 {
   final Rule rule=new Rule("done_plotting");
-  rule.setSalience(-10);
   Column stageColumn=new Column(0,stageType,"stage");
   stageColumn.addConstraint(getLiteralConstraint(stageColumn,"value",new Integer(Stage.PLOT_REMAINING_EDGES),this.integerEqualEvaluator));
   rule.addPattern(stageColumn);
   final Declaration stageDeclaration=rule.getDeclaration("stage");
+  Column notEdgeColumn=new Column(1,edgeType);
+  notEdgeColumn.addConstraint(getLiteralConstraint(notEdgeColumn,"plotted",Edge.NIL,this.objectEqualEvaluator));
+  Not notEdge=new Not();
+  notEdge.addChild(notEdgeColumn);
+  rule.addPattern(notEdge);
   Consequence consequence=new Consequence(){
     public void evaluate(    Activation activation,    WorkingMemory workingMemory) throws ConsequenceException {
       try {
