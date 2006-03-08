@@ -1,0 +1,42 @@
+{
+  if (columnDescr.getObjectType() == null || columnDescr.getObjectType().equals("")) {
+    this.errors.add(new RuleError(this.rule,columnDescr,null,"ObjectType not correctly defined"));
+    return;
+  }
+  Class clazz=null;
+  try {
+    clazz=typeResolver.resolveType(columnDescr.getObjectType());
+  }
+ catch (  ClassNotFoundException e) {
+    this.errors.add(new RuleError(this.rule,columnDescr,null,"Unable to resolve ObjectType '" + columnDescr.getObjectType() + "'"));
+    return;
+  }
+  Column column;
+  if (columnDescr.getIdentifier() != null && !columnDescr.getIdentifier().equals("")) {
+    column=new Column(columnCounter++,new ClassObjectType(clazz),columnDescr.getIdentifier());
+    ;
+    this.declarations.put(column.getDeclaration().getIdentifier(),column.getDeclaration());
+  }
+ else {
+    column=new Column(columnCounter++,new ClassObjectType(clazz));
+  }
+  for (Iterator it=columnDescr.getDescrs().iterator(); it.hasNext(); ) {
+    Object object=it.next();
+    if (object instanceof FieldBindingDescr) {
+      build(column,(FieldBindingDescr)object);
+    }
+ else     if (object instanceof LiteralDescr) {
+      build(column,(LiteralDescr)object);
+    }
+ else     if (object instanceof BoundVariableDescr) {
+      build(column,(BoundVariableDescr)object);
+    }
+ else     if (object instanceof ReturnValueDescr) {
+      build(column,(ReturnValueDescr)object);
+    }
+ else     if (object instanceof PredicateDescr) {
+      build(column,(PredicateDescr)object);
+    }
+  }
+  ce.addChild(column);
+}

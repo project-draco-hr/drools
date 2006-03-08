@@ -1,0 +1,19 @@
+{
+  Class clazz=((ClassObjectType)column.getObjectType()).getClassType();
+  FieldExtractor extractor=getFieldExtractor(literalDescr,clazz,literalDescr.getFieldName());
+  if (extractor == null) {
+    return;
+  }
+  FieldValue field=null;
+  try {
+    field=FieldFactory.getFieldValue(literalDescr.getText(),extractor.getObjectType().getValueType());
+  }
+ catch (  Exception e) {
+    this.errors.add(new RuleError(this.rule,literalDescr,e,"Unable to create a Field value ofr type  '" + extractor.getObjectType().getValueType() + "' and value '"+ literalDescr.getText()+ "'"));
+  }
+  Evaluator evaluator=getEvaluator(literalDescr,extractor.getObjectType().getValueType(),literalDescr.getEvaluator());
+  if (evaluator == null) {
+    return;
+  }
+  column.addConstraint(new LiteralConstraint(field,extractor,evaluator));
+}
