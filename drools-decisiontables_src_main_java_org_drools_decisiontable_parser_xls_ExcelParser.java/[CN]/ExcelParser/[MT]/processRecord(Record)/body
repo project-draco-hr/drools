@@ -1,0 +1,35 @@
+{
+switch (record.getSid()) {
+case BoundSheetRecord.sid:
+    BoundSheetRecord bsr=(BoundSheetRecord)record;
+  _sheetNames.add(bsr.getSheetname());
+break;
+case BOFRecord.sid:
+BOFRecord bof=(BOFRecord)record;
+if (bof.getType() == BOFRecord.TYPE_WORKSHEET) {
+newSheet((String)_sheetNames.get(_currentSheetNumber++));
+}
+break;
+case RowRecord.sid:
+RowRecord rowRec=(RowRecord)record;
+_currentSheetListener.newRow(rowRec.getRowNumber(),rowRec.getLastCol() - rowRec.getFirstCol() + 1);
+break;
+case SSTRecord.sid:
+_sstRec=(SSTRecord)record;
+break;
+case LabelSSTRecord.sid:
+handleText(record);
+break;
+case NumberRecord.sid:
+handleNumber(record);
+break;
+case BoolErrRecord.sid:
+handleBool(record);
+break;
+case FormulaRecord.sid:
+handleFormula(record);
+break;
+default :
+break;
+}
+}
