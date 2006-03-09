@@ -1,7 +1,12 @@
 {
   this.attachingNewNode=true;
-  this.objectSource.removeObjectSink(this);
-  this.objectSource.addObjectSink(this);
-  this.objectSource.updateNewNode(workingMemory,context);
+  Map memory=(Map)workingMemory.getNodeMemory(this);
+  for (Iterator it=memory.values().iterator(); it.hasNext(); ) {
+    LinkedList list=(LinkedList)it.next();
+    int i=0;
+    for (LinkedListNode node=list.removeFirst(); node != null; node=list.removeFirst()) {
+      ((TupleSink)getTupleSinks().get(i++)).modifyTuple((ReteTuple)((LinkedListNodeWrapper)node).getNode(),context,workingMemory);
+    }
+  }
   this.attachingNewNode=false;
 }
