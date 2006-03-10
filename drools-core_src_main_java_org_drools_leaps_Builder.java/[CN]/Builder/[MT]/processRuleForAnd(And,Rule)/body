@@ -1,4 +1,5 @@
 {
+  ColumnConstraints constraints;
   ArrayList leapsRules=new ArrayList();
   ArrayList cols=new ArrayList();
   ArrayList notCols=new ArrayList();
@@ -6,21 +7,23 @@
   for (Iterator it=and.getChildren().iterator(); it.hasNext(); ) {
     Object object=it.next();
     if (object instanceof Column) {
-      cols.add(Builder.processColumn((Column)object));
+      constraints=Builder.processColumn((Column)object);
     }
  else {
       ConditionalElement ce=(ConditionalElement)object;
-      if (!(ce.getChildren().get(0) instanceof Column)) {
+      while (!(ce.getChildren().get(0) instanceof Column)) {
         ce=(ConditionalElement)ce.getChildren().get(0);
       }
-      if (object instanceof Not) {
-        notCols.add(Builder.processColumn((Column)ce.getChildren().get(0)));
-      }
- else       if (object instanceof Exists) {
-        existsCols.add(Builder.processColumn((Column)ce.getChildren().get(0)));
-      }
+      constraints=Builder.processColumn((Column)ce.getChildren().get(0));
+    }
+    if (object instanceof Not) {
+      notCols.add(constraints);
+    }
+ else     if (object instanceof Exists) {
+      existsCols.add(constraints);
+    }
  else {
-      }
+      cols.add(constraints);
     }
   }
   leapsRules.add(new LeapsRule(rule,cols,notCols,existsCols));
