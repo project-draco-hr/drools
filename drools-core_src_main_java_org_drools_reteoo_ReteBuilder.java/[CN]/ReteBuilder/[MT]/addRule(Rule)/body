@@ -1,21 +1,23 @@
 {
   this.workingMemories=(WorkingMemoryImpl[])this.ruleBase.getWorkingMemories().toArray(new WorkingMemoryImpl[this.ruleBase.getWorkingMemories().size()]);
+  List nodes=new ArrayList();
   And[] and=rule.getTransformedLhs();
   for (int i=0; i < and.length; i++) {
     addRule(and[i],rule);
-  }
-  BaseNode node=null;
-  if (!(rule instanceof Query)) {
-    node=new TerminalNode(this.id++,this.tupleSource,rule);
-  }
+    BaseNode node=null;
+    if (!(rule instanceof Query)) {
+      node=new TerminalNode(this.id++,this.tupleSource,rule);
+    }
  else {
-    node=new QueryTerminalNode(this.id++,this.tupleSource,rule);
-  }
-  this.rules.put(rule,new BaseNode[]{node});
-  if (this.workingMemories.length == 0) {
-    node.attach();
-  }
+      node=new QueryTerminalNode(this.id++,this.tupleSource,rule);
+    }
+    nodes.add(node);
+    if (this.workingMemories.length == 0) {
+      node.attach();
+    }
  else {
-    node.attach(workingMemories);
+      node.attach(workingMemories);
+    }
   }
+  this.rules.put(rule,nodes.toArray());
 }
