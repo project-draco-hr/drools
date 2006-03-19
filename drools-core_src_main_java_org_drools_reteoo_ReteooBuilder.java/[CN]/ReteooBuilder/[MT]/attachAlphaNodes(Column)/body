@@ -4,14 +4,16 @@
   List predicateConstraints=new ArrayList();
   for (Iterator it=constraints.iterator(); it.hasNext(); ) {
     Object object=it.next();
-    if (!(object instanceof FieldConstraint)) {
-      continue;
+    if (object instanceof Declaration) {
+      Declaration declaration=(Declaration)object;
+      this.declarations.put(declaration.getIdentifier(),declaration);
     }
     FieldConstraint fieldConstraint=(FieldConstraint)object;
-    if (fieldConstraint.getRequiredDeclarations().length == 0) {
+    if (fieldConstraint instanceof LiteralConstraint) {
       this.objectSource=attachNode(new AlphaNode(this.id++,fieldConstraint,objectSource));
     }
  else {
+      checkUnboundDeclarations(fieldConstraint.getRequiredDeclarations());
       predicateConstraints.add(fieldConstraint);
     }
   }

@@ -1,11 +1,18 @@
 {
   this.objectSource=null;
   this.tupleSource=null;
+  this.declarations=new HashMap();
   if (rule instanceof Query) {
     attachQuery(rule.getName());
   }
   for (Iterator it=and.getChildren().iterator(); it.hasNext(); ) {
     Object object=it.next();
+    if (object instanceof EvalCondition) {
+      EvalCondition eval=(EvalCondition)object;
+      checkUnboundDeclarations(eval.getRequiredDeclarations());
+      this.tupleSource=attachNode(new EvalConditionNode(this.id++,this.tupleSource,eval));
+      continue;
+    }
     BetaNodeBinder binder;
     Column column;
     if (object instanceof Column) {
