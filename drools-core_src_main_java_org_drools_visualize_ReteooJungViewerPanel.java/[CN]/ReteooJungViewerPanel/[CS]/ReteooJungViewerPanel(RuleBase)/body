@@ -1,0 +1,80 @@
+{
+  setLayout(new BorderLayout());
+  JPanel leftPanel=new JPanel(new BorderLayout());
+  JPanel rightPanel=new JPanel(new BorderLayout());
+  JSplitPane splitPane=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,leftPanel,rightPanel);
+  splitPane.setDividerLocation(0.75);
+  splitPane.setResizeWeight(1);
+  add(splitPane);
+  this.graph=new DirectedSparseGraph();
+  ReteooToJungVisitor visitor=new ReteooToJungVisitor(this.graph);
+  visitor.visit(ruleBase);
+  final PluggableRenderer pr=new PluggableRenderer();
+  pr.setEdgeShapeFunction(new EdgeShape.QuadCurve());
+  pr.setVertexPaintFunction(new VertexPaintFunction(){
+    public Paint getFillPaint(    Vertex v){
+      return ((DroolsVertex)v).getFillPaint();
+    }
+    public Paint getDrawPaint(    Vertex v){
+      return ((DroolsVertex)v).getDrawPaint();
+    }
+  }
+);
+  pr.setEdgePaintFunction(new PickableEdgePaintFunction(pr,Color.black,Color.cyan));
+  pr.setGraphLabelRenderer(new DefaultGraphLabelRenderer(Color.cyan,Color.cyan));
+  pr.setVertexShapeFunction(new EllipseVertexShapeFunction(new ConstantVertexSizeFunction(14),new ConstantVertexAspectRatioFunction(1.0f)));
+  ReteooLayoutSolver solver=new ReteooLayoutSolver(visitor.getRootVertex());
+  Layout layout=new ReteooLayout(this.graph,new VertexFunctions(),solver.getRowList());
+  this.vv=new VisualizationViewer(layout,pr);
+  this.vv.setBackground(Color.white);
+  this.vv.setPickSupport(new ShapePickSupport());
+  this.vv.setToolTipFunction(new DefaultToolTipFunction());
+  final PluggableGraphMouse graphMouse=new PluggableGraphMouse();
+  graphMouse.add(new PickingGraphMousePlugin());
+  graphMouse.add(new ViewScalingGraphMousePlugin());
+  graphMouse.add(new CrossoverScalingGraphMousePlugin());
+  graphMouse.add(new RotatingGraphMousePlugin());
+  this.vv.setGraphMouse(graphMouse);
+  final ScalingControl scaler=new CrossoverScalingControl();
+  JButton plus=new JButton("+");
+  plus.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      scaler.scale(vv,1.1f,vv.getCenter());
+    }
+  }
+);
+  JButton minus=new JButton("-");
+  minus.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      scaler.scale(vv,0.9f,vv.getCenter());
+    }
+  }
+);
+  final GraphZoomScrollPane graphPanel=new GraphZoomScrollPane(this.vv);
+  graphPanel.scrollRectToVisible(new Rectangle(1,1,1,1));
+  leftPanel.add(graphPanel);
+  JPanel scaleGrid=new JPanel(new GridLayout(1,0));
+  scaleGrid.setBorder(BorderFactory.createTitledBorder("Zoom"));
+  JPanel controls=new JPanel();
+  scaleGrid.add(plus);
+  scaleGrid.add(minus);
+  controls.add(scaleGrid);
+  leftPanel.add(controls,BorderLayout.SOUTH);
+  final JEditorPane infoPane=new JEditorPane();
+  infoPane.setEditable(false);
+  infoPane.setContentType("text/html");
+  JScrollPane infoScrollPane=new JScrollPane(infoPane);
+  infoScrollPane.setPreferredSize(new Dimension(150,10));
+  infoScrollPane.setMinimumSize(new Dimension(150,10));
+  this.vv.addGraphMouseListener(new GraphMouseListener(){
+    public void graphClicked(    Vertex vertex,    MouseEvent e){
+      infoPane.setText(((DroolsVertex)vertex).getHtml());
+    }
+    public void graphPressed(    Vertex vertex,    MouseEvent e){
+    }
+    public void graphReleased(    Vertex vertex,    MouseEvent e){
+    }
+  }
+);
+  rightPanel.add(infoScrollPane);
+}
