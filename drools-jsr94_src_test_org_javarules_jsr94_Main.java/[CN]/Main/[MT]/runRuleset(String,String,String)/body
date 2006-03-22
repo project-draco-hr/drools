@@ -1,0 +1,54 @@
+{
+  log("Rule Execution Set to run: " + fileName);
+  log("Administrator API - Parse and Deploy RuleSet");
+  RuleServiceProvider serviceProvider=RuleServiceProviderManager.getRuleServiceProvider(ruleServiceProvider);
+  RuleAdministrator ruleAdministrator=serviceProvider.getRuleAdministrator();
+  log("Got RuleAdministrator implementation: " + ruleAdministrator);
+  InputStream inStream=Main.class.getResourceAsStream(fileName);
+  log("Acquired InputStream to input file: " + inStream);
+  RuleExecutionSet ruleExecutionSet=ruleAdministrator.getLocalRuleExecutionSetProvider(null).createRuleExecutionSet(inStream,null);
+  log("Loaded RuleExecutionSet: " + ruleExecutionSet);
+  log("Name: " + ruleExecutionSet.getName());
+  log("Description: " + ruleExecutionSet.getDescription());
+  log("Rules:");
+  for (Iterator it=ruleExecutionSet.getRules().iterator(); it.hasNext(); ) {
+    Rule rule=(Rule)it.next();
+    log(rule.getName());
+  }
+  String uri="uri_" + System.currentTimeMillis();
+  ruleAdministrator.registerRuleExecutionSet(uri,ruleExecutionSet,null);
+  log("Bound RuleExecutionSet to URI: " + uri);
+  log("Runtime API - Query Deployed RuleSets");
+  RuleRuntime ruleRuntime=serviceProvider.getRuleRuntime();
+  log("Acquired RuleRuntime: " + ruleRuntime);
+  List uriList=ruleRuntime.getRegistrations();
+  log("Registered RuleExecutionSets:");
+  for (Iterator it=uriList.iterator(); it.hasNext(); ) {
+    log("Ruleset URI: " + it.next());
+  }
+  log("Runtime API - Stateless Execution");
+  StatelessRuleSession statelessRuleSession=(StatelessRuleSession)ruleRuntime.createRuleSession(uri,new HashMap(),RuleRuntime.STATELESS_SESSION_TYPE);
+  log("Got Stateful Rule Session " + uri);
+  log("Implementation: " + statelessRuleSession);
+  List inputList=new LinkedList();
+  inputList.add(userAgent);
+  log("Adding browser User-Agent to session: " + userAgent);
+  List resultList=statelessRuleSession.executeRules(inputList);
+  log("Called executeRules on Stateless Rule Session: " + statelessRuleSession);
+  log("Result of calling executeRules: " + resultList);
+  statelessRuleSession.release();
+  log("Released Stateless Rule Session.");
+  log("Runtime API - Stateful Execution");
+  StatefulRuleSession statefulRuleSession=(StatefulRuleSession)ruleRuntime.createRuleSession(uri,new HashMap(),RuleRuntime.STATEFUL_SESSION_TYPE);
+  log("Got Stateful Rule Session " + uri);
+  log(": " + statefulRuleSession);
+  log("Adding browser User-Agent to session: " + userAgent);
+  statefulRuleSession.addObjects(inputList);
+  log("Called addObject on Stateful Rule Session: " + statefulRuleSession);
+  statefulRuleSession.executeRules();
+  log("Called executeRules");
+  resultList=statefulRuleSession.getObjects();
+  log("Result of calling getObjects: " + resultList);
+  statefulRuleSession.release();
+  log("Released Stateful Rule Session.");
+}
