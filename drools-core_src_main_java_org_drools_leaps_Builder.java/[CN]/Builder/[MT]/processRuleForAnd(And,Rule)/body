@@ -4,28 +4,36 @@
   ArrayList cols=new ArrayList();
   ArrayList notCols=new ArrayList();
   ArrayList existsCols=new ArrayList();
+  ArrayList evalConditions=new ArrayList();
   for (Iterator it=and.getChildren().iterator(); it.hasNext(); ) {
     Object object=it.next();
-    if (object instanceof Column) {
-      constraints=Builder.processColumn((Column)object);
+    if (object instanceof EvalCondition) {
+      EvalCondition eval=(EvalCondition)object;
+      evalConditions.add(eval);
     }
  else {
-      GroupElement ce=(GroupElement)object;
-      while (!(ce.getChildren().get(0) instanceof Column)) {
-        ce=(GroupElement)ce.getChildren().get(0);
+      if (object instanceof Column) {
+        constraints=Builder.processColumn((Column)object);
       }
-      constraints=Builder.processColumn((Column)ce.getChildren().get(0));
-    }
-    if (object instanceof Not) {
-      notCols.add(constraints);
-    }
- else     if (object instanceof Exists) {
-      existsCols.add(constraints);
-    }
  else {
-      cols.add(constraints);
+        GroupElement ce=(GroupElement)object;
+        while (!(ce.getChildren().get(0) instanceof Column)) {
+          ce=(GroupElement)ce.getChildren().get(0);
+        }
+        constraints=Builder.processColumn((Column)ce.getChildren().get(0));
+      }
+      if (object instanceof Not) {
+        notCols.add(constraints);
+      }
+ else       if (object instanceof Exists) {
+        existsCols.add(constraints);
+      }
+ else {
+        cols.add(constraints);
+      }
     }
   }
-  leapsRules.add(new LeapsRule(rule,cols,notCols,existsCols));
+  checkEvalUnboundDeclarations(rule,evalConditions);
+  leapsRules.add(new LeapsRule(rule,cols,notCols,existsCols,evalConditions));
   return leapsRules;
 }

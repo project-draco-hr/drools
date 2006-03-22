@@ -1,0 +1,21 @@
+{
+  LeapsTuple tuple=token.getTuple(new PropagationContextImpl(workingMemory.increamentPropagationIdCounter(),PropagationContext.ASSERTION,leapsRule.getRule(),(Activation)null));
+  if (leapsRule.containsEvalConditions()) {
+    if (!TokenEvaluator.evaluateEvalConditions(leapsRule,tuple,workingMemory)) {
+      return false;
+    }
+  }
+  if (tuple.isExistsConstraintsPresent()) {
+    TokenEvaluator.evaluateExistsConditions(tuple,workingMemory,(leapsRule.getNumberOfColumns() == 0));
+  }
+  if (tuple.isNotConstraintsPresent()) {
+    TokenEvaluator.evaluateNotConditions(tuple,workingMemory,(leapsRule.getNumberOfColumns() == 0));
+  }
+  if (tuple.isReadyForActivation()) {
+    workingMemory.assertTuple(tuple,leapsRule.getRule());
+    return true;
+  }
+ else {
+    return false;
+  }
+}

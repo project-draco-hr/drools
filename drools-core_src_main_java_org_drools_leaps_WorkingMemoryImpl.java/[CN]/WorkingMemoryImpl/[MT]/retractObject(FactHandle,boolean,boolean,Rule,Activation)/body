@@ -1,6 +1,5 @@
 {
   removePropertyChangeListener(handle);
-  PropagationContextImpl context=new PropagationContextImpl(++this.propagationIdCounter,PropagationContext.RETRACTION,rule,activation);
   for (Iterator it=this.getFactTablesList(((FactHandleImpl)handle).getObject().getClass()).iterator(); it.hasNext(); ) {
     ((FactTable)it.next()).remove(handle);
   }
@@ -37,7 +36,7 @@
   for (; chain.hasNext(); ) {
     tuple=((FactHandleTupleAssembly)chain.next()).getTuple();
     if (tuple.isReadyForActivation() && tuple.isActivationNull()) {
-      this.assertTuple(tuple,rule);
+      this.assertTuple(tuple,tuple.getContext().getRuleOrigin());
     }
  else {
       this.invalidateActivation(tuple);
@@ -51,5 +50,6 @@
   if (updateEqualsMap) {
     this.equalsMap.remove(oldObject);
   }
+  PropagationContextImpl context=new PropagationContextImpl(++this.propagationIdCounter,PropagationContext.RETRACTION,rule,activation);
   this.workingMemoryEventSupport.fireObjectRetracted(context,handle,oldObject);
 }
