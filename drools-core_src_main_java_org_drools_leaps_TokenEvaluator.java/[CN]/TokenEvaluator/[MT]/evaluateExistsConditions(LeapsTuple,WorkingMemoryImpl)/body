@@ -7,25 +7,14 @@
   for (int i=0, length=exists.length; i < length; i++) {
     constraint=exists[i];
     factTable=workingMemory.getFactTable(((ClassObjectType)constraint.getColumn().getObjectType()).getClassType());
-    if (noColumnsToken) {
-      Handle marker=new Handle(workingMemory.getIdLastFireAllAt(),null);
-      tableIterator=factTable.headIterator(marker);
-    }
- else {
-      tableIterator=factTable.iterator();
-    }
+    tableIterator=factTable.iterator();
     while (tableIterator.hasNext()) {
       factHandle=(FactHandleImpl)tableIterator.next();
       if (constraint.isAllowed(factHandle,tuple,workingMemory)) {
         tuple.addExistsFactHandle(factHandle,i);
-        if (tuple.getFactHandles().length > 0) {
-          factTable.addTuple(tuple);
-          factHandle.addExistsTuple(tuple,i);
-        }
- else {
-          return;
-        }
+        factHandle.addExistsTuple(tuple,i);
       }
+      factTable.addTuple(tuple);
     }
   }
 }

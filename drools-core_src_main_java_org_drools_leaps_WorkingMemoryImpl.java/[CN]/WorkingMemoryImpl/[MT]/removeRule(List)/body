@@ -1,5 +1,21 @@
 {
-  for (Iterator it=rules.iterator(); it.hasNext(); ) {
-    this.noRequiredColumnsLeapsRules.remove(it.next());
+synchronized (this.lock) {
+    ArrayList ruleHandlesList;
+    LeapsRule rule;
+    RuleHandle ruleHandle;
+    for (Iterator it=rules.iterator(); it.hasNext(); ) {
+      rule=(LeapsRule)it.next();
+      if (rule.getNumberOfColumns() > 0) {
+        ruleHandlesList=(ArrayList)this.leapsRulesToHandlesMap.remove(rule);
+        for (int i=0; i < ruleHandlesList.size(); i++) {
+          ruleHandle=(RuleHandle)ruleHandlesList.get(i);
+          this.getFactTable(((ClassObjectType)(rule.getColumnConstraintsAtPosition(i)).getColumn().getObjectType()).getClassType()).removeRule(ruleHandle);
+        }
+      }
+ else {
+        ruleHandle=(RuleHandle)this.leapsRulesToHandlesMap.remove(rule);
+        this.noRequiredColumnsLeapsRules.remove(ruleHandle);
+      }
+    }
   }
 }

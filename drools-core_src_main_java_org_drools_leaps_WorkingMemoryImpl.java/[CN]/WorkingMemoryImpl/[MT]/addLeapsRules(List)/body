@@ -1,18 +1,23 @@
 {
 synchronized (this.lock) {
+    ArrayList ruleHandlesList;
     LeapsRule rule;
     RuleHandle ruleHandle;
     for (Iterator it=rules.iterator(); it.hasNext(); ) {
       rule=(LeapsRule)it.next();
       if (rule.getNumberOfColumns() > 0) {
+        ruleHandlesList=new ArrayList();
         for (int i=0; i < rule.getNumberOfColumns(); i++) {
           ruleHandle=new RuleHandle(((HandleFactory)this.handleFactory).getNextId(),rule,i);
           this.getFactTable(((ClassObjectType)(rule.getColumnConstraintsAtPosition(i)).getColumn().getObjectType()).getClassType()).addRule(this,ruleHandle);
+          ruleHandlesList.add(ruleHandle);
         }
+        this.leapsRulesToHandlesMap.put(rule,ruleHandlesList);
       }
  else {
         ruleHandle=new RuleHandle(((HandleFactory)this.handleFactory).getNextId(),rule,-1);
         this.noRequiredColumnsLeapsRules.add(ruleHandle);
+        this.leapsRulesToHandlesMap.put(rule,ruleHandle);
       }
     }
   }

@@ -7,25 +7,14 @@
   for (int i=0, length=not.length; i < length; i++) {
     constraint=not[i];
     factTable=workingMemory.getFactTable(((ClassObjectType)constraint.getColumn().getObjectType()).getClassType());
-    if (noColumnsToken) {
-      Handle marker=new Handle(workingMemory.getIdLastFireAllAt(),null);
-      tableIterator=factTable.headIterator(marker);
-    }
- else {
-      tableIterator=factTable.iterator();
-    }
+    tableIterator=factTable.iterator();
     while (tableIterator.hasNext()) {
       factHandle=(FactHandleImpl)tableIterator.next();
       if (constraint.isAllowed(factHandle,tuple,workingMemory)) {
         tuple.addNotFactHandle(factHandle,i);
-        if (tuple.getFactHandles().length > 0) {
-          factTable.addTuple(tuple);
-          factHandle.addNotTuple(tuple,i);
-        }
- else {
-          return;
-        }
+        factHandle.addNotTuple(tuple,i);
       }
+      factTable.addTuple(tuple);
     }
   }
 }
