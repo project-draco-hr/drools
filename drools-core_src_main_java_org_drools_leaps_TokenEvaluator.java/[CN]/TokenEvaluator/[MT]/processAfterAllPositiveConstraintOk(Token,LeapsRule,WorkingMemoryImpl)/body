@@ -5,11 +5,15 @@
       return false;
     }
   }
-  if (tuple.isExistsConstraintsPresent()) {
-    TokenEvaluator.evaluateExistsConditions(tuple,workingMemory);
+  if (leapsRule.containsExistsColumns()) {
+    TokenEvaluator.evaluateExistsConditions(tuple,leapsRule,workingMemory);
   }
-  if (tuple.isNotConstraintsPresent()) {
-    TokenEvaluator.evaluateNotConditions(tuple,workingMemory);
+  if (leapsRule.containsNotColumns()) {
+    TokenEvaluator.evaluateNotConditions(tuple,leapsRule,workingMemory);
+  }
+  Class[] classes=leapsRule.getExistsNotColumnsClasses();
+  for (int i=0, length=classes.length; i < length; i++) {
+    workingMemory.getFactTable(classes[i]).addTuple(tuple);
   }
   if (tuple.isReadyForActivation()) {
     workingMemory.assertTuple(tuple);

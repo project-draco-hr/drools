@@ -5,20 +5,9 @@
  else {
     super.fireActivation(activation);
     LeapsTuple tuple=(LeapsTuple)activation.getTuple();
-    ColumnConstraints[] constraints;
-    if (tuple.isNotConstraintsPresent()) {
-      constraints=tuple.getNotConstraints();
-      for (int i=0, length=constraints.length; i < length; i++) {
-        FactTable factTable=this.workingMemory.getFactTable(((ClassObjectType)constraints[i].getColumn().getObjectType()).getClassType());
-        factTable.removeTuple(tuple);
-      }
-    }
-    if (tuple.isExistsConstraintsPresent()) {
-      constraints=tuple.getExistsConstraints();
-      for (int i=0, length=constraints.length; i < length; i++) {
-        FactTable factTable=this.workingMemory.getFactTable(((ClassObjectType)constraints[i].getColumn().getObjectType()).getClassType());
-        factTable.removeTuple(tuple);
-      }
+    Class[] classes=tuple.getLeapsRule().getExistsNotColumnsClasses();
+    for (int i=0, length=classes.length; i < length; i++) {
+      workingMemory.getFactTable(classes[i]).removeTuple(tuple);
     }
   }
 }
