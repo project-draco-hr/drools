@@ -1,0 +1,16 @@
+{
+  RuleRuntime ruleRuntime=ruleServiceProvider.getRuleRuntime();
+  assertNotNull("cannot obtain RuleRuntime",ruleRuntime);
+  try {
+    ruleRuntime.createRuleSession("someUri",null,RuleRuntime.STATELESS_SESSION_TYPE);
+    fail("RuleExecutionSetNotFoundException expected");
+  }
+ catch (  RuleExecutionSetNotFoundException ex) {
+  }
+  Reader ruleReader=new InputStreamReader(RuleRuntimeTest.class.getResourceAsStream(RULES_RESOURCE));
+  RuleExecutionSet ruleSet=ruleSetProvider.createRuleExecutionSet(ruleReader,null);
+  ruleAdministrator.registerRuleExecutionSet(RULES_RESOURCE,ruleSet,null);
+  StatelessRuleSession statelessRuleSession=(StatelessRuleSession)ruleRuntime.createRuleSession(RULES_RESOURCE,null,RuleRuntime.STATELESS_SESSION_TYPE);
+  assertNotNull("cannot obtain StatelessRuleSession",statelessRuleSession);
+  ruleAdministrator.deregisterRuleExecutionSet(RULES_RESOURCE,null);
+}
