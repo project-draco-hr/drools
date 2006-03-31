@@ -1,0 +1,19 @@
+{
+  SpreadsheetCompiler converter=new SpreadsheetCompiler();
+  String drl=converter.compile("/data/IntegrationExampleTest.xls",InputType.XLS);
+  assertNotNull(drl);
+  PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new StringReader(drl));
+  Package pkg=builder.getPackage();
+  assertNotNull(pkg);
+  assertEquals(0,builder.getErrors().length);
+  RuleBase rb=RuleBaseFactory.getInstance().newRuleBase();
+  rb.addPackage(pkg);
+  WorkingMemory wm=rb.newWorkingMemory();
+  wm.assertObject(new Cheese("stilton",42));
+  wm.assertObject(new Person("michael","stilton",42));
+  List list=new ArrayList();
+  wm.setGlobal("list",list);
+  wm.fireAllRules();
+  assertEquals(1,list.size());
+}
