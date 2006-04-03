@@ -3,7 +3,8 @@
     WorkingMemoryImpl workingMemory=workingMemories[i];
     TerminalNodeMemory memory=(TerminalNodeMemory)workingMemory.getNodeMemory(this);
     ActivationQueue queue=memory.getLifo();
-    for (AgendaItem item=(AgendaItem)queue.getFirst(); item != null; item=(AgendaItem)item.getNext()) {
+    for (AgendaItem item=(AgendaItem)queue.getFirst(); item != null; ) {
+      AgendaItem nextItem=(AgendaItem)item.getNext();
       if (item.getRule() == this.rule) {
         if (item.isActivated()) {
           item.remove();
@@ -12,6 +13,7 @@
         PropagationContext propagationContext=new PropagationContextImpl(workingMemory.getNextPropagationIdCounter(),PropagationContext.RULE_ADDITION,null,null);
         workingMemory.removeLogicalDependencies(item,propagationContext,this.rule);
       }
+      item=nextItem;
     }
   }
   tupleSource.remove(this,workingMemories);
