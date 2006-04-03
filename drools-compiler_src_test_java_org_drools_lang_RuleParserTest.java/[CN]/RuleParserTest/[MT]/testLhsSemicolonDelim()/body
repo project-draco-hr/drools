@@ -1,0 +1,34 @@
+{
+  RuleDescr rule=parseResource("lhs_semicolon_delim.drl").rule();
+  assertNotNull(rule);
+  assertEquals("simple_rule",rule.getName());
+  AndDescr lhs=rule.getLhs();
+  assertNotNull(lhs);
+  assertEquals(3,lhs.getDescrs().size());
+  ColumnDescr first=(ColumnDescr)lhs.getDescrs().get(0);
+  assertEquals("foo3",first.getIdentifier());
+  assertEquals("Bar",first.getObjectType());
+  assertEquals(1,first.getDescrs().size());
+  LiteralDescr constraint=(LiteralDescr)first.getDescrs().get(0);
+  assertNotNull(constraint);
+  assertEquals("a",constraint.getFieldName());
+  assertEquals("==",constraint.getEvaluator());
+  assertEquals("3",constraint.getText());
+  ColumnDescr second=(ColumnDescr)lhs.getDescrs().get(1);
+  assertEquals("foo4",second.getIdentifier());
+  assertEquals("Bar",second.getObjectType());
+  assertEquals(2,second.getDescrs().size());
+  FieldBindingDescr fieldBindingDescr=(FieldBindingDescr)second.getDescrs().get(0);
+  assertEquals("a",fieldBindingDescr.getFieldName());
+  assertEquals("a4",fieldBindingDescr.getIdentifier());
+  constraint=(LiteralDescr)second.getDescrs().get(1);
+  assertNotNull(constraint);
+  assertEquals("a",constraint.getFieldName());
+  assertEquals("==",constraint.getEvaluator());
+  assertEquals("4",constraint.getText());
+  ColumnDescr third=(ColumnDescr)lhs.getDescrs().get(2);
+  assertNull(third.getIdentifier());
+  assertEquals("Baz",third.getObjectType());
+  assertEqualsIgnoreWhitespace("if ( a == b ) { " + "  assert( foo3 );" + "} else {"+ "  retract( foo4 );"+ "}"+ "  System.out.println( a4 );",rule.getConsequence());
+  assertFalse(parser.hasErrors());
+}
