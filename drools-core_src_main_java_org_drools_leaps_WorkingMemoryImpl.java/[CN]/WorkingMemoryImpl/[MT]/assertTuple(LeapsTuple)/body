@@ -1,6 +1,6 @@
 {
   PropagationContext context=tuple.getContext();
-  Rule rule=context.getRuleOrigin();
+  Rule rule=tuple.getLeapsRule().getRule();
   if (rule.getNoLoop() && rule.equals(context.getRuleOrigin())) {
     return;
   }
@@ -14,24 +14,31 @@
     this.getAgendaEventSupport().fireActivationCreated(agendaItem);
   }
  else {
-    AgendaGroupImpl agendaGroup=null;
-    if (rule.getAgendaGroup() == null || rule.getAgendaGroup().equals("") || rule.getAgendaGroup().equals(AgendaGroup.MAIN)) {
-      agendaGroup=(AgendaGroupImpl)this.agenda.getAgendaGroup(AgendaGroup.MAIN);
-    }
- else {
-      agendaGroup=(AgendaGroupImpl)this.agenda.getAgendaGroup(rule.getAgendaGroup());
-    }
+    LeapsRule leapsRule=tuple.getLeapsRule();
+    AgendaGroupImpl agendaGroup=leapsRule.getAgendaGroup();
     if (agendaGroup == null) {
-      agendaGroup=new AgendaGroupImpl(rule.getAgendaGroup());
-      this.agenda.addAgendaGroup(agendaGroup);
+      if (rule.getAgendaGroup() == null || rule.getAgendaGroup().equals("") || rule.getAgendaGroup().equals(AgendaGroup.MAIN)) {
+        agendaGroup=(AgendaGroupImpl)this.agenda.getAgendaGroup(AgendaGroup.MAIN);
+      }
+ else {
+        agendaGroup=(AgendaGroupImpl)this.agenda.getAgendaGroup(rule.getAgendaGroup());
+      }
+      if (agendaGroup == null) {
+        agendaGroup=new AgendaGroupImpl(rule.getAgendaGroup());
+        this.getAgenda().addAgendaGroup(agendaGroup);
+      }
+      leapsRule.setAgendaGroup(agendaGroup);
     }
     if (rule.getAutoFocus()) {
       this.agenda.setFocus(agendaGroup);
     }
-    ActivationQueue queue=agendaGroup.getActivationQueue(rule.getSalience());
+    if (leapsRule.getLifo() == null) {
+      leapsRule.setLifo(agendaGroup.getActivationQueue(rule.getSalience()));
+    }
+    ActivationQueue queue=leapsRule.getLifo();
     agendaItem=new AgendaItem(context.getPropagationNumber(),tuple,context,rule,queue);
     queue.add(agendaItem);
-    agendaGroup.addToAgenda(queue);
+    agendaGroup.addToAgenda(leapsRule.getLifo());
     tuple.setActivation(agendaItem);
     agendaItem.setActivated(true);
     this.getAgendaEventSupport().fireActivationCreated(agendaItem);

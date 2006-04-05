@@ -1,0 +1,19 @@
+{
+  Map globals=existingPackage.getGlobals();
+  List imports=existingPackage.getImports();
+  PackageCompilationData compilationData=existingPackage.getPackageCompilationData();
+  PackageCompilationData newCompilationData=newPackage.getPackageCompilationData();
+  String[] files=newCompilationData.list();
+  for (int i=0, length=files.length; i < length; i++) {
+    compilationData.write(files[i],newCompilationData.read(files[i]));
+  }
+  imports.addAll(newPackage.getImports());
+  compilationData.putAllInvokers(newCompilationData.getInvokers());
+  for (Iterator it=globals.keySet().iterator(); it.hasNext(); ) {
+    String identifier=(String)it.next();
+    Class type=(Class)globals.get(identifier);
+    if (globals.containsKey(identifier) && !globals.get(identifier).equals(type)) {
+      throw new PackageIntegrationException("Unable to merge new Package",newPackage);
+    }
+  }
+}
