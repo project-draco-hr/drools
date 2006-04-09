@@ -1,7 +1,15 @@
 {
   List constraints=column.getConstraints();
+  Class thisClass=((ClassObjectType)column.getObjectType()).getClassType();
   this.objectSource=attachNode(new ObjectTypeNode(this.id++,column.getObjectType(),this.rete));
   List predicateConstraints=new ArrayList();
+  for (int i=0, size=this.objectType.size(); i < size; i++) {
+    Class previousClass=((ClassObjectType)this.objectType.get(i)).getClassType();
+    if (thisClass.isAssignableFrom(previousClass)) {
+      predicateConstraints.add(new InstanceEqualsConstraint(i));
+    }
+  }
+  this.objectType.add(column.getObjectType());
   for (Iterator it=constraints.iterator(); it.hasNext(); ) {
     Object object=it.next();
     if (object instanceof Declaration) {
