@@ -3,6 +3,7 @@
   StringBuffer expanded=new StringBuffer();
   String eol=System.getProperty("line.separator");
   while (lines.hasMoreTokens()) {
+    startLine++;
     String line=lines.nextToken();
     line=line.trim();
     if (line.length() > 0) {
@@ -11,8 +12,13 @@
         expanded.append(eol);
       }
  else {
-        expanded.append(expander.expand("then",line));
-        expanded.append(eol);
+        try {
+          expanded.append(expander.expand("then",line));
+          expanded.append(eol);
+        }
+ catch (        Exception e) {
+          this.errors.add(new ExpanderException("Unable to expand: " + line + ". Due to "+ e.getMessage(),startLine));
+        }
       }
     }
   }
