@@ -3,13 +3,16 @@
   Class thisClass=((ClassObjectType)column.getObjectType()).getClassType();
   this.objectSource=attachNode(new ObjectTypeNode(this.id++,column.getObjectType(),this.rete));
   List predicateConstraints=new ArrayList();
-  for (int i=0, size=this.objectType.size(); i < size; i++) {
-    Class previousClass=((ClassObjectType)this.objectType.get(i)).getClassType();
-    if (thisClass.isAssignableFrom(previousClass)) {
-      predicateConstraints.add(new InstanceEqualsConstraint(i));
+  if (removeIdentities) {
+    for (Iterator it=this.objectType.entrySet().iterator(); it.hasNext(); ) {
+      Map.Entry entry=(Map.Entry)it.next();
+      Class previousClass=((ClassObjectType)entry.getKey()).getClassType();
+      if (thisClass.isAssignableFrom(previousClass)) {
+        predicateConstraints.add(new InstanceEqualsConstraint(((Integer)entry.getValue()).intValue()));
+      }
     }
+    this.objectType.put(column.getObjectType(),new Integer(column.getFactIndex()));
   }
-  this.objectType.add(column.getObjectType());
   for (Iterator it=constraints.iterator(); it.hasNext(); ) {
     Object object=it.next();
     if (object instanceof Declaration) {
