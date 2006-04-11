@@ -1,20 +1,20 @@
 {
-  StatelessRuleSession statelessSession=sessionBuilder.getStatelessRuleSession(bindUri);
-  List inObjects=new ArrayList();
+  this.statefulSession=engine.getStatefulRuleSession(bindUri_drl);
   Person bob=new Person("bob");
-  inObjects.add(bob);
-  Person jeannie=new Person("jeannie");
-  jeannie.addSister("rebecca");
-  inObjects.add(jeannie);
+  statefulSession.addObject(bob);
   Person rebecca=new Person("rebecca");
   rebecca.addSister("jeannie");
-  inObjects.add(rebecca);
-  List outList=statelessSession.executeRules(inObjects);
+  statefulSession.addObject(rebecca);
+  Person jeannie=new Person("jeannie");
+  jeannie.addSister("rebecca");
+  statefulSession.addObject(jeannie);
+  statefulSession.executeRules();
+  List outList=statefulSession.getObjects();
   assertEquals("incorrect size",5,outList.size());
   assertContains(outList,bob);
   assertContains(outList,rebecca);
   assertContains(outList,jeannie);
   assertContains(outList,"rebecca and jeannie are sisters");
   assertContains(outList,"jeannie and rebecca are sisters");
-  statelessSession.release();
+  statefulSession.release();
 }
