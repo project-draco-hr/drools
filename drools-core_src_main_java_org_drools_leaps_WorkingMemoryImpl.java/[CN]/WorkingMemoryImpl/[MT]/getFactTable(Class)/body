@@ -6,6 +6,18 @@
  else {
     table=new FactTable(DefaultConflictResolver.getInstance());
     this.factTables.put(c,table);
+    for (Iterator iter=this.leapsRulesToHandlesMap.keySet().iterator(); iter.hasNext(); ) {
+      LeapsRule leapsRule=(LeapsRule)iter.next();
+      if (leapsRule.getNumberOfColumns() > 0) {
+        List rulesHandles=(List)this.leapsRulesToHandlesMap.get(leapsRule);
+        for (Iterator handles=rulesHandles.iterator(); handles.hasNext(); ) {
+          RuleHandle handle=(RuleHandle)handles.next();
+          if (leapsRule.getColumnClassObjectTypeAtPosition(handle.getDominantPosition()).isAssignableFrom(c)) {
+            table.addRule(this,handle);
+          }
+        }
+      }
+    }
   }
   return table;
 }
