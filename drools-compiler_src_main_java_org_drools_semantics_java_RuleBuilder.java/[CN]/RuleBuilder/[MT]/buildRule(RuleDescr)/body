@@ -1,8 +1,21 @@
 {
-  StringTemplate st=ruleGroup.getInstanceOf("ruleClass");
-  st.setAttribute("package",this.pkg.getName());
-  st.setAttribute("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
-  st.setAttribute("imports",this.pkg.getImports());
-  st.setAttribute("methods",this.methods);
-  this.ruleClass=st.toString();
+  if (this.methods.isEmpty()) {
+    this.ruleClass=null;
+    return;
+  }
+  String lineSeparator=System.getProperty("line.separator");
+  StringBuffer buffer=new StringBuffer();
+  buffer.append("package " + this.pkg.getName() + ";"+ lineSeparator);
+  for (Iterator it=this.pkg.getImports().iterator(); it.hasNext(); ) {
+    buffer.append("import " + it.next() + ";"+ lineSeparator);
+  }
+  buffer.append("public class " + ucFirst(this.ruleDescr.getClassName()) + " {"+ lineSeparator);
+  for (int i=0, size=this.methods.size() - 1; i < size; i++) {
+    buffer.append(this.methods.get(i) + lineSeparator);
+  }
+  String[] lines=buffer.toString().split(lineSeparator);
+  this.ruleDescr.setConsequenceOffset(lines.length + 2);
+  buffer.append(this.methods.get(this.methods.size() - 1) + lineSeparator);
+  buffer.append("}");
+  this.ruleClass=buffer.toString();
 }

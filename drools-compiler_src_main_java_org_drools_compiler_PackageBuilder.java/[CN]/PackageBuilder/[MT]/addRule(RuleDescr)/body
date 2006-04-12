@@ -5,24 +5,8 @@
   builder.build(this.pkg,ruleDescr);
   this.results.addAll(builder.getErrors());
   Rule rule=builder.getRule();
-  CompilationResult result=compile(this.pkg.getName() + "." + ruleDescr.getClassName(),builder.getRuleClass(),src,this.packageStoreWrapper);
-  if (result.getErrors().length > 0) {
-    this.results.add(new RuleError(rule,ruleDescr,result.getErrors(),"Rule Compilation error"));
-  }
- else {
-    for (Iterator it=builder.getInvokers().keySet().iterator(); it.hasNext(); ) {
-      String className=(String)it.next();
-      Object invoker=builder.getInvokerLookups().get(className);
-      if (invoker != null) {
-        this.pkg.getPackageCompilationData().putInvoker(className,invoker);
-      }
-      String text=(String)builder.getInvokers().get(className);
-      result=compile(className,text,src,this.packageStoreWrapper);
-      if (result.getErrors().length > 0) {
-        PatternDescr descr=(PatternDescr)builder.getDescrLookups().get(className);
-        this.results.add(new RuleError(rule,descr,result.getErrors(),"Rule Compilation error for Invoker"));
-      }
-    }
+  if (builder.getRuleClass() != null) {
+    compileRule(builder,rule,ruleDescr);
   }
   this.pkg.addRule(rule);
 }
