@@ -2,100 +2,93 @@
   WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)token.getWorkingMemory();
   LeapsRule leapsRule=token.getCurrentRuleHandle().getLeapsRule();
   int numberOfColumns=leapsRule.getNumberOfColumns();
-  if (numberOfColumns > 0) {
-    int dominantFactPosition=token.getCurrentRuleHandle().getDominantPosition();
-    FactHandleImpl dominantFactHandle=token.getDominantFactHandle();
-    if (leapsRule.getColumnConstraintsAtPosition(dominantFactPosition).isAllowedAlpha(dominantFactHandle,token,workingMemory)) {
-      Class dominantClass=leapsRule.getColumnClassObjectTypeAtPosition(dominantFactPosition);
-      TableIterator[] iterators=new TableIterator[numberOfColumns];
-      for (int i=0; i < numberOfColumns; i++) {
-        if (i == dominantFactPosition) {
-          iterators[i]=Table.singleItemIterator(dominantFactHandle);
-        }
- else {
-          Class columnClass=leapsRule.getColumnClassObjectTypeAtPosition(i);
-          ColumnConstraints constraints=leapsRule.getColumnConstraintsAtPosition(i);
-          FactTable factTable=workingMemory.getFactTable(columnClass);
-          FactHandleImpl startFactHandle=(dominantClass == columnClass) ? new FactHandleImpl(dominantFactHandle.getId() - 1,null) : dominantFactHandle;
-          if (i > 0 && constraints.isAlphaPresent()) {
-            iterators[i]=factTable.tailConstrainedIterator(workingMemory,constraints,startFactHandle,(token.isResume() ? (FactHandleImpl)token.get(i) : startFactHandle));
-          }
- else {
-            iterators[i]=factTable.tailIterator(startFactHandle,(token.isResume() ? (FactHandleImpl)token.get(i) : startFactHandle));
-          }
-        }
+  int dominantFactPosition=token.getCurrentRuleHandle().getDominantPosition();
+  FactHandleImpl dominantFactHandle=token.getDominantFactHandle();
+  if (leapsRule.getColumnConstraintsAtPosition(dominantFactPosition).isAllowedAlpha(dominantFactHandle,token,workingMemory)) {
+    Class dominantClass=leapsRule.getColumnClassObjectTypeAtPosition(dominantFactPosition);
+    TableIterator[] iterators=new TableIterator[numberOfColumns];
+    for (int i=0; i < numberOfColumns; i++) {
+      if (i == dominantFactPosition) {
+        iterators[i]=Table.singleItemIterator(dominantFactHandle);
       }
-      boolean doReset=false;
-      boolean skip=token.isResume();
-      TableIterator currentIterator;
-      for (int i=0; i < numberOfColumns; i++) {
-        currentIterator=iterators[i];
-        if (currentIterator.isEmpty()) {
-          throw new NoMatchesFoundException();
+ else {
+        Class columnClass=leapsRule.getColumnClassObjectTypeAtPosition(i);
+        ColumnConstraints constraints=leapsRule.getColumnConstraintsAtPosition(i);
+        FactTable factTable=workingMemory.getFactTable(columnClass);
+        FactHandleImpl startFactHandle=(dominantClass == columnClass) ? new FactHandleImpl(dominantFactHandle.getId() - 1,null) : dominantFactHandle;
+        if (i > 0 && constraints.isAlphaPresent()) {
+          iterators[i]=factTable.tailConstrainedIterator(workingMemory,constraints,startFactHandle,(token.isResume() ? (FactHandleImpl)token.get(i) : startFactHandle));
         }
  else {
-          if (!doReset) {
-            if (skip && currentIterator.hasNext() && !currentIterator.peekNext().equals(token.get(i))) {
-              skip=false;
-              doReset=true;
-            }
-          }
- else {
-            currentIterator.reset();
-          }
-        }
-      }
-      int jj=0;
-      boolean done=false;
-      int stopIteratingCount=numberOfColumns - 1;
-      while (!done) {
-        currentIterator=iterators[jj];
-        if (!currentIterator.hasNext()) {
-          if (jj == 0) {
-            done=true;
-          }
- else {
-            currentIterator.reset();
-            jj=jj - 1;
-            if (skip) {
-              skip=false;
-            }
-          }
-        }
- else {
-          FactHandleImpl currentFactHandle=(FactHandleImpl)currentIterator.next();
-          boolean localMatch=false;
-          if (!skip) {
-            if (jj != 0 || jj == dominantFactPosition) {
-              localMatch=leapsRule.getColumnConstraintsAtPosition(jj).isAllowedBeta(currentFactHandle,token,workingMemory);
-            }
- else {
-              localMatch=leapsRule.getColumnConstraintsAtPosition(jj).isAllowed(currentFactHandle,token,workingMemory);
-            }
-          }
-          if (localMatch || skip) {
-            token.set(jj,currentFactHandle);
-            if (jj == stopIteratingCount) {
-              if (!skip) {
-                if (processAfterAllPositiveConstraintOk(token,leapsRule,workingMemory)) {
-                  return;
-                }
-              }
- else {
-                skip=false;
-              }
-            }
- else {
-              jj=jj + 1;
-            }
-          }
+          iterators[i]=factTable.tailIterator(startFactHandle,(token.isResume() ? (FactHandleImpl)token.get(i) : startFactHandle));
         }
       }
     }
-  }
+    boolean doReset=false;
+    boolean skip=token.isResume();
+    TableIterator currentIterator;
+    for (int i=0; i < numberOfColumns; i++) {
+      currentIterator=iterators[i];
+      if (currentIterator.isEmpty()) {
+        throw new NoMatchesFoundException();
+      }
  else {
-    if (processAfterAllPositiveConstraintOk(token,leapsRule,workingMemory)) {
-      return;
+        if (!doReset) {
+          if (skip && currentIterator.hasNext() && !currentIterator.peekNext().equals(token.get(i))) {
+            skip=false;
+            doReset=true;
+          }
+        }
+ else {
+          currentIterator.reset();
+        }
+      }
+    }
+    int jj=0;
+    boolean done=false;
+    int stopIteratingCount=numberOfColumns - 1;
+    while (!done) {
+      currentIterator=iterators[jj];
+      if (!currentIterator.hasNext()) {
+        if (jj == 0) {
+          done=true;
+        }
+ else {
+          currentIterator.reset();
+          jj=jj - 1;
+          if (skip) {
+            skip=false;
+          }
+        }
+      }
+ else {
+        FactHandleImpl currentFactHandle=(FactHandleImpl)currentIterator.next();
+        boolean localMatch=false;
+        if (!skip) {
+          if (jj != 0 || jj == dominantFactPosition) {
+            localMatch=leapsRule.getColumnConstraintsAtPosition(jj).isAllowedBeta(currentFactHandle,token,workingMemory);
+          }
+ else {
+            localMatch=leapsRule.getColumnConstraintsAtPosition(jj).isAllowed(currentFactHandle,token,workingMemory);
+          }
+        }
+        if (localMatch || skip) {
+          token.set(jj,currentFactHandle);
+          if (jj == stopIteratingCount) {
+            if (!skip) {
+              if (processAfterAllPositiveConstraintOk(token.getTuple(),leapsRule,workingMemory)) {
+                return;
+              }
+            }
+ else {
+              skip=false;
+            }
+          }
+ else {
+            jj=jj + 1;
+          }
+        }
+      }
     }
   }
   throw new NoMatchesFoundException();

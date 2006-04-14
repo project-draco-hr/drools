@@ -8,28 +8,32 @@
     this.invalidateActivation((LeapsTuple)tuples.next());
   }
   FactHandleTupleAssembly assembly;
-  Iterator it;
-  it=((FactHandleImpl)handle).getNotTuples();
-  if (it != null) {
-    for (; it.hasNext(); ) {
-      assembly=(FactHandleTupleAssembly)it.next();
-      assembly.getTuple().removeNotFactHandle(handle,assembly.getIndex());
-    }
-  }
-  it=((FactHandleImpl)handle).getExistsTuples();
-  if (it != null) {
-    for (; it.hasNext(); ) {
-      assembly=(FactHandleTupleAssembly)it.next();
-      assembly.getTuple().removeExistsFactHandle(handle,assembly.getIndex());
-    }
-  }
   LeapsTuple tuple;
+  Iterator it;
+  it=((FactHandleImpl)handle).getNotTupleAssemblies();
+  if (it != null) {
+    for (; it.hasNext(); ) {
+      assembly=(FactHandleTupleAssembly)it.next();
+      tuple=assembly.getTuple();
+      tuple.removeBlockingNotFactHandle(assembly.getIndex());
+      TokenEvaluator.evaluateNotCondition(new FactHandleImpl(((FactHandleImpl)handle).getId() + 1,null),assembly.getIndex(),tuple,this);
+    }
+  }
+  it=((FactHandleImpl)handle).getExistsTupleAssemblies();
+  if (it != null) {
+    for (; it.hasNext(); ) {
+      assembly=(FactHandleTupleAssembly)it.next();
+      tuple=assembly.getTuple();
+      tuple.removeExistsFactHandle(assembly.getIndex());
+      TokenEvaluator.evaluateExistsCondition(new FactHandleImpl(((FactHandleImpl)handle).getId() + 1,null),assembly.getIndex(),tuple,this);
+    }
+  }
   IteratorChain chain=new IteratorChain();
-  it=((FactHandleImpl)handle).getNotTuples();
+  it=((FactHandleImpl)handle).getNotTupleAssemblies();
   if (it != null) {
     chain.addIterator(it);
   }
-  it=((FactHandleImpl)handle).getExistsTuples();
+  it=((FactHandleImpl)handle).getExistsTupleAssemblies();
   if (it != null) {
     chain.addIterator(it);
   }

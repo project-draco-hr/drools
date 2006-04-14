@@ -1,16 +1,15 @@
 {
-  FactHandleImpl factHandle;
-  TableIterator tableIterator;
-  ColumnConstraints constraint;
   ColumnConstraints[] not=rule.getNotColumnConstraints();
   for (int i=0, length=not.length; i < length; i++) {
-    constraint=not[i];
-    tableIterator=workingMemory.getFactTable(constraint.getClassType()).iterator();
-    while (tableIterator.hasNext()) {
-      factHandle=(FactHandleImpl)tableIterator.next();
+    ColumnConstraints constraint=not[i];
+    TableIterator tableIterator=workingMemory.getFactTable(constraint.getClassType()).iterator();
+    boolean done=false;
+    while (!done && tableIterator.hasNext()) {
+      FactHandleImpl factHandle=(FactHandleImpl)tableIterator.next();
       if (constraint.isAllowed(factHandle,tuple,workingMemory)) {
-        tuple.addNotFactHandle(factHandle,i);
+        tuple.setBlockingNotFactHandle(factHandle,i);
         factHandle.addNotTuple(tuple,i);
+        done=true;
       }
     }
   }

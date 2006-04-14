@@ -1,16 +1,15 @@
 {
-  FactHandleImpl factHandle;
-  TableIterator tableIterator;
-  ColumnConstraints constraint;
   ColumnConstraints[] exists=rule.getExistsColumnConstraints();
   for (int i=0, length=exists.length; i < length; i++) {
-    constraint=exists[i];
-    tableIterator=workingMemory.getFactTable(constraint.getClassType()).iterator();
-    while (tableIterator.hasNext()) {
-      factHandle=(FactHandleImpl)tableIterator.next();
+    ColumnConstraints constraint=exists[i];
+    TableIterator tableIterator=workingMemory.getFactTable(constraint.getClassType()).iterator();
+    boolean done=false;
+    while (!done && tableIterator.hasNext()) {
+      FactHandleImpl factHandle=(FactHandleImpl)tableIterator.next();
       if (constraint.isAllowed(factHandle,tuple,workingMemory)) {
-        tuple.addExistsFactHandle(factHandle,i);
+        tuple.setExistsFactHandle(factHandle,i);
         factHandle.addExistsTuple(tuple,i);
+        done=true;
       }
     }
   }

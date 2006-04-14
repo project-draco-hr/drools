@@ -35,39 +35,39 @@
     tuple.addLogicalDependency(handle);
     handle.addLogicalDependency(tuple);
   }
-  LeapsTuple tuple;
-  LeapsRule leapsRule;
   Class objectClass=object.getClass();
   for (Iterator tables=this.getFactTablesList(objectClass).iterator(); tables.hasNext(); ) {
     FactTable factTable=(FactTable)tables.next();
     factTable.add(handle);
-    ColumnConstraints constraint;
-    ColumnConstraints[] constraints;
     for (Iterator tuples=factTable.getTuplesIterator(); tuples.hasNext(); ) {
-      tuple=(LeapsTuple)tuples.next();
-      leapsRule=tuple.getLeapsRule();
-      constraints=leapsRule.getNotColumnConstraints();
-      for (int i=0, length=constraints.length; i < length; i++) {
-        constraint=constraints[i];
-        if (objectClass.isAssignableFrom(constraint.getClassType()) && constraint.isAllowed(handle,tuple,this)) {
-          tuple.addNotFactHandle(handle,i);
-          handle.addNotTuple(tuple,i);
+      LeapsTuple tuple=(LeapsTuple)tuples.next();
+      if (!tuple.isActivationNull()) {
+        ColumnConstraints[] not=tuple.getLeapsRule().getNotColumnConstraints();
+        for (int i=0, length=not.length; i < length; i++) {
+          ColumnConstraints constraint=not[i];
+          if (constraint.isAllowed(handle,tuple,this)) {
+            tuple.setBlockingNotFactHandle(handle,i);
+            handle.addNotTuple(tuple,i);
+          }
+        }
+        if (!tuple.isReadyForActivation()) {
+          this.invalidateActivation(tuple);
         }
       }
-      constraints=leapsRule.getExistsColumnConstraints();
-      for (int i=0, length=constraints.length; i < length; i++) {
-        constraint=constraints[i];
-        if (objectClass.isAssignableFrom(constraint.getClassType()) && constraint.isAllowed(handle,tuple,this)) {
-          tuple.addExistsFactHandle(handle,i);
-          handle.addExistsTuple(tuple,i);
+ else {
+        ColumnConstraints[] exists=tuple.getLeapsRule().getExistsColumnConstraints();
+        for (int i=0, length=exists.length; i < length; i++) {
+          ColumnConstraints constraint=exists[i];
+          if (constraint.getClassType().isAssignableFrom(objectClass)) {
+            if (constraint.isAllowed(handle,tuple,this)) {
+              tuple.setExistsFactHandle(handle,i);
+              handle.addExistsTuple(tuple,i);
+            }
+          }
         }
-      }
-      if (tuple.isReadyForActivation() && tuple.isActivationNull()) {
-        this.assertTuple(tuple);
-        tuples.remove();
-      }
- else       if (!tuple.isReadyForActivation() && !tuple.isActivationNull()) {
-        this.invalidateActivation(tuple);
+        if (tuple.isReadyForActivation()) {
+          this.assertTuple(tuple);
+        }
       }
     }
   }
