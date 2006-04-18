@@ -1,0 +1,20 @@
+{
+  Configuration config=packageReader.endConfiguration();
+  String name=config.getAttribute("name");
+  if (name == null || name.trim().equals("")) {
+    throw new SAXParseException("<function> requires a 'name' attribute",packageReader.getLocator());
+  }
+  String returnType=config.getAttribute("returnType");
+  if (returnType == null || returnType.trim().equals("")) {
+    throw new SAXParseException("<function> requires a 'returnType' attribute",packageReader.getLocator());
+  }
+  FunctionDescr functionDescr=new FunctionDescr(name,returnType);
+  Configuration[] parameters=config.getChildren("parameter");
+  for (int i=0, length=parameters.length; i < length; i++) {
+    functionDescr.addParameter(parameters[i].getAttribute("identifier"),parameters[i].getAttribute("text"));
+  }
+  functionDescr.setText(config.getText());
+  PackageDescr packageDescr=this.packageReader.getPackageDescr();
+  packageDescr.addFunction(functionDescr);
+  return functionDescr;
+}

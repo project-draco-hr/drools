@@ -1,0 +1,23 @@
+{
+  if (!this.lastWasEndElement) {
+    this.peer=null;
+  }
+  Handler handler=getHandler(localName);
+  if ((handler != null) && (!this.parents.isEmpty() && this.parents.getLast() instanceof RuleDescr)) {
+    this.inHandledRuleSubElement=true;
+  }
+  if (handler == null) {
+    if (((this.inHandledRuleSubElement == false) && (this.parents.getLast() instanceof RuleDescr)) || (this.parents.getLast() instanceof PackageDescr)) {
+      throw new SAXParseException("unknown tag '" + localName + "' in namespace '"+ uri+ "'",getLocator());
+    }
+    startConfiguration(localName,attrs);
+    return;
+  }
+  validate(uri,localName,handler);
+  Object node=handler.start(uri,localName,attrs);
+  if (node != null) {
+    this.parents.add(node);
+    this.current=node;
+  }
+  this.lastWasEndElement=false;
+}

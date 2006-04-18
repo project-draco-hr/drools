@@ -1,0 +1,58 @@
+{
+  boolean validParent=false;
+  boolean validPeer=false;
+  boolean invalidNesting=false;
+  Set validParents=handler.getValidParents();
+  Set validPeers=handler.getValidPeers();
+  boolean allowNesting=handler.allowNesting();
+  Object parent;
+  if (this.parents.size() != 0) {
+    parent=this.parents.getLast();
+  }
+ else {
+    parent=null;
+  }
+  Class nodeClass=getHandler(localName).generateNodeFor();
+  if (!nodeClass.isInstance(parent)) {
+    Object allowedParent;
+    Iterator it=validParents.iterator();
+    while (!validParent && it.hasNext()) {
+      allowedParent=it.next();
+      if (parent == null && allowedParent == null) {
+        validParent=true;
+      }
+ else       if (allowedParent != null && ((Class)allowedParent).isInstance(parent)) {
+        validParent=true;
+      }
+    }
+    if (!validParent) {
+      throw new SAXParseException("<" + localName + "> has an invalid parent element",getLocator());
+    }
+  }
+  Object peer=this.peer;
+  Object allowedPeer;
+  Iterator it=validPeers.iterator();
+  while (!validPeer && it.hasNext()) {
+    allowedPeer=it.next();
+    if (peer == null && allowedPeer == null) {
+      validPeer=true;
+    }
+ else     if (allowedPeer != null && ((Class)allowedPeer).isInstance(peer)) {
+      validPeer=true;
+    }
+  }
+  if (!validPeer) {
+    throw new SAXParseException("<" + localName + "> is after an invalid element",getLocator());
+  }
+  if (!allowNesting) {
+    it=this.parents.iterator();
+    while (!invalidNesting && it.hasNext()) {
+      if (nodeClass.isInstance(it.next())) {
+        invalidNesting=true;
+      }
+    }
+  }
+  if (invalidNesting) {
+    throw new SAXParseException("<" + localName + ">  may not be nested",getLocator());
+  }
+}
