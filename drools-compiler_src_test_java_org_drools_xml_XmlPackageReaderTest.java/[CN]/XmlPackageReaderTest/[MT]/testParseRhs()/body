@@ -1,0 +1,28 @@
+{
+  XmlPackageReader xmlPackageReader=new XmlPackageReader();
+  xmlPackageReader.read(new InputStreamReader(getClass().getResourceAsStream("test_ParseRhs.xml")));
+  PackageDescr packageDescr=xmlPackageReader.getPackageDescr();
+  assertNotNull(packageDescr);
+  assertEquals("com.sample",packageDescr.getName());
+  List imports=packageDescr.getImports();
+  assertEquals(2,imports.size());
+  assertEquals("java.util.HashMap",imports.get(0));
+  assertEquals("org.drools.*",imports.get(1));
+  Map globals=packageDescr.getGlobals();
+  assertEquals(2,globals.size());
+  assertEquals("com.sample.X",globals.get("x"));
+  assertEquals("com.sample.Yada",globals.get("yada"));
+  FunctionDescr functionDescr=(FunctionDescr)packageDescr.getFunctions().get(0);
+  List names=functionDescr.getParameterNames();
+  assertEquals("foo",names.get(0));
+  assertEquals("bada",names.get(1));
+  List types=functionDescr.getParameterTypes();
+  assertEquals("Bar",types.get(0));
+  assertEquals("Bing",types.get(1));
+  assertEquals("System.out.println(\"hello world\");",functionDescr.getText().trim());
+  RuleDescr ruleDescr=(RuleDescr)packageDescr.getRules().get(0);
+  assertEquals("my rule",ruleDescr.getName());
+  String consequence=ruleDescr.getConsequence();
+  assertNotNull(consequence);
+  assertEquals("System.out.println( \"hello\" );",consequence.trim());
+}
