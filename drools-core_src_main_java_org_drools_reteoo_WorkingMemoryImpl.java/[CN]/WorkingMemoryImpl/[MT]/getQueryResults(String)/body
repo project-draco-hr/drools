@@ -1,10 +1,14 @@
 {
   FactHandle handle=assertObject(new DroolsQuery(query));
   QueryTerminalNode node=(QueryTerminalNode)this.queryResults.remove(query);
-  List list=null;
-  if (node != null) {
-    list=(List)this.nodeMemories.remove(node.getId());
+  if (node == null) {
+    retractObject(handle);
+    return null;
   }
+  List list=(List)this.nodeMemories.remove(node.getId());
   retractObject(handle);
-  return list;
+  if (list == null) {
+    list=Collections.EMPTY_LIST;
+  }
+  return new QueryResults(list,(Query)node.getRule(),this);
 }
