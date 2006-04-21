@@ -1,0 +1,85 @@
+{
+  super(new BorderLayout());
+  final String nextGenerationLabel=ConwayApplicationProperties.getProperty("next.generation.label");
+  nextGenerationButton=new JButton(nextGenerationLabel);
+  final String startLabel=ConwayApplicationProperties.getProperty("start.label");
+  startStopButton=new JButton(startLabel);
+  final String clearLabel=ConwayApplicationProperties.getProperty("clear.label");
+  clearButton=new JButton(clearLabel);
+  final CellGrid grid=new CellGrid(30,30);
+  final CellGridCanvas canvas=new CellGridCanvas(grid);
+  JPanel panel=new JPanel(new BorderLayout());
+  panel.add(BorderLayout.CENTER,canvas);
+  Border etchedBorder=BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
+  Border outerBlankBorder=BorderFactory.createEmptyBorder(5,5,5,5);
+  Border innerBlankBorder=BorderFactory.createEmptyBorder(5,5,5,5);
+  Border border=BorderFactory.createCompoundBorder(BorderFactory.createCompoundBorder(outerBlankBorder,etchedBorder),innerBlankBorder);
+  panel.setBorder(border);
+  add(BorderLayout.CENTER,panel);
+  add(BorderLayout.EAST,createControlPanel());
+  nextGenerationButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      Worker.post(new Job(){
+        public Object run(){
+          grid.nextGeneration();
+          return null;
+        }
+      }
+);
+      canvas.repaint();
+    }
+  }
+);
+  clearButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      Worker.post(new Job(){
+        public Object run(){
+          grid.killAll();
+          return null;
+        }
+      }
+);
+      canvas.repaint();
+    }
+  }
+);
+  ActionListener timerAction=new ActionListener(){
+    public void actionPerformed(    ActionEvent ae){
+      Worker.post(new Job(){
+        public Object run(){
+          if (!grid.nextGeneration()) {
+            stopTimer();
+          }
+          return null;
+        }
+      }
+);
+      canvas.repaint();
+    }
+  }
+;
+  timer=new Timer(500,timerAction);
+  startStopButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      if (timer.isRunning()) {
+        stopTimer();
+      }
+ else {
+        startTimer();
+      }
+    }
+  }
+);
+  populatePatternSelector();
+  patternSelector.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      ConwayPattern pattern=(ConwayPattern)patternSelector.getSelectedItem();
+      if (pattern != null) {
+        grid.setPattern(pattern);
+        canvas.repaint();
+      }
+    }
+  }
+);
+  patternSelector.setSelectedIndex(-1);
+}
