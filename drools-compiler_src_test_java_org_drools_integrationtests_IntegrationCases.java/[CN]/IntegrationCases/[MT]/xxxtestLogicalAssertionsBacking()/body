@@ -1,0 +1,30 @@
+{
+  PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LogicalAssertionsBacking.drl")));
+  Package pkg=builder.getPackage();
+  RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  Cheese cheese1=new Cheese("c",1);
+  Cheese cheese2=new Cheese(cheese1.getType(),1);
+  List list;
+  FactHandle h1=workingMemory.assertObject(cheese1);
+  workingMemory.fireAllRules();
+  list=workingMemory.getObjects(cheese1.getType().getClass());
+  assertEquals(1,list.size());
+  assertEquals(cheese1.getType(),list.get(0));
+  FactHandle h2=workingMemory.assertObject(cheese2);
+  workingMemory.fireAllRules();
+  list=workingMemory.getObjects(cheese1.getType().getClass());
+  assertEquals(1,list.size());
+  assertEquals(cheese1.getType(),list.get(0));
+  workingMemory.retractObject(h1);
+  workingMemory.fireAllRules();
+  list=workingMemory.getObjects(cheese1.getType().getClass());
+  assertEquals("cheese-type " + cheese1.getType() + " was retracted, but should not. Backed by cheese2 => type.",1,list.size());
+  assertEquals("cheese-type " + cheese1.getType() + " was retracted, but should not. Backed by cheese2 => type.",cheese1.getType(),list.get(0));
+  workingMemory.retractObject(h2);
+  workingMemory.fireAllRules();
+  list=workingMemory.getObjects(cheese1.getType().getClass());
+  assertEquals("cheese-type " + cheese1.getType() + " was not retracted, but should have. Neither  cheese1 => type nor cheese2 => type is true.",0,list.size());
+}

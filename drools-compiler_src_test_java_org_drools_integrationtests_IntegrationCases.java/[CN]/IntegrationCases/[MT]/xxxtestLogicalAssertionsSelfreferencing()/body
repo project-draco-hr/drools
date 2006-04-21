@@ -1,0 +1,28 @@
+{
+  PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LogicalAssertionsSelfreferencing.drl")));
+  Package pkg=builder.getPackage();
+  RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  List list;
+  String b=new String("b");
+  String a=new String("a");
+  workingMemory.setGlobal("b",b);
+  FactHandle h1=workingMemory.assertObject(a);
+  workingMemory.fireAllRules();
+  list=workingMemory.getObjects(a.getClass());
+  assertEquals(2,list.size());
+  assertTrue(list.contains(a));
+  assertTrue(list.contains(b));
+  workingMemory.retractObject(h1);
+  workingMemory.fireAllRules();
+  list=workingMemory.getObjects(a.getClass());
+  assertEquals("b was retracted, but it should not have. Is backed by b => b being true.",1,list.size());
+  assertEquals("b was retracted, but it should not have. Is backed by b => b being true.",b,list.get(0));
+  h1=workingMemory.getFactHandle(b);
+  workingMemory.retractObject(h1);
+  workingMemory.fireAllRules();
+  list=workingMemory.getObjects(a.getClass());
+  assertEquals(0,list.size());
+}

@@ -1,35 +1,45 @@
 {
   FactHandleImpl handle=(FactHandleImpl)this.identityMap.get(object);
-  if ((handle != null) && (logical)) {
-    return handle;
+  FactStatus logicalState=(FactStatus)this.equalsMap.get(object);
+  if (logicalState == null) {
+    logicalState=STATUS_NEW;
   }
-  Object logicalState=this.equalsMap.get(object);
-  if ((handle != null) && (!logical) && logicalState == WorkingMemoryImpl.STATED) {
+  if ((logical) && (logicalState.getStatus() == WorkingMemoryImpl.STATED)) {
+    return null;
+  }
+  if ((logical) && (logicalState.getStatus() == WorkingMemoryImpl.JUSTIFIED)) {
+    addLogicalDependency(logicalState.getHandle(),activation,activation.getPropagationContext(),rule);
+    return logicalState.getHandle();
+  }
+  if ((handle != null) && (!logical) && (logicalState.getStatus() == WorkingMemoryImpl.STATED)) {
     return handle;
   }
   if (!logical) {
-    if (logicalState instanceof FactHandleImpl) {
-      handle=(FactHandleImpl)logicalState;
+    if (logicalState.getStatus() == WorkingMemoryImpl.JUSTIFIED) {
+      handle=logicalState.getHandle();
       removeLogicalDependencies(handle);
     }
  else {
       handle=(FactHandleImpl)newFactHandle();
     }
     putObject(handle,object);
-    this.equalsMap.put(object,WorkingMemoryImpl.STATED);
+    if (logicalState != WorkingMemoryImpl.STATUS_NEW) {
+      logicalState.setStatus(WorkingMemoryImpl.STATED);
+      logicalState.incCounter();
+    }
+ else {
+      this.equalsMap.put(object,new FactStatus(WorkingMemoryImpl.STATED,1));
+    }
     if (dynamic) {
       addPropertyChangeListener(object);
     }
   }
  else {
-    if (logicalState == WorkingMemoryImpl.STATED) {
-      return null;
-    }
-    handle=(FactHandleImpl)logicalState;
+    handle=logicalState.getHandle();
     if (handle == null) {
       handle=(FactHandleImpl)newFactHandle();
       putObject(handle,object);
-      this.equalsMap.put(object,handle);
+      this.equalsMap.put(object,new FactStatus(WorkingMemoryImpl.JUSTIFIED,handle));
     }
     addLogicalDependency(handle,activation,activation.getPropagationContext(),rule);
   }
