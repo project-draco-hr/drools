@@ -1,0 +1,34 @@
+{
+  boolean itf=opcode == Opcodes.INVOKEINTERFACE;
+  Item i=cw.newMethodItem(owner,name,desc,itf);
+  int argSize=i.intVal;
+  if (computeMaxs) {
+    if (argSize == 0) {
+      argSize=getArgumentsAndReturnSizes(desc);
+      i.intVal=argSize;
+    }
+    int size;
+    if (opcode == Opcodes.INVOKESTATIC) {
+      size=stackSize - (argSize >> 2) + (argSize & 0x03) + 1;
+    }
+ else {
+      size=stackSize - (argSize >> 2) + (argSize & 0x03);
+    }
+    if (size > maxStackSize) {
+      maxStackSize=size;
+    }
+    stackSize=size;
+  }
+  if (itf) {
+    if (!computeMaxs) {
+      if (argSize == 0) {
+        argSize=getArgumentsAndReturnSizes(desc);
+        i.intVal=argSize;
+      }
+    }
+    code.put12(Opcodes.INVOKEINTERFACE,i.index).put11(argSize >> 2,0);
+  }
+ else {
+    code.put12(opcode,i.index);
+  }
+}

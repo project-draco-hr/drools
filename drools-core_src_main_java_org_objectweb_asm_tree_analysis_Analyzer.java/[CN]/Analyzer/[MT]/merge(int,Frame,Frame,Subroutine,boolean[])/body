@@ -1,0 +1,32 @@
+{
+  if (insn > n - 1) {
+    throw new AnalyzerException("Execution can fall off end of the code");
+  }
+  Frame oldFrame=frames[insn];
+  Subroutine oldSubroutine=subroutines[insn];
+  boolean changes=false;
+  afterRET.merge(beforeJSR,access);
+  if (oldFrame == null) {
+    frames[insn]=newFrame(afterRET);
+    changes=true;
+  }
+ else {
+    changes|=oldFrame.merge(afterRET,access);
+  }
+  newControlFlowEdge(afterRET,oldFrame);
+  if (oldSubroutine == null) {
+    if (subroutineBeforeJSR != null) {
+      subroutines[insn]=subroutineBeforeJSR.copy();
+      changes=true;
+    }
+  }
+ else {
+    if (subroutineBeforeJSR != null) {
+      changes|=oldSubroutine.merge(subroutineBeforeJSR,!jsr);
+    }
+  }
+  if (changes && !queued[insn]) {
+    queued[insn]=true;
+    queue[top++]=insn;
+  }
+}

@@ -1,0 +1,33 @@
+{
+  StackMapAttribute attr=new StackMapAttribute();
+  boolean isExtCodeSize=cr.readInt(codeOff + 4) > MAX_SIZE;
+  boolean isExtLocals=cr.readUnsignedShort(codeOff + 2) > MAX_SIZE;
+  boolean isExtStack=cr.readUnsignedShort(codeOff) > MAX_SIZE;
+  int size=0;
+  if (isExtCodeSize) {
+    size=cr.readInt(off);
+    off+=4;
+  }
+ else {
+    size=cr.readUnsignedShort(off);
+    off+=2;
+  }
+  for (int i=0; i < size; i++) {
+    int offset;
+    if (isExtCodeSize) {
+      offset=cr.readInt(off);
+      off+=4;
+    }
+ else {
+      offset=cr.readUnsignedShort(off);
+      off+=2;
+    }
+    Label label=getLabel(offset,labels);
+    List locals=new ArrayList();
+    List stack=new ArrayList();
+    off=readTypeInfo(cr,off,locals,labels,buf,isExtLocals,isExtCodeSize);
+    off=readTypeInfo(cr,off,stack,labels,buf,isExtStack,isExtCodeSize);
+    attr.frames.add(new StackMapFrame(label,locals,stack));
+  }
+  return attr;
+}

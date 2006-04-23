@@ -1,0 +1,34 @@
+{
+  if (f.isDirectory()) {
+    File[] files=f.listFiles();
+    for (int i=0; i < files.length; ++i) {
+      optimize(files[i],d,mapping);
+    }
+  }
+ else   if (f.getName().endsWith(".class")) {
+    ConstantPool cp=new ConstantPool();
+    ClassReader cr=new ClassReader(new FileInputStream(f));
+    ClassWriter cw=new ClassWriter(false);
+    ClassConstantsCollector ccc=new ClassConstantsCollector(cw,cp);
+    ClassOptimizer co=new ClassOptimizer(ccc,mapping);
+    cr.accept(co,true);
+    Set constants=new TreeSet(new ConstantComparator());
+    constants.addAll(cp.values());
+    cr=new ClassReader(cw.toByteArray());
+    cw=new ClassWriter(false);
+    Iterator i=constants.iterator();
+    while (i.hasNext()) {
+      Constant c=(Constant)i.next();
+      c.write(cw);
+    }
+    cr.accept(cw,true);
+    String n=mapping.map(co.getClassName());
+    File g=new File(d,n + ".class");
+    if (!g.exists() || g.lastModified() < f.lastModified()) {
+      g.getParentFile().mkdirs();
+      OutputStream os=new FileOutputStream(g);
+      os.write(cw.toByteArray());
+      os.close();
+    }
+  }
+}

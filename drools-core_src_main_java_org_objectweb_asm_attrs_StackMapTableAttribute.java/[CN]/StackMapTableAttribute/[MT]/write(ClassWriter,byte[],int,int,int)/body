@@ -1,0 +1,92 @@
+{
+  ByteVector bv=new ByteVector();
+  boolean isExtCodeSize=code != null && code.length > MAX_SHORT;
+  writeSize(frames.size() - 1,bv,isExtCodeSize);
+  if (frames.size() < 2) {
+    return bv;
+  }
+  boolean isExtLocals=maxLocals > MAX_SHORT;
+  boolean isExtStack=maxStack > MAX_SHORT;
+  StackMapFrame frame=(StackMapFrame)frames.get(0);
+  List locals=frame.locals;
+  int offset=frame.label.getOffset();
+  for (int i=1; i < frames.size(); i++) {
+    frame=(StackMapFrame)frames.get(i);
+    List clocals=frame.locals;
+    List cstack=frame.stack;
+    int coffset=frame.label.getOffset();
+    int clocalsSize=clocals.size();
+    int cstackSize=cstack.size();
+    int localsSize=locals.size();
+    int delta=coffset - offset;
+    int type=FULL_FRAME;
+    int k=0;
+    if (cstackSize == 0) {
+      k=clocalsSize - localsSize;
+switch (k) {
+case -3:
+case -2:
+case -1:
+        type=CHOP_FRAME;
+      localsSize=clocalsSize;
+    break;
+case 0:
+  type=delta < 64 ? SAME_FRAME : SAME_FRAME_EXTENDED;
+break;
+case 1:
+case 2:
+case 3:
+type=APPEND_FRAME;
+break;
+}
+}
+ else if (localsSize == clocalsSize && cstackSize == 1) {
+type=delta < 63 ? SAME_LOCALS_1_STACK_ITEM_FRAME : SAME_LOCALS_1_STACK_ITEM_FRAME_EXTENDED;
+}
+if (type != FULL_FRAME) {
+for (int j=0; j < localsSize && type != FULL_FRAME; j++) {
+if (!locals.get(j).equals(clocals.get(j))) type=FULL_FRAME;
+}
+}
+switch (type) {
+case SAME_FRAME:
+bv.putByte(delta);
+break;
+case SAME_LOCALS_1_STACK_ITEM_FRAME:
+bv.putByte(SAME_LOCALS_1_STACK_ITEM_FRAME + delta);
+writeTypeInfos(bv,cw,cstack,0,1);
+break;
+case SAME_LOCALS_1_STACK_ITEM_FRAME_EXTENDED:
+bv.putByte(SAME_LOCALS_1_STACK_ITEM_FRAME_EXTENDED);
+writeSize(delta,bv,isExtCodeSize);
+writeTypeInfos(bv,cw,cstack,0,1);
+break;
+case SAME_FRAME_EXTENDED:
+bv.putByte(SAME_FRAME_EXTENDED);
+writeSize(delta,bv,isExtCodeSize);
+break;
+case CHOP_FRAME:
+bv.putByte(SAME_FRAME_EXTENDED + k);
+writeSize(delta,bv,isExtCodeSize);
+break;
+case APPEND_FRAME:
+bv.putByte(SAME_FRAME_EXTENDED + k);
+writeSize(delta,bv,isExtCodeSize);
+writeTypeInfos(bv,cw,clocals,clocalsSize - 1,clocalsSize);
+break;
+case FULL_FRAME:
+bv.putByte(FULL_FRAME);
+writeSize(delta,bv,isExtCodeSize);
+writeSize(clocalsSize,bv,isExtLocals);
+writeTypeInfos(bv,cw,clocals,0,clocalsSize);
+writeSize(cstackSize,bv,isExtStack);
+writeTypeInfos(bv,cw,cstack,0,cstackSize);
+break;
+default :
+throw new RuntimeException();
+}
+offset=coffset + 1;
+locals=clocals;
+}
+return bv;
+}

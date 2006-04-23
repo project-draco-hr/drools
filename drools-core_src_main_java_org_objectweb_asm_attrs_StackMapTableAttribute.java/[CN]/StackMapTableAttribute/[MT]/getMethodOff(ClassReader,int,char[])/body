@@ -1,0 +1,32 @@
+{
+  int off=cr.header + 6;
+  int interfacesCount=cr.readUnsignedShort(off);
+  off+=2 + interfacesCount * 2;
+  int fieldsCount=cr.readUnsignedShort(off);
+  off+=2;
+  for (; fieldsCount > 0; --fieldsCount) {
+    int attrCount=cr.readUnsignedShort(off + 6);
+    off+=8;
+    for (; attrCount > 0; --attrCount) {
+      off+=6 + cr.readInt(off + 2);
+    }
+  }
+  int methodsCount=cr.readUnsignedShort(off);
+  off+=2;
+  for (; methodsCount > 0; --methodsCount) {
+    int methodOff=off;
+    int attrCount=cr.readUnsignedShort(off + 6);
+    off+=8;
+    for (; attrCount > 0; --attrCount) {
+      String attrName=cr.readUTF8(off,buf);
+      off+=6;
+      if (attrName.equals("Code")) {
+        if (codeOff == off) {
+          return methodOff;
+        }
+      }
+      off+=cr.readInt(off - 4);
+    }
+  }
+  return -1;
+}
