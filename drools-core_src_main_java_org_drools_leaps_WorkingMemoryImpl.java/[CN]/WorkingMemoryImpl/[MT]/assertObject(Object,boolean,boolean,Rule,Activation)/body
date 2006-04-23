@@ -45,24 +45,27 @@
         ColumnConstraints[] not=tuple.getLeapsRule().getNotColumnConstraints();
         for (int i=0, length=not.length; i < length; i++) {
           ColumnConstraints constraint=not[i];
-          if (constraint.isAllowed(handle,tuple,this)) {
+          if (!tuple.isBlockingNotFactHandle(i) && constraint.getClassType().isAssignableFrom(objectClass) && constraint.isAllowed(handle,tuple,this)) {
             tuple.setBlockingNotFactHandle(handle,i);
             handle.addNotTuple(tuple,i);
           }
         }
         if (!tuple.isReadyForActivation()) {
-          this.invalidateActivation(tuple);
+          if (tuple.getLeapsRule().getRule() instanceof Query) {
+            removeFromQueryResults(tuple.getLeapsRule().getRule().getName(),tuple);
+          }
+ else {
+            invalidateActivation(tuple);
+          }
         }
       }
  else {
         ColumnConstraints[] exists=tuple.getLeapsRule().getExistsColumnConstraints();
         for (int i=0, length=exists.length; i < length; i++) {
           ColumnConstraints constraint=exists[i];
-          if (constraint.getClassType().isAssignableFrom(objectClass)) {
-            if (constraint.isAllowed(handle,tuple,this)) {
-              tuple.setExistsFactHandle(handle,i);
-              handle.addExistsTuple(tuple,i);
-            }
+          if (!tuple.isExistsFactHandle(i) && constraint.getClassType().isAssignableFrom(objectClass) && constraint.isAllowed(handle,tuple,this)) {
+            tuple.setExistsFactHandle(handle,i);
+            handle.addExistsTuple(tuple,i);
           }
         }
         if (tuple.isReadyForActivation()) {
@@ -72,7 +75,7 @@
     }
   }
   PropagationContextImpl context=new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.ASSERTION,rule,activation);
-  this.pushTokenOnStack(new Token(this,handle,context));
+  this.pushTokenOnStack(handle,new Token(this,handle,context));
   this.workingMemoryEventSupport.fireObjectAsserted(context,handle,object);
   return handle;
 }

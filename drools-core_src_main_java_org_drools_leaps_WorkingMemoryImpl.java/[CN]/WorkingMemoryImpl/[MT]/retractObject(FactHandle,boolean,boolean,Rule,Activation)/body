@@ -5,7 +5,13 @@
   }
   Iterator tuples=((FactHandleImpl)handle).getActivatedTuples();
   for (; tuples != null && tuples.hasNext(); ) {
-    this.invalidateActivation((LeapsTuple)tuples.next());
+    LeapsTuple tuple=(LeapsTuple)tuples.next();
+    if (tuple.getLeapsRule().getRule() instanceof Query) {
+      removeFromQueryResults(tuple.getLeapsRule().getRule().getName(),tuple);
+    }
+ else {
+      invalidateActivation(tuple);
+    }
   }
   FactHandleTupleAssembly assembly;
   LeapsTuple tuple;
@@ -43,10 +49,15 @@
       this.assertTuple(tuple);
     }
  else {
-      this.invalidateActivation(tuple);
+      if (tuple.getLeapsRule().getRule() instanceof Query) {
+        removeFromQueryResults(tuple.getLeapsRule().getRule().getName(),tuple);
+      }
+ else {
+        invalidateActivation(tuple);
+      }
     }
   }
-  this.stack.remove(new Token(this,(FactHandleImpl)handle,null));
+  this.removeTokenFromStack((FactHandleImpl)handle);
   Object oldObject=removeObject(handle);
   if (removeLogical) {
     this.equalsMap.remove(oldObject);
