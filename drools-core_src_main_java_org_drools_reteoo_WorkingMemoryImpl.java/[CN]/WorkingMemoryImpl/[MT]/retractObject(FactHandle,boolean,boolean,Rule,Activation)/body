@@ -1,21 +1,23 @@
 {
-  removePropertyChangeListener(handle);
-  PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.RETRACTION,rule,activation);
-  this.ruleBase.retractObject(handle,propagationContext,this);
-  Object oldObject=removeObject(handle);
-  if (removeLogical) {
-    removeLogicalDependencies(handle);
-  }
-  if (removeLogical || updateEqualsMap) {
-    FactStatus status=(FactStatus)this.equalsMap.get(oldObject);
-    if (status != null) {
-      status.decCounter();
-      if (status.getCounter() <= 0) {
-        this.equalsMap.remove(oldObject);
+synchronized (this.ruleBase.getLock()) {
+    removePropertyChangeListener(handle);
+    PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.RETRACTION,rule,activation);
+    this.ruleBase.retractObject(handle,propagationContext,this);
+    Object oldObject=removeObject(handle);
+    if (removeLogical) {
+      removeLogicalDependencies(handle);
+    }
+    if (removeLogical || updateEqualsMap) {
+      FactStatus status=(FactStatus)this.equalsMap.get(oldObject);
+      if (status != null) {
+        status.decCounter();
+        if (status.getCounter() <= 0) {
+          this.equalsMap.remove(oldObject);
+        }
       }
     }
+    this.factHandlePool.push(((FactHandleImpl)handle).getId());
+    this.workingMemoryEventSupport.fireObjectRetracted(propagationContext,handle,oldObject);
+    ((FactHandleImpl)handle).invalidate();
   }
-  this.factHandlePool.push(((FactHandleImpl)handle).getId());
-  this.workingMemoryEventSupport.fireObjectRetracted(propagationContext,handle,oldObject);
-  ((FactHandleImpl)handle).invalidate();
 }

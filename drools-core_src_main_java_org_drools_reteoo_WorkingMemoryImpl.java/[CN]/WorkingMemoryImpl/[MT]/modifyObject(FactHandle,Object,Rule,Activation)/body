@@ -1,16 +1,18 @@
 {
-  Object originalObject=removeObject(handle);
-  if (originalObject == null) {
-    throw new NoSuchFactObjectException(handle);
+synchronized (this.ruleBase.getLock()) {
+    Object originalObject=removeObject(handle);
+    if (originalObject == null) {
+      throw new NoSuchFactObjectException(handle);
+    }
+    this.handleFactory.increaseFactHandleRecency(handle);
+    putObject(handle,object);
+    FactHandleImpl handleImpl=(FactHandleImpl)handle;
+    if (this.justified.get(handleImpl.getId()) != null) {
+      this.equalsMap.remove(originalObject);
+      this.equalsMap.put(object,new FactStatus(WorkingMemoryImpl.JUSTIFIED,handleImpl));
+    }
+    PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation);
+    this.ruleBase.modifyObject(handle,propagationContext,this);
+    this.workingMemoryEventSupport.fireObjectModified(propagationContext,handle,originalObject,object);
   }
-  this.handleFactory.increaseFactHandleRecency(handle);
-  putObject(handle,object);
-  FactHandleImpl handleImpl=(FactHandleImpl)handle;
-  if (this.justified.get(handleImpl.getId()) != null) {
-    this.equalsMap.remove(originalObject);
-    this.equalsMap.put(object,new FactStatus(WorkingMemoryImpl.JUSTIFIED,handleImpl));
-  }
-  PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation);
-  this.ruleBase.modifyObject(handle,propagationContext,this);
-  this.workingMemoryEventSupport.fireObjectModified(propagationContext,handle,originalObject,object);
 }
