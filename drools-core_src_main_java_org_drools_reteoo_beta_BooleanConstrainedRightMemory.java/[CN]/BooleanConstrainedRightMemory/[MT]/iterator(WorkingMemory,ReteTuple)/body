@@ -1,18 +1,20 @@
 {
   this.selectPossibleMatches(workingMemory,tuple);
   Iterator iterator=new Iterator(){
-    Iterator it=selectedList.iterator();
     ObjectMatches current=null;
     ObjectMatches next=null;
-    public boolean hasNext(){
+    ObjectMatches candidate=(ObjectMatches)selectedList.getFirst();
+    public final boolean hasNext(){
       boolean hasnext=false;
       if (next == null) {
-        while (it.hasNext()) {
-          next=(ObjectMatches)it.next();
-          if ((childMemory == null) || (childMemory.isPossibleMatch((MultiLinkedListNodeWrapper)next.getChild()))) {
+        while (candidate != null) {
+          if ((childMemory == null) || (childMemory.isPossibleMatch((MultiLinkedListNodeWrapper)candidate.getChild()))) {
             hasnext=true;
+            next=candidate;
+            candidate=(ObjectMatches)candidate.getNext();
             break;
           }
+          candidate=(ObjectMatches)candidate.getNext();
         }
       }
  else {
@@ -20,7 +22,7 @@
       }
       return hasnext;
     }
-    public Object next(){
+    public final Object next(){
       if (this.next == null) {
         this.hasNext();
       }
@@ -31,7 +33,7 @@
       }
       return this.current;
     }
-    public void remove(){
+    public final void remove(){
       throw new UnsupportedOperationException("Iterator.remove() should not be used to remove right side objects from right memory.");
     }
   }
