@@ -1,6 +1,10 @@
 {
   newPkg.checkValidity();
   Package pkg=(Package)this.pkgs.get(newPkg.getName());
+  for (Iterator it=this.workingMemories.keySet().iterator(); it.hasNext(); ) {
+    WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)it.next();
+    workingMemory.getLock().lock();
+  }
   if (pkg != null) {
     mergePackage(pkg,newPkg);
   }
@@ -21,4 +25,9 @@
     addRule(rules[i]);
   }
   this.packageClassLoader.addClassLoader(newPkg.getPackageCompilationData().getClassLoader());
+  for (Iterator it=this.workingMemories.keySet().iterator(); it.hasNext(); ) {
+    WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)it.next();
+    workingMemory.fireAllRules();
+    workingMemory.getLock().unlock();
+  }
 }

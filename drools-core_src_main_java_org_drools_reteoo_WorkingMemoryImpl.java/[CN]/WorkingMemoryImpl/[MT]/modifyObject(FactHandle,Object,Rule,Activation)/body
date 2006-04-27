@@ -1,5 +1,6 @@
 {
-synchronized (this.ruleBase.getLock()) {
+  this.lock.lock();
+  try {
     Object originalObject=removeObject(handle);
     if (originalObject == null) {
       throw new NoSuchFactObjectException(handle);
@@ -14,5 +15,8 @@ synchronized (this.ruleBase.getLock()) {
     PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation);
     this.ruleBase.modifyObject(handle,propagationContext,this);
     this.workingMemoryEventSupport.fireObjectModified(propagationContext,handle,originalObject,object);
+  }
+  finally {
+    this.lock.unlock();
   }
 }

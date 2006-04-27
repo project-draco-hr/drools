@@ -1,5 +1,6 @@
 {
-synchronized (this.ruleBase.getLock()) {
+  this.lock.lock();
+  try {
     removePropertyChangeListener(handle);
     PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.RETRACTION,rule,activation);
     this.ruleBase.retractObject(handle,propagationContext,this);
@@ -19,5 +20,8 @@ synchronized (this.ruleBase.getLock()) {
     this.factHandlePool.push(((FactHandleImpl)handle).getId());
     this.workingMemoryEventSupport.fireObjectRetracted(propagationContext,handle,oldObject);
     ((FactHandleImpl)handle).invalidate();
+  }
+  finally {
+    this.lock.unlock();
   }
 }
