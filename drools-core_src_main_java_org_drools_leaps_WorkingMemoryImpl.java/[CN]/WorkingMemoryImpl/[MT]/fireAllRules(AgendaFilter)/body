@@ -2,38 +2,44 @@
   if (!this.firing) {
     try {
       this.firing=true;
-      while (!this.mainStack.empty()) {
-        Token token=(Token)this.peekTokenOnTop();
-        boolean done=false;
-        while (!done) {
-          if (!token.isResume()) {
-            if (token.hasNextRuleHandle()) {
-              token.nextRuleHandle();
-            }
+      boolean nothingToProcess=false;
+      while (!nothingToProcess) {
+        while (!this.mainStack.empty()) {
+          Token token=(Token)this.peekTokenOnTop();
+          boolean done=false;
+          while (!done) {
+            if (!token.isResume()) {
+              if (token.hasNextRuleHandle()) {
+                token.nextRuleHandle();
+              }
  else {
-              this.removeTokenFromStack(token.getDominantFactHandle());
-              done=true;
-            }
-          }
-          if (!done) {
-            try {
-              TokenEvaluator.evaluate(token);
-              if (token.getDominantFactHandle() != null) {
-                token.setResume(true);
+                this.removeTokenFromStack(token.getDominantFactHandle());
                 done=true;
               }
             }
- catch (            NoMatchesFoundException ex) {
-              token.setResume(false);
+            if (!done) {
+              try {
+                TokenEvaluator.evaluate(token);
+                if (token.getDominantFactHandle() != null) {
+                  token.setResume(true);
+                  done=true;
+                }
+              }
+ catch (              NoMatchesFoundException ex) {
+                token.setResume(false);
+              }
+            }
+            while (this.agenda.fireNextItem(agendaFilter)) {
+              ;
             }
           }
-          while (this.agenda.fireNextItem(agendaFilter)) {
-            ;
-          }
         }
-      }
-      while (this.agenda.fireNextItem(agendaFilter)) {
-        ;
+        while (this.agenda.fireNextItem(agendaFilter)) {
+          ;
+        }
+        if (this.mainStack.empty()) {
+          nothingToProcess=true;
+        }
       }
       this.idLastFireAllAt=((HandleFactory)this.handleFactory).getNextId();
       for (Enumeration e=this.factTables.elements(); e.hasMoreElements(); ) {

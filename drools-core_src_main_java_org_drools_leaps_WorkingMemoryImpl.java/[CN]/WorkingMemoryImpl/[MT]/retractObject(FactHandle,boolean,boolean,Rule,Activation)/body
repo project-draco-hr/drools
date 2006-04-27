@@ -1,5 +1,18 @@
 {
   removePropertyChangeListener(handle);
+  Object oldObject=removeObject(handle);
+  if (removeLogical) {
+    removeLogicalDependencies(handle);
+  }
+  if (removeLogical || updateEqualsMap) {
+    FactStatus status=(FactStatus)this.equalsMap.get(oldObject);
+    if (status != null) {
+      status.decCounter();
+      if (status.getCounter() <= 0) {
+        this.equalsMap.remove(oldObject);
+      }
+    }
+  }
   for (Iterator it=this.getFactTablesList(((FactHandleImpl)handle).getObject().getClass()).iterator(); it.hasNext(); ) {
     ((FactTable)it.next()).remove(handle);
   }
@@ -13,6 +26,7 @@
       invalidateActivation(tuple);
     }
   }
+  IdentityMap tuplesNotReadyForActivation=new IdentityMap();
   FactHandleTupleAssembly assembly;
   LeapsTuple tuple;
   Iterator it;
@@ -21,6 +35,9 @@
     for (; it.hasNext(); ) {
       assembly=(FactHandleTupleAssembly)it.next();
       tuple=assembly.getTuple();
+      if (!tuple.isReadyForActivation()) {
+        tuplesNotReadyForActivation.put(tuple,tuple);
+      }
       tuple.removeBlockingNotFactHandle(assembly.getIndex());
       TokenEvaluator.evaluateNotCondition(new FactHandleImpl(((FactHandleImpl)handle).getId() + 1,null),assembly.getIndex(),tuple,this);
     }
@@ -30,6 +47,9 @@
     for (; it.hasNext(); ) {
       assembly=(FactHandleTupleAssembly)it.next();
       tuple=assembly.getTuple();
+      if (!tuple.isReadyForActivation()) {
+        tuplesNotReadyForActivation.put(tuple,tuple);
+      }
       tuple.removeExistsFactHandle(assembly.getIndex());
       TokenEvaluator.evaluateExistsCondition(new FactHandleImpl(((FactHandleImpl)handle).getId() + 1,null),assembly.getIndex(),tuple,this);
     }
@@ -45,7 +65,8 @@
   }
   for (; chain.hasNext(); ) {
     tuple=((FactHandleTupleAssembly)chain.next()).getTuple();
-    if (tuple.isReadyForActivation() && tuple.isActivationNull()) {
+    if (tuple.isReadyForActivation() && tuple.isActivationNull() && tuplesNotReadyForActivation.containsKey(tuple)) {
+      tuple.setContext(new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.ASSERTION,tuple.getLeapsRule().getRule(),null));
       this.assertTuple(tuple);
     }
  else {
@@ -58,13 +79,6 @@
     }
   }
   this.removeTokenFromStack((FactHandleImpl)handle);
-  Object oldObject=removeObject(handle);
-  if (removeLogical) {
-    this.equalsMap.remove(oldObject);
-  }
-  if (updateEqualsMap) {
-    this.equalsMap.remove(oldObject);
-  }
   PropagationContextImpl context=new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.RETRACTION,rule,activation);
   this.workingMemoryEventSupport.fireObjectRetracted(context,handle,oldObject);
 }
