@@ -1,0 +1,30 @@
+{
+  if (Thread.interrupted())   throw new InterruptedException();
+  Thread caller=Thread.currentThread();
+synchronized (this) {
+    if (owner_ == null) {
+      owner_=caller;
+      holds_=1;
+      return;
+    }
+ else     if (caller == owner_) {
+      incHolds();
+      return;
+    }
+ else {
+      try {
+        do {
+          wait();
+        }
+ while (owner_ != null);
+        owner_=caller;
+        holds_=1;
+        return;
+      }
+ catch (      InterruptedException ex) {
+        if (owner_ == null)         notify();
+        throw ex;
+      }
+    }
+  }
+}

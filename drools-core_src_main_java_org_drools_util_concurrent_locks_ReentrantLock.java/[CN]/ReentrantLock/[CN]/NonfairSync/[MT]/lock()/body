@@ -1,0 +1,35 @@
+{
+  Thread caller=Thread.currentThread();
+synchronized (this) {
+    if (owner_ == null) {
+      owner_=caller;
+      holds_=1;
+      return;
+    }
+ else     if (caller == owner_) {
+      incHolds();
+      return;
+    }
+ else {
+      boolean wasInterrupted=Thread.interrupted();
+      try {
+        while (true) {
+          try {
+            wait();
+          }
+ catch (          InterruptedException e) {
+            wasInterrupted=true;
+          }
+          if (owner_ == null) {
+            owner_=caller;
+            holds_=1;
+            return;
+          }
+        }
+      }
+  finally {
+        if (wasInterrupted)         Thread.currentThread().interrupt();
+      }
+    }
+  }
+}
