@@ -1,0 +1,12 @@
+{
+  this.pkgs=(Map)stream.readObject();
+  this.packageClassLoader=new CompositePackageClassLoader(Thread.currentThread().getContextClassLoader());
+  for (Iterator it=this.pkgs.values().iterator(); it.hasNext(); ) {
+    this.packageClassLoader.addClassLoader(((Package)it.next()).getPackageCompilationData().getClassLoader());
+  }
+  byte[] bytes=(byte[])stream.readObject();
+  ObjectInputStreamWithLoader streamWithLoader=new ObjectInputStreamWithLoader(new ByteArrayInputStream(bytes),this.packageClassLoader);
+  this.factHandleFactory=(FactHandleFactory)streamWithLoader.readObject();
+  this.globals=(Map)streamWithLoader.readObject();
+  this.workingMemories=new WeakHashMap();
+}

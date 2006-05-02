@@ -1,91 +1,97 @@
 {
-  FactHandleImpl handle=(FactHandleImpl)this.identityMap.get(object);
-  FactStatus logicalState=(FactStatus)this.equalsMap.get(object);
-  if (logicalState == null) {
-    logicalState=STATUS_NEW;
-  }
-  if ((logical) && (logicalState.getStatus() == WorkingMemoryImpl.STATED)) {
-    return null;
-  }
-  if ((logical) && (logicalState.getStatus() == WorkingMemoryImpl.JUSTIFIED)) {
-    addLogicalDependency(logicalState.getHandle(),activation,activation.getPropagationContext(),rule);
-    return logicalState.getHandle();
-  }
-  if ((handle != null) && (!logical) && (logicalState.getStatus() == WorkingMemoryImpl.STATED)) {
+  this.getLock().lock();
+  try {
+    FactHandleImpl handle=(FactHandleImpl)this.identityMap.get(object);
+    FactStatus logicalState=(FactStatus)this.equalsMap.get(object);
+    if (logicalState == null) {
+      logicalState=STATUS_NEW;
+    }
+    if ((logical) && (logicalState.getStatus() == WorkingMemoryImpl.STATED)) {
+      return null;
+    }
+    if ((logical) && (logicalState.getStatus() == WorkingMemoryImpl.JUSTIFIED)) {
+      addLogicalDependency(logicalState.getHandle(),activation,activation.getPropagationContext(),rule);
+      return logicalState.getHandle();
+    }
+    if ((handle != null) && (!logical) && (logicalState.getStatus() == WorkingMemoryImpl.STATED)) {
+      return handle;
+    }
+    if (!logical) {
+      if (logicalState.getStatus() == WorkingMemoryImpl.JUSTIFIED) {
+        handle=(FactHandleImpl)logicalState.getHandle();
+        removeLogicalDependencies(handle);
+      }
+ else {
+        handle=(FactHandleImpl)newFactHandle(object);
+      }
+      putObject(handle,object);
+      if (logicalState != WorkingMemoryImpl.STATUS_NEW) {
+        logicalState.setStatus(WorkingMemoryImpl.STATED);
+        logicalState.incCounter();
+      }
+ else {
+        this.equalsMap.put(object,new FactStatus(WorkingMemoryImpl.STATED,1));
+      }
+      if (dynamic) {
+        addPropertyChangeListener(object);
+      }
+    }
+ else {
+      handle=(FactHandleImpl)logicalState.getHandle();
+      if (handle == null) {
+        handle=(FactHandleImpl)newFactHandle(object);
+        putObject(handle,object);
+        this.equalsMap.put(object,new FactStatus(WorkingMemoryImpl.JUSTIFIED,handle));
+      }
+      addLogicalDependency(handle,activation,activation.getPropagationContext(),rule);
+    }
+    PropagationContextImpl context=new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.ASSERTION,rule,activation);
+    this.pushTokenOnStack(handle,new Token(this,handle,context));
+    this.workingMemoryEventSupport.fireObjectAsserted(context,handle,object);
+    Class objectClass=object.getClass();
+    for (Iterator tables=this.getFactTablesList(objectClass).iterator(); tables.hasNext(); ) {
+      FactTable factTable=(FactTable)tables.next();
+      factTable.add(handle);
+      for (Iterator tuples=factTable.getTuplesIterator(); tuples.hasNext(); ) {
+        LeapsTuple tuple=(LeapsTuple)tuples.next();
+        boolean tupleWasReadyForActivation=tuple.isReadyForActivation();
+        if (!tuple.isActivationNull()) {
+          ColumnConstraints[] not=tuple.getLeapsRule().getNotColumnConstraints();
+          for (int i=0, length=not.length; i < length; i++) {
+            ColumnConstraints constraint=not[i];
+            if (!tuple.isBlockingNotFactHandle(i) && constraint.getClassType().isAssignableFrom(objectClass) && constraint.isAllowed(handle,tuple,this)) {
+              tuple.setBlockingNotFactHandle(handle,i);
+              handle.addNotTuple(tuple,i);
+            }
+          }
+          if (!tuple.isReadyForActivation()) {
+            if (tuple.getLeapsRule().getRule() instanceof Query) {
+              removeFromQueryResults(tuple.getLeapsRule().getRule().getName(),tuple);
+            }
+ else {
+              invalidateActivation(tuple);
+            }
+          }
+        }
+ else {
+          ColumnConstraints[] exists=tuple.getLeapsRule().getExistsColumnConstraints();
+          for (int i=0, length=exists.length; i < length; i++) {
+            ColumnConstraints constraint=exists[i];
+            if (!tuple.isExistsFactHandle(i) && constraint.getClassType().isAssignableFrom(objectClass) && constraint.isAllowed(handle,tuple,this)) {
+              tuple.setExistsFactHandle(handle,i);
+              handle.addExistsTuple(tuple,i);
+            }
+          }
+          if (tuple.isReadyForActivation() && !tupleWasReadyForActivation) {
+            tuple.setContext(new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.ASSERTION,tuple.getLeapsRule().getRule(),null));
+            this.assertTuple(tuple);
+          }
+        }
+      }
+    }
     return handle;
   }
-  if (!logical) {
-    if (logicalState.getStatus() == WorkingMemoryImpl.JUSTIFIED) {
-      handle=(FactHandleImpl)logicalState.getHandle();
-      removeLogicalDependencies(handle);
-    }
- else {
-      handle=(FactHandleImpl)newFactHandle(object);
-    }
-    putObject(handle,object);
-    if (logicalState != WorkingMemoryImpl.STATUS_NEW) {
-      logicalState.setStatus(WorkingMemoryImpl.STATED);
-      logicalState.incCounter();
-    }
- else {
-      this.equalsMap.put(object,new FactStatus(WorkingMemoryImpl.STATED,1));
-    }
-    if (dynamic) {
-      addPropertyChangeListener(object);
-    }
+  finally {
+    this.getLock().unlock();
   }
- else {
-    handle=(FactHandleImpl)logicalState.getHandle();
-    if (handle == null) {
-      handle=(FactHandleImpl)newFactHandle(object);
-      putObject(handle,object);
-      this.equalsMap.put(object,new FactStatus(WorkingMemoryImpl.JUSTIFIED,handle));
-    }
-    addLogicalDependency(handle,activation,activation.getPropagationContext(),rule);
-  }
-  PropagationContextImpl context=new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.ASSERTION,rule,activation);
-  this.pushTokenOnStack(handle,new Token(this,handle,context));
-  this.workingMemoryEventSupport.fireObjectAsserted(context,handle,object);
-  Class objectClass=object.getClass();
-  for (Iterator tables=this.getFactTablesList(objectClass).iterator(); tables.hasNext(); ) {
-    FactTable factTable=(FactTable)tables.next();
-    factTable.add(handle);
-    for (Iterator tuples=factTable.getTuplesIterator(); tuples.hasNext(); ) {
-      LeapsTuple tuple=(LeapsTuple)tuples.next();
-      boolean tupleWasReadyForActivation=tuple.isReadyForActivation();
-      if (!tuple.isActivationNull()) {
-        ColumnConstraints[] not=tuple.getLeapsRule().getNotColumnConstraints();
-        for (int i=0, length=not.length; i < length; i++) {
-          ColumnConstraints constraint=not[i];
-          if (!tuple.isBlockingNotFactHandle(i) && constraint.getClassType().isAssignableFrom(objectClass) && constraint.isAllowed(handle,tuple,this)) {
-            tuple.setBlockingNotFactHandle(handle,i);
-            handle.addNotTuple(tuple,i);
-          }
-        }
-        if (!tuple.isReadyForActivation()) {
-          if (tuple.getLeapsRule().getRule() instanceof Query) {
-            removeFromQueryResults(tuple.getLeapsRule().getRule().getName(),tuple);
-          }
- else {
-            invalidateActivation(tuple);
-          }
-        }
-      }
- else {
-        ColumnConstraints[] exists=tuple.getLeapsRule().getExistsColumnConstraints();
-        for (int i=0, length=exists.length; i < length; i++) {
-          ColumnConstraints constraint=exists[i];
-          if (!tuple.isExistsFactHandle(i) && constraint.getClassType().isAssignableFrom(objectClass) && constraint.isAllowed(handle,tuple,this)) {
-            tuple.setExistsFactHandle(handle,i);
-            handle.addExistsTuple(tuple,i);
-          }
-        }
-        if (tuple.isReadyForActivation() && !tupleWasReadyForActivation) {
-          tuple.setContext(new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.ASSERTION,tuple.getLeapsRule().getRule(),null));
-          this.assertTuple(tuple);
-        }
-      }
-    }
-  }
-  return handle;
 }

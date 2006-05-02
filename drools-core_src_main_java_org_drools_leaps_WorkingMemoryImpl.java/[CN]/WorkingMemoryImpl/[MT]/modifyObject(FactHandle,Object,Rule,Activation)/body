@@ -1,13 +1,19 @@
 {
-  this.retractObject(handle);
-  Object originalObject=removeObject(handle);
-  if (originalObject == null) {
-    throw new NoSuchFactObjectException(handle);
+  this.getLock().lock();
+  try {
+    this.retractObject(handle);
+    Object originalObject=removeObject(handle);
+    if (originalObject == null) {
+      throw new NoSuchFactObjectException(handle);
+    }
+    FactHandleImpl handleImpl=(FactHandleImpl)this.assertObject(object,false,false,rule,activation);
+    if (this.justified.get(handleImpl.getId()) != null) {
+      this.equalsMap.remove(originalObject);
+      this.equalsMap.put(object,new FactStatus(WorkingMemoryImpl.JUSTIFIED,handleImpl));
+    }
+    this.workingMemoryEventSupport.fireObjectModified(new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.MODIFICATION,rule,activation),handle,((FactHandleImpl)handle).getObject(),object);
   }
-  FactHandleImpl handleImpl=(FactHandleImpl)this.assertObject(object,false,false,rule,activation);
-  if (this.justified.get(handleImpl.getId()) != null) {
-    this.equalsMap.remove(originalObject);
-    this.equalsMap.put(object,new FactStatus(WorkingMemoryImpl.JUSTIFIED,handleImpl));
+  finally {
+    this.getLock().unlock();
   }
-  this.workingMemoryEventSupport.fireObjectModified(new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.MODIFICATION,rule,activation),handle,((FactHandleImpl)handle).getObject(),object);
 }
