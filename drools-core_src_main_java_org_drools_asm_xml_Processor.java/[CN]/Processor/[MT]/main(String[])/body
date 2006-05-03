@@ -1,0 +1,36 @@
+{
+  if (args.length < 2) {
+    showUsage();
+    return;
+  }
+  int inRepresentation=getRepresentation(args[0]);
+  int outRepresentation=getRepresentation(args[1]);
+  InputStream is=System.in;
+  OutputStream os=new BufferedOutputStream(System.out);
+  Source xslt=null;
+  for (int i=2; i < args.length; i++) {
+    if ("-in".equals(args[i])) {
+      is=new FileInputStream(args[++i]);
+    }
+ else     if ("-out".equals(args[i])) {
+      os=new BufferedOutputStream(new FileOutputStream(args[++i]));
+    }
+ else     if ("-xslt".equals(args[i])) {
+      xslt=new StreamSource(new FileInputStream(args[++i]));
+    }
+ else {
+      showUsage();
+      return;
+    }
+  }
+  if (inRepresentation == 0 || outRepresentation == 0) {
+    showUsage();
+    return;
+  }
+  Processor m=new Processor(inRepresentation,outRepresentation,is,os,xslt);
+  long l1=System.currentTimeMillis();
+  int n=m.process();
+  long l2=System.currentTimeMillis();
+  System.err.println(n);
+  System.err.println("" + (l2 - l1) + "ms  "+ (1000f * n / (l2 - l1))+ " resources/sec");
+}
