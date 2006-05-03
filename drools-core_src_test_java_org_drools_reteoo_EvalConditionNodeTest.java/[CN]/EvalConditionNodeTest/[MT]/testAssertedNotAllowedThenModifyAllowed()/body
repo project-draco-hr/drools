@@ -1,0 +1,28 @@
+{
+  MockEvalCondition eval=new MockEvalCondition(false);
+  EvalConditionNode node=new EvalConditionNode(1,new MockTupleSource(15),eval);
+  MockTupleSink sink=new MockTupleSink();
+  node.addTupleSink(sink);
+  FactHandleImpl f0=new FactHandleImpl(0);
+  f0.setObject("stilton");
+  ReteTuple tuple0=new ReteTuple(f0);
+  node.assertTuple(tuple0,this.context,this.workingMemory);
+  FactHandleImpl f1=new FactHandleImpl(1);
+  f0.setObject("cheddar");
+  ReteTuple tuple1=new ReteTuple(f1);
+  node.assertTuple(tuple1,this.context,this.workingMemory);
+  LinkedList memory=(LinkedList)this.workingMemory.getNodeMemory(node);
+  assertEquals(0,memory.size());
+  eval.setIsAllowed(true);
+  node.modifyTuple(tuple1,context,workingMemory);
+  assertEquals(1,memory.size());
+  assertEquals(1,sink.getAsserted().size());
+  assertSame(tuple1,memory.getFirst());
+  node.modifyTuple(tuple0,context,workingMemory);
+  assertEquals(2,memory.size());
+  assertEquals(2,sink.getAsserted().size());
+  assertSame(tuple1,memory.getFirst());
+  assertSame(tuple0,tuple1.getNext());
+  assertEquals(0,sink.getModified().size());
+  assertEquals(0,sink.getRetracted().size());
+}
