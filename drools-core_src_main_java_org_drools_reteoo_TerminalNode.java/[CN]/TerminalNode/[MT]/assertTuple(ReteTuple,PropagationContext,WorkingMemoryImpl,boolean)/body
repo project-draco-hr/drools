@@ -1,0 +1,53 @@
+{
+  if (this.rule.getNoLoop() && this.rule.equals(context.getRuleOrigin())) {
+    return;
+  }
+  final Agenda agenda=workingMemory.getAgenda();
+  final Duration dur=this.rule.getDuration();
+  if (dur != null && dur.getDuration(tuple) > 0) {
+    final ScheduledAgendaItem item=new ScheduledAgendaItem(context.getPropagationNumber(),tuple,workingMemory.getAgenda(),context,this.rule);
+    if (this.rule.getXorGroup() != null) {
+      if (this.xorGroup == null) {
+        this.xorGroup=workingMemory.getAgenda().getXorGroup(this.rule.getXorGroup());
+      }
+      this.xorGroup.addActivation(item);
+    }
+    agenda.scheduleItem(item);
+    tuple.setActivation(item);
+    item.setActivated(true);
+    workingMemory.getAgendaEventSupport().fireActivationCreated(item);
+  }
+ else {
+    final TerminalNodeMemory memory=(TerminalNodeMemory)workingMemory.getNodeMemory(this);
+    AgendaGroupImpl agendaGroup=memory.getAgendaGroup();
+    if (agendaGroup == null) {
+      if (this.rule.getAgendaGroup() == null || this.rule.getAgendaGroup().equals("") || this.rule.getAgendaGroup().equals(AgendaGroup.MAIN)) {
+        agendaGroup=(AgendaGroupImpl)agenda.getAgendaGroup(AgendaGroup.MAIN);
+      }
+ else {
+        agendaGroup=(AgendaGroupImpl)agenda.getAgendaGroup(this.rule.getAgendaGroup());
+      }
+      if (agendaGroup == null) {
+        agendaGroup=new AgendaGroupImpl(this.rule.getAgendaGroup());
+        workingMemory.getAgenda().addAgendaGroup(agendaGroup);
+      }
+      memory.setAgendaGroup(agendaGroup);
+    }
+    if (this.rule.getAutoFocus()) {
+      agenda.setFocus(agendaGroup);
+    }
+    final AgendaItem item=new AgendaItem(context.getPropagationNumber(),tuple,context,this.rule);
+    if (this.rule.getXorGroup() != null) {
+      if (this.xorGroup == null) {
+        this.xorGroup=workingMemory.getAgenda().getXorGroup(this.rule.getXorGroup());
+      }
+      this.xorGroup.addActivation(item);
+    }
+    agendaGroup.add(item);
+    tuple.setActivation(item);
+    item.setActivated(true);
+    if (fireActivationCreated) {
+      workingMemory.getAgendaEventSupport().fireActivationCreated(item);
+    }
+  }
+}

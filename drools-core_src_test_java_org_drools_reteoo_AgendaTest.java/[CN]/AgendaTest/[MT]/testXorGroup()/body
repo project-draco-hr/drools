@@ -1,0 +1,63 @@
+{
+  RuleBase ruleBase=new RuleBaseImpl();
+  WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
+  final Agenda agenda=workingMemory.getAgenda();
+  final List list=new ArrayList();
+  Consequence consequence=new Consequence(){
+    public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory){
+      list.add(knowledgeHelper.getRule());
+    }
+  }
+;
+  ReteTuple tuple=new ReteTuple(new FactHandleImpl(1));
+  Rule rule0=new Rule("test-rule0");
+  rule0.setXorGroup("xor-group-0");
+  TerminalNode node0=new TerminalNode(3,new MockTupleSource(2),rule0);
+  rule0.setConsequence(consequence);
+  PropagationContext context0=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule0,null);
+  Rule rule1=new Rule("test-rule1");
+  rule1.setXorGroup("xor-group-0");
+  TerminalNode node1=new TerminalNode(5,new MockTupleSource(4),rule1);
+  rule1.setConsequence(consequence);
+  PropagationContext context1=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule1,null);
+  Rule rule2=new Rule("test-rule2");
+  TerminalNode node2=new TerminalNode(7,new MockTupleSource(6),rule2);
+  rule2.setConsequence(consequence);
+  PropagationContext context2=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule2,null);
+  Rule rule3=new Rule("test-rule3","agendaGroup3");
+  rule3.setXorGroup("xor-group-3");
+  TerminalNode node3=new TerminalNode(9,new MockTupleSource(8),rule3);
+  rule3.setConsequence(consequence);
+  PropagationContext context3=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule3,null);
+  node0.assertTuple(tuple,context0,workingMemory);
+  XorGroup xorGroup0=agenda.getXorGroup("xor-group-0");
+  assertEquals(1,xorGroup0.size());
+  node1.assertTuple(tuple,context1,workingMemory);
+  assertEquals(2,xorGroup0.size());
+  assertEquals(2,agenda.focusStackSize());
+  agenda.fireNextItem(null);
+  assertEquals(0,xorGroup0.size());
+  assertEquals(0,agenda.focusStackSize());
+  assertEquals(1,list.size());
+  assertSame(rule0,list.get(0));
+  list.clear();
+  node0.assertTuple(tuple,context0,workingMemory);
+  node1.assertTuple(tuple,context1,workingMemory);
+  node2.assertTuple(tuple,context2,workingMemory);
+  node3.assertTuple(tuple,context3,workingMemory);
+  assertEquals(2,xorGroup0.size());
+  XorGroup xorGroup3=agenda.getXorGroup("xor-group-3");
+  assertEquals(4,agenda.agendaSize());
+  assertEquals(1,xorGroup3.size());
+  agenda.clearAgendaGroup("agendaGroup3");
+  assertEquals(3,agenda.agendaSize());
+  assertEquals(0,xorGroup3.size());
+  agenda.fireNextItem(null);
+  assertEquals(1,agenda.agendaSize());
+  assertEquals(0,xorGroup0.size());
+  agenda.fireNextItem(null);
+  assertEquals(0,agenda.agendaSize());
+  assertEquals(2,list.size());
+  assertEquals(rule0,list.get(0));
+  assertEquals(rule2,list.get(1));
+}
