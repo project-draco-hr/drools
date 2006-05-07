@@ -1,27 +1,18 @@
 {
-  DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();
-  DocumentBuilder docBuilder;
   try {
-    docBuilder=factory.newDocumentBuilder();
-    Document doc1=docBuilder.newDocument();
-    doc1.appendChild(ruleExecutionSetElement);
-    Reader reader=new StringReader(ruleExecutionSetElement.getChildNodes().item(2).getNodeValue());
-    DrlParser parser=new DrlParser();
-    PackageDescr packageDescr;
-    packageDescr=parser.parse(reader);
+    Source source=new DOMSource(ruleExecutionSetElement);
+    XmlPackageReader xmlPackageReader=new XmlPackageReader();
+    SAXResult result=new SAXResult(xmlPackageReader);
+    Transformer xformer=TransformerFactory.newInstance().newTransformer();
+    xformer.transform(source,result);
+    PackageDescr packageDescr=xmlPackageReader.getPackageDescr();
     PackageBuilder builder=new PackageBuilder();
     builder.addPackage(packageDescr);
     Package pkg=builder.getPackage();
     LocalRuleExecutionSetProviderImpl localRuleExecutionSetProvider=new LocalRuleExecutionSetProviderImpl();
     return localRuleExecutionSetProvider.createRuleExecutionSet(pkg,properties);
   }
- catch (  ParserConfigurationException e) {
-    throw new RuleExecutionSetCreateException("could not create RuleExecutionSet: " + e);
-  }
-catch (  IOException e) {
-    throw new RuleExecutionSetCreateException("could not create RuleExecutionSet: " + e);
-  }
-catch (  DroolsParserException e) {
+ catch (  TransformerException e) {
     throw new RuleExecutionSetCreateException("could not create RuleExecutionSet: " + e);
   }
 }
