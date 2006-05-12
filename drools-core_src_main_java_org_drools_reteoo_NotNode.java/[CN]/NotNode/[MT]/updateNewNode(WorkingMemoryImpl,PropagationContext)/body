@@ -1,10 +1,12 @@
 {
   this.attachingNewNode=true;
   BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  for (Iterator it=memory.leftTupleIterator(workingMemory,null); it.hasNext(); ) {
+  for (Iterator it=memory.getLeftTupleMemory().iterator(); it.hasNext(); ) {
     ReteTuple leftTuple=(ReteTuple)it.next();
     if (leftTuple.matchesSize() == 0) {
-      propagateAssertTuple(leftTuple,context,workingMemory);
+      ReteTuple child=new ReteTuple(leftTuple);
+      leftTuple.addLinkedTuple(new LinkedListObjectWrapper(child));
+      ((TupleSink)getTupleSinks().get(getTupleSinks().size() - 1)).assertTuple(child,context,workingMemory);
     }
   }
   this.attachingNewNode=true;
