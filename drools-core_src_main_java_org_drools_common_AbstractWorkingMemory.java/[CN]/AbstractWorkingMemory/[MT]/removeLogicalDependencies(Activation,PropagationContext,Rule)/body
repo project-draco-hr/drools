@@ -6,10 +6,12 @@
   for (LogicalDependency node=(LogicalDependency)list.getFirst(); node != null; node=(LogicalDependency)node.getNext()) {
     InternalFactHandle handle=(InternalFactHandle)node.getFactHandle();
     Set set=(Set)this.justified.get(handle.getId());
-    set.remove(node);
-    if (set.isEmpty()) {
-      this.justified.remove(handle.getId());
-      retractObject(handle,false,true,context.getRuleOrigin(),context.getActivationOrigin());
+    if (set != null) {
+      set.remove(node);
+      if (set.isEmpty()) {
+        this.justified.remove(handle.getId());
+        this.factQueue.add(new WorkingMemoryRetractAction(handle,false,true,context.getRuleOrigin(),context.getActivationOrigin()));
+      }
     }
   }
 }
