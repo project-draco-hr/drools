@@ -30,12 +30,28 @@
   FactHandle logicalHandle1=workingMemory.assertObject(logicalString1,false,true,rule1,tuple1.getActivation());
   String logicalString2=new String("logical");
   FactHandle logicalHandle2=workingMemory.assertObject(logicalString2,false,true,rule2,tuple2.getActivation());
-  assertLength(1,workingMemory.getJustified().values());
+  if (RuleBaseConfiguration.WM_BEHAVIOR_IDENTITY.equals(((RuleBaseImpl)ruleBase).getConfiguration().getProperty(RuleBaseConfiguration.PROPERTY_LOGICAL_ASSERT_BEHAVIOR))) {
+    assertLength(2,workingMemory.getJustified().values());
+  }
+ else {
+    assertLength(1,workingMemory.getJustified().values());
+  }
   node2.retractTuple(tuple2,context2,workingMemory);
-  assertLength(0,sink.getRetracted());
+  workingMemory.propagateQueuedActions();
+  if (RuleBaseConfiguration.WM_BEHAVIOR_IDENTITY.equals(((RuleBaseImpl)ruleBase).getConfiguration().getProperty(RuleBaseConfiguration.PROPERTY_LOGICAL_ASSERT_BEHAVIOR))) {
+    assertLength(1,sink.getRetracted());
+  }
+ else {
+    assertLength(0,sink.getRetracted());
+  }
   assertLength(1,workingMemory.getJustified().values());
   node.retractTuple(tuple1,context1,workingMemory);
   workingMemory.propagateQueuedActions();
-  assertLength(1,sink.getRetracted());
+  if (RuleBaseConfiguration.WM_BEHAVIOR_IDENTITY.equals(((RuleBaseImpl)ruleBase).getConfiguration().getProperty(RuleBaseConfiguration.PROPERTY_LOGICAL_ASSERT_BEHAVIOR))) {
+    assertLength(2,sink.getRetracted());
+  }
+ else {
+    assertLength(1,sink.getRetracted());
+  }
   assertLength(0,workingMemory.getJustified().values());
 }

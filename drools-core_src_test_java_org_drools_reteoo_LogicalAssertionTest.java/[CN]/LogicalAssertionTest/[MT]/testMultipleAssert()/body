@@ -25,10 +25,22 @@
   FactHandle statedHandle2=workingMemory.assertObject(statedString2);
   String logicalString3=new String("logical");
   FactHandle logicalHandle3=workingMemory.assertObject(logicalString3,false,true,rule1,tuple1.getActivation());
-  assertNull(logicalHandle3);
-  workingMemory.retractObject(statedHandle2);
-  logicalHandle3=workingMemory.assertObject(logicalString3,false,true,rule1,tuple1.getActivation());
-  assertNull(logicalHandle3);
+  if (RuleBaseConfiguration.WM_BEHAVIOR_IDENTITY.equals(((RuleBaseImpl)ruleBase).getConfiguration().getProperty(RuleBaseConfiguration.PROPERTY_LOGICAL_ASSERT_BEHAVIOR))) {
+    assertNotNull(logicalHandle3);
+  }
+ else {
+    assertNull(logicalHandle3);
+  }
+  if (RuleBaseConfiguration.WM_BEHAVIOR_IDENTITY.equals(((RuleBaseImpl)ruleBase).getConfiguration().getProperty(RuleBaseConfiguration.PROPERTY_ASSERT_BEHAVIOR))) {
+    workingMemory.retractObject(statedHandle2);
+    logicalHandle3=workingMemory.assertObject(logicalString3,false,true,rule1,tuple1.getActivation());
+    if (RuleBaseConfiguration.WM_BEHAVIOR_IDENTITY.equals(((RuleBaseImpl)ruleBase).getConfiguration().getProperty(RuleBaseConfiguration.PROPERTY_LOGICAL_ASSERT_BEHAVIOR))) {
+      assertNotNull(logicalHandle3);
+    }
+ else {
+      assertNull(logicalHandle3);
+    }
+  }
   workingMemory.retractObject(statedHandle1);
   logicalHandle3=workingMemory.assertObject(logicalString3,false,true,rule1,tuple1.getActivation());
   assertNotNull(logicalHandle3);

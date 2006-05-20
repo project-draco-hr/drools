@@ -2,8 +2,8 @@
   FactHandleImpl handle=null;
   this.lock.lock();
   try {
-    handle=(FactHandleImpl)this.identityMap.get(object);
-    FactStatus logicalState=(FactStatus)this.equalsMap.get(object);
+    handle=(FactHandleImpl)this.assertMap.get(object);
+    FactStatus logicalState=(FactStatus)this.logicalAssertMap.get(object);
     if (logicalState == null) {
       logicalState=STATUS_NEW;
     }
@@ -19,11 +19,14 @@
     }
     if (!logical) {
       if (logicalState.getStatus() == WorkingMemoryImpl.JUSTIFIED) {
-        handle=logicalState.getHandle();
-        removeLogicalDependencies(handle);
+        FactHandleImpl handle2=logicalState.getHandle();
+        removeLogicalDependencies(handle2);
+        if (handle == null) {
+          handle=handle2;
+        }
       }
  else {
-        handle=(FactHandleImpl)newFactHandle();
+        handle=(handle == null) ? (FactHandleImpl)newFactHandle() : handle;
       }
       putObject(handle,object);
       if (logicalState != WorkingMemoryImpl.STATUS_NEW) {
@@ -31,7 +34,7 @@
         logicalState.incCounter();
       }
  else {
-        this.equalsMap.put(object,new FactStatus(WorkingMemoryImpl.STATED,1));
+        this.logicalAssertMap.put(object,new FactStatus(WorkingMemoryImpl.STATED,1));
       }
       if (dynamic) {
         addPropertyChangeListener(object);
@@ -42,7 +45,7 @@
       if (handle == null) {
         handle=(FactHandleImpl)newFactHandle();
         putObject(handle,object);
-        this.equalsMap.put(object,new FactStatus(WorkingMemoryImpl.JUSTIFIED,handle));
+        this.logicalAssertMap.put(object,new FactStatus(WorkingMemoryImpl.JUSTIFIED,handle));
       }
       addLogicalDependency(handle,activation,activation.getPropagationContext(),rule);
     }

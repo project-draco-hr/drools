@@ -25,7 +25,12 @@
   FactHandle logicalHandle2=workingMemory.assertObject(logicalString2);
   node.retractTuple(tuple1,context1,workingMemory);
   assertLength(0,sink.getRetracted());
-  assertSame(logicalHandle1,logicalHandle2);
+  if (RuleBaseConfiguration.WM_BEHAVIOR_IDENTITY.equals(((RuleBaseImpl)ruleBase).getConfiguration().getProperty(RuleBaseConfiguration.PROPERTY_LOGICAL_ASSERT_BEHAVIOR))) {
+    assertNotSame(logicalHandle2,logicalHandle1);
+  }
+ else {
+    assertSame(logicalHandle2,logicalHandle1);
+  }
   assertEquals(logicalString1,workingMemory.getObject(logicalHandle2));
   assertNotSame(logicalString1,workingMemory.getObject(logicalHandle2));
   node.assertTuple(tuple1,context1,workingMemory);
@@ -33,7 +38,12 @@
   logicalHandle2=workingMemory.assertObject(logicalString2);
   logicalString1=new String("logical");
   logicalHandle1=workingMemory.assertObject(logicalString1,false,true,rule1,tuple1.getActivation());
-  assertNull(logicalHandle1);
+  if (RuleBaseConfiguration.WM_BEHAVIOR_IDENTITY.equals(((RuleBaseImpl)ruleBase).getConfiguration().getProperty(RuleBaseConfiguration.PROPERTY_LOGICAL_ASSERT_BEHAVIOR))) {
+    assertNotNull(logicalHandle1);
+  }
+ else {
+    assertNull(logicalHandle1);
+  }
   logicalHandle1=workingMemory.assertObject(logicalString2,false,false,rule1,tuple1.getActivation());
   assertSame(logicalHandle2,logicalHandle1);
   node.retractTuple(tuple1,context1,workingMemory);
