@@ -1,24 +1,43 @@
 {
   if (raw == null)   return null;
   StringBuffer buf=new StringBuffer();
-  int startIndex=0, lastIndex=0;
+  int lastIndex=0, startIndex=0;
   Matcher matcher=pattern.matcher(raw);
   while (matcher.find(startIndex)) {
-    startIndex=getStartIndex(matcher);
+    int endIndex=findEndParenthesis(raw,matcher);
+    if (endIndex < 0) {
+      startIndex=matcher.start(3);
+      continue;
+    }
+ else {
+      startIndex=endIndex;
+    }
+    String params=matcher.group(3).trim();
+    if (endIndex > matcher.end()) {
+      params+=raw.substring(matcher.end() - 1,endIndex - 1);
+    }
+    params=fix(params,pattern);
+    String function=null;
     String pre=matcher.group(1);
     if (matcher.group(1) != null) {
       String trimmedPre=pre.trim();
       if (trimmedPre.endsWith(".") || trimmedPre.endsWith("new")) {
-        continue;
+        function=raw.substring(matcher.start(2),matcher.start(3) - 1);
       }
     }
-    String function=matcher.group(2).trim();
-    if (KEYWORDS.contains(function))     continue;
-    String params=matcher.group(3).trim();
-    String target=ucFirst(function) + "." + function+ "("+ params+ ")";
+    if (function == null) {
+      function=matcher.group(2).trim();
+      if (KEYWORDS.contains(function)) {
+        function=raw.substring(matcher.start(2),matcher.start(3) - 1);
+      }
+ else {
+        function=ucFirst(function) + "." + function;
+      }
+    }
+    String target=function + "(" + params+ ")";
     buf.append(raw.substring(lastIndex,matcher.start(2)));
     buf.append(target);
-    lastIndex=matcher.end();
+    lastIndex=endIndex;
   }
   buf.append(raw.substring(lastIndex));
   return buf.toString();
