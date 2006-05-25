@@ -1,0 +1,26 @@
+{
+  PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_" + name + ".drl")));
+  Package pkg=builder.getPackage();
+  RuleBaseImpl ruleBase=(RuleBaseImpl)getRuleBase();
+  ruleBase.addPackage(pkg);
+  if (showRete) {
+    final ReteooJungViewer viewer=new ReteooJungViewer(ruleBase);
+    javax.swing.SwingUtilities.invokeLater(new Runnable(){
+      public void run(){
+        viewer.showGUI();
+      }
+    }
+);
+    while (viewer.isRunning()) {
+      Thread.yield();
+      Thread.sleep(100);
+    }
+  }
+  if (writeTree) {
+    writeRuleBase(ruleBase,name);
+  }
+  XStream xstream=new XStream();
+  RuleBase goodRuleBase=(RuleBase)xstream.fromXML(new BufferedReader(new FileReader("src/test/resources/org/drools/reteoo/" + name)));
+  nodesEquals(((RuleBaseImpl)goodRuleBase).getRete(),((RuleBaseImpl)ruleBase).getRete());
+}
