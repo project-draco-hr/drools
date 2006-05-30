@@ -1,17 +1,31 @@
 {
-  Package pkg=(Package)this.pkgs.get(packageName);
-  for (Iterator it=this.workingMemories.keySet().iterator(); it.hasNext(); ) {
-    AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)it.next();
+  final Package pkg=(Package)this.pkgs.get(packageName);
+  for (final Iterator it=this.workingMemories.keySet().iterator(); it.hasNext(); ) {
+    final AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)it.next();
     workingMemory.getLock().lock();
   }
-  Rule[] rules=pkg.getRules();
+  final Rule[] rules=pkg.getRules();
   for (int i=0; i < rules.length; ++i) {
     removeRule(rules[i]);
   }
   this.packageClassLoader.removeClassLoader(pkg.getPackageCompilationData().getClassLoader());
   pkg.clear();
-  for (Iterator it=this.workingMemories.keySet().iterator(); it.hasNext(); ) {
-    AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)it.next();
+  final Set referencedGlobals=new HashSet();
+  for (final Iterator it=this.pkgs.values().iterator(); it.hasNext(); ) {
+    final org.drools.rule.Package pkgref=(org.drools.rule.Package)it.next();
+    if (pkgref != pkg) {
+      referencedGlobals.addAll(pkgref.getGlobals().keySet());
+    }
+  }
+  for (final Iterator it=pkg.getGlobals().keySet().iterator(); it.hasNext(); ) {
+    final String globalName=(String)it.next();
+    if (!referencedGlobals.contains(globalName)) {
+      this.globals.remove(globalName);
+    }
+  }
+  this.pkgs.remove(pkg.getName());
+  for (final Iterator it=this.workingMemories.keySet().iterator(); it.hasNext(); ) {
+    final AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)it.next();
     workingMemory.getLock().unlock();
   }
 }

@@ -1,6 +1,6 @@
 {
-  byte[] b=this.b;
-  char[] c=new char[maxStringLength];
+  final byte[] b=this.b;
+  final char[] c=new char[this.maxStringLength];
   int i, j, k;
   int u, v, w;
   Attribute attr;
@@ -12,12 +12,12 @@
   int anns=0;
   int ianns=0;
   Attribute cattrs=null;
-  u=header;
+  u=this.header;
   access=readUnsignedShort(u);
   name=readClass(u + 2,c);
-  v=items[readUnsignedShort(u + 4)];
-  String superClassName=v == 0 ? null : readUTF8(v,c);
-  String[] implementedItfs=new String[readUnsignedShort(u + 6)];
+  v=this.items[readUnsignedShort(u + 4)];
+  final String superClassName=v == 0 ? null : readUTF8(v,c);
+  final String[] implementedItfs=new String[readUnsignedShort(u + 6)];
   w=0;
   u+=8;
   for (i=0; i < implementedItfs.length; ++i) {
@@ -75,15 +75,15 @@
       signature=readUTF8(v + 6,c);
     }
  else     if (attrName.equals("SourceDebugExtension")) {
-      int len=readInt(v + 2);
+      final int len=readInt(v + 2);
       sourceDebug=readUTF(v + 6,len,new char[len]);
     }
  else     if (attrName.equals("EnclosingMethod")) {
       enclosingOwner=readClass(v + 6,c);
-      int item=readUnsignedShort(v + 8);
+      final int item=readUnsignedShort(v + 8);
       if (item != 0) {
-        enclosingName=readUTF8(items[item],c);
-        enclosingDesc=readUTF8(items[item] + 2,c);
+        enclosingName=readUTF8(this.items[item],c);
+        enclosingDesc=readUTF8(this.items[item] + 2,c);
       }
     }
  else     if (attrName.equals("RuntimeVisibleAnnotations")) {
@@ -179,8 +179,8 @@
       }
       u+=6 + readInt(u + 2);
     }
-    Object value=(fieldValueItem == 0 ? null : readConst(fieldValueItem,c));
-    FieldVisitor fv=classVisitor.visitField(access,name,desc,signature,value);
+    final Object value=(fieldValueItem == 0 ? null : readConst(fieldValueItem,c));
+    final FieldVisitor fv=classVisitor.visitField(access,name,desc,signature,value);
     if (fv != null) {
       for (j=1; j >= 0; --j) {
         v=j == 0 ? ianns : anns;
@@ -206,7 +206,7 @@
   i=readUnsignedShort(u);
   u+=2;
   for (; i > 0; --i) {
-    int u0=u + 6;
+    final int u0=u + 6;
     access=readUnsignedShort(u);
     name=readUTF8(u + 2,c);
     desc=readUTF8(u + 4,c);
@@ -224,7 +224,7 @@
     for (; j > 0; --j) {
       attrName=readUTF8(u,c);
       u+=2;
-      int attrSize=readInt(u);
+      final int attrSize=readInt(u);
       u+=4;
       if (attrName.equals("Code")) {
         v=u;
@@ -283,10 +283,10 @@
         w+=2;
       }
     }
-    MethodVisitor mv=classVisitor.visitMethod(access,name,desc,signature,exceptions);
+    final MethodVisitor mv=classVisitor.visitMethod(access,name,desc,signature,exceptions);
     if (mv != null) {
       if (mv instanceof MethodWriter) {
-        MethodWriter mw=(MethodWriter)mv;
+        final MethodWriter mw=(MethodWriter)mv;
         if (mw.cw.cr == this) {
           if (signature == mw.signature) {
             boolean sameExceptions=false;
@@ -314,7 +314,7 @@
         }
       }
       if (dann != 0) {
-        AnnotationVisitor dv=mv.visitAnnotationDefault();
+        final AnnotationVisitor dv=mv.visitAnnotationDefault();
         readAnnotationValue(dann,c,null,dv);
         dv.visitEnd();
       }
@@ -344,15 +344,15 @@
       }
     }
     if (mv != null && v != 0) {
-      int maxStack=readUnsignedShort(v);
-      int maxLocals=readUnsignedShort(v + 2);
-      int codeLength=readInt(v + 4);
+      final int maxStack=readUnsignedShort(v);
+      final int maxLocals=readUnsignedShort(v + 2);
+      final int codeLength=readInt(v + 4);
       v+=8;
-      int codeStart=v;
-      int codeEnd=v + codeLength;
+      final int codeStart=v;
+      final int codeEnd=v + codeLength;
       mv.visitCode();
       int label;
-      Label[] labels=new Label[codeLength + 1];
+      final Label[] labels=new Label[codeLength + 1];
       while (v < codeEnd) {
         int opcode=b[v] & 0xFF;
 switch (ClassWriter.TYPE[opcode]) {
@@ -460,12 +460,12 @@ Label handler=labels[label];
 if (handler == null) {
 labels[label]=handler=new Label();
 }
-int type=readUnsignedShort(v + 6);
+final int type=readUnsignedShort(v + 6);
 if (type == 0) {
 mv.visitTryCatchBlock(start,end,handler,null);
 }
  else {
-mv.visitTryCatchBlock(start,end,handler,readUTF8(items[type],c));
+mv.visitTryCatchBlock(start,end,handler,readUTF8(this.items[type],c));
 }
 v+=8;
 }
@@ -575,11 +575,11 @@ case ClassWriter.TABL_INSN:
 v=v + 4 - (w & 3);
 label=w + readInt(v);
 v+=4;
-int min=readInt(v);
+final int min=readInt(v);
 v+=4;
-int max=readInt(v);
+final int max=readInt(v);
 v+=4;
-Label[] table=new Label[max - min + 1];
+final Label[] table=new Label[max - min + 1];
 for (j=0; j < table.length; ++j) {
 table[j]=labels[w + readInt(v)];
 v+=4;
@@ -592,8 +592,8 @@ label=w + readInt(v);
 v+=4;
 j=readInt(v);
 v+=4;
-int[] keys=new int[j];
-Label[] values=new Label[j];
+final int[] keys=new int[j];
+final Label[] values=new Label[j];
 for (j=0; j < keys.length; ++j) {
 keys[j]=readInt(v);
 v+=4;
@@ -624,11 +624,11 @@ v+=3;
 break;
 case ClassWriter.FIELDORMETH_INSN:
 case ClassWriter.ITFMETH_INSN:
-int cpIndex=items[readUnsignedShort(v + 1)];
-String iowner=readClass(cpIndex,c);
-cpIndex=items[readUnsignedShort(cpIndex + 2)];
-String iname=readUTF8(cpIndex,c);
-String idesc=readUTF8(cpIndex + 2,c);
+int cpIndex=this.items[readUnsignedShort(v + 1)];
+final String iowner=readClass(cpIndex,c);
+cpIndex=this.items[readUnsignedShort(cpIndex + 2)];
+final String iname=readUTF8(cpIndex,c);
+final String idesc=readUTF8(cpIndex + 2,c);
 if (opcode < Opcodes.INVOKEVIRTUAL) {
 mv.visitFieldInsn(opcode,iowner,iname,idesc);
 }
@@ -678,9 +678,9 @@ w=varTable;
 k=readUnsignedShort(w);
 w+=2;
 for (; k > 0; --k) {
-int start=readUnsignedShort(w);
-int length=readUnsignedShort(w + 2);
-int index=readUnsignedShort(w + 8);
+final int start=readUnsignedShort(w);
+final int length=readUnsignedShort(w + 2);
+final int index=readUnsignedShort(w + 8);
 String vsignature=null;
 if (typeTable != null) {
 for (int a=0; a < typeTable.length; a+=3) {

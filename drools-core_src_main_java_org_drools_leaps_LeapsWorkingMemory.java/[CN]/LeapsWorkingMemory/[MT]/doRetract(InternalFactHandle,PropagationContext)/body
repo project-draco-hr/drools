@@ -1,0 +1,68 @@
+{
+  for (final Iterator it=this.getFactTablesList(((FactHandleImpl)factHandle).getObject().getClass()).iterator(); it.hasNext(); ) {
+    ((FactTable)it.next()).remove(factHandle);
+  }
+  final Iterator tuples=((FactHandleImpl)factHandle).getActivatedTuples();
+  for (; tuples != null && tuples.hasNext(); ) {
+    final LeapsTuple tuple=(LeapsTuple)tuples.next();
+    if (tuple.getLeapsRule().getRule() instanceof Query) {
+      removeFromQueryResults(tuple.getLeapsRule().getRule().getName(),tuple);
+    }
+ else {
+      invalidateActivation(tuple);
+    }
+  }
+  final IdentityMap tuplesNotReadyForActivation=new IdentityMap();
+  FactHandleTupleAssembly assembly;
+  LeapsTuple tuple;
+  Iterator it;
+  it=((FactHandleImpl)factHandle).getNotTupleAssemblies();
+  if (it != null) {
+    for (; it.hasNext(); ) {
+      assembly=(FactHandleTupleAssembly)it.next();
+      tuple=assembly.getTuple();
+      if (!tuple.isReadyForActivation()) {
+        tuplesNotReadyForActivation.put(tuple,tuple);
+      }
+      tuple.removeBlockingNotFactHandle(assembly.getIndex());
+      TokenEvaluator.evaluateNotCondition(new FactHandleImpl(((FactHandleImpl)factHandle).getId() + 1,new Object()),assembly.getIndex(),tuple,this);
+    }
+  }
+  it=((FactHandleImpl)factHandle).getExistsTupleAssemblies();
+  if (it != null) {
+    for (; it.hasNext(); ) {
+      assembly=(FactHandleTupleAssembly)it.next();
+      tuple=assembly.getTuple();
+      if (!tuple.isReadyForActivation()) {
+        tuplesNotReadyForActivation.put(tuple,tuple);
+      }
+      tuple.removeExistsFactHandle(assembly.getIndex());
+      TokenEvaluator.evaluateExistsCondition(new FactHandleImpl(((FactHandleImpl)factHandle).getId() + 1,null),assembly.getIndex(),tuple,this);
+    }
+  }
+  final IteratorChain chain=new IteratorChain();
+  it=((FactHandleImpl)factHandle).getNotTupleAssemblies();
+  if (it != null) {
+    chain.addIterator(it);
+  }
+  it=((FactHandleImpl)factHandle).getExistsTupleAssemblies();
+  if (it != null) {
+    chain.addIterator(it);
+  }
+  for (; chain.hasNext(); ) {
+    tuple=((FactHandleTupleAssembly)chain.next()).getTuple();
+    if (tuple.isReadyForActivation() && tuple.isActivationNull() && tuplesNotReadyForActivation.containsKey(tuple)) {
+      tuple.setContext(new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.ASSERTION,tuple.getLeapsRule().getRule(),null));
+      this.assertTuple(tuple);
+    }
+ else {
+      if (tuple.getLeapsRule().getRule() instanceof Query) {
+        removeFromQueryResults(tuple.getLeapsRule().getRule().getName(),tuple);
+      }
+ else {
+        invalidateActivation(tuple);
+      }
+    }
+  }
+  this.removeTokenFromStack((FactHandleImpl)factHandle);
+}

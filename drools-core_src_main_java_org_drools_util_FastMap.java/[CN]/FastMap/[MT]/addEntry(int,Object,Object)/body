@@ -1,0 +1,23 @@
+{
+  if ((this._size++ >> FastMap.R0) >= this._entries.length) {
+    increaseEntryTable();
+  }
+  if (this._tail._next == null) {
+    increaseCapacity();
+  }
+  final Entry newTail=this._tail._next;
+  this._tail._key=key;
+  this._tail._value=value;
+  this._tail._keyHash=hash;
+  this._tail._table=this._entries;
+  final int index=(hash >> FastMap.R0) & (this._entries.length - 1);
+  Entry[] tmp=this._entries[index];
+  if (tmp == FastMap.NULL_BLOCK) {
+    newBlock(index);
+    tmp=this._entries[index];
+  }
+  final Entry beside=tmp[hash & FastMap.M0];
+  this._tail._beside=beside;
+  tmp[hash & FastMap.M0]=this._tail;
+  this._tail=newTail;
+}

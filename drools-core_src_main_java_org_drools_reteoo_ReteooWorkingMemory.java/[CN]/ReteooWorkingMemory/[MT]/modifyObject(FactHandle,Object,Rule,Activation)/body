@@ -1,0 +1,37 @@
+{
+  this.lock.lock();
+  try {
+    final int status=((InternalFactHandle)factHandle).getEqualityKey().getStatus();
+    final InternalFactHandle handle=(InternalFactHandle)factHandle;
+    final Object originalObject=handle.getObject();
+    if (handle.getId() == -1 || object == null) {
+      return;
+    }
+    handle.setObject(object);
+    if (originalObject != object) {
+      this.assertMap.put(handle,handle);
+    }
+    EqualityKey key=handle.getEqualityKey();
+    key.removeFactHandle(handle);
+    if (key.isEmpty()) {
+      this.tms.remove(key);
+    }
+    key=this.tms.get(object);
+    if (key == null) {
+      key=new EqualityKey(handle,status);
+      this.tms.put(key);
+    }
+    key.addFactHandle(handle);
+    handle.setEqualityKey(key);
+    this.handleFactory.increaseFactHandleRecency(handle);
+    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation);
+    this.ruleBase.modifyObject(factHandle,propagationContext,this);
+    this.workingMemoryEventSupport.fireObjectModified(propagationContext,factHandle,originalObject,object);
+    if (!this.factQueue.isEmpty()) {
+      propagateQueuedActions();
+    }
+  }
+  finally {
+    this.lock.unlock();
+  }
+}

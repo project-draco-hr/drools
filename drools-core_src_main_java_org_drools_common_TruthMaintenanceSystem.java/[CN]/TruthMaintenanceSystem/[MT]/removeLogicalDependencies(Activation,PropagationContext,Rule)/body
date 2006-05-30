@@ -1,0 +1,15 @@
+{
+  final org.drools.util.LinkedList list=activation.getLogicalDependencies();
+  if (list == null || list.isEmpty()) {
+    return;
+  }
+  for (LogicalDependency node=(LogicalDependency)list.getFirst(); node != null; node=(LogicalDependency)node.getNext()) {
+    final InternalFactHandle handle=(InternalFactHandle)node.getFactHandle();
+    final Set set=(Set)this.justifiedMap.get(handle.getId());
+    set.remove(node);
+    if (set.isEmpty()) {
+      this.justifiedMap.remove(handle.getId());
+      this.WorkingMemory.queueRetractAction(handle,false,true,context.getRuleOrigin(),context.getActivationOrigin());
+    }
+  }
+}

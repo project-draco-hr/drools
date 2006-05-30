@@ -1,23 +1,22 @@
 {
-  WorkingMemoryImpl workingMemory=new WorkingMemoryImpl(new RuleBaseImpl());
-  Rule rule=new Rule("test-rule");
-  PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
-  MockObjectSource source=new MockObjectSource(15);
-  FieldExtractor extractor=new ClassFieldExtractor(Cheese.class,"type");
-  FieldValue field=new MockField("cheddar");
-  Evaluator evaluator=EvaluatorFactory.getInstance().getEvaluator(Evaluator.OBJECT_TYPE,Evaluator.EQUAL);
-  LiteralConstraint constraint=new LiteralConstraint(field,extractor,evaluator);
-  AlphaNode alphaNode=new AlphaNode(2,constraint,source);
-  MockObjectSink sink=new MockObjectSink();
+  final ReteooWorkingMemory workingMemory=new ReteooWorkingMemory(new ReteooRuleBase());
+  final Rule rule=new Rule("test-rule");
+  final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
+  final MockObjectSource source=new MockObjectSource(15);
+  final FieldExtractor extractor=new ClassFieldExtractor(Cheese.class,"type");
+  final FieldValue field=new MockField("cheddar");
+  final Evaluator evaluator=EvaluatorFactory.getEvaluator(Evaluator.OBJECT_TYPE,Evaluator.EQUAL);
+  final LiteralConstraint constraint=new LiteralConstraint(field,extractor,evaluator);
+  final AlphaNode alphaNode=new AlphaNode(2,constraint,source);
+  final MockObjectSink sink=new MockObjectSink();
   alphaNode.addObjectSink(sink);
-  Cheese cheddar=new Cheese("cheddar",5);
-  FactHandleImpl f0=new FactHandleImpl(0);
-  workingMemory.putObject(f0,cheddar);
-  Set memory=(Set)workingMemory.getNodeMemory(alphaNode);
+  final Cheese cheddar=new Cheese("cheddar",5);
+  final DefaultFactHandle f0=new DefaultFactHandle(0,cheddar);
+  final Set memory=(Set)workingMemory.getNodeMemory(alphaNode);
   assertLength(0,memory);
   alphaNode.assertObject(f0,context,workingMemory);
   assertLength(1,memory);
-  FactHandleImpl f1=new FactHandleImpl(1);
+  final DefaultFactHandle f1=new DefaultFactHandle(1,"cheese");
   alphaNode.retractObject(f1,context,workingMemory);
   assertLength(0,sink.getRetracted());
   assertLength(1,memory);
@@ -25,6 +24,6 @@
   alphaNode.retractObject(f0,context,workingMemory);
   assertLength(1,sink.getRetracted());
   assertLength(0,memory);
-  Object[] list=(Object[])sink.getRetracted().get(0);
+  final Object[] list=(Object[])sink.getRetracted().get(0);
   assertSame(f0,list[0]);
 }

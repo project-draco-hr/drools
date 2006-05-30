@@ -1,45 +1,38 @@
 {
   final Rule rule1=new Rule("test-rule1");
-  Rete rete=new Rete();
-  ObjectTypeNode objectTypeNode=new ObjectTypeNode(0,new ClassObjectType(String.class),rete);
+  final Rete rete=new Rete();
+  final ObjectTypeNode objectTypeNode=new ObjectTypeNode(0,new ClassObjectType(String.class),rete);
   objectTypeNode.attach();
-  MockObjectSink sink=new MockObjectSink();
+  final MockObjectSink sink=new MockObjectSink();
   objectTypeNode.addObjectSink(sink);
   final TerminalNode node=new TerminalNode(2,new MockTupleSource(2),rule1);
-  RuleBase ruleBase=new RuleBaseImpl();
-  WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
-  Consequence consequence=new Consequence(){
+  final RuleBase ruleBase=new ReteooRuleBase();
+  final ReteooWorkingMemory workingMemory=(ReteooWorkingMemory)ruleBase.newWorkingMemory();
+  final Consequence consequence=new Consequence(){
+    /** 
+ */
+    private static final long serialVersionUID=-3139752102258757978L;
     public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory){
     }
   }
 ;
   rule1.setConsequence(consequence);
-  FactHandleImpl handle1=new FactHandleImpl(1);
-  ReteTuple tuple1=new ReteTuple(handle1);
-  PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
+  final DefaultFactHandle handle1=new DefaultFactHandle(1,"cheese");
+  final ReteTuple tuple1=new ReteTuple(handle1);
+  final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
   node.assertTuple(tuple1,context,workingMemory);
-  String logicalString1=new String("logical");
-  FactHandle logicalHandle1=workingMemory.assertObject(logicalString1,false,true,rule1,tuple1.getActivation());
+  final String logicalString1=new String("logical");
+  final FactHandle logicalHandle1=workingMemory.assertObject(logicalString1,false,true,rule1,tuple1.getActivation());
   final Rule rule2=new Rule("test-rule2");
   final TerminalNode node2=new TerminalNode(4,new MockTupleSource(3),rule2);
   rule2.setConsequence(consequence);
-  FactHandleImpl handle2=new FactHandleImpl(2);
-  ReteTuple tuple2=new ReteTuple(handle2);
+  final DefaultFactHandle handle2=new DefaultFactHandle(2,"cheese");
+  final ReteTuple tuple2=new ReteTuple(handle2);
   node.assertTuple(tuple2,context,workingMemory);
   node2.assertTuple(tuple2,context,workingMemory);
-  String logicalString2=new String("logical");
-  FactHandle logicalHandle2=workingMemory.assertObject(logicalString2,false,true,rule2,tuple2.getActivation());
-  if (RuleBaseConfiguration.WM_BEHAVIOR_IDENTITY.equals(((RuleBaseImpl)ruleBase).getConfiguration().getProperty(RuleBaseConfiguration.PROPERTY_LOGICAL_ASSERT_BEHAVIOR))) {
-    assertLength(2,workingMemory.getJustified().values());
-  }
- else {
-    assertLength(1,workingMemory.getJustified().values());
-  }
+  final String logicalString2=new String("logical");
+  final FactHandle logicalHandle2=workingMemory.assertObject(logicalString2,false,true,rule2,tuple2.getActivation());
+  assertLength(1,workingMemory.getTruthMaintenanceSystem().getJustifiedMap().values());
   workingMemory.retractObject(logicalHandle2);
-  if (RuleBaseConfiguration.WM_BEHAVIOR_IDENTITY.equals(((RuleBaseImpl)ruleBase).getConfiguration().getProperty(RuleBaseConfiguration.PROPERTY_LOGICAL_ASSERT_BEHAVIOR))) {
-    assertLength(1,workingMemory.getJustified().values());
-  }
- else {
-    assertLength(0,workingMemory.getJustified().values());
-  }
+  assertLength(0,workingMemory.getTruthMaintenanceSystem().getJustifiedMap().values());
 }

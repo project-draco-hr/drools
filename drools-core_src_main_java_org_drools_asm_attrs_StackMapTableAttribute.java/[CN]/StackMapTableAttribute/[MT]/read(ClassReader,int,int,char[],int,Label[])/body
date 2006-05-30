@@ -1,10 +1,10 @@
 {
-  ArrayList frames=new ArrayList();
-  boolean isExtCodeSize=cr.readInt(codeOff + 4) > MAX_SHORT;
-  boolean isExtLocals=cr.readUnsignedShort(codeOff + 2) > MAX_SHORT;
-  boolean isExtStack=cr.readUnsignedShort(codeOff) > MAX_SHORT;
+  final ArrayList frames=new ArrayList();
+  final boolean isExtCodeSize=cr.readInt(codeOff + 4) > StackMapTableAttribute.MAX_SHORT;
+  final boolean isExtLocals=cr.readUnsignedShort(codeOff + 2) > StackMapTableAttribute.MAX_SHORT;
+  final boolean isExtStack=cr.readUnsignedShort(codeOff) > StackMapTableAttribute.MAX_SHORT;
   int offset=0;
-  int methodOff=getMethodOff(cr,codeOff,buf);
+  final int methodOff=getMethodOff(cr,codeOff,buf);
   StackMapFrame frame=new StackMapFrame(getLabel(offset,labels),calculateLocals(cr.readClass(cr.header + 2,buf),cr.readUnsignedShort(methodOff),cr.readUTF8(methodOff + 2,buf),cr.readUTF8(methodOff + 4,buf)),Collections.EMPTY_LIST);
   frames.add(frame);
   int size;
@@ -17,18 +17,18 @@
     off+=2;
   }
   for (; size > 0; size--) {
-    int tag=cr.readByte(off);
+    final int tag=cr.readByte(off);
     off++;
     List stack;
     List locals;
     int offsetDelta;
-    if (tag < SAME_LOCALS_1_STACK_ITEM_FRAME) {
+    if (tag < StackMapTableAttribute.SAME_LOCALS_1_STACK_ITEM_FRAME) {
       offsetDelta=tag;
       locals=new ArrayList(frame.locals);
       stack=Collections.EMPTY_LIST;
     }
- else     if (tag < RESERVED) {
-      offsetDelta=tag - SAME_LOCALS_1_STACK_ITEM_FRAME;
+ else     if (tag < StackMapTableAttribute.RESERVED) {
+      offsetDelta=tag - StackMapTableAttribute.SAME_LOCALS_1_STACK_ITEM_FRAME;
       locals=new ArrayList(frame.locals);
       stack=new ArrayList();
       off=readType(stack,isExtCodeSize,cr,off,labels,buf);
@@ -42,28 +42,28 @@
         offsetDelta=cr.readUnsignedShort(off);
         off+=2;
       }
-      if (tag == SAME_LOCALS_1_STACK_ITEM_FRAME_EXTENDED) {
+      if (tag == StackMapTableAttribute.SAME_LOCALS_1_STACK_ITEM_FRAME_EXTENDED) {
         locals=new ArrayList(frame.locals);
         stack=new ArrayList();
         off=readType(stack,isExtCodeSize,cr,off,labels,buf);
       }
- else       if (tag >= CHOP_FRAME && tag < SAME_FRAME_EXTENDED) {
+ else       if (tag >= StackMapTableAttribute.CHOP_FRAME && tag < StackMapTableAttribute.SAME_FRAME_EXTENDED) {
         stack=Collections.EMPTY_LIST;
-        int k=SAME_FRAME_EXTENDED - tag;
+        final int k=StackMapTableAttribute.SAME_FRAME_EXTENDED - tag;
         locals=new ArrayList(frame.locals.subList(0,frame.locals.size() - k));
       }
- else       if (tag == SAME_FRAME_EXTENDED) {
+ else       if (tag == StackMapTableAttribute.SAME_FRAME_EXTENDED) {
         stack=Collections.EMPTY_LIST;
         locals=new ArrayList(frame.locals);
       }
- else       if (tag < FULL_FRAME) {
+ else       if (tag < StackMapTableAttribute.FULL_FRAME) {
         stack=Collections.EMPTY_LIST;
         locals=new ArrayList(frame.locals);
-        for (int k=tag - SAME_FRAME_EXTENDED; k > 0; k--) {
+        for (int k=tag - StackMapTableAttribute.SAME_FRAME_EXTENDED; k > 0; k--) {
           off=readType(locals,isExtCodeSize,cr,off,labels,buf);
         }
       }
- else       if (tag == FULL_FRAME) {
+ else       if (tag == StackMapTableAttribute.FULL_FRAME) {
         locals=new ArrayList();
         off=readTypes(locals,isExtLocals,isExtCodeSize,cr,off,labels,buf);
         stack=new ArrayList();
@@ -74,7 +74,7 @@
       }
     }
     offset+=offsetDelta;
-    Label offsetLabel=getLabel(offset,labels);
+    final Label offsetLabel=getLabel(offset,labels);
     frame=new StackMapFrame(offsetLabel,locals,stack);
     frames.add(frame);
     offset++;

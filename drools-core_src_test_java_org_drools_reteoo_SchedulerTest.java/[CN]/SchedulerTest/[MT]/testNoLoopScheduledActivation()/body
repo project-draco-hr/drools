@@ -1,11 +1,14 @@
 {
-  RuleBase ruleBase=new RuleBaseImpl();
-  final WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
+  final RuleBase ruleBase=new ReteooRuleBase();
+  final ReteooWorkingMemory workingMemory=(ReteooWorkingMemory)ruleBase.newWorkingMemory();
   final Agenda agenda=workingMemory.getAgenda();
   final Rule rule=new Rule("test-rule");
   final List data=new ArrayList();
   final TerminalNode node=new TerminalNode(1,new MockTupleSource(2),rule);
-  Duration duration=new Duration(){
+  final Duration duration=new Duration(){
+    /** 
+ */
+    private static final long serialVersionUID=-2288407417074884302L;
     public long getDuration(    Tuple tuple){
       return 100;
     }
@@ -14,19 +17,22 @@
   rule.setDuration(duration);
   rule.setNoLoop(true);
   rule.setConsequence(new org.drools.spi.Consequence(){
-    public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory){
+    /** 
+ */
+    private static final long serialVersionUID=-4822730789394039868L;
+    public void evaluate(    final KnowledgeHelper knowledgeHelper,    final WorkingMemory workingMemory){
       if (data.size() < 5) {
-        PropagationContext context2=new PropagationContextImpl(0,0,rule,knowledgeHelper.getActivation());
-        ReteTuple tuple2=new ReteTuple(new FactHandleImpl(2));
-        node.assertTuple(tuple2,context2,(WorkingMemoryImpl)workingMemory);
+        final PropagationContext context2=new PropagationContextImpl(0,0,rule,knowledgeHelper.getActivation());
+        final ReteTuple tuple2=new ReteTuple(new DefaultFactHandle(2,"cheese"));
+        node.assertTuple(tuple2,context2,(ReteooWorkingMemory)workingMemory);
       }
       data.add("tested");
     }
   }
 );
-  PropagationContext context1=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
-  ReteTuple tuple1=new ReteTuple(new FactHandleImpl(1));
-  node.assertTuple(tuple1,context1,(WorkingMemoryImpl)workingMemory);
+  final PropagationContext context1=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
+  final ReteTuple tuple1=new ReteTuple(new DefaultFactHandle(1,"cheese"));
+  node.assertTuple(tuple1,context1,workingMemory);
   assertEquals(0,data.size());
   Thread.sleep(500);
   assertEquals(1,data.size());

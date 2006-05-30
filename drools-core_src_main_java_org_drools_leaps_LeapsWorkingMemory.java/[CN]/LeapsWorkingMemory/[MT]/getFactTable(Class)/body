@@ -1,0 +1,23 @@
+{
+  FactTable table;
+  if (this.factTables.containsKey(c)) {
+    table=(FactTable)this.factTables.get(c);
+  }
+ else {
+    table=new FactTable(DefaultConflictResolver.getInstance());
+    this.factTables.put(c,table);
+    for (final Iterator iter=this.leapsRulesToHandlesMap.keySet().iterator(); iter.hasNext(); ) {
+      final LeapsRule leapsRule=(LeapsRule)iter.next();
+      if (leapsRule.getNumberOfColumns() > 0) {
+        final List rulesHandles=(List)this.leapsRulesToHandlesMap.get(leapsRule);
+        for (final Iterator handles=rulesHandles.iterator(); handles.hasNext(); ) {
+          final RuleHandle handle=(RuleHandle)handles.next();
+          if (leapsRule.getColumnClassObjectTypeAtPosition(handle.getDominantPosition()).isAssignableFrom(c)) {
+            table.addRule(this,handle);
+          }
+        }
+      }
+    }
+  }
+  return table;
+}

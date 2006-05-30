@@ -1,0 +1,20 @@
+{
+  this.getLock().lock();
+  try {
+    final int status=((InternalFactHandle)factHandle).getEqualityKey().getStatus();
+    final InternalFactHandle handle=(InternalFactHandle)factHandle;
+    final Object originalObject=this.assertMap.remove(factHandle);
+    if (originalObject == null) {
+      throw new NoSuchFactObjectException(handle);
+    }
+    this.retractObject(handle);
+    final FactHandleImpl handleImpl=(FactHandleImpl)this.assertObject(object,false,(status == EqualityKey.STATED) ? false : true,rule,activation);
+    this.workingMemoryEventSupport.fireObjectModified(new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.MODIFICATION,rule,activation),handle,((FactHandleImpl)handle).getObject(),object);
+    if (!this.factQueue.isEmpty()) {
+      propagateQueuedActions();
+    }
+  }
+  finally {
+    this.getLock().unlock();
+  }
+}

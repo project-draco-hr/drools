@@ -1,33 +1,36 @@
 {
   final Rule rule=new Rule("WorkingButCanNotResolveOrObjectInConsequence");
-  Column edgeColumn1=new Column(0,edgeType,"edge1");
+  final Column edgeColumn1=new Column(0,this.edgeType,"edge1");
   setFieldDeclaration(edgeColumn1,"p1","edge1p1");
   setFieldDeclaration(edgeColumn1,"p2","edge1p2");
   rule.addPattern(edgeColumn1);
   final Declaration edge1Declaration=rule.getDeclaration("edge1");
   final Declaration edge1P1Declaration=rule.getDeclaration("edge1p1");
   final Declaration edge1P2Declaration=rule.getDeclaration("edge1p2");
-  Column edgeColumn2=new Column(1,edgeType,"edge2");
+  final Column edgeColumn2=new Column(1,this.edgeType,"edge2");
   rule.addPattern(edgeColumn2);
   final Declaration edge2Declaration=rule.getDeclaration("edge2");
-  edgeColumn2.addConstraint(getBoundVariableConstraint(edgeColumn2,"p1",edge1P1Declaration,integerEqualEvaluator));
-  edgeColumn2.addConstraint(getBoundVariableConstraint(edgeColumn2,"p2",edge1P2Declaration,integerNotEqualEvaluator));
-  Column stageColumn1=new Column(2,stageType,"stage1");
+  edgeColumn2.addConstraint(getBoundVariableConstraint(edgeColumn2,"p1",edge1P1Declaration,this.integerEqualEvaluator));
+  edgeColumn2.addConstraint(getBoundVariableConstraint(edgeColumn2,"p2",edge1P2Declaration,this.integerNotEqualEvaluator));
+  final Column stageColumn1=new Column(2,this.stageType,"stage1");
   stageColumn1.addConstraint(getLiteralConstraint(stageColumn1,"value",new Integer(Stage.DETECT_JUNCTIONS),this.integerEqualEvaluator));
-  Column stageColumn2=new Column(2,stageType,"stage");
+  final Column stageColumn2=new Column(2,this.stageType,"stage");
   stageColumn2.addConstraint(getLiteralConstraint(stageColumn2,"value",new Integer(Stage.LABELING),this.integerEqualEvaluator));
-  Or or=new Or();
+  final Or or=new Or();
   or.addChild(stageColumn1);
   or.addChild(stageColumn2);
   rule.addPattern(or);
   final Declaration stageDeclaration=rule.getDeclaration("stage");
-  Consequence consequence=new Consequence(){
+  final Consequence consequence=new Consequence(){
+    /** 
+ */
+    private static final long serialVersionUID=-4956304333289545872L;
     public void evaluate(    KnowledgeHelper drools,    WorkingMemory workingMemory) throws ConsequenceException {
       try {
         Rule rule=drools.getRule();
         Tuple tuple=drools.getTuple();
         Stage stage=(Stage)drools.get(stageDeclaration);
-        markStage=stage;
+        OrTest.this.markStage=stage;
       }
  catch (      Exception e) {
         e.printStackTrace();

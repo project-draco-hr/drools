@@ -1,0 +1,24 @@
+{
+  final Map memory=(Map)workingMemory.getNodeMemory(this);
+  if ((this.binder == null) || (this.binder.isAllowed(handle,null,workingMemory))) {
+    final LinkedList list=(LinkedList)memory.get(handle);
+    if (list != null) {
+      int i=0;
+      for (LinkedListNode node=list.getFirst(); node != null; node=node.getNext()) {
+        ((TupleSink)getTupleSinks().get(i++)).modifyTuple((ReteTuple)((LinkedListObjectWrapper)node).getObject(),context,workingMemory);
+      }
+    }
+ else {
+      this.createAndAssertTuple(handle,context,workingMemory,memory);
+    }
+  }
+ else {
+    final LinkedList list=(LinkedList)memory.remove(handle);
+    if (list != null) {
+      int i=0;
+      for (LinkedListNode node=list.getFirst(); node != null; node=node.getNext()) {
+        ((TupleSink)getTupleSinks().get(i++)).retractTuple((ReteTuple)((LinkedListObjectWrapper)node).getObject(),context,workingMemory);
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  this.attachingNewNode=true;
+  final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  for (final Iterator it=memory.getRightObjectMemory().iterator(); it.hasNext(); ) {
+    final ObjectMatches objectMatches=(ObjectMatches)it.next();
+    final DefaultFactHandle handle=objectMatches.getFactHandle();
+    for (TupleMatch tupleMatch=objectMatches.getFirstTupleMatch(); tupleMatch != null; tupleMatch=(TupleMatch)tupleMatch.getNext()) {
+      final ReteTuple tuple=new ReteTuple(tupleMatch.getTuple(),handle);
+      final TupleSink sink=(TupleSink)this.tupleSinks.get(this.tupleSinks.size() - 1);
+      if (sink != null) {
+        tupleMatch.addJoinedTuple(tuple);
+        sink.assertTuple(tuple,context,workingMemory);
+      }
+ else {
+        throw new RuntimeException("Possible BUG: trying to propagate an assert to a node that was the last added node");
+      }
+    }
+  }
+  this.attachingNewNode=false;
+}

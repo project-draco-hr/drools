@@ -1,0 +1,16 @@
+{
+  final ColumnConstraints[] not=rule.getNotColumnConstraints();
+  for (int i=0, length=not.length; i < length; i++) {
+    final ColumnConstraints constraint=not[i];
+    final TableIterator tableIterator=workingMemory.getFactTable(constraint.getClassType()).reverseOrderIterator();
+    boolean done=false;
+    while (!done && tableIterator.hasNext()) {
+      final FactHandleImpl factHandle=(FactHandleImpl)tableIterator.next();
+      if (constraint.isAllowed(factHandle,tuple,workingMemory)) {
+        tuple.setBlockingNotFactHandle(factHandle,i);
+        factHandle.addNotTuple(tuple,i);
+        done=true;
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  if (!this.firing) {
+    try {
+      this.firing=true;
+      boolean nothingToProcess=false;
+      while (!nothingToProcess) {
+        while (!this.mainStack.empty()) {
+          final Token token=this.peekTokenOnTop();
+          boolean done=false;
+          while (!done) {
+            if (!token.isResume()) {
+              if (token.hasNextRuleHandle()) {
+                token.nextRuleHandle();
+              }
+ else {
+                this.removeTokenFromStack((FactHandleImpl)token.getDominantFactHandle());
+                done=true;
+              }
+            }
+            if (!done) {
+              try {
+                TokenEvaluator.evaluate(token);
+                if (token.getDominantFactHandle() != null) {
+                  token.setResume(true);
+                  done=true;
+                }
+              }
+ catch (              final NoMatchesFoundException ex) {
+                token.setResume(false);
+              }
+            }
+            while (this.agenda.fireNextItem(agendaFilter)) {
+              ;
+            }
+          }
+        }
+        while (this.agenda.fireNextItem(agendaFilter)) {
+          ;
+        }
+        if (this.mainStack.empty()) {
+          nothingToProcess=true;
+        }
+      }
+      this.idLastFireAllAt=((LeapsFactHandleFactory)this.handleFactory).getNextId();
+      for (final Iterator it=this.factTables.values().iterator(); it.hasNext(); ) {
+        ((FactTable)it.next()).setReseededStack(true);
+      }
+    }
+  finally {
+      this.firing=false;
+    }
+  }
+}

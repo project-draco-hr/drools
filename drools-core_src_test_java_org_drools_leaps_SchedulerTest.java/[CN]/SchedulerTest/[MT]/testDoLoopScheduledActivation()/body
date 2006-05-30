@@ -1,9 +1,12 @@
 {
-  RuleBase ruleBase=new RuleBaseImpl();
-  final WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
+  final RuleBase ruleBase=new LeapsRuleBase();
+  final LeapsWorkingMemory workingMemory=(LeapsWorkingMemory)ruleBase.newWorkingMemory();
   final Rule rule=new Rule("do-loop-scheduled-test-rule");
   final List data=new ArrayList();
-  Duration duration=new Duration(){
+  final Duration duration=new Duration(){
+    /** 
+ */
+    private static final long serialVersionUID=-65249353062404118L;
     public long getDuration(    Tuple tuple){
       return 100;
     }
@@ -11,26 +14,29 @@
 ;
   rule.setDuration(duration);
   rule.setConsequence(new org.drools.spi.Consequence(){
-    public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory){
+    /** 
+ */
+    private static final long serialVersionUID=5431138295939934840L;
+    public void evaluate(    final KnowledgeHelper knowledgeHelper,    final WorkingMemory workingMemory){
       if (data.size() < 3) {
-        PropagationContext context2=new PropagationContextImpl(0,0,rule,knowledgeHelper.getActivation());
-        FactHandleImpl tupleFactHandleIn=(FactHandleImpl)workingMemory.assertObject("tuple object in");
-        FactHandleImpl[] factHandlesTupleIn=new FactHandleImpl[1];
+        final PropagationContext context2=new PropagationContextImpl(0,0,rule,knowledgeHelper.getActivation());
+        final FactHandleImpl tupleFactHandleIn=(FactHandleImpl)workingMemory.assertObject("tuple object in");
+        final FactHandleImpl[] factHandlesTupleIn=new FactHandleImpl[1];
         factHandlesTupleIn[0]=tupleFactHandleIn;
-        ArrayList leapsRules=(ArrayList)Builder.processRule(rule);
-        LeapsTuple tupleIn=new LeapsTuple(factHandlesTupleIn,(LeapsRule)leapsRules.get(0),context2);
-        ((WorkingMemoryImpl)workingMemory).assertTuple(tupleIn);
+        final ArrayList leapsRules=(ArrayList)Builder.processRule(rule);
+        final LeapsTuple tupleIn=new LeapsTuple(factHandlesTupleIn,(LeapsRule)leapsRules.get(0),context2);
+        ((LeapsWorkingMemory)workingMemory).assertTuple(tupleIn);
       }
       data.add("tested");
     }
   }
 );
-  PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule,null);
-  FactHandleImpl tupleFactHandle=(FactHandleImpl)workingMemory.assertObject("tuple object");
-  FactHandleImpl[] factHandlesTuple=new FactHandleImpl[1];
+  final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule,null);
+  final FactHandleImpl tupleFactHandle=(FactHandleImpl)workingMemory.assertObject("tuple object");
+  final FactHandleImpl[] factHandlesTuple=new FactHandleImpl[1];
   factHandlesTuple[0]=tupleFactHandle;
-  ArrayList leapsRules=(ArrayList)Builder.processRule(rule);
-  LeapsTuple tuple=new LeapsTuple(factHandlesTuple,(LeapsRule)leapsRules.get(0),context);
+  final ArrayList leapsRules=(ArrayList)Builder.processRule(rule);
+  final LeapsTuple tuple=new LeapsTuple(factHandlesTuple,(LeapsRule)leapsRules.get(0),context);
   workingMemory.assertTuple(tuple);
   assertEquals(0,data.size());
   Thread.sleep(1000);

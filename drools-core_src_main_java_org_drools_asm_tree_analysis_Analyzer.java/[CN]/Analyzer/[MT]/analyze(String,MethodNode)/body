@@ -1,125 +1,125 @@
 {
-  n=m.instructions.size();
-  indexes=new IntMap(2 * n);
-  handlers=new List[n];
-  frames=new Frame[n];
-  subroutines=new Subroutine[n];
-  queued=new boolean[n];
-  queue=new int[n];
-  top=0;
-  for (int i=0; i < n; ++i) {
+  this.n=m.instructions.size();
+  this.indexes=new IntMap(2 * this.n);
+  this.handlers=new List[this.n];
+  this.frames=new Frame[this.n];
+  this.subroutines=new Subroutine[this.n];
+  this.queued=new boolean[this.n];
+  this.queue=new int[this.n];
+  this.top=0;
+  for (int i=0; i < this.n; ++i) {
     Object insn=m.instructions.get(i);
     if (insn instanceof LabelNode) {
       insn=((LabelNode)insn).label;
     }
-    indexes.put(insn,i);
+    this.indexes.put(insn,i);
   }
   for (int i=0; i < m.tryCatchBlocks.size(); ++i) {
-    TryCatchBlockNode tcb=(TryCatchBlockNode)m.tryCatchBlocks.get(i);
-    int begin=indexes.get(tcb.start);
-    int end=indexes.get(tcb.end);
+    final TryCatchBlockNode tcb=(TryCatchBlockNode)m.tryCatchBlocks.get(i);
+    final int begin=this.indexes.get(tcb.start);
+    final int end=this.indexes.get(tcb.end);
     for (int j=begin; j < end; ++j) {
-      List insnHandlers=handlers[j];
+      List insnHandlers=this.handlers[j];
       if (insnHandlers == null) {
         insnHandlers=new ArrayList();
-        handlers[j]=insnHandlers;
+        this.handlers[j]=insnHandlers;
       }
       insnHandlers.add(tcb);
     }
   }
-  Frame current=newFrame(m.maxLocals,m.maxStack);
-  Frame handler=newFrame(m.maxLocals,m.maxStack);
-  Type[] args=Type.getArgumentTypes(m.desc);
+  final Frame current=newFrame(m.maxLocals,m.maxStack);
+  final Frame handler=newFrame(m.maxLocals,m.maxStack);
+  final Type[] args=Type.getArgumentTypes(m.desc);
   int local=0;
-  if ((m.access & ACC_STATIC) == 0) {
-    Type ctype=Type.getType("L" + owner + ";");
-    current.setLocal(local++,interpreter.newValue(ctype));
+  if ((m.access & Opcodes.ACC_STATIC) == 0) {
+    final Type ctype=Type.getType("L" + owner + ";");
+    current.setLocal(local++,this.interpreter.newValue(ctype));
   }
   for (int i=0; i < args.length; ++i) {
-    current.setLocal(local++,interpreter.newValue(args[i]));
+    current.setLocal(local++,this.interpreter.newValue(args[i]));
     if (args[i].getSize() == 2) {
-      current.setLocal(local++,interpreter.newValue(null));
+      current.setLocal(local++,this.interpreter.newValue(null));
     }
   }
   while (local < m.maxLocals) {
-    current.setLocal(local++,interpreter.newValue(null));
+    current.setLocal(local++,this.interpreter.newValue(null));
   }
   merge(0,current,null);
-  while (top > 0) {
-    int insn=queue[--top];
-    Frame f=frames[insn];
-    Subroutine subroutine=subroutines[insn];
-    queued[insn]=false;
+  while (this.top > 0) {
+    final int insn=this.queue[--this.top];
+    final Frame f=this.frames[insn];
+    Subroutine subroutine=this.subroutines[insn];
+    this.queued[insn]=false;
     try {
-      Object o=m.instructions.get(insn);
-      jsr=false;
+      final Object o=m.instructions.get(insn);
+      this.jsr=false;
       if (o instanceof LabelNode) {
         merge(insn + 1,f,subroutine);
       }
  else {
-        AbstractInsnNode insnNode=(AbstractInsnNode)o;
-        int insnOpcode=insnNode.getOpcode();
-        current.init(f).execute(insnNode,interpreter);
+        final AbstractInsnNode insnNode=(AbstractInsnNode)o;
+        final int insnOpcode=insnNode.getOpcode();
+        current.init(f).execute(insnNode,this.interpreter);
         subroutine=subroutine == null ? null : subroutine.copy();
         if (insnNode instanceof JumpInsnNode) {
-          JumpInsnNode j=(JumpInsnNode)insnNode;
-          if (insnOpcode != GOTO && insnOpcode != JSR) {
+          final JumpInsnNode j=(JumpInsnNode)insnNode;
+          if (insnOpcode != Opcodes.GOTO && insnOpcode != Opcodes.JSR) {
             merge(insn + 1,current,subroutine);
           }
-          if (insnOpcode == JSR) {
-            jsr=true;
-            merge(indexes.get(j.label),current,new Subroutine(j.label,m.maxLocals,j));
+          if (insnOpcode == Opcodes.JSR) {
+            this.jsr=true;
+            merge(this.indexes.get(j.label),current,new Subroutine(j.label,m.maxLocals,j));
           }
  else {
-            merge(indexes.get(j.label),current,subroutine);
+            merge(this.indexes.get(j.label),current,subroutine);
           }
         }
  else         if (insnNode instanceof LookupSwitchInsnNode) {
-          LookupSwitchInsnNode lsi=(LookupSwitchInsnNode)insnNode;
-          merge(indexes.get(lsi.dflt),current,subroutine);
+          final LookupSwitchInsnNode lsi=(LookupSwitchInsnNode)insnNode;
+          merge(this.indexes.get(lsi.dflt),current,subroutine);
           for (int j=0; j < lsi.labels.size(); ++j) {
-            Label label=(Label)lsi.labels.get(j);
-            merge(indexes.get(label),current,subroutine);
+            final Label label=(Label)lsi.labels.get(j);
+            merge(this.indexes.get(label),current,subroutine);
           }
         }
  else         if (insnNode instanceof TableSwitchInsnNode) {
-          TableSwitchInsnNode tsi=(TableSwitchInsnNode)insnNode;
-          merge(indexes.get(tsi.dflt),current,subroutine);
+          final TableSwitchInsnNode tsi=(TableSwitchInsnNode)insnNode;
+          merge(this.indexes.get(tsi.dflt),current,subroutine);
           for (int j=0; j < tsi.labels.size(); ++j) {
-            Label label=(Label)tsi.labels.get(j);
-            merge(indexes.get(label),current,subroutine);
+            final Label label=(Label)tsi.labels.get(j);
+            merge(this.indexes.get(label),current,subroutine);
           }
         }
- else         if (insnOpcode == RET) {
+ else         if (insnOpcode == Opcodes.RET) {
           if (subroutine == null) {
             throw new AnalyzerException("RET instruction outside of a sub routine");
           }
           for (int i=0; i < subroutine.callers.size(); ++i) {
-            int caller=indexes.get(subroutine.callers.get(i));
-            merge(caller + 1,frames[caller],current,subroutines[caller],subroutine.access);
+            final int caller=this.indexes.get(subroutine.callers.get(i));
+            merge(caller + 1,this.frames[caller],current,this.subroutines[caller],subroutine.access);
           }
         }
- else         if (insnOpcode != ATHROW && (insnOpcode < IRETURN || insnOpcode > RETURN)) {
+ else         if (insnOpcode != Opcodes.ATHROW && (insnOpcode < Opcodes.IRETURN || insnOpcode > Opcodes.RETURN)) {
           if (subroutine != null) {
             if (insnNode instanceof VarInsnNode) {
-              int var=((VarInsnNode)insnNode).var;
+              final int var=((VarInsnNode)insnNode).var;
               subroutine.access[var]=true;
-              if (insnOpcode == LLOAD || insnOpcode == DLOAD || insnOpcode == LSTORE || insnOpcode == DSTORE) {
+              if (insnOpcode == Opcodes.LLOAD || insnOpcode == Opcodes.DLOAD || insnOpcode == Opcodes.LSTORE || insnOpcode == Opcodes.DSTORE) {
                 subroutine.access[var + 1]=true;
               }
             }
  else             if (insnNode instanceof IincInsnNode) {
-              int var=((IincInsnNode)insnNode).var;
+              final int var=((IincInsnNode)insnNode).var;
               subroutine.access[var]=true;
             }
           }
           merge(insn + 1,current,subroutine);
         }
       }
-      List insnHandlers=handlers[insn];
+      final List insnHandlers=this.handlers[insn];
       if (insnHandlers != null) {
         for (int i=0; i < insnHandlers.size(); ++i) {
-          TryCatchBlockNode tcb=(TryCatchBlockNode)insnHandlers.get(i);
+          final TryCatchBlockNode tcb=(TryCatchBlockNode)insnHandlers.get(i);
           Type type;
           if (tcb.type == null) {
             type=Type.getType("Ljava/lang/Throwable;");
@@ -129,17 +129,17 @@
           }
           handler.init(f);
           handler.clearStack();
-          handler.push(interpreter.newValue(type));
-          merge(indexes.get(tcb.handler),handler,subroutine);
+          handler.push(this.interpreter.newValue(type));
+          merge(this.indexes.get(tcb.handler),handler,subroutine);
         }
       }
     }
- catch (    AnalyzerException e) {
+ catch (    final AnalyzerException e) {
       throw new AnalyzerException("Error at instruction " + insn + ": "+ e.getMessage(),e);
     }
-catch (    Exception e) {
+catch (    final Exception e) {
       throw new AnalyzerException("Error at instruction " + insn + ": "+ e.getMessage(),e);
     }
   }
-  return frames;
+  return this.frames;
 }

@@ -1,0 +1,44 @@
+{
+  this.pushTokenOnStack(factHandle,new Token(this,factHandle,propagationContext));
+  final Class objectClass=object.getClass();
+  for (final Iterator tables=this.getFactTablesList(objectClass).iterator(); tables.hasNext(); ) {
+    final FactTable factTable=(FactTable)tables.next();
+    factTable.add(factHandle);
+    for (final Iterator tuples=factTable.getTuplesIterator(); tuples.hasNext(); ) {
+      final LeapsTuple tuple=(LeapsTuple)tuples.next();
+      boolean tupleWasReadyForActivation=tuple.isReadyForActivation();
+      if (!tuple.isActivationNull()) {
+        final ColumnConstraints[] not=tuple.getLeapsRule().getNotColumnConstraints();
+        for (int i=0, length=not.length; i < length; i++) {
+          final ColumnConstraints constraint=not[i];
+          if (!tuple.isBlockingNotFactHandle(i) && constraint.getClassType().isAssignableFrom(objectClass) && constraint.isAllowed(factHandle,tuple,this)) {
+            tuple.setBlockingNotFactHandle((FactHandleImpl)factHandle,i);
+            ((FactHandleImpl)factHandle).addNotTuple(tuple,i);
+          }
+        }
+        if (!tuple.isReadyForActivation()) {
+          if (tuple.getLeapsRule().getRule() instanceof Query) {
+            removeFromQueryResults(tuple.getLeapsRule().getRule().getName(),tuple);
+          }
+ else {
+            invalidateActivation(tuple);
+          }
+        }
+      }
+ else {
+        final ColumnConstraints[] exists=tuple.getLeapsRule().getExistsColumnConstraints();
+        for (int i=0, length=exists.length; i < length; i++) {
+          final ColumnConstraints constraint=exists[i];
+          if (!tuple.isExistsFactHandle(i) && constraint.getClassType().isAssignableFrom(objectClass) && constraint.isAllowed(factHandle,tuple,this)) {
+            tuple.setExistsFactHandle((FactHandleImpl)factHandle,i);
+            ((FactHandleImpl)factHandle).addExistsTuple(tuple,i);
+          }
+        }
+        if (tuple.isReadyForActivation() && !tupleWasReadyForActivation) {
+          tuple.setContext(new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.ASSERTION,tuple.getLeapsRule().getRule(),null));
+          this.assertTuple(tuple);
+        }
+      }
+    }
+  }
+}

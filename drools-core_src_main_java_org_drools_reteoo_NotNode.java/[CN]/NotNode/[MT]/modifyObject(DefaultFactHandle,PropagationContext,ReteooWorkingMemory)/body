@@ -1,0 +1,34 @@
+{
+  final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  final ObjectMatches objectMatches=memory.remove(workingMemory,handle);
+  memory.add(workingMemory,objectMatches);
+  TupleMatch tupleMatch=objectMatches.getFirstTupleMatch();
+  final BetaNodeBinder binder=getJoinNodeBinder();
+  for (final Iterator it=memory.leftTupleIterator(workingMemory,handle); it.hasNext(); ) {
+    final ReteTuple leftTuple=(ReteTuple)it.next();
+    if (tupleMatch != null && tupleMatch.getTuple() == leftTuple) {
+      final int previous=leftTuple.getTupleMatches().size();
+      if (!binder.isAllowed(handle,leftTuple,workingMemory)) {
+        leftTuple.removeMatch(handle);
+        objectMatches.remove(tupleMatch);
+      }
+      if (previous == 0 && leftTuple.matchesSize() == 0) {
+        propagateModifyTuple(leftTuple,context,workingMemory);
+      }
+ else       if (previous != 0 && leftTuple.matchesSize() == 0) {
+        propagateAssertTuple(leftTuple,context,workingMemory);
+      }
+ else       if (previous == 0 && leftTuple.matchesSize() != 0) {
+        propagateRetractTuple(leftTuple,context,workingMemory);
+      }
+      tupleMatch=(TupleMatch)tupleMatch.getNext();
+    }
+ else {
+      final int previousSize=leftTuple.matchesSize();
+      attemptJoin(leftTuple,handle,objectMatches,binder,workingMemory);
+      if (previousSize == 0 && leftTuple.matchesSize() != 0) {
+        propagateRetractTuple(leftTuple,context,workingMemory);
+      }
+    }
+  }
+}

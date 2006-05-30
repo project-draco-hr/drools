@@ -1,0 +1,34 @@
+{
+  final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  memory.remove(workingMemory,leftTuple);
+  memory.add(workingMemory,leftTuple);
+  final Map matches=leftTuple.getTupleMatches();
+  final int previous=matches.size();
+  final BetaNodeBinder binder=getJoinNodeBinder();
+  for (final Iterator rightIterator=memory.rightObjectIterator(workingMemory,leftTuple); rightIterator.hasNext(); ) {
+    final ObjectMatches objectMatches=(ObjectMatches)rightIterator.next();
+    final DefaultFactHandle handle=objectMatches.getFactHandle();
+    if (binder.isAllowed(handle,leftTuple,workingMemory)) {
+      TupleMatch tupleMatch=(TupleMatch)leftTuple.getTupleMatches().get(handle);
+      if (tupleMatch == null) {
+        tupleMatch=objectMatches.add(leftTuple);
+        leftTuple.addTupleMatch(handle,tupleMatch);
+      }
+    }
+ else {
+      final TupleMatch tupleMatch=leftTuple.removeMatch(handle);
+      if (tupleMatch != null) {
+        objectMatches.remove(tupleMatch);
+      }
+    }
+  }
+  if (previous == 0 && leftTuple.matchesSize() == 0) {
+    propagateModifyTuple(leftTuple,context,workingMemory);
+  }
+ else   if (previous != 0 && leftTuple.matchesSize() == 0) {
+    propagateAssertTuple(leftTuple,context,workingMemory);
+  }
+ else   if (previous == 0 && leftTuple.matchesSize() != 0) {
+    propagateRetractTuple(leftTuple,context,workingMemory);
+  }
+}

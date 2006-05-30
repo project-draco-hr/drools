@@ -1,20 +1,23 @@
 {
-  RuleBase ruleBase=new RuleBaseImpl();
-  WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)ruleBase.newWorkingMemory();
+  final RuleBase ruleBase=new ReteooRuleBase();
+  final ReteooWorkingMemory workingMemory=(ReteooWorkingMemory)ruleBase.newWorkingMemory();
   final Agenda agenda=workingMemory.getAgenda();
   final Rule rule=new Rule("test-rule");
-  TerminalNode node=new TerminalNode(3,new MockTupleSource(2),rule);
+  final TerminalNode node=new TerminalNode(3,new MockTupleSource(2),rule);
   final Map results=new HashMap();
   rule.setConsequence(new org.drools.spi.Consequence(){
-    public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory){
+    /** 
+ */
+    private static final long serialVersionUID=-5958911613493145604L;
+    public void evaluate(    final KnowledgeHelper knowledgeHelper,    final WorkingMemory workingMemory){
       results.put("fired",new Boolean(true));
     }
   }
 );
-  ReteTuple tuple=new ReteTuple(new FactHandleImpl(1));
+  final ReteTuple tuple=new ReteTuple(new DefaultFactHandle(1,"cheese"));
   final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule,null);
   assertEquals(0,agenda.getFocus().size());
-  AgendaFilter filterTrue=new AgendaFilter(){
+  final AgendaFilter filterTrue=new AgendaFilter(){
     public boolean accept(    Activation item){
       return true;
     }
@@ -28,7 +31,7 @@
   assertEquals(new Boolean(true),results.get("fired"));
   agenda.clearAgenda();
   results.clear();
-  AgendaFilter filterFalse=new AgendaFilter(){
+  final AgendaFilter filterFalse=new AgendaFilter(){
     public boolean accept(    Activation item){
       return false;
     }

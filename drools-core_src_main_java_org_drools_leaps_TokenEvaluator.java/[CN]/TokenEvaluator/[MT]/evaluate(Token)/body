@@ -1,21 +1,21 @@
 {
-  WorkingMemoryImpl workingMemory=(WorkingMemoryImpl)token.getWorkingMemory();
-  LeapsRule leapsRule=token.getCurrentRuleHandle().getLeapsRule();
-  int numberOfColumns=leapsRule.getNumberOfColumns();
-  int dominantFactPosition=token.getCurrentRuleHandle().getDominantPosition();
-  FactHandleImpl dominantFactHandle=token.getDominantFactHandle();
+  final LeapsWorkingMemory workingMemory=(LeapsWorkingMemory)token.getWorkingMemory();
+  final LeapsRule leapsRule=token.getCurrentRuleHandle().getLeapsRule();
+  final int numberOfColumns=leapsRule.getNumberOfColumns();
+  final int dominantFactPosition=token.getCurrentRuleHandle().getDominantPosition();
+  final InternalFactHandle dominantFactHandle=token.getDominantFactHandle();
   if (leapsRule.getColumnConstraintsAtPosition(dominantFactPosition).isAllowedAlpha(dominantFactHandle,token,workingMemory)) {
-    Class dominantClass=leapsRule.getColumnClassObjectTypeAtPosition(dominantFactPosition);
-    TableIterator[] iterators=new TableIterator[numberOfColumns];
+    final Class dominantClass=leapsRule.getColumnClassObjectTypeAtPosition(dominantFactPosition);
+    final TableIterator[] iterators=new TableIterator[numberOfColumns];
     for (int i=0; i < numberOfColumns; i++) {
       if (i == dominantFactPosition) {
         iterators[i]=Table.singleItemIterator(dominantFactHandle);
       }
  else {
-        Class columnClass=leapsRule.getColumnClassObjectTypeAtPosition(i);
-        ColumnConstraints constraints=leapsRule.getColumnConstraintsAtPosition(i);
-        FactTable factTable=workingMemory.getFactTable(columnClass);
-        FactHandleImpl startFactHandle=(dominantClass == columnClass) ? new FactHandleImpl(dominantFactHandle.getId() - 1,null) : dominantFactHandle;
+        final Class columnClass=leapsRule.getColumnClassObjectTypeAtPosition(i);
+        final ColumnConstraints constraints=leapsRule.getColumnConstraintsAtPosition(i);
+        final FactTable factTable=workingMemory.getFactTable(columnClass);
+        final FactHandleImpl startFactHandle=(dominantClass == columnClass) ? new FactHandleImpl(dominantFactHandle.getId() - 1,new Object()) : (FactHandleImpl)dominantFactHandle;
         if (i > 0 && constraints.isAlphaPresent()) {
           iterators[i]=factTable.tailConstrainedIterator(workingMemory,constraints,startFactHandle,(token.isResume() ? (FactHandleImpl)token.get(i) : startFactHandle));
         }
@@ -46,7 +46,7 @@
     }
     int jj=0;
     boolean done=false;
-    int stopIteratingCount=numberOfColumns - 1;
+    final int stopIteratingCount=numberOfColumns - 1;
     while (!done) {
       currentIterator=iterators[jj];
       if (!currentIterator.hasNext()) {
@@ -62,7 +62,7 @@
         }
       }
  else {
-        FactHandleImpl currentFactHandle=(FactHandleImpl)currentIterator.next();
+        final FactHandleImpl currentFactHandle=(FactHandleImpl)currentIterator.next();
         boolean localMatch=false;
         if (!skip) {
           if (jj != 0 || jj == dominantFactPosition) {

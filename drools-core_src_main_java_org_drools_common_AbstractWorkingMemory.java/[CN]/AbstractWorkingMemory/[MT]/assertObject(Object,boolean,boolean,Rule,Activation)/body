@@ -1,0 +1,89 @@
+{
+  if (object == null) {
+    return null;
+  }
+  InternalFactHandle handle=null;
+  this.lock.lock();
+  try {
+    handle=(InternalFactHandle)this.assertMap.get(object);
+    EqualityKey key=null;
+    if (handle == null) {
+      key=this.tms.get(object);
+    }
+ else {
+      key=handle.getEqualityKey();
+      if (key.getStatus() == EqualityKey.STATED) {
+        return handle;
+      }
+      if (!logical) {
+        key.setStatus(EqualityKey.STATED);
+        this.tms.removeLogicalDependencies(handle);
+      }
+ else {
+        this.tms.addLogicalDependency(handle,activation,activation.getPropagationContext(),rule);
+      }
+      return handle;
+    }
+    if (key == null) {
+      handle=this.handleFactory.newFactHandle(object);
+      this.assertMap.put(handle,handle);
+      key=new EqualityKey(handle);
+      handle.setEqualityKey(key);
+      this.tms.put(key);
+      if (!logical) {
+        key.setStatus(EqualityKey.STATED);
+      }
+ else {
+        key.setStatus(EqualityKey.JUSTIFIED);
+        this.tms.addLogicalDependency(handle,activation,activation.getPropagationContext(),rule);
+      }
+    }
+ else     if (!logical) {
+      if (key.getStatus() == EqualityKey.JUSTIFIED) {
+        final InternalFactHandle justifiedHandle=key.getFactHandle();
+        this.tms.removeLogicalDependencies(justifiedHandle);
+        if (this.discardOnLogicalOverride) {
+          key.setStatus(EqualityKey.STATED);
+          handle=key.getFactHandle();
+          handle.setObject(object);
+          return handle;
+        }
+ else {
+          key.setStatus(EqualityKey.STATED);
+          handle=this.handleFactory.newFactHandle(object);
+          handle.setEqualityKey(key);
+          key.addFactHandle(handle);
+          this.assertMap.put(handle,handle);
+        }
+      }
+ else {
+        handle=this.handleFactory.newFactHandle(object);
+        this.assertMap.put(handle,handle);
+        key.addFactHandle(handle);
+        handle.setEqualityKey(key);
+      }
+    }
+ else {
+      if (key.getStatus() == EqualityKey.JUSTIFIED) {
+        this.tms.addLogicalDependency(key.getFactHandle(),activation,activation.getPropagationContext(),rule);
+        return key.getFactHandle();
+      }
+ else {
+        return null;
+      }
+    }
+    if (dynamic) {
+      addPropertyChangeListener(object);
+    }
+    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.ASSERTION,rule,activation);
+    doAssertObject(handle,object,propagationContext);
+    this.workingMemoryEventSupport.fireObjectAsserted(propagationContext,handle,object);
+    if (!this.factQueue.isEmpty()) {
+      propagateQueuedActions();
+    }
+  }
+  finally {
+    this.lock.unlock();
+  }
+  return handle;
+}
