@@ -1,39 +1,36 @@
 {
-  String classMethodName="returnValue" + counter++;
+  final String classMethodName="returnValue" + this.counter++;
   returnValueDescr.setClassMethodName(classMethodName);
-  List usedDeclarations=getUsedDeclarations(returnValueDescr,returnValueDescr.getText());
-  if (usedDeclarations == null) {
-    return;
+  final List[] usedIdentifiers=getUsedIdentifiers(returnValueDescr,returnValueDescr.getText());
+  final Declaration[] declarations=new Declaration[usedIdentifiers[0].size()];
+  for (int i=0, size=usedIdentifiers[0].size(); i < size; i++) {
+    declarations[i]=(Declaration)this.declarations.get((String)usedIdentifiers[0].get(i));
   }
-  Declaration[] declarations=new Declaration[usedDeclarations.size()];
-  for (int i=0, size=usedDeclarations.size(); i < size; i++) {
-    declarations[i]=(Declaration)this.declarations.get((String)usedDeclarations.get(i));
-  }
-  Class clazz=((ClassObjectType)column.getObjectType()).getClassType();
-  FieldExtractor extractor=getFieldExtractor(returnValueDescr,clazz,returnValueDescr.getFieldName());
+  final Class clazz=((ClassObjectType)column.getObjectType()).getClassType();
+  final FieldExtractor extractor=getFieldExtractor(returnValueDescr,clazz,returnValueDescr.getFieldName());
   if (extractor == null) {
     return;
   }
-  Evaluator evaluator=getEvaluator(returnValueDescr,extractor.getObjectType().getValueType(),returnValueDescr.getEvaluator());
+  final Evaluator evaluator=getEvaluator(returnValueDescr,extractor.getObjectType().getValueType(),returnValueDescr.getEvaluator());
   if (evaluator == null) {
     return;
   }
-  ReturnValueConstraint returnValueConstraint=new ReturnValueConstraint(extractor,declarations,evaluator);
+  final ReturnValueConstraint returnValueConstraint=new ReturnValueConstraint(extractor,declarations,evaluator);
   column.addConstraint(returnValueConstraint);
-  StringTemplate st=ruleGroup.getInstanceOf("returnValueMethod");
-  setStringTemplateAttributes(st,declarations,returnValueDescr.getText());
+  StringTemplate st=RuleBuilder.ruleGroup.getInstanceOf("returnValueMethod");
+  setStringTemplateAttributes(st,declarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]),returnValueDescr.getText());
   st.setAttribute("methodName",classMethodName);
-  String returnValueText=functionFixer.fix(returnValueDescr.getText());
+  final String returnValueText=RuleBuilder.functionFixer.fix(returnValueDescr.getText());
   st.setAttribute("text",returnValueText);
   this.methods.add(st.toString());
-  st=invokerGroup.getInstanceOf("returnValueInvoker");
+  st=RuleBuilder.invokerGroup.getInstanceOf("returnValueInvoker");
   st.setAttribute("package",this.pkg.getName());
   st.setAttribute("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
-  st.setAttribute("invokerClassName",ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker");
+  st.setAttribute("invokerClassName",this.ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker");
   st.setAttribute("methodName",classMethodName);
-  setStringTemplateAttributes(st,declarations,returnValueDescr.getText());
+  setStringTemplateAttributes(st,declarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]),returnValueDescr.getText());
   st.setAttribute("hashCode",returnValueText.hashCode());
-  String invokerClassName=pkg.getName() + "." + ruleDescr.getClassName()+ ucFirst(classMethodName)+ "Invoker";
+  final String invokerClassName=this.pkg.getName() + "." + this.ruleDescr.getClassName()+ ucFirst(classMethodName)+ "Invoker";
   this.invokers.put(invokerClassName,st.toString());
   this.invokerLookups.put(invokerClassName,returnValueConstraint);
   this.descrLookups.put(invokerClassName,returnValueDescr);

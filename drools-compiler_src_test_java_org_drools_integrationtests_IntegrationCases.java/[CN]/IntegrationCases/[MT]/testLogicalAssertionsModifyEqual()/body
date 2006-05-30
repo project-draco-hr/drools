@@ -1,0 +1,27 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LogicalAssertionsModifyEqual.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  List l;
+  final FactHandle h=workingMemory.assertObject(new Integer(2));
+  assertEquals(1,workingMemory.getObjects().size());
+  workingMemory.fireAllRules();
+  assertEquals(2,workingMemory.getObjects().size());
+  l=workingMemory.getObjects(CheeseEqual.class);
+  assertEquals(1,l.size());
+  assertEquals(3,((CheeseEqual)l.get(0)).getPrice());
+  workingMemory.retractObject(h);
+  assertEquals(0,workingMemory.getObjects().size());
+  try {
+    final java.lang.reflect.Field field=workingMemory.getClass().getDeclaredField("logicalAssertMap");
+    field.setAccessible(true);
+    final java.util.Map m=(java.util.Map)field.get(workingMemory);
+    field.setAccessible(false);
+    assertEquals("logicalAssertMap should be empty",0,m.size());
+  }
+ catch (  final NoSuchFieldException e) {
+  }
+}

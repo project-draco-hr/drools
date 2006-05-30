@@ -1,45 +1,42 @@
 {
-  String classMethodName="predicate" + counter++;
+  final String classMethodName="predicate" + this.counter++;
   predicateDescr.setClassMethodName(classMethodName);
-  Class clazz=((ClassObjectType)column.getObjectType()).getClassType();
-  FieldExtractor extractor=getFieldExtractor(predicateDescr,clazz,predicateDescr.getFieldName());
+  final Class clazz=((ClassObjectType)column.getObjectType()).getClassType();
+  final FieldExtractor extractor=getFieldExtractor(predicateDescr,clazz,predicateDescr.getFieldName());
   if (extractor == null) {
     return;
   }
-  Declaration declaration=column.addDeclaration(predicateDescr.getDeclaration(),extractor);
+  final Declaration declaration=column.addDeclaration(predicateDescr.getDeclaration(),extractor);
   this.declarations.put(declaration.getIdentifier(),declaration);
   if (this.notDeclarations != null) {
     this.notDeclarations.put(declaration.getIdentifier(),declaration);
   }
-  List usedDeclarations=getUsedDeclarations(predicateDescr,predicateDescr.getText());
-  if (usedDeclarations == null) {
-    return;
+  final List[] usedIdentifiers=getUsedIdentifiers(predicateDescr,predicateDescr.getText());
+  usedIdentifiers[0].remove(predicateDescr.getDeclaration());
+  final Declaration[] declarations=new Declaration[usedIdentifiers[0].size()];
+  for (int i=0, size=usedIdentifiers[0].size(); i < size; i++) {
+    declarations[i]=(Declaration)this.declarations.get((String)usedIdentifiers[0].get(i));
   }
-  usedDeclarations.remove(predicateDescr.getDeclaration());
-  Declaration[] declarations=new Declaration[usedDeclarations.size()];
-  for (int i=0, size=usedDeclarations.size(); i < size; i++) {
-    declarations[i]=(Declaration)this.declarations.get((String)usedDeclarations.get(i));
-  }
-  PredicateConstraint predicateConstraint=new PredicateConstraint(declaration,declarations);
+  final PredicateConstraint predicateConstraint=new PredicateConstraint(declaration,declarations);
   column.addConstraint(predicateConstraint);
-  StringTemplate st=ruleGroup.getInstanceOf("predicateMethod");
+  StringTemplate st=RuleBuilder.ruleGroup.getInstanceOf("predicateMethod");
   st.setAttribute("declaration",declaration);
   st.setAttribute("declarationType",((ClassObjectType)declaration.getObjectType()).getClassType().getName().replace('$','.'));
-  setStringTemplateAttributes(st,declarations,predicateDescr.getText());
+  setStringTemplateAttributes(st,declarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]),predicateDescr.getText());
   st.setAttribute("methodName",classMethodName);
-  String predicateText=functionFixer.fix(predicateDescr.getText());
+  final String predicateText=RuleBuilder.functionFixer.fix(predicateDescr.getText());
   st.setAttribute("text",predicateText);
   this.methods.add(st.toString());
-  st=invokerGroup.getInstanceOf("predicateInvoker");
+  st=RuleBuilder.invokerGroup.getInstanceOf("predicateInvoker");
   st.setAttribute("package",this.pkg.getName());
   st.setAttribute("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
-  st.setAttribute("invokerClassName",ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker");
+  st.setAttribute("invokerClassName",this.ruleDescr.getClassName() + ucFirst(classMethodName) + "Invoker");
   st.setAttribute("methodName",classMethodName);
   st.setAttribute("declaration",declaration);
   st.setAttribute("declarationType",((ClassObjectType)declaration.getObjectType()).getClassType().getName().replace('$','.'));
-  setStringTemplateAttributes(st,declarations,predicateDescr.getText());
+  setStringTemplateAttributes(st,declarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]),predicateDescr.getText());
   st.setAttribute("hashCode",predicateText.hashCode());
-  String invokerClassName=pkg.getName() + "." + ruleDescr.getClassName()+ ucFirst(classMethodName)+ "Invoker";
+  final String invokerClassName=this.pkg.getName() + "." + this.ruleDescr.getClassName()+ ucFirst(classMethodName)+ "Invoker";
   this.invokers.put(invokerClassName,st.toString());
   this.invokerLookups.put(invokerClassName,predicateConstraint);
   this.descrLookups.put(invokerClassName,predicateDescr);
