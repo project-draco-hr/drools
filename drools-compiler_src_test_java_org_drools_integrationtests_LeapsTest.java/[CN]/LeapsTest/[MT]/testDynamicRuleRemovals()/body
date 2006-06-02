@@ -1,2 +1,36 @@
 {
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic1.drl")));
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic2.drl")));
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic3.drl")));
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic4.drl")));
+  final Package pkg=builder.getPackage();
+  org.drools.leaps.LeapsRuleBase leapsRuleBase=null;
+  final RuleBase ruleBase=getRuleBase();
+  leapsRuleBase=(org.drools.leaps.LeapsRuleBase)ruleBase;
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  final List list=new ArrayList();
+  workingMemory.setGlobal("list",list);
+  final PersonInterface bob=new Person("bob","stilton");
+  bob.setStatus("Not evaluated");
+  workingMemory.assertObject(bob);
+  final Cheese stilton1=new Cheese("stilton",5);
+  workingMemory.assertObject(stilton1);
+  final Cheese stilton2=new Cheese("stilton",3);
+  workingMemory.assertObject(stilton2);
+  final Cheese stilton3=new Cheese("stilton",1);
+  workingMemory.assertObject(stilton3);
+  final Cheese cheddar=new Cheese("cheddar",5);
+  workingMemory.assertObject(cheddar);
+  workingMemory.fireAllRules();
+  assertEquals(11,workingMemory.getAgenda().getActivations().length);
+  leapsRuleBase.removeRule("org.drools.test","Who likes Stilton");
+  assertEquals(8,workingMemory.getAgenda().getActivations().length);
+  leapsRuleBase.removeRule("org.drools.test","like cheese");
+  final Cheese muzzarela=new Cheese("muzzarela",5);
+  workingMemory.assertObject(muzzarela);
+  assertEquals(4,workingMemory.getAgenda().getActivations().length);
+  leapsRuleBase.removePackage("org.drools.test");
+  assertEquals(0,workingMemory.getAgenda().getActivations().length);
 }
