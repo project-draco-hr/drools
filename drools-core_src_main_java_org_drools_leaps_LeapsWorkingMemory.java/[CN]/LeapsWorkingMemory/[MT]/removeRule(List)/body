@@ -3,21 +3,21 @@
   try {
     ArrayList ruleHandlesList;
     LeapsRule leapsRule;
-    RuleHandle ruleHandle;
+    LeapsRuleHandle ruleHandle;
     for (final Iterator it=rules.iterator(); it.hasNext(); ) {
       leapsRule=(LeapsRule)it.next();
       if (leapsRule.getNumberOfColumns() > 0) {
         ruleHandlesList=(ArrayList)this.leapsRulesToHandlesMap.remove(leapsRule);
         for (int i=0; i < ruleHandlesList.size(); i++) {
-          ruleHandle=(RuleHandle)ruleHandlesList.get(i);
-          this.getFactTable(leapsRule.getColumnClassObjectTypeAtPosition(i)).removeRule(ruleHandle);
+          ruleHandle=(LeapsRuleHandle)ruleHandlesList.get(i);
+          this.getFactTable(leapsRule.getColumnClassObjectTypeAtPosition(i)).removeRule(this,ruleHandle);
         }
       }
     }
     final Rule rule=((LeapsRule)rules.get(0)).getRule();
-    final List activations=(List)this.rulesActivationsMap.remove(rule);
+    final FastMap activations=(FastMap)this.rulesActivationsMap.remove(rule);
     if (activations != null) {
-      for (final Iterator activationsIt=activations.iterator(); activationsIt.hasNext(); ) {
+      for (final Iterator activationsIt=activations.keySet().iterator(); activationsIt.hasNext(); ) {
         final Activation activation=(Activation)activationsIt.next();
         ((LeapsTuple)activation.getTuple()).setActivation(null);
         this.tms.removeLogicalDependencies(activation,activation.getPropagationContext(),rule);

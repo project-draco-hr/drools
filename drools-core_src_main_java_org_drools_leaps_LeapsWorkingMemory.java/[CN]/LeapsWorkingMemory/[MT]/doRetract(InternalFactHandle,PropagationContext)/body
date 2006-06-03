@@ -1,8 +1,8 @@
 {
-  for (final Iterator it=this.getFactTablesList(((FactHandleImpl)factHandle).getObject().getClass()).iterator(); it.hasNext(); ) {
+  for (final Iterator it=this.getFactTablesList(factHandle.getObject().getClass()).iterator(); it.hasNext(); ) {
     ((FactTable)it.next()).remove(factHandle);
   }
-  final Iterator tuples=((FactHandleImpl)factHandle).getActivatedTuples();
+  final Iterator tuples=((LeapsFactHandle)factHandle).getActivatedTuples();
   for (; tuples != null && tuples.hasNext(); ) {
     final LeapsTuple tuple=(LeapsTuple)tuples.next();
     if (tuple.getLeapsRule().getRule() instanceof Query) {
@@ -16,7 +16,7 @@
   FactHandleTupleAssembly assembly;
   LeapsTuple tuple;
   Iterator it;
-  it=((FactHandleImpl)factHandle).getNotTupleAssemblies();
+  it=((LeapsFactHandle)factHandle).getNotTupleAssemblies();
   if (it != null) {
     for (; it.hasNext(); ) {
       assembly=(FactHandleTupleAssembly)it.next();
@@ -25,10 +25,10 @@
         tuplesNotReadyForActivation.put(tuple,tuple);
       }
       tuple.removeBlockingNotFactHandle(assembly.getIndex());
-      TokenEvaluator.evaluateNotCondition(new FactHandleImpl(((FactHandleImpl)factHandle).getId() + 1,new Object()),assembly.getIndex(),tuple,this);
+      TokenEvaluator.evaluateNotCondition(new LeapsFactHandle(factHandle.getRecency() + 1,new Object()),assembly.getIndex(),tuple,this);
     }
   }
-  it=((FactHandleImpl)factHandle).getExistsTupleAssemblies();
+  it=((LeapsFactHandle)factHandle).getExistsTupleAssemblies();
   if (it != null) {
     for (; it.hasNext(); ) {
       assembly=(FactHandleTupleAssembly)it.next();
@@ -37,15 +37,15 @@
         tuplesNotReadyForActivation.put(tuple,tuple);
       }
       tuple.removeExistsFactHandle(assembly.getIndex());
-      TokenEvaluator.evaluateExistsCondition(new FactHandleImpl(((FactHandleImpl)factHandle).getId() + 1,null),assembly.getIndex(),tuple,this);
+      TokenEvaluator.evaluateExistsCondition(new LeapsFactHandle(factHandle.getRecency() + 1,null),assembly.getIndex(),tuple,this);
     }
   }
   final IteratorChain chain=new IteratorChain();
-  it=((FactHandleImpl)factHandle).getNotTupleAssemblies();
+  it=((LeapsFactHandle)factHandle).getNotTupleAssemblies();
   if (it != null) {
     chain.addIterator(it);
   }
-  it=((FactHandleImpl)factHandle).getExistsTupleAssemblies();
+  it=((LeapsFactHandle)factHandle).getExistsTupleAssemblies();
   if (it != null) {
     chain.addIterator(it);
   }
@@ -64,5 +64,5 @@
       }
     }
   }
-  this.removeTokenFromStack((FactHandleImpl)factHandle);
+  this.removeTokenFromStack((LeapsFactHandle)factHandle);
 }

@@ -1,15 +1,27 @@
 {
   this.getLock().lock();
   try {
+    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation);
     final int status=((InternalFactHandle)factHandle).getEqualityKey().getStatus();
-    final InternalFactHandle handle=(InternalFactHandle)factHandle;
     final Object originalObject=this.assertMap.remove(factHandle);
     if (originalObject == null) {
-      throw new NoSuchFactObjectException(handle);
+      throw new NoSuchFactObjectException(factHandle);
     }
-    this.retractObject(handle);
-    final FactHandleImpl handleImpl=(FactHandleImpl)this.assertObject(object,false,(status == EqualityKey.STATED) ? false : true,rule,activation);
-    this.workingMemoryEventSupport.fireObjectModified(new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.MODIFICATION,rule,activation),handle,((FactHandleImpl)handle).getObject(),object);
+    final InternalFactHandle handle=(InternalFactHandle)factHandle;
+    if (handle.getId() == -1) {
+      return;
+    }
+    removePropertyChangeListener(handle);
+    doRetract(handle,propagationContext);
+    final EqualityKey key=handle.getEqualityKey();
+    key.removeFactHandle(handle);
+    handle.setEqualityKey(null);
+    if (key.isEmpty()) {
+      this.tms.remove(key);
+    }
+    this.handleFactory.destroyFactHandle(handle);
+    this.assertObject(object,false,(status == EqualityKey.STATED) ? false : true,rule,activation);
+    this.workingMemoryEventSupport.fireObjectModified(propagationContext,handle,handle.getObject(),object);
     if (!this.factQueue.isEmpty()) {
       propagateQueuedActions();
     }
