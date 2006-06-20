@@ -1,30 +1,34 @@
 {
   if (!this.empty) {
-    final TableRecord record=(TableRecord)this.map.get(object);
-    if (record != null) {
-      if (record == this.headRecord) {
-        if (record.right != null) {
-          this.headRecord=record.right;
-          this.headRecord.left=null;
+    try {
+      final TableRecord record=(TableRecord)this.set.tailSet(new TableRecord(object)).first();
+      if (record != null) {
+        if (record == this.headRecord) {
+          if (record.right != null) {
+            this.headRecord=record.right;
+            this.headRecord.left=null;
+          }
+ else {
+            this.headRecord=new TableRecord(null);
+            this.tailRecord=this.headRecord;
+            this.empty=true;
+          }
+        }
+ else         if (record == this.tailRecord) {
+          this.tailRecord=record.left;
+          this.tailRecord.right=null;
         }
  else {
-          this.headRecord=new TableRecord(null);
-          this.tailRecord=this.headRecord;
-          this.empty=true;
+          record.left.right=record.right;
+          record.right.left=record.left;
         }
+        record.left=null;
+        record.right=null;
       }
- else       if (record == this.tailRecord) {
-        this.tailRecord=record.left;
-        this.tailRecord.right=null;
-      }
- else {
-        record.left.right=record.right;
-        record.right.left=record.left;
-      }
-      record.left=null;
-      record.right=null;
+      this.count--;
+      this.set.remove(record);
     }
-    this.count--;
-    this.map.remove(object);
+ catch (    final NoSuchElementException nsee) {
+    }
   }
 }
