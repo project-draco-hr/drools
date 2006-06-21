@@ -1,0 +1,24 @@
+{
+  Expander exp=new Expander(){
+    public String expand(    String scope,    String pattern){
+      if (scope.equals("when")) {
+        if (!((pattern.trim().equals("line 1")) || (pattern.trim().equals("line 2")))) {
+          Assert.fail("expected line 1 or line 2 only.");
+        }
+      }
+      if (scope.equals("then")) {
+        Assert.assertEquals("line 3",pattern.trim());
+      }
+      return "expanded: " + pattern.trim();
+    }
+  }
+;
+  LineBasedExpander ex=new LineBasedExpander(readFile("rule1.drl"),exp);
+  String result=ex.expand();
+  assertNotNull(result);
+  System.out.println(result);
+  assertTrue(result.indexOf("expanded: line 1") > result.indexOf("when"));
+  assertTrue(result.indexOf("expanded: line 2") > result.indexOf("expanded: line 1"));
+  assertTrue(result.indexOf("then") > result.indexOf("expanded: line 2"));
+  assertTrue(result.indexOf("expanded: line 3") > result.indexOf("then"));
+}
