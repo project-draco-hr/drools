@@ -1,0 +1,17 @@
+{
+  PackageBuilderConfiguration config=new PackageBuilderConfiguration();
+  config.setCompiler(PackageBuilderConfiguration.JANINO);
+  final PackageBuilder builder=new PackageBuilder(config);
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("eval_rule_test.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  workingMemory.setGlobal("five",new Integer(5));
+  final List list=new ArrayList();
+  workingMemory.setGlobal("list",list);
+  final Cheese stilton=new Cheese("stilton",5);
+  workingMemory.assertObject(stilton);
+  workingMemory.fireAllRules();
+  assertEquals(stilton,list.get(0));
+}
