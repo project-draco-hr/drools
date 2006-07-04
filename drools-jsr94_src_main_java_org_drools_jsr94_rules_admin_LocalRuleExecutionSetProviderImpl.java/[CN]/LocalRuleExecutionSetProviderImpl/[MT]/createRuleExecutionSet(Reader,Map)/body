@@ -1,18 +1,33 @@
 {
   try {
     final PackageBuilder builder=new PackageBuilder();
-    if (properties != null && properties.containsKey("dsl")) {
-      final Reader dsl=new StringReader((String)properties.get("dsl"));
-      builder.addPackageFromDrl(ruleExecutionSetReader,dsl);
+    String dsl=null;
+    String source=null;
+    if (properties != null) {
+      dsl=(String)properties.get("dsl");
+      source=(String)properties.get("source");
     }
- else     if (properties != null && properties.containsKey("xml")) {
-      builder.addPackageFromXml(ruleExecutionSetReader);
+    if (source == null) {
+      source="drl";
+    }
+    if (dsl == null) {
+      if (source.equals("xml")) {
+        builder.addPackageFromXml(ruleExecutionSetReader);
+      }
+ else {
+        builder.addPackageFromDrl(ruleExecutionSetReader);
+      }
     }
  else {
-      builder.addPackageFromDrl(ruleExecutionSetReader);
+      if (source.equals("xml")) {
+        builder.addPackageFromXml(ruleExecutionSetReader);
+      }
+ else {
+        builder.addPackageFromDrl(ruleExecutionSetReader,new StringReader(dsl));
+      }
     }
     final Package pkg=builder.getPackage();
-    return this.createRuleExecutionSet(pkg,properties);
+    return createRuleExecutionSet(pkg,properties);
   }
  catch (  final IOException e) {
     throw new RuleExecutionSetCreateException("cannot create rule execution set",e);
