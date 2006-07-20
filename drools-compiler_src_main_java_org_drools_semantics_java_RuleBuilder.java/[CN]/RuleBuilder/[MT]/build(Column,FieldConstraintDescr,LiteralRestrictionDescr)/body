@@ -1,0 +1,36 @@
+{
+  final Class clazz=((ClassObjectType)column.getObjectType()).getClassType();
+  final FieldExtractor extractor=getFieldExtractor(literalRestrictionDescr,clazz,fieldConstraintDescr.getFieldName());
+  if (extractor == null) {
+    return;
+  }
+  FieldValue field=null;
+  if (literalRestrictionDescr.isStaticFieldValue()) {
+    final int lastDot=literalRestrictionDescr.getText().lastIndexOf('.');
+    final String className=literalRestrictionDescr.getText().substring(0,lastDot);
+    final String fieldName=literalRestrictionDescr.getText().substring(lastDot + 1);
+    try {
+      final Class staticClass=this.typeResolver.resolveType(className);
+      field=new FieldImpl(staticClass.getField(fieldName).get(null));
+    }
+ catch (    final ClassNotFoundException e) {
+      this.errors.add(new RuleError(this.rule,literalRestrictionDescr,e,e.getMessage()));
+    }
+catch (    final Exception e) {
+      this.errors.add(new RuleError(this.rule,literalRestrictionDescr,e,"Unable to create a Field value of type  '" + extractor.getObjectType().getValueType() + "' and value '"+ literalRestrictionDescr.getText()+ "'"));
+    }
+  }
+ else {
+    try {
+      field=FieldFactory.getFieldValue(literalRestrictionDescr.getText(),extractor.getObjectType().getValueType());
+    }
+ catch (    final Exception e) {
+      this.errors.add(new RuleError(this.rule,literalRestrictionDescr,e,"Unable to create a Field value of type  '" + extractor.getObjectType().getValueType() + "' and value '"+ literalRestrictionDescr.getText()+ "'"));
+    }
+  }
+  final Evaluator evaluator=getEvaluator(literalRestrictionDescr,extractor.getObjectType().getValueType(),literalRestrictionDescr.getEvaluator());
+  if (evaluator == null) {
+    return;
+  }
+  column.addConstraint(new LiteralConstraint(extractor,evaluator,field));
+}
