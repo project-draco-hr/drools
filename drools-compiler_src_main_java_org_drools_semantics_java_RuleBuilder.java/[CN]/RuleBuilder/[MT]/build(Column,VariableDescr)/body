@@ -1,0 +1,21 @@
+{
+  if (variableDescr.getIdentifier() == null || variableDescr.getIdentifier().equals("")) {
+    this.errors.add(new RuleError(this.rule,variableDescr,null,"Identifier not defined for binding field '" + variableDescr.getFieldName() + "'"));
+    return;
+  }
+  final Class clazz=((ClassObjectType)column.getObjectType()).getClassType();
+  final FieldExtractor extractor=getFieldExtractor(variableDescr,clazz,variableDescr.getFieldName());
+  if (extractor == null) {
+    return;
+  }
+  final Declaration declaration=(Declaration)this.declarations.get(variableDescr.getIdentifier());
+  if (declaration == null) {
+    this.errors.add(new RuleError(this.rule,variableDescr,null,"Unable to return Declaration for identifier '" + variableDescr.getIdentifier() + "'"));
+    return;
+  }
+  final Evaluator evaluator=getEvaluator(variableDescr,extractor.getObjectType().getValueType(),variableDescr.getEvaluator());
+  if (evaluator == null) {
+    return;
+  }
+  column.addConstraint(new VariableConstraint(extractor,declaration,evaluator));
+}
