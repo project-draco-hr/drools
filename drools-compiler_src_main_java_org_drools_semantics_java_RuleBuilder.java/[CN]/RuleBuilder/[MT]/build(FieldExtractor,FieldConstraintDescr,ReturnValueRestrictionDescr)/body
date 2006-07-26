@@ -6,17 +6,11 @@
   for (int i=0, size=usedIdentifiers[0].size(); i < size; i++) {
     declarations[i]=(Declaration)this.declarations.get((String)usedIdentifiers[0].get(i));
   }
-  final Class clazz=((ClassObjectType)column.getObjectType()).getClassType();
-  final FieldExtractor extractor=getFieldExtractor(returnValueRestrictionDescr,clazz,fieldConstraintDescr.getFieldName());
-  if (extractor == null) {
-    return;
-  }
   final Evaluator evaluator=getEvaluator(returnValueRestrictionDescr,extractor.getObjectType().getValueType(),returnValueRestrictionDescr.getEvaluator());
   if (evaluator == null) {
-    return;
+    return null;
   }
-  final ReturnValueConstraint returnValueConstraint=new ReturnValueConstraint(extractor,declarations,evaluator);
-  column.addConstraint(returnValueConstraint);
+  final ReturnValueRestriction returnValueRestriction=new ReturnValueRestriction(declarations,evaluator);
   StringTemplate st=RuleBuilder.ruleGroup.getInstanceOf("returnValueMethod");
   setStringTemplateAttributes(st,declarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]),returnValueRestrictionDescr.getText());
   st.setAttribute("methodName",classMethodName);
@@ -32,6 +26,7 @@
   st.setAttribute("hashCode",returnValueText.hashCode());
   final String invokerClassName=this.pkg.getName() + "." + this.ruleDescr.getClassName()+ ucFirst(classMethodName)+ "Invoker";
   this.invokers.put(invokerClassName,st.toString());
-  this.invokerLookups.put(invokerClassName,returnValueConstraint);
+  this.invokerLookups.put(invokerClassName,returnValueRestriction);
   this.descrLookups.put(invokerClassName,returnValueRestrictionDescr);
+  return returnValueRestriction;
 }
