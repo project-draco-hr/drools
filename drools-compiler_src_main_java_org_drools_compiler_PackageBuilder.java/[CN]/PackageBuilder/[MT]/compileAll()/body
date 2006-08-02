@@ -5,17 +5,24 @@
   if (result.getErrors().length > 0) {
     for (int i=0; i < result.getErrors().length; i++) {
       CompilationProblem err=result.getErrors()[i];
+      System.out.println(err.getFileName());
+      System.out.println(err.getMessage());
       ErrorHandler handler=(ErrorHandler)this.errorHandlers.get(err.getFileName());
+      if (handler instanceof RuleErrorHandler) {
+        RuleErrorHandler rh=(RuleErrorHandler)handler;
+      }
       handler.addError(err);
     }
     Collection errors=this.errorHandlers.values();
     for (Iterator iter=errors.iterator(); iter.hasNext(); ) {
       ErrorHandler handler=(ErrorHandler)iter.next();
-      if (!(handler instanceof RuleInvokerErrorHandler)) {
-        this.results.add(handler.getError());
-      }
+      if (handler.isInError()) {
+        if (!(handler instanceof RuleInvokerErrorHandler)) {
+          this.results.add(handler.getError());
+        }
  else {
-        System.err.println("!!!! An error occurred compiling the invoker: " + handler.getError());
+          System.err.println("Warning: An error occurred compiling a semantic invoker. Errors should have been reported elsewhere.");
+        }
       }
     }
   }
