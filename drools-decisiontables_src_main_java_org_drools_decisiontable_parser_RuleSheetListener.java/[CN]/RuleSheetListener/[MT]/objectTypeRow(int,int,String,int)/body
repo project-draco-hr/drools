@@ -1,0 +1,34 @@
+{
+  if (value.indexOf("$param") > -1 || value.indexOf("$1") > -1) {
+    throw new DecisionTableParseException("It looks like you have snippets in the row that is " + "meant for column declarations." + " Please insert an additional row before the snippets."+ " Row number: "+ (row + 1));
+  }
+  ActionType action=getActionForColumn(row,column);
+  if (mergedColStart == SheetListener.NON_MERGED) {
+    if (action.type == ActionType.CONDITION) {
+      SourceBuilder src=new LhsBuilder(value);
+      action.setSourceBuilder(src);
+      this.sourceBuilders.add(src);
+    }
+ else     if (action.type == ActionType.ACTION) {
+      SourceBuilder src=new RhsBuilder(value);
+      action.setSourceBuilder(src);
+      this.sourceBuilders.add(src);
+    }
+  }
+ else {
+    if (column == mergedColStart) {
+      if (action.type == ActionType.CONDITION) {
+        action.setSourceBuilder(new LhsBuilder(value));
+        this.sourceBuilders.add(action.getSourceBuilder());
+      }
+ else       if (action.type == ActionType.ACTION) {
+        action.setSourceBuilder(new RhsBuilder(value));
+        this.sourceBuilders.add(action.getSourceBuilder());
+      }
+    }
+ else {
+      ActionType startOfMergeAction=getActionForColumn(row,mergedColStart);
+      action.setSourceBuilder(startOfMergeAction.getSourceBuilder());
+    }
+  }
+}

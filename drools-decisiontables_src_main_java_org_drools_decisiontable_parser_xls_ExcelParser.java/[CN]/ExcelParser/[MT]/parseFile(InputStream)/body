@@ -1,16 +1,23 @@
 {
-  InputStream din=null;
-  POIFSFileSystem poifs=null;
   try {
-    poifs=new POIFSFileSystem(inStream);
-    this._workbook=new HSSFWorkbook(poifs);
-    din=poifs.createDocumentInputStream(ExcelParser.WORKBOOK);
-    final HSSFRequest req=new HSSFRequest();
-    req.addListenerForAllRecords(this);
-    final HSSFEventFactory factory=new HSSFEventFactory();
-    factory.processEvents(req,din);
+    Workbook workbook=Workbook.getWorkbook(inStream);
+    if (_useFirstSheet) {
+      Sheet sheet=workbook.getSheet(0);
+      processSheet(sheet,_currentSheetListener);
+    }
+ else {
+      Set sheetNames=_listners.keySet();
+      for (Iterator iter=sheetNames.iterator(); iter.hasNext(); ) {
+        String sheetName=(String)iter.next();
+        Sheet sheet=workbook.getSheet(sheetName);
+        processSheet(sheet,(SheetListener)_listners.get(sheetName));
+      }
+    }
   }
- catch (  final IOException ex) {
-    throw new DecisionTableParseException("Failed to open Excel stream, " + "please check that the content is xls97 format.",ex);
+ catch (  BiffException e) {
+    throw new DecisionTableParseException("An error occured opening the workbook. ",e);
+  }
+catch (  IOException e) {
+    throw new DecisionTableParseException("Failed to open Excel stream, " + "please check that the content is xls97 format.",e);
   }
 }
