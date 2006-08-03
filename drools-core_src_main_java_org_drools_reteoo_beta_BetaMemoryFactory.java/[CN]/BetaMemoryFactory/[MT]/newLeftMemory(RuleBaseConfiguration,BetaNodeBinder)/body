@@ -7,44 +7,38 @@
       if (constraints[i] instanceof VariableConstraint) {
         final VariableConstraint bvc=(VariableConstraint)constraints[i];
         BetaLeftMemory innerMemory=null;
-switch (bvc.getEvaluator().getType()) {
-case Evaluator.BOOLEAN_TYPE:
+        ValueType valueType=bvc.getEvaluator().getValueType();
+        if (valueType == ValueType.BOOLEAN_TYPE) {
           innerMemory=new BooleanConstrainedLeftMemory(bvc.getFieldExtractor(),bvc.getRequiredDeclarations()[0],bvc.getEvaluator());
-        break;
-case Evaluator.OBJECT_TYPE:
-case Evaluator.SHORT_TYPE:
-case Evaluator.INTEGER_TYPE:
-case Evaluator.DOUBLE_TYPE:
-case Evaluator.FLOAT_TYPE:
-case Evaluator.BYTE_TYPE:
-      if (bvc.getEvaluator().getOperator() == Evaluator.EQUAL) {
-        innerMemory=new ObjectEqualConstrLeftMemory(bvc.getFieldExtractor(),bvc.getRequiredDeclarations()[0],bvc.getEvaluator());
-      }
- else       if (bvc.getEvaluator().getOperator() == Evaluator.NOT_EQUAL) {
-        innerMemory=new ObjectNotEqualConstrLeftMemory(bvc.getFieldExtractor(),bvc.getRequiredDeclarations()[0],bvc.getEvaluator());
-      }
-    break;
-}
-if (innerMemory != null) {
-  if (innerMostMemory != null) {
-    try {
-      innerMostMemory.setInnerMemory(innerMemory);
-      innerMostMemory=innerMemory;
-    }
- catch (    final OperationNotSupportedException e) {
-      throw new RuntimeException("BUG: Exception was not supposed to be raised",e);
-    }
-  }
+        }
  else {
-    memory=innerMemory;
-    innerMostMemory=memory;
+          if (bvc.getEvaluator().getOperator() == Operator.EQUAL) {
+            innerMemory=new ObjectEqualConstrLeftMemory(bvc.getFieldExtractor(),bvc.getRequiredDeclarations()[0],bvc.getEvaluator());
+          }
+ else           if (bvc.getEvaluator().getOperator() == Operator.NOT_EQUAL) {
+            innerMemory=new ObjectNotEqualConstrLeftMemory(bvc.getFieldExtractor(),bvc.getRequiredDeclarations()[0],bvc.getEvaluator());
+          }
+        }
+        if (innerMemory != null) {
+          if (innerMostMemory != null) {
+            try {
+              innerMostMemory.setInnerMemory(innerMemory);
+              innerMostMemory=innerMemory;
+            }
+ catch (            final OperationNotSupportedException e) {
+              throw new RuntimeException("BUG: Exception was not supposed to be raised",e);
+            }
+          }
+ else {
+            memory=innerMemory;
+            innerMostMemory=memory;
+          }
+        }
+      }
+    }
   }
-}
-}
-}
-}
-if (memory == null) {
-memory=new DefaultLeftMemory();
-}
-return memory;
+  if (memory == null) {
+    memory=new DefaultLeftMemory();
+  }
+  return memory;
 }
