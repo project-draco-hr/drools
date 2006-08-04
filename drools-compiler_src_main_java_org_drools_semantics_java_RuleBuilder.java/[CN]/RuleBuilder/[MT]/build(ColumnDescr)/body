@@ -3,17 +3,23 @@
     this.errors.add(new RuleError(this.rule,columnDescr,null,"ObjectType not correctly defined"));
     return null;
   }
-  Class clazz=null;
-  try {
-    clazz=this.typeResolver.resolveType(columnDescr.getObjectType());
+  ObjectType objectType=null;
+  FactTemplate factTemplate=this.pkg.getFactTemplate(columnDescr.getObjectType());
+  if (factTemplate != null) {
+    objectType=new FactTemplateObjectType(factTemplate);
   }
- catch (  final ClassNotFoundException e) {
-    this.errors.add(new RuleError(this.rule,columnDescr,null,"Unable to resolve ObjectType '" + columnDescr.getObjectType() + "'"));
-    return null;
+ else {
+    try {
+      objectType=new ClassObjectType(this.typeResolver.resolveType(columnDescr.getObjectType()));
+    }
+ catch (    final ClassNotFoundException e) {
+      this.errors.add(new RuleError(this.rule,columnDescr,null,"Unable to resolve ObjectType '" + columnDescr.getObjectType() + "'"));
+      return null;
+    }
   }
   Column column;
   if (columnDescr.getIdentifier() != null && !columnDescr.getIdentifier().equals("")) {
-    column=new Column(this.columnCounter.getNext(),this.columnOffset,new ClassObjectType(clazz),columnDescr.getIdentifier());
+    column=new Column(this.columnCounter.getNext(),this.columnOffset,objectType,columnDescr.getIdentifier());
     ;
     this.declarations.put(column.getDeclaration().getIdentifier(),column.getDeclaration());
     if (this.notDeclarations != null) {
@@ -21,7 +27,7 @@
     }
   }
  else {
-    column=new Column(this.columnCounter.getNext(),this.columnOffset,new ClassObjectType(clazz),null);
+    column=new Column(this.columnCounter.getNext(),this.columnOffset,objectType,null);
   }
   for (final Iterator it=columnDescr.getDescrs().iterator(); it.hasNext(); ) {
     final Object object=it.next();
