@@ -1,14 +1,18 @@
 {
   final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("literal_rule_test.drl")));
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_FactTemplate.drl")));
   final Package pkg=builder.getPackage();
   final RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
   final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
   final List list=new ArrayList();
   workingMemory.setGlobal("list",list);
-  final Cheese stilton=new Cheese("stilton",5);
+  FactTemplate cheese=pkg.getFactTemplate("Cheese");
+  Fact stilton=cheese.createFact(0);
+  stilton.setFieldValue("name","stilton");
+  stilton.setFieldValue("price",new Integer(100));
   workingMemory.assertObject(stilton);
   workingMemory.fireAllRules();
-  assertEquals("stilton",list.get(0));
+  assertEquals(1,list.size());
+  assertEquals(stilton,list.get(0));
 }
