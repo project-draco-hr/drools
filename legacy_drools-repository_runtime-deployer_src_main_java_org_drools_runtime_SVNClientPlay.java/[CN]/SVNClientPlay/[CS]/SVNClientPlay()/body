@@ -1,0 +1,33 @@
+{
+  DAVRepositoryFactory.setup();
+  String url="http://localhost:8080/svn/myrepos";
+  String name="xxx";
+  String password="xxx";
+  SVNRepository repository=null;
+  DAVRepositoryFactory.setup();
+  try {
+    repository=SVNRepositoryFactory.create(SVNURL.parseURIEncoded(url));
+    ISVNAuthenticationManager authManager=SVNWCUtil.createDefaultAuthenticationManager(name,password);
+    repository.setAuthenticationManager(authManager);
+    Map props=new HashMap();
+    OutputStream out=new ByteArrayOutputStream();
+    String resource="drools/rules/michael.drl";
+    Collection revs=repository.getFileRevisions(resource,null,1,repository.getLatestRevision());
+    SVNFileRevision[] fileRevisions=new SVNFileRevision[revs.size()];
+    revs.toArray(fileRevisions);
+    Arrays.sort(fileRevisions);
+    long startRevision=fileRevisions[fileRevisions.length - 1].getRevision();
+    repository.getFile(resource,-1,props,out);
+    while (!(props.containsKey("drools:status") && props.get("drools:status").equals("production"))) {
+      System.out.println("going back a version...");
+      out=new ByteArrayOutputStream();
+      startRevision--;
+      repository.getFile(resource,startRevision,props,out);
+    }
+    System.out.println("we have prod !");
+  }
+ catch (  SVNException e) {
+    e.printStackTrace();
+    System.exit(1);
+  }
+}

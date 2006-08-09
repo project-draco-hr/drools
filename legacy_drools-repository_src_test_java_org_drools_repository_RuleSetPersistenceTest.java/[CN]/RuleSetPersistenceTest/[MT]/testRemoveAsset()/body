@@ -1,0 +1,20 @@
+{
+  RuleSetDef def=new RuleSetDef("addRemove",null);
+  RuleDef rule=new RuleDef("addRemove Rule","xxx");
+  def.addRule(rule);
+  RepositoryManager repo=getRepo();
+  repo.save(def);
+  def=repo.loadRuleSet("addRemove",1);
+  assertEquals(1,def.getRules().size());
+  def.createNewVersion("new version");
+  repo.save(def);
+  def=repo.loadRuleSet("addRemove",2);
+  RuleDef onlyRule=(RuleDef)def.getRules().iterator().next();
+  def.removeRule(onlyRule);
+  assertEquals(null,onlyRule.getOwningRuleSetName());
+  repo.save(def);
+  def=repo.loadRuleSet("addRemove",2);
+  assertEquals(0,def.getRules().size());
+  def=repo.loadRuleSet("addRemove",1);
+  assertEquals(1,def.getRules().size());
+}

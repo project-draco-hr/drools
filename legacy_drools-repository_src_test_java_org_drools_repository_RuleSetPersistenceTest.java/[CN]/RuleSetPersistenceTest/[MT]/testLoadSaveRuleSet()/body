@@ -1,0 +1,32 @@
+{
+  MetaData meta=new MetaData();
+  meta.setCreator("Michael Neale");
+  meta.setRights("Unlimited");
+  RuleSetDef def=new RuleSetDef("my ruleset",meta);
+  def.addTag("ME");
+  def.addRule(new RuleDef("simple","x"));
+  RepositoryManager repo=getRepo();
+  repo.save(def);
+  RuleSetDef def2=repo.loadRuleSet("my ruleset",1);
+  assertEquals("my ruleset",def2.getName());
+  assertEquals("Michael Neale",def2.getMetaData().getCreator());
+  assertEquals(1,def2.getTags().size());
+  RuleDef rule=(RuleDef)def2.getRules().iterator().next();
+  rule.setContent("Something new");
+  def2.modify(rule);
+  repo.save(def2);
+  def2=repo.loadRuleSet("my ruleset",1);
+  RuleDef rule2=(RuleDef)def2.getRules().iterator().next();
+  assertEquals("Something new",rule2.getContent());
+  RuleDef newRule=new RuleDef("pre-existing","ABC");
+  repo.save(newRule);
+  newRule.addTag("a tag");
+  repo.save(newRule);
+  newRule=repo.loadRule("pre-existing",1);
+  def2.addRule(newRule);
+  repo.save(def2);
+  def2=repo.loadRuleSet("my ruleset",1);
+  newRule=def2.findRuleByName("pre-existing");
+  assertEquals("ABC",newRule.getContent());
+  assertEquals(1,newRule.getTags().size());
+}

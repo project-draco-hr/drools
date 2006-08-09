@@ -1,0 +1,26 @@
+{
+  RuleSetDef def1=new RuleSetDef("multiSess",new MetaData());
+  def1.addApplicationData(new ApplicationDataDef("xx","abc"));
+  def1.addRule(new RuleDef("multis1","abc"));
+  RepositoryManager repo=RepositoryFactory.getStatefulRepository();
+  repo.save(def1);
+  repo.close();
+  LocalStore store=new LocalStore();
+  ByteArrayOutputStream out=new ByteArrayOutputStream();
+  store.save(def1,out);
+  def1=(RuleSetDef)store.load(new ByteArrayInputStream(out.toByteArray()));
+  def1.addRule(new RuleDef("multi12","njkfdkj"));
+  def1.addAttachment(new RuleSetAttachment("dsl","nothing","yeah".getBytes(),"nil"));
+  def1.createNewVersion("new version");
+  out=new ByteArrayOutputStream();
+  store.save(def1,out);
+  def1=(RuleSetDef)store.load(new ByteArrayInputStream(out.toByteArray()));
+  repo=RepositoryFactory.getStatefulRepository();
+  repo.save(def1);
+  repo.close();
+  repo=RepositoryFactory.getStatefulRepository();
+  RuleSetDef def2=repo.loadRuleSet("multiSess",2);
+  assertEquals(1,def2.getAttachments().size());
+  assertEquals(2,def2.getWorkingVersionNumber());
+  repo.close();
+}

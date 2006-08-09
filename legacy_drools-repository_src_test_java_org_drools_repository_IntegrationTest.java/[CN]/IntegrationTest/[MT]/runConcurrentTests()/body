@@ -1,0 +1,58 @@
+{
+  RepositoryManager repoA=RepositoryFactory.getStatefulRepository();
+  RepositoryManager repoB=RepositoryFactory.getStatefulRepository();
+  RuleDef ruleA=new RuleDef("Concurrent 1","content1");
+  repoA.save(ruleA);
+  repoA.close();
+  repoA=RepositoryFactory.getStatefulRepository();
+  RuleDef ruleB=repoB.loadRule("Concurrent 1",1);
+  assertEquals("content1",ruleB.getContent());
+  ruleB.setContent("bobs version");
+  ruleA.setContent("michaels version");
+  repoB.save(ruleB);
+  try {
+    repoA.save(ruleA);
+    fail();
+  }
+ catch (  StaleObjectStateException e) {
+    assertNotNull(e.getMessage());
+  }
+  repoA=RepositoryFactory.getStatefulRepository();
+  RuleSetDef ruleSet=new RuleSetDef("Integration concurrent 1",null);
+  ruleSet.addRule(new RuleDef("Concurrent 2","abc").addTag("yeah"));
+  repoA.save(ruleSet);
+  repoA.close();
+  repoA=RepositoryFactory.getStatefulRepository();
+  repoB=RepositoryFactory.getStatefulRepository();
+  RuleSetDef ruleSetA=repoA.loadRuleSet("Integration concurrent 1",1);
+  RuleSetDef ruleSetB=repoB.loadRuleSet("Integration concurrent 1",1);
+  ruleA=new RuleDef("Concurrent 3","content");
+  ruleSetA.addRule(ruleA);
+  ruleSetB.addRule(new RuleDef("Concurrent 4","content"));
+  repoA.save(ruleSetA);
+  repoB.save(ruleSetB);
+  ruleSetA.addFunction(new FunctionDef("abc","yeah"));
+  repoA.save(ruleSetA);
+  ruleA.setContent("new content");
+  repoA.save(ruleSetA);
+  repoA.close();
+  repoB.close();
+  repoA=RepositoryFactory.getStatefulRepository();
+  ruleSetA=repoA.loadRuleSet("Integration concurrent 1",1);
+  assertEquals(3,ruleSetA.getRules().size());
+  ruleA=ruleSetA.findRuleByName("Concurrent 3");
+  assertEquals("new content",ruleA.getContent());
+  repoA.close();
+  repoA=RepositoryFactory.getStatefulRepository();
+  repoB=RepositoryFactory.getStatefulRepository();
+  ruleSetA=repoA.loadRuleSet("Integration concurrent 1",1);
+  ruleSetB=repoB.loadRuleSet("Integration concurrent 1",1);
+  ruleA=ruleSetA.findRuleByName("Concurrent 3");
+  ruleB=ruleSetB.findRuleByName("Concurrent 4");
+  ruleA.setContent("something wild");
+  ruleB.setContent("something simple");
+  repoA.save(ruleSetA);
+  repoB.save(ruleSetB);
+  repoA.close();
+  repoB.close();
+}

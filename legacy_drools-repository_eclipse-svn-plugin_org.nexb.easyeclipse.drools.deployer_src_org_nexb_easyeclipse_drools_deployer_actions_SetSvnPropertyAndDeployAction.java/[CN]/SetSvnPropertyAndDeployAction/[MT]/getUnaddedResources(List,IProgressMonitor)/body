@@ -1,0 +1,33 @@
+{
+  final List unadded=new ArrayList();
+  final SVNException[] exception=new SVNException[]{null};
+  for (Iterator iter=resources.iterator(); iter.hasNext(); ) {
+    IResource resource=(IResource)iter.next();
+    if (resource.exists()) {
+      try {
+        resource.accept(new IResourceVisitor(){
+          public boolean visit(          IResource aResource){
+            ISVNLocalResource svnResource=SVNWorkspaceRoot.getSVNResourceFor(aResource);
+            try {
+              if (svnResource.isIgnored())               return false;
+              if (svnResource.isManaged())               return true;
+              if ((aResource.getType() == IResource.FOLDER) && isSymLink(aResource))               return false;
+            }
+ catch (            SVNException e) {
+              exception[0]=e;
+            }
+            unadded.add(aResource);
+            return aResource.getType() == IResource.FOLDER;
+          }
+        }
+,IResource.DEPTH_INFINITE,false);
+      }
+ catch (      CoreException e) {
+        throw SVNException.wrapException(e);
+      }
+      if (exception[0] != null)       throw exception[0];
+    }
+  }
+  if (unadded.size() > 0)   hasUnaddedResources=true;
+  return (IResource[])unadded.toArray(new IResource[unadded.size()]);
+}

@@ -1,0 +1,32 @@
+{
+  RuleSetDef setA=new RuleSetDef("offline1",null);
+  setA.addRule(new RuleDef("offline1","blah"));
+  setA.addRule(new RuleDef("offline2","blah"));
+  RepositoryManager repo=RepositoryFactory.getStatefulRepository();
+  repo.save(setA);
+  repo.close();
+  repo=RepositoryFactory.getStatefulRepository();
+  setA=repo.loadRuleSet("offline1",1);
+  repo.close();
+  repo=RepositoryFactory.getStatefulRepository();
+  RuleSetDef setB=repo.loadRuleSet("offline1",1);
+  repo.close();
+  LocalStore store=new LocalStore();
+  ByteArrayOutputStream outA=new ByteArrayOutputStream();
+  ByteArrayOutputStream outB=new ByteArrayOutputStream();
+  store.save(setA,outA);
+  store.save(setB,outB);
+  setA=(RuleSetDef)store.load(new ByteArrayInputStream(outA.toByteArray()));
+  setB=(RuleSetDef)store.load(new ByteArrayInputStream(outB.toByteArray()));
+  RuleDef rule1=setA.findRuleByName("offline1");
+  RuleDef rule2=setB.findRuleByName("offline2");
+  rule1.setContent("something");
+  setA.addApplicationData(new ApplicationDataDef("dsadsa","dfsads"));
+  setB.setMetaData(new MetaData());
+  repo=RepositoryFactory.getStatefulRepository();
+  repo.save(setA);
+  repo.close();
+  repo=RepositoryFactory.getStatefulRepository();
+  repo.save(setB);
+  repo.close();
+}

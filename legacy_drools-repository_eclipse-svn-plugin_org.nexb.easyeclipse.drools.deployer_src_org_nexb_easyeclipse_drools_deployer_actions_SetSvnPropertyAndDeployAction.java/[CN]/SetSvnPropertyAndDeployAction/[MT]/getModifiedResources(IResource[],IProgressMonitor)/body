@@ -1,0 +1,35 @@
+{
+  final List modified=new ArrayList();
+  List unversionedFolders=new ArrayList();
+  hasUnaddedResources=false;
+  for (int i=0; i < resources.length; i++) {
+    IResource resource=resources[i];
+    ISVNLocalResource svnResource=SVNWorkspaceRoot.getSVNResourceFor(resource);
+    if (resources.length == 1) {
+      url=svnResource.getStatus().getUrlString();
+      if ((url == null) || (resource.getType() == IResource.FILE))       url=Util.getParentUrl(svnResource);
+    }
+    GetStatusCommand command=new GetStatusCommand(svnResource,true,false);
+    command.run(iProgressMonitor);
+    ISVNStatus[] statuses=command.getStatuses();
+    for (int j=0; j < statuses.length; j++) {
+      if (SVNStatusUtils.isReadyForCommit(statuses[j]) || SVNStatusUtils.isMissing(statuses[j])) {
+        IResource currentResource=SVNWorkspaceRoot.getResourceFor(statuses[j]);
+        if (currentResource != null) {
+          ISVNLocalResource localResource=SVNWorkspaceRoot.getSVNResourceFor(currentResource);
+          if (!localResource.isIgnored()) {
+            if (!SVNStatusUtils.isManaged(statuses[j])) {
+              hasUnaddedResources=true;
+              if ((currentResource.getType() != IResource.FILE) && !isSymLink(currentResource))               unversionedFolders.add(currentResource);
+ else               if (!modified.contains(currentResource))               modified.add(currentResource);
+            }
+ else             if (!modified.contains(currentResource))             modified.add(currentResource);
+          }
+        }
+      }
+    }
+  }
+  IResource[] unaddedResources=getUnaddedResources(unversionedFolders,iProgressMonitor);
+  for (int i=0; i < unaddedResources.length; i++)   if (!modified.contains(unaddedResources[i]))   modified.add(unaddedResources[i]);
+  return (IResource[])modified.toArray(new IResource[modified.size()]);
+}
