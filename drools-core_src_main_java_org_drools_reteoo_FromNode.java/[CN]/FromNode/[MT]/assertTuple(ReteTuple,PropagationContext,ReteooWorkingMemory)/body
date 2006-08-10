@@ -1,0 +1,24 @@
+{
+  final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  memory.add(workingMemory,leftTuple);
+  for (Iterator it=this.dataProvider.getResults(leftTuple); it.hasNext(); ) {
+    Object object=it.next();
+    boolean isAllowed=true;
+    for (int i=0, length=this.constraints.length; i < length; i++) {
+      if (!this.constraints[i].isAllowed(object,leftTuple,workingMemory)) {
+        isAllowed=false;
+        break;
+      }
+    }
+    if (!isAllowed) {
+      continue;
+    }
+    final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(object);
+    final ObjectMatches objectMatches=new ObjectMatches((DefaultFactHandle)handle);
+    if (binder.isAllowed(handle,leftTuple,workingMemory)) {
+      final TupleMatch tupleMatch=new TupleMatch(leftTuple,objectMatches);
+      leftTuple.addTupleMatch((DefaultFactHandle)handle,tupleMatch);
+      propagateAssertTuple(new ReteTuple(leftTuple,(DefaultFactHandle)handle),tupleMatch,context,workingMemory);
+    }
+  }
+}
