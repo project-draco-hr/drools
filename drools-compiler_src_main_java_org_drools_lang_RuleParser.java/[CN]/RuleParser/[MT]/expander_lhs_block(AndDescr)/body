@@ -3,6 +3,7 @@
   String text=null;
   String lhsBlock=null;
   String eol=System.getProperty("line.separator");
+  List constraints=null;
   try {
 {
       loop44:       do {
@@ -90,11 +91,23 @@ following.pop();
 loc=(Token)input.LT(1);
 match(input,EOL,FOLLOW_EOL_in_expander_lhs_block1482);
 if (text != null) {
+if (text.trim().startsWith("-")) {
+if (constraints == null) {
+constraints=new ArrayList();
+}
+constraints.add(runWhenExpander(text,offset(loc.getLine())));
+}
+ else {
+if (constraints != null) {
+lhsBlock=applyConstraints(constraints,lhsBlock);
+constraints=null;
+}
 if (lhsBlock == null) {
 lhsBlock=runWhenExpander(text,offset(loc.getLine()));
 }
  else {
 lhsBlock=lhsBlock + eol + runWhenExpander(text,offset(loc.getLine()));
+}
 }
 text=null;
 }
@@ -105,6 +118,7 @@ break loop44;
 }
 }
  while (true);
+lhsBlock=applyConstraints(constraints,lhsBlock);
 if (lhsBlock != null) {
 reparseLhs(lhsBlock,descrs);
 }
