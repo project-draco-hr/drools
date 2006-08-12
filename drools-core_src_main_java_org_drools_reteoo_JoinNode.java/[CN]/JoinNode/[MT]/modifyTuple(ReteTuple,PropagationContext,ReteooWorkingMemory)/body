@@ -6,13 +6,14 @@
     assertTuple(leftTuple,context,workingMemory);
   }
  else {
+    final Map oldMatches=new HashMap(matches);
     memory.add(workingMemory,leftTuple);
     final BetaNodeBinder binder=getJoinNodeBinder();
     for (final Iterator rightIterator=memory.rightObjectIterator(workingMemory,leftTuple); rightIterator.hasNext(); ) {
       final ObjectMatches objectMatches=(ObjectMatches)rightIterator.next();
       final DefaultFactHandle handle=objectMatches.getFactHandle();
       if (binder.isAllowed(handle,leftTuple,workingMemory)) {
-        TupleMatch tupleMatch=(TupleMatch)leftTuple.getTupleMatches().get(handle);
+        TupleMatch tupleMatch=(TupleMatch)oldMatches.remove(handle);
         if (tupleMatch != null) {
           objectMatches.remove(tupleMatch);
           objectMatches.add(tupleMatch);
@@ -27,9 +28,16 @@
  else {
         final TupleMatch tupleMatch=leftTuple.removeMatch(handle);
         if (tupleMatch != null) {
+          oldMatches.remove(handle);
           objectMatches.remove(tupleMatch);
           propagateRetractTuple(tupleMatch,context,workingMemory);
         }
+      }
+    }
+    if (!oldMatches.isEmpty()) {
+      for (Iterator it=oldMatches.values().iterator(); it.hasNext(); ) {
+        final TupleMatch tupleMatch=(TupleMatch)it.next();
+        tupleMatch.getObjectMatches().remove(tupleMatch);
       }
     }
   }
