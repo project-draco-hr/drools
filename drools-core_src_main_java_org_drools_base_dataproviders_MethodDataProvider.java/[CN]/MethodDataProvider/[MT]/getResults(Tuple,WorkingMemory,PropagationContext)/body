@@ -1,0 +1,50 @@
+{
+  Object variable=null;
+  if (variableIsDeclaration) {
+    variable=tuple.get(this.variableDeclaration).getObject();
+  }
+ else {
+    variable=wm.getGlobal(this.variableName);
+  }
+  Class[] parameterTypes=this.method.getParameterTypes();
+  Object[] args=new Object[this.valueHandlers.length];
+  for (int i=0; i < this.valueHandlers.length; i++) {
+    ValueHandler handler=valueHandlers[i];
+    if (handler instanceof LiteralValue) {
+      String text=(String)handler.getValue(tuple,wm);
+      Class type=parameterTypes[i];
+      if (type == String.class) {
+        args[i]=text;
+      }
+ else {
+        args[i]=convert(text,type);
+      }
+    }
+ else {
+      args[i]=handler.getValue(tuple,wm);
+    }
+  }
+  try {
+    Object result=this.method.invoke(variable,args);
+    if (result instanceof Collection) {
+      return ((Collection)result).iterator();
+    }
+ else     if (result instanceof Iterator) {
+      return (Iterator)result;
+    }
+ else {
+      List resultAsList=new ArrayList(1);
+      resultAsList.add(result);
+      return resultAsList.iterator();
+    }
+  }
+ catch (  IllegalArgumentException e) {
+    throw new RuntimeDroolsException(e);
+  }
+catch (  IllegalAccessException e) {
+    throw new RuntimeDroolsException(e);
+  }
+catch (  InvocationTargetException e) {
+    throw new RuntimeDroolsException(e);
+  }
+}

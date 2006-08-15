@@ -1,0 +1,20 @@
+{
+  Extractor ex=new ColumnExtractor(new ClassObjectType(TestVariable.class));
+  Declaration varDec=new Declaration("var",ex,0);
+  declarations.put("var",varDec);
+  ex=new ColumnExtractor(new ClassObjectType(String.class));
+  Declaration var2Dec=new Declaration("var2",ex,1);
+  declarations.put("var2",var2Dec);
+  List args=new ArrayList();
+  args.add(new ArgumentValueDescr(ArgumentValueDescr.STRING,"boo"));
+  args.add(new ArgumentValueDescr(ArgumentValueDescr.INTEGRAL,"42"));
+  args.add(new ArgumentValueDescr(ArgumentValueDescr.VARIABLE,"var2"));
+  MethodDataProvider prov=new MethodDataProvider("var","helloWorld",args,declarations,globals);
+  TestVariable var=new TestVariable();
+  FactHandle varHandle=workingMemory.assertObject(var);
+  FactHandle var2Handle=workingMemory.assertObject("hola");
+  ReteTuple tuple=new ReteTuple(new ReteTuple((DefaultFactHandle)varHandle),(DefaultFactHandle)var2Handle);
+  Iterator it=prov.getResults(tuple,workingMemory,context);
+  Object result=it.next();
+  assertEquals("boo42hola",result);
+}
