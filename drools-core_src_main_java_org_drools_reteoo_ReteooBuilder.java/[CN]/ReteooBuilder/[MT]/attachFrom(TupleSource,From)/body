@@ -1,5 +1,10 @@
 {
   Column column=from.getColumn();
+  if (this.tupleSource == null) {
+    this.currentOffsetAdjustment=1;
+    final ObjectSource objectSource=attachNode(new ObjectTypeNode(this.id++,this.sinklistFactory.newObjectSinkList(ObjectTypeNode.class),new ClassObjectType(InitialFact.class),this.rete));
+    this.tupleSource=attachNode(new LeftInputAdapterNode(this.id++,objectSource));
+  }
   column.adjustOffset(this.currentOffsetAdjustment);
   final List constraints=column.getConstraints();
   if (column.getDeclaration() != null) {
@@ -31,5 +36,5 @@
  else {
     binder=new BetaNodeBinder();
   }
-  FromNode node=new FromNode(id,from.getDataProvider(),this.tupleSource,(FieldConstraint[])alphaNodeConstraints.toArray(new FieldConstraint[alphaNodeConstraints.size()]),binder);
+  this.tupleSource=attachNode(new FromNode(id++,from.getDataProvider(),this.tupleSource,(FieldConstraint[])alphaNodeConstraints.toArray(new FieldConstraint[alphaNodeConstraints.size()]),binder));
 }

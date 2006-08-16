@@ -14,8 +14,8 @@
       this.tupleSource=attachNode(new EvalConditionNode(this.id++,this.tupleSource,eval));
       continue;
     }
-    BetaNodeBinder binder;
-    Column column;
+    BetaNodeBinder binder=null;
+    Column column=null;
     if (object instanceof Column) {
       column=(Column)object;
       binder=attachColumn((Column)object,and,true);
@@ -24,7 +24,7 @@
         this.objectSource=null;
       }
     }
- else {
+ else     if (object instanceof GroupElement) {
       GroupElement ce=(GroupElement)object;
       while (!(ce.getChildren().get(0) instanceof Column)) {
         ce=(GroupElement)ce.getChildren().get(0);
@@ -37,11 +37,14 @@
       }
       binder=attachColumn(column,and,false);
     }
-    if (object instanceof Not) {
+    if (object.getClass() == Not.class) {
       attachNot(this.tupleSource,(Not)object,this.objectSource,binder,column);
     }
- else     if (object instanceof Exists) {
+ else     if (object.getClass() == Exists.class) {
       attachExists(this.tupleSource,(Exists)object,this.objectSource,binder,column);
+    }
+ else     if (object.getClass() == From.class) {
+      attachFrom(this.tupleSource,(From)object);
     }
  else     if (this.objectSource != null) {
       this.tupleSource=attachNode(new JoinNode(this.id++,this.tupleSource,this.objectSource,binder));
