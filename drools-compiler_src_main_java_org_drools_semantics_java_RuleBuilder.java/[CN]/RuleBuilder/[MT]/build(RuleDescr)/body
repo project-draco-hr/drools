@@ -2,19 +2,19 @@
   for (final Iterator it=ruleDescr.getLhs().getDescrs().iterator(); it.hasNext(); ) {
     final Object object=it.next();
     if (object instanceof ConditionalElementDescr) {
-      if (object instanceof AndDescr) {
+      if (object.getClass() == AndDescr.class) {
         final And and=new And();
         this.columnCounter.setParent(and);
         build(this.rule,(ConditionalElementDescr)object,and,false,false);
         this.rule.addPattern(and);
       }
- else       if (object instanceof OrDescr) {
+ else       if (object.getClass() == OrDescr.class) {
         final Or or=new Or();
         this.columnCounter.setParent(or);
         build(this.rule,(ConditionalElementDescr)object,or,true,false);
         this.rule.addPattern(or);
       }
- else       if (object instanceof NotDescr) {
+ else       if (object.getClass() == NotDescr.class) {
         this.notDeclarations=new HashMap();
         final Not not=new Not();
         this.columnCounter.setParent(not);
@@ -25,7 +25,7 @@
         }
         this.notDeclarations=null;
       }
- else       if (object instanceof ExistsDescr) {
+ else       if (object.getClass() == ExistsDescr.class) {
         this.notDeclarations=new HashMap();
         final Exists exists=new Exists();
         this.columnCounter.setParent(exists);
@@ -36,14 +36,18 @@
         this.notDeclarations=null;
         this.rule.addPattern(exists);
       }
- else       if (object instanceof EvalDescr) {
+ else       if (object.getClass() == EvalDescr.class) {
         final EvalCondition eval=build((EvalDescr)object);
         if (eval != null) {
           this.rule.addPattern(eval);
         }
       }
+ else       if (object.getClass() == FromDescr.class) {
+        final From from=build((FromDescr)object);
+        this.rule.addPattern(from);
+      }
     }
- else     if (object instanceof ColumnDescr) {
+ else     if (object.getClass() == ColumnDescr.class) {
       final Column column=build((ColumnDescr)object);
       if (column != null) {
         this.rule.addPattern(column);
