@@ -1,0 +1,33 @@
+{
+  BetaNodeBinder binder;
+  final List alphaConstraints=new ArrayList();
+  final List predicateConstraints=new ArrayList();
+  final List constraints=column.getConstraints();
+  Map declarations=new HashMap();
+  if (column.getDeclaration() != null) {
+    final Declaration declaration=column.getDeclaration();
+    declarations.put(declaration.getIdentifier(),declaration);
+  }
+  for (final Iterator it=constraints.iterator(); it.hasNext(); ) {
+    final Object object=it.next();
+    if (object instanceof Declaration) {
+      final Declaration declaration=(Declaration)object;
+      declarations.put(declaration.getIdentifier(),declaration);
+      continue;
+    }
+    final FieldConstraint fieldConstraint=(FieldConstraint)object;
+    if (fieldConstraint.getRequiredDeclarations().length == 0) {
+      alphaConstraints.add(fieldConstraint);
+    }
+ else {
+      predicateConstraints.add(fieldConstraint);
+    }
+  }
+  if (!predicateConstraints.isEmpty()) {
+    binder=new BetaNodeBinder((FieldConstraint[])predicateConstraints.toArray(new FieldConstraint[predicateConstraints.size()]));
+  }
+ else {
+    binder=new BetaNodeBinder();
+  }
+  return new ColumnConstraints(column,alphaConstraints,binder);
+}
