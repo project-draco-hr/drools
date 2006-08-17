@@ -1,11 +1,27 @@
 {
-  TreeItem child=item.getChild(0);
-  if (child instanceof PendingItem) {
-    item.removeItem(child);
-    Proto proto=(Proto)item.getUserObject();
-    for (int i=0; i < proto.children.length; ++i) {
-      createItem(proto.children[i]);
-      item.addItem(proto.children[i].item);
+  if (notShowing(item))   return;
+  if (item == lastItemChanged)   return;
+  lastItemChanged=item;
+  final TreeItem root=item;
+  String categoryPath=item.getText();
+  TreeItem parent=item.getParentItem();
+  while (parent != null) {
+    categoryPath=parent.getText() + "/" + categoryPath;
+    parent=parent.getParentItem();
+  }
+  service.loadChildCategories(categoryPath,new AsyncCallback(){
+    public void onFailure(    Throwable caught){
+    }
+    public void onSuccess(    Object result){
+      TreeItem child=root.getChild(0);
+      if (child instanceof PendingItem) {
+        root.removeItem(child);
+      }
+      String[] list=(String[])result;
+      for (int i=0; i < list.length; i++) {
+        root.addItem(list[i]).addItem(new PendingItem());
+      }
     }
   }
+);
 }
