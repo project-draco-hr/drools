@@ -1,5 +1,5 @@
 {
-  for (final Iterator it=this.getFactTablesList(factHandle.getObject().getClass()).iterator(); it.hasNext(); ) {
+  for (final Iterator it=this.getFactTablesList(LeapsBuilder.getLeapsClassType(factHandle.getObject())).iterator(); it.hasNext(); ) {
     ((FactTable)it.next()).remove(factHandle);
   }
   final Iterator tuples=((LeapsFactHandle)factHandle).getActivatedTuples();
@@ -51,17 +51,10 @@
   }
   for (; chain.hasNext(); ) {
     tuple=((FactHandleTupleAssembly)chain.next()).getTuple();
-    if (tuple.isReadyForActivation() && tuple.isActivationNull() && tuplesNotReadyForActivation.containsKey(tuple)) {
+    if (tuple.isReadyForActivation()) {
       tuple.setContext(new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.ASSERTION,tuple.getLeapsRule().getRule(),null));
+      this.getFactTable(LeapsBuilder.getLeapsClassType(factHandle.getObject())).removeTuple(tuple);
       this.assertTuple(tuple);
-    }
- else {
-      if (tuple.getLeapsRule().getRule() instanceof Query) {
-        removeFromQueryResults(tuple.getLeapsRule().getRule().getName(),tuple);
-      }
- else {
-        invalidateActivation(tuple);
-      }
     }
   }
   this.removeTokenFromStack((LeapsFactHandle)factHandle);

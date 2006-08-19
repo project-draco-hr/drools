@@ -4,6 +4,12 @@
       this.firing=true;
       boolean nothingToProcess=false;
       while (!nothingToProcess) {
+        for (Iterator rulesIt=this.noPositiveColumnsRules.iterator(); rulesIt.hasNext(); ) {
+          LeapsRule rule=((LeapsRuleHandle)rulesIt.next()).getLeapsRule();
+          final PropagationContextImpl context=new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.ASSERTION,null,null);
+          TokenEvaluator.processAfterAllPositiveConstraintOk(new LeapsTuple(new LeapsFactHandle[0],rule,context),rule,this);
+        }
+        this.noPositiveColumnsRules.clear();
         while (!this.mainStack.empty()) {
           final Token token=this.peekTokenOnTop();
           boolean done=false;
@@ -21,7 +27,9 @@
               try {
                 TokenEvaluator.evaluate(token);
                 if (token.getDominantFactHandle() != null) {
-                  token.setResume(true);
+                  if (token.getDominantFactHandle().getObject().getClass() != FromConstraintFactDriver.class) {
+                    token.setResume(true);
+                  }
                   done=true;
                 }
               }
@@ -45,6 +53,7 @@
       for (final Iterator it=this.factTables.values().iterator(); it.hasNext(); ) {
         ((FactTable)it.next()).setReseededStack(true);
       }
+      this.getFactTable(FromConstraintFactDriver.class).clear();
     }
   finally {
       this.firing=false;

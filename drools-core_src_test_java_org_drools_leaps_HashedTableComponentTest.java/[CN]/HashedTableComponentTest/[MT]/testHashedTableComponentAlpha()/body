@@ -1,0 +1,26 @@
+{
+  Rule r=this.getMakePathAlpha();
+  this.pkg.addRule(r);
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase(RuleBase.LEAPS);
+  ruleBase.addPackage(this.pkg);
+  final LeapsWorkingMemory wm=(LeapsWorkingMemory)ruleBase.newWorkingMemory();
+  wm.assertObject(this.p1Alex);
+  wm.assertObject(this.p2John);
+  wm.assertObject(this.p3Mike);
+  wm.assertObject(this.p4Alex);
+  wm.assertObject(this.p5Alex);
+  Iterator it;
+  Tuple tuple;
+  FactTable ft=wm.getFactTable(Path.class);
+  ColumnConstraints notConstraint=(ColumnConstraints)ft.getHashedConstraints().next();
+  LeapsFactHandle[] fh=new LeapsFactHandle[1];
+  fh[0]=new LeapsFactHandle(99,p1Alex);
+  tuple=new LeapsTuple(fh,null,null);
+  it=ft.reverseOrderIterator(tuple,notConstraint);
+  assertFalse("Did not expect any more data",it.hasNext());
+  fh[0]=new LeapsFactHandle(99,p3Mike);
+  tuple=new LeapsTuple(fh,null,null);
+  it=ft.reverseOrderIterator(tuple,notConstraint);
+  assertSame("Expected matching",((LeapsFactHandle)it.next()).getObject(),p3Mike);
+  assertFalse("Did not expect any more data",it.hasNext());
+}

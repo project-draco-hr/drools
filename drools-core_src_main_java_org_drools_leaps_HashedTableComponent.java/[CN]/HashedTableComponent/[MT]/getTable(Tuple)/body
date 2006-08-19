@@ -1,0 +1,26 @@
+{
+  Table ret=null;
+  if (this.numberOfVariableConstraints > 0) {
+    Map currentMap=this.buckets;
+    for (int i=0; (i < this.numberOfVariableConstraints) && (currentMap != null); i++) {
+      Integer hash=DEFAULT_HASH;
+      if (this.constraints.getBetaContraints()[i] instanceof VariableConstraint && ((VariableConstraint)this.constraints.getBetaContraints()[i]).getEvaluator().getOperator() == Operator.EQUAL) {
+        Declaration declaration=this.constraints.getBetaContraints()[i].getRequiredDeclarations()[0];
+        final Object select=declaration.getValue(tuple.get(declaration.getColumn().getFactIndex()).getObject());
+        if (select != null) {
+          hash=new Integer(select.hashCode());
+        }
+      }
+      if (i != (this.numberOfVariableConstraints - 1)) {
+        currentMap=(Map)currentMap.get(hash);
+      }
+ else {
+        ret=(Table)currentMap.get(hash);
+      }
+    }
+  }
+ else {
+    ret=this.noConstraintsTable;
+  }
+  return ret;
+}
