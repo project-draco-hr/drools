@@ -1,0 +1,21 @@
+{
+  FragmentValue rtf=(FragmentValue)rtf_ns;
+  setupLineNumbering(context);
+  try {
+    LineCountEmitter lcEmitter=new LineCountEmitter();
+    rtf.replay(lcEmitter);
+    int numLines=lcEmitter.lineCount();
+    int listingModulus=numLines < modulus ? 1 : modulus;
+    double log10numLines=Math.log(numLines) / Math.log(10);
+    int listingWidth=width < log10numLines + 1 ? (int)Math.floor(log10numLines + 1) : width;
+    Controller controller=context.getController();
+    NamePool namePool=controller.getNamePool();
+    NumberLinesEmitter nlEmitter=new NumberLinesEmitter(controller,namePool,startinglinenumber,listingModulus,listingWidth,separator,foStylesheet);
+    rtf.replay(nlEmitter);
+    return nlEmitter.getResultTreeFragment();
+  }
+ catch (  TransformerException e) {
+    System.out.println("Transformer Exception in numberLines");
+    return rtf;
+  }
+}

@@ -1,0 +1,30 @@
+{
+  int xalanMod=Params.getInt(context,"linenumbering.everyNth");
+  int xalanWidth=Params.getInt(context,"linenumbering.width");
+  String xalanSep=Params.getString(context,"linenumbering.separator");
+  DocumentFragment xalanRTF=(DocumentFragment)xalanNI.nextNode();
+  int numLines=countLineBreaks(xalanRTF) + 1;
+  DocumentBuilderFactory docFactory=DocumentBuilderFactory.newInstance();
+  DocumentBuilder docBuilder=null;
+  try {
+    docBuilder=docFactory.newDocumentBuilder();
+  }
+ catch (  ParserConfigurationException e) {
+    System.out.println("PCE!");
+    return xalanRTF;
+  }
+  Document doc=docBuilder.newDocument();
+  DocumentFragment df=doc.createDocumentFragment();
+  DOMBuilder db=new DOMBuilder(doc,df);
+  elementStack=new Stack();
+  lineNumber=0;
+  modulus=numLines < xalanMod ? 1 : xalanMod;
+  width=xalanWidth;
+  separator=xalanSep;
+  double log10numLines=Math.log(numLines) / Math.log(10);
+  if (width < log10numLines + 1) {
+    width=(int)Math.floor(log10numLines + 1);
+  }
+  lineNumberFragment(db,xalanRTF);
+  return df;
+}

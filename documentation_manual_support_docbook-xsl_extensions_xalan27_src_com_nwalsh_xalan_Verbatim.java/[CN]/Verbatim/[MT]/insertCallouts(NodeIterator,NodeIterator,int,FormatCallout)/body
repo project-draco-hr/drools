@@ -1,0 +1,56 @@
+{
+  DocumentFragment xalanRTF=(DocumentFragment)xalanNI.nextNode();
+  callout=new Callout[10];
+  calloutCount=0;
+  calloutPos=0;
+  lineNumber=1;
+  colNumber=1;
+  int pos=0;
+  int coNum=0;
+  boolean inAreaSet=false;
+  Node node=areaspecNodeSet.nextNode();
+  node=node.getFirstChild();
+  while (node != null) {
+    if (node.getNodeType() == Node.ELEMENT_NODE) {
+      if (node.getNodeName().equals("areaset")) {
+        coNum++;
+        Node area=node.getFirstChild();
+        while (area != null) {
+          if (area.getNodeType() == Node.ELEMENT_NODE) {
+            if (area.getNodeName().equals("area")) {
+              addCallout(coNum,area,defaultColumn);
+            }
+ else {
+              System.out.println("Unexpected element in areaset: " + area.getNodeName());
+            }
+          }
+          area=area.getNextSibling();
+        }
+      }
+ else       if (node.getNodeName().equalsIgnoreCase("area")) {
+        coNum++;
+        addCallout(coNum,node,defaultColumn);
+      }
+ else {
+        System.out.println("Unexpected element in areaspec: " + node.getNodeName());
+      }
+    }
+    node=node.getNextSibling();
+  }
+  java.util.Arrays.sort(callout,0,calloutCount);
+  DocumentBuilderFactory docFactory=DocumentBuilderFactory.newInstance();
+  DocumentBuilder docBuilder=null;
+  try {
+    docBuilder=docFactory.newDocumentBuilder();
+  }
+ catch (  ParserConfigurationException e) {
+    System.out.println("PCE 2!");
+    return xalanRTF;
+  }
+  Document doc=docBuilder.newDocument();
+  DocumentFragment df=doc.createDocumentFragment();
+  DOMBuilder db=new DOMBuilder(doc,df);
+  elementStack=new Stack();
+  calloutFragment(db,xalanRTF,fCallout);
+  return df;
+}

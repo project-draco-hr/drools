@@ -1,0 +1,92 @@
+{
+  try {
+    if (node.getNodeType() == Node.DOCUMENT_FRAGMENT_NODE || node.getNodeType() == Node.DOCUMENT_NODE) {
+      Node child=node.getFirstChild();
+      while (child != null) {
+        calloutFragment(rtf,child,fCallout);
+        child=child.getNextSibling();
+      }
+    }
+ else     if (node.getNodeType() == Node.ELEMENT_NODE) {
+      String ns=node.getNamespaceURI();
+      String localName=node.getLocalName();
+      String name=((Element)node).getTagName();
+      rtf.startElement(ns,localName,name,copyAttributes((Element)node));
+      elementStack.push(node);
+      Node child=node.getFirstChild();
+      while (child != null) {
+        calloutFragment(rtf,child,fCallout);
+        child=child.getNextSibling();
+      }
+    }
+ else     if (node.getNodeType() == Node.TEXT_NODE) {
+      String text=node.getNodeValue();
+      char chars[]=text.toCharArray();
+      int pos=0;
+      for (int count=0; count < text.length(); count++) {
+        if (calloutPos < calloutCount && callout[calloutPos].getLine() == lineNumber && callout[calloutPos].getColumn() == colNumber) {
+          if (pos > 0) {
+            rtf.characters(chars,0,pos);
+            pos=0;
+          }
+          closeOpenElements(rtf);
+          while (calloutPos < calloutCount && callout[calloutPos].getLine() == lineNumber && callout[calloutPos].getColumn() == colNumber) {
+            fCallout.formatCallout(rtf,callout[calloutPos]);
+            calloutPos++;
+          }
+          openClosedElements(rtf);
+        }
+        if (text.charAt(count) == '\n') {
+          if (calloutPos < calloutCount && callout[calloutPos].getLine() == lineNumber && callout[calloutPos].getColumn() > colNumber) {
+            if (pos > 0) {
+              rtf.characters(chars,0,pos);
+              pos=0;
+            }
+            closeOpenElements(rtf);
+            while (calloutPos < calloutCount && callout[calloutPos].getLine() == lineNumber && callout[calloutPos].getColumn() > colNumber) {
+              formatPad(rtf,callout[calloutPos].getColumn() - colNumber);
+              colNumber=callout[calloutPos].getColumn();
+              while (calloutPos < calloutCount && callout[calloutPos].getLine() == lineNumber && callout[calloutPos].getColumn() == colNumber) {
+                fCallout.formatCallout(rtf,callout[calloutPos]);
+                calloutPos++;
+              }
+            }
+            openClosedElements(rtf);
+          }
+          lineNumber++;
+          colNumber=1;
+        }
+ else {
+          colNumber++;
+        }
+        chars[pos++]=text.charAt(count);
+      }
+      if (pos > 0) {
+        rtf.characters(chars,0,pos);
+      }
+    }
+ else     if (node.getNodeType() == Node.COMMENT_NODE) {
+      String text=node.getNodeValue();
+      char chars[]=text.toCharArray();
+      rtf.comment(chars,0,text.length());
+    }
+ else     if (node.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE) {
+      rtf.processingInstruction(node.getNodeName(),node.getNodeValue());
+    }
+ else {
+      System.out.println("Warning: unexpected node type in calloutFragment: " + node.getNodeType() + ": "+ node.getNodeName());
+    }
+    if (node.getNodeType() == Node.ELEMENT_NODE) {
+      String ns=node.getNamespaceURI();
+      String localName=node.getLocalName();
+      String name=((Element)node).getTagName();
+      rtf.endElement(ns,localName,name);
+      elementStack.pop();
+    }
+ else {
+    }
+  }
+ catch (  SAXException e) {
+    System.out.println("SAX Exception in calloutFragment");
+  }
+}

@@ -1,0 +1,114 @@
+{
+  FragmentValue rtf=(FragmentValue)rtf_ns;
+  setupColumnWidths(context);
+  try {
+    Controller controller=context.getController();
+    NamePool namePool=controller.getNamePool();
+    ColumnScanEmitter csEmitter=new ColumnScanEmitter(namePool);
+    rtf.replay(csEmitter);
+    int numColumns=csEmitter.columnCount();
+    String widths[]=csEmitter.columnWidths();
+    float relTotal=0;
+    float relParts[]=new float[numColumns];
+    float absTotal=0;
+    float absParts[]=new float[numColumns];
+    for (int count=0; count < numColumns; count++) {
+      String width=widths[count];
+      int pos=width.indexOf("*");
+      if (pos >= 0) {
+        String relPart=width.substring(0,pos);
+        String absPart=width.substring(pos + 1);
+        try {
+          float rel=Float.parseFloat(relPart);
+          relTotal+=rel;
+          relParts[count]=rel;
+        }
+ catch (        NumberFormatException e) {
+          System.out.println(relPart + " is not a valid relative unit.");
+        }
+        int pixels=0;
+        if (absPart != null && !absPart.equals("")) {
+          pixels=convertLength(absPart);
+        }
+        absTotal+=pixels;
+        absParts[count]=pixels;
+      }
+ else {
+        relParts[count]=0;
+        int pixels=0;
+        if (width != null && !width.equals("")) {
+          pixels=convertLength(width);
+        }
+        absTotal+=pixels;
+        absParts[count]=pixels;
+      }
+    }
+    if (relTotal == 0) {
+      for (int count=0; count < numColumns; count++) {
+        Float f=new Float(absParts[count]);
+        if (foStylesheet) {
+          int pixels=f.intValue();
+          float inches=(float)pixels / pixelsPerInch;
+          widths[count]=inches + "in";
+        }
+ else {
+          widths[count]=Integer.toString(f.intValue());
+        }
+      }
+    }
+ else     if (absTotal == 0) {
+      for (int count=0; count < numColumns; count++) {
+        float rel=relParts[count] / relTotal * 100;
+        Float f=new Float(rel);
+        widths[count]=Integer.toString(f.intValue());
+      }
+      widths=correctRoundingError(widths);
+    }
+ else {
+      int pixelWidth=nominalWidth;
+      if (tableWidth.indexOf("%") <= 0) {
+        pixelWidth=convertLength(tableWidth);
+      }
+      if (pixelWidth <= absTotal) {
+        System.out.println("Table is wider than table width.");
+      }
+ else {
+        pixelWidth-=absTotal;
+      }
+      absTotal=0;
+      for (int count=0; count < numColumns; count++) {
+        float rel=relParts[count] / relTotal * pixelWidth;
+        relParts[count]=rel + absParts[count];
+        absTotal+=rel + absParts[count];
+      }
+      if (tableWidth.indexOf("%") <= 0) {
+        for (int count=0; count < numColumns; count++) {
+          Float f=new Float(relParts[count]);
+          if (foStylesheet) {
+            int pixels=f.intValue();
+            float inches=(float)pixels / pixelsPerInch;
+            widths[count]=inches + "in";
+          }
+ else {
+            widths[count]=Integer.toString(f.intValue());
+          }
+        }
+      }
+ else {
+        for (int count=0; count < numColumns; count++) {
+          float rel=relParts[count] / absTotal * 100;
+          Float f=new Float(rel);
+          widths[count]=Integer.toString(f.intValue());
+        }
+        widths=correctRoundingError(widths);
+      }
+    }
+    ColumnUpdateEmitter cuEmitter=new ColumnUpdateEmitter(controller,namePool,widths);
+    rtf.replay(cuEmitter);
+    return cuEmitter.getResultTreeFragment();
+  }
+ catch (  TransformerException e) {
+    System.out.println("Transformer Exception in adjustColumnWidths");
+    return rtf;
+  }
+}

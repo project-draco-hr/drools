@@ -1,0 +1,75 @@
+{
+  Element area=(Element)node;
+  String units=area.getAttribute("units");
+  String otherUnits=area.getAttribute("otherunits");
+  String coords=area.getAttribute("coords");
+  int type=0;
+  String otherType=null;
+  if (units == null || units.equals("linecolumn")) {
+    type=Callout.LINE_COLUMN;
+  }
+ else   if (units.equals("linerange")) {
+    type=Callout.LINE_RANGE;
+  }
+ else   if (units.equals("linecolumnpair")) {
+    type=Callout.LINE_COLUMN_PAIR;
+  }
+ else   if (units.equals("calspair")) {
+    type=Callout.CALS_PAIR;
+  }
+ else {
+    type=Callout.OTHER;
+    otherType=otherUnits;
+  }
+  if (type != Callout.LINE_COLUMN && type != Callout.LINE_RANGE) {
+    System.out.println("Only linecolumn and linerange units are supported");
+    return;
+  }
+  if (coords == null) {
+    System.out.println("Coords must be specified");
+    return;
+  }
+  StringTokenizer st=new StringTokenizer(coords);
+  int tokenCount=0;
+  int c1=0;
+  int c2=0;
+  while (st.hasMoreTokens()) {
+    tokenCount++;
+    if (tokenCount > 2) {
+      System.out.println("Unparseable coordinates");
+      return;
+    }
+    try {
+      String token=st.nextToken();
+      int coord=Integer.parseInt(token);
+      c2=coord;
+      if (tokenCount == 1) {
+        c1=coord;
+      }
+    }
+ catch (    NumberFormatException e) {
+      System.out.println("Unparseable coordinate");
+      return;
+    }
+  }
+  if (calloutCount == callout.length) {
+    Callout bigger[]=new Callout[calloutCount + 10];
+    for (int count=0; count < callout.length; count++) {
+      bigger[count]=callout[count];
+    }
+    callout=bigger;
+  }
+  if (tokenCount == 2) {
+    if (type == Callout.LINE_RANGE) {
+      for (int count=c1; count <= c2; count++) {
+        callout[calloutCount++]=new Callout(coNum,area,count,defaultColumn,type);
+      }
+    }
+ else {
+      callout[calloutCount++]=new Callout(coNum,area,c1,c2,type);
+    }
+  }
+ else {
+    callout[calloutCount++]=new Callout(coNum,area,c1,defaultColumn,type);
+  }
+}
