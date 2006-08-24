@@ -1,0 +1,32 @@
+{
+  RuleBase rb=RuleBaseFactory.newRuleBase();
+  Package pkg=new Package("org.test");
+  pkg.addGlobal("list",List.class);
+  rb.addPackage(pkg);
+  WorkingMemory wm=rb.newWorkingMemory();
+  List list=new ArrayList();
+  wm.setGlobal("list",list);
+  LiteralValue literal=new LiteralValue("literal");
+  Column column=new Column(0,new ClassObjectType(Cheese.class),"stilton");
+  DeclarationVariable declaration=new DeclarationVariable(column.getDeclaration());
+  GlobalVariable global=new GlobalVariable("list");
+  LiteralValue literalKey=new LiteralValue("literalKey");
+  LiteralValue literalValue=new LiteralValue("literalValue");
+  MapValue.KeyValuePair literalPair=new MapValue.KeyValuePair(literalKey,literalValue);
+  MapValue mapValue=new MapValue(new MapValue.KeyValuePair[]{literalPair});
+  List listValueHandlers=new ArrayList();
+  listValueHandlers.add(literal);
+  listValueHandlers.add(declaration);
+  listValueHandlers.add(mapValue);
+  listValueHandlers.add(global);
+  ListValue listValue=new ListValue(listValueHandlers);
+  Cheese stilton=new Cheese("stilton",20);
+  FactHandle stiltonHandle=wm.assertObject(stilton);
+  ReteTuple tuple=new ReteTuple((DefaultFactHandle)stiltonHandle);
+  List values=(List)listValue.getValue(tuple,wm);
+  assertEquals("literal",values.get(0));
+  assertEquals(stilton,values.get(1));
+  Map map=(Map)values.get(2);
+  assertEquals("literalValue",map.get("literalKey"));
+  assertEquals(list,values.get(3));
+}
