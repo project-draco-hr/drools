@@ -1,0 +1,38 @@
+{
+  Object instance=this.instanceValueHandler.getValue(tuple,wm);
+  if (instance == null) {
+    throw new IllegalArgumentException("Unable to resolve the variable: [" + this.instanceValueHandler + "]");
+  }
+  Class[] parameterTypes=this.method.getParameterTypes();
+  Object[] args=new Object[this.valueHandlers.length];
+  for (int i=0; i < this.valueHandlers.length; i++) {
+    ValueHandler handler=valueHandlers[i];
+    if (handler instanceof LiteralValue) {
+      String text=(String)handler.getValue(tuple,wm);
+      Class type=parameterTypes[i];
+      if (type == String.class) {
+        args[i]=text;
+      }
+ else {
+        args[i]=convert(text,type);
+      }
+    }
+ else {
+      args[i]=handler.getValue(tuple,wm);
+    }
+  }
+  Object result=null;
+  try {
+    result=this.method.invoke(instance,args);
+  }
+ catch (  IllegalArgumentException e) {
+    throw new RuntimeDroolsException(e);
+  }
+catch (  IllegalAccessException e) {
+    throw new RuntimeDroolsException(e);
+  }
+catch (  InvocationTargetException e) {
+    throw new RuntimeDroolsException(e);
+  }
+  return result;
+}
