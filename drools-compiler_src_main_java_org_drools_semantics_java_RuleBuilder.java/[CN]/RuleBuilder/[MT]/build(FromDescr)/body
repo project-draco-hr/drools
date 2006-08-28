@@ -2,13 +2,40 @@
   Column column=build(fromDescr.getReturnedColumn());
   DeclarativeInvokerDescr invokerDescr=fromDescr.getDataSource();
   DataProvider dataProvider=null;
-  if (invokerDescr.getClass() == FieldAccessDescr.class) {
-  }
- else   if (invokerDescr.getClass() == FunctionCallDescr.class) {
-  }
- else   if (invokerDescr.getClass() == MethodAccessDescr.class) {
-    MethodAccessDescr methodAccessDescr=(MethodAccessDescr)invokerDescr;
-    dataProvider=new MethodDataProvider(methodAccessDescr.getVariableName(),methodAccessDescr.getMethodName(),methodAccessDescr.getArguments(),this.declarations,this.pkg.getGlobals());
+  if (invokerDescr.getClass() == MethodAccessDescr.class) {
+    MethodAccessDescr methodAccessor=(MethodAccessDescr)invokerDescr;
+    ValueHandler instanceValueHandler=null;
+    String variableName=methodAccessor.getVariableName();
+    if (declarations.containsKey(variableName)) {
+      instanceValueHandler=new DeclarationVariable((Declaration)declarations.get(variableName));
+    }
+ else     if (this.pkg.getGlobals().containsKey(variableName)) {
+      instanceValueHandler=new GlobalVariable(variableName,(Class)this.pkg.getGlobals().get(variableName));
+    }
+ else {
+      throw new IllegalArgumentException("The variable name [" + variableName + "] was not a global or declaration.");
+    }
+    List arguments=((MethodAccessDescr)invokerDescr).getArguments();
+    List valueHandlers=new ArrayList();
+    for (Iterator iter=arguments.iterator(); iter.hasNext(); ) {
+      ArgumentValueDescr desc=(ArgumentValueDescr)iter.next();
+      if (desc.getType() == ArgumentValueDescr.VARIABLE) {
+        if (this.declarations.containsKey(desc.getValue())) {
+          valueHandlers.add(new DeclarationVariable((Declaration)declarations.get(desc.getValue())));
+        }
+ else         if (this.pkg.getGlobals().containsKey(desc.getValue())) {
+          valueHandlers.add(new GlobalVariable((String)desc.getValue(),(Class)this.pkg.getGlobals().get(variableName)));
+        }
+ else {
+          throw new IllegalArgumentException("Uknown variable: " + desc.getValue());
+        }
+      }
+ else {
+        valueHandlers.add(new LiteralValue((String)desc.getValue(),Object.class));
+      }
+    }
+    MethodInvoker invoker=new MethodInvoker(methodAccessor.getMethodName(),instanceValueHandler,(ValueHandler[])valueHandlers.toArray(new ValueHandler[valueHandlers.size()]));
+    dataProvider=new MethodDataProvider(invoker);
   }
   return new From(column,dataProvider);
 }
