@@ -1,32 +1,40 @@
 {
   try {
-    this.getLock().lock();
-    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation);
+    this.lock.lock();
     final int status=((InternalFactHandle)factHandle).getEqualityKey().getStatus();
-    final Object originalObject=this.assertMap.remove(factHandle);
-    if (originalObject == null) {
-      throw new NoSuchFactObjectException(factHandle);
-    }
     final InternalFactHandle handle=(InternalFactHandle)factHandle;
-    if (handle.getId() == -1) {
+    final Object originalObject=handle.getObject();
+    if (handle.getId() == -1 || object == null) {
       return;
     }
-    removePropertyChangeListener(handle);
-    doRetract(handle,propagationContext);
-    final EqualityKey key=handle.getEqualityKey();
+    handle.setObject(object);
+    if (originalObject != object) {
+      this.assertMap.put(handle,handle);
+    }
+    EqualityKey key=handle.getEqualityKey();
     key.removeFactHandle(handle);
-    handle.setEqualityKey(null);
     if (key.isEmpty()) {
       this.tms.remove(key);
     }
-    this.handleFactory.destroyFactHandle(handle);
-    this.assertObject(object,false,(status == EqualityKey.STATED) ? false : true,rule,activation);
-    this.workingMemoryEventSupport.fireObjectModified(propagationContext,handle,handle.getObject(),object);
+    key=this.tms.get(object);
+    if (key == null) {
+      key=new EqualityKey(handle,status);
+      this.tms.put(key);
+    }
+ else {
+      key.addFactHandle(handle);
+    }
+    handle.setEqualityKey(key);
+    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation);
+    doRetract(handle,propagationContext);
+    this.handleFactory.increaseFactHandleRecency(handle);
+    doAssertObject(handle,object,propagationContext);
+    this.workingMemoryEventSupport.fireObjectModified(propagationContext,factHandle,originalObject,object);
     if (!this.factQueue.isEmpty()) {
       propagateQueuedActions();
     }
   }
   finally {
-    this.getLock().unlock();
+    this.lock.unlock();
   }
 }

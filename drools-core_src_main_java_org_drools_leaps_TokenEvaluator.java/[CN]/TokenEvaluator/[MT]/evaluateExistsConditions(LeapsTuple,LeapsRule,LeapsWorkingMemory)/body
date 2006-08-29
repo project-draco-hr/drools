@@ -1,15 +1,23 @@
 {
+  boolean notFound=false;
+  boolean done=false;
   final ColumnConstraints[] exists=rule.getExistsColumnConstraints();
-  for (int i=0, length=exists.length; i < length; i++) {
+  for (int i=0, length=exists.length; !notFound && i < length; i++) {
     final ColumnConstraints constraint=exists[i];
-    final TableIterator tableIterator=workingMemory.getFactTable(constraint.getClassType()).reverseOrderIterator(tuple,constraint);
-    boolean done=false;
-    while (!done && tableIterator.hasNext()) {
-      final LeapsFactHandle factHandle=(LeapsFactHandle)tableIterator.next();
-      if (constraint.isAllowed(factHandle,tuple,workingMemory)) {
-        tuple.setExistsFactHandle(factHandle,i);
-        factHandle.addExistsTuple(tuple,i);
-        done=true;
+    if (!tuple.isExistsFactHandle(i)) {
+      final TableIterator tableIterator=workingMemory.getFactTable(constraint.getClassType()).reverseOrderIterator(tuple,constraint);
+      done=false;
+      while (!done && tableIterator.hasNext()) {
+        final LeapsFactHandle factHandle=(LeapsFactHandle)tableIterator.next();
+        if (constraint.isAllowed(factHandle,tuple,workingMemory)) {
+          tuple.setExistsFactHandle(factHandle,i);
+          factHandle.addExistsTuple(tuple,i);
+          done=true;
+        }
+      }
+      if (!done) {
+        notFound=true;
+        workingMemory.getFactTable(constraint.getClassType()).addTuple(tuple);
       }
     }
   }

@@ -7,7 +7,10 @@
         for (Iterator rulesIt=this.noPositiveColumnsRules.iterator(); rulesIt.hasNext(); ) {
           LeapsRule rule=((LeapsRuleHandle)rulesIt.next()).getLeapsRule();
           final PropagationContextImpl context=new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.ASSERTION,null,null);
-          TokenEvaluator.processAfterAllPositiveConstraintOk(new LeapsTuple(new LeapsFactHandle[0],rule,context),rule,this);
+          final LeapsTuple tuple=new LeapsTuple(new LeapsFactHandle[0],rule,context);
+          if (TokenEvaluator.processAfterAllPositiveConstraintOk(tuple,rule,this)) {
+            this.assertTuple(tuple);
+          }
         }
         this.noPositiveColumnsRules.clear();
         while (!this.mainStack.empty()) {
@@ -49,6 +52,7 @@
           nothingToProcess=true;
         }
       }
+      this.rulesAddedSinceLastFireAll=false;
       this.idLastFireAllAt=((LeapsFactHandleFactory)this.handleFactory).getNextId();
       for (final Iterator it=this.factTables.values().iterator(); it.hasNext(); ) {
         ((FactTable)it.next()).setReseededStack(true);

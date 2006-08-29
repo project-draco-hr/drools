@@ -1,14 +1,12 @@
 {
   final Activation activation=tuple.getActivation();
-  if (!tuple.isReadyForActivation() && !tuple.isActivationNull()) {
+  if (activation != null) {
     if (activation.isActivated()) {
       activation.remove();
-      getAgendaEventSupport().fireActivationCancelled(activation);
+      this.getAgendaEventSupport().fireActivationCancelled(activation);
     }
+    this.getTruthMaintenanceSystem().removeLogicalDependencies(activation,tuple.getContext(),tuple.getLeapsRule().getRule());
     tuple.setActivation(null);
-  }
-  if (activation != null) {
-    this.tms.removeLogicalDependencies(activation,tuple.getContext(),tuple.getLeapsRule().getRule());
     FastMap activations=(FastMap)this.rulesActivationsMap.get(activation.getRule());
     if (activations != null) {
       activations.remove(activation);

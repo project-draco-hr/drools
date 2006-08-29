@@ -1,5 +1,6 @@
 {
-  for (final Iterator it=this.getFactTablesList(LeapsBuilder.getLeapsClassType(factHandle.getObject())).iterator(); it.hasNext(); ) {
+  final Object objectClass=LeapsBuilder.getLeapsClassType(factHandle.getObject());
+  for (final Iterator it=this.getFactTablesList(objectClass).iterator(); it.hasNext(); ) {
     ((FactTable)it.next()).remove(factHandle);
   }
   final Iterator tuples=((LeapsFactHandle)factHandle).getActivatedTuples();
@@ -12,34 +13,8 @@
       invalidateActivation(tuple);
     }
   }
-  final IdentityMap tuplesNotReadyForActivation=new IdentityMap();
-  FactHandleTupleAssembly assembly;
-  LeapsTuple tuple;
+  ((LeapsFactHandle)factHandle).clearActivatedTuples();
   Iterator it;
-  it=((LeapsFactHandle)factHandle).getNotTupleAssemblies();
-  if (it != null) {
-    for (; it.hasNext(); ) {
-      assembly=(FactHandleTupleAssembly)it.next();
-      tuple=assembly.getTuple();
-      if (!tuple.isReadyForActivation()) {
-        tuplesNotReadyForActivation.put(tuple,tuple);
-      }
-      tuple.removeBlockingNotFactHandle(assembly.getIndex());
-      TokenEvaluator.evaluateNotCondition((LeapsFactHandle)factHandle,assembly.getIndex(),tuple,this);
-    }
-  }
-  it=((LeapsFactHandle)factHandle).getExistsTupleAssemblies();
-  if (it != null) {
-    for (; it.hasNext(); ) {
-      assembly=(FactHandleTupleAssembly)it.next();
-      tuple=assembly.getTuple();
-      if (!tuple.isReadyForActivation()) {
-        tuplesNotReadyForActivation.put(tuple,tuple);
-      }
-      tuple.removeExistsFactHandle(assembly.getIndex());
-      TokenEvaluator.evaluateExistsCondition((LeapsFactHandle)factHandle,assembly.getIndex(),tuple,this);
-    }
-  }
   final IteratorChain chain=new IteratorChain();
   it=((LeapsFactHandle)factHandle).getNotTupleAssemblies();
   if (it != null) {
@@ -50,12 +25,22 @@
     chain.addIterator(it);
   }
   for (; chain.hasNext(); ) {
-    tuple=((FactHandleTupleAssembly)chain.next()).getTuple();
-    if (tuple.isReadyForActivation()) {
-      tuple.setContext(new PropagationContextImpl(nextPropagationIdCounter(),PropagationContext.ASSERTION,tuple.getLeapsRule().getRule(),null));
-      this.getFactTable(LeapsBuilder.getLeapsClassType(factHandle.getObject())).removeTuple(tuple);
+    FactHandleTupleAssembly tupleAssembly=((FactHandleTupleAssembly)chain.next());
+    final LeapsTuple tuple=tupleAssembly.getTuple();
+    if (tupleAssembly.getType() == FactHandleTupleAssembly.NOT) {
+      tuple.removeBlockingNotFactHandle(tupleAssembly.getIndex());
+    }
+ else {
+      tuple.removeExistsFactHandle(tupleAssembly.getIndex());
+    }
+    if (!TokenEvaluator.processAfterAllPositiveConstraintOk(tuple,tuple.getLeapsRule(),this)) {
+      invalidateActivation(tuple);
+    }
+ else {
       this.assertTuple(tuple);
     }
   }
+  ((LeapsFactHandle)factHandle).clearExistsTuples();
+  ((LeapsFactHandle)factHandle).clearNotTuples();
   this.removeTokenFromStack((LeapsFactHandle)factHandle);
 }
