@@ -1,0 +1,18 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_FromWithParams.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  List list=new ArrayList();
+  workingMemory.setGlobal("list",list);
+  workingMemory.setGlobal("testObject",new FromTestClass());
+  Person bob=new Person("bob");
+  workingMemory.assertObject(bob);
+  workingMemory.fireAllRules();
+  assertEquals(new Integer(42),list.get(0));
+  assertEquals("literal",list.get(1));
+  assertSame(bob,list.get(2));
+  assertSame(list,list.get(3));
+}
