@@ -18,21 +18,7 @@
     List arguments=((MethodAccessDescr)invokerDescr).getArguments();
     List valueHandlers=new ArrayList();
     for (Iterator iter=arguments.iterator(); iter.hasNext(); ) {
-      ArgumentValueDescr desc=(ArgumentValueDescr)iter.next();
-      if (desc.getType() == ArgumentValueDescr.VARIABLE) {
-        if (this.declarations.containsKey(desc.getValue())) {
-          valueHandlers.add(new DeclarationVariable((Declaration)declarations.get(desc.getValue())));
-        }
- else         if (this.pkg.getGlobals().containsKey(desc.getValue())) {
-          valueHandlers.add(new GlobalVariable((String)desc.getValue(),(Class)this.pkg.getGlobals().get(variableName)));
-        }
- else {
-          throw new IllegalArgumentException("Uknown variable: " + desc.getValue());
-        }
-      }
- else {
-        valueHandlers.add(new LiteralValue((String)desc.getValue(),Object.class));
-      }
+      valueHandlers.add(buildValueHandler((ArgumentValueDescr)iter.next()));
     }
     MethodInvoker invoker=new MethodInvoker(methodAccessor.getMethodName(),instanceValueHandler,(ValueHandler[])valueHandlers.toArray(new ValueHandler[valueHandlers.size()]));
     dataProvider=new MethodDataProvider(invoker);
