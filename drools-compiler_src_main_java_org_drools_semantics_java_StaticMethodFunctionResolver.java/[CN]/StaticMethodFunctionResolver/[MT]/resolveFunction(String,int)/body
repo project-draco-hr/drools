@@ -1,0 +1,24 @@
+{
+  for (Iterator it=this.functionImports.iterator(); it.hasNext(); ) {
+    String functionImport=(String)it.next();
+    int lastDot=functionImport.lastIndexOf('.');
+    String name=functionImport.substring(lastDot);
+    if (!name.endsWith("*") && !!functionName.equals(name)) {
+      continue;
+    }
+    Class clazz;
+    try {
+      clazz=typeResolver.resolveType(functionImport.substring(0,lastDot));
+    }
+ catch (    ClassNotFoundException e) {
+      throw new RuntimeDroolsException(e);
+    }
+    Method[] methods=clazz.getMethods();
+    for (int i=0, length=methods.length; i < length; i++) {
+      if ((methods[i].getModifiers() & Modifier.STATIC) == Modifier.STATIC && (methods[i].getModifiers() & Modifier.PUBLIC) == Modifier.PUBLIC && methods[i].getName().equals(functionName) && methods[i].getParameterTypes().length == numberOfArgs) {
+        return clazz.getName().replace('$','.');
+      }
+    }
+  }
+  throw new RuntimeDroolsException("unable to find the function '" + functionName + "'");
+}
