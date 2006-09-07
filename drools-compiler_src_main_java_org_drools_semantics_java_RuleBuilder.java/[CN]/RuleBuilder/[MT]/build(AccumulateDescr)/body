@@ -1,0 +1,58 @@
+{
+  Column sourceColumn=build(accumDescr.getSourceColumn());
+  this.columnOffset--;
+  Column resultColumn=build(accumDescr.getResultColumn());
+  final String className="accumulate" + this.counter++;
+  accumDescr.setClassMethodName(className);
+  final List[] usedIdentifiers1=getUsedIdentifiers(accumDescr,accumDescr.getInitCode());
+  final List[] usedIdentifiers2=getUsedIdentifiers(accumDescr,accumDescr.getActionCode());
+  final List[] usedIdentifiers3=getUsedIdentifiers(accumDescr,accumDescr.getResultCode());
+  final List requiredDeclarations=new ArrayList(usedIdentifiers1[0]);
+  requiredDeclarations.addAll(usedIdentifiers2[0]);
+  requiredDeclarations.addAll(usedIdentifiers3[0]);
+  final List requiredGlobals=new ArrayList(usedIdentifiers1[1]);
+  requiredGlobals.addAll(usedIdentifiers2[1]);
+  requiredGlobals.addAll(usedIdentifiers3[1]);
+  final Declaration[] declarations=(Declaration[])requiredDeclarations.toArray(new Declaration[requiredDeclarations.size()]);
+  final String[] globals=(String[])requiredGlobals.toArray(new String[requiredGlobals.size()]);
+  StringTemplate st=RuleBuilder.ruleGroup.getInstanceOf("accumulateMethod");
+  setStringTemplateAttributes(st,declarations,globals,null);
+  st.setAttribute("methodName",className);
+  final String initCode=this.functionFixer.fix(accumDescr.getInitCode());
+  final String actionCode=this.functionFixer.fix(accumDescr.getActionCode());
+  final String resultCode=this.functionFixer.fix(accumDescr.getResultCode());
+  st.setAttribute("initCode",initCode);
+  st.setAttribute("actionCode",actionCode);
+  st.setAttribute("resultCode",resultCode);
+  String columnType=null;
+  if (sourceColumn.getObjectType() instanceof ClassObjectType) {
+    columnType=((ClassObjectType)sourceColumn.getObjectType()).getClassType().getName();
+  }
+ else {
+    columnType=sourceColumn.getObjectType().getValueType().getClassType().getName();
+  }
+  String resultType=null;
+  if (resultColumn.getObjectType() instanceof ClassObjectType) {
+    resultType=((ClassObjectType)resultColumn.getObjectType()).getClassType().getName();
+  }
+ else {
+    resultType=resultColumn.getObjectType().getValueType().getClassType().getName();
+  }
+  st.setAttribute("columnType",columnType);
+  st.setAttribute("columnDeclaration",sourceColumn.getDeclaration());
+  st.setAttribute("resultType",resultType);
+  this.methods.add(st.toString());
+  st=RuleBuilder.invokerGroup.getInstanceOf("accumulateInvoker");
+  st.setAttribute("package",this.pkg.getName());
+  st.setAttribute("ruleClassName",ucFirst(this.ruleDescr.getClassName()));
+  st.setAttribute("invokerClassName",this.ruleDescr.getClassName() + ucFirst(className) + "Invoker");
+  st.setAttribute("methodName",className);
+  setStringTemplateAttributes(st,declarations,(String[])requiredGlobals.toArray(new String[requiredGlobals.size()]),null);
+  st.setAttribute("hashCode",actionCode.hashCode());
+  Accumulate accumulate=new Accumulate(sourceColumn,resultColumn,declarations);
+  final String invokerClassName=this.pkg.getName() + "." + this.ruleDescr.getClassName()+ ucFirst(className)+ "Invoker";
+  this.invokers.put(invokerClassName,st.toString());
+  this.invokerLookups.put(invokerClassName,accumulate);
+  this.descrLookups.put(invokerClassName,accumDescr);
+  return accumulate;
+}
