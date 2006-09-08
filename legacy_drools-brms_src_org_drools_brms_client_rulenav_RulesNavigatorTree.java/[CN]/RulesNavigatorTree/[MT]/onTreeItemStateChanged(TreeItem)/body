@@ -1,0 +1,23 @@
+{
+  if (hasBeenLoaded(item)) {
+    return;
+  }
+  final TreeItem root=item;
+  String categoryPath=getPath(item);
+  item.setUserObject(new Boolean(true));
+  service.loadChildCategories(categoryPath,new AsyncCallback(){
+    public void onFailure(    Throwable caught){
+    }
+    public void onSuccess(    Object result){
+      TreeItem child=root.getChild(0);
+      if (child instanceof PendingItem) {
+        root.removeItem(child);
+      }
+      String[] list=(String[])result;
+      for (int i=0; i < list.length; i++) {
+        root.addItem(list[i]).addItem(new PendingItem());
+      }
+    }
+  }
+);
+}
