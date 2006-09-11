@@ -8,18 +8,17 @@
           FieldExtractor extractor=fieldIndex.getFieldExtactor();
           this.hashKey.setIndex(index);
           this.hashKey.setValue(extractor.getValue(object));
-          ObjectSink sink=(ObjectSink)this.hashedSinks.get(this.hashKey);
+          ObjectSink sink=(ObjectSink)this.hashedSinkMap.get(this.hashKey);
           if (sink != null) {
             sink.retractObject(handle,context,workingMemory);
           }
         }
       }
     }
-  }
  else {
-    for (Iterator it=this.hashedSinks.values().iterator(); it.hasNext(); ) {
-      ObjectSink sink=(ObjectSink)it.next();
-      sink.retractObject(handle,context,workingMemory);
+      for (ObjectSinkNode sink=this.hashedSinks.getFirst(); sink != null; sink=sink.getNextObjectSinkNode()) {
+        sink.retractObject(handle,context,workingMemory);
+      }
     }
   }
   for (ObjectSinkNode sink=this.otherSinks.getFirst(); sink != null; sink=sink.getNextObjectSinkNode()) {

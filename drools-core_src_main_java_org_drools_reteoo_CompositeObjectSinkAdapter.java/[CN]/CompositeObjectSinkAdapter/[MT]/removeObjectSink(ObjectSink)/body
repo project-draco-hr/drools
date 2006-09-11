@@ -8,17 +8,15 @@
       Object value=literalConstraint.getField().getValue();
       if (evaluator.getOperator() == Operator.EQUAL) {
         int index=literalConstraint.getFieldExtractor().getIndex();
-        this.hashKey.setIndex(index);
-        this.hashKey.setValue(value);
-        hashedSinks.remove(this.hashKey);
         FieldIndex fieldIndex=unregisterFieldIndex(index);
-        if (fieldIndex.count < 3) {
-          unHashSinks(index);
-          fieldIndex.setHashed(false);
-          return;
-        }
-        if (this.hashedSinks.isEmpty()) {
-          this.hashedSinks=null;
+        this.hashedSinks.remove((ObjectSinkNode)sink);
+        if (fieldIndex.isHashed()) {
+          this.hashKey.setIndex(index);
+          this.hashKey.setValue(value);
+          hashedSinkMap.remove(this.hashKey);
+          if (fieldIndex.getCount() <= 2) {
+            unHashSinks(fieldIndex);
+          }
         }
         return;
       }
