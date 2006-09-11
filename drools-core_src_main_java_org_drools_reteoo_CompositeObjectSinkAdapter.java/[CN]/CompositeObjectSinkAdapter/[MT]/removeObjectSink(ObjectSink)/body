@@ -1,0 +1,28 @@
+{
+  if (sink.getClass() == AlphaNode.class) {
+    AlphaNode alphaNode=(AlphaNode)sink;
+    FieldConstraint fieldConstraint=alphaNode.getConstraint();
+    if (fieldConstraint.getClass() == LiteralConstraint.class) {
+      LiteralConstraint literalConstraint=(LiteralConstraint)fieldConstraint;
+      Evaluator evaluator=literalConstraint.getEvaluator();
+      Object value=literalConstraint.getField().getValue();
+      if (evaluator.getOperator() == Operator.EQUAL) {
+        int index=literalConstraint.getFieldExtractor().getIndex();
+        this.hashKey.setIndex(index);
+        this.hashKey.setValue(value);
+        hashedSinks.remove(this.hashKey);
+        FieldIndex fieldIndex=unregisterFieldIndex(index);
+        if (fieldIndex.count < 3) {
+          unHashSinks(index);
+          fieldIndex.setHashed(false);
+          return;
+        }
+        if (this.hashedSinks.isEmpty()) {
+          this.hashedSinks=null;
+        }
+        return;
+      }
+    }
+  }
+  this.otherSinks.remove((ObjectSinkNode)sink);
+}

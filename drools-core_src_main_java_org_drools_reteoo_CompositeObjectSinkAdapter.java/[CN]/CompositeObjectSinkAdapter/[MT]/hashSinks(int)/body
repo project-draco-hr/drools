@@ -1,0 +1,22 @@
+{
+  List list=new ArrayList();
+  for (ObjectSinkNode sink=this.otherSinks.getFirst(); sink != null; sink=sink.getNextObjectSinkNode()) {
+    if (sink.getClass() == AlphaNode.class) {
+      AlphaNode alphaNode=(AlphaNode)sink;
+      FieldConstraint fieldConstraint=alphaNode.getConstraint();
+      if (fieldConstraint.getClass() == LiteralConstraint.class) {
+        LiteralConstraint literalConstraint=(LiteralConstraint)fieldConstraint;
+        Evaluator evaluator=literalConstraint.getEvaluator();
+        Object value=literalConstraint.getField().getValue();
+        if (evaluator.getOperator() == Operator.EQUAL && index == literalConstraint.getFieldExtractor().getIndex()) {
+          hashedSinks.put(new HashKey(index,value),sink);
+          list.add(sink);
+        }
+      }
+    }
+  }
+  for (Iterator it=list.iterator(); it.hasNext(); ) {
+    ObjectSink sink=(ObjectSink)it.next();
+    this.otherSinks.remove((ObjectSinkNode)sink);
+  }
+}

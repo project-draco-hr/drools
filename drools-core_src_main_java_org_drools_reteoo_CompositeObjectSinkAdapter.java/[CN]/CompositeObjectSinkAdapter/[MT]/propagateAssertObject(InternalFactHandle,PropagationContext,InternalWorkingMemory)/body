@@ -1,0 +1,20 @@
+{
+  Object object=handle.getObject();
+  if (this.hashedFieldIndexes != null) {
+    for (FieldIndex fieldIndex=(FieldIndex)this.hashedFieldIndexes.getFirst(); fieldIndex != null; fieldIndex=(FieldIndex)fieldIndex.getNext()) {
+      if (fieldIndex.isHashed()) {
+        int index=fieldIndex.getIndex();
+        FieldExtractor extractor=fieldIndex.getFieldExtactor();
+        this.hashKey.setIndex(index);
+        this.hashKey.setValue(extractor.getValue(object));
+        ObjectSink sink=(ObjectSink)this.hashedSinks.get(this.hashKey);
+        if (sink != null) {
+          sink.assertObject(handle,context,workingMemory);
+        }
+      }
+    }
+  }
+  for (ObjectSinkNode sink=this.otherSinks.getFirst(); sink != null; sink=sink.getNextObjectSinkNode()) {
+    sink.assertObject(handle,context,workingMemory);
+  }
+}

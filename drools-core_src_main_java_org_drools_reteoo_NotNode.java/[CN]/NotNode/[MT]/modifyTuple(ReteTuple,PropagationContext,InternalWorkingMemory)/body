@@ -1,0 +1,47 @@
+{
+  final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  memory.remove(workingMemory,leftTuple);
+  memory.add(workingMemory,leftTuple);
+  final Map oldMatches=new HashMap(leftTuple.getTupleMatches());
+  leftTuple.getTupleMatches().clear();
+  final int previous=oldMatches.size();
+  final BetaNodeBinder binder=getJoinNodeBinder();
+  for (final Iterator rightIterator=memory.rightObjectIterator(workingMemory,leftTuple); rightIterator.hasNext(); ) {
+    final ObjectMatches objectMatches=(ObjectMatches)rightIterator.next();
+    final InternalFactHandle handle=objectMatches.getFactHandle();
+    if (binder.isAllowed(handle,leftTuple,workingMemory)) {
+      TupleMatch tupleMatch=(TupleMatch)oldMatches.remove(handle);
+      if (tupleMatch == null) {
+        tupleMatch=objectMatches.add(leftTuple);
+      }
+      leftTuple.addTupleMatch(handle,tupleMatch);
+    }
+ else {
+      final TupleMatch tupleMatch=(TupleMatch)oldMatches.remove(handle);
+      if (tupleMatch != null) {
+        objectMatches.remove(tupleMatch);
+      }
+    }
+  }
+  for (final Iterator oldMatchesIt=oldMatches.values().iterator(); oldMatchesIt.hasNext(); ) {
+    final TupleMatch tupleMatch=(TupleMatch)oldMatchesIt.next();
+    tupleMatch.getObjectMatches().remove(tupleMatch);
+  }
+  if (previous == 0 && leftTuple.matchesSize() == 0) {
+    LinkedList list=leftTuple.getLinkedTuples();
+    for (LinkedListNode node=list.getFirst(); node != null; node=node.getNext()) {
+      ReteTuple tuple=(ReteTuple)((LinkedListObjectWrapper)node).getObject();
+      tuple.modifyTuple(context,workingMemory);
+    }
+  }
+ else   if (previous != 0 && leftTuple.matchesSize() == 0) {
+    this.sink.propagateAssertTuple(leftTuple,context,workingMemory);
+  }
+ else   if (previous == 0 && leftTuple.matchesSize() != 0) {
+    LinkedList list=leftTuple.getLinkedTuples();
+    for (LinkedListNode node=list.getFirst(); node != null; node=node.getNext()) {
+      ReteTuple tuple=(ReteTuple)((LinkedListObjectWrapper)node).getObject();
+      tuple.retractTuple(context,workingMemory);
+    }
+  }
+}
