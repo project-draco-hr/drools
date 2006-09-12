@@ -1,0 +1,42 @@
+{
+  if (this.tupleSource == null) {
+    this.currentOffsetAdjustment=1;
+    final ObjectSource auxObjectSource=attachNode(new ObjectTypeNode(this.id++,this.sinklistFactory.newObjectSinkList(ObjectTypeNode.class),new ClassObjectType(InitialFact.class),this.rete));
+    this.tupleSource=attachNode(new LeftInputAdapterNode(this.id++,auxObjectSource));
+  }
+  final Column sourceColumn=collect.getSourceColumn();
+  final BetaNodeBinder sourceBinder=attachColumn(sourceColumn,parent,true);
+  Column column=collect.getResultColumn();
+  column.adjustOffset(this.currentOffsetAdjustment);
+  final List constraints=column.getConstraints();
+  if (column.getDeclaration() != null) {
+    final Declaration declaration=column.getDeclaration();
+    this.declarations.put(declaration.getIdentifier(),declaration);
+  }
+  final List predicateConstraints=new ArrayList();
+  final List alphaNodeConstraints=new ArrayList();
+  for (final Iterator it=constraints.iterator(); it.hasNext(); ) {
+    final Object object=it.next();
+    if (object instanceof Declaration) {
+      final Declaration declaration=(Declaration)object;
+      this.declarations.put(declaration.getIdentifier(),declaration);
+      continue;
+    }
+    final FieldConstraint fieldConstraint=(FieldConstraint)object;
+    if (fieldConstraint instanceof LiteralConstraint) {
+      alphaNodeConstraints.add(fieldConstraint);
+    }
+ else {
+      checkUnboundDeclarations(fieldConstraint.getRequiredDeclarations());
+      predicateConstraints.add(fieldConstraint);
+    }
+  }
+  BetaNodeBinder resultsBinder=null;
+  if (!predicateConstraints.isEmpty()) {
+    resultsBinder=new BetaNodeBinder((FieldConstraint[])predicateConstraints.toArray(new FieldConstraint[predicateConstraints.size()]));
+  }
+ else {
+    resultsBinder=new BetaNodeBinder();
+  }
+  this.tupleSource=attachNode(new CollectNode(id++,this.tupleSource,this.objectSource,(FieldConstraint[])alphaNodeConstraints.toArray(new FieldConstraint[alphaNodeConstraints.size()]),sourceBinder,resultsBinder,collect));
+}
