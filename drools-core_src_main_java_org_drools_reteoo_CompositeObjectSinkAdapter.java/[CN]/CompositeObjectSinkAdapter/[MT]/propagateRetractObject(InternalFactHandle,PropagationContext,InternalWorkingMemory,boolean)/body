@@ -1,17 +1,15 @@
 {
   if (this.hashedFieldIndexes != null) {
-    if (useHash) {
+    if (useHash && this.hashedSinkMap != null) {
       Object object=handle.getObject();
-      for (FieldIndex fieldIndex=(FieldIndex)this.hashedFieldIndexes.getFirst(); fieldIndex != null; fieldIndex=(FieldIndex)fieldIndex.getNext()) {
-        if (fieldIndex.isHashed()) {
-          int index=fieldIndex.getIndex();
-          FieldExtractor extractor=fieldIndex.getFieldExtactor();
-          this.hashKey.setIndex(index);
-          this.hashKey.setValue(extractor.getValue(object));
-          ObjectSink sink=(ObjectSink)this.hashedSinkMap.get(this.hashKey);
-          if (sink != null) {
-            sink.retractObject(handle,context,workingMemory);
-          }
+      for (FieldIndex fieldIndex=(FieldIndex)this.hashedFieldIndexes.getFirst(); fieldIndex != null && fieldIndex.isHashed(); fieldIndex=(FieldIndex)fieldIndex.getNext()) {
+        int index=fieldIndex.getIndex();
+        FieldExtractor extractor=fieldIndex.getFieldExtactor();
+        this.hashKey.setIndex(index);
+        this.hashKey.setValue(extractor.getValue(object));
+        ObjectSink sink=(ObjectSink)this.hashedSinkMap.get(this.hashKey);
+        if (sink != null) {
+          sink.retractObject(handle,context,workingMemory);
         }
       }
     }
