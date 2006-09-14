@@ -5,7 +5,7 @@
   final Map oldMatches=new HashMap(leftTuple.getTupleMatches());
   leftTuple.getTupleMatches().clear();
   final int previous=oldMatches.size();
-  final BetaNodeBinder binder=getJoinNodeBinder();
+  final BetaNodeConstraints binder=getJoinNodeBinder();
   for (final Iterator rightIterator=memory.rightObjectIterator(workingMemory,leftTuple); rightIterator.hasNext(); ) {
     final ObjectMatches objectMatches=(ObjectMatches)rightIterator.next();
     final InternalFactHandle handle=objectMatches.getFactHandle();
@@ -29,9 +29,8 @@
     tupleMatch.getObjectMatches().remove(tupleMatch);
   }
   if (previous == 0 && leftTuple.matchesSize() == 0) {
-    LinkedList list=leftTuple.getLinkedTuples();
-    for (LinkedListNode node=list.getFirst(); node != null; node=node.getNext()) {
-      ReteTuple tuple=(ReteTuple)((LinkedListObjectWrapper)node).getObject();
+    for (LinkedListNode node=leftTuple.getChildEntries().getFirst(); node != null; node=node.getNext()) {
+      ReteTuple tuple=(ReteTuple)((LinkedListEntry)node).getObject();
       tuple.modifyTuple(context,workingMemory);
     }
   }
@@ -39,9 +38,8 @@
     this.sink.propagateAssertTuple(leftTuple,context,workingMemory);
   }
  else   if (previous == 0 && leftTuple.matchesSize() != 0) {
-    LinkedList list=leftTuple.getLinkedTuples();
-    for (LinkedListNode node=list.getFirst(); node != null; node=node.getNext()) {
-      ReteTuple tuple=(ReteTuple)((LinkedListObjectWrapper)node).getObject();
+    for (LinkedListNode node=leftTuple.getChildEntries().getFirst(); node != null; node=node.getNext()) {
+      ReteTuple tuple=(ReteTuple)((LinkedListEntry)node).getObject();
       tuple.retractTuple(context,workingMemory);
     }
   }

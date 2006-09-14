@@ -3,7 +3,7 @@
   final ObjectMatches objectMatches=memory.remove(workingMemory,handle);
   memory.add(workingMemory,objectMatches);
   TupleMatch tupleMatch=objectMatches.getFirstTupleMatch();
-  final BetaNodeBinder binder=getJoinNodeBinder();
+  final BetaNodeConstraints binder=getJoinNodeBinder();
   for (final Iterator it=memory.leftTupleIterator(workingMemory,handle); it.hasNext(); ) {
     final ReteTuple leftTuple=(ReteTuple)it.next();
     if (tupleMatch != null && tupleMatch.getTuple() == leftTuple) {
@@ -14,9 +14,8 @@
         objectMatches.remove(tupleMatch);
       }
       if (previous == 0 && leftTuple.matchesSize() == 0) {
-        LinkedList list=leftTuple.getLinkedTuples();
-        for (LinkedListNode node=list.getFirst(); node != null; node=node.getNext()) {
-          ReteTuple tuple=(ReteTuple)((LinkedListObjectWrapper)node).getObject();
+        for (LinkedListNode node=leftTuple.getChildEntries().getFirst(); node != null; node=node.getNext()) {
+          ReteTuple tuple=(ReteTuple)((LinkedListEntry)node).getObject();
           tuple.modifyTuple(context,workingMemory);
         }
       }
@@ -24,9 +23,8 @@
         this.sink.propagateAssertTuple(leftTuple,context,workingMemory);
       }
  else       if (previous == 0 && leftTuple.matchesSize() != 0) {
-        LinkedList list=leftTuple.getLinkedTuples();
-        for (LinkedListNode node=list.getFirst(); node != null; node=node.getNext()) {
-          ReteTuple tuple=(ReteTuple)((LinkedListObjectWrapper)node).getObject();
+        for (LinkedListNode node=leftTuple.getChildEntries().getFirst(); node != null; node=node.getNext()) {
+          ReteTuple tuple=(ReteTuple)((LinkedListEntry)node).getObject();
           tuple.retractTuple(context,workingMemory);
         }
       }
@@ -36,9 +34,8 @@
       final int previousSize=leftTuple.matchesSize();
       attemptJoin(leftTuple,handle,objectMatches,binder,workingMemory);
       if (previousSize == 0 && leftTuple.matchesSize() != 0) {
-        LinkedList list=leftTuple.getLinkedTuples();
-        for (LinkedListNode node=list.getFirst(); node != null; node=node.getNext()) {
-          ReteTuple tuple=(ReteTuple)((LinkedListObjectWrapper)node).getObject();
+        for (LinkedListNode node=leftTuple.getChildEntries().getFirst(); node != null; node=node.getNext()) {
+          ReteTuple tuple=(ReteTuple)((LinkedListEntry)node).getObject();
           tuple.retractTuple(context,workingMemory);
         }
       }
