@@ -1,0 +1,98 @@
+{
+  if (paramString.trim().equals("")) {
+    return new Class[0];
+  }
+  String[] params=paramString.split(",");
+  Class[] classes=new Class[params.length];
+  for (int i=0, length=params.length; i < length; i++) {
+    String param=params[i].trim();
+    if (param.charAt(0) == '"' && param.charAt(param.length() - 1) == '"') {
+      classes[i]=String.class;
+    }
+ else     if (Character.getType(param.charAt(0)) == Character.DECIMAL_DIGIT_NUMBER) {
+      char c=param.charAt(param.length() - 1);
+      if (param.indexOf('.') == -1) {
+        if (Character.getType(c) != Character.DECIMAL_DIGIT_NUMBER) {
+switch (c) {
+case 'l':
+case 'L':
+            classes[i]=Long.class;
+          break;
+case 'f':
+case 'F':
+        classes[i]=Float.class;
+      break;
+case 'd':
+case 'D':
+    classes[i]=Double.class;
+  break;
+default :
+throw new IllegalArgumentException("invalid type identifier '" + c + "' used with number ["+ param+ "]");
+}
+}
+ else {
+classes[i]=Integer.class;
+}
+}
+ else {
+if (Character.getType(c) != Character.DECIMAL_DIGIT_NUMBER) {
+switch (c) {
+case 'l':
+case 'L':
+throw new IllegalArgumentException("invalid type identifier '" + c + "' used with number ["+ param+ "]");
+case 'f':
+case 'F':
+classes[i]=Float.class;
+break;
+case 'd':
+case 'D':
+classes[i]=Double.class;
+break;
+default :
+throw new IllegalArgumentException("invalid type identifier '" + c + "' used with number ["+ param+ "]");
+}
+}
+ else {
+classes[i]=Float.class;
+}
+}
+}
+ else if (param.startsWith("new")) {
+int start=3;
+int wordLength=param.length();
+for (int j=start; j < wordLength; j++) {
+if (param.charAt(j) != ' ') {
+break;
+}
+start++;
+}
+int end=start;
+for (int j=start; j <= wordLength; j++) {
+char c=param.charAt(j);
+if (c == ' ' || c == '(') {
+break;
+}
+end++;
+}
+char[] word=new char[end - start];
+int k=0;
+for (int j=start; j < end; j++) {
+word[k++]=param.charAt(j);
+}
+Class clazz=null;
+try {
+clazz=this.typeResolver.resolveType(new String(word));
+}
+ catch (Exception e) {
+throw new IllegalArgumentException("Unable to resovle type [" + new String(word) + "]");
+}
+classes[i]=clazz;
+}
+ else {
+if (variables != null) {
+classes[i]=variables.getType(param);
+}
+}
+}
+return classes;
+}

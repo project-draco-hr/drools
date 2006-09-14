@@ -1,0 +1,51 @@
+{
+  if (raw == null) {
+    return null;
+  }
+  final StringBuffer buf=new StringBuffer();
+  int lastIndex=0, startIndex=0;
+  final Matcher matcher=pattern.matcher(raw);
+  while (matcher.find(startIndex)) {
+    final int endIndex=findEndParenthesis(raw,matcher);
+    if (endIndex < 0) {
+      startIndex=matcher.start(3);
+      continue;
+    }
+ else {
+      startIndex=endIndex;
+    }
+    String params=matcher.group(3).trim();
+    if (endIndex > matcher.end()) {
+      params+=raw.substring(matcher.end() - 1,endIndex - 1);
+    }
+    params=fix(params,pattern,variables);
+    String function=null;
+    final String pre=matcher.group(1);
+    if (matcher.group(1) != null) {
+      final String trimmedPre=pre.trim();
+      if (trimmedPre.endsWith(".") || trimmedPre.endsWith("new")) {
+        function=raw.substring(matcher.start(2),matcher.start(3) - 1);
+      }
+    }
+    if (function == null) {
+      function=matcher.group(2).trim();
+      if (function == null || function.length() == 0 || FunctionFixer.KEYWORDS.contains(function)) {
+        function=raw.substring(matcher.start(2),matcher.start(3) - 1);
+      }
+ else {
+        if (this.pkg.getFunctions().contains(function)) {
+          function=ucFirst(function) + "." + function;
+        }
+ else {
+          function=resolver.resolveFunction(function,params,variables) + "." + function;
+        }
+      }
+    }
+    final String target=function + "(" + params+ ")";
+    buf.append(raw.substring(lastIndex,matcher.start(2)));
+    buf.append(target);
+    lastIndex=endIndex;
+  }
+  buf.append(raw.substring(lastIndex));
+  return buf.toString();
+}

@@ -28,8 +28,63 @@
     }
     valueHandler=new ListValue(handlers);
   }
- else {
-    valueHandler=new LiteralValue((String)descr.getValue(),Object.class);
+ else   if (descr.getType() == ArgumentValueDescr.BOOLEAN) {
+    valueHandler=new LiteralValue(new Boolean((String)descr.getValue()));
   }
-  return valueHandler;
+ else   if (descr.getType() == ArgumentValueDescr.INTEGRAL) {
+    String text=(String)descr.getValue();
+    char c=text.charAt(text.length() - 1);
+    if (Character.getType(c) != Character.DECIMAL_DIGIT_NUMBER) {
+switch (c) {
+case 'l':
+case 'L':
+        valueHandler=new LiteralValue(new Long((String)descr.getValue()));
+      break;
+case 'f':
+case 'F':
+    valueHandler=new LiteralValue(new Float((String)descr.getValue()));
+  break;
+case 'd':
+case 'D':
+valueHandler=new LiteralValue(new Double((String)descr.getValue()));
+break;
+default :
+throw new IllegalArgumentException("invalid type identifier '" + c + "' used with number ["+ text+ "]");
+}
+}
+ else {
+valueHandler=new LiteralValue(new Integer((String)descr.getValue()));
+}
+}
+ else if (descr.getType() == ArgumentValueDescr.DECIMAL) {
+String text=(String)descr.getValue();
+char c=text.charAt(text.length() - 1);
+if (Character.getType(c) != Character.DECIMAL_DIGIT_NUMBER) {
+switch (c) {
+case 'l':
+case 'L':
+throw new IllegalArgumentException("invalid type identifier '" + c + "' used with number ["+ text+ "]");
+case 'f':
+case 'F':
+valueHandler=new LiteralValue(new Float((String)descr.getValue()));
+break;
+case 'd':
+case 'D':
+valueHandler=new LiteralValue(new Double((String)descr.getValue()));
+break;
+default :
+throw new IllegalArgumentException("invalid type identifier '" + c + "' used with number ["+ text+ "]");
+}
+}
+ else {
+valueHandler=new LiteralValue(new Float((String)descr.getValue()));
+}
+}
+ else if (descr.getType() == ArgumentValueDescr.STRING) {
+valueHandler=new LiteralValue((String)descr.getValue());
+}
+ else {
+throw new IllegalArgumentException("Unable to determine type for argument [" + descr.getType() + "]");
+}
+return valueHandler;
 }
