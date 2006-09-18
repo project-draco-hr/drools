@@ -2,11 +2,16 @@
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
   memory.remove(workingMemory,leftTuple);
   final Map matches=leftTuple.getTupleMatches();
-  if (!matches.isEmpty()) {
+  if (matches.isEmpty()) {
+    assertTuple(leftTuple,context,workingMemory);
+  }
+ else {
     for (final Iterator it=matches.values().iterator(); it.hasNext(); ) {
       final TupleMatch tupleMatch=(TupleMatch)it.next();
-      propagateRetractTuple(tupleMatch,context,workingMemory);
+      tupleMatch.getTuple().retractChildEntries(context,workingMemory);
       workingMemory.getFactHandleFactory().destroyFactHandle(tupleMatch.getObjectMatches().getFactHandle());
     }
+    leftTuple.clearTupleMatches();
+    assertTuple(leftTuple,context,workingMemory);
   }
 }
