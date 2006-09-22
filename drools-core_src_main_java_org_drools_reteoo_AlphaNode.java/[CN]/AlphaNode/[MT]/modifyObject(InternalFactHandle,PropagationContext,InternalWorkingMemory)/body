@@ -1,7 +1,11 @@
 {
-  final FactHashSet memory=(FactHashSet)workingMemory.getNodeMemory(this);
+  boolean propagate=true;
   if (this.constraint.isAllowed(handle.getObject(),null,workingMemory)) {
-    if (memory.add(handle,true)) {
+    if (hasMemory()) {
+      final FactHashSet memory=(FactHashSet)workingMemory.getNodeMemory(this);
+      propagate=memory.add(handle,true);
+    }
+    if (propagate) {
       this.sink.propagateAssertObject(handle,context,workingMemory);
     }
  else {
@@ -9,7 +13,11 @@
     }
   }
  else {
-    if (memory.remove(handle)) {
+    if (hasMemory) {
+      final FactHashSet memory=(FactHashSet)workingMemory.getNodeMemory(this);
+      propagate=memory.remove(handle);
+    }
+    if (propagate) {
       this.sink.propagateRetractObject(handle,context,workingMemory,false);
     }
   }
