@@ -1,9 +1,13 @@
 {
   this.attachingNewNode=true;
-  final Set memory=(Set)workingMemory.getNodeMemory(this);
-  for (final Iterator it=memory.iterator(); it.hasNext(); ) {
-    final InternalFactHandle handle=(InternalFactHandle)it.next();
-    this.sink.propagateNewObjectSink(handle,context,workingMemory);
+  final FactHashSet memory=(FactHashSet)workingMemory.getNodeMemory(this);
+  FactEntry[] entries=memory.getTable();
+  for (int i=0, length=entries.length; i < length; i++) {
+    FactEntry current=entries[i];
+    while (current != null) {
+      this.sink.propagateNewObjectSink(current.getFactHandle(),context,workingMemory);
+      current=(FactEntry)current.getNext();
+    }
   }
   this.attachingNewNode=false;
 }
