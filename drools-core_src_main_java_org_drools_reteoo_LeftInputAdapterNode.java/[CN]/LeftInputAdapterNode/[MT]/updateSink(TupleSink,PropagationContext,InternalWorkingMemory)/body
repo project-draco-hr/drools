@@ -1,21 +1,21 @@
 {
-  List tupeList=new ArrayList();
   if (this.hasMemory) {
     ObjectHashMap map=(ObjectHashMap)workingMemory.getNodeMemory(this);
     ObjectEntry[] entries=(ObjectEntry[])map.getTable();
     for (int i=0, length=entries.length; i < length; i++) {
       ObjectEntry current=entries[i];
       while (current != null) {
+        InternalFactHandle handle=(InternalFactHandle)current.getKey();
         LinkedList list=(LinkedList)current.getValue();
-        for (LinkedListEntry entry=(LinkedListEntry)list.getFirst(); entry != null; entry=(LinkedListEntry)entry.getNext()) {
-          tupeList.add(entry.getObject());
-        }
+        ReteTuple tuple=new ReteTuple(handle);
+        list.add(new LinkedListEntry(tuple));
+        sink.assertTuple(tuple,context,workingMemory);
         current=(ObjectEntry)current.getNext();
       }
     }
   }
  else {
-    ObjectSinkAdapter adapter=new ObjectSinkAdapter(tupeList);
+    ObjectSinkAdapter adapter=new ObjectSinkAdapter(sink);
+    this.objectSource.updateSink(adapter,context,workingMemory);
   }
-  return tupeList;
 }

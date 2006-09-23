@@ -1,0 +1,23 @@
+{
+  FactHashSet memory=null;
+  if (!hasMemory()) {
+    setHasMemory(true);
+    memory=(FactHashSet)workingMemory.getNodeMemory(this);
+    for (Iterator it=this.objectSource.getPropagatedFacts(workingMemory).iterator(); it.hasNext(); ) {
+      InternalFactHandle handle=(InternalFactHandle)it.next();
+      memory.add(handle,false);
+      sink.assertObject(handle,context,workingMemory);
+    }
+  }
+ else {
+    memory=(FactHashSet)workingMemory.getNodeMemory(this);
+    AbstractHashTable.FactEntry[] entries=(AbstractHashTable.FactEntry[])memory.getTable();
+    for (int i=0, length=entries.length; i < length; i++) {
+      AbstractHashTable.FactEntry current=entries[i];
+      while (current != null) {
+        sink.assertObject(current.getFactHandle(),context,workingMemory);
+        current=(AbstractHashTable.FactEntry)current.getNext();
+      }
+    }
+  }
+}

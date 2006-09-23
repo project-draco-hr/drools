@@ -1,6 +1,12 @@
 {
-  final Map memory=(Map)workingMemory.getNodeMemory(this);
   if ((this.binder == null) || (this.binder.isAllowed(handle,null,workingMemory))) {
-    memory.put(handle,this.sink.createAndAssertTuple(handle,context,workingMemory));
+    if (this.hasMemory) {
+      LinkedList list=this.sink.createAndPropagateAssertTupleWithMemory(handle,context,workingMemory);
+      ObjectHashMap map=(ObjectHashMap)workingMemory.getNodeMemory(this);
+      map.put(handle,list,false);
+    }
+ else {
+      this.sink.createAndPropagateAssertTuple(handle,context,workingMemory);
+    }
   }
 }
