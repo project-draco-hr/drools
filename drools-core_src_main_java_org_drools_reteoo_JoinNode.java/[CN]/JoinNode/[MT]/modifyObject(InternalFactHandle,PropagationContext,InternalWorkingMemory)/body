@@ -1,28 +1,15 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  final ObjectMatches objectMatches=memory.remove(workingMemory,handle);
-  memory.add(workingMemory,objectMatches);
-  TupleMatch tupleMatch=objectMatches.getFirstTupleMatch();
-  final BetaNodeConstraints binder=getJoinNodeBinder();
-  for (final Iterator it=memory.leftTupleIterator(workingMemory,handle); it.hasNext(); ) {
-    final ReteTuple leftTuple=(ReteTuple)it.next();
-    if (tupleMatch != null && tupleMatch.getTuple() == leftTuple) {
-      TupleMatch nextTupleMatch=(TupleMatch)tupleMatch.getNext();
-      if (binder.isAllowed(handle,leftTuple,workingMemory)) {
-        tupleMatch.propagateModifyTuple(context,workingMemory);
-      }
- else {
-        leftTuple.removeMatch(handle);
-        objectMatches.remove(tupleMatch);
-        tupleMatch.propagateRetractTuple(context,workingMemory);
-      }
-      tupleMatch=nextTupleMatch;
+  if (!memory.getObjectMemory().contains(handle)) {
+    assertObject(handle,context,workingMemory);
+  }
+  Iterator it=memory.getTupleMemory().iterator();
+  for (ReteTuple tuple=(ReteTuple)it.next(); tuple != null; tuple=(ReteTuple)it.next()) {
+    if (this.constraints.isAllowed(handle,tuple,workingMemory)) {
+      this.sink.propagateModifyTuple(tuple,handle,context,workingMemory);
     }
  else {
-      final TupleMatch newTupleMatch=attemptJoin(leftTuple,handle,objectMatches,binder,workingMemory);
-      if (newTupleMatch != null) {
-        this.sink.propagateAssertTuple(leftTuple,handle,newTupleMatch,context,workingMemory);
-      }
+      this.sink.propagateRetractTuple(tuple,handle,context,workingMemory);
     }
   }
 }

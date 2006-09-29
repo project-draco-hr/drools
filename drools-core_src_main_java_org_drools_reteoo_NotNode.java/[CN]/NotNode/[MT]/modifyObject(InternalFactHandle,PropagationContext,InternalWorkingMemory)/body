@@ -1,43 +1,15 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  final ObjectMatches objectMatches=memory.remove(workingMemory,handle);
-  memory.add(workingMemory,objectMatches);
-  TupleMatch tupleMatch=objectMatches.getFirstTupleMatch();
-  final BetaNodeConstraints binder=getJoinNodeBinder();
-  for (final Iterator it=memory.leftTupleIterator(workingMemory,handle); it.hasNext(); ) {
-    final ReteTuple leftTuple=(ReteTuple)it.next();
-    if (tupleMatch != null && tupleMatch.getTuple() == leftTuple) {
-      final int previous=leftTuple.getTupleMatches().size();
-      TupleMatch nextTupleMatch=(TupleMatch)tupleMatch.getNext();
-      if (!binder.isAllowed(handle,leftTuple,workingMemory)) {
-        leftTuple.removeMatch(handle);
-        objectMatches.remove(tupleMatch);
-      }
-      if (previous == 0 && leftTuple.matchesSize() == 0) {
-        for (LinkedListNode node=leftTuple.getChildEntries().getFirst(); node != null; node=node.getNext()) {
-          ReteTuple tuple=(ReteTuple)((LinkedListEntry)node).getObject();
-          tuple.modifyTuple(context,workingMemory);
-        }
-      }
- else       if (previous != 0 && leftTuple.matchesSize() == 0) {
-        this.sink.propagateAssertTuple(leftTuple,context,workingMemory);
-      }
- else       if (previous == 0 && leftTuple.matchesSize() != 0) {
-        for (LinkedListNode node=leftTuple.getChildEntries().getFirst(); node != null; node=node.getNext()) {
-          ReteTuple tuple=(ReteTuple)((LinkedListEntry)node).getObject();
-          tuple.retractTuple(context,workingMemory);
-        }
-      }
-      tupleMatch=(TupleMatch)nextTupleMatch;
-    }
- else {
-      final int previousSize=leftTuple.matchesSize();
-      attemptJoin(leftTuple,handle,objectMatches,binder,workingMemory);
-      if (previousSize == 0 && leftTuple.matchesSize() != 0) {
-        for (LinkedListNode node=leftTuple.getChildEntries().getFirst(); node != null; node=node.getNext()) {
-          ReteTuple tuple=(ReteTuple)((LinkedListEntry)node).getObject();
-          tuple.retractTuple(context,workingMemory);
-        }
+  if (!memory.getObjectMemory().contains(handle)) {
+    assertObject(handle,context,workingMemory);
+  }
+  Iterator it=memory.getTupleMemory().iterator();
+  for (ReteTuple tuple=(ReteTuple)it.next(); tuple != null; tuple=(ReteTuple)it.next()) {
+    if (this.constraints.isAllowed(handle,tuple,workingMemory)) {
+      int matches=tuple.getMatches();
+      tuple.setMatches(matches + 1);
+      if (matches == 0) {
+        this.sink.propagateRetractTuple(tuple,context,workingMemory);
       }
     }
   }

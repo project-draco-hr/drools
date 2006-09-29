@@ -1,13 +1,11 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  memory.add(workingMemory,leftTuple);
-  final BetaNodeConstraints binder=getJoinNodeBinder();
-  for (final Iterator it=memory.rightObjectIterator(workingMemory,leftTuple); it.hasNext(); ) {
-    final ObjectMatches objectMatches=(ObjectMatches)it.next();
-    final InternalFactHandle handle=objectMatches.getFactHandle();
-    final TupleMatch tupleMatch=attemptJoin(leftTuple,handle,objectMatches,binder,workingMemory);
-    if (tupleMatch != null) {
-      sink.propagateAssertTuple(leftTuple,handle,tupleMatch,context,workingMemory);
+  memory.getTupleMemory().add(leftTuple);
+  Iterator it=memory.getObjectMemory().iterator(leftTuple);
+  for (FactEntry entry=(FactEntry)it.next(); entry != null; entry=(FactEntry)it.next()) {
+    InternalFactHandle handle=entry.getFactHandle();
+    if (this.constraints.isAllowed(handle,leftTuple,workingMemory)) {
+      sink.propagateAssertTuple(leftTuple,handle,context,workingMemory);
     }
   }
 }

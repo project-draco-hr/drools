@@ -1,48 +1,22 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  memory.remove(workingMemory,leftTuple);
-  final Map matches=leftTuple.getTupleMatches();
-  if (matches.isEmpty()) {
+  if (!memory.getTupleMemory().contains(leftTuple)) {
     assertTuple(leftTuple,context,workingMemory);
   }
+  Iterator iterator;
+  if (leftTuple.isFieldIndexed()) {
+    iterator=memory.getObjectMemory().iterator(leftTuple.getFieldIndexHashCode());
+  }
  else {
-    final Map oldMatches=new HashMap(matches);
-    leftTuple.getTupleMatches().clear();
-    memory.add(workingMemory,leftTuple);
-    final BetaNodeConstraints binder=getJoinNodeBinder();
-    for (final Iterator rightIterator=memory.rightObjectIterator(workingMemory,leftTuple); rightIterator.hasNext(); ) {
-      final ObjectMatches objectMatches=(ObjectMatches)rightIterator.next();
-      final InternalFactHandle handle=objectMatches.getFactHandle();
-      if (binder.isAllowed(handle,leftTuple,workingMemory)) {
-        TupleMatch tupleMatch=(TupleMatch)oldMatches.remove(handle);
-        if (tupleMatch != null) {
-          objectMatches.remove(tupleMatch);
-          objectMatches.add(tupleMatch);
-          leftTuple.addTupleMatch(handle,tupleMatch);
-          tupleMatch.propagateModifyTuple(context,workingMemory);
-        }
- else {
-          tupleMatch=this.tupleMatchFactory.newTupleMatch(leftTuple,objectMatches);
-          objectMatches.add(tupleMatch);
-          leftTuple.addTupleMatch(handle,tupleMatch);
-          this.sink.propagateAssertTuple(leftTuple,handle,tupleMatch,context,workingMemory);
-        }
-      }
- else {
-        final TupleMatch tupleMatch=leftTuple.removeMatch(handle);
-        if (tupleMatch != null) {
-          oldMatches.remove(handle);
-          objectMatches.remove(tupleMatch);
-          tupleMatch.propagateRetractTuple(context,workingMemory);
-        }
-      }
+    iterator=memory.getObjectMemory().iterator();
+  }
+  for (FactEntry entry=(FactEntry)iterator.next(); entry != null; entry=(FactEntry)entry.getNext()) {
+    InternalFactHandle handle=entry.getFactHandle();
+    if (this.constraints.isAllowed(handle,leftTuple,workingMemory)) {
+      this.sink.propagateModifyTuple(leftTuple,handle,context,workingMemory);
     }
-    if (!oldMatches.isEmpty()) {
-      for (Iterator it=oldMatches.values().iterator(); it.hasNext(); ) {
-        final TupleMatch tupleMatch=(TupleMatch)it.next();
-        tupleMatch.getObjectMatches().remove(tupleMatch);
-        tupleMatch.propagateRetractTuple(context,workingMemory);
-      }
+ else {
+      this.sink.propagateRetractTuple(leftTuple,handle,context,workingMemory);
     }
   }
 }

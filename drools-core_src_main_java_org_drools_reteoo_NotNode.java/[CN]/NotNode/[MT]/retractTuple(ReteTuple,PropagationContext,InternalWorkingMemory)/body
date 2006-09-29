@@ -1,17 +1,20 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  memory.remove(workingMemory,leftTuple);
-  final Map matches=leftTuple.getTupleMatches();
-  if (!matches.isEmpty()) {
-    for (final Iterator it=matches.values().iterator(); it.hasNext(); ) {
-      final TupleMatch tupleMatch=(TupleMatch)it.next();
-      tupleMatch.getObjectMatches().remove(tupleMatch);
+  ReteTuple tuple=(ReteTuple)memory.getTupleMemory().remove(leftTuple);
+  if (tuple == null) {
+    return;
+  }
+  int matches=tuple.getMatches();
+  int previousMatches=matches;
+  Iterator it=memory.getObjectMemory().iterator(tuple);
+  for (FactEntry entry=(FactEntry)it.next(); entry != null; entry=(FactEntry)it.next()) {
+    InternalFactHandle handle=entry.getFactHandle();
+    if (this.constraints.isAllowed(handle,tuple,workingMemory)) {
+      matches--;
     }
   }
- else {
-    for (LinkedListNode node=leftTuple.getChildEntries().getFirst(); node != null; node=node.getNext()) {
-      ReteTuple tuple=(ReteTuple)((LinkedListEntry)node).getObject();
-      tuple.retractTuple(context,workingMemory);
-    }
+  tuple.setMatches(matches);
+  if (previousMatches != 0 && matches == 0) {
+    this.sink.propagateRetractTuple(tuple,context,workingMemory);
   }
 }

@@ -1,23 +1,24 @@
 {
-  boolean propagate=true;
   if (this.constraint.isAllowed(handle.getObject(),null,workingMemory)) {
+    boolean exists=false;
     if (hasMemory()) {
-      final FactHashSet memory=(FactHashSet)workingMemory.getNodeMemory(this);
-      propagate=memory.add(handle,true);
+      final ObjectHashTable memory=(ObjectHashTable)workingMemory.getNodeMemory(this);
+      exists=!memory.add(handle,true);
     }
-    if (propagate) {
-      this.sink.propagateAssertObject(handle,context,workingMemory);
+    if (exists) {
+      this.sink.propagateModifyObject(handle,context,workingMemory);
     }
  else {
-      this.sink.propagateModifyObject(handle,context,workingMemory);
+      this.sink.propagateAssertObject(handle,context,workingMemory);
     }
   }
  else {
+    boolean exists=true;
     if (hasMemory) {
-      final FactHashSet memory=(FactHashSet)workingMemory.getNodeMemory(this);
-      propagate=memory.remove(handle);
+      final ObjectHashTable memory=(ObjectHashTable)workingMemory.getNodeMemory(this);
+      exists=memory.remove(handle);
     }
-    if (propagate) {
+    if (exists) {
       this.sink.propagateRetractObject(handle,context,workingMemory,false);
     }
   }

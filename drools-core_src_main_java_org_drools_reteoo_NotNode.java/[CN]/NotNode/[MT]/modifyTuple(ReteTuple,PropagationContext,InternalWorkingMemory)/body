@@ -1,46 +1,27 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  memory.remove(workingMemory,leftTuple);
-  memory.add(workingMemory,leftTuple);
-  final Map oldMatches=new HashMap(leftTuple.getTupleMatches());
-  leftTuple.getTupleMatches().clear();
-  final int previous=oldMatches.size();
-  final BetaNodeConstraints binder=getJoinNodeBinder();
-  for (final Iterator rightIterator=memory.rightObjectIterator(workingMemory,leftTuple); rightIterator.hasNext(); ) {
-    final ObjectMatches objectMatches=(ObjectMatches)rightIterator.next();
-    final InternalFactHandle handle=objectMatches.getFactHandle();
-    if (binder.isAllowed(handle,leftTuple,workingMemory)) {
-      TupleMatch tupleMatch=(TupleMatch)oldMatches.remove(handle);
-      if (tupleMatch == null) {
-        tupleMatch=this.tupleMatchFactory.newTupleMatch(leftTuple,objectMatches);
-        objectMatches.add(tupleMatch);
-      }
-      leftTuple.addTupleMatch(handle,tupleMatch);
-    }
+  ReteTuple tuple=(ReteTuple)memory.getTupleMemory().remove(leftTuple);
+  if (tuple == null) {
+    assertTuple(leftTuple,context,workingMemory);
+  }
+  Iterator iterator;
+  if (leftTuple.isFieldIndexed()) {
+    iterator=memory.getObjectMemory().iterator(leftTuple.getFieldIndexHashCode());
+  }
  else {
-      final TupleMatch tupleMatch=(TupleMatch)oldMatches.remove(handle);
-      if (tupleMatch != null) {
-        objectMatches.remove(tupleMatch);
-      }
+    iterator=memory.getObjectMemory().iterator();
+  }
+  int matches=tuple.getMatches();
+  for (FactEntry entry=(FactEntry)iterator.next(); entry != null; entry=(FactEntry)entry.getNext()) {
+    InternalFactHandle handle=entry.getFactHandle();
+    if (!this.constraints.isAllowed(handle,leftTuple,workingMemory)) {
+      matches--;
     }
   }
-  for (final Iterator oldMatchesIt=oldMatches.values().iterator(); oldMatchesIt.hasNext(); ) {
-    final TupleMatch tupleMatch=(TupleMatch)oldMatchesIt.next();
-    tupleMatch.getObjectMatches().remove(tupleMatch);
-  }
-  if (previous == 0 && leftTuple.matchesSize() == 0) {
-    for (LinkedListNode node=leftTuple.getChildEntries().getFirst(); node != null; node=node.getNext()) {
-      ReteTuple tuple=(ReteTuple)((LinkedListEntry)node).getObject();
-      tuple.modifyTuple(context,workingMemory);
-    }
-  }
- else   if (previous != 0 && leftTuple.matchesSize() == 0) {
+  if (tuple.getMatches() != 0 && matches == 0) {
     this.sink.propagateAssertTuple(leftTuple,context,workingMemory);
   }
- else   if (previous == 0 && leftTuple.matchesSize() != 0) {
-    for (LinkedListNode node=leftTuple.getChildEntries().getFirst(); node != null; node=node.getNext()) {
-      ReteTuple tuple=(ReteTuple)((LinkedListEntry)node).getObject();
-      tuple.retractTuple(context,workingMemory);
-    }
+ else   if (tuple.getMatches() == 0 && matches != 0) {
+    this.sink.propagateRetractTuple(leftTuple,context,workingMemory);
   }
 }

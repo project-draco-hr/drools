@@ -1,3 +1,18 @@
 {
-  return new BetaMemory(config,this.getJoinNodeBinder());
+  LinkedList constraints=this.constraints.getConstraints();
+  for (LinkedListEntry entry=(LinkedListEntry)constraints.getFirst(); entry != null; entry=(LinkedListEntry)entry.getNext()) {
+    FieldConstraint constraint=(FieldConstraint)entry.getObject();
+    if (constraint.getClass() == VariableConstraint.class) {
+      VariableConstraint variableConstraint=(VariableConstraint)constraint;
+      FieldExtractor extractor=variableConstraint.getFieldExtractor();
+      Evaluator evaluator=variableConstraint.getEvaluator();
+      if (evaluator.getOperator() == Operator.EQUAL) {
+        constraints.remove(entry);
+        BetaMemory memory=new BetaMemory(new TupleHashTable(),new FieldIndexHashTable(extractor,variableConstraint.getRequiredDeclarations()[0]));
+        return memory;
+      }
+    }
+  }
+  BetaMemory memory=new BetaMemory(new TupleHashTable(),new FactHashTable());
+  return memory;
 }
