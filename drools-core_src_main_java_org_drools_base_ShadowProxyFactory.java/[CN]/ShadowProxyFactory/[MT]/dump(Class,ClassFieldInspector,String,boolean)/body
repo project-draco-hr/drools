@@ -1,0 +1,20 @@
+{
+  final ClassWriter cw=new ClassWriter(true);
+  buildClassHeader(clazz,className,cw);
+  buildField(DELEGATE_FIELD_NAME,Type.getDescriptor(clazz),cw);
+  Map fieldNames=inspector.getFieldNames();
+  Map fieldTypes=inspector.getFieldTypes();
+  Map fieldGetters=inspector.getGetterMethods();
+  fieldNames.remove("class");
+  fieldTypes.remove("class");
+  fieldGetters.remove("class");
+  for (Iterator it=fieldNames.keySet().iterator(); it.hasNext(); ) {
+    String fieldName=(String)it.next();
+    buildField(FIELD_NAME_PREFIX + fieldName,Type.getDescriptor((Class)fieldTypes.get(fieldName)),cw);
+    buildField(FIELD_NAME_PREFIX + fieldName + FIELD_SET_FLAG,Type.BOOLEAN_TYPE.getDescriptor(),cw);
+    buildGetMethod(FIELD_NAME_PREFIX + fieldName,(Class)fieldTypes.get(fieldName),FIELD_NAME_PREFIX + fieldName + FIELD_SET_FLAG,(Method)fieldGetters.get(fieldName),className,clazz,cw);
+  }
+  buildConstructor(clazz,className,cw);
+  buildResetProxyMethod(fieldTypes,className,cw);
+  return cw.toByteArray();
+}
