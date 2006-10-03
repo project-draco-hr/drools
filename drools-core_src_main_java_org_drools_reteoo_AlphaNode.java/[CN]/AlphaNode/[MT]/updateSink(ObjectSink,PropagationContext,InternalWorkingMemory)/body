@@ -1,23 +1,14 @@
 {
   FactHashTable memory=null;
   if (!hasMemory()) {
-    setHasMemory(true);
-    memory=(FactHashTable)workingMemory.getNodeMemory(this);
-    for (Iterator it=this.objectSource.getPropagatedFacts(workingMemory).iterator(); it.hasNext(); ) {
-      InternalFactHandle handle=(InternalFactHandle)it.next();
-      memory.add(handle,false);
-      sink.assertObject(handle,context,workingMemory);
-    }
+    ObjectSinkAdapter adapter=new ObjectSinkAdapter(sink);
+    this.objectSource.updateSink(adapter,context,workingMemory);
   }
  else {
     memory=(FactHashTable)workingMemory.getNodeMemory(this);
-    AbstractHashTable.FactEntry[] entries=(AbstractHashTable.FactEntry[])memory.getTable();
-    for (int i=0, length=entries.length; i < length; i++) {
-      AbstractHashTable.FactEntry current=entries[i];
-      while (current != null) {
-        sink.assertObject(current.getFactHandle(),context,workingMemory);
-        current=(AbstractHashTable.FactEntry)current.getNext();
-      }
+    Iterator it=memory.iterator();
+    for (FactEntry entry=(FactEntry)it.next(); entry != null; entry=(FactEntry)it.next()) {
+      sink.assertObject(entry.getFactHandle(),context,workingMemory);
     }
   }
 }

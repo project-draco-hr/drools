@@ -1,17 +1,13 @@
 {
   if (this.hasMemory) {
     ObjectHashMap map=(ObjectHashMap)workingMemory.getNodeMemory(this);
-    ObjectEntry[] entries=(ObjectEntry[])map.getTable();
-    for (int i=0, length=entries.length; i < length; i++) {
-      ObjectEntry current=entries[i];
-      while (current != null) {
-        InternalFactHandle handle=(InternalFactHandle)current.getKey();
-        LinkedList list=(LinkedList)current.getValue();
-        ReteTuple tuple=new ReteTuple(handle);
-        list.add(new LinkedListEntry(tuple));
-        sink.assertTuple(tuple,context,workingMemory);
-        current=(ObjectEntry)current.getNext();
-      }
+    Iterator it=map.iterator();
+    for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; it.next()) {
+      InternalFactHandle handle=(InternalFactHandle)entry.getKey();
+      LinkedList list=(LinkedList)entry.getValue();
+      ReteTuple tuple=new ReteTuple(handle);
+      list.add(new LinkedListEntry(tuple));
+      sink.assertTuple(tuple,context,workingMemory);
     }
   }
  else {
