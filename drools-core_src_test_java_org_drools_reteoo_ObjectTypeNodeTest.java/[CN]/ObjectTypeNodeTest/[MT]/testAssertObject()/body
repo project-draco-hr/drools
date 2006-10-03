@@ -1,17 +1,18 @@
 {
   final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
-  final ReteooWorkingMemory workingMemory=new ReteooWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase());
-  final Rete source=new Rete();
+  ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
+  final ReteooWorkingMemory workingMemory=new ReteooWorkingMemory(1,ruleBase);
+  final Rete source=ruleBase.getRete();
   final ObjectTypeNode objectTypeNode=new ObjectTypeNode(1,new ClassObjectType(String.class),source);
   final MockObjectSink sink=new MockObjectSink();
   objectTypeNode.addObjectSink(sink);
   final Object string1="cheese";
-  final DefaultFactHandle handle1=(DefaultFactHandle)workingMemory.assertObject(string1);
+  final InternalFactHandle handle1=(InternalFactHandle)workingMemory.assertObject(string1);
   objectTypeNode.assertObject(handle1,context,workingMemory);
   final List asserted=sink.getAsserted();
   assertLength(1,asserted);
   assertSame(string1,workingMemory.getObject((DefaultFactHandle)((Object[])asserted.get(0))[0]));
-  final PrimitiveLongMap memory=(PrimitiveLongMap)workingMemory.getNodeMemory(objectTypeNode);
+  final FactHashTable memory=(FactHashTable)workingMemory.getNodeMemory(objectTypeNode);
   assertEquals(1,memory.size());
-  assertSame(handle1,memory.get(handle1.getId()));
+  assertTrue(memory.contains(handle1));
 }
