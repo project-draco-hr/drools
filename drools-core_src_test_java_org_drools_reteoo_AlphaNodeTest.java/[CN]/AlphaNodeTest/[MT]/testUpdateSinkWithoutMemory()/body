@@ -1,0 +1,24 @@
+{
+  final ReteooWorkingMemory workingMemory=new ReteooWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase());
+  final Rule rule=new Rule("test-rule");
+  final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
+  final MockObjectSource source=new MockObjectSource(1);
+  final FieldExtractor extractor=new ClassFieldExtractor(Cheese.class,"type");
+  final FieldValue field=new MockField("cheddar");
+  final Evaluator evaluator=ValueType.OBJECT_TYPE.getEvaluator(Operator.EQUAL);
+  final LiteralConstraint constraint=new LiteralConstraint(extractor,evaluator,field);
+  final AlphaNode alphaNode=new AlphaNode(2,constraint,source,false);
+  alphaNode.attach();
+  final MockObjectSink sink1=new MockObjectSink();
+  alphaNode.addObjectSink(sink1);
+  final Cheese cheese=new Cheese("cheddar",0);
+  final DefaultFactHandle handle1=new DefaultFactHandle(1,cheese);
+  source.addFact(handle1);
+  alphaNode.assertObject(handle1,context,workingMemory);
+  assertLength(1,sink1.getAsserted());
+  final MockObjectSink sink2=new MockObjectSink();
+  alphaNode.updateSink(sink2,context,workingMemory);
+  assertLength(1,sink1.getAsserted());
+  assertLength(1,sink2.getAsserted());
+  assertEquals(1,source.getUdated());
+}

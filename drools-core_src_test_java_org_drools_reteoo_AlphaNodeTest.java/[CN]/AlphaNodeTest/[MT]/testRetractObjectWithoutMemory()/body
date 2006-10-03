@@ -1,0 +1,29 @@
+{
+  final ReteooWorkingMemory workingMemory=new ReteooWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase());
+  final Rule rule=new Rule("test-rule");
+  final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
+  final MockObjectSource source=new MockObjectSource(15);
+  final FieldExtractor extractor=new ClassFieldExtractor(Cheese.class,"type");
+  final FieldValue field=new MockField("cheddar");
+  final Evaluator evaluator=ValueType.OBJECT_TYPE.getEvaluator(Operator.EQUAL);
+  final LiteralConstraint constraint=new LiteralConstraint(extractor,evaluator,field);
+  final AlphaNode alphaNode=new AlphaNode(2,constraint,source,false);
+  final MockObjectSink sink=new MockObjectSink();
+  alphaNode.addObjectSink(sink);
+  final Cheese cheddar=new Cheese("cheddar",5);
+  final DefaultFactHandle f0=new DefaultFactHandle(0,cheddar);
+  final FactHashTable memory=(FactHashTable)workingMemory.getNodeMemory(alphaNode);
+  assertEquals(0,memory.size());
+  alphaNode.assertObject(f0,context,workingMemory);
+  assertEquals(0,memory.size());
+  final DefaultFactHandle f1=new DefaultFactHandle(1,"cheese");
+  alphaNode.retractObject(f1,context,workingMemory);
+  assertLength(1,sink.getRetracted());
+  assertEquals(0,memory.size());
+  assertFalse("Should not contain 'cheddar handle'",memory.contains(f0));
+  alphaNode.retractObject(f0,context,workingMemory);
+  assertLength(2,sink.getRetracted());
+  assertEquals(0,memory.size());
+  final Object[] list=(Object[])sink.getRetracted().get(1);
+  assertSame(f0,list[0]);
+}
