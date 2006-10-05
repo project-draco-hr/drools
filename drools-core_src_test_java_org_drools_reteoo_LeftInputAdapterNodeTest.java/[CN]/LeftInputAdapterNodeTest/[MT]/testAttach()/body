@@ -1,9 +1,13 @@
 {
   final MockObjectSource source=new MockObjectSource(15);
   final LeftInputAdapterNode liaNode=new LeftInputAdapterNode(1,source);
+  Field field=ObjectSource.class.getDeclaredField("sink");
+  field.setAccessible(true);
+  ObjectSinkPropagator sink=(ObjectSinkPropagator)field.get(source);
   assertEquals(1,liaNode.getId());
-  assertLength(0,source.getObjectSinksAsList());
+  assertNull(sink);
   liaNode.attach();
-  assertLength(1,source.getObjectSinksAsList());
-  assertSame(liaNode,source.getObjectSinks().getLastObjectSink());
+  sink=(ObjectSinkPropagator)field.get(source);
+  assertEquals(1,sink.getSinks().length);
+  assertSame(liaNode,sink.getSinks()[0]);
 }

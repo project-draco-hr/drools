@@ -1,0 +1,25 @@
+{
+  final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
+  final ReteooWorkingMemory workingMemory=new ReteooWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase());
+  final LeftInputAdapterNode liaNode=new LeftInputAdapterNode(1,new MockObjectSource(15));
+  final MockTupleSink sink=new MockTupleSink();
+  liaNode.addTupleSink(sink);
+  Field field=BaseNode.class.getDeclaredField("hasMemory");
+  field.setAccessible(true);
+  field.set(liaNode,new Boolean(true));
+  final Object string1="cheese";
+  final DefaultFactHandle f0=(DefaultFactHandle)workingMemory.assertObject(string1);
+  liaNode.assertObject(f0,context,workingMemory);
+  final List asserted=sink.getAsserted();
+  assertLength(1,asserted);
+  final Tuple tuple0=(Tuple)((Object[])asserted.get(0))[0];
+  assertSame(string1,workingMemory.getObject(tuple0.get(0)));
+  final ObjectHashMap map=(ObjectHashMap)workingMemory.getNodeMemory(liaNode);
+  assertSame(tuple0,map.get(f0));
+  final DefaultFactHandle f1=(DefaultFactHandle)workingMemory.assertObject("test1");
+  liaNode.assertObject(f1,context,workingMemory);
+  assertLength(2,asserted);
+  final Tuple tuple1=(Tuple)((Object[])asserted.get(1))[0];
+  assertSame(tuple1,map.get(f1));
+  assertNotSame(tuple0,tuple1);
+}
