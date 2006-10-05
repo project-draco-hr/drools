@@ -1,8 +1,13 @@
 {
   try {
-    final ClassFieldInspector inspector=new ClassFieldInspector(clazz,false);
-    final String className=Type.getInternalName(clazz) + "ShadowProxy";
-    final byte[] bytes=dump(clazz,inspector,className,clazz.isInterface());
+    String className=null;
+    if (clazz.getPackage().getName().startsWith("java.") || clazz.getPackage().getName().startsWith("javax.")) {
+      className="org/drools/shadow/" + Type.getInternalName(clazz) + "ShadowProxy";
+    }
+ else {
+      className=Type.getInternalName(clazz) + "ShadowProxy";
+    }
+    final byte[] bytes=dump(clazz,className);
     final ByteArrayClassLoader classLoader=new ByteArrayClassLoader(Thread.currentThread().getContextClassLoader());
     final Class newClass=classLoader.defineClass(className.replace('/','.'),bytes);
     return newClass;
