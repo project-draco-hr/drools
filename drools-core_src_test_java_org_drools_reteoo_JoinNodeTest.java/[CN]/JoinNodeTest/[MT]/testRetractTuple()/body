@@ -12,18 +12,21 @@
   final DefaultFactHandle f4=(DefaultFactHandle)this.workingMemory.assertObject("test4");
   this.node.assertObject(f4,this.context,this.workingMemory);
   assertLength(6,this.sink.getAsserted());
+  BetaMemory memory=(BetaMemory)this.workingMemory.getNodeMemory(this.node);
+  assertTrue(memory.getObjectMemory().contains(f0));
   this.node.retractObject(f0,this.context,this.workingMemory);
   assertLength(2,this.sink.getRetracted());
-  assertNull(tuple1.getTupleMatches().get(f0));
-  assertNull(tuple2.getTupleMatches().get(f0));
+  List tuples=new ArrayList();
+  tuples.add(((Object[])this.sink.getRetracted().get(0))[0]);
+  tuples.add(((Object[])this.sink.getRetracted().get(1))[0]);
+  assertTrue(tuples.contains(new ReteTuple(tuple1,f0)));
+  assertTrue(tuples.contains(new ReteTuple(tuple1,f0)));
+  assertFalse(memory.getObjectMemory().contains(f0));
   this.node.retractTuple(tuple2,this.context,this.workingMemory);
-  ObjectMatches matches=this.getMatchesFor(tuple2,f3);
-  for (CompositeTupleMatch match=matches.getFirstTupleMatch(); match != null; match=(CompositeTupleMatch)match.getNext()) {
-    assertNotSame(tuple2,match.getTuple());
-  }
-  matches=this.getMatchesFor(tuple2,f4);
-  for (CompositeTupleMatch match=matches.getFirstTupleMatch(); match != null; match=(CompositeTupleMatch)match.getNext()) {
-    assertNotSame(tuple2,match.getTuple());
-  }
-  assertLength(4,this.sink.getRetracted());
+  assertEquals(4,this.sink.getRetracted().size());
+  tuples=new ArrayList();
+  tuples.add(((Object[])this.sink.getRetracted().get(2))[0]);
+  tuples.add(((Object[])this.sink.getRetracted().get(3))[0]);
+  assertTrue(tuples.contains(new ReteTuple(tuple2,f3)));
+  assertTrue(tuples.contains(new ReteTuple(tuple2,f4)));
 }

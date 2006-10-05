@@ -4,18 +4,19 @@
   final DefaultFactHandle f1=new DefaultFactHandle(1,"cheese");
   final ReteTuple tuple1=new ReteTuple(f1);
   this.node.assertTuple(tuple1,this.context,this.workingMemory);
-  final Map map=tuple1.getTupleMatches();
-  final TupleMatch match=(TupleMatch)map.get(f0);
-  ObjectMatches matches=(ObjectMatches)this.memory.rightObjectIterator(this.workingMemory,tuple1).next();
-  assertSame(match,matches.getFirstTupleMatch());
-  assertSame(match.getJoinedTuples().get(0),((Object[])this.sink.getAsserted().get(0))[0]);
+  assertEquals(1,this.sink.getAsserted().size());
+  assertEquals(new ReteTuple(tuple1,f0),((Object[])this.sink.getAsserted().get(0))[0]);
   final DefaultFactHandle f2=new DefaultFactHandle(2,"cheese");
   final ReteTuple tuple2=new ReteTuple(f2);
   this.node.assertTuple(tuple2,this.context,this.workingMemory);
-  assertSame((tuple2.getTupleMatches()).get(f0),matches.getFirstTupleMatch().getNext());
+  assertEquals(2,this.sink.getAsserted().size());
+  assertEquals(new ReteTuple(tuple2,f0),((Object[])this.sink.getAsserted().get(1))[0]);
   final DefaultFactHandle f3=(DefaultFactHandle)this.workingMemory.assertObject("test2");
   this.node.assertObject(f3,this.context,this.workingMemory);
-  matches=getMatchesFor(tuple1,f3);
-  assertSame((tuple1.getTupleMatches()).get(f3),matches.getFirstTupleMatch());
-  assertSame((tuple2.getTupleMatches()).get(f3),matches.getFirstTupleMatch().getNext());
+  assertEquals(4,this.sink.getAsserted().size());
+  List tuples=new ArrayList();
+  tuples.add(((Object[])this.sink.getAsserted().get(2))[0]);
+  tuples.add(((Object[])this.sink.getAsserted().get(3))[0]);
+  assertTrue(tuples.contains(new ReteTuple(tuple1,f3)));
+  assertTrue(tuples.contains(new ReteTuple(tuple2,f3)));
 }
