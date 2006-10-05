@@ -1,8 +1,28 @@
 {
   final MockTupleSource source=new MockTupleSource(15);
-  assertLength(0,source.getTupleSinks());
-  source.addTupleSink(new MockTupleSink());
-  assertLength(1,source.getTupleSinks());
-  source.addTupleSink(new MockTupleSink());
-  assertLength(2,source.getTupleSinks());
+  Field field=TupleSource.class.getDeclaredField("sink");
+  field.setAccessible(true);
+  TupleSinkPropagator sink=(TupleSinkPropagator)field.get(source);
+  assertNull(sink);
+  MockTupleSink sink1=new MockTupleSink();
+  source.addTupleSink(sink1);
+  sink=(TupleSinkPropagator)field.get(source);
+  assertSame(SingleTupleSinkAdapter.class,sink.getClass());
+  assertEquals(1,sink.getSinks().length);
+  MockTupleSink sink2=new MockTupleSink();
+  source.addTupleSink(sink2);
+  sink=(TupleSinkPropagator)field.get(source);
+  assertSame(CompositeTupleSinkAdapter.class,sink.getClass());
+  assertEquals(2,sink.getSinks().length);
+  MockTupleSink sink3=new MockTupleSink();
+  source.addTupleSink(sink3);
+  assertSame(CompositeTupleSinkAdapter.class,sink.getClass());
+  assertEquals(3,sink.getSinks().length);
+  source.removeTupleSink(sink2);
+  assertSame(CompositeTupleSinkAdapter.class,sink.getClass());
+  assertEquals(2,sink.getSinks().length);
+  source.removeTupleSink(sink1);
+  sink=(TupleSinkPropagator)field.get(source);
+  assertSame(SingleTupleSinkAdapter.class,sink.getClass());
+  assertEquals(1,sink.getSinks().length);
 }
