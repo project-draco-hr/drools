@@ -7,15 +7,15 @@
   final Duration dur=this.rule.getDuration();
   if (dur != null && dur.getDuration(tuple) > 0) {
     final ScheduledAgendaItem item=new ScheduledAgendaItem(context.getPropagationNumber(),cloned,agenda,context,this.rule);
+    final TerminalNodeMemory memory=(TerminalNodeMemory)workingMemory.getNodeMemory(this);
     if (this.rule.getActivationGroup() != null) {
-      final TerminalNodeMemory memory=(TerminalNodeMemory)workingMemory.getNodeMemory(this);
       if (memory.getActivationGroup() == null) {
         memory.setActivationGroup(workingMemory.getAgenda().getActivationGroup(this.rule.getActivationGroup()));
       }
       memory.getActivationGroup().addActivation(item);
     }
     agenda.scheduleItem(item);
-    tuple.setActivation(item);
+    memory.getTupleMemory().put(tuple,item,false);
     item.setActivated(true);
     workingMemory.getAgendaEventSupport().fireActivationCreated(item);
   }
@@ -46,7 +46,7 @@
       memory.getActivationGroup().addActivation(item);
     }
     agendaGroup.add(item);
-    tuple.setActivation(item);
+    memory.getTupleMemory().put(tuple,item,false);
     item.setActivated(true);
     if (fireActivationCreated) {
       workingMemory.getAgendaEventSupport().fireActivationCreated(item);
