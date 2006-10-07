@@ -1,6 +1,8 @@
 {
-  ClassFieldExtractor extractor=new ClassFieldExtractor(Cheese.class,"type");
-  FieldIndexHashTable map=new FieldIndexHashTable(extractor.getIndex(),extractor);
+  final FieldExtractor extractor=new ClassFieldExtractor(Cheese.class,"type");
+  Column column=new Column(0,new ClassObjectType(Cheese.class));
+  final Declaration declaration=new Declaration("typeOfCheese",extractor,column);
+  FieldIndexHashTable map=new FieldIndexHashTable(extractor,declaration);
   assertEquals(0,map.size());
   Cheese stilton1=new Cheese("stilton",35);
   InternalFactHandle stiltonHandle1=new DefaultFactHandle(1,stilton1);
@@ -10,10 +12,14 @@
   map.add(cheddarHandle1);
   assertEquals(2,map.size());
   assertEquals(2,tablePopulationSize(map));
-  FieldIndexEntry stiltonEntry=map.get("stilton");
+  Cheese stilton2=new Cheese("stilton",77);
+  InternalFactHandle stiltonHandle2=new DefaultFactHandle(2,stilton2);
+  FieldIndexEntry stiltonEntry=map.get(new ReteTuple(stiltonHandle2));
   assertSame(stiltonHandle1,stiltonEntry.getFirst().getFactHandle());
   assertNull(stiltonEntry.getFirst().getNext());
-  FieldIndexEntry cheddarEntry=map.get("cheddar");
+  Cheese cheddar2=new Cheese("cheddar",5);
+  InternalFactHandle cheddarHandle2=new DefaultFactHandle(2,cheddar2);
+  FieldIndexEntry cheddarEntry=map.get(new ReteTuple(cheddarHandle2));
   assertSame(cheddarHandle1,cheddarEntry.getFirst().getFactHandle());
   assertNull(cheddarEntry.getFirst().getNext());
 }

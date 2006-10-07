@@ -1,8 +1,8 @@
 {
-  Field field=AbstractHashTable.class.getDeclaredField("table");
-  field.setAccessible(true);
-  ClassFieldExtractor extractor=new ClassFieldExtractor(Cheese.class,"type");
-  FieldIndexHashTable map=new FieldIndexHashTable(extractor.getIndex(),extractor);
+  final FieldExtractor extractor=new ClassFieldExtractor(Cheese.class,"type");
+  Column column=new Column(0,new ClassObjectType(Cheese.class));
+  final Declaration declaration=new Declaration("typeOfCheese",extractor,column);
+  FieldIndexHashTable map=new FieldIndexHashTable(extractor,declaration);
   assertEquals(0,map.size());
   Cheese stilton1=new Cheese("stilton",35);
   map.add(new DefaultFactHandle(1,stilton1));
@@ -37,12 +37,12 @@
   Cheese emmental=new Cheese("emmental",98);
   map.add(new DefaultFactHandle(16,emmental));
   assertEquals(12,map.size());
-  Entry[] table=(Entry[])field.get(map);
+  Entry[] table=map.getTable();
   assertEquals(16,table.length);
   Cheese feta=new Cheese("feta",48);
   map.add(new DefaultFactHandle(2,feta));
   assertEquals(13,map.size());
-  table=(Entry[])field.get(map);
+  table=(Entry[])map.getTable();
   assertEquals(32,table.length);
   Cheese haloumi=new Cheese("haloumi",48);
   map.add(new DefaultFactHandle(2,haloumi));
