@@ -1,0 +1,20 @@
+{
+  System.out.println(indent() + node);
+  BetaMemory memory=(BetaMemory)this.workingMemory.getNodeMemory(node);
+  checkObjectHashTable(memory.getObjectMemory());
+  checkTupleMemory(memory.getTupleMemory());
+  indent++;
+  try {
+    Field field=TupleSource.class.getDeclaredField("sink");
+    field.setAccessible(true);
+    TupleSinkPropagator sink=(TupleSinkPropagator)field.get(node);
+    TupleSink[] sinks=sink.getSinks();
+    for (int i=0, length=sinks.length; i < length; i++) {
+      visit(sinks[i]);
+    }
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+  }
+  indent--;
+}

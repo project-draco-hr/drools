@@ -1,0 +1,39 @@
+{
+  Entry[] entries=memory.getTable();
+  int factCount=0;
+  int bucketCount=0;
+  for (int i=0, length=entries.length; i < length; i++) {
+    if (entries[i] != null) {
+      FieldIndexEntry fieldIndexEntry=(FieldIndexEntry)entries[i];
+      while (fieldIndexEntry != null) {
+        if (fieldIndexEntry.getFirst() != null) {
+          Entry entry=fieldIndexEntry.getFirst();
+          while (entry != null) {
+            entry=entry.getNext();
+            factCount++;
+          }
+        }
+ else {
+          System.out.println("error : fieldIndexHashTable cannot have empty FieldIndexEntry objects");
+        }
+        fieldIndexEntry=(FieldIndexEntry)fieldIndexEntry.getNext();
+        bucketCount++;
+      }
+    }
+  }
+  try {
+    Field field=AbstractHashTable.class.getDeclaredField("size");
+    field.setAccessible(true);
+    System.out.println(indent() + ((Integer)field.get(memory)).intValue() + ":"+ bucketCount);
+    if (((Integer)field.get(memory)).intValue() != bucketCount) {
+      System.out.println(indent() + "error");
+    }
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+  }
+  System.out.println(indent() + memory.size() + ":"+ factCount);
+  if (memory.size() != factCount) {
+    System.out.println(indent() + "error");
+  }
+}
