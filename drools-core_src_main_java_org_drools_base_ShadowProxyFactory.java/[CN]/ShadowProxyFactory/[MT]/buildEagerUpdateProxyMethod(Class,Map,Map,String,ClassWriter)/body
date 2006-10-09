@@ -6,34 +6,20 @@
   for (Iterator it=fieldTypes.entrySet().iterator(); it.hasNext(); ) {
     Map.Entry entry=(Map.Entry)it.next();
     String fieldName=(String)entry.getKey();
-    String fieldFlag=fieldName + FIELD_SET_FLAG;
     Class fieldType=(Class)entry.getValue();
+    Method method=(Method)fieldMethods.get(fieldName);
     Label l1=new Label();
     mv.visitLabel(l1);
     mv.visitVarInsn(Opcodes.ALOAD,0);
-    if (fieldType.isPrimitive()) {
-      if (fieldType.equals(Long.TYPE)) {
-        mv.visitInsn(Opcodes.LCONST_0);
-      }
- else       if (fieldType.equals(Double.TYPE)) {
-        mv.visitInsn(Opcodes.DCONST_0);
-      }
- else       if (fieldType.equals(Float.TYPE)) {
-        mv.visitInsn(Opcodes.FCONST_0);
-      }
- else {
-        mv.visitInsn(Opcodes.ICONST_0);
-      }
+    mv.visitVarInsn(Opcodes.ALOAD,0);
+    mv.visitFieldInsn(Opcodes.GETFIELD,className,DELEGATE_FIELD_NAME,Type.getDescriptor(delegate));
+    if (delegate.isInterface()) {
+      mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,Type.getInternalName(delegate),method.getName(),Type.getMethodDescriptor(method));
     }
  else {
-      mv.visitInsn(Opcodes.ACONST_NULL);
+      mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(delegate),method.getName(),Type.getMethodDescriptor(method));
     }
     mv.visitFieldInsn(Opcodes.PUTFIELD,className,fieldName,Type.getDescriptor(fieldType));
-    Label l2=new Label();
-    mv.visitLabel(l2);
-    mv.visitVarInsn(Opcodes.ALOAD,0);
-    mv.visitInsn(Opcodes.ICONST_0);
-    mv.visitFieldInsn(Opcodes.PUTFIELD,className,fieldFlag,Type.BOOLEAN_TYPE.getDescriptor());
   }
   Label l4=new Label();
   mv.visitLabel(l4);

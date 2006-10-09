@@ -1,0 +1,25 @@
+{
+  final ClassWriter cw=new ClassWriter(true);
+  buildClassHeader(clazz,className,cw);
+  buildField(DELEGATE_FIELD_NAME,Type.getDescriptor(clazz),cw);
+  Map fieldTypes=new HashMap();
+  Map fieldMethods=new HashMap();
+  Method[] methods=clazz.getMethods();
+  for (int i=0; i < methods.length; i++) {
+    if ((!Modifier.isFinal(methods[i].getModifiers())) && Modifier.isPublic(methods[i].getModifiers())) {
+      if ((!methods[i].getReturnType().equals(Void.TYPE)) && (methods[i].getParameterTypes().length == 0) && ((methods[i].getName().startsWith("get")) || (methods[i].getName().startsWith("is")))) {
+        String fieldName=methods[i].getName();
+        buildField(FIELD_NAME_PREFIX + fieldName,Type.getDescriptor(methods[i].getReturnType()),cw);
+        fieldMethods.put(FIELD_NAME_PREFIX + fieldName,methods[i]);
+        fieldTypes.put(FIELD_NAME_PREFIX + fieldName,methods[i].getReturnType());
+        buildSimpleGetMethod(FIELD_NAME_PREFIX + fieldName,methods[i].getReturnType(),FIELD_NAME_PREFIX + fieldName + FIELD_SET_FLAG,methods[i],className,clazz,cw);
+      }
+ else {
+        buildDelegateMethod(methods[i],clazz,className,cw);
+      }
+    }
+  }
+  buildEagerConstructor(clazz,className,cw);
+  buildEagerUpdateProxyMethod(clazz,fieldTypes,fieldMethods,className,cw);
+  return cw.toByteArray();
+}
