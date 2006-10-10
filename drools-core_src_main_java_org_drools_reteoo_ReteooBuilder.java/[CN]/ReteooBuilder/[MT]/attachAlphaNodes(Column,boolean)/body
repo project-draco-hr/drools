@@ -8,10 +8,10 @@
       final Map.Entry entry=(Map.Entry)it.next();
       final Class previousClass=((ClassObjectType)entry.getKey()).getClassType();
       if (thisClass.isAssignableFrom(previousClass)) {
-        predicateConstraints.add(new InstanceNotEqualsConstraint(((Integer)entry.getValue()).intValue()));
+        predicateConstraints.add(new InstanceNotEqualsConstraint((Column)entry.getValue()));
       }
     }
-    this.objectType.put(column.getObjectType(),new Integer(column.getFactIndex()));
+    this.objectType.put(column.getObjectType(),column);
   }
   for (final Iterator it=constraints.iterator(); it.hasNext(); ) {
     final Object object=it.next();
@@ -20,13 +20,13 @@
       this.declarations.put(declaration.getIdentifier(),declaration);
       continue;
     }
-    final FieldConstraint fieldConstraint=(FieldConstraint)object;
-    if (fieldConstraint.getRequiredDeclarations().length == 0) {
-      this.objectSource=attachNode(new AlphaNode(this.id++,fieldConstraint,this.objectSource));
+    final Constraint constraint=(Constraint)object;
+    if (constraint.getRequiredDeclarations().length == 0) {
+      this.objectSource=attachNode(new AlphaNode(this.id++,(AlphaNodeFieldConstraint)constraint,this.objectSource));
     }
  else {
-      checkUnboundDeclarations(fieldConstraint.getRequiredDeclarations());
-      predicateConstraints.add(fieldConstraint);
+      checkUnboundDeclarations(((BetaNodeFieldConstraint)constraint).getRequiredDeclarations());
+      predicateConstraints.add((BetaNodeFieldConstraint)constraint);
     }
   }
   return predicateConstraints;

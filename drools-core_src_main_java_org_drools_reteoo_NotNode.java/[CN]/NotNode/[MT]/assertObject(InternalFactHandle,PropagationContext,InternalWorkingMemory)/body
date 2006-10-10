@@ -2,13 +2,13 @@
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
   memory.getObjectMemory().add(handle);
   Iterator it=memory.getTupleMemory().iterator();
+  this.constraints.updateFromFactHandle(handle);
   for (ReteTuple tuple=(ReteTuple)it.next(); tuple != null; tuple=(ReteTuple)it.next()) {
-    if (this.constraints.isAllowed(handle,tuple,workingMemory)) {
+    this.constraints.updateFromTuple(tuple);
+    if (this.constraints.isAllowed()) {
       int matches=tuple.getMatches();
       tuple.setMatches(matches + 1);
-      if (matches == 0) {
-        this.sink.propagateRetractTuple(tuple,context,workingMemory);
-      }
+      this.sink.propagateRetractTuple(tuple,context,workingMemory);
     }
   }
 }
