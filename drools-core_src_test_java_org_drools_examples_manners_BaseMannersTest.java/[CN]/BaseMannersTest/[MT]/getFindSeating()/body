@@ -1,7 +1,7 @@
 {
   final Rule rule=new Rule("findSeating");
   final Column contextColumn=new Column(0,this.contextType,"context");
-  contextColumn.addConstraint(getLiteralConstraint(contextColumn,"state",new Integer(Context.ASSIGN_SEATS),this.integerEqualEvaluator));
+  contextColumn.addConstraint(getLiteralConstraint(contextColumn,"state",Context.ASSIGN_SEATS,this.integerEqualEvaluator));
   rule.addPattern(contextColumn);
   final Declaration contextDeclaration=rule.getDeclaration("context");
   final Column seatingColumn=new Column(1,this.seatingType);
@@ -51,18 +51,18 @@
         Tuple tuple=drools.getTuple();
         Context context=(Context)drools.get(contextDeclaration);
         Count count=(Count)drools.get(countDeclaration);
-        int seatId=((Integer)drools.get(seatingIdDeclaration)).intValue();
-        int seatingRightSeat=((Integer)drools.get(seatingRightSeatDeclaration)).intValue();
+        Integer seatId=((Integer)drools.get(seatingIdDeclaration));
+        Integer seatingRightSeat=((Integer)drools.get(seatingRightSeatDeclaration));
         String leftGuestName=(String)drools.get(leftGuestNameDeclaration);
         String rightGuestName=(String)drools.get(seatingRightGuestNameDeclaration);
         Hobby rightGuestHobby=(Hobby)drools.get(rightGuestHobbyDeclaration);
-        Seating seating=new Seating(count.getValue(),seatId,false,seatingRightSeat,rightGuestName,seatingRightSeat + 1,leftGuestName);
+        Seating seating=new Seating(count.getValue(),seatId,false,seatingRightSeat,rightGuestName,new Integer(seatingRightSeat.intValue() + 1),leftGuestName);
         drools.assertObject(seating);
-        Path path=new Path(count.getValue(),seatingRightSeat + 1,leftGuestName);
+        Path path=new Path(count.getValue(),new Integer(seatingRightSeat.intValue() + 1),leftGuestName);
         drools.assertObject(path);
         Chosen chosen=new Chosen(seatId,leftGuestName,rightGuestHobby);
         drools.assertObject(chosen);
-        count.setValue(count.getValue() + 1);
+        count.setValue(new Integer(count.getValue().intValue() + 1));
         drools.modifyObject(tuple.get(countDeclaration),count);
         context.setState(Context.MAKE_PATH);
         drools.modifyObject(tuple.get(contextDeclaration),context);
