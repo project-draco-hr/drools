@@ -6,8 +6,12 @@
     return;
   }
   Iterator it=memory.getObjectMemory().iterator(leftTuple);
+  this.constraints.updateFromTuple(leftTuple);
   for (FactEntry entry=(FactEntry)it.next(); entry != null; entry=(FactEntry)it.next()) {
-    sink.propagateRetractTuple(leftTuple,entry.getFactHandle(),context,workingMemory);
+    InternalFactHandle handle=entry.getFactHandle();
+    if (this.constraints.isAllowedCachedLeft(handle.getObject())) {
+      sink.propagateRetractTuple(leftTuple,handle,context,workingMemory);
+    }
   }
   tuple.release();
   leftTuple.release();
