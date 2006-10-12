@@ -11,8 +11,8 @@
     final Declaration declaration=column.getDeclaration();
     this.declarations.put(declaration.getIdentifier(),declaration);
   }
-  final List predicateConstraints=new ArrayList();
-  final List alphaNodeConstraints=new ArrayList();
+  final List betaConstraints=new ArrayList();
+  final List alphaConstraints=new ArrayList();
   for (final Iterator it=constraints.iterator(); it.hasNext(); ) {
     final Object object=it.next();
     if (object instanceof Declaration) {
@@ -22,19 +22,13 @@
     }
     final AlphaNodeFieldConstraint fieldConstraint=(AlphaNodeFieldConstraint)object;
     if (fieldConstraint instanceof LiteralConstraint) {
-      alphaNodeConstraints.add(fieldConstraint);
+      alphaConstraints.add(fieldConstraint);
     }
  else {
       checkUnboundDeclarations(fieldConstraint.getRequiredDeclarations());
-      predicateConstraints.add(fieldConstraint);
+      betaConstraints.add(fieldConstraint);
     }
   }
-  BetaNodeConstraints binder;
-  if (!predicateConstraints.isEmpty()) {
-    binder=new BetaNodeConstraints((BetaNodeFieldConstraint[])predicateConstraints.toArray(new BetaNodeFieldConstraint[predicateConstraints.size()]));
-  }
- else {
-    binder=new BetaNodeConstraints();
-  }
-  this.tupleSource=attachNode(new FromNode(id++,from.getDataProvider(),this.tupleSource,(AlphaNodeFieldConstraint[])alphaNodeConstraints.toArray(new AlphaNodeFieldConstraint[alphaNodeConstraints.size()]),binder));
+  BetaConstraints binder=createBetaNodeConstraint(betaConstraints);
+  this.tupleSource=attachNode(new FromNode(id++,from.getDataProvider(),this.tupleSource,(AlphaNodeFieldConstraint[])alphaConstraints.toArray(new AlphaNodeFieldConstraint[alphaConstraints.size()]),binder));
 }
