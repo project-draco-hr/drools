@@ -2,11 +2,9 @@
   try {
     final ClassFieldInspector inspector=new ClassFieldInspector(clazz);
     final Class fieldType=(Class)inspector.getFieldTypes().get(fieldName);
-    final String originalClassName=clazz.getName().replace('.','/');
-    final String getterName=((Method)inspector.getGetterMethods().get(fieldName)).getName();
-    final String className=ClassFieldExtractorFactory.BASE_PACKAGE + "/" + originalClassName+ "$"+ getterName;
-    final String typeName=getTypeName(fieldType);
-    final byte[] bytes=dump(originalClassName,className,getterName,typeName,fieldType,clazz.isInterface());
+    final Method getterMethod=(Method)inspector.getGetterMethods().get(fieldName);
+    final String className=ClassFieldExtractorFactory.BASE_PACKAGE + "/" + Type.getInternalName(clazz)+ "$"+ getterMethod.getName();
+    final byte[] bytes=dump(clazz,className,getterMethod,fieldType,clazz.isInterface());
     final ByteArrayClassLoader classLoader=new ByteArrayClassLoader(Thread.currentThread().getContextClassLoader());
     final Class newClass=classLoader.defineClass(className.replace('/','.'),bytes);
     final Object[] params={clazz,fieldName};

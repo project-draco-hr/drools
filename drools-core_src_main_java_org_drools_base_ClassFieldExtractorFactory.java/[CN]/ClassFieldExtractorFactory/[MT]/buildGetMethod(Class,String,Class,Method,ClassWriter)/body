@@ -1,0 +1,29 @@
+{
+  Class fieldType=getterMethod.getReturnType();
+  Method overridingMethod;
+  try {
+    overridingMethod=superClass.getMethod(getOverridingMethodName(fieldType),new Class[]{Object.class});
+  }
+ catch (  Exception e) {
+    throw new RuntimeDroolsException("This is a bug. Please report back to JBRules team.",e);
+  }
+  MethodVisitor mv=cw.visitMethod(Opcodes.ACC_PUBLIC,overridingMethod.getName(),Type.getMethodDescriptor(overridingMethod),null,null);
+  mv.visitCode();
+  final Label l0=new Label();
+  mv.visitLabel(l0);
+  mv.visitVarInsn(Opcodes.ALOAD,1);
+  mv.visitTypeInsn(Opcodes.CHECKCAST,Type.getInternalName(originalClass));
+  if (originalClass.isInterface()) {
+    mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,Type.getInternalName(originalClass),getterMethod.getName(),Type.getMethodDescriptor(getterMethod));
+  }
+ else {
+    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(originalClass),getterMethod.getName(),Type.getMethodDescriptor(getterMethod));
+  }
+  mv.visitInsn(Type.getType(fieldType).getOpcode(Opcodes.IRETURN));
+  final Label l1=new Label();
+  mv.visitLabel(l1);
+  mv.visitLocalVariable("this","L" + className + ";",null,l0,l1,0);
+  mv.visitLocalVariable("object",Type.getDescriptor(Object.class),null,l0,l1,1);
+  mv.visitMaxs(0,0);
+  mv.visitEnd();
+}
