@@ -1,17 +1,17 @@
 {
   final ClassWriter cw=new ClassWriter(true);
   buildClassHeader(clazz,className,cw);
-  buildField(DELEGATE_FIELD_NAME,Type.getDescriptor(clazz),cw);
-  Map fieldTypes=new HashMap();
-  Method[] methods=clazz.getMethods();
+  buildField(ShadowProxyFactory.DELEGATE_FIELD_NAME,Type.getDescriptor(clazz),cw);
+  final Map fieldTypes=new HashMap();
+  final Method[] methods=clazz.getMethods();
   for (int i=0; i < methods.length; i++) {
     if ((!Modifier.isFinal(methods[i].getModifiers())) && Modifier.isPublic(methods[i].getModifiers())) {
       if ((!methods[i].getReturnType().equals(Void.TYPE)) && (methods[i].getParameterTypes().length == 0)) {
-        String fieldName=methods[i].getName();
+        final String fieldName=methods[i].getName();
         buildField(fieldName,Type.getDescriptor(methods[i].getReturnType()),cw);
         fieldTypes.put(fieldName,methods[i].getReturnType());
-        buildField(fieldName + FIELD_SET_FLAG,Type.BOOLEAN_TYPE.getDescriptor(),cw);
-        buildGetMethod(fieldName,methods[i].getReturnType(),fieldName + FIELD_SET_FLAG,methods[i],className,clazz,cw);
+        buildField(fieldName + ShadowProxyFactory.FIELD_SET_FLAG,Type.BOOLEAN_TYPE.getDescriptor(),cw);
+        buildGetMethod(fieldName,methods[i].getReturnType(),fieldName + ShadowProxyFactory.FIELD_SET_FLAG,methods[i],className,clazz,cw);
       }
  else {
         buildDelegateMethod(methods[i],clazz,className,cw);
