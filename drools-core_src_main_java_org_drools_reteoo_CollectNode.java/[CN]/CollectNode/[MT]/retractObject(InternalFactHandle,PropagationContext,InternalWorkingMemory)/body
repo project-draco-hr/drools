@@ -1,3 +1,14 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  if (!memory.getObjectMemory().remove(handle)) {
+    return;
+  }
+  final Iterator it=memory.getTupleMemory().iterator();
+  this.constraints.updateFromFactHandle(workingMemory,handle);
+  for (ReteTuple tuple=(ReteTuple)it.next(); tuple != null; tuple=(ReteTuple)it.next()) {
+    if (this.constraints.isAllowedCachedRight(tuple)) {
+      this.retractTuple(tuple,context,workingMemory);
+      this.assertTuple(tuple,context,workingMemory);
+    }
+  }
 }
