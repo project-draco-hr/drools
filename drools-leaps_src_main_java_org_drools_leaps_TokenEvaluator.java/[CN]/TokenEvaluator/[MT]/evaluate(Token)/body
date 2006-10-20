@@ -1,0 +1,114 @@
+{
+  final LeapsWorkingMemory workingMemory=(LeapsWorkingMemory)token.getWorkingMemory();
+  final LeapsRule leapsRule=token.getCurrentRuleHandle().getLeapsRule();
+  final int numberOfColumns=leapsRule.getNumberOfColumns();
+  final int dominantFactPosition=token.getCurrentRuleHandle().getDominantPosition();
+  final InternalFactHandle dominantFactHandle=token.getDominantFactHandle();
+  if (leapsRule.getColumnConstraintsAtPosition(dominantFactPosition).isAllowedAlpha(dominantFactHandle,token,workingMemory)) {
+    final Object dominantClass=leapsRule.getColumnClassObjectTypeAtPosition(dominantFactPosition);
+    final TableIterator[] iterators=new TableIterator[numberOfColumns];
+    for (int i=0; i < numberOfColumns; i++) {
+      final Object columnClass=leapsRule.getColumnClassObjectTypeAtPosition(i);
+      final ColumnConstraints constraints=leapsRule.getColumnConstraintsAtPosition(i);
+      if (constraints.getClass() != FromConstraint.class) {
+        if (i == dominantFactPosition) {
+          iterators[i]=Table.singleItemIterator(dominantFactHandle);
+        }
+ else {
+          final FactTable factTable=workingMemory.getFactTable(columnClass);
+          final LeapsFactHandle startFactHandle=(dominantClass == columnClass) ? new LeapsFactHandle(dominantFactHandle.getRecency() - 1,new Object()) : (LeapsFactHandle)dominantFactHandle;
+          if (i > 0 && constraints.isAlphaPresent()) {
+            iterators[i]=factTable.constrainedIteratorFromPositionToTableStart(workingMemory,constraints,startFactHandle,(token.isResume() ? (LeapsFactHandle)token.get(i) : startFactHandle));
+          }
+ else {
+            iterators[i]=factTable.iteratorFromPositionToTableStart(startFactHandle,(token.isResume() ? (LeapsFactHandle)token.get(i) : startFactHandle));
+          }
+        }
+      }
+ else {
+        iterators[i]=null;
+      }
+    }
+    boolean doReset=false;
+    boolean skip=token.isResume();
+    TableIterator currentIterator;
+    for (int i=0; i < numberOfColumns; i++) {
+      currentIterator=iterators[i];
+      if (currentIterator != null) {
+        if (currentIterator.isEmpty()) {
+          throw new NoMatchesFoundException();
+        }
+ else {
+          if (!doReset) {
+            if (skip && currentIterator.hasNext() && !currentIterator.peekNext().equals(token.get(i))) {
+              skip=false;
+              doReset=true;
+            }
+          }
+ else {
+            currentIterator.reset();
+          }
+        }
+      }
+    }
+    int jj=0;
+    boolean done=false;
+    final int stopIteratingCount=numberOfColumns - 1;
+    while (!done) {
+      currentIterator=iterators[jj];
+      if (currentIterator != null && !currentIterator.hasNext()) {
+        if (jj == 0) {
+          done=true;
+        }
+ else {
+          currentIterator.reset();
+          jj=jj - 1;
+          if (skip) {
+            skip=false;
+          }
+        }
+      }
+ else {
+        boolean localMatch=false;
+        LeapsFactHandle currentFactHandle=null;
+        if (currentIterator != null) {
+          currentFactHandle=(LeapsFactHandle)currentIterator.next();
+          if (!skip) {
+            if (jj != 0 || jj == dominantFactPosition) {
+              localMatch=leapsRule.getColumnConstraintsAtPosition(jj).isAllowedBeta(currentFactHandle,token,workingMemory);
+            }
+ else {
+              localMatch=leapsRule.getColumnConstraintsAtPosition(jj).isAllowed(currentFactHandle,token,workingMemory);
+            }
+          }
+        }
+ else {
+          final Object fromMatch=TokenEvaluator.evaluateFrom((FromConstraint)leapsRule.getColumnConstraintsAtPosition(jj),token,leapsRule,workingMemory);
+          if (fromMatch != null) {
+            localMatch=true;
+            currentFactHandle=new LeapsFactHandle(-1,fromMatch);
+          }
+        }
+        if (localMatch || skip) {
+          token.set(jj,currentFactHandle);
+          if (jj == stopIteratingCount) {
+            if (!skip) {
+              final LeapsTuple tuple=token.getTuple();
+              if (processAfterAllPositiveConstraintOk(tuple,leapsRule,workingMemory)) {
+                workingMemory.assertTuple(tuple);
+                return;
+              }
+            }
+ else {
+              skip=false;
+            }
+          }
+ else {
+            jj=jj + 1;
+          }
+        }
+      }
+    }
+  }
+  throw new NoMatchesFoundException();
+}

@@ -1,0 +1,45 @@
+{
+  this.getLock().lock();
+  try {
+    this.rulesAddedSinceLastFireAll=true;
+    ArrayList ruleHandlesList;
+    LeapsRule rule;
+    LeapsRuleHandle ruleHandle;
+    for (final Iterator it=rules.iterator(); it.hasNext(); ) {
+      rule=(LeapsRule)it.next();
+      ColumnConstraints constraint;
+      for (int i=0; i < rule.getNumberOfNotColumns(); i++) {
+        constraint=rule.getNotColumnConstraints()[i];
+        this.getFactTable(constraint.getClassType()).createHashedSubTable(constraint);
+      }
+      for (int i=0; i < rule.getNumberOfExistsColumns(); i++) {
+        constraint=rule.getExistsColumnConstraints()[i];
+        this.getFactTable(constraint.getClassType()).createHashedSubTable(constraint);
+      }
+      if (rule.getNumberOfColumns() > 0) {
+        ruleHandlesList=new ArrayList();
+        for (int i=0; i < rule.getNumberOfColumns(); i++) {
+          ruleHandle=new LeapsRuleHandle(((LeapsFactHandleFactory)this.handleFactory).getNextId(),rule,i);
+          if (rule.getColumnConstraintsAtPosition(i).getClass() != FromConstraint.class) {
+            this.getFactTable(rule.getColumnClassObjectTypeAtPosition(i)).addRule(this,ruleHandle);
+          }
+ else {
+            final FactTable table=this.getFactTable(FromConstraintFactDriver.class);
+            table.addRule(this,ruleHandle);
+            if (table.isEmpty()) {
+              this.assertObject(new FromConstraintFactDriver());
+            }
+          }
+          ruleHandlesList.add(ruleHandle);
+        }
+        this.leapsRulesToHandlesMap.put(rule,ruleHandlesList);
+      }
+ else {
+        this.noPositiveColumnsRules.add(new LeapsRuleHandle(((LeapsFactHandleFactory)this.handleFactory).getNextId(),rule,0));
+      }
+    }
+  }
+  finally {
+    this.getLock().unlock();
+  }
+}

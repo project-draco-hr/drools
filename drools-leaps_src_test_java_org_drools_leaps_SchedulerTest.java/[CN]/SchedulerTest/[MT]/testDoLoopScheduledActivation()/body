@@ -1,0 +1,44 @@
+{
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase(RuleBase.LEAPS);
+  final LeapsWorkingMemory workingMemory=(LeapsWorkingMemory)ruleBase.newWorkingMemory();
+  final Rule rule=new Rule("do-loop-scheduled-test-rule");
+  final List data=new ArrayList();
+  final Duration duration=new Duration(){
+    /** 
+ */
+    private static final long serialVersionUID=-65249353062404118L;
+    public long getDuration(    Tuple tuple){
+      return 100;
+    }
+  }
+;
+  rule.setDuration(duration);
+  rule.setConsequence(new org.drools.spi.Consequence(){
+    /** 
+ */
+    private static final long serialVersionUID=5431138295939934840L;
+    public void evaluate(    final KnowledgeHelper knowledgeHelper,    final WorkingMemory workingMemory){
+      if (data.size() < 3) {
+        final PropagationContext context2=new PropagationContextImpl(0,0,rule,knowledgeHelper.getActivation());
+        final LeapsFactHandle tupleFactHandleIn=(LeapsFactHandle)workingMemory.assertObject("tuple object in");
+        final LeapsFactHandle[] factHandlesTupleIn=new LeapsFactHandle[1];
+        factHandlesTupleIn[0]=tupleFactHandleIn;
+        final ArrayList leapsRules=(ArrayList)LeapsBuilder.processRule(rule);
+        final LeapsTuple tupleIn=new LeapsTuple(factHandlesTupleIn,(LeapsRule)leapsRules.get(0),context2);
+        ((LeapsWorkingMemory)workingMemory).assertTuple(tupleIn);
+      }
+      data.add("tested");
+    }
+  }
+);
+  final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule,null);
+  final LeapsFactHandle tupleFactHandle=(LeapsFactHandle)workingMemory.assertObject("tuple object");
+  final LeapsFactHandle[] factHandlesTuple=new LeapsFactHandle[1];
+  factHandlesTuple[0]=tupleFactHandle;
+  final ArrayList leapsRules=(ArrayList)LeapsBuilder.processRule(rule);
+  final LeapsTuple tuple=new LeapsTuple(factHandlesTuple,(LeapsRule)leapsRules.get(0),context);
+  workingMemory.assertTuple(tuple);
+  assertEquals(0,data.size());
+  Thread.sleep(1000);
+  assertEquals(4,data.size());
+}

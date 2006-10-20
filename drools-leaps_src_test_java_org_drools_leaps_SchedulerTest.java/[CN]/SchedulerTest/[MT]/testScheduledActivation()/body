@@ -1,0 +1,35 @@
+{
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase(RuleBase.LEAPS);
+  final LeapsWorkingMemory workingMemory=(LeapsWorkingMemory)ruleBase.newWorkingMemory();
+  final Rule rule=new Rule("scheduled-test-rule");
+  final List data=new ArrayList();
+  rule.setConsequence(new org.drools.spi.Consequence(){
+    /** 
+ */
+    private static final long serialVersionUID=-1991405634414239175L;
+    public void evaluate(    final KnowledgeHelper knowledgeHelper,    final WorkingMemory workingMemory){
+      data.add("tested");
+    }
+  }
+);
+  final Duration duration=new Duration(){
+    /** 
+ */
+    private static final long serialVersionUID=-1650013015631329969L;
+    public long getDuration(    Tuple tuple){
+      return 100;
+    }
+  }
+;
+  rule.setDuration(duration);
+  final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule,null);
+  final LeapsFactHandle tupleFactHandle=(LeapsFactHandle)workingMemory.assertObject("tuple object");
+  final LeapsFactHandle[] factHandlesTuple=new LeapsFactHandle[1];
+  factHandlesTuple[0]=tupleFactHandle;
+  final ArrayList leapsRules=(ArrayList)LeapsBuilder.processRule(rule);
+  final LeapsTuple tuple=new LeapsTuple(factHandlesTuple,(LeapsRule)leapsRules.get(0),context);
+  assertEquals(0,data.size());
+  workingMemory.assertTuple(tuple);
+  Thread.sleep(300);
+  assertEquals(1,data.size());
+}

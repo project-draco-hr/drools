@@ -1,0 +1,28 @@
+{
+  boolean ret=false;
+  if (this.rulesIterator() != null) {
+    final long levelId=(this.workingMemory.isRulesAddedSinceLastFireAll()) ? this.workingMemory.getIdLastFireAllAt() : -1;
+    if (this.dominantFactHandle == null || this.dominantFactHandle.getRecency() >= levelId) {
+      ret=this.rules.hasNext();
+    }
+ else {
+      boolean done=false;
+      while (!done) {
+        if (this.rules.hasNext()) {
+          if (((LeapsRuleHandle)((TableIterator)this.rules).peekNext()).getRecency() > levelId) {
+            ret=true;
+            done=true;
+          }
+ else {
+            this.rules.next();
+          }
+        }
+ else {
+          ret=false;
+          done=true;
+        }
+      }
+    }
+  }
+  return ret;
+}

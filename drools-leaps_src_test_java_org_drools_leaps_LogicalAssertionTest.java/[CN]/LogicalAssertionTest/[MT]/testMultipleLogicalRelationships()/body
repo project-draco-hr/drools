@@ -1,0 +1,30 @@
+{
+  final Rule rule1=new Rule("test-rule1");
+  rule1.setConsequence(this.consequence);
+  final LeapsRule leapsRule1=new LeapsRule(rule1,new ArrayList(),new ArrayList(),new ArrayList(),new ArrayList());
+  final LeapsFactHandle tuple1Fact=(LeapsFactHandle)this.workingMemory.assertObject("tuple1 object");
+  final LeapsFactHandle tuple2Fact=(LeapsFactHandle)this.workingMemory.assertObject("tuple2 object");
+  final LeapsFactHandle[] tuple1Handles=new LeapsFactHandle[1];
+  final LeapsFactHandle[] tuple2Handles=new LeapsFactHandle[1];
+  tuple1Handles[0]=tuple1Fact;
+  tuple2Handles[0]=tuple2Fact;
+  final PropagationContext context1=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule1,null);
+  final LeapsTuple tuple1=new LeapsTuple(tuple1Handles,leapsRule1,context1);
+  this.workingMemory.assertTuple(tuple1);
+  final Activation activation1=this.workingMemory.getAgenda().getActivations()[0];
+  final String logicalString1=new String("logical");
+  final FactHandle logicalHandle1=this.workingMemory.assertObject(logicalString1,false,true,rule1,activation1);
+  final Rule rule2=new Rule("test-rule2");
+  rule2.setConsequence(this.consequence);
+  final PropagationContext context2=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule2,null);
+  final LeapsTuple tuple2=new LeapsTuple(tuple2Handles,leapsRule1,context2);
+  this.workingMemory.assertTuple(tuple2);
+  final Activation activation2=this.workingMemory.getAgenda().getActivations()[1];
+  final String logicalString2=new String("logical");
+  final FactHandle logicalHandle2=this.workingMemory.assertObject(logicalString2,false,true,rule2,activation2);
+  assertEquals(3,this.workingMemory.getObjects().size());
+  this.workingMemory.retractObject(tuple1Fact);
+  assertEquals(2,this.workingMemory.getObjects().size());
+  this.workingMemory.retractObject(tuple2Fact);
+  assertEquals(0,this.workingMemory.getObjects().size());
+}

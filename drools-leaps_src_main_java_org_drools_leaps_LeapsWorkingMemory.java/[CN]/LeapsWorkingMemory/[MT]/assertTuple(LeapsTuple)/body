@@ -1,0 +1,51 @@
+{
+  final PropagationContext context=tuple.getContext();
+  final Rule rule=tuple.getLeapsRule().getRule();
+  if (rule.getNoLoop() && rule.equals(context.getRuleOrigin())) {
+    return;
+  }
+  final Duration dur=rule.getDuration();
+  Activation agendaItem;
+  if (dur != null && dur.getDuration(tuple) > 0) {
+    agendaItem=new ScheduledAgendaItem(context.getPropagationNumber(),tuple,this.agenda,context,rule);
+    this.agenda.scheduleItem((ScheduledAgendaItem)agendaItem);
+    tuple.setActivation(agendaItem);
+    agendaItem.setActivated(true);
+    this.getAgendaEventSupport().fireActivationCreated(agendaItem);
+  }
+ else {
+    final LeapsRule leapsRule=tuple.getLeapsRule();
+    AgendaGroupImpl agendaGroup=leapsRule.getAgendaGroup();
+    if (agendaGroup == null) {
+      if (rule.getAgendaGroup() == null || rule.getAgendaGroup().equals("") || rule.getAgendaGroup().equals(AgendaGroup.MAIN)) {
+        agendaGroup=(AgendaGroupImpl)this.agenda.getAgendaGroup(AgendaGroup.MAIN);
+      }
+ else {
+        agendaGroup=(AgendaGroupImpl)this.agenda.getAgendaGroup(rule.getAgendaGroup());
+      }
+      if (agendaGroup == null) {
+        agendaGroup=new AgendaGroupImpl(rule.getAgendaGroup());
+        this.agenda.addAgendaGroup(agendaGroup);
+      }
+      leapsRule.setAgendaGroup(agendaGroup);
+    }
+    if (rule.getAutoFocus()) {
+      this.agenda.setFocus(agendaGroup);
+    }
+    agendaItem=new AgendaItem(context.getPropagationNumber(),tuple,context,rule);
+    agendaGroup.add(agendaItem);
+    tuple.setActivation(agendaItem);
+    agendaItem.setActivated(true);
+    this.getAgendaEventSupport().fireActivationCreated(agendaItem);
+  }
+  final LeapsFactHandle[] factHandles=(LeapsFactHandle[])tuple.getFactHandles();
+  for (int i=0; i < factHandles.length; i++) {
+    factHandles[i].addActivatedTuple(tuple);
+  }
+  FastMap activations=(FastMap)this.rulesActivationsMap.get(rule);
+  if (activations == null) {
+    activations=new FastMap();
+    this.rulesActivationsMap.put(rule,activations);
+  }
+  activations.put(agendaItem,agendaItem);
+}
