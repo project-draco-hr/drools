@@ -1,18 +1,29 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
   memory.getTupleMemory().add(leftTuple);
-  this.binder.updateFromTuple(workingMemory,leftTuple);
+  LinkedList list=new LinkedList();
+  this.betaConstraints.updateFromTuple(workingMemory,leftTuple);
   for (final java.util.Iterator it=this.dataProvider.getResults(leftTuple,workingMemory,context); it.hasNext(); ) {
     final Object object=it.next();
-    for (int i=0, length=this.constraints.length; i < length; i++) {
-      if (!this.constraints[i].isAllowed(object,workingMemory)) {
+    if (this.alphaConstraints != null) {
+      boolean isAllowed=true;
+      for (int i=0, length=this.alphaConstraints.length; i < length; i++) {
+        if (!this.alphaConstraints[i].isAllowed(object,workingMemory)) {
+          isAllowed=false;
+          break;
+        }
+      }
+      if (!isAllowed) {
         continue;
       }
     }
-    if (this.binder.isAllowedCachedLeft(object)) {
+    if (this.betaConstraints.isAllowedCachedLeft(object)) {
       final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(object);
-      memory.getCreatedHandles().put(leftTuple,handle);
+      list.add(new LinkedListEntry(handle));
       this.sink.propagateAssertTuple(leftTuple,handle,context,workingMemory);
     }
+  }
+  if (!list.isEmpty()) {
+    memory.getCreatedHandles().put(leftTuple,list);
   }
 }

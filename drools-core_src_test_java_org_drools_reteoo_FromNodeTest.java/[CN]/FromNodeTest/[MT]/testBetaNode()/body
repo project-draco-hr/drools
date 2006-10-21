@@ -5,14 +5,15 @@
   final ClassFieldExtractor ageExtractor=new ClassFieldExtractor(Person.class,"age");
   final Column column=new Column(0,new ClassObjectType(Person.class));
   final Declaration declaration=new Declaration("age",ageExtractor,column);
-  final VariableConstraint variableConstraint=new VariableConstraint(priceExtractor,declaration,ValueType.INTEGER_TYPE.getEvaluator(Operator.EQUAL));
+  final VariableConstraint variableConstraint=new VariableConstraint(priceExtractor,declaration,ValueType.PINTEGER_TYPE.getEvaluator(Operator.EQUAL));
+  final BetaConstraints betaConstraints=new SingleBetaConstraints(variableConstraint,false);
   final List list=new ArrayList();
   final Cheese cheese1=new Cheese("cheddar",18);
   final Cheese cheese2=new Cheese("brie",12);
   list.add(cheese1);
   list.add(cheese2);
   final MockDataProvider dataProvider=new MockDataProvider(list);
-  final FromNode from=new FromNode(3,dataProvider,null,new AlphaNodeFieldConstraint[]{variableConstraint},null);
+  final FromNode from=new FromNode(3,dataProvider,null,null,betaConstraints);
   final MockTupleSink sink=new MockTupleSink(5);
   from.addTupleSink(sink);
   final Person person1=new Person("xxx1",30);
@@ -28,8 +29,8 @@
   final List asserted=sink.getAsserted();
   assertEquals(1,asserted.size());
   Tuple tuple=(Tuple)((Object[])asserted.get(0))[0];
-  assertSame(person2,tuple.getFactHandles()[0].getObject());
-  assertSame(cheese1,tuple.getFactHandles()[1].getObject());
+  assertSame(person2,tuple.getFactHandles()[1].getObject());
+  assertSame(cheese1,tuple.getFactHandles()[0].getObject());
   cheese2.setPrice(30);
   final Person person3=new Person("xxx2",30);
   final FactHandle person3Handle=workingMemory.assertObject(person3);
@@ -37,10 +38,10 @@
   from.assertTuple(tuple3,context,workingMemory);
   assertEquals(3,asserted.size());
   tuple=(Tuple)((Object[])asserted.get(1))[0];
-  assertSame(person3,tuple.getFactHandles()[0].getObject());
-  assertSame(cheese1,tuple.getFactHandles()[1].getObject());
+  assertSame(person3,tuple.getFactHandles()[1].getObject());
+  assertSame(cheese1,tuple.getFactHandles()[0].getObject());
   tuple=(Tuple)((Object[])asserted.get(2))[0];
-  assertSame(person3,tuple.getFactHandles()[0].getObject());
-  assertSame(cheese2,tuple.getFactHandles()[1].getObject());
+  assertSame(person3,tuple.getFactHandles()[1].getObject());
+  assertSame(cheese2,tuple.getFactHandles()[0].getObject());
   assertNotSame(cheese1,cheese2);
 }
