@@ -1,11 +1,12 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  memory.add(workingMemory,handle);
-  final BetaConstraints binder=constraints();
-  for (final Iterator it=memory.leftTupleIterator(workingMemory,handle); it.hasNext(); ) {
-    final ReteTuple leftTuple=(ReteTuple)it.next();
-    if (binder.isAllowed(handle,leftTuple,workingMemory)) {
-      this.modifyTuple(leftTuple,context,workingMemory);
+  memory.getObjectMemory().add(handle);
+  final Iterator it=memory.getTupleMemory().iterator();
+  this.constraints.updateFromFactHandle(workingMemory,handle);
+  for (ReteTuple tuple=(ReteTuple)it.next(); tuple != null; tuple=(ReteTuple)it.next()) {
+    if (this.constraints.isAllowedCachedRight(tuple)) {
+      this.retractTuple(tuple,context,workingMemory);
+      this.assertTuple(tuple,context,workingMemory);
     }
   }
 }

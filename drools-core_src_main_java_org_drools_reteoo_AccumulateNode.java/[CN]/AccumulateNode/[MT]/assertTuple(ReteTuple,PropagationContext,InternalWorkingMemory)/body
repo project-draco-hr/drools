@@ -1,26 +1,29 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  memory.add(workingMemory,leftTuple);
+  memory.getTupleMemory().add(leftTuple);
   final List matchingObjects=new ArrayList();
-  for (final Iterator it=memory.rightObjectIterator(workingMemory,leftTuple); it.hasNext(); ) {
-    final ObjectMatches objectMatches=(ObjectMatches)it.next();
-    final InternalFactHandle handle=objectMatches.getFactHandle();
-    if (attemptJoin(leftTuple,handle,objectMatches,this.resultsBinder,workingMemory) != null) {
+  final Iterator it=memory.getObjectMemory().iterator(leftTuple);
+  this.constraints.updateFromTuple(workingMemory,leftTuple);
+  for (FactEntry entry=(FactEntry)it.next(); entry != null; entry=(FactEntry)it.next()) {
+    final InternalFactHandle handle=entry.getFactHandle();
+    if (this.constraints.isAllowedCachedLeft(handle.getObject())) {
       matchingObjects.add(handle.getObject());
     }
   }
   final Object result=this.accumulate.accumulate(leftTuple,matchingObjects,workingMemory);
   boolean isAllowed=true;
-  for (int i=0, length=this.constraints.length; i < length; i++) {
-    if (!this.constraints[i].isAllowed(result,leftTuple,workingMemory)) {
+  for (int i=0, length=this.resultConstraints.length; i < length; i++) {
+    if (!this.resultConstraints[i].isAllowed(result,workingMemory)) {
       isAllowed=false;
       break;
     }
   }
   if (isAllowed) {
-    final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(result);
-    if (this.resultsBinder.isAllowed(handle,leftTuple,workingMemory)) {
-      this.sink.propagateAssertTuple(leftTuple,handle,context,workingMemory);
+    this.resultBinder.updateFromTuple(workingMemory,leftTuple);
+    if (this.resultBinder.isAllowedCachedLeft(result)) {
+      final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(result);
+      memory.getCreatedHandles().put(leftTuple,handle,false);
+      sink.propagateAssertTuple(leftTuple,handle,context,workingMemory);
     }
   }
 }
