@@ -1,10 +1,16 @@
 {
   BetaMemory memory;
-  if (this.indexed) {
-    final Constraint constraint=(Constraint)this.constraints.getFirst();
-    final VariableConstraint variableConstraint=(VariableConstraint)constraint;
-    final FieldIndex index=new FieldIndex(variableConstraint.getFieldExtractor(),variableConstraint.getRequiredDeclarations()[0]);
-    memory=new BetaMemory(new TupleHashTable(),new FieldIndexHashTable(new FieldIndex[]{index}));
+  if (this.indexed > 0) {
+    LinkedListEntry entry=(LinkedListEntry)this.constraints.getFirst();
+    List list=new ArrayList();
+    for (int pos=0; pos < this.indexed; pos++) {
+      final Constraint constraint=(Constraint)entry.getNext();
+      final VariableConstraint variableConstraint=(VariableConstraint)constraint;
+      final FieldIndex index=new FieldIndex(variableConstraint.getFieldExtractor(),variableConstraint.getRequiredDeclarations()[0]);
+      list.add(index);
+    }
+    FieldIndex[] indexes=(FieldIndex[])list.toArray(new FieldIndex[list.size()]);
+    memory=new BetaMemory(new TupleHashTable(),new FieldIndexHashTable(indexes));
   }
  else {
     memory=new BetaMemory(new TupleHashTable(),new FactHashTable());
