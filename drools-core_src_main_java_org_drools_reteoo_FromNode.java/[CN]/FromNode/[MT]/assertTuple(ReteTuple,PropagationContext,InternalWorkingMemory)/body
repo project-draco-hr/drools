@@ -1,24 +1,18 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  memory.add(workingMemory,leftTuple);
-  for (final Iterator it=this.dataProvider.getResults(leftTuple,workingMemory,context); it.hasNext(); ) {
+  memory.getTupleMemory().add(leftTuple);
+  this.binder.updateFromTuple(workingMemory,leftTuple);
+  for (final java.util.Iterator it=this.dataProvider.getResults(leftTuple,workingMemory,context); it.hasNext(); ) {
     final Object object=it.next();
-    boolean isAllowed=true;
     for (int i=0, length=this.constraints.length; i < length; i++) {
-      if (!this.constraints[i].isAllowed(object,leftTuple,workingMemory)) {
-        isAllowed=false;
-        break;
+      if (!this.constraints[i].isAllowed(object,workingMemory)) {
+        continue;
       }
     }
-    if (!isAllowed) {
-      continue;
-    }
-    final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(object);
-    final ObjectMatches objectMatches=new ObjectMatches((DefaultFactHandle)handle);
-    if (this.binder.isAllowed(handle,leftTuple,workingMemory)) {
-      final TupleMatch tupleMatch=new CompositeTupleMatch(leftTuple,objectMatches);
-      leftTuple.addTupleMatch((DefaultFactHandle)handle,tupleMatch);
-      this.sink.propagateAssertTuple(leftTuple,handle,tupleMatch,context,workingMemory);
+    if (this.binder.isAllowedCachedLeft(object)) {
+      final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(object);
+      memory.getCreatedHandles().put(leftTuple,handle);
+      this.sink.propagateAssertTuple(leftTuple,handle,context,workingMemory);
     }
   }
 }

@@ -1,12 +1,9 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  memory.remove(workingMemory,leftTuple);
-  final Map matches=leftTuple.getTupleMatches();
-  if (!matches.isEmpty()) {
-    for (final Iterator it=matches.values().iterator(); it.hasNext(); ) {
-      final TupleMatch tupleMatch=(TupleMatch)it.next();
-      tupleMatch.getTuple().retractChildEntries(context,workingMemory);
-      workingMemory.getFactHandleFactory().destroyFactHandle(tupleMatch.getObjectMatches().getFactHandle());
-    }
+  memory.getTupleMemory().remove(leftTuple);
+  final InternalFactHandle handle=(InternalFactHandle)memory.getCreatedHandles().remove(leftTuple);
+  if (handle != null) {
+    this.sink.propagateRetractTuple(leftTuple,handle,context,workingMemory);
+    workingMemory.getFactHandleFactory().destroyFactHandle(handle);
   }
 }
