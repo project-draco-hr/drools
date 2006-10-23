@@ -1,12 +1,10 @@
 {
-  ReteTuple tuple=null;
+  boolean propagate=true;
   if (this.hasMemory) {
-    final ObjectHashMap map=(ObjectHashMap)workingMemory.getNodeMemory(this);
-    tuple=(ReteTuple)map.remove(handle);
+    final FactHashTable memory=(FactHashTable)workingMemory.getNodeMemory(this);
+    propagate=memory.remove(handle);
   }
- else {
-    tuple=new ReteTuple(handle);
+  if (propagate) {
+    this.sink.createAndPropagateRetractTuple(handle,context,workingMemory);
   }
-  this.sink.createAndPropagateRetractTuple(tuple,context,workingMemory);
-  tuple.release();
 }
