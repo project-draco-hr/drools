@@ -1,0 +1,26 @@
+{
+  CompositeObjectSinkAdapter ad=new CompositeObjectSinkAdapter();
+  LiteralConstraint lit=new LiteralConstraint(new MockExtractor(),StringFactory.getInstance().getEvaluator(Operator.EQUAL),new ObjectFieldImpl("stilton"));
+  AlphaNode al=new AlphaNode(0,lit,new MockObjectSource(0));
+  ad.addObjectSink(al);
+  assertNull(ad.otherSinks);
+  assertNotNull(ad.hashedFieldIndexes);
+  assertEquals(1,ad.hashableSinks.size());
+  assertEquals(al,ad.getSinks()[0]);
+  LiteralConstraint lit2=new LiteralConstraint(new MockExtractor(),StringFactory.getInstance().getEvaluator(Operator.EQUAL),new ObjectFieldImpl("cheddar"));
+  AlphaNode al2=new AlphaNode(1,lit2,new MockObjectSource(0));
+  ad.addObjectSink(al2);
+  assertNull(ad.otherSinks);
+  assertEquals(2,ad.hashableSinks.size());
+  assertEquals(al,ad.getSinks()[0]);
+  assertEquals(al2,ad.getSinks()[1]);
+  MockBetaNode beta=new MockBetaNode(0,null,null);
+  ad.addObjectSink(beta);
+  assertNotNull(ad.otherSinks);
+  assertEquals(2,ad.hashableSinks.size());
+  assertEquals(1,ad.otherSinks.size());
+  assertEquals(beta,ad.otherSinks.getFirst());
+  ad.removeObjectSink(beta);
+  assertNull(ad.otherSinks);
+  assertEquals(2,ad.hashableSinks.size());
+}
