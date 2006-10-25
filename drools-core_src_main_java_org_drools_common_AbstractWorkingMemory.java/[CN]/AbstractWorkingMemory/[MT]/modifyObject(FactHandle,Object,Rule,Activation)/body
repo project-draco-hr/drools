@@ -3,10 +3,12 @@
     this.lock.lock();
     final int status=((InternalFactHandle)factHandle).getEqualityKey().getStatus();
     final InternalFactHandle handle=(InternalFactHandle)factHandle;
-    final Object originalObject=handle.getObject();
+    final Object originalObject=(handle.isShadowFact()) ? ((ShadowProxy)handle.getObject()).getShadowedObject() : handle.getObject();
     if (handle.getId() == -1 || object == null) {
       return;
     }
+    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation);
+    doRetract(handle,propagationContext);
     handle.setObject(object);
     if (originalObject != object) {
       this.assertMap.put(handle,handle);
@@ -25,8 +27,6 @@
       key.addFactHandle(handle);
     }
     handle.setEqualityKey(key);
-    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation);
-    doRetract(handle,propagationContext);
     this.handleFactory.increaseFactHandleRecency(handle);
     doAssertObject(handle,object,propagationContext);
     this.workingMemoryEventSupport.fireObjectModified(propagationContext,factHandle,originalObject,object);
