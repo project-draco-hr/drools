@@ -1,6 +1,6 @@
 {
   final ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
-  final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  final InternalWorkingMemory workingMemory=(InternalWorkingMemory)ruleBase.newWorkingMemory();
   final FieldExtractor priceExtractor=new ClassFieldExtractor(Cheese.class,"price");
   final Column column=new Column(0,new ClassObjectType(Cheese.class));
   final Declaration priceDeclaration=new Declaration("price1",priceExtractor,column);
@@ -8,9 +8,9 @@
     /** 
  */
     private static final long serialVersionUID=5673999834006100045L;
-    public Object evaluate(    Tuple tuple,    Declaration[] declarations,    WorkingMemory workingMemory){
+    public FieldValue evaluate(    Tuple tuple,    Declaration[] declarations,    WorkingMemory workingMemory){
       int price=((Integer)declarations[0].getValue(workingMemory.getObject(tuple.get(declarations[0])))).intValue();
-      return new Integer(2 * price);
+      return FieldFactory.getFieldValue(2 * price);
     }
   }
 ;
@@ -22,9 +22,9 @@
   final Cheese cheddar1=new Cheese("cheddar",10);
   final InternalFactHandle f1=(InternalFactHandle)workingMemory.assertObject(cheddar1);
   tuple=new InstrumentedReteTuple(tuple,f1);
-  assertTrue(constraint1.isAllowed(f1.getObject(),tuple,workingMemory));
-  assertFalse(constraint2.isAllowed(f1.getObject(),tuple,workingMemory));
+  assertTrue(constraint1.isAllowed(f1.getObject(),workingMemory));
+  assertFalse(constraint2.isAllowed(f1.getObject(),workingMemory));
   final Cheese cheddar2=new Cheese("cheddar",11);
   final InternalFactHandle f2=(InternalFactHandle)workingMemory.assertObject(cheddar2);
-  assertTrue(constraint2.isAllowed(f2.getObject(),tuple,workingMemory));
+  assertTrue(constraint2.isAllowed(f2.getObject(),workingMemory));
 }

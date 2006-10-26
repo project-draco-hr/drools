@@ -29,10 +29,10 @@
     int count=0;
     for (Iterator it=fieldTypes.entrySet().iterator(); it.hasNext(); ) {
       Map.Entry entry=(Map.Entry)it.next();
-      String name=(String)entry.getKey();
+      String fieldName=(String)entry.getKey();
       Method method=(Method)entry.getValue();
       Class fieldType=method.getReturnType();
-      String fieldFlag=name + ShadowProxyFactory.FIELD_SET_FLAG;
+      String fieldFlag=fieldName + ShadowProxyFactory.FIELD_SET_FLAG;
       count++;
       Label goNext=new Label();
       final Label l5=new Label();
@@ -52,7 +52,7 @@
  else {
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(clazz),method.getName(),Type.getMethodDescriptor(method));
       }
-      mv.visitFieldInsn(Opcodes.PUTFIELD,className,name,Type.getDescriptor(fieldType));
+      mv.visitFieldInsn(Opcodes.PUTFIELD,className,fieldName,Type.getDescriptor(fieldType));
       final Label l8=new Label();
       mv.visitLabel(l8);
       mv.visitVarInsn(Opcodes.ALOAD,0);
@@ -61,7 +61,7 @@
       mv.visitLabel(l6);
       if (fieldType.isPrimitive()) {
         mv.visitVarInsn(Opcodes.ALOAD,0);
-        mv.visitFieldInsn(Opcodes.GETFIELD,className,name,Type.getDescriptor(fieldType));
+        mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
         mv.visitVarInsn(Opcodes.ALOAD,2);
         if (clazz.isInterface()) {
           mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,className,method.getName(),Type.getMethodDescriptor(method));
@@ -89,7 +89,7 @@
       }
  else {
         mv.visitVarInsn(Opcodes.ALOAD,0);
-        mv.visitFieldInsn(Opcodes.GETFIELD,className,name,Type.getDescriptor(fieldType));
+        mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
         Label secondIfPart=new Label();
         mv.visitJumpInsn(Opcodes.IFNONNULL,secondIfPart);
         mv.visitVarInsn(Opcodes.ALOAD,2);
@@ -103,10 +103,10 @@
         mv.visitJumpInsn(Opcodes.IFNONNULL,returnFalse);
         mv.visitLabel(secondIfPart);
         mv.visitVarInsn(Opcodes.ALOAD,0);
-        mv.visitFieldInsn(Opcodes.GETFIELD,className,name,Type.getDescriptor(fieldType));
+        mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
         mv.visitJumpInsn(Opcodes.IFNULL,goNext);
         mv.visitVarInsn(Opcodes.ALOAD,0);
-        mv.visitFieldInsn(Opcodes.GETFIELD,className,name,Type.getDescriptor(fieldType));
+        mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
         mv.visitVarInsn(Opcodes.ALOAD,2);
         if (clazz.isInterface()) {
           mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,className,method.getName(),Type.getMethodDescriptor(method));
@@ -114,7 +114,12 @@
  else {
           mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,className,method.getName(),Type.getMethodDescriptor(method));
         }
-        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(fieldType),"equals",Type.getMethodDescriptor(Type.BOOLEAN_TYPE,new Type[]{Type.getType(Object.class)}));
+        if (fieldType.isInterface()) {
+          mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,Type.getInternalName(fieldType),"equals",Type.getMethodDescriptor(Type.BOOLEAN_TYPE,new Type[]{Type.getType(Object.class)}));
+        }
+ else {
+          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(fieldType),"equals",Type.getMethodDescriptor(Type.BOOLEAN_TYPE,new Type[]{Type.getType(Object.class)}));
+        }
         mv.visitJumpInsn(Opcodes.IFNE,goNext);
         mv.visitLabel(returnFalse);
         mv.visitInsn(Opcodes.ICONST_0);

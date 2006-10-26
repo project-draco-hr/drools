@@ -1,5 +1,6 @@
 {
   MethodVisitor mv;
+  boolean hasDoubleAttr=false;
 {
     mv=cw.visitMethod(Opcodes.ACC_PUBLIC,"hashCode",Type.getMethodDescriptor(Type.INT_TYPE,new Type[]{}),null,null);
     mv.visitCode();
@@ -14,10 +15,10 @@
     int count=0;
     for (Iterator it=fieldTypes.entrySet().iterator(); it.hasNext(); ) {
       Map.Entry entry=(Map.Entry)it.next();
-      String name=(String)entry.getKey();
+      String fieldName=(String)entry.getKey();
       Method method=(Method)entry.getValue();
       Class fieldType=method.getReturnType();
-      String fieldFlag=name + ShadowProxyFactory.FIELD_SET_FLAG;
+      String fieldFlag=fieldName + ShadowProxyFactory.FIELD_SET_FLAG;
       count++;
       Label goNext=new Label();
       final Label l5=new Label();
@@ -37,27 +38,72 @@
  else {
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(clazz),method.getName(),Type.getMethodDescriptor(method));
       }
-      mv.visitFieldInsn(Opcodes.PUTFIELD,className,name,Type.getDescriptor(fieldType));
+      mv.visitFieldInsn(Opcodes.PUTFIELD,className,fieldName,Type.getDescriptor(fieldType));
       final Label l8=new Label();
       mv.visitLabel(l8);
       mv.visitVarInsn(Opcodes.ALOAD,0);
       mv.visitInsn(Opcodes.ICONST_1);
       mv.visitFieldInsn(Opcodes.PUTFIELD,className,fieldFlag,Type.BOOLEAN_TYPE.getDescriptor());
       mv.visitLabel(l6);
-      Label l2=new Label();
-      mv.visitLabel(l2);
-      mv.visitIntInsn(Opcodes.BIPUSH,31);
-      mv.visitVarInsn(Opcodes.ILOAD,2);
-      mv.visitInsn(Opcodes.IMUL);
       if (fieldType.isPrimitive()) {
-        mv.visitVarInsn(Opcodes.ALOAD,0);
-        mv.visitFieldInsn(Opcodes.GETFIELD,className,name,Type.getDescriptor(fieldType));
-        mv.visitInsn(Type.getType(fieldType).getOpcode(Opcodes.IADD));
-        mv.visitVarInsn(Type.getType(fieldType).getOpcode(Opcodes.ISTORE),2);
+        Label l2=new Label();
+        if (fieldType == Double.TYPE) {
+          hasDoubleAttr=true;
+          mv.visitVarInsn(Opcodes.ALOAD,0);
+          mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
+          mv.visitMethodInsn(Opcodes.INVOKESTATIC,Type.getInternalName(Double.class),"doubleToLongBits","(D)J");
+          mv.visitVarInsn(Opcodes.LSTORE,3);
+        }
+        mv.visitLabel(l2);
+        mv.visitIntInsn(Opcodes.BIPUSH,31);
+        mv.visitVarInsn(Opcodes.ILOAD,2);
+        mv.visitInsn(Opcodes.IMUL);
+        if (fieldType != Double.TYPE) {
+          mv.visitVarInsn(Opcodes.ALOAD,0);
+          mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
+        }
+        if (fieldType == Boolean.TYPE) {
+          Label z1=new Label();
+          mv.visitJumpInsn(Opcodes.IFEQ,z1);
+          mv.visitIntInsn(Opcodes.SIPUSH,1231);
+          Label z2=new Label();
+          mv.visitJumpInsn(Opcodes.GOTO,z2);
+          mv.visitLabel(z1);
+          mv.visitIntInsn(Opcodes.SIPUSH,1237);
+          mv.visitLabel(z2);
+        }
+ else         if (fieldType == Double.TYPE) {
+          Label d1=new Label();
+          mv.visitLabel(d1);
+          mv.visitVarInsn(Opcodes.LLOAD,3);
+          mv.visitVarInsn(Opcodes.LLOAD,3);
+          mv.visitIntInsn(Opcodes.BIPUSH,32);
+          mv.visitInsn(Opcodes.LUSHR);
+          mv.visitInsn(Opcodes.LXOR);
+          mv.visitInsn(Opcodes.L2I);
+        }
+ else         if (fieldType == Float.TYPE) {
+          mv.visitMethodInsn(Opcodes.INVOKESTATIC,Type.getInternalName(Float.class),"floatToIntBits","(F)I");
+        }
+ else         if (fieldType == Long.TYPE) {
+          mv.visitVarInsn(Opcodes.ALOAD,0);
+          mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
+          mv.visitIntInsn(Opcodes.BIPUSH,32);
+          mv.visitInsn(Opcodes.LUSHR);
+          mv.visitInsn(Opcodes.LXOR);
+          mv.visitInsn(Opcodes.L2I);
+        }
+        mv.visitInsn(Opcodes.IADD);
+        mv.visitVarInsn(Opcodes.ISTORE,2);
       }
  else {
+        Label l2=new Label();
+        mv.visitLabel(l2);
+        mv.visitIntInsn(Opcodes.BIPUSH,31);
+        mv.visitVarInsn(Opcodes.ILOAD,2);
+        mv.visitInsn(Opcodes.IMUL);
         mv.visitVarInsn(Opcodes.ALOAD,0);
-        mv.visitFieldInsn(Opcodes.GETFIELD,className,name,Type.getDescriptor(fieldType));
+        mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
         Label np1=new Label();
         mv.visitJumpInsn(Opcodes.IFNONNULL,np1);
         mv.visitInsn(Opcodes.ICONST_0);
@@ -65,8 +111,13 @@
         mv.visitJumpInsn(Opcodes.GOTO,np2);
         mv.visitLabel(np1);
         mv.visitVarInsn(Opcodes.ALOAD,0);
-        mv.visitFieldInsn(Opcodes.GETFIELD,className,name,Type.getDescriptor(fieldType));
-        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(fieldType),"hashCode","()I");
+        mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
+        if (fieldType.isInterface()) {
+          mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,Type.getInternalName(fieldType),"hashCode","()I");
+        }
+ else {
+          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(fieldType),"hashCode","()I");
+        }
         mv.visitLabel(np2);
         mv.visitInsn(Opcodes.IADD);
         mv.visitVarInsn(Opcodes.ISTORE,2);
@@ -80,6 +131,9 @@
     mv.visitLocalVariable("this","L" + className + ";",null,l0,lastLabel,0);
     mv.visitLocalVariable("PRIME",Type.INT_TYPE.getDescriptor(),null,l0,lastLabel,1);
     mv.visitLocalVariable("result",Type.INT_TYPE.getDescriptor(),null,l1,lastLabel,2);
+    if (hasDoubleAttr) {
+      mv.visitLocalVariable("temp",Type.LONG_TYPE.getDescriptor(),null,l1,lastLabel,3);
+    }
     mv.visitMaxs(0,0);
     mv.visitEnd();
   }
