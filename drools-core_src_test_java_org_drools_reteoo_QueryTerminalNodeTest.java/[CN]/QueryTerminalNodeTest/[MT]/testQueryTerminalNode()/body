@@ -2,10 +2,10 @@
   final ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
   final Rete rete=ruleBase.getRete();
   final ClassObjectType queryObjectType=new ClassObjectType(DroolsQuery.class);
-  final ObjectTypeNode queryObjectTypeNode=new ObjectTypeNode(1,queryObjectType,rete);
+  final ObjectTypeNode queryObjectTypeNode=new ObjectTypeNode(1,queryObjectType,rete,3);
   queryObjectTypeNode.attach();
   ClassFieldExtractor extractor=new ClassFieldExtractor(DroolsQuery.class,"name");
-  FieldValue field=new MockField("query-1");
+  FieldValue field=FieldFactory.getFieldValue("query-1");
   final Evaluator evaluator=ValueType.STRING_TYPE.getEvaluator(Operator.EQUAL);
   LiteralConstraint constraint=new LiteralConstraint(extractor,evaluator,field);
   AlphaNode alphaNode=new AlphaNode(2,constraint,queryObjectTypeNode);
@@ -13,10 +13,10 @@
   final LeftInputAdapterNode liaNode=new LeftInputAdapterNode(3,alphaNode);
   liaNode.attach();
   final ClassObjectType cheeseObjectType=new ClassObjectType(Cheese.class);
-  final ObjectTypeNode cheeseObjectTypeNode=new ObjectTypeNode(4,cheeseObjectType,rete);
+  final ObjectTypeNode cheeseObjectTypeNode=new ObjectTypeNode(4,cheeseObjectType,rete,3);
   cheeseObjectTypeNode.attach();
   extractor=new ClassFieldExtractor(Cheese.class,"type");
-  field=new MockField("stilton");
+  field=FieldFactory.getFieldValue("stilton");
   constraint=new LiteralConstraint(extractor,evaluator,field);
   alphaNode=new AlphaNode(5,constraint,cheeseObjectTypeNode);
   alphaNode.attach();
@@ -42,15 +42,15 @@
   assertEquals(2,results.size());
   QueryResult result=results.get(0);
   assertEquals(1,result.size());
-  assertSame(stilton1,result.get(0));
+  assertEquals(stilton2,result.get(0));
   result=results.get(1);
   assertEquals(1,result.size());
-  assertSame(stilton2,result.get(0));
+  assertEquals(stilton1,result.get(0));
   int i=0;
   for (final Iterator it=results.iterator(); it.hasNext(); ) {
     result=(QueryResult)it.next();
     assertEquals(1,result.size());
-    if (i == 0) {
+    if (i == 1) {
       assertSame(stilton1,result.get(0));
     }
  else {
