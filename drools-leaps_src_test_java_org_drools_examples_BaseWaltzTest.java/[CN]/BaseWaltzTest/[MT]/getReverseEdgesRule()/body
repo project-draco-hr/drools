@@ -1,0 +1,29 @@
+{
+  final Rule rule=new Rule("reverse_edges");
+  final Column stageColumn=new Column(0,this.stageType,"stage");
+  stageColumn.addConstraint(getLiteralConstraint(stageColumn,"value",new Integer(Stage.DUPLICATE),this.integerEqualEvaluator));
+  rule.addPattern(stageColumn);
+  final Column lineColumn=new Column(1,this.lineType,"line");
+  rule.addPattern(lineColumn);
+  final Declaration lineDeclaration=rule.getDeclaration("line");
+  final Consequence consequence=new Consequence(){
+    public void evaluate(    KnowledgeHelper drools,    WorkingMemory workingMemory) throws ConsequenceException {
+      try {
+        Rule rule=drools.getRule();
+        Tuple tuple=drools.getTuple();
+        Line line=(Line)drools.get(lineDeclaration);
+        drools.assertObject(new Edge(line.getP1(),line.getP2(),false,Edge.NIL,Edge.NIL));
+        drools.assertObject(new Edge(line.getP2(),line.getP1(),false,Edge.NIL,Edge.NIL));
+        drools.retractObject(tuple.get(lineDeclaration));
+        System.out.println("draw " + line.getP1() + " "+ line.getP2());
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        throw new ConsequenceException(e);
+      }
+    }
+  }
+;
+  rule.setConsequence(consequence);
+  return rule;
+}

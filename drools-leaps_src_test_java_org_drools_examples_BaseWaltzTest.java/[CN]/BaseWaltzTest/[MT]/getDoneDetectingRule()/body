@@ -1,0 +1,30 @@
+{
+  final Rule rule=new Rule("done_detecting");
+  final Column stageColumn=new Column(0,this.stageType,"stage");
+  stageColumn.addConstraint(getLiteralConstraint(stageColumn,"value",new Integer(Stage.DETECT_JUNCTIONS),this.integerEqualEvaluator));
+  rule.addPattern(stageColumn);
+  final Declaration stageDeclaration=rule.getDeclaration("stage");
+  final Column notEdgeColumn=new Column(1,this.edgeType);
+  notEdgeColumn.addConstraint(getLiteralConstraint(notEdgeColumn,"joined",new Boolean(false),this.booleanEqualEvaluator));
+  final Not notEdge=new Not();
+  notEdge.addChild(notEdgeColumn);
+  rule.addPattern(notEdge);
+  final Consequence consequence=new Consequence(){
+    public void evaluate(    KnowledgeHelper drools,    WorkingMemory workingMemory) throws ConsequenceException {
+      try {
+        Rule rule=drools.getRule();
+        Tuple tuple=drools.getTuple();
+        Stage stage=(Stage)drools.get(stageDeclaration);
+        stage.setValue(Stage.FIND_INITIAL_BOUNDARY);
+        drools.modifyObject(tuple.get(stageDeclaration),stage);
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        throw new ConsequenceException(e);
+      }
+    }
+  }
+;
+  rule.setConsequence(consequence);
+  return rule;
+}

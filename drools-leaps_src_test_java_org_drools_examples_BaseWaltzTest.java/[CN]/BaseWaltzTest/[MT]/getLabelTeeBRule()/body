@@ -1,0 +1,47 @@
+{
+  final Rule rule=new Rule("label_tee_B");
+  final Column stageColumn=new Column(0,this.stageType,"stage");
+  stageColumn.addConstraint(getLiteralConstraint(stageColumn,"value",new Integer(Stage.LABELING),this.integerEqualEvaluator));
+  rule.addPattern(stageColumn);
+  final Column junctionColumn=new Column(1,this.junctionType);
+  junctionColumn.addConstraint(getLiteralConstraint(junctionColumn,"type",Junction.TEE,this.objectEqualEvaluator));
+  setFieldDeclaration(junctionColumn,"basePoint","junctionBasePoint");
+  setFieldDeclaration(junctionColumn,"p1","junctionP1");
+  setFieldDeclaration(junctionColumn,"p3","junctionP3");
+  rule.addPattern(junctionColumn);
+  final Declaration junctionBasePointDeclaration=rule.getDeclaration("junctionBasePoint");
+  final Declaration junctionP1Declaration=rule.getDeclaration("junctionP1");
+  final Declaration junctionP3Declaration=rule.getDeclaration("junctionP3");
+  final Column edgeColumn1=new Column(2,this.edgeType,"edge1");
+  rule.addPattern(edgeColumn1);
+  final Declaration edge1Declaration=rule.getDeclaration("edge1");
+  edgeColumn1.addConstraint(getBoundVariableConstraint(edgeColumn1,"p1",junctionBasePointDeclaration,this.integerEqualEvaluator));
+  edgeColumn1.addConstraint(getBoundVariableConstraint(edgeColumn1,"p2",junctionP1Declaration,this.integerEqualEvaluator));
+  final Column edgeColumn2=new Column(3,this.edgeType,"edge2");
+  edgeColumn2.addConstraint(getLiteralConstraint(edgeColumn2,"label",Edge.NIL,this.objectEqualEvaluator));
+  rule.addPattern(edgeColumn2);
+  final Declaration edge2Declaration=rule.getDeclaration("edge2");
+  edgeColumn2.addConstraint(getBoundVariableConstraint(edgeColumn2,"p1",junctionBasePointDeclaration,this.integerEqualEvaluator));
+  edgeColumn2.addConstraint(getBoundVariableConstraint(edgeColumn2,"p2",junctionP3Declaration,this.integerEqualEvaluator));
+  final Consequence consequence=new Consequence(){
+    public void evaluate(    KnowledgeHelper drools,    WorkingMemory workingMemory) throws ConsequenceException {
+      try {
+        Rule rule=drools.getRule();
+        Tuple tuple=drools.getTuple();
+        Edge edge1=(Edge)drools.get(edge1Declaration);
+        edge1.setLabel(Edge.B);
+        Edge edge2=(Edge)drools.get(edge2Declaration);
+        edge2.setLabel(Edge.B);
+        drools.modifyObject(tuple.get(edge1Declaration),edge1);
+        drools.modifyObject(tuple.get(edge2Declaration),edge2);
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        throw new ConsequenceException(e);
+      }
+    }
+  }
+;
+  rule.setConsequence(consequence);
+  return rule;
+}

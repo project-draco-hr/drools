@@ -1,0 +1,29 @@
+{
+  final Rule rule=new Rule("done_reversing");
+  final Column stageColumn=new Column(0,this.stageType,"stage");
+  stageColumn.addConstraint(getLiteralConstraint(stageColumn,"value",new Integer(Stage.DUPLICATE),this.integerEqualEvaluator));
+  rule.addPattern(stageColumn);
+  final Declaration stageDeclaration=rule.getDeclaration("stage");
+  final Column notLineColumn=new Column(1,this.lineType);
+  final Not notLine=new Not();
+  notLine.addChild(notLineColumn);
+  rule.addPattern(notLine);
+  final Consequence consequence=new Consequence(){
+    public void evaluate(    KnowledgeHelper drools,    WorkingMemory workingMemory) throws ConsequenceException {
+      try {
+        Rule rule=drools.getRule();
+        Tuple tuple=drools.getTuple();
+        Stage stage=(Stage)drools.get(stageDeclaration);
+        stage.setValue(Stage.DETECT_JUNCTIONS);
+        drools.modifyObject(tuple.get(stageDeclaration),stage);
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        throw new ConsequenceException(e);
+      }
+    }
+  }
+;
+  rule.setConsequence(consequence);
+  return rule;
+}
