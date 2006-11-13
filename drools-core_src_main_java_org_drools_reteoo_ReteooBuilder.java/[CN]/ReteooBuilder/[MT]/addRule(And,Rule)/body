@@ -18,6 +18,7 @@
     Column column=null;
     if (object instanceof Column) {
       column=(Column)object;
+      if ((binder != null) && (binder != EmptyBetaConstraints.getInstance()))       throw new RuntimeDroolsException("This is a bug! Please report to Drools development team!");
       binder=attachColumn((Column)object,and,this.removeIdentities);
       if (this.tupleSource == null) {
         this.tupleSource=attachNode(new LeftInputAdapterNode(this.id++,this.objectSource));
@@ -35,13 +36,16 @@
         final ObjectSource objectSource=attachNode(new ObjectTypeNode(this.id++,new ClassObjectType(InitialFact.class),this.rete,this.ruleBase.getConfiguration().getAlphaNodeHashingThreshold()));
         this.tupleSource=attachNode(new LeftInputAdapterNode(this.id++,objectSource));
       }
+      if ((binder != null) && (binder != EmptyBetaConstraints.getInstance()))       throw new RuntimeDroolsException("This is a bug! Please report to Drools development team!");
       binder=attachColumn(column,and,false);
     }
     if (object.getClass() == Not.class) {
       attachNot(this.tupleSource,(Not)object,this.objectSource,binder,column);
+      binder=null;
     }
  else     if (object.getClass() == Exists.class) {
       attachExists(this.tupleSource,(Exists)object,this.objectSource,binder,column);
+      binder=null;
     }
  else     if (object.getClass() == From.class) {
       attachFrom(this.tupleSource,(From)object);
@@ -54,6 +58,7 @@
     }
  else     if (this.objectSource != null) {
       this.tupleSource=attachNode(new JoinNode(this.id++,this.tupleSource,this.objectSource,binder));
+      binder=null;
     }
   }
 }
