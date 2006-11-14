@@ -8,14 +8,16 @@
     /** 
  */
     private static final long serialVersionUID=5673999834006100045L;
-    public FieldValue evaluate(    Tuple tuple,    Declaration[] declarations,    WorkingMemory workingMemory){
-      int price=((Number)declarations[0].getValue(workingMemory.getObject(tuple.get(declarations[0])))).intValue();
+    public FieldValue evaluate(    Object object,    Tuple tuple,    Declaration[] previousDeclarations,    Declaration[] localDeclarations,    WorkingMemory workingMemory){
+      int price=((Number)previousDeclarations[0].getValue(workingMemory.getObject(tuple.get(previousDeclarations[0])))).intValue();
       return FieldFactory.getFieldValue(2 * price);
     }
   }
 ;
-  final ReturnValueConstraint constraint1=new ReturnValueConstraint(priceExtractor,isDoubleThePrice,new Declaration[]{priceDeclaration},ValueType.INTEGER_TYPE.getEvaluator(Operator.EQUAL));
-  final ReturnValueConstraint constraint2=new ReturnValueConstraint(priceExtractor,isDoubleThePrice,new Declaration[]{priceDeclaration},ValueType.INTEGER_TYPE.getEvaluator(Operator.GREATER));
+  ReturnValueRestriction restriction1=new ReturnValueRestriction(priceExtractor,isDoubleThePrice,new Declaration[]{priceDeclaration},new Declaration[0],ValueType.INTEGER_TYPE.getEvaluator(Operator.EQUAL));
+  final ReturnValueConstraint constraint1=new ReturnValueConstraint(priceExtractor,restriction1);
+  ReturnValueRestriction restriction2=new ReturnValueRestriction(priceExtractor,isDoubleThePrice,new Declaration[]{priceDeclaration},new Declaration[0],ValueType.INTEGER_TYPE.getEvaluator(Operator.GREATER));
+  final ReturnValueConstraint constraint2=new ReturnValueConstraint(priceExtractor,restriction2);
   final Cheese cheddar0=new Cheese("cheddar",5);
   final FactHandle f0=workingMemory.assertObject(cheddar0);
   InstrumentedReteTuple tuple=new InstrumentedReteTuple(f0);
