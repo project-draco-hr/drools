@@ -1,0 +1,15 @@
+{
+  final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  memory.getFactHandleMemory().add(handle);
+  final Iterator it=memory.getTupleMemory().iterator(handle);
+  this.constraints.updateFromFactHandle(workingMemory,handle);
+  for (ReteTuple tuple=(ReteTuple)it.next(); tuple != null; tuple=(ReteTuple)it.next()) {
+    if (this.constraints.isAllowedCachedRight(tuple)) {
+      final int matches=tuple.getMatches();
+      tuple.setMatches(matches + 1);
+      if (tuple.getMatches() == 1) {
+        this.sink.propagateAssertTuple(tuple,context,workingMemory);
+      }
+    }
+  }
+}
