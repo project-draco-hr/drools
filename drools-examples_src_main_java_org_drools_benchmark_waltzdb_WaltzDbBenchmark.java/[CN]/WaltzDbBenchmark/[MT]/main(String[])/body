@@ -1,0 +1,34 @@
+{
+  try {
+    PackageBuilder builder=new PackageBuilder();
+    builder.addPackageFromDrl(new InputStreamReader(WaltzDbBenchmark.class.getResourceAsStream("waltzdb.drl")));
+    Package pkg=builder.getPackage();
+    RuleBaseConfiguration conf=new RuleBaseConfiguration();
+    conf.setRemoveIdentities(true);
+    final RuleBase ruleBase=RuleBaseFactory.newRuleBase(RuleBase.RETEOO,conf);
+    ruleBase.addPackage(pkg);
+    WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+    java.util.List lines=WaltzDbBenchmark.loadLines("waltzdb16.dat");
+    java.util.List labels=WaltzDbBenchmark.loadLabels("waltzdb16.dat");
+    long now=System.currentTimeMillis();
+    Iterator iter=lines.iterator();
+    while (iter.hasNext()) {
+      Line line=(Line)iter.next();
+      workingMemory.assertObject(line);
+      System.out.println(line.getP1() + " " + line.getP2());
+    }
+    iter=labels.iterator();
+    while (iter.hasNext()) {
+      Label label=(Label)iter.next();
+      workingMemory.assertObject(label);
+      System.out.println(label.getId() + " " + label.getType());
+    }
+    Stage stage=new Stage(Stage.DUPLICATE);
+    workingMemory.assertObject(stage);
+    workingMemory.fireAllRules();
+    System.out.println("Time: " + (System.currentTimeMillis() - now));
+  }
+ catch (  Throwable t) {
+    t.printStackTrace();
+  }
+}
