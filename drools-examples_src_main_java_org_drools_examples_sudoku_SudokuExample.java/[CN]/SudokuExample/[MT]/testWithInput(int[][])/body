@@ -1,0 +1,42 @@
+{
+  try {
+    Collection fields=new ArrayList();
+    for (int i=0; i < field.length; i++) {
+      String row="{";
+      for (int j=0; j < field[i].length; j++) {
+        row+=field[i][j] + ",";
+        fields.add(new Field("" + field[i][j],j + 1,i + 1,getZone(i,j)));
+      }
+      row+="}";
+      System.out.println(row);
+    }
+    RuleBase ruleBase=readRule();
+    WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+    Iterator iter=fields.iterator();
+    Collection handles=new ArrayList();
+    while (iter.hasNext()) {
+      handles.add(workingMemory.assertObject(iter.next()));
+    }
+    workingMemory.fireAllRules();
+    System.out.println("Size: " + workingMemory.getObjects().size());
+    iter=workingMemory.getObjects().iterator();
+    while (iter.hasNext()) {
+      Object next=iter.next();
+      if (next instanceof Field) {
+        field[((Field)next).getRow() - 1][((Field)next).getColumn() - 1]=Integer.parseInt(((Field)next).getValue());
+      }
+    }
+    for (int i=0; i < field.length; i++) {
+      String row="{";
+      for (int j=0; j < field[i].length; j++) {
+        row+=field[i][j] + ",";
+        fields.add(new Field("" + field[i][j],j + 1,i + 1,getZone(i,j)));
+      }
+      row+="}";
+      System.out.println(row);
+    }
+  }
+ catch (  Throwable t) {
+    t.printStackTrace();
+  }
+}
