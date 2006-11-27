@@ -1,0 +1,28 @@
+{
+  final ClassReader reader=new ClassReader(stream);
+  final ClassFieldVisitor visitor=new ClassFieldVisitor(clazz,includeFinalMethods,this);
+  reader.accept(visitor,false);
+  if (clazz.getSuperclass() != null) {
+    final String name=getResourcePath(clazz.getSuperclass());
+    final InputStream parentStream=clazz.getResourceAsStream(name);
+    if (parentStream != null) {
+      processClassWithByteCode(clazz.getSuperclass(),parentStream,includeFinalMethods);
+    }
+ else {
+      processClassWithoutByteCode(clazz.getSuperclass(),includeFinalMethods);
+    }
+  }
+  if (clazz.isInterface()) {
+    final Class[] interfaces=clazz.getInterfaces();
+    for (int i=0; i < interfaces.length; i++) {
+      final String name=getResourcePath(interfaces[i]);
+      final InputStream parentStream=clazz.getResourceAsStream(name);
+      if (parentStream != null) {
+        processClassWithByteCode(interfaces[i],parentStream,includeFinalMethods);
+      }
+ else {
+        processClassWithoutByteCode(interfaces[i],includeFinalMethods);
+      }
+    }
+  }
+}
