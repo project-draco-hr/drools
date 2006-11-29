@@ -1,0 +1,47 @@
+{
+  final DRLParser parser=parseResource("simple_expander.drl");
+  final MockExpanderResolver mockExpanderResolver=new MockExpanderResolver();
+  parser.setExpanderResolver(mockExpanderResolver);
+  parser.compilation_unit();
+  final PackageDescr pack=parser.getPackageDescr();
+  if (parser.hasErrors()) {
+    System.err.println(parser.getErrorMessages());
+  }
+  assertNotNull(pack);
+  assertEquals(1,pack.getRules().size());
+  assertTrue(mockExpanderResolver.checkCalled("foo.dsl"));
+  final RuleDescr rule=(RuleDescr)pack.getRules().get(0);
+  assertEquals("simple_rule",rule.getName());
+  assertEquals(4,rule.getLhs().getDescrs().size());
+  ColumnDescr col=(ColumnDescr)rule.getLhs().getDescrs().get(0);
+  assertEquals("Bar",col.getObjectType());
+  assertEquals("foo1",col.getIdentifier());
+  assertEquals(1,col.getDescrs().size());
+  assertEquals(6,col.getLine());
+  FieldConstraintDescr fld=(FieldConstraintDescr)col.getDescrs().get(0);
+  LiteralRestrictionDescr lit=(LiteralRestrictionDescr)fld.getRestrictions().get(0);
+  assertEquals("==",lit.getEvaluator());
+  assertEquals("a",fld.getFieldName());
+  assertEquals("1",lit.getText());
+  col=(ColumnDescr)rule.getLhs().getDescrs().get(1);
+  assertEquals("Baz",col.getObjectType());
+  assertEquals(7,col.getLine());
+  col=(ColumnDescr)rule.getLhs().getDescrs().get(2);
+  assertEquals("Bar",col.getObjectType());
+  assertEquals("foo2",col.getIdentifier());
+  assertEquals(1,col.getDescrs().size());
+  assertEquals(8,col.getLine());
+  fld=(FieldConstraintDescr)col.getDescrs().get(0);
+  lit=(LiteralRestrictionDescr)fld.getRestrictions().get(0);
+  assertEquals("==",lit.getEvaluator());
+  assertEquals("a",fld.getFieldName());
+  assertEquals("2",lit.getText());
+  col=(ColumnDescr)rule.getLhs().getDescrs().get(3);
+  assertEquals("Bar",col.getObjectType());
+  assertEquals(9,col.getLine());
+  assertEqualsIgnoreWhitespace("bar foo3 : Bar(a==3) baz foo4 : Bar(a==4)",rule.getConsequence());
+  assertTrue(mockExpanderResolver.checkExpanded("when,The rain in spain falls mainly"));
+  assertTrue(mockExpanderResolver.checkExpanded("then,Something else"));
+  assertTrue(mockExpanderResolver.checkExpanded("then,Hey dude"));
+  assertFalse(parser.hasErrors());
+}
