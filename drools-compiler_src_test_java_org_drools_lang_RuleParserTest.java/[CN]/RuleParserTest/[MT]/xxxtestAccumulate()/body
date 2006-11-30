@@ -1,13 +1,15 @@
 {
-  final DRLParser parser=parseResource("accumulate_with_bindings.drl");
+  final DRLParser parser=parseResource("accumulate.drl");
   parser.compilation_unit();
-  assertFalse(parser.hasErrors());
+  if (parser.hasErrors()) {
+    System.err.println(parser.getErrorMessages());
+  }
+  assertFalse(parser.getErrorMessages().toString(),parser.hasErrors());
   final PackageDescr pack=parser.getPackageDescr();
   assertEquals(1,pack.getRules().size());
   final RuleDescr rule=(RuleDescr)pack.getRules().get(0);
   assertEquals(1,rule.getLhs().getDescrs().size());
   final AccumulateDescr accum=(AccumulateDescr)rule.getLhs().getDescrs().get(0);
-  assertEqualsIgnoreWhitespace("$counter",accum.getResultColumn().getIdentifier());
   assertEqualsIgnoreWhitespace("int x = 0 ;",accum.getInitCode());
   assertEqualsIgnoreWhitespace("x++;",accum.getActionCode());
   assertEqualsIgnoreWhitespace("new Integer(x)",accum.getResultCode());
