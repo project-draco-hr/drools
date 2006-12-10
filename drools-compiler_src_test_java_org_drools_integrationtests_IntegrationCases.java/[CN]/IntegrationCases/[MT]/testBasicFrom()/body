@@ -1,2 +1,30 @@
 {
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_From.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  List list1=new ArrayList();
+  workingMemory.setGlobal("list1",list1);
+  List list2=new ArrayList();
+  workingMemory.setGlobal("list2",list2);
+  List list3=new ArrayList();
+  workingMemory.setGlobal("list3",list3);
+  Cheesery cheesery=new Cheesery();
+  Cheese stilton=new Cheese("stilton",12);
+  Cheese cheddar=new Cheese("cheddar",15);
+  cheesery.addCheese(stilton);
+  cheesery.addCheese(cheddar);
+  workingMemory.setGlobal("cheesery",cheesery);
+  workingMemory.assertObject(cheesery);
+  workingMemory.fireAllRules();
+  assertEquals(2,list1.size());
+  assertEquals(cheddar,list1.get(0));
+  assertEquals(stilton,list1.get(1));
+  assertEquals(2,list2.size());
+  assertEquals(cheddar,list2.get(0));
+  assertEquals(stilton,list2.get(1));
+  assertEquals(1,list3.size());
+  assertEquals(stilton,list3.get(0));
 }

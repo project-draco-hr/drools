@@ -1,4 +1,18 @@
 {
   final Column column=build(fromDescr.getReturnedColumn());
-  return null;
+  AccessorDescr accessor=(AccessorDescr)fromDescr.getDataSource();
+  DataProvider dataProvider=null;
+  try {
+    JFDIParser parser=createParser(accessor.toString());
+    DroolsJFDIFactory factory=new DroolsJFDIFactory(this.typeResolver);
+    factory.setDeclarationMap(this.declarations);
+    factory.setGlobalsMap(this.pkg.getGlobals());
+    parser.setValueHandlerFactory(factory);
+    dataProvider=new JFDIDataProvider(parser.expr(),factory);
+  }
+ catch (  final Exception e) {
+    this.errors.add(new RuleError(this.rule,fromDescr,null,"Unable to build expression for 'from' node '" + accessor.toString() + "'"));
+    return null;
+  }
+  return new From(column,dataProvider);
 }
