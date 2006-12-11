@@ -1,3 +1,14 @@
 {
-  throw new InvalidPatternException("You cannot nest an OR within an Exists");
+  if ((!(parent.getChildren().get(0) instanceof GroupElement)) && (((GroupElement)parent.getChildren().get(0)).isExists())) {
+    throw new RuntimeException("ExistOrTransformation expected 'OR' but instead found '" + parent.getChildren().get(0).getClass().getName() + "'");
+  }
+  GroupElement or=(GroupElement)parent.getChildren().get(0);
+  parent.setType(GroupElement.OR);
+  parent.getChildren().clear();
+  for (Iterator it=or.getChildren().iterator(); it.hasNext(); ) {
+    GroupElement newExists=GroupElementFactory.newExistsInstance();
+    newExists.addChild(it.next());
+    parent.addChild(newExists);
+  }
+  parent.pack();
 }

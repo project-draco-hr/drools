@@ -1,3 +1,14 @@
 {
-  throw new InvalidPatternException("You cannot nest an OR within an Not");
+  if ((!(parent.getChildren().get(0) instanceof GroupElement)) && (((GroupElement)parent.getChildren().get(0)).isOr())) {
+    throw new RuntimeException("NotOrTransformation expected 'OR' but instead found '" + parent.getChildren().get(0).getClass().getName() + "'");
+  }
+  GroupElement or=(GroupElement)parent.getChildren().get(0);
+  parent.setType(GroupElement.AND);
+  parent.getChildren().clear();
+  for (Iterator it=or.getChildren().iterator(); it.hasNext(); ) {
+    GroupElement newNot=GroupElementFactory.newNotInstance();
+    newNot.addChild(it.next());
+    parent.addChild(newNot);
+  }
+  parent.pack();
 }

@@ -1,0 +1,32 @@
+{
+  if (this.children.size() == 0) {
+    parent.children.remove(this);
+    return;
+  }
+  if (this.isAnd() || this.isOr() || this.isExists()) {
+    if (parent.getType() == this.getType()) {
+      parent.getChildren().remove(this);
+      for (Iterator childIt=this.children.iterator(); childIt.hasNext(); ) {
+        Object child=childIt.next();
+        parent.addChild(child);
+        if (child instanceof GroupElement) {
+          ((GroupElement)child).pack(parent);
+        }
+      }
+    }
+ else     if ((!this.isExists()) && (this.children.size() == 1)) {
+      Object child=this.children.get(0);
+      parent.addChild(child);
+      parent.getChildren().remove(this);
+      if (child instanceof GroupElement) {
+        ((GroupElement)child).pack(parent);
+      }
+    }
+ else {
+      this.pack();
+    }
+  }
+ else {
+    this.pack();
+  }
+}

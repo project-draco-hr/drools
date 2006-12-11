@@ -1,18 +1,17 @@
 {
+  boolean hasChildOr=false;
+  ce.pack();
   for (final ListIterator it=ce.getChildren().listIterator(); it.hasNext(); ) {
     final Object object=it.next();
     if (object instanceof GroupElement) {
-      final GroupElement parent=(GroupElement)object;
-      processTree(parent);
-      checkForAndRemoveDuplicates(parent);
-      for (final Iterator orIter=parent.getChildren().iterator(); orIter.hasNext(); ) {
-        final Object object2=orIter.next();
-        if (object2 instanceof Or) {
-          it.remove();
-          it.add(applyOrTransformation(parent,(GroupElement)object2));
-          break;
-        }
+      final GroupElement child=(GroupElement)object;
+      processTree(child);
+      if (child.isOr()) {
+        hasChildOr=true;
       }
     }
+  }
+  if (hasChildOr) {
+    applyOrTransformation(ce);
   }
 }

@@ -1,5 +1,33 @@
 {
-  final Or or=new Or();
-  determinePermutations(0,(And)and,null,or);
-  return or;
+  List orsList=new ArrayList();
+  List others=new ArrayList();
+  int permutations=1;
+  for (Iterator it=parent.getChildren().iterator(); it.hasNext(); ) {
+    Object child=it.next();
+    if ((child instanceof GroupElement) && ((GroupElement)child).isOr()) {
+      permutations*=((GroupElement)child).getChildren().size();
+      orsList.add(child);
+    }
+ else {
+      others.add(child);
+    }
+  }
+  parent.setType(GroupElement.OR);
+  parent.getChildren().clear();
+  GroupElement[] ors=(GroupElement[])orsList.toArray(new GroupElement[orsList.size()]);
+  int[] indexes=new int[ors.length];
+  for (int i=1; i <= permutations; i++) {
+    GroupElement and=GroupElementFactory.newAndInstance();
+    and.getChildren().addAll(others);
+    int mod=1;
+    for (int j=ors.length - 1; j >= 0; j--) {
+      and.addChild(ors[j].getChildren().get(indexes[j]));
+      if ((i % mod) == 0) {
+        indexes[j]=(indexes[j] + 1) % ors[j].getChildren().size();
+      }
+      mod*=ors[j].getChildren().size();
+    }
+    parent.addChild(and);
+  }
+  parent.pack();
 }
