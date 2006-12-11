@@ -5,19 +5,23 @@
   }
   if (this.isAnd() || this.isOr() || this.isExists()) {
     if (parent.getType() == this.getType()) {
+      int index=parent.getChildren().indexOf(this);
       parent.getChildren().remove(this);
       for (Iterator childIt=this.children.iterator(); childIt.hasNext(); ) {
         Object child=childIt.next();
-        parent.addChild(child);
+        parent.getChildren().add(index++,child);
         if (child instanceof GroupElement) {
+          int previousSize=parent.getChildren().size();
           ((GroupElement)child).pack(parent);
+          index+=(parent.getChildren().size() - previousSize);
         }
       }
     }
  else     if ((!this.isExists()) && (this.children.size() == 1)) {
-      Object child=this.children.get(0);
-      parent.addChild(child);
+      int index=parent.getChildren().indexOf(this);
       parent.getChildren().remove(this);
+      Object child=this.children.get(0);
+      parent.getChildren().add(index,child);
       if (child instanceof GroupElement) {
         ((GroupElement)child).pack(parent);
       }

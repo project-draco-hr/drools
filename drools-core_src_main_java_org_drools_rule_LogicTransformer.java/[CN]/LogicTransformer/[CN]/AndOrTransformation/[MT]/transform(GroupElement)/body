@@ -1,7 +1,8 @@
 {
   List orsList=new ArrayList();
-  List others=new ArrayList();
+  Object[] others=new Object[parent.getChildren().size()];
   int permutations=1;
+  int index=0;
   for (Iterator it=parent.getChildren().iterator(); it.hasNext(); ) {
     Object child=it.next();
     if ((child instanceof GroupElement) && ((GroupElement)child).isOr()) {
@@ -9,8 +10,9 @@
       orsList.add(child);
     }
  else {
-      others.add(child);
+      others[index]=child;
     }
+    index++;
   }
   parent.setType(GroupElement.OR);
   parent.getChildren().clear();
@@ -18,14 +20,18 @@
   int[] indexes=new int[ors.length];
   for (int i=1; i <= permutations; i++) {
     GroupElement and=GroupElementFactory.newAndInstance();
-    and.getChildren().addAll(others);
     int mod=1;
     for (int j=ors.length - 1; j >= 0; j--) {
-      and.addChild(ors[j].getChildren().get(indexes[j]));
+      and.getChildren().add(0,ors[j].getChildren().get(indexes[j]));
       if ((i % mod) == 0) {
         indexes[j]=(indexes[j] + 1) % ors[j].getChildren().size();
       }
       mod*=ors[j].getChildren().size();
+    }
+    for (int j=0; j < others.length; j++) {
+      if (others[j] != null) {
+        and.getChildren().add(j,others[j]);
+      }
     }
     parent.addChild(and);
   }

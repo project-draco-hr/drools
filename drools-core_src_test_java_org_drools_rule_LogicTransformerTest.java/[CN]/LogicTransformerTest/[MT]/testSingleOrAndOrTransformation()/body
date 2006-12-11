@@ -2,20 +2,21 @@
   final String a="a";
   final String b="b";
   final String c="c";
-  final GroupElement parent=GroupElementFactory.newAndInstance();
-  parent.addChild(c);
   final GroupElement or=GroupElementFactory.newOrInstance();
   or.addChild(a);
   or.addChild(b);
+  final GroupElement parent=GroupElementFactory.newAndInstance();
   parent.addChild(or);
+  parent.addChild(c);
   LogicTransformer.getInstance().applyOrTransformation(parent);
   assertLength(2,parent.getChildren());
   assertEquals(GroupElement.class,parent.getChildren().get(0).getClass());
   assertEquals(GroupElement.class,parent.getChildren().get(1).getClass());
   final GroupElement and1=(GroupElement)parent.getChildren().get(0);
-  assertContains(c,and1.getChildren());
-  assertContains(a,and1.getChildren());
+  assertTrue(and1.isAnd());
+  assertEquals(a,and1.getChildren().get(0));
+  assertEquals(c,and1.getChildren().get(1));
   final GroupElement and2=(GroupElement)parent.getChildren().get(1);
-  assertContains(c,and2.getChildren());
-  assertContains(b,and2.getChildren());
+  assertEquals(b,and2.getChildren().get(0));
+  assertEquals(c,and2.getChildren().get(1));
 }
