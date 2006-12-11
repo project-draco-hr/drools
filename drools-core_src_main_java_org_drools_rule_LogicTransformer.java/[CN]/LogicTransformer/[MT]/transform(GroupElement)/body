@@ -3,11 +3,28 @@
   processTree(cloned);
   cloned.pack();
   GroupElement[] ands=null;
-  if (cloned.getType() == GroupElement.AND) {
+  if (cloned.isAnd()) {
     ands=new GroupElement[]{cloned};
   }
+ else   if (cloned.isOr()) {
+    ands=new GroupElement[cloned.getChildren().size()];
+    int i=0;
+    for (Iterator it=cloned.getChildren().iterator(); it.hasNext(); ) {
+      Object branch=it.next();
+      if ((branch instanceof GroupElement) && (((GroupElement)branch).isAnd())) {
+        ands[i++]=(GroupElement)branch;
+      }
  else {
-    ands=(GroupElement[])cloned.getChildren().toArray(new GroupElement[cloned.getChildren().size()]);
+        ands[i]=GroupElementFactory.newAndInstance();
+        ands[i].addChild(branch);
+        i++;
+      }
+    }
+  }
+ else {
+    GroupElement wrapper=GroupElementFactory.newAndInstance();
+    wrapper.addChild(cloned);
+    ands=new GroupElement[]{wrapper};
   }
   return ands;
 }
