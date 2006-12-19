@@ -1,0 +1,28 @@
+{
+  final ExternalSpreadsheetCompiler converter=new ExternalSpreadsheetCompiler();
+  final List listeners=new ArrayList();
+  ExternalSheetListener l1=new ExternalSheetListener(10,3,"/templates/test_pricing1.drl");
+  listeners.add(l1);
+  ExternalSheetListener l2=new ExternalSheetListener(30,3,"/templates/test_pricing2.drl");
+  listeners.add(l2);
+  converter.compile("/data/ExamplePolicyPricing.xls",InputType.XLS,listeners);
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new StringReader(l1.renderDRL()));
+  builder.addPackageFromDrl(new StringReader(l2.renderDRL()));
+  final Package pkg=builder.getPackage();
+  assertNotNull(pkg);
+  DroolsError[] errors=builder.getErrors();
+  assertEquals(0,errors.length);
+  final RuleBase rb=RuleBaseFactory.newRuleBase();
+  rb.addPackage(pkg);
+  WorkingMemory wm=rb.newWorkingMemory();
+  Driver driver=new Driver();
+  Policy policy=new Policy();
+  wm.assertObject(driver);
+  wm.assertObject(policy);
+  wm.fireAllRules();
+  System.out.println("BASE PRICE IS: " + policy.getBasePrice());
+  System.out.println("DISCOUNT IS: " + policy.getDiscountPercent());
+  int basePrice=policy.getBasePrice();
+  assertEquals(120,basePrice);
+}

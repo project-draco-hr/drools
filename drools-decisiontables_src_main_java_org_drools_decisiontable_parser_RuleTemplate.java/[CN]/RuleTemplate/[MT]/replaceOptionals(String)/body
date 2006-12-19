@@ -1,0 +1,28 @@
+{
+  try {
+    final Pattern pattern=Pattern.compile("\\$(.[^\\$]*)\\$");
+    final List columns=new ArrayList(getColumns());
+    columns.add("row.rowNumber");
+    final BufferedReader reader=new BufferedReader(new StringReader(contents));
+    String line=null;
+    final StringBuffer newLine=new StringBuffer();
+    while ((line=reader.readLine()) != null) {
+      final Matcher matcher=pattern.matcher(line);
+      int optCols=0;
+      while (matcher.find()) {
+        final String c=matcher.group(1);
+        if (!columns.contains(c)) {
+          newLine.append("$if(").append(matcher.group(1)).append(")$");
+          optCols++;
+        }
+      }
+      newLine.append(line);
+      newLine.append(StringUtils.repeat("$endif$",optCols));
+      newLine.append("\n");
+    }
+    return newLine.toString();
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+}

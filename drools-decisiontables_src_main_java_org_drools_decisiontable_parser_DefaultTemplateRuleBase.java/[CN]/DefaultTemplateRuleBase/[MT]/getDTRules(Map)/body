@@ -1,0 +1,27 @@
+{
+  org.drools.decisiontable.model.Package p=new org.drools.decisiontable.model.Package("org.drools.decisiontable.parser");
+  addImports(p);
+  addGlobals(p);
+  int i=1;
+  for (Iterator it=templates.values().iterator(); it.hasNext(); ) {
+    RuleTemplate template=(RuleTemplate)it.next();
+    Rule rule=new Rule(template.getName(),null,i++);
+    Condition condition=new Condition();
+    condition.setSnippet("r : Row()");
+    rule.addCondition(condition);
+    List templateColumns=template.getColumns();
+    for (Iterator it1=templateColumns.iterator(); it1.hasNext(); ) {
+      String column=(String)it1.next();
+      rule.addCondition(createCondition(column));
+    }
+    String[] templateNotColumns=template.getNotColumns();
+    for (int j=0; j < templateNotColumns.length; j++) {
+      rule.addCondition(createNotCondition(templateNotColumns[j]));
+    }
+    rule.addConsequence(createConsequence(template));
+    p.addRule(rule);
+  }
+  DRLOutput out=new DRLOutput();
+  p.renderDRL(out);
+  return out.getDRL();
+}
