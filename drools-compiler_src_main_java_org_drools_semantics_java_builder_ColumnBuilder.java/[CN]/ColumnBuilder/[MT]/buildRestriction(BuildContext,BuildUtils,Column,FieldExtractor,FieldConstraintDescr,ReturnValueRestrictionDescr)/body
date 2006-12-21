@@ -1,0 +1,49 @@
+{
+  final String className="returnValue" + context.getNextId();
+  returnValueRestrictionDescr.setClassMethodName(className);
+  final List[] usedIdentifiers=utils.getUsedIdentifiers(context,returnValueRestrictionDescr,returnValueRestrictionDescr.getText());
+  final List tupleDeclarations=new ArrayList();
+  final List factDeclarations=new ArrayList();
+  for (int i=0, size=usedIdentifiers[0].size(); i < size; i++) {
+    Declaration declaration=(Declaration)context.getDeclarations().get((String)usedIdentifiers[0].get(i));
+    if (declaration.getColumn() == column) {
+      factDeclarations.add(declaration);
+    }
+ else {
+      tupleDeclarations.add(declaration);
+    }
+  }
+  final Evaluator evaluator=getEvaluator(context,returnValueRestrictionDescr,extractor.getValueType(),returnValueRestrictionDescr.getEvaluator());
+  if (evaluator == null) {
+    return null;
+  }
+  Declaration[] previousDeclarations=(Declaration[])tupleDeclarations.toArray(new Declaration[tupleDeclarations.size()]);
+  Declaration[] localDeclarations=(Declaration[])factDeclarations.toArray(new Declaration[factDeclarations.size()]);
+  final ReturnValueRestriction returnValueRestriction=new ReturnValueRestriction(extractor,previousDeclarations,localDeclarations,evaluator);
+  StringTemplate st=utils.getRuleGroup().getInstanceOf("returnValueMethod");
+  utils.setStringTemplateAttributes(context,st,previousDeclarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]));
+  final String[] localDeclarationTypes=new String[localDeclarations.length];
+  for (int i=0, size=localDeclarations.length; i < size; i++) {
+    localDeclarationTypes[i]=localDeclarations[i].getExtractor().getExtractToClass().getName().replace('$','.');
+  }
+  st.setAttribute("localDeclarations",localDeclarations);
+  st.setAttribute("localDeclarationTypes",localDeclarationTypes);
+  st.setAttribute("methodName",className);
+  final String returnValueText=utils.getFunctionFixer().fix(returnValueRestrictionDescr.getText(),context.getVariables());
+  st.setAttribute("text",returnValueText);
+  context.getMethods().add(st.toString());
+  st=utils.getInvokerGroup().getInstanceOf("returnValueInvoker");
+  st.setAttribute("package",context.getPkg().getName());
+  st.setAttribute("ruleClassName",utils.ucFirst(context.getRuleDescr().getClassName()));
+  st.setAttribute("invokerClassName",context.getRuleDescr().getClassName() + utils.ucFirst(className) + "Invoker");
+  st.setAttribute("methodName",className);
+  utils.setStringTemplateAttributes(context,st,previousDeclarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]));
+  st.setAttribute("localDeclarations",localDeclarations);
+  st.setAttribute("localDeclarationTypes",localDeclarationTypes);
+  st.setAttribute("hashCode",returnValueText.hashCode());
+  final String invokerClassName=context.getPkg().getName() + "." + context.getRuleDescr().getClassName()+ utils.ucFirst(className)+ "Invoker";
+  context.getInvokers().put(invokerClassName,st.toString());
+  context.getInvokerLookups().put(invokerClassName,returnValueRestriction);
+  context.getDescrLookups().put(invokerClassName,returnValueRestrictionDescr);
+  return returnValueRestriction;
+}

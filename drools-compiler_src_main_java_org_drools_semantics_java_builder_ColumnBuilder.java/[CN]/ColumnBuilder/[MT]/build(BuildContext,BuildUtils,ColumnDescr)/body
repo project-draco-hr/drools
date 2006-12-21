@@ -1,0 +1,57 @@
+{
+  if (columnDescr.getObjectType() == null || columnDescr.getObjectType().equals("")) {
+    context.getErrors().add(new RuleError(context.getRule(),columnDescr,null,"ObjectType not correctly defined"));
+    return null;
+  }
+  ObjectType objectType=null;
+  final FactTemplate factTemplate=context.getPkg().getFactTemplate(columnDescr.getObjectType());
+  if (factTemplate != null) {
+    objectType=new FactTemplateObjectType(factTemplate);
+  }
+ else {
+    try {
+      Class userProvidedClass=utils.getTypeResolver().resolveType(columnDescr.getObjectType());
+      String shadowProxyName=ShadowProxyFactory.getProxyClassNameForClass(userProvidedClass);
+      Class shadowClass=null;
+      try {
+        shadowClass=context.getPkg().getPackageCompilationData().getClassLoader().loadClass(shadowProxyName);
+      }
+ catch (      ClassNotFoundException cnfe) {
+        byte[] proxyBytes=ShadowProxyFactory.getProxyBytes(userProvidedClass);
+        if (proxyBytes != null) {
+          context.getPkg().getPackageCompilationData().write(shadowProxyName,proxyBytes);
+          shadowClass=context.getPkg().getPackageCompilationData().getClassLoader().loadClass(shadowProxyName);
+        }
+      }
+      objectType=new ClassObjectType(userProvidedClass,shadowClass);
+    }
+ catch (    final ClassNotFoundException e) {
+      context.getErrors().add(new RuleError(context.getRule(),columnDescr,null,"Unable to resolve ObjectType '" + columnDescr.getObjectType() + "'"));
+      return null;
+    }
+  }
+  Column column;
+  if (columnDescr.getIdentifier() != null && !columnDescr.getIdentifier().equals("")) {
+    column=new Column(context.getNextColumnId(),context.getColumnOffset(),objectType,columnDescr.getIdentifier());
+    context.getDeclarations().put(column.getDeclaration().getIdentifier(),column.getDeclaration());
+    if (context.getInnerDeclarations() != null) {
+      context.getInnerDeclarations().put(column.getDeclaration().getIdentifier(),column.getDeclaration());
+    }
+  }
+ else {
+    column=new Column(context.getNextColumnId(),context.getColumnOffset(),objectType,null);
+  }
+  for (final Iterator it=columnDescr.getDescrs().iterator(); it.hasNext(); ) {
+    final Object object=it.next();
+    if (object instanceof FieldBindingDescr) {
+      build(context,utils,column,(FieldBindingDescr)object);
+    }
+ else     if (object instanceof FieldConstraintDescr) {
+      build(context,utils,column,(FieldConstraintDescr)object);
+    }
+ else     if (object instanceof PredicateDescr) {
+      build(context,utils,column,(PredicateDescr)object);
+    }
+  }
+  return column;
+}

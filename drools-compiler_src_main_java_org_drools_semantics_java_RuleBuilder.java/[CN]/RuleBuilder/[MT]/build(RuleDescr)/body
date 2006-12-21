@@ -4,68 +4,51 @@
     if (object instanceof ConditionalElementDescr) {
       if (object.getClass() == AndDescr.class) {
         final GroupElement and=GroupElementFactory.newAndInstance();
-        build(this.rule,(ConditionalElementDescr)object,and,false,false);
-        this.rule.addPattern(and);
+        build(this.context.getRule(),(ConditionalElementDescr)object,and,false,false);
+        this.context.getRule().addPattern(and);
       }
  else       if (object.getClass() == OrDescr.class) {
         final GroupElement or=GroupElementFactory.newOrInstance();
-        build(this.rule,(ConditionalElementDescr)object,or,true,false);
-        this.rule.addPattern(or);
+        build(this.context.getRule(),(ConditionalElementDescr)object,or,true,false);
+        this.context.getRule().addPattern(or);
       }
  else       if (object.getClass() == NotDescr.class) {
-        this.innerDeclarations=new HashMap();
+        context.setInnerDeclarations(new HashMap());
         final GroupElement not=GroupElementFactory.newNotInstance();
-        build(this.rule,(ConditionalElementDescr)object,not,true,true);
-        this.rule.addPattern(not);
-        for (final Iterator notIt=this.innerDeclarations.keySet().iterator(); notIt.hasNext(); ) {
-          this.declarations.remove(notIt.next());
+        build(this.context.getRule(),(ConditionalElementDescr)object,not,true,true);
+        this.context.getRule().addPattern(not);
+        for (final Iterator notIt=context.getInnerDeclarations().keySet().iterator(); notIt.hasNext(); ) {
+          context.getDeclarations().remove(notIt.next());
         }
-        this.innerDeclarations=null;
+        context.setInnerDeclarations(null);
       }
  else       if (object.getClass() == ExistsDescr.class) {
-        this.innerDeclarations=new HashMap();
+        context.setInnerDeclarations(new HashMap());
         final GroupElement exists=GroupElementFactory.newExistsInstance();
-        build(this.rule,(ConditionalElementDescr)object,exists,true,true);
-        for (final Iterator notIt=this.innerDeclarations.keySet().iterator(); notIt.hasNext(); ) {
-          this.declarations.remove(notIt.next());
+        build(this.context.getRule(),(ConditionalElementDescr)object,exists,true,true);
+        for (final Iterator notIt=context.getInnerDeclarations().keySet().iterator(); notIt.hasNext(); ) {
+          context.getDeclarations().remove(notIt.next());
         }
-        this.innerDeclarations=null;
-        this.rule.addPattern(exists);
+        context.setInnerDeclarations(null);
+        this.context.getRule().addPattern(exists);
       }
- else       if (object.getClass() == EvalDescr.class) {
-        final EvalCondition eval=build((EvalDescr)object);
-        if (eval != null) {
-          this.rule.addPattern(eval);
-        }
-      }
- else       if (object.getClass() == FromDescr.class) {
-        final From from=build((FromDescr)object);
-        if (from != null) {
-          this.rule.addPattern(from);
-        }
-      }
- else       if (object.getClass() == AccumulateDescr.class) {
-        final Accumulate accumulate=build((AccumulateDescr)object);
-        if (accumulate != null) {
-          this.rule.addPattern(accumulate);
-        }
-      }
- else       if (object.getClass() == CollectDescr.class) {
-        final Collect collect=build((CollectDescr)object);
-        if (collect != null) {
-          this.rule.addPattern(collect);
+ else {
+        ConditionalElementBuilder builder=(ConditionalElementBuilder)this.builders.get(object.getClass());
+        ConditionalElement ce=builder.build(this.context,this.utils,this.columnBuilder,(BaseDescr)object);
+        if (ce != null) {
+          this.context.getRule().addPattern(ce);
         }
       }
     }
  else     if (object.getClass() == ColumnDescr.class) {
-      final Column column=build((ColumnDescr)object);
+      final Column column=this.columnBuilder.build(this.context,this.utils,(ColumnDescr)object);
       if (column != null) {
-        this.rule.addPattern(column);
+        this.context.getRule().addPattern(column);
       }
     }
   }
   if (!(ruleDescr instanceof QueryDescr)) {
-    buildConsequence(ruleDescr);
+    this.consequenceBuilder.buildConsequence(this.context,this.utils,ruleDescr);
   }
-  buildRule(ruleDescr);
+  this.classBuilder.buildRule(this.context,this.utils,ruleDescr);
 }
