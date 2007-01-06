@@ -6,16 +6,12 @@
     return;
   }
   final Declaration declaration=column.addDeclaration(predicateDescr.getDeclaration(),extractor);
-  context.getDeclarations().put(declaration.getIdentifier(),declaration);
-  if (context.getInnerDeclarations() != null) {
-    context.getInnerDeclarations().put(declaration.getIdentifier(),declaration);
-  }
   final List[] usedIdentifiers=utils.getUsedIdentifiers(context,predicateDescr,predicateDescr.getText());
   usedIdentifiers[0].remove(predicateDescr.getDeclaration());
   final List tupleDeclarations=new ArrayList();
   final List factDeclarations=new ArrayList();
   for (int i=0, size=usedIdentifiers[0].size(); i < size; i++) {
-    Declaration decl=(Declaration)context.getDeclarations().get((String)usedIdentifiers[0].get(i));
+    Declaration decl=(Declaration)context.getDeclarationResolver().getDeclaration((String)usedIdentifiers[0].get(i));
     if (decl.getColumn() == column) {
       factDeclarations.add(decl);
     }
@@ -38,7 +34,7 @@
   st.setAttribute("localDeclarations",localDeclarations);
   st.setAttribute("localDeclarationTypes",localDeclarationTypes);
   st.setAttribute("methodName",className);
-  final String predicateText=utils.getFunctionFixer().fix(predicateDescr.getText(),context.getVariables());
+  final String predicateText=utils.getFunctionFixer().fix(predicateDescr.getText(),context.getDeclarationResolver());
   st.setAttribute("text",predicateText);
   context.getMethods().add(st.toString());
   st=utils.getInvokerGroup().getInstanceOf("predicateInvoker");

@@ -1,14 +1,9 @@
 {
   AccumulateDescr accumDescr=(AccumulateDescr)descr;
-  context.setInnerDeclarations(new HashMap());
   Column sourceColumn=columnBuilder.build(context,utils,accumDescr.getSourceColumn());
   if (sourceColumn == null) {
     return null;
   }
-  context.getDeclarations().keySet().removeAll(context.getInnerDeclarations().keySet());
-  Map sourceDeclarations=context.getInnerDeclarations();
-  context.setInnerDeclarations(null);
-  context.setColumnOffset(context.getColumnOffset() - 1);
   Column resultColumn=columnBuilder.build(context,utils,accumDescr.getResultColumn());
   final String className="accumulate" + context.getNextId();
   accumDescr.setClassMethodName(className);
@@ -23,9 +18,9 @@
   requiredGlobals.addAll(usedIdentifiers3[1]);
   final Declaration[] declarations=new Declaration[requiredDeclarations.size()];
   for (int i=0, size=requiredDeclarations.size(); i < size; i++) {
-    declarations[i]=(Declaration)context.getDeclarations().get((String)requiredDeclarations.get(i));
+    declarations[i]=(Declaration)context.getDeclarationResolver().getDeclaration((String)requiredDeclarations.get(i));
   }
-  final Declaration[] sourceDeclArr=(Declaration[])sourceDeclarations.values().toArray(new Declaration[sourceDeclarations.size()]);
+  final Declaration[] sourceDeclArr=(Declaration[])sourceColumn.getOuterDeclarations().values().toArray(new Declaration[0]);
   final String[] globals=(String[])requiredGlobals.toArray(new String[requiredGlobals.size()]);
   StringTemplate st=utils.getRuleGroup().getInstanceOf("accumulateMethod");
   utils.setStringTemplateAttributes(context,st,declarations,globals);

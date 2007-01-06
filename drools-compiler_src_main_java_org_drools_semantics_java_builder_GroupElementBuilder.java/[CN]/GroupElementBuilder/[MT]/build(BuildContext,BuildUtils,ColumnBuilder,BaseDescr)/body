@@ -1,0 +1,22 @@
+{
+  ConditionalElementDescr cedescr=(ConditionalElementDescr)descr;
+  final GroupElement ge=this.newGroupElementFor(cedescr.getClass());
+  context.getBuildStack().push(ge);
+  for (Iterator it=cedescr.getDescrs().iterator(); it.hasNext(); ) {
+    BaseDescr child=(BaseDescr)it.next();
+    ConditionalElementBuilder cebuilder=utils.getBuilder(child.getClass());
+    if (cebuilder != null) {
+      ConditionalElement ce=cebuilder.build(context,utils,columnBuilder,(BaseDescr)child);
+      ge.addChild(ce);
+    }
+ else     if (child instanceof ColumnDescr) {
+      final Column column=columnBuilder.build(context,utils,(ColumnDescr)child);
+      ge.addChild(column);
+    }
+ else {
+      throw new RuntimeDroolsException("BUG: no builder found for descriptor class " + child.getClass());
+    }
+  }
+  context.getBuildStack().pop();
+  return ge;
+}

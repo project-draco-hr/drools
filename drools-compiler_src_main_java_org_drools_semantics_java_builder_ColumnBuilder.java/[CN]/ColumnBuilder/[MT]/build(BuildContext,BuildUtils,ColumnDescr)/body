@@ -32,15 +32,12 @@
   }
   Column column;
   if (columnDescr.getIdentifier() != null && !columnDescr.getIdentifier().equals("")) {
-    column=new Column(context.getNextColumnId(),context.getColumnOffset(),objectType,columnDescr.getIdentifier());
-    context.getDeclarations().put(column.getDeclaration().getIdentifier(),column.getDeclaration());
-    if (context.getInnerDeclarations() != null) {
-      context.getInnerDeclarations().put(column.getDeclaration().getIdentifier(),column.getDeclaration());
-    }
+    column=new Column(context.getNextColumnId(),0,objectType,columnDescr.getIdentifier());
   }
  else {
-    column=new Column(context.getNextColumnId(),context.getColumnOffset(),objectType,null);
+    column=new Column(context.getNextColumnId(),0,objectType,null);
   }
+  context.getBuildStack().push(column);
   for (final Iterator it=columnDescr.getDescrs().iterator(); it.hasNext(); ) {
     final Object object=it.next();
     if (object instanceof FieldBindingDescr) {
@@ -53,5 +50,6 @@
       build(context,utils,column,(PredicateDescr)object);
     }
   }
+  context.getBuildStack().pop();
   return column;
 }
