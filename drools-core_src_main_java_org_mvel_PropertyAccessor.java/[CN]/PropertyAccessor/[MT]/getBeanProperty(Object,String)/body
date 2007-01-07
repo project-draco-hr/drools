@@ -1,0 +1,22 @@
+{
+  Class cls;
+  Member member=checkReadCache(cls=(ctx instanceof Class ? ((Class)ctx) : ctx.getClass()),property.hashCode());
+  if (member == null) {
+    addReadCache(cls,property.hashCode(),member=getFieldOrAccessor(cls,property));
+  }
+  if (member instanceof Field) {
+    return ((Field)member).get(ctx);
+  }
+ else   if (member != null) {
+    return ((Method)member).invoke(ctx,EMPTYARG);
+  }
+ else   if (ctx instanceof Map && ((Map)ctx).containsKey(property)) {
+    return ((Map)ctx).get(property);
+  }
+ else   if ("this".equals(property)) {
+    return this.thisReference;
+  }
+ else {
+    throw new PropertyAccessException("could not access property (" + property + ")");
+  }
+}

@@ -1,0 +1,19 @@
+{
+  String[] constructorParms=parseMethodOrConstructor(expression.toCharArray());
+  if (constructorParms != null) {
+    Class cls=Token.LITERALS.containsKey(expression=expression.substring(0,expression.indexOf('('))) ? ((Class)Token.LITERALS.get(expression)) : createClass(expression);
+    Object[] parms=new Object[constructorParms.length];
+    for (int i=0; i < constructorParms.length; i++) {
+      parms[i]=(eval(constructorParms[i],ctx,vrf));
+    }
+    Constructor cns=getBestConstructorCanadidate(parms,cls);
+    if (cns == null)     throw new CompileException("unable to find constructor for: " + cls.getName());
+    for (int i=0; i < parms.length; i++) {
+      parms[i]=convert(parms[i],cns.getParameterTypes()[i]);
+    }
+    return cns.newInstance(parms);
+  }
+ else {
+    return forName(expression).newInstance();
+  }
+}

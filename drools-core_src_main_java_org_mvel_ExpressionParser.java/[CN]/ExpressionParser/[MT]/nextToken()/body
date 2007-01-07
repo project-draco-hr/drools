@@ -1,0 +1,314 @@
+{
+  if (fastExecuteMode)   return nextCompiledToken();
+  Token tk;
+  if (cursor >= length) {
+    return null;
+  }
+  int brace, start=cursor;
+  fields=((fields & Token.ASSIGN) | (fields & Token.BOOLEAN_MODE) | (fields & Token.LISTCREATE)| (fields & Token.CAPTURE_ONLY)| (fields & Token.NOCOMPILE)| (fields & Token.MAPCREATE)| (fields & Token.ARRAYCREATE)| (fields & Token.PUSH)| (fields & Token.NEST)| (fields & Token.ENDNEST));
+  boolean capture=false;
+  while (start < length && isWhitespace(expr[start]))   start++;
+  for (cursor=start; cursor < length; ) {
+    if (isIdentifierPart(expr[cursor])) {
+      capture=true;
+      cursor++;
+    }
+ else     if (capture) {
+      if (expr[cursor] == '(') {
+        cursor++;
+        for (brace=1; cursor < length && brace > 0; ) {
+switch (expr[cursor++]) {
+case '(':
+            brace++;
+          break;
+case ')':
+        brace--;
+      break;
+  }
+}
+if (brace > 0) throw new CompileException("unbalanced braces in expression: (" + brace + "):"+ new String(expr));
+}
+if (cursor < length) {
+switch (expr[cursor]) {
+case ']':
+  if (((fields & Token.LISTCREATE) | (fields & Token.MAPCREATE)) != 0)   break;
+case '[':
+case '\'':
+case '"':
+case '.':
+cursor++;
+continue;
+}
+}
+return createToken(expr,start,cursor,fields);
+}
+ else switch (expr[cursor]) {
+case '=':
+{
+if (expr[++cursor] != '=') {
+return createToken(expr,start,cursor++,fields);
+}
+ else {
+return createToken(expr,start,++cursor,fields);
+}
+}
+case '-':
+if (!PropertyTools.isDigit(expr[cursor + 1])) {
+return createToken(expr,start,cursor++ + 1,fields);
+}
+ else if ((cursor - 1) < 0 || (!isDigit(expr[cursor - 1])) && isDigit(expr[cursor + 1])) {
+cursor++;
+break;
+}
+case ';':
+case '#':
+case '?':
+case ':':
+case '^':
+case '/':
+case '+':
+case '*':
+case '%':
+{
+return createToken(expr,start,cursor++ + 1,fields);
+}
+case '(':
+{
+cursor++;
+for (brace=1; cursor < length && brace > 0; ) {
+switch (expr[cursor++]) {
+case '(':
+brace++;
+break;
+case ')':
+brace--;
+break;
+}
+}
+if (brace > 0) throw new CompileException("unbalanced braces in expression: (" + brace + "):"+ new String(expr));
+tk=createToken(expr,start + 1,cursor - 1,fields|=Token.SUBEVAL);
+if (cursor < length && (expr[cursor] == '.')) {
+stk.push(reduce(tk));
+continue;
+}
+return tk;
+}
+case '>':
+{
+if (expr[cursor + 1] == '>') {
+if (expr[cursor+=2] == '>') cursor++;
+return createToken(expr,start,cursor,fields);
+}
+ else if (expr[cursor + 1] == '=') {
+return createToken(expr,start,cursor+=2,fields);
+}
+ else {
+return createToken(expr,start,++cursor,fields);
+}
+}
+case '<':
+{
+if (expr[++cursor] == '<') {
+if (expr[++cursor] == '<') cursor++;
+return createToken(expr,start,cursor,fields);
+}
+ else if (expr[cursor] == '=') {
+return createToken(expr,start,++cursor,fields);
+}
+ else {
+return createToken(expr,start,cursor,fields);
+}
+}
+case '\'':
+while (++cursor < length && expr[cursor] != '\'') {
+if (expr[cursor] == '\\') ParseTools.handleEscapeSequence(expr[++cursor]);
+}
+if (cursor == length || expr[cursor] != '\'') {
+throw new CompileException("unterminated literal: " + new String(expr));
+}
+return createToken(expr,start + 1,cursor++,fields|=Token.STR_LITERAL | Token.LITERAL);
+case '"':
+while (++cursor < length && expr[cursor] != '"') {
+if (expr[cursor] == '\\') ParseTools.handleEscapeSequence(expr[++cursor]);
+}
+if (cursor == length || expr[cursor] != '"') {
+throw new CompileException("unterminated literal: " + new String(expr));
+}
+return createToken(expr,start + 1,cursor++,fields|=Token.STR_LITERAL | Token.LITERAL);
+case '&':
+{
+if (expr[cursor++ + 1] == '&') {
+return createToken(expr,start,++cursor,fields);
+}
+ else {
+return createToken(expr,start,cursor,fields);
+}
+}
+case '|':
+{
+if (expr[cursor++ + 1] == '|') {
+return createToken(expr,start,++cursor,fields);
+}
+ else {
+return createToken(expr,start,cursor,fields);
+}
+}
+case '~':
+if ((cursor - 1 < 0 || !isIdentifierPart(expr[cursor - 1])) && isDigit(expr[cursor + 1])) {
+fields|=Token.INVERT;
+start++;
+cursor++;
+break;
+}
+ else if (expr[cursor + 1] == '(') {
+fields|=Token.INVERT;
+start=++cursor;
+continue;
+}
+ else {
+if (expr[cursor + 1] == '=') cursor++;
+return createToken(expr,start,++cursor,fields);
+}
+case '!':
+{
+if (isIdentifierPart(expr[++cursor]) || expr[cursor] == '(') {
+start=cursor;
+fields|=Token.NEGATION;
+continue;
+}
+ else if (expr[cursor] != '=') throw new CompileException("unexpected operator '!'",expr,cursor,null);
+ else {
+return createToken(expr,start,++cursor,fields);
+}
+}
+case '[':
+if (capture) {
+cursor++;
+continue;
+}
+cursor++;
+fields|=Token.LISTCREATE | Token.NOCOMPILE;
+Token tk1=nextToken();
+fields|=Token.NOCOMPILE;
+Token tk2=nextToken();
+if (tk2 != null && tk2.getName().equals(":")) {
+setFieldFalse(Token.LISTCREATE);
+if (compileMode) {
+setFieldFalse(Token.NOCOMPILE);
+tk1.setFlag(false,Token.LISTCREATE);
+tk1.setFlag(true,Token.MAPCREATE);
+tk2.setFlag(false,Token.LISTCREATE);
+tk2.setFlag(true,Token.MAPCREATE);
+((TokenMap)tokenMap).addTokenNode(new Token('[',Token.MAPCREATE | Token.NEST));
+((TokenMap)tokenMap).addTokenNode(tk1);
+}
+tk2=nextToken();
+fields|=Token.MAPCREATE;
+Map<Object,Object> map=new HashMap<Object,Object>();
+map.put(reduce(tk1),reduce(tk2));
+skipWhitespace();
+try {
+while (expr[cursor++] != ']') {
+tk1=nextToken();
+fields|=Token.NOCOMPILE;
+if ((tk2=nextToken()) == null || (!tk2.isOperator() || (tk2.getOperator() != Operator.TERNARY_ELSE))) throw new CompileException("unexpected token or end of expression, in map creation construct: " + tk2.getName());
+map.put(reduce(tk1),reduce(nextToken()));
+skipWhitespace();
+}
+}
+ catch (ArrayIndexOutOfBoundsException e) {
+throw new CompileException("unterminated list projection");
+}
+if (compileMode) ((TokenMap)tokenMap).addTokenNode(new Token(']',Token.ENDNEST));
+setFieldFalse(Token.MAPCREATE);
+if (cursor < length && (expr[cursor] == '.')) {
+capture=false;
+fields|=Token.PUSH;
+stk.push(map);
+continue;
+}
+return (createToken(expr,start + 1,cursor - 1,fields|=Token.DO_NOT_REDUCE | Token.NOCOMPILE)).setValue(map);
+}
+ else {
+tk1.setFlag(false,Token.MAPCREATE);
+ArrayList<Object> projectionList=new ArrayList<Object>();
+projectionList.add(reduce(tk1));
+if (compileMode) {
+((TokenMap)tokenMap).addTokenNode(new Token('[',Token.LISTCREATE | Token.NEST));
+((TokenMap)tokenMap).addTokenNode(tk1);
+}
+try {
+while (expr[cursor++] != ']') {
+projectionList.add(reduce(nextToken()));
+}
+if (compileMode) {
+addTokenToMap(new Token(']',fields | Token.ENDNEST));
+}
+}
+ catch (ArrayIndexOutOfBoundsException e) {
+throw new CompileException("unterminated list projection");
+}
+setFieldFalse(Token.LISTCREATE);
+if (cursor < length && (expr[cursor] == '.')) {
+capture=false;
+fields|=Token.PUSH;
+stk.push(projectionList);
+continue;
+}
+return (createToken(expr,start + 1,cursor - 1,fields|=Token.DO_NOT_REDUCE | Token.NOCOMPILE)).setValue(projectionList);
+}
+case '{':
+fields|=Token.ARRAYCREATE;
+if (compileMode) {
+addTokenToMap(new Token('{',fields | Token.NEST));
+}
+ArrayList<Object> projectionList=new ArrayList<Object>();
+try {
+while (expr[cursor++] != '}') {
+projectionList.add(reduce(nextToken()));
+}
+if (compileMode) {
+addTokenToMap(new Token('}',fields | Token.ENDNEST));
+}
+}
+ catch (ArrayIndexOutOfBoundsException e) {
+throw new CompileException("unterminated list projection");
+}
+setFieldFalse(Token.ARRAYCREATE);
+if (cursor < length && (expr[cursor] == '.')) {
+capture=false;
+fields|=Token.PUSH;
+stk.push(projectionList.toArray());
+continue;
+}
+return (createToken(expr,start + 1,cursor - 1,fields|=Token.DO_NOT_REDUCE | Token.NOCOMPILE)).setValue(projectionList.toArray());
+case ']':
+case '}':
+case ',':
+if (((fields & Token.LISTCREATE | fields & Token.ARRAYCREATE | fields & Token.MAPCREATE)) != 0) {
+return createToken(expr,start,cursor,fields|=Token.DO_NOT_REDUCE | Token.NOCOMPILE);
+}
+ else if (!capture) {
+throw new CompileException("unexpected: " + expr[cursor]);
+}
+ else {
+++cursor;
+continue;
+}
+case '.':
+start++;
+if (!capture) {
+cursor++;
+fields|=Token.CAPTURE_ONLY | Token.PUSH;
+tk=nextToken();
+setFieldFalse(Token.CAPTURE_ONLY);
+setFieldFalse(Token.PUSH);
+if (!compileMode) return tk.setValue(PropertyAccessor.get((tk).getName(),stk.pop()));
+ else return tk;
+}
+default :
+cursor++;
+}
+}
+return createToken(expr,start,cursor,fields);
+}

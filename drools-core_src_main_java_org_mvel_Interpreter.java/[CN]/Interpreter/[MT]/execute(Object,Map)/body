@@ -1,0 +1,114 @@
+{
+  if (nodes == null) {
+    return new String(expression);
+  }
+ else   if (nodes.length == 2) {
+switch (nodes[0].getToken()) {
+case PROPERTY_EX:
+      if (!cacheAggressively) {
+        char[] seg=new char[expression.length - 3];
+        arraycopy(expression,2,seg,0,seg.length);
+        return ExpressionParser.eval(seg,ctx,tokens);
+      }
+ else {
+        String s=new String(expression,2,expression.length - 3);
+        if (!EX_PRECOMP_CACHE.containsKey(s)) {
+          EX_PRECOMP_CACHE.put(s,compileExpression(s));
+        }
+        return executeExpression(EX_PRECOMP_CACHE.get(s),ctx,tokens);
+      }
+case LITERAL:
+    return new String(expression);
+}
+return new String(expression);
+}
+Object register=null;
+StringBuilder sbuf=new StringBuilder(10);
+Node currNode=null;
+try {
+ExpressionParser oParser=new ExpressionParser(ctx,tokens);
+initStack();
+pushAndForward();
+while ((currNode=pop()) != null) {
+  node=currNode.getNode();
+switch (currNode.getToken()) {
+case LITERAL:
+{
+      sbuf.append(register=new String(expression,currNode.getStartPos(),currNode.getEndPos() - currNode.getStartPos()));
+      break;
+    }
+case PROPERTY_EX:
+{
+    sbuf.append(valueOf(register=oParser.setExpressionArray(getInternalSegment(currNode)).parse()));
+    break;
+  }
+case IF:
+case ELSEIF:
+{
+  try {
+    oParser.setBooleanModeOnly(true);
+    if (!((Boolean)oParser.setExpressionArray(getInternalSegment(currNode)).parse())) {
+      exitContext();
+    }
+    oParser.setBooleanModeOnly(false);
+  }
+ catch (  ClassCastException e) {
+    throw new CompileException("IF expression does not return a boolean: " + new String(getSegment(currNode)));
+  }
+  break;
+}
+case FOREACH:
+{
+if (currNode.getRegister() == null) {
+  try {
+    currNode.setRegister(((Collection)new ExpressionParser(getForEachSegment(currNode),ctx,tokens).parse()).iterator());
+  }
+ catch (  ClassCastException e) {
+    throw new CompileException("expression for collection does not return a collection object: " + new String(getSegment(currNode)));
+  }
+catch (  NullPointerException e) {
+    throw new CompileException("null returned for foreach in expression: " + (getForEachSegment(currNode)));
+  }
+}
+Iterator iter=(Iterator)currNode.getRegister();
+if (iter.hasNext()) {
+  push();
+  tokens.put(currNode.getAlias(),iter.next());
+}
+ else {
+  tokens.remove(currNode.getAlias());
+  exitContext();
+}
+break;
+}
+case ELSE:
+case END:
+if (stack.isEmpty()) forwardAndPush();
+continue;
+case GOTO:
+pushNode(currNode.getEndNode());
+continue;
+case TERMINUS:
+{
+if (nodes.length == 2) {
+return register;
+}
+ else {
+return sbuf.toString();
+}
+}
+}
+forwardAndPush();
+}
+throw new CompileException("expression did not end properly: expected TERMINUS node");
+}
+ catch (CompileException e) {
+throw e;
+}
+catch (Exception e) {
+if (currNode != null) {
+throw new CompileException("problem encountered at node [" + currNode.getNode() + "] "+ currNode.getToken()+ "{"+ currNode.getStartPos()+ ","+ currNode.getEndPos()+ "}",e);
+}
+throw new CompileException("unhandled fatal exception (node:" + node + ")",e);
+}
+}

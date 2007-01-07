@@ -1,0 +1,36 @@
+{
+  Token tk;
+  Operator operator;
+  while ((tk=nextToken()) != null) {
+    if (stk.size() == 0) {
+      if ((fields & Token.SUBEVAL) != 0) {
+        stk.push(reduce(tk));
+      }
+ else {
+        stk.push(tk);
+      }
+      if (!tk.isOperator() && (tk=nextToken()) == null) {
+        return;
+      }
+    }
+    if (!tk.isOperator()) {
+      continue;
+    }
+switch (reduceBinary(operator=tk.getOperator())) {
+case -1:
+      return;
+case 0:
+    break;
+case 1:
+  continue;
+}
+if ((tk=nextToken()) == null) throw new CompileException("unexpected end of statament");
+if ((fields & Token.SUBEVAL) != 0) {
+stk.push(reduce(tk),operator);
+}
+ else {
+stk.push(tk,operator);
+}
+if (!compileMode) reduceTrinary();
+}
+}

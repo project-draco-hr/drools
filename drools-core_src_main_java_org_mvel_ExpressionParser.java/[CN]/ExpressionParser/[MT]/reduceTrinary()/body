@@ -1,0 +1,171 @@
+{
+  Object v1=null, v2;
+  Operator operator;
+  try {
+    while (stk.size() > 1) {
+      if ((v1=stk.pop()) instanceof Boolean) {
+        operator=(Operator)stk.pop();
+        v2=processToken(stk.pop());
+      }
+ else       if ((fields & Token.EVAL_RIGHT) != 0) {
+        operator=(Operator)v1;
+        v2=processToken(stk.pop());
+        v1=processToken(stk.pop());
+      }
+ else {
+        operator=(Operator)v1;
+        v1=processToken(stk.pop());
+        v2=processToken(stk.pop());
+      }
+switch (operator) {
+case ADD:
+        if (v1 instanceof BigDecimal && v2 instanceof BigDecimal) {
+          stk.push(((BigDecimal)v1).add((BigDecimal)v2));
+        }
+ else {
+          stk.push(valueOf(v2) + valueOf(v1));
+        }
+      break;
+case SUB:
+    stk.push(((BigDecimal)v2).subtract(((BigDecimal)v1)));
+  break;
+case DIV:
+stk.push(((BigDecimal)v2).divide(((BigDecimal)v1),20,roundingMode));
+break;
+case MULT:
+stk.push(((BigDecimal)v2).multiply((BigDecimal)v1));
+break;
+case MOD:
+stk.push(((BigDecimal)v2).remainder((BigDecimal)v1));
+break;
+case EQUAL:
+if (v1 instanceof BigDecimal && v2 instanceof BigDecimal) {
+stk.push(((BigDecimal)v2).compareTo((BigDecimal)v1) == 0);
+}
+ else if (v1 != null) stk.push(v1.equals(v2));
+ else if (v2 != null) stk.push(v2.equals(v1));
+ else stk.push(v1 == v2);
+break;
+case NEQUAL:
+if (v1 instanceof BigDecimal && v2 instanceof BigDecimal) {
+stk.push(((BigDecimal)v2).compareTo((BigDecimal)v1) != 0);
+}
+ else if (v1 != null) stk.push(!v1.equals(v2));
+ else if (v2 != null) stk.push(!v2.equals(v1));
+ else stk.push(v1 != v2);
+break;
+case GTHAN:
+stk.push(((BigDecimal)v2).compareTo((BigDecimal)v1) == 1);
+break;
+case LTHAN:
+stk.push(((BigDecimal)v2).compareTo((BigDecimal)v1) == -1);
+break;
+case GETHAN:
+stk.push(((BigDecimal)v2).compareTo((BigDecimal)v1) >= 0);
+break;
+case LETHAN:
+stk.push(((BigDecimal)v2).compareTo((BigDecimal)v1) <= 0);
+break;
+case AND:
+if (v2 instanceof Boolean && v1 instanceof Boolean) {
+stk.push(((Boolean)v2) && ((Boolean)v1));
+break;
+}
+ else if (((Boolean)v2)) {
+stk.push(v2,Operator.AND,v1);
+}
+return;
+case OR:
+if (v2 instanceof Boolean && v1 instanceof Boolean) {
+stk.push(((Boolean)v2) || ((Boolean)v1));
+break;
+}
+ else {
+stk.push(v2,Operator.OR,v1);
+return;
+}
+case CHOR:
+if (!isEmpty(v2) || !isEmpty(v1)) {
+stk.clear();
+stk.push(!isEmpty(v2) ? v2 : v1);
+return;
+}
+ else stk.push(null);
+break;
+case REGEX:
+stk.push(compile(valueOf(v1)).matcher(valueOf(v2)).matches());
+break;
+case INSTANCEOF:
+if (v1 instanceof Class) stk.push(((Class)v1).isInstance(v2));
+ else stk.push(forName(valueOf(v1)).isInstance(v2));
+break;
+case CONVERTABLE_TO:
+if (v1 instanceof Class) stk.push(canConvert(v2.getClass(),(Class)v1));
+ else stk.push(canConvert(v2.getClass(),forName(valueOf(v1))));
+break;
+case CONTAINS:
+stk.push(containsCheck(v2,v1));
+break;
+case BW_AND:
+stk.push(asInt(v2) & asInt(v1));
+break;
+case BW_OR:
+stk.push(asInt(v2) | asInt(v1));
+break;
+case BW_XOR:
+stk.push(asInt(v2) ^ asInt(v1));
+break;
+case BW_SHIFT_LEFT:
+stk.push(asInt(v2) << asInt(v1));
+break;
+case BW_USHIFT_LEFT:
+int iv2=asInt(v2);
+if (iv2 < 0) iv2*=-1;
+stk.push(iv2 << asInt(v1));
+break;
+case BW_SHIFT_RIGHT:
+stk.push(asInt(v2) >> asInt(v1));
+break;
+case BW_USHIFT_RIGHT:
+stk.push(asInt(v2) >>> asInt(v1));
+break;
+case STR_APPEND:
+stk.push(new StringBuilder(valueOf(v2)).append(valueOf(v1)).toString());
+break;
+case PROJECTION:
+try {
+List<Object> list=new ArrayList<Object>(((Collection)v1).size());
+for (Object o : (Collection)v1) {
+list.add(PropertyAccessor.get(valueOf(v2),o));
+}
+stk.push(list);
+}
+ catch (ClassCastException e) {
+throw new ParseException("projections can only be peformed on collections");
+}
+break;
+case SOUNDEX:
+stk.push(Soundex.soundex(valueOf(v1)).equals(Soundex.soundex(valueOf(v2))));
+break;
+case SIMILARITY:
+stk.push(similarity(valueOf(v1),valueOf(v2)));
+break;
+}
+}
+}
+ catch (ClassCastException e) {
+if ((fields & Token.LOOKAHEAD) == 0) {
+fields|=Token.LOOKAHEAD;
+Token tk=nextToken();
+if (tk != null) {
+stk.push(v1,nextToken(),tk.getOperator());
+reduceTrinary();
+return;
+}
+}
+throw new CompileException("syntax error or incomptable types",expr,cursor,e);
+}
+catch (Exception e) {
+throw new CompileException("failed to reduce expression",e);
+}
+}

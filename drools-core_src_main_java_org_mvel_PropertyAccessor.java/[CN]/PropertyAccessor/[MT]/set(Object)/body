@@ -1,0 +1,46 @@
+{
+  curr=ctx;
+  try {
+    String tk=null;
+    while (cursor < length) {
+      tk=captureNext();
+      if (!hasMore())       break;
+      curr=getBeanProperty(curr,tk);
+    }
+    Member member=checkWriteCache(curr.getClass(),tk == null ? 0 : tk.hashCode());
+    if (member == null) {
+      addWriteCache(curr.getClass(),tk == null ? 0 : tk.hashCode(),(member=getFieldOrWriteAccessor(curr.getClass(),tk)));
+    }
+    if (member instanceof Field) {
+      Field fld=(Field)member;
+      if (value != null && !fld.getType().isAssignableFrom(value.getClass())) {
+        if (!canConvert(fld.getType(),value.getClass())) {
+          throw new ConversionException("cannot convert type: " + value.getClass() + ": to "+ fld.getType());
+        }
+        fld.set(curr,convert(value,fld.getType()));
+      }
+ else       fld.set(curr,value);
+    }
+ else     if (member != null) {
+      Method meth=(Method)member;
+      if (value != null && !meth.getParameterTypes()[0].isAssignableFrom(value.getClass())) {
+        if (!canConvert(meth.getParameterTypes()[0],value.getClass())) {
+          throw new ConversionException("cannot convert type: " + value.getClass() + ": to "+ meth.getParameterTypes()[0]);
+        }
+        meth.invoke(curr,convert(value,meth.getParameterTypes()[0]));
+      }
+ else {
+        meth.invoke(curr,value);
+      }
+    }
+ else {
+      throw new PropertyAccessException("could not access property (" + property + ") in: "+ ctx.getClass().getName());
+    }
+  }
+ catch (  InvocationTargetException e) {
+    throw new PropertyAccessException("could not access property",e);
+  }
+catch (  IllegalAccessException e) {
+    throw new PropertyAccessException("could not access property",e);
+  }
+}

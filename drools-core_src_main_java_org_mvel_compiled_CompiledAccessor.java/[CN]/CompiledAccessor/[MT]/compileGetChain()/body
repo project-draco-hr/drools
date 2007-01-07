@@ -1,0 +1,42 @@
+{
+  Object curr=ctx;
+  try {
+    while (cursor < length) {
+switch (nextToken()) {
+case BEAN:
+        curr=getBeanProperty(curr,capture());
+      break;
+case METH:
+    curr=getMethod(curr,capture());
+  break;
+case COL:
+curr=getCollectionProperty(curr,capture());
+break;
+case DONE:
+break;
+}
+}
+return curr;
+}
+ catch (InvocationTargetException e) {
+throw new PropertyAccessException("could not access property",e);
+}
+catch (IllegalAccessException e) {
+throw new PropertyAccessException("could not access property",e);
+}
+catch (IndexOutOfBoundsException e) {
+throw new PropertyAccessException("array or collection index out of bounds (property: " + new String(property) + ")",e);
+}
+catch (PropertyAccessException e) {
+throw new PropertyAccessException("failed to access property: <<" + new String(property) + ">> in: "+ (ctx != null ? ctx.getClass() : null),e);
+}
+catch (CompileException e) {
+throw e;
+}
+catch (NullPointerException e) {
+throw new PropertyAccessException("null pointer exception in property: " + new String(property),e);
+}
+catch (Exception e) {
+throw new PropertyAccessException("unknown exception in expression: " + new String(property),e);
+}
+}

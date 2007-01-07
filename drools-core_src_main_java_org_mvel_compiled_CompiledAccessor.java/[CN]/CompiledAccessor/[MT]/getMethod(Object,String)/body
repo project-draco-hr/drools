@@ -1,0 +1,84 @@
+{
+  int st=cursor;
+  int depth=1;
+  while (cursor++ < length - 1 && depth != 0) {
+switch (property[cursor]) {
+case '(':
+      depth++;
+    continue;
+case ')':
+  depth--;
+}
+}
+cursor--;
+String tk=(cursor - st) > 1 ? new String(property,st + 1,cursor - st - 1) : "";
+cursor++;
+Object[] args;
+Serializable[] es;
+if (tk.length() == 0) {
+args=new Object[0];
+es=null;
+}
+ else {
+if (SUBEXPRESSION_CACHE.containsKey(tk)) {
+es=SUBEXPRESSION_CACHE.get(tk);
+args=new Object[es.length];
+for (int i=0; i < es.length; i++) {
+  args[i]=executeExpression(es[i],ctx,variableFactory);
+}
+}
+ else {
+String[] subtokens=parseParameterList(tk.toCharArray(),0,-1);
+es=new Serializable[subtokens.length];
+args=new Object[subtokens.length];
+for (int i=0; i < subtokens.length; i++) {
+  es[i]=compileExpression(subtokens[i]);
+  args[i]=executeExpression(es[i],this.ctx,variableFactory);
+  ((CompiledExpression)es[i]).setKnownEgressType(args[i] != null ? args[i].getClass() : null);
+}
+SUBEXPRESSION_CACHE.put(tk,es);
+}
+}
+Class cls=ctx instanceof Class ? (Class)ctx : ctx.getClass();
+Method m;
+Class[] parameterTypes=null;
+if ((m=ParseTools.getBestCanadidate(args,name,cls.getMethods())) != null) {
+parameterTypes=m.getParameterTypes();
+}
+if (m == null) {
+if ((m=ParseTools.getBestCanadidate(args,name,cls.getClass().getDeclaredMethods())) != null) {
+parameterTypes=m.getParameterTypes();
+}
+}
+if (m == null) {
+StringBuilder errorBuild=new StringBuilder();
+for (int i=0; i < args.length; i++) {
+errorBuild.append(args[i] != null ? args[i].getClass().getName() : null);
+if (i < args.length - 1) errorBuild.append(", ");
+}
+throw new PropertyAccessException("unable to resolve method: " + cls.getName() + "."+ name+ "("+ errorBuild.toString()+ ") [arglength="+ args.length+ "]");
+}
+ else {
+if (es != null) {
+CompiledExpression cExpr;
+for (int i=0; i < es.length; i++) {
+  cExpr=((CompiledExpression)es[i]);
+  if (cExpr.getKnownIngressType() == null) {
+    cExpr.setKnownIngressType(parameterTypes[i]);
+    cExpr.pack();
+  }
+  if (!cExpr.isConvertableIngressEgress()) {
+    args[i]=DataConversion.convert(args[i],parameterTypes[i]);
+  }
+}
+}
+ else {
+for (int i=0; i < args.length; i++) args[i]=DataConversion.convert(args[i],parameterTypes[i]);
+}
+MethodAccessor access=new MethodAccessor();
+access.setMethod(m);
+access.setCompiledParameters(es);
+addAccessorNode(access);
+return m.invoke(ctx,args);
+}
+}
