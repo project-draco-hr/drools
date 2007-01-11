@@ -1,0 +1,30 @@
+{
+  if (rule instanceof Query) {
+    this.addQueryColumn(context,subrule,(Query)rule);
+  }
+  ReteooComponentBuilder builder=this.utils.getBuilderFor(subrule);
+  if (builder.requiresLeftActivation(utils,subrule)) {
+    this.addInitialFactColumn(context,subrule,rule);
+  }
+  builder.build(context,this.utils,subrule);
+  TerminalNode terminal=null;
+  if (!(rule instanceof Query)) {
+    if (rule.getConsequence() == null) {
+      throw new InvalidPatternException("Rule '" + rule.getName() + "' has no Consequence");
+    }
+    terminal=new RuleTerminalNode(context.getNextId(),context.getTupleSource(),rule);
+  }
+ else {
+    if (rule.getConsequence() != null) {
+      throw new InvalidPatternException("Query '" + rule.getName() + "' should have no Consequence");
+    }
+    terminal=new QueryTerminalNode(context.getNextId(),context.getTupleSource(),rule);
+  }
+  if (context.getWorkingMemories().length == 0) {
+    ((BaseNode)terminal).attach();
+  }
+ else {
+    ((BaseNode)terminal).attach(context.getWorkingMemories());
+  }
+  return terminal;
+}

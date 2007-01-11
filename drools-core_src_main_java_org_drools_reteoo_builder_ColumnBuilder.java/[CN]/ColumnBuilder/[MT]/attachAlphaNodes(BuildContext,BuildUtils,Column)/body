@@ -1,0 +1,28 @@
+{
+  final List constraints=column.getConstraints();
+  context.setObjectSource((ObjectSource)utils.attachNode(context,new ObjectTypeNode(context.getNextId(),column.getObjectType(),context.getRuleBase().getRete(),context.getRuleBase().getConfiguration().getAlphaNodeHashingThreshold())));
+  final List betaConstraints=new ArrayList();
+  checkRemoveIdentities(context,column,betaConstraints);
+  for (final Iterator it=constraints.iterator(); it.hasNext(); ) {
+    final Object object=it.next();
+    if (object instanceof Declaration) {
+      continue;
+    }
+    final Constraint constraint=(Constraint)object;
+    Declaration[] declarations=constraint.getRequiredDeclarations();
+    boolean isAlphaConstraint=true;
+    for (int i=0; isAlphaConstraint && i < declarations.length; i++) {
+      if (declarations[i].getColumn() != column) {
+        isAlphaConstraint=false;
+      }
+    }
+    if (isAlphaConstraint) {
+      context.setObjectSource((ObjectSource)utils.attachNode(context,new AlphaNode(context.getNextId(),(AlphaNodeFieldConstraint)constraint,context.getObjectSource())));
+    }
+ else {
+      utils.checkUnboundDeclarations(context,constraint.getRequiredDeclarations());
+      betaConstraints.add(constraint);
+    }
+  }
+  return betaConstraints;
+}

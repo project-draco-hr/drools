@@ -1,0 +1,27 @@
+{
+  Collect collect=(Collect)rce;
+  final Column sourceColumn=collect.getSourceColumn();
+  ReteooComponentBuilder builder=utils.getBuilderFor(sourceColumn);
+  builder.build(context,utils,sourceColumn);
+  final Column column=collect.getResultColumn();
+  column.setOffset(context.getCurrentColumnOffset() - 1);
+  final List constraints=column.getConstraints();
+  final List betaConstraints=new ArrayList();
+  final List alphaConstraints=new ArrayList();
+  for (final Iterator it=constraints.iterator(); it.hasNext(); ) {
+    final Object object=it.next();
+    if (object instanceof Declaration) {
+      continue;
+    }
+    final AlphaNodeFieldConstraint fieldConstraint=(AlphaNodeFieldConstraint)object;
+    if (fieldConstraint instanceof LiteralConstraint) {
+      alphaConstraints.add(fieldConstraint);
+    }
+ else {
+      utils.checkUnboundDeclarations(context,fieldConstraint.getRequiredDeclarations());
+      betaConstraints.add(fieldConstraint);
+    }
+  }
+  final BetaConstraints resultsBinder=utils.createBetaNodeConstraint(context,betaConstraints);
+  context.setTupleSource((TupleSource)utils.attachNode(context,new CollectNode(context.getNextId(),context.getTupleSource(),context.getObjectSource(),(AlphaNodeFieldConstraint[])alphaConstraints.toArray(new AlphaNodeFieldConstraint[alphaConstraints.size()]),context.getBetaconstraints(),resultsBinder,collect)));
+}

@@ -1,33 +1,4 @@
 {
-  this.workingMemories=(ReteooWorkingMemory[])this.ruleBase.getWorkingMemories().toArray(new ReteooWorkingMemory[this.ruleBase.getWorkingMemories().size()]);
-  this.currentOffsetAdjustment=0;
-  final List nodes=new ArrayList();
-  final GroupElement[] and=rule.getTransformedLhs();
-  for (int i=0; i < and.length; i++) {
-    if (!hasColumns(and[i])) {
-      addInitialFactMatch(and[i]);
-    }
-    addRule(and[i],rule);
-    BaseNode node=null;
-    if (!(rule instanceof Query)) {
-      if (rule.getConsequence() == null) {
-        throw new InvalidPatternException("Rule '" + rule.getName() + "' has no Consequence");
-      }
-      node=new TerminalNode(this.id++,this.tupleSource,rule);
-    }
- else {
-      if (rule.getConsequence() != null) {
-        throw new InvalidPatternException("Query '" + rule.getName() + "' should have no Consequence");
-      }
-      node=new QueryTerminalNode(this.id++,this.tupleSource,rule);
-    }
-    nodes.add(node);
-    if (this.workingMemories.length == 0) {
-      node.attach();
-    }
- else {
-      node.attach(this.workingMemories);
-    }
-  }
-  this.rules.put(rule,nodes.toArray(new BaseNode[nodes.size()]));
+  List terminals=this.ruleBuilder.addRule(rule,this.ruleBase,this.attachedNodes,this.idGenerator);
+  this.rules.put(rule,terminals.toArray(new BaseNode[terminals.size()]));
 }

@@ -1,0 +1,17 @@
+{
+  GroupElement ge=(GroupElement)rce;
+  for (Iterator it=ge.getChildren().iterator(); it.hasNext(); ) {
+    RuleConditionElement child=(RuleConditionElement)it.next();
+    ReteooComponentBuilder builder=utils.getBuilderFor(child);
+    builder.build(context,utils,child);
+    if (context.getObjectSource() != null && context.getTupleSource() == null) {
+      context.setTupleSource((TupleSource)utils.attachNode(context,new LeftInputAdapterNode(context.getNextId(),context.getObjectSource())));
+      context.setObjectSource(null);
+    }
+    if (context.getObjectSource() != null && context.getTupleSource() != null) {
+      context.setTupleSource((TupleSource)utils.attachNode(context,new JoinNode(context.getNextId(),context.getTupleSource(),context.getObjectSource(),context.getBetaconstraints())));
+      context.setBetaconstraints(null);
+      context.setObjectSource(null);
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  From from=(From)rce;
+  final Column column=from.getColumn();
+  column.setOffset(context.getCurrentColumnOffset());
+  context.incrementCurrentColumnOffset();
+  final List constraints=column.getConstraints();
+  final List betaConstraints=new ArrayList();
+  final List alphaConstraints=new ArrayList();
+  for (final Iterator it=constraints.iterator(); it.hasNext(); ) {
+    final Object object=it.next();
+    if (object instanceof Declaration) {
+      continue;
+    }
+    final AlphaNodeFieldConstraint fieldConstraint=(AlphaNodeFieldConstraint)object;
+    if (fieldConstraint instanceof LiteralConstraint) {
+      alphaConstraints.add(fieldConstraint);
+    }
+ else {
+      utils.checkUnboundDeclarations(context,fieldConstraint.getRequiredDeclarations());
+      betaConstraints.add(fieldConstraint);
+    }
+  }
+  final BetaConstraints binder=utils.createBetaNodeConstraint(context,betaConstraints);
+  context.setTupleSource((TupleSource)utils.attachNode(context,new FromNode(context.getNextId(),from.getDataProvider(),context.getTupleSource(),(AlphaNodeFieldConstraint[])alphaConstraints.toArray(new AlphaNodeFieldConstraint[alphaConstraints.size()]),binder)));
+}
