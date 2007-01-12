@@ -1,15 +1,20 @@
 {
   GroupElement not=(GroupElement)rce;
   int currentColumnIndex=context.getCurrentColumnOffset();
+  TupleSource tupleSource=context.getTupleSource();
   RuleConditionElement child=(RuleConditionElement)not.getChildren().get(0);
   ReteooComponentBuilder builder=utils.getBuilderFor(child);
   builder.build(context,utils,child);
-  if (child instanceof Column) {
-    context.setTupleSource((TupleSource)utils.attachNode(context,new NotNode(context.getNextId(),context.getTupleSource(),context.getObjectSource(),context.getBetaconstraints())));
-    context.setBetaconstraints(null);
-    context.setObjectSource(null);
+  if (!(child instanceof Column)) {
+    context.setObjectSource((ObjectSource)utils.attachNode(context,new RightInputAdapterNode(context.getNextId(),context.getTupleSource())));
+    context.setTupleSource(tupleSource);
+    TupleStartEqualsConstraint constraint=TupleStartEqualsConstraint.getInstance();
+    List predicates=new ArrayList();
+    predicates.add(constraint);
+    context.setBetaconstraints(utils.createBetaNodeConstraint(context,predicates));
   }
- else {
-  }
+  context.setTupleSource((TupleSource)utils.attachNode(context,new NotNode(context.getNextId(),context.getTupleSource(),context.getObjectSource(),context.getBetaconstraints())));
+  context.setBetaconstraints(null);
+  context.setObjectSource(null);
   context.setCurrentColumnOffset(currentColumnIndex);
 }
