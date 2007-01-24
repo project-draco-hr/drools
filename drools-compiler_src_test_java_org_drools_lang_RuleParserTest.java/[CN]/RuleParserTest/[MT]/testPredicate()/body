@@ -1,10 +1,12 @@
 {
-  List constraints=new ArrayList();
-  parse("$var : attr -> ( $var.equals(\"xyz\") )").predicate(constraints);
-  assertFalse(this.parser.hasErrors());
-  assertEquals(1,constraints.size());
-  PredicateDescr predicate=(PredicateDescr)constraints.get(0);
-  assertEquals("$var",predicate.getDeclaration());
-  assertEquals("attr",predicate.getFieldName());
+  ColumnDescr column=new ColumnDescr();
+  parse("$var : attr -> ( $var.equals(\"xyz\") )").constraints(column);
+  assertFalse(this.parser.getErrorMessages().toString(),this.parser.hasErrors());
+  List constraints=column.getDescrs();
+  assertEquals(2,constraints.size());
+  FieldBindingDescr field=(FieldBindingDescr)constraints.get(0);
+  PredicateDescr predicate=(PredicateDescr)constraints.get(1);
+  assertEquals("$var",field.getIdentifier());
+  assertEquals("attr",field.getFieldName());
   assertEquals(" $var.equals(\"xyz\") ",predicate.getText());
 }

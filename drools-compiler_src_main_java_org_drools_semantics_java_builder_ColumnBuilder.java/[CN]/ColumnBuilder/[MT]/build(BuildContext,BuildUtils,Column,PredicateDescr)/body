@@ -1,13 +1,7 @@
 {
   final String className="predicate" + context.getNextId();
   predicateDescr.setClassMethodName(className);
-  final FieldExtractor extractor=getFieldExtractor(context,utils,predicateDescr,column.getObjectType(),predicateDescr.getFieldName());
-  if (extractor == null) {
-    return;
-  }
-  final Declaration declaration=column.addDeclaration(predicateDescr.getDeclaration(),extractor);
   final List[] usedIdentifiers=utils.getUsedIdentifiers(context,predicateDescr,predicateDescr.getText());
-  usedIdentifiers[0].remove(predicateDescr.getDeclaration());
   final List tupleDeclarations=new ArrayList();
   final List factDeclarations=new ArrayList();
   for (int i=0, size=usedIdentifiers[0].size(); i < size; i++) {
@@ -21,11 +15,9 @@
   }
   Declaration[] previousDeclarations=(Declaration[])tupleDeclarations.toArray(new Declaration[tupleDeclarations.size()]);
   Declaration[] localDeclarations=(Declaration[])factDeclarations.toArray(new Declaration[factDeclarations.size()]);
-  final PredicateConstraint predicateConstraint=new PredicateConstraint(declaration,previousDeclarations,localDeclarations);
+  final PredicateConstraint predicateConstraint=new PredicateConstraint(previousDeclarations,localDeclarations);
   column.addConstraint(predicateConstraint);
   StringTemplate st=utils.getRuleGroup().getInstanceOf("predicateMethod");
-  st.setAttribute("declaration",declaration);
-  st.setAttribute("declarationType",declaration.getExtractor().getExtractToClass().getName().replace('$','.'));
   utils.setStringTemplateAttributes(context,st,previousDeclarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]));
   final String[] localDeclarationTypes=new String[localDeclarations.length];
   for (int i=0, size=localDeclarations.length; i < size; i++) {
@@ -42,8 +34,6 @@
   st.setAttribute("ruleClassName",utils.ucFirst(context.getRuleDescr().getClassName()));
   st.setAttribute("invokerClassName",context.getRuleDescr().getClassName() + utils.ucFirst(className) + "Invoker");
   st.setAttribute("methodName",className);
-  st.setAttribute("declaration",declaration);
-  st.setAttribute("declarationType",declaration.getExtractor().getExtractToClass().getName().replace('$','.'));
   utils.setStringTemplateAttributes(context,st,previousDeclarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]));
   st.setAttribute("localDeclarations",localDeclarations);
   st.setAttribute("localDeclarationTypes",localDeclarationTypes);
