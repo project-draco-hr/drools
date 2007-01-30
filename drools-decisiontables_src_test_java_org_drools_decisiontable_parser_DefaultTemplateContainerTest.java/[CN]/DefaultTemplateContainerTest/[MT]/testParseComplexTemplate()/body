@@ -1,0 +1,31 @@
+{
+  InputStream is=DefaultTemplateContainerTest.class.getResourceAsStream("/templates/test_template_complex.drl");
+  DefaultTemplateContainer t=new DefaultTemplateContainer(is);
+  assertEquals("package This_is_a_ruleset;\n",t.getHeader());
+  Column[] columnList=t.getColumns();
+  assertEquals(5,columnList.length);
+  assertEquals("first_name",columnList[0].getName());
+  assertEquals("last_name",columnList[1].getName());
+  assertEquals("age",columnList[2].getName());
+  assertEquals("city",columnList[3].getName());
+  assertEquals("phone",columnList[4].getName());
+  Map templates=t.getTemplates();
+  assertEquals(2,templates.size());
+  RuleTemplate template=(RuleTemplate)templates.get("template1");
+  assertNotNull(template);
+  List columns=template.getColumns();
+  assertEquals(1,columns.size());
+  assertEquals("first_name",columns.get(0));
+  String contents=template.getContents();
+  assertTrue(contents.startsWith("rule \"How cool is $first_name$ $row.rowNumber$\""));
+  assertTrue(contents.endsWith("then\nend\n"));
+  template=(RuleTemplate)templates.get("template2");
+  assertNotNull(template);
+  columns=template.getColumns();
+  assertEquals(2,columns.size());
+  assertEquals("first_name",columns.get(0));
+  assertEquals("last_name",columns.get(1));
+  contents=template.getContents();
+  assertTrue(contents.startsWith("rule \"How uncool is $first_name$ $row.rowNumber$\""));
+  assertTrue(contents.endsWith("then\nend\n"));
+}

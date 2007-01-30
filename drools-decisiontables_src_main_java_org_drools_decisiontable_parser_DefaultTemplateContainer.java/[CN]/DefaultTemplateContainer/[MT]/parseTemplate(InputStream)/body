@@ -22,6 +22,9 @@
           addTemplate(template);
         }
  else         if (line.startsWith("package")) {
+          if (inHeader == false) {
+            throw new DecisionTableParseException("Missing header");
+          }
           inHeader=false;
           header.append(line).append("\n");
         }
@@ -49,12 +52,15 @@
         }
       }
     }
+    if (inTemplate) {
+      throw new DecisionTableParseException("Missing end template");
+    }
     this.header=header.toString();
   }
  catch (  IOException e) {
     throw new RuntimeException(e);
   }
  finally {
-    closeStream(templateStream);
+    if (templateStream != null)     closeStream(templateStream);
   }
 }
