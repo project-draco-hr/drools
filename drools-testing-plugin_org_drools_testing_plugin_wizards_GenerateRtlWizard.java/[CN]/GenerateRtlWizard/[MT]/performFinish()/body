@@ -1,0 +1,34 @@
+{
+  Object[] ruleDescrs=selectRulesPage.getViewer().getCheckedElements();
+  for (int i=0; i < ruleDescrs.length; i++) {
+    rtlModel.getRuleDescrs().add((RuleDescr)ruleDescrs[i]);
+  }
+  final String fileName=rtlNewPage.getRtlFileName() + ".rtl";
+  final String containerName=rtlNewPage.getContainerName();
+  IRunnableWithProgress op=new IRunnableWithProgress(){
+    public void run(    IProgressMonitor monitor) throws InvocationTargetException {
+      try {
+        doFinish(containerName,fileName,monitor);
+      }
+ catch (      CoreException e) {
+        throw new InvocationTargetException(e);
+      }
+ finally {
+        monitor.done();
+      }
+    }
+  }
+;
+  try {
+    getContainer().run(true,false,op);
+  }
+ catch (  InterruptedException e) {
+    return false;
+  }
+catch (  InvocationTargetException e) {
+    Throwable realException=e.getTargetException();
+    MessageDialog.openError(getShell(),"Error",realException.getMessage());
+    return false;
+  }
+  return true;
+}
