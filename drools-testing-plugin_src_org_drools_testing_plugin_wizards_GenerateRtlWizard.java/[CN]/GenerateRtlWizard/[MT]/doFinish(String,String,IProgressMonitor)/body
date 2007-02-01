@@ -8,7 +8,17 @@
   IContainer container=(IContainer)resource;
   final IFile file=container.getFile(new Path(fileName));
   try {
-    InputStream stream=openContentStream();
+    Testing testing=new Testing("The Test Test Suite",rtlModel.getPackageDescr());
+    Scenario scenario=testing.generateScenario("Scenario One",rtlModel.getPackageDescr().getRules());
+    testing.addScenarioToSuite(scenario);
+    TestSuite testSuite=testing.getTestSuite();
+    FileWriter out=new FileWriter(fileName);
+    ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
+    Marshaller marshaller=new Marshaller(out);
+    marshaller.setSuppressXSIType(true);
+    marshaller.setSupressXMLDeclaration(true);
+    marshaller.marshal(testSuite);
+    InputStream stream=new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
     if (file.exists()) {
       file.setContents(stream,true,true,monitor);
     }
@@ -17,7 +27,17 @@
     }
     stream.close();
   }
- catch (  IOException e) {
+ catch (  RuleTestLanguageException e) {
+    throwCoreException(e.getMessage());
+  }
+catch (  IOException e) {
+    throwCoreException(e.getMessage());
+  }
+catch (  MarshalException e) {
+    throwCoreException(e.getMessage());
+  }
+catch (  ValidationException e) {
+    throwCoreException(e.getMessage());
   }
   monitor.worked(1);
   monitor.setTaskName("Opening file for editing...");
