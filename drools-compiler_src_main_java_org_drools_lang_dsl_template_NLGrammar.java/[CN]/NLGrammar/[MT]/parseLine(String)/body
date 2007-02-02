@@ -3,13 +3,20 @@
   String left=line.substring(0,split).trim();
   final String right=line.substring(split + 1).trim();
   left=StringUtils.replace(left,"\\","");
-  final Matcher matcher=NLGrammar.itemPrefix.matcher(left);
-  if (matcher.matches()) {
-    final String type=matcher.group(1);
-    left=left.substring(left.indexOf("]") + 1).trim();
-    return new NLMappingItem(left,right,type);
+  final Matcher m2=NLGrammar.itemMetadata.matcher(left);
+  if (m2.find()) {
+    String type=m2.group(0);
+    type=type.substring(1,type.length() - 1);
+    if (m2.find()) {
+      String obj=m2.group(0);
+      obj=obj.substring(1,obj.length() - 1);
+      left=left.substring(left.lastIndexOf("]") + 1).trim();
+      return new NLMappingItem(left,right,type,obj);
+    }
+    left=left.substring(left.lastIndexOf("]") + 1).trim();
+    return new NLMappingItem(left,right,type,"*");
   }
  else {
-    return new NLMappingItem(left,right,"*");
+    return new NLMappingItem(left,right,"*","*");
   }
 }
