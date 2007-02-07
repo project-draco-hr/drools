@@ -1,0 +1,57 @@
+{
+  File jarFile=null;
+  ZipOutputStream zos=null;
+  File rootDirectory=null;
+  try {
+    jarFile=File.createTempFile("drools-jsr94",".jar");
+    URL url=Jsr94FactHandle.class.getResource("Jsr94FactHandle.class");
+    rootDirectory=new File(url.getFile()).getParentFile().getParentFile().getParentFile().getParentFile();
+    zos=new ZipOutputStream(new FileOutputStream(jarFile));
+    zipDir(rootDirectory,zos);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+  }
+ finally {
+    if (zos != null) {
+      try {
+        zos.close();
+      }
+ catch (      IOException e) {
+      }
+    }
+  }
+  String conf="";
+  conf+="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+  conf+="<tck-configuration>\n";
+  conf+="<test-factory>org.jcp.jsr94.tck.util.TestFactory</test-factory>\n";
+  conf+="<rule-service-provider>org.drools.jsr94.rules.RuleServiceProviderImpl</rule-service-provider>\n";
+  conf+="<rule-service-provider-jar-url>file://" + jarFile.getAbsolutePath() + "</rule-service-provider-jar-url>\n";
+  URL url=AllTests.class.getResource("AllTests.class");
+  String setLocation=new File(url.getFile()).getParentFile().getAbsolutePath().replaceAll("\\\\","/");
+  if (setLocation.charAt(1) == ':') {
+    setLocation=setLocation.substring(2);
+  }
+  conf+="<rule-execution-set-location>" + setLocation + "</rule-execution-set-location>\n";
+  conf+="</tck-configuration>";
+  url=AllTests.class.getResource("tck.conf");
+  File tckConf=new File(url.getFile());
+  BufferedWriter buffWriter=null;
+  try {
+    FileWriter fileWriter=new FileWriter(tckConf);
+    buffWriter=new BufferedWriter(fileWriter);
+    buffWriter.write(conf);
+  }
+ catch (  IOException e) {
+    e.printStackTrace();
+  }
+ finally {
+    try {
+      buffWriter.close();
+    }
+ catch (    IOException e) {
+      e.printStackTrace();
+    }
+  }
+  System.setProperty("jsr94.tck.configuration",tckConf.getParent());
+}
