@@ -1,18 +1,35 @@
 {
-  TestSuite testSuite;
+  TestSuite testSuite=null;
   try {
     FileEditorInput fileEditorInput=((FileEditorInput)getEditorInput());
     BufferedReader br=new BufferedReader(new FileReader(fileEditorInput.getFile().getName()));
-    Unmarshaller unmarshaller=new Unmarshaller();
+    Unmarshaller unmarshaller=new Unmarshaller(TestSuite.class);
     testSuite=(TestSuite)unmarshaller.unmarshal(br);
   }
  catch (  Exception e) {
-    e.printStackTrace();
+    MessageDialog.openError(this.getSite().getShell(),"Error",e.getMessage());
   }
-  ScrolledForm form=managedForm.getForm();
+  final ScrolledForm form=managedForm.getForm();
   FormToolkit toolkit=managedForm.getToolkit();
   form.setText("Rtl Input Capture");
-  GridLayout layout=new GridLayout();
+  TableWrapLayout layout=new TableWrapLayout();
   layout.numColumns=2;
   form.getBody().setLayout(layout);
+  Section section=toolkit.createSection(form.getBody(),Section.DESCRIPTION | Section.TITLE_BAR | Section.TWISTIE| Section.EXPANDED);
+  TableWrapData td=new TableWrapData(TableWrapData.FILL);
+  td.colspan=2;
+  section.setLayoutData(td);
+  section.addExpansionListener(new ExpansionAdapter(){
+    public void expansionStateChanged(    ExpansionEvent e){
+      form.reflow(true);
+    }
+  }
+);
+  section.setText("Test Suite");
+  section.setDescription("This is the test suite information " + "generated from the supplied rtl file.");
+  Composite sectionClient=toolkit.createComposite(section);
+  sectionClient.setLayout(new GridLayout());
+  Label label=toolkit.createLabel(sectionClient,"Suite Name:");
+  Text text=toolkit.createText(sectionClient,testSuite.getName());
+  section.setClient(sectionClient);
 }
