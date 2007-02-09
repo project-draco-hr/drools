@@ -1,5 +1,6 @@
 {
   Class clazz=null;
+  boolean isArray=false;
   if ("boolean".equals(className)) {
     clazz=boolean.class;
   }
@@ -24,6 +25,35 @@
  else   if ("double".equals(className)) {
     clazz=double.class;
   }
+ else   if ("boolean[]".equals(className)) {
+    clazz=boolean[].class;
+  }
+ else   if ("byte[]".equals(className)) {
+    clazz=byte[].class;
+  }
+ else   if ("short[]".equals(className)) {
+    clazz=short[].class;
+  }
+ else   if ("char[]".equals(className)) {
+    clazz=char[].class;
+  }
+ else   if ("int[]".equals(className)) {
+    clazz=int[].class;
+  }
+ else   if ("long[]".equals(className)) {
+    clazz=long[].class;
+  }
+ else   if ("float[]".equals(className)) {
+    clazz=float[].class;
+  }
+ else   if ("double[]".equals(className)) {
+    clazz=double[].class;
+  }
+ else   if (className.endsWith("[]")) {
+    String componentName=className.substring(0,className.length() - 2);
+    className=componentName;
+    isArray=true;
+  }
   if (clazz == null) {
     clazz=lookupFromCache(className);
   }
@@ -40,12 +70,6 @@
     final Iterator it=this.imports.iterator();
     while (it.hasNext()) {
       clazz=importClass((String)it.next(),className);
-      if (clazz != null) {
-        validClazzCandidates.add(clazz);
-      }
-    }
-    if (validClazzCandidates.isEmpty()) {
-      clazz=importClass("java.lang.*",className);
       if (clazz != null) {
         validClazzCandidates.add(clazz);
       }
@@ -70,6 +94,15 @@
   }
   if (clazz == null) {
     clazz=defaultClass(className);
+  }
+  if (isArray && clazz != null) {
+    String arrayClassName=new StringBuffer().append("[L").append(clazz.getName()).append(";").toString();
+    try {
+      clazz=Class.forName(arrayClassName);
+    }
+ catch (    ClassNotFoundException e) {
+      clazz=null;
+    }
   }
   if (clazz == null) {
     throw new ClassNotFoundException("Unable to find class '" + className + "'");
