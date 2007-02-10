@@ -1,0 +1,20 @@
+{
+  final Map classFilesByName=new HashMap();
+  final CompilingIClassLoader icl=new CompilingIClassLoader(pResourceReader,classFilesByName,classLoader);
+  try {
+    for (int i=0; i < pClasses.length; i++) {
+      icl.loadIClass(Descriptor.fromClassName(pClasses[i]));
+    }
+  }
+ catch (  ClassNotFoundException e) {
+    e.printStackTrace();
+  }
+  for (Iterator i=classFilesByName.entrySet().iterator(); i.hasNext(); ) {
+    final Map.Entry entry=(Map.Entry)i.next();
+    pStore.write((String)entry.getKey(),(byte[])entry.getValue());
+  }
+  final Collection problems=icl.getProblems();
+  final CompilationProblem[] result=new CompilationProblem[problems.size()];
+  problems.toArray(result);
+  return new CompilationResult(result);
+}
