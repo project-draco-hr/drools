@@ -6,16 +6,18 @@
       return;
     }
     removePropertyChangeListener(handle);
-    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.RETRACTION,rule,activation);
+    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.RETRACTION,rule,activation,this.agenda.getActiveActivations(),this.agenda.getDormantActivations());
     doRetract(handle,propagationContext);
-    final EqualityKey key=handle.getEqualityKey();
-    if (key.getStatus() == EqualityKey.JUSTIFIED) {
-      this.tms.removeLogicalDependencies(handle);
-    }
-    key.removeFactHandle(handle);
-    handle.setEqualityKey(null);
-    if (key.isEmpty()) {
-      this.tms.remove(key);
+    if (this.maintainTms) {
+      final EqualityKey key=handle.getEqualityKey();
+      if (key.getStatus() == EqualityKey.JUSTIFIED) {
+        this.tms.removeLogicalDependencies(handle);
+      }
+      key.removeFactHandle(handle);
+      handle.setEqualityKey(null);
+      if (key.isEmpty()) {
+        this.tms.remove(key);
+      }
     }
     final Object object=handle.getObject();
     this.workingMemoryEventSupport.fireObjectRetracted(propagationContext,handle,object);

@@ -1,32 +1,37 @@
 {
   try {
     this.lock.lock();
-    final int status=((InternalFactHandle)factHandle).getEqualityKey().getStatus();
+    int status=-1;
+    if (this.maintainTms) {
+      status=((InternalFactHandle)factHandle).getEqualityKey().getStatus();
+    }
     final InternalFactHandle handle=(InternalFactHandle)factHandle;
     final Object originalObject=(handle.isShadowFact()) ? ((ShadowProxy)handle.getObject()).getShadowedObject() : handle.getObject();
     if (handle.getId() == -1 || object == null) {
       return;
     }
-    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation);
+    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation,this.agenda.getActiveActivations(),this.agenda.getDormantActivations());
     doRetract(handle,propagationContext);
     handle.setObject(object);
-    if (originalObject != object) {
-      this.assertMap.put(handle,handle);
-    }
-    EqualityKey key=handle.getEqualityKey();
-    key.removeFactHandle(handle);
-    if (key.isEmpty()) {
-      this.tms.remove(key);
-    }
-    key=this.tms.get(object);
-    if (key == null) {
-      key=new EqualityKey(handle,status);
-      this.tms.put(key);
-    }
+    if (this.maintainTms) {
+      if (originalObject != object) {
+        this.assertMap.put(handle,handle);
+      }
+      EqualityKey key=handle.getEqualityKey();
+      key.removeFactHandle(handle);
+      if (key.isEmpty()) {
+        this.tms.remove(key);
+      }
+      key=this.tms.get(object);
+      if (key == null) {
+        key=new EqualityKey(handle,status);
+        this.tms.put(key);
+      }
  else {
-      key.addFactHandle(handle);
+        key.addFactHandle(handle);
+      }
+      handle.setEqualityKey(key);
     }
-    handle.setEqualityKey(key);
     this.handleFactory.increaseFactHandleRecency(handle);
     doAssertObject(handle,object,propagationContext);
     this.workingMemoryEventSupport.fireObjectModified(propagationContext,factHandle,originalObject,object);
