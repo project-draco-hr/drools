@@ -1,58 +1,19 @@
 {
   Class clazz=null;
   boolean isArray=false;
-  if ("boolean".equals(className)) {
-    clazz=boolean.class;
+  StringBuffer arrayClassName=new StringBuffer();
+  if (internalNamesMap.containsKey(className)) {
+    clazz=Class.forName("[" + internalNamesMap.get(className),true,classLoader).getComponentType();
   }
- else   if ("byte".equals(className)) {
-    clazz=byte.class;
-  }
- else   if ("short".equals(className)) {
-    clazz=short.class;
-  }
- else   if ("char".equals(className)) {
-    clazz=char.class;
-  }
- else   if ("int".equals(className)) {
-    clazz=int.class;
-  }
- else   if ("long".equals(className)) {
-    clazz=long.class;
-  }
- else   if ("float".equals(className)) {
-    clazz=float.class;
-  }
- else   if ("double".equals(className)) {
-    clazz=double.class;
-  }
- else   if ("boolean[]".equals(className)) {
-    clazz=boolean[].class;
-  }
- else   if ("byte[]".equals(className)) {
-    clazz=byte[].class;
-  }
- else   if ("short[]".equals(className)) {
-    clazz=short[].class;
-  }
- else   if ("char[]".equals(className)) {
-    clazz=char[].class;
-  }
- else   if ("int[]".equals(className)) {
-    clazz=int[].class;
-  }
- else   if ("long[]".equals(className)) {
-    clazz=long[].class;
-  }
- else   if ("float[]".equals(className)) {
-    clazz=float[].class;
-  }
- else   if ("double[]".equals(className)) {
-    clazz=double[].class;
-  }
- else   if (className.endsWith("[]")) {
-    String componentName=className.substring(0,className.length() - 2);
-    className=componentName;
+ else   if (className.indexOf('[') > 0) {
     isArray=true;
+    int bracketIndex=className.indexOf('[');
+    String componentName=className.substring(0,bracketIndex);
+    arrayClassName.append('[');
+    while ((bracketIndex=className.indexOf('[',bracketIndex + 1)) > 0) {
+      arrayClassName.append('[');
+    }
+    className=componentName;
   }
   if (clazz == null) {
     clazz=lookupFromCache(className);
@@ -95,10 +56,20 @@
   if (clazz == null) {
     clazz=defaultClass(className);
   }
-  if (isArray && clazz != null) {
-    String arrayClassName=new StringBuffer().append("[L").append(clazz.getName()).append(";").toString();
+  if (isArray) {
+    if (clazz == null && internalNamesMap.containsKey(className)) {
+      arrayClassName.append(internalNamesMap.get(className));
+    }
+ else {
+      if (clazz != null) {
+        arrayClassName.append("L").append(clazz.getName()).append(";");
+      }
+ else {
+        arrayClassName.append("L").append(className).append(";");
+      }
+    }
     try {
-      clazz=Class.forName(arrayClassName);
+      clazz=Class.forName(arrayClassName.toString());
     }
  catch (    ClassNotFoundException e) {
       clazz=null;
