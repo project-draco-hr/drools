@@ -1,0 +1,33 @@
+{
+  if (visited.contains(javaProject))   return;
+  visited.add(javaProject);
+  IPath outPath=javaProject.getProject().getFullPath();
+  outPath=outPath.addTrailingSeparator();
+  URL out=createFileURL(outPath);
+  urls.add(out);
+  IClasspathEntry[] entries=null;
+  try {
+    entries=javaProject.getResolvedClasspath(true);
+  }
+ catch (  JavaModelException e) {
+    return;
+  }
+  IClasspathEntry entry, resEntry;
+  IJavaProject proj=null;
+  List projects=null;
+  for (int i=0; i < entries.length; i++) {
+    entry=entries[i];
+switch (entry.getEntryKind()) {
+case IClasspathEntry.CPE_LIBRARY:
+case IClasspathEntry.CPE_CONTAINER:
+case IClasspathEntry.CPE_VARIABLE:
+      collectClasspathEntryURL(entry,urls);
+    break;
+case IClasspathEntry.CPE_PROJECT:
+{
+    if (isFirstProject || entry.isExported())     collectClasspathURLs(getJavaProject(entry),urls,visited,false);
+    break;
+  }
+}
+}
+}
