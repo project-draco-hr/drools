@@ -1,0 +1,28 @@
+{
+  Matcher m=finder.matcher(drl);
+  StringBuffer buf=new StringBuffer();
+  while (m.find()) {
+    StringBuffer expanded=new StringBuffer();
+    String constr=m.group(1).trim();
+    if (constr.startsWith("rule")) {
+      expanded.append(m.group(2));
+      expanded.append(this.expandLHS(m.group(3)));
+      expanded.append(m.group(4));
+      expanded.append(this.expandRHS(m.group(5)));
+      expanded.append(m.group(6));
+      expanded.append("\n");
+    }
+ else     if (constr.startsWith("query")) {
+      expanded.append(m.group(7));
+      expanded.append(this.expandLHS(m.group(8)));
+      expanded.append(m.group(9));
+      expanded.append("\n");
+    }
+ else {
+      this.addError(new ExpanderException("Unable to expand statement: " + constr,0));
+    }
+    m.appendReplacement(buf,expanded.toString().replaceAll("\\$","\\\\\\$"));
+  }
+  m.appendTail(buf);
+  return buf;
+}

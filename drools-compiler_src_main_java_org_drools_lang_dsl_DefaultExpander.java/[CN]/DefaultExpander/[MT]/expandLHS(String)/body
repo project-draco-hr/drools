@@ -1,0 +1,53 @@
+{
+  StringBuffer buf=new StringBuffer();
+  String[] lines=lhs.split("\n");
+  String[] expanded=new String[lines.length];
+  int lastExpanded=-1;
+  int lastColumn=-1;
+  for (int i=0; i < lines.length; i++) {
+    String trimmed=lines[i].trim();
+    expanded[++lastExpanded]=lines[i];
+    if (trimmed.length() == 0 || trimmed.startsWith("#") || trimmed.startsWith("//")) {
+    }
+ else     if (trimmed.startsWith(">")) {
+      expanded[lastExpanded]=lines[i].replaceFirst(">"," ");
+    }
+ else {
+      for (Iterator it=this.condition.iterator(); it.hasNext(); ) {
+        DSLMappingEntry entry=(DSLMappingEntry)it.next();
+        expanded[lastExpanded]=entry.getKeyPattern().matcher(expanded[lastExpanded]).replaceAll(entry.getValuePattern());
+      }
+      if (lines[i].equals(expanded[lastExpanded])) {
+        this.addError(new ExpanderException("Unable to expand: [" + lines[i] + "]",i));
+      }
+      if (trimmed.startsWith("-") && (!lines[i].equals(expanded[lastExpanded]))) {
+        int lastMatchStart=-1;
+        int lastMatchEnd=-1;
+        String constraints="";
+        if (lastColumn >= 0) {
+          Matcher m2=columnFinder.matcher(expanded[lastColumn]);
+          while (m2.find()) {
+            lastMatchStart=m2.start();
+            lastMatchEnd=m2.end();
+            constraints=m2.group(1).trim();
+          }
+        }
+        if (lastMatchStart > -1) {
+          expanded[lastColumn]=expanded[lastColumn].substring(0,lastMatchStart) + "( " + constraints+ ((constraints.length() == 0) ? "" : ", ")+ expanded[lastExpanded].trim()+ " )"+ expanded[lastColumn].substring(lastMatchEnd);
+        }
+ else {
+          this.addError(new ExpanderException("No column was found to add the constraint to: " + lines[i],i));
+        }
+        lastExpanded--;
+      }
+ else {
+        lastColumn=lastExpanded;
+      }
+    }
+  }
+  for (int i=0; i <= lastExpanded; i++) {
+    buf.append(expanded[i]);
+    buf.append("\n");
+  }
+  return buf.toString();
+}

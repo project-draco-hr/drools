@@ -1,7 +1,15 @@
 {
-  final DefaultExpanderResolver resolver=new DefaultExpanderResolver(dsl);
-  final DRLParser parser=getParser(source);
-  parser.setExpanderResolver(resolver);
-  compile(parser);
-  return parser.getPackageDescr();
+  DefaultExpanderResolver resolver;
+  try {
+    resolver=new DefaultExpanderResolver(dsl);
+  }
+ catch (  IOException e) {
+    throw new DroolsParserException("Error parsing the DSL.",e);
+  }
+  Expander expander=resolver.get("*",null);
+  String expanded=expander.expand(source);
+  if (expander.hasErrors()) {
+    this.results.addAll(expander.getErrors());
+  }
+  return this.parse(expanded);
 }

@@ -1,0 +1,34 @@
+{
+  String line=null;
+  int linecounter=0;
+  this.parsed=true;
+  while ((line=this.dslFileReader.readLine()) != null) {
+    linecounter++;
+    Matcher mat=pattern.matcher(line);
+    if (mat.matches()) {
+      String sectionStr=mat.group(2);
+      String metadataStr=mat.group(4);
+      String key=mat.group(5);
+      String value=mat.group(6);
+      DSLMappingEntry.Section section=DSLMappingEntry.ANY;
+      if (KEYWORD.equals(sectionStr)) {
+        section=DSLMappingEntry.KEYWORD;
+      }
+ else       if (CONDITION.equals(sectionStr)) {
+        section=DSLMappingEntry.CONDITION;
+      }
+ else       if (CONSEQUENCE.equals(sectionStr)) {
+        section=DSLMappingEntry.CONSEQUENCE;
+      }
+      DSLMappingEntry.MetaData metadata=new StandardDSLEntryMetaData(metadataStr);
+      DSLMappingEntry entry=new DefaultDSLMappingEntry(section,metadata,key,value);
+      this.entries.add(entry);
+    }
+ else     if (!line.trim().startsWith("#")) {
+      String error="Error parsing mapping entry: " + line;
+      DSLMappingParseException exception=new DSLMappingParseException(error,linecounter);
+      this.errors.add(exception);
+    }
+  }
+  return this.errors.isEmpty();
+}
