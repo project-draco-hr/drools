@@ -7,10 +7,15 @@
   }
   IContainer container=(IContainer)resource;
   final IFile file=container.getFile(new Path(fileName));
+  ClassLoader oldLoader=Thread.currentThread().getContextClassLoader();
+  ClassLoader newLoader=GenerateRtlWizard.class.getClassLoader();
+  if (resource.getProject().getNature("org.eclipse.jdt.core.javanature") != null) {
+    IJavaProject project=JavaCore.create(resource.getProject());
+    newLoader=ProjectClassLoader.getProjectClassLoader(project);
+  }
   try {
-    if (resource instanceof IProject)     System.out.println("fuck me");
-    IJavaProject proj=(IJavaProject)resource.getAdapter(IJavaProject.class);
-    Testing testing=new Testing("The Test Test Suite",rtlModel.getPackageDescr(),GenerateRtlWizard.class.getClassLoader());
+    Thread.currentThread().setContextClassLoader(newLoader);
+    Testing testing=new Testing("The Test Test Suite",rtlModel.getPackageDescr(),newLoader);
     Scenario scenario=testing.generateScenario("Scenario One",rtlModel.getPackageDescr().getRules());
     testing.addScenarioToSuite(scenario);
     TestSuite testSuite=testing.getTestSuite();
@@ -40,6 +45,9 @@ catch (  MarshalException e) {
   }
 catch (  ValidationException e) {
     throwCoreException(e.toString());
+  }
+ finally {
+    Thread.currentThread().setContextClassLoader(oldLoader);
   }
   monitor.worked(1);
   monitor.setTaskName("Opening file for editing...");

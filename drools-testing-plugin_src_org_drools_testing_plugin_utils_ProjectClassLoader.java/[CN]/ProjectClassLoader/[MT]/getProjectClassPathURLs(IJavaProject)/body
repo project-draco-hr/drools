@@ -1,0 +1,32 @@
+{
+  List pathElements=new ArrayList();
+  try {
+    IClasspathEntry[] paths=project.getResolvedClasspath(true);
+    if (paths != null) {
+      for (int i=0; i < paths.length; i++) {
+        IClasspathEntry path=paths[i];
+        if (path.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
+          URL url=getRawLocationURL(path.getPath());
+          pathElements.add(url);
+        }
+      }
+    }
+    IPath location=getProjectLocation(project.getProject());
+    IPath outputPath=location.append(project.getOutputLocation().removeFirstSegments(1));
+    pathElements.add(outputPath.toFile().toURL());
+    String[] names=project.getRequiredProjectNames();
+    for (int i=0; i < names.length; i++) {
+      String projectName=names[i];
+      IProject reqProject=project.getProject().getWorkspace().getRoot().getProject(projectName);
+      if (reqProject != null) {
+        IJavaProject reqJavaProject=JavaCore.create(reqProject);
+        pathElements.addAll(getProjectClassPathURLs(reqJavaProject));
+      }
+    }
+  }
+ catch (  JavaModelException e) {
+  }
+catch (  MalformedURLException e) {
+  }
+  return pathElements;
+}
