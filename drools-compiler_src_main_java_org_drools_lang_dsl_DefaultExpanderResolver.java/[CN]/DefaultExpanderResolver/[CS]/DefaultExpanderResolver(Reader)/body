@@ -1,8 +1,11 @@
 {
-  DSLMappingFile file=new DSLMappingFile("default",reader);
-  file.parseFile();
-  file.close();
-  final Expander expander=new DefaultExpander();
-  expander.addDSLMapping(file);
-  this.expanders.put("*",expander);
+  DSLMappingFile file=new DSLMappingFile();
+  if (file.parseAndLoad(reader)) {
+    final Expander expander=new DefaultExpander();
+    expander.addDSLMapping(file.getMapping());
+    this.expanders.put("*",expander);
+  }
+ else {
+    throw new RuntimeDroolsException("Error parsing and loading DSL file." + file.getErrors());
+  }
 }
