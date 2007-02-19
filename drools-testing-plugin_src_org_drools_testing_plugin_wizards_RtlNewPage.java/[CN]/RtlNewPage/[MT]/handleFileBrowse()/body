@@ -1,8 +1,11 @@
 {
-  FileDialog dialog=new FileDialog(getShell());
-  String[] extensions={"*.drl"};
-  dialog.setFilterExtensions(extensions);
-  dialog.setFilterPath(".");
-  dialog.setFilterPath(ResourcesPlugin.getWorkspace().getRoot().getProject(getContainerName()).getFullPath().toString());
-  fileText.setText(dialog.open());
+  IContainer container=(IContainer)ResourcesPlugin.getWorkspace().getRoot().findMember(new Path(getContainerName()));
+  ResourceListSelectionDialog dialog=new ResourceListSelectionDialog(getShell(),container,IResource.FILE);
+  if (dialog.open() == ResourceListSelectionDialog.OK) {
+    Object[] result=dialog.getResult();
+    if (result.length == 1) {
+      IResource resource=(IResource)result[0];
+      fileText.setText(resource.getName());
+    }
+  }
 }
