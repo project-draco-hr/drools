@@ -1,14 +1,18 @@
 {
   final Package pkg=(Package)this.pkgs.get(packageName);
   final Rule rule=pkg.getRule(ruleName);
-  for (final Iterator it=this.workingMemories.keySet().iterator(); it.hasNext(); ) {
-    final AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)it.next();
-    workingMemory.getLock().lock();
+  int lastAquiredLock=0;
+  AbstractWorkingMemory[] wms=(AbstractWorkingMemory[])this.workingMemories.keySet().toArray(new AbstractWorkingMemory[this.workingMemories.size()]);
+  try {
+    for (lastAquiredLock=0; lastAquiredLock < wms.length; lastAquiredLock++) {
+      wms[lastAquiredLock].getLock().lock();
+    }
+    removeRule(rule);
+    pkg.removeRule(rule);
   }
-  removeRule(rule);
-  pkg.removeRule(rule);
-  for (final Iterator it=this.workingMemories.keySet().iterator(); it.hasNext(); ) {
-    final AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)it.next();
-    workingMemory.getLock().unlock();
+  finally {
+    for (lastAquiredLock--; lastAquiredLock > -1; lastAquiredLock--) {
+      wms[lastAquiredLock].getLock().unlock();
+    }
   }
 }
