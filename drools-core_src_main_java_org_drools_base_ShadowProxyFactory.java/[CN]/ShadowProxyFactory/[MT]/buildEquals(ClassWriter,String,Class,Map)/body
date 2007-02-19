@@ -16,7 +16,7 @@
     Label l3=new Label();
     mv.visitJumpInsn(Opcodes.IFNULL,l3);
     mv.visitVarInsn(Opcodes.ALOAD,1);
-    mv.visitTypeInsn(Opcodes.INSTANCEOF,className);
+    mv.visitTypeInsn(Opcodes.INSTANCEOF,Type.getInternalName(clazz));
     Label l4=new Label();
     mv.visitJumpInsn(Opcodes.IFNE,l4);
     mv.visitLabel(l3);
@@ -24,7 +24,7 @@
     mv.visitInsn(Opcodes.IRETURN);
     mv.visitLabel(l4);
     mv.visitVarInsn(Opcodes.ALOAD,1);
-    mv.visitTypeInsn(Opcodes.CHECKCAST,className);
+    mv.visitTypeInsn(Opcodes.CHECKCAST,Type.getInternalName(clazz));
     mv.visitVarInsn(Opcodes.ASTORE,2);
     int count=0;
     for (Iterator it=fieldTypes.entrySet().iterator(); it.hasNext(); ) {
@@ -64,10 +64,10 @@
         mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
         mv.visitVarInsn(Opcodes.ALOAD,2);
         if (clazz.isInterface()) {
-          mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,className,method.getName(),Type.getMethodDescriptor(method));
+          mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,Type.getInternalName(clazz),method.getName(),Type.getMethodDescriptor(method));
         }
  else {
-          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,className,method.getName(),Type.getMethodDescriptor(method));
+          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(clazz),method.getName(),Type.getMethodDescriptor(method));
         }
         if (fieldType.equals(Long.TYPE)) {
           mv.visitInsn(Opcodes.LCMP);
@@ -94,10 +94,10 @@
         mv.visitJumpInsn(Opcodes.IFNONNULL,secondIfPart);
         mv.visitVarInsn(Opcodes.ALOAD,2);
         if (clazz.isInterface()) {
-          mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,className,method.getName(),Type.getMethodDescriptor(method));
+          mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,Type.getInternalName(clazz),method.getName(),Type.getMethodDescriptor(method));
         }
  else {
-          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,className,method.getName(),Type.getMethodDescriptor(method));
+          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(clazz),method.getName(),Type.getMethodDescriptor(method));
         }
         Label returnFalse=new Label();
         mv.visitJumpInsn(Opcodes.IFNONNULL,returnFalse);
@@ -109,10 +109,10 @@
         mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
         mv.visitVarInsn(Opcodes.ALOAD,2);
         if (clazz.isInterface()) {
-          mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,className,method.getName(),Type.getMethodDescriptor(method));
+          mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,Type.getInternalName(clazz),method.getName(),Type.getMethodDescriptor(method));
         }
  else {
-          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,className,method.getName(),Type.getMethodDescriptor(method));
+          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(clazz),method.getName(),Type.getMethodDescriptor(method));
         }
         if (fieldType.isInterface()) {
           mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,Type.getInternalName(fieldType),"equals",Type.getMethodDescriptor(Type.BOOLEAN_TYPE,new Type[]{Type.getType(Object.class)}));
@@ -138,7 +138,7 @@
     mv.visitLabel(lastLabel);
     mv.visitLocalVariable("this","L" + className + ";",null,l0,lastLabel,0);
     mv.visitLocalVariable("object",Type.getDescriptor(Object.class),null,l0,lastLabel,1);
-    mv.visitLocalVariable("other","L" + className + ";",null,l0,lastLabel,2);
+    mv.visitLocalVariable("other",Type.getDescriptor(clazz),null,l0,lastLabel,2);
     mv.visitMaxs(0,0);
     mv.visitEnd();
   }
