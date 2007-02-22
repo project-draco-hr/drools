@@ -1,0 +1,22 @@
+{
+  this.pointer=0;
+  this.sequence=0;
+  this.data=HEADER;
+  ByteArrayOutputStream byteOut=new ByteArrayOutputStream();
+  DataOutputStream dout=new DataOutputStream(byteOut);
+  try {
+    dout.writeByte(ObjectStreamConstants.TC_OBJECT);
+    dout.writeByte(ObjectStreamConstants.TC_CLASSDESC);
+    dout.writeUTF(clazz.getName());
+    dout.writeLong(ObjectStreamClass.lookup(clazz).getSerialVersionUID());
+    dout.writeByte(ObjectStreamConstants.SC_SERIALIZABLE);
+    dout.writeShort((short)0);
+    dout.writeByte(ObjectStreamConstants.TC_ENDBLOCKDATA);
+    dout.writeByte(ObjectStreamConstants.TC_NULL);
+  }
+ catch (  IOException e) {
+    throw new Error("IOException: " + e.getMessage());
+  }
+  this.FIRST_DATA=byteOut.toByteArray();
+  buffers=new byte[][]{HEADER,FIRST_DATA,REPEATING_DATA};
+}
