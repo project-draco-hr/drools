@@ -1,14 +1,19 @@
 {
   try {
-    final ClassFieldInspector inspector=new ClassFieldInspector(clazz);
-    final Class fieldType=(Class)inspector.getFieldTypes().get(fieldName);
-    final Method getterMethod=(Method)inspector.getGetterMethods().get(fieldName);
-    final String className=ClassFieldExtractorFactory.BASE_PACKAGE + "/" + Type.getInternalName(clazz)+ "$"+ getterMethod.getName();
-    final byte[] bytes=dump(clazz,className,getterMethod,fieldType,clazz.isInterface());
-    final ByteArrayClassLoader classLoader=new ByteArrayClassLoader(Thread.currentThread().getContextClassLoader());
-    final Class newClass=classLoader.defineClass(className.replace('/','.'),bytes,PROTECTION_DOMAIN);
-    final Object[] params={clazz,fieldName};
-    return (BaseClassFieldExtractor)newClass.getConstructors()[0].newInstance(params);
+    if (SELF_REFERENCE_FIELD.equals(fieldName)) {
+      return new SelfReferenceClassFieldExtractor(clazz,fieldName);
+    }
+ else {
+      final ClassFieldInspector inspector=new ClassFieldInspector(clazz);
+      final Class fieldType=(Class)inspector.getFieldTypes().get(fieldName);
+      final Method getterMethod=(Method)inspector.getGetterMethods().get(fieldName);
+      final String className=ClassFieldExtractorFactory.BASE_PACKAGE + "/" + Type.getInternalName(clazz)+ "$"+ getterMethod.getName();
+      final byte[] bytes=dump(clazz,className,getterMethod,fieldType,clazz.isInterface());
+      final ByteArrayClassLoader classLoader=new ByteArrayClassLoader(Thread.currentThread().getContextClassLoader());
+      final Class newClass=classLoader.defineClass(className.replace('/','.'),bytes,PROTECTION_DOMAIN);
+      final Object[] params={clazz,fieldName};
+      return (BaseClassFieldExtractor)newClass.getConstructors()[0].newInstance(params);
+    }
   }
  catch (  final Exception e) {
     throw new RuntimeDroolsException(e);
