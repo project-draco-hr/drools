@@ -4,14 +4,20 @@
       return new SelfReferenceClassFieldExtractor(clazz,fieldName);
     }
  else {
-      final ClassFieldInspector inspector=new ClassFieldInspector(clazz);
+      ClassFieldInspector inspector=(ClassFieldInspector)inspectors.get(clazz);
+      if (inspector == null) {
+        inspector=new ClassFieldInspector(clazz);
+        inspectors.put(clazz,inspector);
+      }
       final Class fieldType=(Class)inspector.getFieldTypes().get(fieldName);
       final Method getterMethod=(Method)inspector.getGetterMethods().get(fieldName);
       final String className=ClassFieldExtractorFactory.BASE_PACKAGE + "/" + Type.getInternalName(clazz)+ "$"+ getterMethod.getName();
       final byte[] bytes=dump(clazz,className,getterMethod,fieldType,clazz.isInterface());
       final ByteArrayClassLoader classLoader=new ByteArrayClassLoader(Thread.currentThread().getContextClassLoader());
       final Class newClass=classLoader.defineClass(className.replace('/','.'),bytes,PROTECTION_DOMAIN);
-      final Object[] params={clazz,fieldName};
+      int index=((Integer)inspector.getFieldNames().get(fieldName)).intValue();
+      ValueType valueType=ValueType.determineValueType(fieldType);
+      final Object[] params={index,fieldType,valueType};
       return (BaseClassFieldExtractor)newClass.getConstructors()[0].newInstance(params);
     }
   }
