@@ -1,0 +1,48 @@
+{
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  final ReteooWorkingMemory workingMemory=(ReteooWorkingMemory)ruleBase.newWorkingMemory();
+  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
+  final Consequence consequence0=new Consequence(){
+    private static final long serialVersionUID=-2596133893109870505L;
+    public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory w){
+    }
+  }
+;
+  final Rule rule0=new Rule("test-rule0");
+  rule0.setRuleFlowGroup("rule-flow-group-0");
+  rule0.setConsequence(consequence0);
+  final RuleTerminalNode node0=new RuleTerminalNode(1,new MockTupleSource(2),rule0,rule0.getLhs());
+  final RuleFlowGroup ruleFlowGroup0=agenda.getRuleFlowGroup("rule-flow-group-0");
+  assertTrue(ruleFlowGroup0.isAutoDeactivate());
+  ruleFlowGroup0.setAutoDeactivate(false);
+  assertFalse(ruleFlowGroup0.isAutoDeactivate());
+  final PropagationContext context0=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule0,null);
+  final ReteTuple tuple0=new ReteTuple(new DefaultFactHandle(1,"cheese"));
+  node0.assertTuple(tuple0,context0,workingMemory);
+  assertEquals(1,ruleFlowGroup0.size());
+  assertEquals(0,agenda.agendaSize());
+  agenda.activateRuleFlowGroup("rule-flow-group-0");
+  assertEquals(1,ruleFlowGroup0.size());
+  assertEquals(1,agenda.agendaSize());
+  agenda.fireNextItem(null);
+  assertEquals(0,ruleFlowGroup0.size());
+  assertEquals(0,agenda.agendaSize());
+  assertTrue(ruleFlowGroup0.isActive());
+  ruleFlowGroup0.setAutoDeactivate(true);
+  assertTrue(ruleFlowGroup0.isAutoDeactivate());
+  assertFalse(ruleFlowGroup0.isActive());
+  final ReteTuple tuple1=new ReteTuple(new DefaultFactHandle(1,"cheese"));
+  node0.assertTuple(tuple1,context0,workingMemory);
+  agenda.activateRuleFlowGroup("rule-flow-group-0");
+  assertEquals(1,ruleFlowGroup0.size());
+  assertEquals(1,agenda.agendaSize());
+  assertTrue(ruleFlowGroup0.isActive());
+  agenda.fireNextItem(null);
+  assertEquals(0,ruleFlowGroup0.size());
+  assertEquals(0,agenda.agendaSize());
+  assertFalse(ruleFlowGroup0.isActive());
+  final ReteTuple tuple2=new ReteTuple(new DefaultFactHandle(1,"cheese"));
+  node0.assertTuple(tuple2,context0,workingMemory);
+  assertEquals(1,ruleFlowGroup0.size());
+  assertEquals(0,agenda.agendaSize());
+}
