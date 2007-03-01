@@ -1,0 +1,24 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("ruleflow.drl")));
+  final Package pkg=builder.getPackage();
+  ProcessBuilder processBuilder=new ProcessBuilder();
+  processBuilder.addProcessFromFile(new InputStreamReader(getClass().getResourceAsStream("ruleflow.rf")));
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  ruleBase.addProcess(processBuilder.getProcesses()[0]);
+  final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  final List list=new ArrayList();
+  workingMemory.setGlobal("list",list);
+  workingMemory.fireAllRules();
+  assertEquals(0,list.size());
+  IProcessInstance processInstance=workingMemory.startProcess("0");
+  assertEquals(IProcessInstance.STATE_ACTIVE,processInstance.getState());
+  workingMemory.fireAllRules();
+  assertEquals(4,list.size());
+  assertEquals("Rule1",list.get(0));
+  assertEquals("Rule3",list.get(1));
+  assertEquals("Rule2",list.get(2));
+  assertEquals("Rule4",list.get(3));
+  assertEquals(IProcessInstance.STATE_COMPLETED,processInstance.getState());
+}
