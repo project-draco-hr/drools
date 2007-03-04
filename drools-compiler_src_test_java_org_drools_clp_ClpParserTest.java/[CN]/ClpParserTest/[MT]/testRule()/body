@@ -1,0 +1,23 @@
+{
+  RuleDescr rule=parse("(defrule xxx (name (name =(xxx)\"yyy\"&~\"zzz\") )").rule();
+  assertEquals("xxx",rule.getName());
+  AndDescr lhs=rule.getLhs();
+  List lhsList=lhs.getDescrs();
+  assertEquals(1,lhsList.size());
+  ColumnDescr col=(ColumnDescr)lhsList.get(0);
+  assertEquals("name",col.getObjectType());
+  List colList=col.getDescrs();
+  assertEquals(1,colList.size());
+  FieldConstraintDescr fieldConstraintDescr=(FieldConstraintDescr)colList.get(0);
+  List restrictionList=fieldConstraintDescr.getRestrictions();
+  assertEquals("name",fieldConstraintDescr.getFieldName());
+  assertEquals(3,restrictionList.size());
+  LiteralRestrictionDescr litDescr=(LiteralRestrictionDescr)restrictionList.get(0);
+  assertEquals("==",litDescr.getEvaluator());
+  assertEquals("yyy",litDescr.getText());
+  RestrictionConnectiveDescr connDescr=(RestrictionConnectiveDescr)restrictionList.get(1);
+  assertEquals(RestrictionConnectiveDescr.AND,connDescr.getConnective());
+  litDescr=(LiteralRestrictionDescr)restrictionList.get(2);
+  assertEquals("!=",litDescr.getEvaluator());
+  assertEquals("zzz",litDescr.getText());
+}
