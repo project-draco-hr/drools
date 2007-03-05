@@ -1,5 +1,5 @@
 {
-  RuleDescr rule=parse("(defrule xxx ?b <- (name (name \"yyy\"&~\"zzz\"|~=(ppp)&:(ooo)) )").rule();
+  RuleDescr rule=parse("(defrule xxx ?b <- (name (name \"yyy\"&?bf|~\"zzz\"|~=(ppp)&:(ooo)) )").rule();
   assertEquals("xxx",rule.getName());
   AndDescr lhs=rule.getLhs();
   List lhsList=lhs.getDescrs();
@@ -12,18 +12,23 @@
   FieldConstraintDescr fieldConstraintDescr=(FieldConstraintDescr)colList.get(0);
   List restrictionList=fieldConstraintDescr.getRestrictions();
   assertEquals("name",fieldConstraintDescr.getFieldName());
-  assertEquals(6,restrictionList.size());
+  assertEquals(8,restrictionList.size());
   LiteralRestrictionDescr litDescr=(LiteralRestrictionDescr)restrictionList.get(0);
   assertEquals("==",litDescr.getEvaluator());
   assertEquals("yyy",litDescr.getText());
   RestrictionConnectiveDescr connDescr=(RestrictionConnectiveDescr)restrictionList.get(1);
   assertEquals(RestrictionConnectiveDescr.AND,connDescr.getConnective());
-  litDescr=(LiteralRestrictionDescr)restrictionList.get(2);
-  assertEquals("!=",litDescr.getEvaluator());
-  assertEquals("zzz",litDescr.getText());
+  VariableRestrictionDescr varDescr=(VariableRestrictionDescr)restrictionList.get(2);
+  assertEquals("==",varDescr.getEvaluator());
+  assertEquals("?bf",varDescr.getIdentifier());
   connDescr=(RestrictionConnectiveDescr)restrictionList.get(3);
   assertEquals(RestrictionConnectiveDescr.OR,connDescr.getConnective());
-  ReturnValueRestrictionDescr retDescr=(ReturnValueRestrictionDescr)restrictionList.get(4);
+  litDescr=(LiteralRestrictionDescr)restrictionList.get(4);
+  assertEquals("!=",litDescr.getEvaluator());
+  assertEquals("zzz",litDescr.getText());
+  connDescr=(RestrictionConnectiveDescr)restrictionList.get(5);
+  assertEquals(RestrictionConnectiveDescr.OR,connDescr.getConnective());
+  ReturnValueRestrictionDescr retDescr=(ReturnValueRestrictionDescr)restrictionList.get(6);
   assertEquals("!=",retDescr.getEvaluator());
   assertEquals("ppp",retDescr.getText());
   PredicateDescr predicateDescr=(PredicateDescr)colList.get(1);
