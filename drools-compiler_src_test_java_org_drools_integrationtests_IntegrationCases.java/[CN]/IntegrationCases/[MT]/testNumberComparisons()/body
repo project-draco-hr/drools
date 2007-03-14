@@ -1,0 +1,29 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_NumberComparisons.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  final List list=new ArrayList();
+  workingMemory.setGlobal("results",list);
+  RandomNumber rn=new RandomNumber();
+  rn.setValue(10);
+  workingMemory.assertObject(rn);
+  Guess guess=new Guess();
+  guess.setValue(new Integer(5));
+  FactHandle handle=workingMemory.assertObject(guess);
+  workingMemory.fireAllRules();
+  assertEquals(1,list.size());
+  assertEquals("HIGHER",list.get(0));
+  guess.setValue(new Integer(15));
+  workingMemory.modifyObject(handle,guess);
+  workingMemory.fireAllRules();
+  assertEquals(2,list.size());
+  assertEquals("LOWER",list.get(1));
+  guess.setValue(new Integer(10));
+  workingMemory.modifyObject(handle,guess);
+  workingMemory.fireAllRules();
+  assertEquals(3,list.size());
+  assertEquals("CORRECT",list.get(2));
+}
