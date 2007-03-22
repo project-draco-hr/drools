@@ -7,6 +7,8 @@
   Column column0=new Column(0,objectType);
   Column column1=new Column(1,objectType);
   ColumnExtractor extractor=new ColumnExtractor(objectType);
+  VariableValueHandler pd=new CLPPreviousDeclarationVariable(new Declaration("pd",extractor,column0));
+  VariableValueHandler ld=new CLPLocalDeclarationVariable(new Declaration("ld",extractor,column1));
   Map variables=new HashMap();
   variables.put("pd",new CLPPreviousDeclarationVariable(new Declaration("pd",extractor,column0)));
   variables.put("ld",new CLPLocalDeclarationVariable(new Declaration("ld",extractor,column1)));
@@ -15,8 +17,13 @@
   ValueHandler val3=new TempTokenVariable("ld");
   ExecutionContext context=new ExecutionContext(workingMemory,tuple,new BigDecimal(10),1);
   context.setLocalVariable(0,new BigDecimal(10));
-  AddFunction add1=new AddFunction(new ValueHandler[]{val1,val2});
-  AddFunction add2=new AddFunction(new ValueHandler[]{val3,add1});
-  add2.replaceTempTokens(variables);
-  assertEquals(new BigDecimal(30),add2.getBigDecimalValue(context));
+  FunctionCaller functionValue=new FunctionCaller(new AddFunction());
+  functionValue.addParameter(val1);
+  functionValue.addParameter(val2);
+  AddFunction add=new AddFunction();
+  FunctionCaller f=new FunctionCaller(add);
+  f.addParameter(val3);
+  f.addParameter(functionValue);
+  f.replaceTempTokens(variables);
+  assertEquals(new BigDecimal(30),f.getValue(context));
 }
