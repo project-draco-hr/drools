@@ -1,0 +1,18 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_skipModify.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  final List results=new ArrayList();
+  workingMemory.setGlobal("results",results);
+  Cheese cheese=new Cheese("brie",10);
+  FactHandle handle=workingMemory.assertObject(cheese);
+  Person bob=new Person("bob","stilton");
+  workingMemory.assertObject(bob);
+  cheese.setType("stilton");
+  workingMemory.modifyObject(handle,cheese);
+  workingMemory.fireAllRules();
+  assertEquals(2,results.size());
+}
