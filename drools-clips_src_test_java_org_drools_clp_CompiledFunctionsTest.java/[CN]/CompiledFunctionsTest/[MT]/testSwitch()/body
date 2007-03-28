@@ -1,0 +1,16 @@
+{
+  BlockExecutionEngine engine=(BlockExecutionEngine)parse("(bind ?cheese ?var) (switch ?cheese (case stilton then (bind ?x ?cheese ) (printout t xxx (eq 1 1) (create$ x y) zzz) (break) ) (case cheddar then (bind ?x ?cheese ) (break) ) (default (bind ?x \"default\" ) ) )").rhs();
+  ExecutionContext context=new ExecutionContext(null,null,3);
+  Map vars=new HashMap();
+  vars.put("?var",new LocalVariableValue("?var",2));
+  engine.replaceTempTokens(vars);
+  context.setLocalVariable(2,new ObjectValueHandler("stilton"));
+  engine.execute(context);
+  assertEquals("stilton",context.getLocalVariable(1).getObject(context));
+  context.setLocalVariable(2,new ObjectValueHandler("cheddar"));
+  engine.execute(context);
+  assertEquals("cheddar",context.getLocalVariable(1).getObject(context));
+  context.setLocalVariable(2,new ObjectValueHandler("brie"));
+  engine.execute(context);
+  assertEquals("default",context.getLocalVariable(1).getObject(context));
+}
