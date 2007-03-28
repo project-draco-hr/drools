@@ -1,12 +1,22 @@
 {
-  boolean result=args[0].getBooleanValue(context);
-  if (result) {
-    return args[2].getValue(context);
+  ValueHandler[] list=((ListValueHandler)args[0]).getList();
+  ValueHandler result=null;
+  int elseIndex=args.length;
+  if (list.length == 2) {
+    elseIndex=list[1].getIntValue(context);
   }
- else   if (args[3] != null && args[4] != null) {
-    return args[4].getValue(context);
+  if (list[0].getBooleanValue(context)) {
+    for (int i=0; i < elseIndex; i++) {
+      result=args[i].getValue(context);
+    }
+  }
+ else   if (elseIndex != args.length) {
+    for (int i=elseIndex; i < args.length; i++) {
+      result=args[i].getValue(context);
+    }
   }
  else {
-    return new BooleanValueHandler(result);
+    result=new BooleanValueHandler(false);
   }
+  return result;
 }

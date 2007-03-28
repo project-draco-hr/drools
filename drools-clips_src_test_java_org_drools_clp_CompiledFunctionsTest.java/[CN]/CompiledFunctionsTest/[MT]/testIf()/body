@@ -1,5 +1,5 @@
 {
-  BlockExecutionEngine engine=(BlockExecutionEngine)parse("(if (< ?x ?y ) then (modify ?p (age 15) ) else (modify ?p (age 5)))").rhs();
+  BlockExecutionEngine engine=(BlockExecutionEngine)parse("(if (< ?x ?y ) then (modify ?p (age 15) ) (printout d 15) else (modify ?p (age 5)) (printout d 5) )").rhs();
   ExecutionContext context=new ExecutionContext(null,null,2);
   Person p=new Person("mark");
   Map vars=new HashMap();
@@ -8,9 +8,15 @@
   vars.put("?p",new ObjectValueHandler(p));
   engine.replaceTempTokens(vars);
   context.setLocalVariable(0,new LongValueHandler(20));
+  ByteArrayOutputStream bais=new ByteArrayOutputStream();
+  context.addPrintoutRouter("d",new PrintStream(bais));
   engine.execute(context);
   assertEquals(15,p.getAge());
+  assertEquals("15",new String(bais.toByteArray()));
   context.setLocalVariable(0,new LongValueHandler(7));
+  bais=new ByteArrayOutputStream();
+  context.addPrintoutRouter("d",new PrintStream(bais));
   engine.execute(context);
   assertEquals(5,p.getAge());
+  assertEquals("5",new String(bais.toByteArray()));
 }

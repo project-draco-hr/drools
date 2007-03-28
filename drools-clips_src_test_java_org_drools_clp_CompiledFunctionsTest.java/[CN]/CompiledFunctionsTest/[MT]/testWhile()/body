@@ -1,5 +1,5 @@
 {
-  BlockExecutionEngine engine=(BlockExecutionEngine)parse("(while (< ?x ?y) do (bind ?x (+ ?x 1) ) )").rhs();
+  BlockExecutionEngine engine=(BlockExecutionEngine)parse("(while (< ?x ?y) do (bind ?x (+ ?x 1)) (printout d ?x \" \") )").rhs();
   ExecutionContext context=new ExecutionContext(null,null,2);
   Map vars=new HashMap();
   vars.put("?x",new LocalVariableValue("?x",0));
@@ -7,6 +7,9 @@
   engine.replaceTempTokens(vars);
   context.setLocalVariable(0,new LongValueHandler(0));
   context.setLocalVariable(1,new LongValueHandler(10));
+  ByteArrayOutputStream bais=new ByteArrayOutputStream();
+  context.addPrintoutRouter("d",new PrintStream(bais));
   engine.execute(context);
   assertEquals(new BigDecimal(10),context.getLocalVariable(0).getBigDecimalValue(context));
+  assertEquals("1 2 3 4 5 6 7 8 9 10 ",new String(bais.toByteArray()));
 }
