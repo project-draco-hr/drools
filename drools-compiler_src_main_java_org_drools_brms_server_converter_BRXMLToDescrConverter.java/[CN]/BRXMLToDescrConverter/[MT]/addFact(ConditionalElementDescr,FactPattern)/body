@@ -1,0 +1,38 @@
+{
+  ColumnDescr column=new ColumnDescr(pattern.factType);
+  column.setIdentifier(pattern.boundName);
+  ce.addDescr(column);
+  for (int i=0; i < pattern.constraints.length; i++) {
+    Constraint constr=pattern.constraints[i];
+    if (constr.fieldBinding != null) {
+      FieldBindingDescr fieldDescr=new FieldBindingDescr(constr.fieldName,constr.fieldBinding);
+      column.addDescr(fieldDescr);
+    }
+    if (constr.type == Constraint.TYPE_PREDICATE) {
+      PredicateDescr predicateDescr=new PredicateDescr(constr.value);
+      column.addDescr(predicateDescr);
+    }
+ else {
+      FieldConstraintDescr constrDescr=new FieldConstraintDescr(constr.fieldName);
+      constrDescr.addRestriction(this.getFieldRestriction(constr.type,constr.operator,constr.value));
+      if (constr.connectives != null) {
+        for (int j=0; j < constr.connectives.length; j++) {
+          ConnectiveConstraint conn=constr.connectives[j];
+switch (conn.connectiveType) {
+case ConnectiveConstraint.AND_CONNECTIVE:
+            RestrictionConnectiveDescr andDescr=new RestrictionConnectiveDescr(RestrictionConnectiveDescr.AND);
+          constrDescr.addRestriction(andDescr);
+        break;
+case ConnectiveConstraint.OR_CONNECTIVE:
+      RestrictionConnectiveDescr orDescr=new RestrictionConnectiveDescr(RestrictionConnectiveDescr.OR);
+    constrDescr.addRestriction(orDescr);
+  break;
+default :
+}
+constrDescr.addRestriction(this.getFieldRestriction(conn.constraintType,conn.operator,conn.value));
+}
+}
+column.addDescr(constrDescr);
+}
+}
+}

@@ -1,0 +1,23 @@
+{
+  for (Iterator it=pkgDescr.getFactTemplates().iterator(); it.hasNext(); ) {
+    FactTemplateDescr templ=(FactTemplateDescr)it.next();
+    String factType=templ.getName();
+    builder.addFactType(factType);
+    String[] fields=new String[templ.getFields().size()];
+    builder.addFieldsForType(factType,fields);
+    int index=0;
+    for (Iterator fieldsIt=templ.getFields().iterator(); fieldsIt.hasNext(); ) {
+      FieldTemplateDescr fieldDescr=(FieldTemplateDescr)fieldsIt.next();
+      fields[index++]=fieldDescr.getName();
+      String fieldType=fieldDescr.getClassType();
+      Class fieldTypeClass=null;
+      try {
+        fieldTypeClass=resolver.resolveType(fieldType);
+      }
+ catch (      ClassNotFoundException e) {
+        errors.add("Fact template field type not found: " + fieldType);
+      }
+      builder.addFieldType(factType + "." + fieldDescr.getName(),getFieldType(fieldTypeClass));
+    }
+  }
+}

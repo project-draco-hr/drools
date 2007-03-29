@@ -1,0 +1,20 @@
+{
+  ClassTypeResolver resolver=new ClassTypeResolver();
+  for (Iterator it=pkgDescr.getImports().iterator(); it.hasNext(); ) {
+    ImportDescr imp=(ImportDescr)it.next();
+    String classname=imp.getTarget();
+    resolver.addImport(classname);
+    Class clazz=loadClass(classname,jars);
+    if (clazz != null) {
+      try {
+        String shortTypeName=getShortNameOfClass(clazz.getName());
+        loadClassFields(clazz,shortTypeName);
+        builder.addFactType(shortTypeName);
+      }
+ catch (      IOException e) {
+        errors.add("Error while inspecting the class: " + classname + ". The error was: "+ e.getMessage());
+      }
+    }
+  }
+  populateFactTemplateTypes(pkgDescr,resolver);
+}
