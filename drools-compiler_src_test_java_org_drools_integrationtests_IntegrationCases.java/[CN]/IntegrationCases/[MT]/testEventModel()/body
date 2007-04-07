@@ -1,0 +1,56 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_EventModel.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory wm=ruleBase.newWorkingMemory();
+  final List agendaList=new ArrayList();
+  AgendaEventListener agendaEventListener=new AgendaEventListener(){
+    public void activationCancelled(    ActivationCancelledEvent event,    WorkingMemory workingMemory){
+      agendaList.add(event);
+    }
+    public void activationCreated(    ActivationCreatedEvent event,    WorkingMemory workingMemory){
+      agendaList.add(event);
+    }
+    public void afterActivationFired(    AfterActivationFiredEvent event,    WorkingMemory workingMemory){
+      agendaList.add(event);
+    }
+    public void agendaGroupPopped(    AgendaGroupPoppedEvent event,    WorkingMemory workingMemory){
+      agendaList.add(event);
+    }
+    public void agendaGroupPushed(    AgendaGroupPushedEvent event,    WorkingMemory workingMemory){
+      agendaList.add(event);
+    }
+    public void beforeActivationFired(    BeforeActivationFiredEvent event,    WorkingMemory workingMemory){
+      agendaList.add(event);
+    }
+  }
+;
+  final List wmList=new ArrayList();
+  WorkingMemoryEventListener workingMemoryListener=new WorkingMemoryEventListener(){
+    public void objectAsserted(    ObjectAssertedEvent event){
+      wmList.add(event);
+    }
+    public void objectModified(    ObjectModifiedEvent event){
+      wmList.add(event);
+    }
+    public void objectRetracted(    ObjectRetractedEvent event){
+      wmList.add(event);
+    }
+  }
+;
+  wm.addEventListener(workingMemoryListener);
+  Cheese stilton=new Cheese("stilton",15);
+  Cheese cheddar=new Cheese("cheddar",17);
+  FactHandle stiltonHandle=wm.assertObject(stilton);
+  ObjectAssertedEvent oae=(ObjectAssertedEvent)wmList.get(0);
+  assertSame(stiltonHandle,oae.getFactHandle());
+  wm.modifyObject(stiltonHandle,stilton);
+  ObjectModifiedEvent ome=(ObjectModifiedEvent)wmList.get(1);
+  assertSame(stiltonHandle,ome.getFactHandle());
+  wm.retractObject(stiltonHandle);
+  ObjectRetractedEvent ore=(ObjectRetractedEvent)wmList.get(2);
+  assertSame(stiltonHandle,ore.getFactHandle());
+  wm.assertObject(cheddar);
+}
