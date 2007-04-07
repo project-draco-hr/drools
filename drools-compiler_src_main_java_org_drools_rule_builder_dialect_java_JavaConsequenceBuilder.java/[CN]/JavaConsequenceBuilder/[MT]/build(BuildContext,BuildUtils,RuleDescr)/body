@@ -19,13 +19,16 @@
   utils.setStringTemplateAttributes(context,st,declarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]));
   final List list=Arrays.asList(context.getRule().getDeclarations());
   final int[] indexes=new int[declarations.length];
+  final String[] notColumns=new String[declarations.length];
   for (int i=0, length=declarations.length; i < length; i++) {
     indexes[i]=list.indexOf(declarations[i]);
+    notColumns[i]=(declarations[i].getExtractor() instanceof ColumnExtractor) ? null : "true";
     if (indexes[i] == -1) {
       throw new RuntimeDroolsException("Unable to find declaration in list while generating the consequence invoker");
     }
   }
   st.setAttribute("indexes",indexes);
+  st.setAttribute("notColumns",notColumns);
   st.setAttribute("text",ruleDescr.getConsequence());
   final String invokerClassName=context.getPkg().getName() + "." + ruleDescr.getClassName()+ utils.ucFirst(className)+ "Invoker";
   context.getInvokers().put(invokerClassName,st.toString());
