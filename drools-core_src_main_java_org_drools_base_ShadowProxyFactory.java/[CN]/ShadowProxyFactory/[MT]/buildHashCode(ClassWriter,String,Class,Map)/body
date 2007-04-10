@@ -4,6 +4,16 @@
 {
     mv=cw.visitMethod(Opcodes.ACC_PUBLIC,"hashCode",Type.getMethodDescriptor(Type.INT_TYPE,new Type[]{}),null,null);
     mv.visitCode();
+    Label ls=new Label();
+    mv.visitLabel(ls);
+    mv.visitVarInsn(Opcodes.ALOAD,0);
+    mv.visitFieldInsn(Opcodes.GETFIELD,className,ShadowProxyFactory.HASHCACHE_FIELD_NAME,Type.getDescriptor(int.class));
+    Label afterIfCachedLabel=new Label();
+    mv.visitJumpInsn(Opcodes.IFEQ,afterIfCachedLabel);
+    mv.visitVarInsn(Opcodes.ALOAD,0);
+    mv.visitFieldInsn(Opcodes.GETFIELD,className,ShadowProxyFactory.HASHCACHE_FIELD_NAME,Type.getDescriptor(int.class));
+    mv.visitInsn(Opcodes.IRETURN);
+    mv.visitLabel(afterIfCachedLabel);
     Label l0=new Label();
     mv.visitLabel(l0);
     mv.visitIntInsn(Opcodes.BIPUSH,31);
@@ -124,6 +134,9 @@
       }
       mv.visitLabel(goNext);
     }
+    mv.visitVarInsn(Opcodes.ALOAD,0);
+    mv.visitVarInsn(Opcodes.ILOAD,2);
+    mv.visitFieldInsn(Opcodes.PUTFIELD,className,ShadowProxyFactory.HASHCACHE_FIELD_NAME,Type.getDescriptor(int.class));
     mv.visitVarInsn(Opcodes.ILOAD,2);
     mv.visitInsn(Opcodes.IRETURN);
     Label lastLabel=new Label();
