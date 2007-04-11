@@ -1,0 +1,27 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LockOnActive.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  final List list=new ArrayList();
+  workingMemory.setGlobal("list",list);
+  final Cheese brie12=new Cheese("brie",12);
+  workingMemory.assertObject(brie12);
+  AgendaGroup group1=workingMemory.getAgenda().getAgendaGroup("group1");
+  assertEquals(1,group1.size());
+  workingMemory.setFocus("group1");
+  final Cheese brie10=new Cheese("brie",10);
+  workingMemory.assertObject(brie10);
+  assertEquals(1,group1.size());
+  final Cheese cheddar20=new Cheese("cheddar",20);
+  workingMemory.assertObject(cheddar20);
+  AgendaGroup group2=workingMemory.getAgenda().getAgendaGroup("group1");
+  assertEquals(1,group2.size());
+  RuleFlowGroupImpl rfg=(RuleFlowGroupImpl)workingMemory.getAgenda().getRuleFlowGroup("ruleflow2");
+  rfg.setActive(true);
+  final Cheese cheddar17=new Cheese("cheddar",17);
+  workingMemory.assertObject(cheddar17);
+  assertEquals(1,group2.size());
+}
