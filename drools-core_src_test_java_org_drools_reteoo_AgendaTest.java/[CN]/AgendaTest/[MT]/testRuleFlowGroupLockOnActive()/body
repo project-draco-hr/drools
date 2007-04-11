@@ -1,0 +1,22 @@
+{
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  final ReteooWorkingMemory workingMemory=(ReteooWorkingMemory)ruleBase.newWorkingMemory();
+  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
+  final RuleFlowGroupImpl ruleFlowGroup=(RuleFlowGroupImpl)agenda.getRuleFlowGroup("rule-flow-group-0");
+  final ReteTuple tuple=new ReteTuple(new DefaultFactHandle(1,"cheese"));
+  final Rule rule=new Rule("test-rule");
+  rule.setRuleFlowGroup("rule-flow-group-0");
+  final RuleTerminalNode node=new RuleTerminalNode(2,new MockTupleSource(2),rule,rule.getLhs());
+  final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule,null);
+  rule.setLockOnActivate(true);
+  ruleFlowGroup.setActive(true);
+  node.assertTuple(tuple,context,workingMemory);
+  assertEquals(0,ruleFlowGroup.size());
+  rule.setLockOnActivate(false);
+  node.assertTuple(tuple,context,workingMemory);
+  assertEquals(1,ruleFlowGroup.size());
+  rule.setLockOnActivate(true);
+  ruleFlowGroup.setActive(false);
+  node.assertTuple(tuple,context,workingMemory);
+  assertEquals(2,ruleFlowGroup.size());
+}

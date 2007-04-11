@@ -4,29 +4,19 @@
   final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
   final AgendaGroupImpl agendaGroup=new AgendaGroupImpl("agendaGroup");
   agenda.addAgendaGroup(agendaGroup);
-  final Consequence consequence=new Consequence(){
-    /** 
- */
-    private static final long serialVersionUID=-5853809196578694208L;
-    public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory){
-    }
-  }
-;
   final ReteTuple tuple=new ReteTuple(new DefaultFactHandle(1,"cheese"));
   final Rule rule=new Rule("test-rule","agendaGroup");
   final RuleTerminalNode node=new RuleTerminalNode(2,new MockTupleSource(2),rule,rule.getLhs());
-  rule.setConsequence(consequence);
   final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule,null);
-  rule.setAutoFocus(false);
+  rule.setLockOnActivate(true);
+  agendaGroup.setActive(true);
+  node.assertTuple(tuple,context,workingMemory);
+  assertEquals(0,agendaGroup.size());
+  rule.setLockOnActivate(false);
   node.assertTuple(tuple,context,workingMemory);
   assertEquals(1,agendaGroup.size());
-  agenda.fireNextItem(null);
-  assertEquals(1,agendaGroup.size());
-  agenda.clearAgenda();
-  assertEquals(0,agendaGroup.size());
-  rule.setAutoFocus(true);
+  rule.setLockOnActivate(true);
+  agendaGroup.setActive(false);
   node.assertTuple(tuple,context,workingMemory);
-  assertEquals(1,agendaGroup.size());
-  agenda.fireNextItem(null);
-  assertEquals(0,agendaGroup.size());
+  assertEquals(2,agendaGroup.size());
 }
