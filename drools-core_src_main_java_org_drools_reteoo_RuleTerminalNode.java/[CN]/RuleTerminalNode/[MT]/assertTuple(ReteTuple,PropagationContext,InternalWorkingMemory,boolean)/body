@@ -56,11 +56,17 @@
     }
     item.setAgendaGroup(agendaGroup);
     if (this.rule.getRuleFlowGroup() == null) {
+      if (context.getType() == PropagationContext.MODIFICATION && this.rule.isLockOnActivate() && agendaGroup.isActivate() && context.removeRetractedTuple(this.rule,tuple) == null) {
+        return;
+      }
       agendaGroup.add(item);
     }
  else {
       if (memory.getRuleFlowGroup() == null) {
         memory.setRuleFlowGroup(workingMemory.getAgenda().getRuleFlowGroup(this.rule.getRuleFlowGroup()));
+      }
+      if (context.getType() == PropagationContext.MODIFICATION && this.rule.isLockOnActivate() && memory.getRuleFlowGroup().isActive() && context.removeRetractedTuple(this.rule,tuple) == null) {
+        return;
       }
       ((InternalRuleFlowGroup)memory.getRuleFlowGroup()).addActivation(item);
     }
