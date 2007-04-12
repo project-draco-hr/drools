@@ -1,26 +1,26 @@
 {
-  RuleBase rb=RuleBaseFactory.newRuleBase();
-  Package pkg=new Package("org.drools.test");
-  Rule rule=new Rule("test1");
+  final RuleBase rb=RuleBaseFactory.newRuleBase();
+  final Package pkg=new Package("org.drools.test");
+  final Rule rule=new Rule("test1");
   rule.setAgendaGroup("test group");
-  ClassObjectType cheeseObjectType=new ClassObjectType(Cheese.class);
-  Column column=new Column(0,cheeseObjectType);
-  ClassFieldExtractor extractor=new ClassFieldExtractor(Cheese.class,"type");
-  FieldValue field=FieldFactory.getFieldValue("cheddar");
-  Evaluator evaluator=ValueType.STRING_TYPE.getEvaluator(Operator.EQUAL);
-  LiteralConstraint constraint=new LiteralConstraint(extractor,evaluator,field);
+  final ClassObjectType cheeseObjectType=new ClassObjectType(Cheese.class);
+  final Column column=new Column(0,cheeseObjectType);
+  final ClassFieldExtractor extractor=new ClassFieldExtractor(Cheese.class,"type");
+  final FieldValue field=FieldFactory.getFieldValue("cheddar");
+  final Evaluator evaluator=ValueType.STRING_TYPE.getEvaluator(Operator.EQUAL);
+  final LiteralConstraint constraint=new LiteralConstraint(extractor,evaluator,field);
   column.addConstraint(constraint);
   rule.addPattern(column);
   rule.setConsequence(new Consequence(){
-    public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory) throws Exception {
+    public void evaluate(    final KnowledgeHelper knowledgeHelper,    final WorkingMemory workingMemory) throws Exception {
     }
   }
 );
   pkg.addRule(rule);
   rb.addPackage(pkg);
-  WorkingMemory wm=rb.newWorkingMemory();
+  final WorkingMemory wm=rb.newWorkingMemory();
   final List agendaList=new ArrayList();
-  AgendaEventListener agendaEventListener=new AgendaEventListener(){
+  final AgendaEventListener agendaEventListener=new AgendaEventListener(){
     public void activationCancelled(    ActivationCancelledEvent event,    WorkingMemory workingMemory){
       agendaList.add(event);
     }
@@ -42,7 +42,7 @@
   }
 ;
   wm.addEventListener(agendaEventListener);
-  Cheese cheddar=new Cheese("cheddar",15);
+  final Cheese cheddar=new Cheese("cheddar",15);
   FactHandle cheddarHandle=wm.assertObject(cheddar);
   assertEquals(1,agendaList.size());
   ActivationCreatedEvent createdEvent=(ActivationCreatedEvent)agendaList.get(0);
@@ -64,15 +64,15 @@
   agendaList.clear();
   wm.setFocus("test group");
   assertEquals(1,agendaList.size());
-  AgendaGroupPushedEvent pushedEvent=(AgendaGroupPushedEvent)agendaList.get(0);
+  final AgendaGroupPushedEvent pushedEvent=(AgendaGroupPushedEvent)agendaList.get(0);
   assertEquals("test group",pushedEvent.getAgendaGroup().getName());
   agendaList.clear();
   wm.fireAllRules();
   assertEquals(3,agendaList.size());
-  BeforeActivationFiredEvent beforeEvent=(BeforeActivationFiredEvent)agendaList.get(0);
+  final BeforeActivationFiredEvent beforeEvent=(BeforeActivationFiredEvent)agendaList.get(0);
   assertSame(cheddar,beforeEvent.getActivation().getTuple().get(0).getObject());
-  AfterActivationFiredEvent afterEvent=(AfterActivationFiredEvent)agendaList.get(1);
+  final AfterActivationFiredEvent afterEvent=(AfterActivationFiredEvent)agendaList.get(1);
   assertSame(cheddar,afterEvent.getActivation().getTuple().get(0).getObject());
-  AgendaGroupPoppedEvent poppedEvent=(AgendaGroupPoppedEvent)agendaList.get(2);
+  final AgendaGroupPoppedEvent poppedEvent=(AgendaGroupPoppedEvent)agendaList.get(2);
   assertEquals("test group",poppedEvent.getAgendaGroup().getName());
 }
