@@ -5,9 +5,14 @@
     return;
   }
   final Activation activation=tuple.getActivation();
+  if (activation.getLogicalDependencies() != null && !activation.getLogicalDependencies().isEmpty()) {
+    context.addRetractedTuple(this.rule,activation);
+  }
   if (activation.isActivated()) {
-    if (this.rule.isLockOnActive() && context.getType() == PropagationContext.MODIFICATION) {
-      context.addRetractedTuple(this.rule,tuple);
+    if (context.getType() == PropagationContext.MODIFICATION) {
+      if (this.rule.isLockOnActive()) {
+        context.addRetractedTuple(this.rule,activation);
+      }
     }
     activation.remove();
     if (activation.getActivationGroupNode() != null) {
