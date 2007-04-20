@@ -1,26 +1,47 @@
 {
-  BaseNode node=context.getNodeFromCache(candidate);
-  if ((node != null) && isSharingEnabledForNode(context,node)) {
-    if (!node.isInUse()) {
-      if (context.getWorkingMemories().length == 0) {
-        node.attach();
-      }
- else {
-        node.attach(context.getWorkingMemories());
+  BaseNode node=null;
+  if (isSharingEnabledForNode(context,candidate)) {
+    if (candidate instanceof ObjectTypeNode) {
+      ObjectTypeNode otn=(ObjectTypeNode)candidate;
+      otn=(ObjectTypeNode)context.getRuleBase().getRete().getObjectTypeNodes().get(otn.getObjectType());
+      if (otn != null) {
+        node=otn;
       }
     }
-    node.addShare();
-    context.releaseLastId();
+ else     if ((context.getTupleSource() != null) && (candidate instanceof TupleSink)) {
+      TupleSink[] sinks=context.getTupleSource().getSinkPropagator().getSinks();
+      for (int i=0; i < sinks.length; i++) {
+        if (candidate.equals(sinks[i])) {
+          node=(BaseNode)sinks[i];
+          break;
+        }
+      }
+    }
+ else     if ((context.getObjectSource() != null) && (candidate instanceof ObjectSink)) {
+      ObjectSink[] sinks=context.getObjectSource().getSinkPropagator().getSinks();
+      for (int i=0; i < sinks.length; i++) {
+        if (candidate.equals(sinks[i])) {
+          node=(BaseNode)sinks[i];
+          break;
+        }
+      }
+    }
+ else {
+      throw new RuntimeDroolsException("This is a bug on node sharing verification. Please report to development team.");
+    }
+    if (node != null) {
+      context.releaseLastId();
+      node.addShare();
+    }
   }
- else {
-    if (context.getWorkingMemories().length == 0) {
-      candidate.attach();
-    }
- else {
-      candidate.attach(context.getWorkingMemories());
-    }
-    context.addNodeToCache(candidate);
+  if (node == null) {
     node=candidate;
+    if (context.getWorkingMemories().length == 0) {
+      node.attach();
+    }
+ else {
+      node.attach(context.getWorkingMemories());
+    }
   }
   return node;
 }
