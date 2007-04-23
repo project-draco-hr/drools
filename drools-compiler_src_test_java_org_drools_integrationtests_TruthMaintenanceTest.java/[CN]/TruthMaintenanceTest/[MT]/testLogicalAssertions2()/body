@@ -4,7 +4,7 @@
   final Package pkg=builder.getPackage();
   final RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
-  final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
   final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(workingMemory);
   logger.setFileName("logical");
   final List events=new ArrayList();
@@ -12,7 +12,7 @@
   final Sensor sensor=new Sensor(80,80);
   final FactHandle handle=workingMemory.assertObject(sensor);
   workingMemory.fireAllRules();
-  final List list=workingMemory.getObjects();
+  final List list=IteratorToList.convert(workingMemory.iterateObjects());
   assertEquals("Only sensor is there",1,list.size());
   assertEquals("Only one event",1,events.size());
   sensor.setPressure(200);

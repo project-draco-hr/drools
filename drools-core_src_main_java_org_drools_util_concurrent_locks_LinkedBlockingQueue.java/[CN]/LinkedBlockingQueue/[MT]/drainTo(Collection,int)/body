@@ -1,0 +1,27 @@
+{
+  if (c == null)   throw new NullPointerException();
+  if (c == this)   throw new IllegalArgumentException();
+synchronized (putLock) {
+synchronized (takeLock) {
+      int n=0;
+      Node p=head.next;
+      while (p != null && n < maxElements) {
+        c.add(p.item);
+        p.item=null;
+        p=p.next;
+        ++n;
+      }
+      if (n != 0) {
+        head.next=p;
+        if (p == null)         last=head;
+        int cold;
+synchronized (this) {
+          cold=count;
+          count-=n;
+        }
+        if (cold == capacity)         putLock.notifyAll();
+      }
+      return n;
+    }
+  }
+}

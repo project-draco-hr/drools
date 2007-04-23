@@ -1,0 +1,20 @@
+{
+  Object x;
+  int c=-1;
+synchronized (takeLock) {
+    try {
+      while (count == 0)       takeLock.wait();
+    }
+ catch (    InterruptedException ie) {
+      takeLock.notify();
+      throw ie;
+    }
+    x=extract();
+synchronized (this) {
+      c=count--;
+    }
+    if (c > 1)     takeLock.notify();
+  }
+  if (c == capacity)   signalNotFull();
+  return x;
+}

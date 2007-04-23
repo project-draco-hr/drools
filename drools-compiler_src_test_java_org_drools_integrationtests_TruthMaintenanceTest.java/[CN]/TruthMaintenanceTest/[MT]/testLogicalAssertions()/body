@@ -4,7 +4,7 @@
   final Package pkg=builder.getPackage();
   final RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
-  final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
   final List list=new ArrayList();
   workingMemory.setGlobal("list",list);
   final Cheese brie=new Cheese("brie",12);
@@ -13,9 +13,9 @@
   final FactHandle provoloneHandle=workingMemory.assertObject(provolone);
   workingMemory.fireAllRules();
   assertEquals(3,list.size());
-  assertEquals(3,workingMemory.getObjects().size());
+  assertEquals(3,IteratorToList.convert(workingMemory.iterateObjects()).size());
   workingMemory.retractObject(brieHandle);
-  assertEquals(2,workingMemory.getObjects().size());
+  assertEquals(2,IteratorToList.convert(workingMemory.iterateObjects()).size());
   workingMemory.retractObject(provoloneHandle);
-  assertEquals(0,workingMemory.getObjects().size());
+  assertEquals(0,IteratorToList.convert(workingMemory.iterateObjects()).size());
 }

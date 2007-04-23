@@ -14,20 +14,20 @@
   assertEquals("match Person 2",rules[1].getName());
   assertEquals("match Person 3",rules[2].getName());
   assertEquals("match Integer",rules[3].getName());
-  WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  WorkingMemory workingMemory=ruleBase.newStatefulSession();
   workingMemory.setGlobal("list",new ArrayList());
   final Person bob=new Person("bob");
   workingMemory.assertObject(bob);
   final byte[] wm=serializeOut(workingMemory);
-  workingMemory=ruleBase.newWorkingMemory(new ByteArrayInputStream(wm));
-  assertEquals(1,workingMemory.getObjects().size());
-  assertEquals(bob,workingMemory.getObjects().get(0));
+  workingMemory=ruleBase.newStatefulSession(new ByteArrayInputStream(wm));
+  assertEquals(1,IteratorToList.convert(workingMemory.iterateObjects()).size());
+  assertEquals(bob,IteratorToList.convert(workingMemory.iterateObjects()).get(0));
   assertEquals(2,workingMemory.getAgenda().agendaSize());
   workingMemory.fireAllRules();
   final List list=(List)workingMemory.getGlobal("list");
   assertEquals(3,list.size());
   assertEquals(new Integer(4),list.get(0));
-  assertEquals(2,workingMemory.getObjects().size());
-  assertEquals(bob,workingMemory.getObjects().get(0));
-  assertEquals(new Person("help"),workingMemory.getObjects().get(1));
+  assertEquals(2,IteratorToList.convert(workingMemory.iterateObjects()).size());
+  assertEquals(bob,IteratorToList.convert(workingMemory.iterateObjects()).get(0));
+  assertEquals(new Person("help"),IteratorToList.convert(workingMemory.iterateObjects()).get(1));
 }

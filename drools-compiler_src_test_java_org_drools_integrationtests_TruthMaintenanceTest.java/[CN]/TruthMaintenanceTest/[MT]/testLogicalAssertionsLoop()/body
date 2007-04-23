@@ -4,14 +4,14 @@
   final Package pkg=builder.getPackage();
   final RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
-  final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
   List list;
   final List l=new ArrayList();
   final Person a=new Person("a");
   workingMemory.setGlobal("a",a);
   workingMemory.setGlobal("l",l);
   workingMemory.fireAllRules();
-  list=workingMemory.getObjects(a.getClass());
+  list=IteratorToList.convert(workingMemory.iterateObjects(new ClassObjectFilter(a.getClass())));
   assertEquals("a still asserted.",0,list.size());
   assertEquals("Rule has not fired (looped) expected number of times",10,l.size());
 }

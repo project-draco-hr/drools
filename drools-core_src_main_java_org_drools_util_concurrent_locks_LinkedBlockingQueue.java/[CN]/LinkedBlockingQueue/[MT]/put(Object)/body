@@ -1,0 +1,19 @@
+{
+  if (e == null)   throw new NullPointerException();
+  int c=-1;
+synchronized (putLock) {
+    try {
+      while (count == capacity)       putLock.wait();
+    }
+ catch (    InterruptedException ie) {
+      putLock.notify();
+      throw ie;
+    }
+    insert(e);
+synchronized (this) {
+      c=count++;
+    }
+    if (c + 1 < capacity)     putLock.notify();
+  }
+  if (c == 0)   signalNotEmpty();
+}

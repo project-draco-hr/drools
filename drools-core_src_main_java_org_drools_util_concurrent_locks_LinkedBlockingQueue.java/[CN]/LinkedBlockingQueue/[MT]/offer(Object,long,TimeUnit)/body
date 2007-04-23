@@ -1,0 +1,29 @@
+{
+  if (e == null)   throw new NullPointerException();
+  long nanos=unit.toNanos(timeout);
+  int c=-1;
+synchronized (putLock) {
+    long deadline=Utils.nanoTime() + nanos;
+    for (; ; ) {
+      if (count < capacity) {
+        insert(e);
+synchronized (this) {
+          c=count++;
+        }
+        if (c + 1 < capacity)         putLock.notify();
+        break;
+      }
+      if (nanos <= 0)       return false;
+      try {
+        TimeUnit.NANOSECONDS.timedWait(putLock,nanos);
+        nanos=deadline - Utils.nanoTime();
+      }
+ catch (      InterruptedException ie) {
+        putLock.notify();
+        throw ie;
+      }
+    }
+  }
+  if (c == 0)   signalNotEmpty();
+  return true;
+}
