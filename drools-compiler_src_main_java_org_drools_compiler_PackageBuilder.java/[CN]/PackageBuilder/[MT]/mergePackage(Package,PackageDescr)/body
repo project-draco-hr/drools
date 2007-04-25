@@ -1,12 +1,17 @@
 {
+  if (this.typeResolver.getImports().isEmpty()) {
+    this.typeResolver.addImport(pkg.getName() + ".*");
+  }
   final List imports=packageDescr.getImports();
   for (final Iterator it=imports.iterator(); it.hasNext(); ) {
-    pkg.addImport(((ImportDescr)it.next()).getTarget());
+    String importEntry=((ImportDescr)it.next()).getTarget();
+    pkg.addImport(importEntry);
+    this.typeResolver.addImport(importEntry);
   }
   for (final Iterator it=packageDescr.getFunctionImports().iterator(); it.hasNext(); ) {
     pkg.addStaticImport(((FunctionImportDescr)it.next()).getTarget());
   }
-  final TypeResolver typeResolver=new ClassTypeResolver(pkg.getImports(),pkg.getPackageCompilationData().getClassLoader());
+  ((ClassTypeResolver)this.typeResolver).setClassLoader(pkg.getPackageCompilationData().getClassLoader());
   final List globals=packageDescr.getGlobals();
   for (final Iterator it=globals.iterator(); it.hasNext(); ) {
     final GlobalDescr global=(GlobalDescr)it.next();

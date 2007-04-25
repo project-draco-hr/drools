@@ -1,17 +1,18 @@
 {
-  this.context=new BuildContext(pkg,ruleDescr);
+  this.context=new RuleBuildContext(pkg,ruleDescr);
   setAttributes(this.context.getRule(),ruleDescr.getAttributes());
-  final ConditionalElementBuilder builder=this.utils.getBuilder(ruleDescr.getLhs().getClass());
+  this.context.setDialect(this.dialect);
+  final ConditionalElementBuilder builder=(ConditionalElementBuilder)context.getDialect().getBuilder(ruleDescr.getLhs().getClass());
   if (builder != null) {
-    final GroupElement ce=(GroupElement)builder.build(this.context,this.utils,this.patternBuilder,ruleDescr.getLhs());
+    final GroupElement ce=(GroupElement)builder.build(this.context,ruleDescr.getLhs());
     this.context.getRule().setLhs(ce);
   }
  else {
     throw new RuntimeDroolsException("BUG: builder not found for descriptor class " + ruleDescr.getLhs().getClass());
   }
   if (!(ruleDescr instanceof QueryDescr)) {
-    this.consequenceBuilder.build(this.context,this.utils,ruleDescr);
+    this.dialect.getConsequenceBuilder().build(this.context,ruleDescr);
   }
-  this.classBuilder.buildRule(this.context,this.utils,ruleDescr);
+  this.dialect.getRuleClassBuilder().buildRule(this.context,ruleDescr);
   return this.context.getRule();
 }

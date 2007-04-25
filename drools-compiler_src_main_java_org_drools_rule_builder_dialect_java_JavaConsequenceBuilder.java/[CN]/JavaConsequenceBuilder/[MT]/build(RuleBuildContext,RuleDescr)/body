@@ -1,0 +1,39 @@
+{
+  context.getBuildStack().push(context.getRule().getLhs());
+  final String className="consequence";
+  JavaDialect dialect=(JavaDialect)context.getDialect();
+  StringTemplate st=dialect.getRuleGroup().getInstanceOf("consequenceMethod");
+  st.setAttribute("methodName",className);
+  final List[] usedIdentifiers=context.getDialect().getBlockIdentifiers(context,ruleDescr,(String)ruleDescr.getConsequence());
+  final Declaration[] declarations=new Declaration[usedIdentifiers[0].size()];
+  for (int i=0, size=usedIdentifiers[0].size(); i < size; i++) {
+    declarations[i]=context.getDeclarationResolver().getDeclaration((String)usedIdentifiers[0].get(i));
+  }
+  dialect.setStringTemplateAttributes(context,st,declarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]));
+  st.setAttribute("text",((JavaDialect)context.getDialect()).getKnowledgeHelperFixer().fix((String)ruleDescr.getConsequence()));
+  context.getMethods().add(st.toString());
+  st=dialect.getInvokerGroup().getInstanceOf("consequenceInvoker");
+  st.setAttribute("package",context.getPkg().getName());
+  st.setAttribute("ruleClassName",StringUtils.ucFirst(context.getRuleDescr().getClassName()));
+  st.setAttribute("invokerClassName",ruleDescr.getClassName() + StringUtils.ucFirst(className) + "Invoker");
+  st.setAttribute("methodName",className);
+  dialect.setStringTemplateAttributes(context,st,declarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]));
+  final List list=Arrays.asList(context.getRule().getDeclarations());
+  final List indexes=new ArrayList(declarations.length);
+  final String[] notPatterns=new String[declarations.length];
+  for (int i=0, length=declarations.length; i < length; i++) {
+    indexes.add(i,new Integer(list.indexOf(declarations[i])));
+    notPatterns[i]=(declarations[i].getExtractor() instanceof PatternExtractor) ? null : "true";
+    if (((Integer)indexes.get(i)).intValue() == -1) {
+      throw new RuntimeDroolsException("Unable to find declaration in list while generating the consequence invoker");
+    }
+  }
+  st.setAttribute("indexes",indexes);
+  st.setAttribute("notPatterns",notPatterns);
+  st.setAttribute("text",ruleDescr.getConsequence());
+  final String invokerClassName=context.getPkg().getName() + "." + ruleDescr.getClassName()+ StringUtils.ucFirst(className)+ "Invoker";
+  context.getInvokers().put(invokerClassName,st.toString());
+  context.getInvokerLookups().put(invokerClassName,context.getRule());
+  context.getDescrLookups().put(invokerClassName,ruleDescr);
+  context.getBuildStack().pop();
+}

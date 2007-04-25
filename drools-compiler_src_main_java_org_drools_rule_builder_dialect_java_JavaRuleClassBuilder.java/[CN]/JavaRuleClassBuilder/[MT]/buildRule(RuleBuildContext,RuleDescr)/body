@@ -1,0 +1,25 @@
+{
+  if (context.getMethods().isEmpty()) {
+    context.setRuleClass(null);
+    return;
+  }
+  final String lineSeparator=System.getProperty("line.separator");
+  final StringBuffer buffer=new StringBuffer();
+  buffer.append("package " + context.getPkg().getName() + ";"+ lineSeparator);
+  for (final Iterator it=context.getPkg().getImports().iterator(); it.hasNext(); ) {
+    buffer.append("import " + it.next() + ";"+ lineSeparator);
+  }
+  for (final Iterator it=context.getPkg().getStaticImports().iterator(); it.hasNext(); ) {
+    buffer.append("import static " + it.next() + ";"+ lineSeparator);
+  }
+  buffer.append("public class " + StringUtils.ucFirst(ruleDescr.getClassName()) + " {"+ lineSeparator);
+  buffer.append("    private static final long serialVersionUID  = 320L;" + lineSeparator);
+  for (int i=0, size=context.getMethods().size() - 1; i < size; i++) {
+    buffer.append(context.getMethods().get(i) + lineSeparator);
+  }
+  final String[] lines=buffer.toString().split(lineSeparator);
+  ruleDescr.setConsequenceOffset(lines.length + 1);
+  buffer.append(context.getMethods().get(context.getMethods().size() - 1) + lineSeparator);
+  buffer.append("}");
+  context.setRuleClass(buffer.toString());
+}
