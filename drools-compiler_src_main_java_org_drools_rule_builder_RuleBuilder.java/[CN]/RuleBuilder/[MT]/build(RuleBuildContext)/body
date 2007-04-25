@@ -1,0 +1,16 @@
+{
+  RuleDescr ruleDescr=context.getRuleDescr();
+  setAttributes(context.getRule(),ruleDescr.getAttributes());
+  final ConditionalElementBuilder builder=(ConditionalElementBuilder)context.getDialect().getBuilder(ruleDescr.getLhs().getClass());
+  if (builder != null) {
+    final GroupElement ce=(GroupElement)builder.build(context,ruleDescr.getLhs());
+    context.getRule().setLhs(ce);
+  }
+ else {
+    throw new RuntimeDroolsException("BUG: builder not found for descriptor class " + ruleDescr.getLhs().getClass());
+  }
+  if (!(ruleDescr instanceof QueryDescr)) {
+    context.getDialect().getConsequenceBuilder().build(context,ruleDescr);
+  }
+  context.getDialect().getRuleClassBuilder().buildRule(context,ruleDescr);
+}

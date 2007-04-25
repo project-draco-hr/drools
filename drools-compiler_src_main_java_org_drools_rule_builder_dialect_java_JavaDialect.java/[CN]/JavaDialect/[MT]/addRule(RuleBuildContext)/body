@@ -2,15 +2,17 @@
   if (this.ruleClass == null) {
     return;
   }
+  Rule rule=context.getRule();
+  RuleDescr ruleDescr=context.getRuleDescr();
   addClassCompileTask(this.pkg.getName() + "." + ruleDescr.getClassName(),ruleDescr,this.ruleClass,this.src,new RuleErrorHandler(ruleDescr,rule,"Rule Compilation error"));
-  for (final Iterator it=builder.getInvokers().keySet().iterator(); it.hasNext(); ) {
+  for (final Iterator it=context.getInvokers().keySet().iterator(); it.hasNext(); ) {
     final String className=(String)it.next();
-    final Object invoker=builder.getInvokerLookups().get(className);
+    final Object invoker=context.getInvokerLookups().get(className);
     if (invoker != null) {
       this.pkg.getPackageCompilationData().putInvoker(className,invoker);
     }
-    final String text=(String)builder.getInvokers().get(className);
-    final BaseDescr descr=(BaseDescr)builder.getDescrLookups().get(className);
+    final String text=(String)context.getInvokers().get(className);
+    final BaseDescr descr=(BaseDescr)context.getDescrLookups().get(className);
     addClassCompileTask(className,descr,text,this.src,new RuleInvokerErrorHandler(descr,rule,"Unable to generate rule invoker."));
   }
   final String name=this.pkg.getName() + "." + ucFirst(ruleDescr.getClassName());
