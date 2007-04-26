@@ -6,14 +6,17 @@
   this.results=new ArrayList();
   this.pkg=pkg;
   this.classFieldExtractorCache=new ClassFieldExtractorCache();
+  this.dialects=new DialectRegistry();
   if (this.pkg != null) {
     this.typeResolver=new ClassTypeResolver(this.pkg.getImports(),this.pkg.getPackageCompilationData().getClassLoader());
     this.typeResolver.addImport(this.pkg.getName() + ".*");
+    this.dialects.addDialect("java",new JavaDialect(pkg,configuration,getTypeResolver(),this.classFieldExtractorCache));
+    this.dialect=this.dialects.getDialect("java");
   }
  else {
     this.typeResolver=new ClassTypeResolver(new ArrayList(),configuration.getClassLoader());
+    this.dialects.addDialect("java",new JavaDialect(pkg,configuration,getTypeResolver(),this.classFieldExtractorCache));
+    this.dialects.addDialect("default",this.dialects.getDialect(configuration.getDialect()));
+    this.dialect=this.dialects.getDialect(configuration.getDialect());
   }
-  this.dialects=new DialectRegistry();
-  this.dialects.addDialect("java",new JavaDialect(pkg,configuration,getTypeResolver(),this.classFieldExtractorCache));
-  this.dialect=this.dialects.getDialect("java");
 }

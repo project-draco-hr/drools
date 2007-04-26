@@ -6,13 +6,15 @@
   final RuleDescr ruleDescr=(RuleDescr)pkgDescr.getRules().get(0);
   final String ruleClassName="RuleClassName.java";
   ruleDescr.setClassName(ruleClassName);
+  ruleDescr.addAttribute(new AttributeDescr("dialect","java"));
   final TypeResolver typeResolver=new ClassTypeResolver(new ArrayList(),this.getClass().getClassLoader());
   typeResolver.addImport(pkgDescr.getName() + ".*");
   typeResolver.addImport("java.lang.*");
   final RuleBuilder builder=new RuleBuilder();
-  RuleBuildContext context=new RuleBuildContext(pkg,ruleDescr);
-  JavaDialect dialect=new JavaDialect(null,new PackageBuilderConfiguration(),typeResolver,new ClassFieldExtractorCache());
-  context.setDialect(dialect);
+  JavaDialect dialect=new JavaDialect(pkg,new PackageBuilderConfiguration(),typeResolver,new ClassFieldExtractorCache());
+  DialectRegistry registry=new DialectRegistry();
+  registry.addDialect("java",dialect);
+  RuleBuildContext context=new RuleBuildContext(pkg,ruleDescr,registry);
   builder.build(context);
   Assert.assertTrue(context.getErrors().toString(),context.getErrors().isEmpty());
   final Rule rule=context.getRule();
