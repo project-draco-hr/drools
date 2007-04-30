@@ -1,12 +1,12 @@
 {
-  final StringTemplate st=JavaFunctionBuilder.functionGroup.getInstanceOf("function");
-  st.setAttribute("package",pkg.getName());
-  st.setAttribute("imports",pkg.getImports());
-  st.setAttribute("className",StringUtils.ucFirst(functionDescr.getName()));
-  st.setAttribute("methodName",functionDescr.getName());
-  st.setAttribute("returnType",functionDescr.getReturnType());
-  st.setAttribute("parameterTypes",functionDescr.getParameterTypes());
-  st.setAttribute("parameterNames",functionDescr.getParameterNames());
+  final Map vars=new HashMap();
+  vars.put("package",pkg.getName());
+  vars.put("imports",pkg.getImports());
+  vars.put("className",StringUtils.ucFirst(functionDescr.getName()));
+  vars.put("methodName",functionDescr.getName());
+  vars.put("returnType",functionDescr.getReturnType());
+  vars.put("parameterTypes",functionDescr.getParameterTypes());
+  vars.put("parameterNames",functionDescr.getParameterNames());
   final Map params=new HashMap();
   final List names=functionDescr.getParameterNames();
   final List types=functionDescr.getParameterTypes();
@@ -18,8 +18,9 @@
  catch (  final ClassNotFoundException e) {
     errors.add(new FunctionError(functionDescr,e,"unable to resolve type while building function"));
   }
-  st.setAttribute("text",functionDescr.getText());
-  final String text=st.toString();
+  vars.put("text",functionDescr.getText());
+  final String text=TemplateInterpreter.evalToString(template,vars);
+  System.out.println(text);
   final BufferedReader reader=new BufferedReader(new StringReader(text));
   String line=null;
   final String lineStartsWith="    public static " + functionDescr.getReturnType() + " "+ functionDescr.getName();

@@ -8,23 +8,7 @@
     declarations[i]=context.getDeclarationResolver().getDeclaration((String)usedIdentifiers[0].get(i));
   }
   final EvalCondition eval=new EvalCondition(declarations);
-  JavaDialect dialect=(JavaDialect)context.getDialect();
-  StringTemplate st=dialect.getRuleGroup().getInstanceOf("evalMethod");
-  dialect.setStringTemplateAttributes(context,st,declarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]));
-  st.setAttribute("methodName",className);
-  final String evalText=(String)evalDescr.getContent();
-  st.setAttribute("text",evalText);
-  context.getMethods().add(st.toString());
-  st=dialect.getInvokerGroup().getInstanceOf("evalInvoker");
-  st.setAttribute("package",context.getPkg().getName());
-  st.setAttribute("ruleClassName",StringUtils.ucFirst(context.getRuleDescr().getClassName()));
-  st.setAttribute("invokerClassName",context.getRuleDescr().getClassName() + StringUtils.ucFirst(className) + "Invoker");
-  st.setAttribute("methodName",className);
-  dialect.setStringTemplateAttributes(context,st,declarations,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]));
-  st.setAttribute("hashCode",evalText.hashCode());
-  final String invokerClassName=context.getPkg().getName() + "." + context.getRuleDescr().getClassName()+ StringUtils.ucFirst(className)+ "Invoker";
-  context.getInvokers().put(invokerClassName,st.toString());
-  context.getInvokerLookups().put(invokerClassName,eval);
-  context.getDescrLookups().put(invokerClassName,evalDescr);
+  final Map map=createVariableContext(className,(String)evalDescr.getContent(),context,declarations,null,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]));
+  generatTemplates("evalMethod","evalInvoker",context,className,map,eval,descr);
   return eval;
 }
