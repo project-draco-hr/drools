@@ -1,27 +1,23 @@
 {
-  try {
-    PackageBuilder builder=new PackageBuilder();
-    builder.addPackageFromDrl(new InputStreamReader(WaltzBenchmark.class.getResourceAsStream("waltz.drl")));
-    Package pkg=builder.getPackage();
-    final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
-    ruleBase.addPackage(pkg);
-    WorkingMemory workingMemory=ruleBase.newWorkingMemory();
-    String filename;
-    if (args.length != 0) {
-      String arg=args[0];
-      filename=arg;
-    }
+  PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(WaltzBenchmark.class.getResourceAsStream("waltz.drl")));
+  Package pkg=builder.getPackage();
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  ruleBase.addPackage(pkg);
+  StatefulSession session=ruleBase.newStatefulSession();
+  String filename;
+  if (args.length != 0) {
+    String arg=args[0];
+    filename=arg;
+  }
  else {
-      filename="waltz12.dat";
-    }
-    loadLines(workingMemory,filename);
-    Stage stage=new Stage(Stage.DUPLICATE);
-    workingMemory.assertObject(stage);
-    long start=System.currentTimeMillis();
-    workingMemory.fireAllRules();
-    System.out.println((System.currentTimeMillis() - start) / 1000);
+    filename="waltz12.dat";
   }
- catch (  Throwable t) {
-    t.printStackTrace();
-  }
+  loadLines(session,filename);
+  Stage stage=new Stage(Stage.DUPLICATE);
+  session.assertObject(stage);
+  long start=System.currentTimeMillis();
+  session.fireAllRules();
+  System.out.println((System.currentTimeMillis() - start) / 1000);
+  session.dispose();
 }

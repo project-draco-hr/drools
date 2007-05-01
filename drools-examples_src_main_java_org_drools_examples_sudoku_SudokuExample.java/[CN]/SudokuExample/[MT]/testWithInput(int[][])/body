@@ -1,4 +1,5 @@
 {
+  StatefulSession session=null;
   try {
     Collection fields=new ArrayList();
     for (int i=0; i < field.length; i++) {
@@ -11,15 +12,15 @@
       System.out.println(row);
     }
     RuleBase ruleBase=readRule();
-    WorkingMemory workingMemory=ruleBase.newWorkingMemory();
+    session=ruleBase.newStatefulSession();
     Iterator iter=fields.iterator();
     Collection handles=new ArrayList();
     while (iter.hasNext()) {
-      handles.add(workingMemory.assertObject(iter.next()));
+      handles.add(session.assertObject(iter.next()));
     }
-    workingMemory.fireAllRules();
-    System.out.println("Size: " + workingMemory.getObjects().size());
-    iter=workingMemory.getObjects().iterator();
+    session.fireAllRules();
+    System.out.println("Size: " + iteratorToList(session.iterateObjects()).size());
+    iter=session.iterateObjects();
     while (iter.hasNext()) {
       Object next=iter.next();
       if (next instanceof Field) {
@@ -38,5 +39,10 @@
   }
  catch (  Throwable t) {
     t.printStackTrace();
+  }
+ finally {
+    if (session != null) {
+      session.dispose();
+    }
   }
 }

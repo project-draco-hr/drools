@@ -3,8 +3,8 @@
   builder.addPackageFromDrl(getSource(),getDSL());
   final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   ruleBase.addPackage(builder.getPackage());
-  final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
-  final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(workingMemory);
+  final StatefulSession session=ruleBase.newStatefulSession();
+  final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(session);
   logger.setFileName("log/state");
   final Customer a=new Customer("A","Gold");
   final Customer b=new Customer("B","Platinum");
@@ -14,17 +14,17 @@
   final Ticket t2=new Ticket(b);
   final Ticket t3=new Ticket(c);
   final Ticket t4=new Ticket(d);
-  final FactHandle fa=workingMemory.assertObject(a);
-  final FactHandle fb=workingMemory.assertObject(b);
-  final FactHandle fc=workingMemory.assertObject(c);
-  final FactHandle fd=workingMemory.assertObject(d);
-  final FactHandle ft1=workingMemory.assertObject(t1);
-  final FactHandle ft2=workingMemory.assertObject(t2);
-  final FactHandle ft3=workingMemory.assertObject(t3);
-  final FactHandle ft4=workingMemory.assertObject(t4);
-  workingMemory.fireAllRules();
+  final FactHandle fa=session.assertObject(a);
+  final FactHandle fb=session.assertObject(b);
+  final FactHandle fc=session.assertObject(c);
+  final FactHandle fd=session.assertObject(d);
+  final FactHandle ft1=session.assertObject(t1);
+  final FactHandle ft2=session.assertObject(t2);
+  final FactHandle ft3=session.assertObject(t3);
+  final FactHandle ft4=session.assertObject(t4);
+  session.fireAllRules();
   t3.setStatus("Done");
-  workingMemory.modifyObject(ft3,t3);
+  session.modifyObject(ft3,t3);
   try {
     System.err.println("[[ Sleeping 5 seconds ]]");
     Thread.sleep(5000);
@@ -32,6 +32,7 @@
  catch (  final InterruptedException e) {
     e.printStackTrace();
   }
-  workingMemory.fireAllRules();
+  session.fireAllRules();
+  session.dispose();
   logger.writeToDisk();
 }

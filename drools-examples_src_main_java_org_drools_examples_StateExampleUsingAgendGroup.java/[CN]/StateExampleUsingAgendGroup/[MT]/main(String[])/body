@@ -3,24 +3,25 @@
   builder.addPackageFromDrl(new InputStreamReader(StateExampleUsingAgendGroup.class.getResourceAsStream("StateExampleUsingAgendGroup.drl")));
   final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   ruleBase.addPackage(builder.getPackage());
-  final WorkingMemory workingMemory=ruleBase.newWorkingMemory();
-  workingMemory.addEventListener(new DefaultAgendaEventListener(){
+  final StatefulSession session=ruleBase.newStatefulSession();
+  session.addEventListener(new DefaultAgendaEventListener(){
     public void afterActivationFired(    final AfterActivationFiredEvent arg0){
-      super.afterActivationFired(arg0,workingMemory);
+      super.afterActivationFired(arg0,session);
     }
   }
 );
-  final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(workingMemory);
+  final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(session);
   logger.setFileName("log/state");
   final State a=new State("A");
   final State b=new State("B");
   final State c=new State("C");
   final State d=new State("D");
   final boolean dynamic=true;
-  workingMemory.assertObject(a,dynamic);
-  workingMemory.assertObject(b,dynamic);
-  workingMemory.assertObject(c,dynamic);
-  workingMemory.assertObject(d,dynamic);
-  workingMemory.fireAllRules();
+  session.assertObject(a,dynamic);
+  session.assertObject(b,dynamic);
+  session.assertObject(c,dynamic);
+  session.assertObject(d,dynamic);
+  session.fireAllRules();
+  session.dispose();
   logger.writeToDisk();
 }
