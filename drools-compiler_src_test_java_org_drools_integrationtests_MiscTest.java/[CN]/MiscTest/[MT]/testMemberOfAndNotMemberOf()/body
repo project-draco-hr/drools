@@ -1,0 +1,23 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_memberOf.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final List list=new ArrayList();
+  workingMemory.setGlobal("list",list);
+  final Cheese stilton=new Cheese("stilton",12);
+  final Cheese muzzarela=new Cheese("muzzarela",10);
+  final Cheese brie=new Cheese("brie",15);
+  workingMemory.assertObject(stilton);
+  workingMemory.assertObject(muzzarela);
+  final Cheesery cheesery=new Cheesery();
+  cheesery.getCheeses().add(stilton.getType());
+  cheesery.getCheeses().add(brie.getType());
+  workingMemory.assertObject(cheesery);
+  workingMemory.fireAllRules();
+  assertEquals(2,list.size());
+  assertEquals(stilton,list.get(0));
+  assertEquals(muzzarela,list.get(1));
+}
