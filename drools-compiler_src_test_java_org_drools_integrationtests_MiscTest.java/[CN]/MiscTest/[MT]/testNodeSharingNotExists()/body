@@ -1,0 +1,17 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_nodeSharingNotExists.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final List list=new ArrayList();
+  workingMemory.setGlobal("results",list);
+  workingMemory.fireAllRules();
+  assertEquals(1,list.size());
+  assertEquals("rule1",list.get(0));
+  workingMemory.assertObject(new Cheese("stilton",10));
+  workingMemory.fireAllRules();
+  assertEquals(2,list.size());
+  assertEquals("rule2",list.get(1));
+}
