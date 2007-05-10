@@ -12,11 +12,12 @@
     }
     final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation,this.agenda.getActiveActivations(),this.agenda.getDormantActivations());
     doRetract(handle,propagationContext);
-    handle.setObject(object);
+    if ((originalObject != object) || (this.ruleBase.getConfiguration().getAssertBehaviour() != AssertBehaviour.IDENTITY)) {
+      this.assertMap.remove(handle);
+      handle.setObject(object);
+      this.assertMap.put(handle,handle,false);
+    }
     if (this.maintainTms) {
-      if (originalObject != object) {
-        this.assertMap.put(handle,handle);
-      }
       EqualityKey key=handle.getEqualityKey();
       key.removeFactHandle(handle);
       if (key.isEmpty()) {
