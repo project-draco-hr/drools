@@ -1,6 +1,10 @@
 {
-  if (obj instanceof FactHandle) {
-    return rehash(((InternalFactHandle)obj).getObjectHashCode());
+  Object realObject=obj;
+  if (realObject instanceof FactHandle) {
+    realObject=((InternalFactHandle)obj).getObject();
   }
-  return rehash(obj.hashCode());
+  if (realObject instanceof ShadowProxy) {
+    realObject=((ShadowProxy)realObject).getShadowedObject();
+  }
+  return rehash(System.identityHashCode(realObject));
 }
