@@ -1,0 +1,24 @@
+{
+  for (int i=0; i < facts.length; i++) {
+    Fact factDefn=facts[i];
+    Class classDefn=ObjectUtils.getClassDefn(factDefn.getType(),pkg.getImports(),null);
+    Object fact;
+    try {
+      fact=classDefn.newInstance();
+    }
+ catch (    Exception e) {
+      throw new RuleTestServiceUnavailableException("Exception ocurred",e);
+    }
+    Field[] fields=factDefn.getFields();
+    for (int j=0; j < fields.length; j++) {
+      Field field=fields[j];
+      try {
+        PropertyUtils.setProperty(fact,field.getName(),field.getValue());
+      }
+ catch (      Exception e) {
+        throw new RuleTestServiceUnavailableException("Exception ocurred",e);
+      }
+    }
+    wm.assertObject(fact);
+  }
+}
