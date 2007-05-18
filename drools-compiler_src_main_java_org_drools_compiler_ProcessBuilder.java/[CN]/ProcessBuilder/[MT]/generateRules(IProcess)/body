@@ -1,0 +1,19 @@
+{
+  String result="";
+  if (process instanceof RuleFlowProcess) {
+    RuleFlowProcess ruleFlow=(RuleFlowProcess)process;
+    INode[] nodes=ruleFlow.getNodes();
+    for (int i=0; i < nodes.length; i++) {
+      if (nodes[i] instanceof ISplit) {
+        ISplit split=(ISplit)nodes[i];
+        if (split.getType() == ISplit.TYPE_XOR || split.getType() == ISplit.TYPE_OR) {
+          for (Iterator iterator=split.getOutgoingConnections().iterator(); iterator.hasNext(); ) {
+            IConnection connection=(IConnection)iterator.next();
+            result+=createSplitRule(process,connection,split.getConstraint(connection).getConstraint());
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
