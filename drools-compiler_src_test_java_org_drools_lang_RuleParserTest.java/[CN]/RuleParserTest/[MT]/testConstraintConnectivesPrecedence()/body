@@ -1,0 +1,36 @@
+{
+  final String text="Person( age < 42 && location==\"atlanta\" || age > 20 && location==\"Seatle\" || location == \"Chicago\")";
+  final CharStream charStream=new ANTLRStringStream(text);
+  final DRLLexer lexer=new DRLLexer(charStream);
+  final TokenStream tokenStream=new SwitchingCommonTokenStream(lexer);
+  final DRLParser parser=new DRLParser(tokenStream);
+  PatternDescr pattern=(PatternDescr)parser.fact();
+  assertFalse(parser.getErrorMessages().toString(),parser.hasErrors());
+  assertEquals(1,pattern.getDescrs().size());
+  OrDescr or=(OrDescr)pattern.getDescrs().get(0);
+  assertEquals(3,or.getDescrs().size());
+  AndDescr and=(AndDescr)or.getDescrs().get(0);
+  assertEquals(2,and.getDescrs().size());
+  FieldConstraintDescr fcd=(FieldConstraintDescr)and.getDescrs().get(0);
+  assertEquals("age",fcd.getFieldName());
+  assertEquals("<",((LiteralRestrictionDescr)fcd.getRestrictions().get(0)).getEvaluator());
+  assertEquals("42",((LiteralRestrictionDescr)fcd.getRestrictions().get(0)).getText());
+  fcd=(FieldConstraintDescr)and.getDescrs().get(1);
+  assertEquals("location",fcd.getFieldName());
+  assertEquals("==",((LiteralRestrictionDescr)fcd.getRestrictions().get(0)).getEvaluator());
+  assertEquals("atlanta",((LiteralRestrictionDescr)fcd.getRestrictions().get(0)).getText());
+  and=(AndDescr)or.getDescrs().get(1);
+  assertEquals(2,and.getDescrs().size());
+  fcd=(FieldConstraintDescr)and.getDescrs().get(0);
+  assertEquals("age",fcd.getFieldName());
+  assertEquals(">",((LiteralRestrictionDescr)fcd.getRestrictions().get(0)).getEvaluator());
+  assertEquals("20",((LiteralRestrictionDescr)fcd.getRestrictions().get(0)).getText());
+  fcd=(FieldConstraintDescr)and.getDescrs().get(1);
+  assertEquals("location",fcd.getFieldName());
+  assertEquals("==",((LiteralRestrictionDescr)fcd.getRestrictions().get(0)).getEvaluator());
+  assertEquals("Seatle",((LiteralRestrictionDescr)fcd.getRestrictions().get(0)).getText());
+  fcd=(FieldConstraintDescr)or.getDescrs().get(2);
+  assertEquals("location",fcd.getFieldName());
+  assertEquals("==",((LiteralRestrictionDescr)fcd.getRestrictions().get(0)).getEvaluator());
+  assertEquals("Chicago",((LiteralRestrictionDescr)fcd.getRestrictions().get(0)).getText());
+}

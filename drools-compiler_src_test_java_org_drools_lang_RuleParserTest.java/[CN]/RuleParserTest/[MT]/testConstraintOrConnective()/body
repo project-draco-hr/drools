@@ -1,0 +1,16 @@
+{
+  final String text="Person( age < 42 || location==\"atlanta\")";
+  final CharStream charStream=new ANTLRStringStream(text);
+  final DRLLexer lexer=new DRLLexer(charStream);
+  final TokenStream tokenStream=new SwitchingCommonTokenStream(lexer);
+  final DRLParser parser=new DRLParser(tokenStream);
+  PatternDescr pattern=(PatternDescr)parser.fact();
+  assertFalse(parser.getErrorMessages().toString(),parser.hasErrors());
+  assertEquals(1,pattern.getDescrs().size());
+  OrDescr or=(OrDescr)pattern.getDescrs().get(0);
+  assertEquals(2,or.getDescrs().size());
+  FieldConstraintDescr fcd=(FieldConstraintDescr)or.getDescrs().get(0);
+  assertEquals("age",fcd.getFieldName());
+  fcd=(FieldConstraintDescr)or.getDescrs().get(1);
+  assertEquals("location",fcd.getFieldName());
+}

@@ -1,0 +1,32 @@
+{
+  final FieldExtractor extractor=getFieldExtractor(context,fieldConstraintDescr,pattern.getObjectType(),fieldConstraintDescr.getFieldName(),true);
+  if (extractor == null) {
+    return;
+  }
+  Restriction restriction=createRestriction(context,pattern,fieldConstraintDescr,fieldConstraintDescr.getRestriction(),extractor);
+  if (restriction == null) {
+    return;
+  }
+  Constraint constraint=null;
+  if (restriction instanceof AbstractCompositeRestriction) {
+    constraint=new MultiRestrictionFieldConstraint(extractor,restriction);
+  }
+ else   if (restriction instanceof LiteralRestriction) {
+    constraint=new LiteralConstraint(extractor,(LiteralRestriction)restriction);
+  }
+ else   if (restriction instanceof VariableRestriction) {
+    constraint=new VariableConstraint(extractor,(VariableRestriction)restriction);
+  }
+ else   if (restriction instanceof ReturnValueRestriction) {
+    constraint=new ReturnValueConstraint(extractor,(ReturnValueRestriction)restriction);
+  }
+ else {
+    throw new UnsupportedOperationException("Unknown restriction type: " + restriction.getClass());
+  }
+  if (container == null) {
+    pattern.addConstraint(constraint);
+  }
+ else {
+    container.addConstraint(constraint);
+  }
+}

@@ -1,0 +1,30 @@
+{
+  Restriction[] restrictions=new Restriction[top.getRestrictions().size()];
+  int index=0;
+  for (Iterator it=top.getRestrictions().iterator(); it.hasNext(); ) {
+    RestrictionDescr restrictionDescr=(RestrictionDescr)it.next();
+    if (restrictionDescr instanceof RestrictionConnectiveDescr) {
+      restrictions[index++]=this.createRestriction(context,pattern,fieldConstraintDescr,(RestrictionConnectiveDescr)restrictionDescr,extractor);
+    }
+ else {
+      restrictions[index++]=buildRestriction(context,pattern,extractor,fieldConstraintDescr,restrictionDescr);
+    }
+  }
+  if (restrictions.length > 1) {
+    AbstractCompositeRestriction composite=null;
+    if (top.getConnective() == RestrictionConnectiveDescr.AND) {
+      composite=new AndCompositeRestriction(restrictions);
+    }
+ else     if (top.getConnective() == RestrictionConnectiveDescr.OR) {
+      composite=new OrCompositeRestriction(restrictions);
+    }
+ else {
+      throw new UnsupportedOperationException("Impossible to create a composite restriction for connective: " + top.getConnective());
+    }
+    return composite;
+  }
+ else   if (restrictions.length == 1) {
+    return restrictions[0];
+  }
+  throw new UnsupportedOperationException("Trying to create a restriction for an empty restriction list");
+}

@@ -1,0 +1,34 @@
+{
+  final ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
+  final InternalWorkingMemory workingMemory=(InternalWorkingMemory)ruleBase.newStatefulSession();
+  final ClassFieldExtractor typeExtractor=new ClassFieldExtractor(Cheese.class,"type");
+  final FieldValue cheddarField=FieldFactory.getFieldValue("cheddar");
+  final Evaluator stringEqual=ValueType.STRING_TYPE.getEvaluator(Operator.EQUAL);
+  final LiteralConstraint constraint1=new LiteralConstraint(typeExtractor,stringEqual,cheddarField);
+  final ClassFieldExtractor priceExtractor=new ClassFieldExtractor(Cheese.class,"price");
+  final FieldValue field10=FieldFactory.getFieldValue(10);
+  final Evaluator integerGreater=ValueType.INTEGER_TYPE.getEvaluator(Operator.GREATER);
+  final LiteralConstraint constraint2=new LiteralConstraint(priceExtractor,integerGreater,field10);
+  final AndConstraint and1=new AndConstraint();
+  and1.addAlphaConstraint(constraint1);
+  and1.addAlphaConstraint(constraint2);
+  final FieldValue stiltonField=FieldFactory.getFieldValue("stilton");
+  final LiteralConstraint constraint3=new LiteralConstraint(typeExtractor,stringEqual,stiltonField);
+  final Evaluator integerLess=ValueType.INTEGER_TYPE.getEvaluator(Operator.LESS);
+  final LiteralConstraint constraint4=new LiteralConstraint(priceExtractor,integerLess,field10);
+  final AndConstraint and2=new AndConstraint();
+  and2.addAlphaConstraint(constraint3);
+  and2.addAlphaConstraint(constraint4);
+  final OrConstraint constraint=new OrConstraint();
+  constraint.addAlphaConstraint(and1);
+  constraint.addAlphaConstraint(and2);
+  final Cheese cheddar=new Cheese("cheddar",15);
+  final InternalFactHandle cheddarHandle=(InternalFactHandle)workingMemory.assertObject(cheddar);
+  assertTrue(constraint.isAllowed(cheddarHandle.getObject(),workingMemory));
+  cheddar.setPrice(5);
+  assertFalse(constraint.isAllowed(cheddarHandle.getObject(),workingMemory));
+  cheddar.setType("stilton");
+  assertTrue(constraint.isAllowed(cheddarHandle.getObject(),workingMemory));
+  cheddar.setPrice(15);
+  assertFalse(constraint.isAllowed(cheddarHandle.getObject(),workingMemory));
+}

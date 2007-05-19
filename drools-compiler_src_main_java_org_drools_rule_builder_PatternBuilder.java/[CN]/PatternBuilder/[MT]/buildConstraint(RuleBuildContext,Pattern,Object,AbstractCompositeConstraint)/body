@@ -1,0 +1,38 @@
+{
+  if (constraint instanceof FieldBindingDescr) {
+    build(context,pattern,(FieldBindingDescr)constraint);
+  }
+ else   if (constraint instanceof FieldConstraintDescr) {
+    build(context,pattern,(FieldConstraintDescr)constraint,container);
+  }
+ else   if (constraint instanceof PredicateDescr) {
+    build(context,pattern,(PredicateDescr)constraint,container);
+  }
+ else   if (constraint instanceof AndDescr) {
+    AndConstraint and=new AndConstraint();
+    for (Iterator it=((AndDescr)constraint).getDescrs().iterator(); it.hasNext(); ) {
+      this.buildConstraint(context,pattern,it.next(),and);
+    }
+    if (container == null) {
+      pattern.addConstraint(and);
+    }
+ else {
+      container.addConstraint(and);
+    }
+  }
+ else   if (constraint instanceof OrDescr) {
+    OrConstraint or=new OrConstraint();
+    for (Iterator it=((OrDescr)constraint).getDescrs().iterator(); it.hasNext(); ) {
+      this.buildConstraint(context,pattern,it.next(),or);
+    }
+    if (container == null) {
+      pattern.addConstraint(or);
+    }
+ else {
+      container.addConstraint(or);
+    }
+  }
+ else {
+    throw new UnsupportedOperationException("This is a bug: unable to build constraint descriptor: " + constraint);
+  }
+}
