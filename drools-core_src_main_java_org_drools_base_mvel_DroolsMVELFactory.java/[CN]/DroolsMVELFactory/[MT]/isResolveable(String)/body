@@ -1,25 +1,25 @@
 {
-  if (this.resolvers == Collections.EMPTY_MAP) {
-    this.resolvers=new HashMap();
-  }
-  VariableResolver resolver=(VariableResolver)this.resolvers.get(name);
-  if (resolver != null) {
+  if (variableResolvers != null && variableResolvers.containsKey(name)) {
     return true;
   }
-  if (this.previousDeclarations != null && this.previousDeclarations.containsKey(name)) {
-    resolver=new DroolsMVELPreviousDeclarationVariable((Declaration)this.previousDeclarations.get(name),this);
+ else   if (this.previousDeclarations != null && this.previousDeclarations.containsKey(name)) {
+    addResolver(name,new DroolsMVELPreviousDeclarationVariable((Declaration)this.previousDeclarations.get(name),this));
+    return true;
   }
  else   if (this.localDeclarations != null && this.localDeclarations.containsKey(name)) {
-    resolver=new DroolsMVELLocalDeclarationVariable((Declaration)this.localDeclarations.get(name),this);
-  }
- else {
-    resolver=new DroolsMVELGlobalVariable(name,(Class)this.globals.get(name),this);
-  }
-  if (resolver != null) {
-    this.resolvers.put(name,resolver);
+    addResolver(name,new DroolsMVELLocalDeclarationVariable((Declaration)this.localDeclarations.get(name),this));
     return true;
   }
- else {
-    return false;
+ else   if (this.globals.containsKey(name)) {
+    addResolver(name,new DroolsMVELGlobalVariable(name,(Class)this.globals.get(name),this));
+    return true;
   }
+ else   if (variables != null && variables.containsKey(name)) {
+    addResolver(name,new MapVariableResolver(variables,name));
+    return true;
+  }
+ else   if (nextFactory != null) {
+    return nextFactory.isResolveable(name);
+  }
+  return false;
 }
