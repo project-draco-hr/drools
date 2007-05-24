@@ -1,0 +1,42 @@
+{
+  FieldValue field=null;
+  final String[] parts=qiRestrictionDescr.getText().split("\\.");
+  if (parts.length == 2) {
+    final Declaration decl=context.getDeclarationResolver().getDeclaration(parts[0]);
+    if (decl != null) {
+      if (decl.isPatternDeclaration()) {
+        final Declaration implicit=this.createDeclarationObject(context,parts[1],decl.getPattern());
+        final Evaluator evaluator=getEvaluator(context,qiRestrictionDescr,extractor.getValueType(),qiRestrictionDescr.getEvaluator());
+        if (evaluator == null) {
+          return null;
+        }
+        return new VariableRestriction(extractor,implicit,evaluator);
+      }
+ else {
+        context.getErrors().add(new RuleError(context.getRule(),qiRestrictionDescr,"","Not possible to directly access the property '" + parts[1] + "' of declaration '"+ parts[0]+ "' since it is not a pattern"));
+        return null;
+      }
+    }
+  }
+  final int lastDot=qiRestrictionDescr.getText().lastIndexOf('.');
+  final String className=qiRestrictionDescr.getText().substring(0,lastDot);
+  final String fieldName=qiRestrictionDescr.getText().substring(lastDot + 1);
+  try {
+    final Class staticClass=context.getDialect().getTypeResolver().resolveType(className);
+    field=FieldFactory.getFieldValue(staticClass.getField(fieldName).get(null),extractor.getValueType());
+  }
+ catch (  final ClassNotFoundException e) {
+    context.getErrors().add(new RuleError(context.getRule(),qiRestrictionDescr,e,e.getMessage()));
+  }
+catch (  final Exception e) {
+    context.getErrors().add(new RuleError(context.getRule(),qiRestrictionDescr,e,"Unable to create a Field value of type  '" + extractor.getValueType() + "' and value '"+ qiRestrictionDescr.getText()+ "'"));
+  }
+  if (field == null) {
+    return null;
+  }
+  final Evaluator evaluator=getEvaluator(context,qiRestrictionDescr,extractor.getValueType(),qiRestrictionDescr.getEvaluator());
+  if (evaluator == null) {
+    return null;
+  }
+  return new LiteralRestriction(field,evaluator,extractor);
+}
