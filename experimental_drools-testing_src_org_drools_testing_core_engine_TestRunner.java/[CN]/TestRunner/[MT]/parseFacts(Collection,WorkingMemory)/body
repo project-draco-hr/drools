@@ -2,24 +2,28 @@
   Iterator i=facts.iterator();
   while (i.hasNext()) {
     Fact factDefn=(Fact)i.next();
-    Class classDefn=ObjectUtils.getClassDefn(factDefn.getType(),pkg.getImports(),null);
+    Class classDefn;
     Object fact;
-    try {
-      fact=classDefn.newInstance();
-    }
- catch (    Exception e) {
-      throw new RuleTestServiceUnavailableException("Exception ocurred",e);
-    }
-    Field[] fields=factDefn.getFields();
-    for (int j=0; j < fields.length; j++) {
-      Field field=fields[j];
+    if (factDefn != null) {
       try {
-        PropertyUtils.setProperty(fact,field.getName(),field.getValue());
+        classDefn=ObjectUtils.getClassDefn(factDefn.getType());
+        fact=classDefn.newInstance();
       }
  catch (      Exception e) {
         throw new RuleTestServiceUnavailableException("Exception ocurred",e);
       }
+      Iterator j=factDefn.getFields().iterator();
+      while (j.hasNext()) {
+        Field field=(Field)j.next();
+        try {
+          Object value=ConvertUtils.convert(field.getValue(),ObjectUtils.getClassDefn(field.getType()));
+          PropertyUtils.setProperty(fact,field.getName(),value);
+        }
+ catch (        Exception e) {
+          throw new RuleTestServiceUnavailableException("Exception ocurred",e);
+        }
+      }
+      wm.assertObject(fact);
     }
-    wm.assertObject(fact);
   }
 }
