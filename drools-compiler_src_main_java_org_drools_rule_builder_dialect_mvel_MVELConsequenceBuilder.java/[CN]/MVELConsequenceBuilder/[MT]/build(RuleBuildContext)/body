@@ -1,7 +1,12 @@
 {
   context.getBuildStack().push(context.getRule().getLhs());
-  final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),null,context.getPkg().getGlobals());
-  factory.setNextFactory(((MVELDialect)context.getDialect()).getClassImportResolverFactory());
-  final Serializable expr=MVEL.compileExpression(delimitExpressions((String)context.getRuleDescr().getConsequence()));
-  context.getRule().setConsequence(new MVELConsequence(expr,factory));
+  try {
+    final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),null,context.getPkg().getGlobals());
+    factory.setNextFactory(((MVELDialect)context.getDialect()).getClassImportResolverFactory());
+    final Serializable expr=MVEL.compileExpression(delimitExpressions((String)context.getRuleDescr().getConsequence()),((MVELDialect)context.getDialect()).getClassImportResolverFactory().getImportedClasses());
+    context.getRule().setConsequence(new MVELConsequence(expr,factory));
+  }
+ catch (  final Exception e) {
+    context.getErrors().add(new RuleError(context.getRule(),context.getRuleDescr(),null,"Unable to build expression for 'consequence' '" + context.getRuleDescr().getConsequence() + "'"));
+  }
 }

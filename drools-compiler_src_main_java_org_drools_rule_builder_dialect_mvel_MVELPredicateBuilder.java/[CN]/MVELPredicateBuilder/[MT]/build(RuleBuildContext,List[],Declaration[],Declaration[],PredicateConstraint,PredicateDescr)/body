@@ -7,8 +7,13 @@
   for (int i=0, length=localDeclarations.length; i < length; i++) {
     localMap.put(localDeclarations[i].getIdentifier(),localDeclarations[i]);
   }
-  final DroolsMVELFactory factory=new DroolsMVELFactory(previousMap,localMap,context.getPkg().getGlobals());
-  factory.setNextFactory(((MVELDialect)context.getDialect()).getClassImportResolverFactory());
-  final Serializable expr=MVEL.compileExpression((String)predicateDescr.getContent());
-  predicate.setPredicateExpression(new MVELPredicateExpression(expr,factory));
+  try {
+    final DroolsMVELFactory factory=new DroolsMVELFactory(previousMap,localMap,context.getPkg().getGlobals());
+    factory.setNextFactory(((MVELDialect)context.getDialect()).getClassImportResolverFactory());
+    final Serializable expr=MVEL.compileExpression((String)predicateDescr.getContent(),((MVELDialect)context.getDialect()).getClassImportResolverFactory().getImportedClasses());
+    predicate.setPredicateExpression(new MVELPredicateExpression(expr,factory));
+  }
+ catch (  final Exception e) {
+    context.getErrors().add(new RuleError(context.getRule(),predicateDescr,null,"Unable to build expression for 'predicate' node '" + predicateDescr.getContent() + "'"));
+  }
 }
