@@ -1,13 +1,22 @@
 {
-  try {
-    final String languageLevel=System.getProperty("drools.compiler.languagelevel",DEFAULT_LANGUAGE_LEVEL);
-    if (Arrays.binarySearch(LANGUAGE_LEVELS,languageLevel) < 0) {
-      throw new RuntimeDroolsException("value '" + languageLevel + "' is not a valid language level");
+  String level=this.chainedProperties.getProperty("drools.compiler.lnglevel",null);
+  if (level == null) {
+    String version=System.getProperty("java.version");
+    if (version.startsWith("1.4")) {
+      level="1.4";
     }
-    return languageLevel;
+ else     if (version.startsWith("1.5")) {
+      level="1.5";
+    }
+ else     if (version.startsWith("1.6")) {
+      level="1.6";
+    }
+ else {
+      level="1.4";
+    }
   }
- catch (  final Exception e) {
-    System.err.println("Drools config: unable to read the drools.compiler.lnglevel property. Using default.");
-    return DEFAULT_LANGUAGE_LEVEL;
+  if (Arrays.binarySearch(LANGUAGE_LEVELS,level) < 0) {
+    throw new RuntimeDroolsException("value '" + level + "' is not a valid language level");
   }
+  return level;
 }

@@ -1,6 +1,19 @@
 {
   validatePackageName(packageDescr);
   validateUniqueRuleNames(packageDescr);
+  String dialectName=null;
+  for (Iterator it=packageDescr.getAttributes().iterator(); it.hasNext(); ) {
+    String value=(String)it.next();
+    if ("dialect".equals(value)) {
+      dialectName=value;
+      break;
+    }
+  }
+  if (dialectName == null) {
+    dialectName=configuration.getDefaultDialect();
+    packageDescr.addAttribute(new AttributeDescr("dialect",dialectName));
+  }
+  this.dialect=this.dialects.getDialect(dialectName);
   if (this.pkg != null) {
     mergePackage(this.pkg,packageDescr);
   }
@@ -19,6 +32,6 @@
       addRule((RuleDescr)it.next());
     }
   }
-  this.dialect.compileAll();
-  this.results.addAll(this.dialect.getResults());
+  this.dialects.compileAll();
+  this.results=this.dialects.addResults(this.results);
 }
