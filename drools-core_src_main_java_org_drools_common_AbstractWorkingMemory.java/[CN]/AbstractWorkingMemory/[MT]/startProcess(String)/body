@@ -1,13 +1,14 @@
 {
-  final IProcess process=getRuleBase().getProcess(processId);
+  final Process process=getRuleBase().getProcess(processId);
   if (process == null) {
     throw new IllegalArgumentException("Unknown process ID: " + processId);
   }
-  if (process instanceof IRuleFlowProcess) {
-    final IRuleFlowProcessInstance processInstance=new RuleFlowProcessInstance();
-    processInstance.setAgenda(this.agenda);
+  if (process instanceof RuleFlowProcess) {
+    final RuleFlowProcessInstance processInstance=new RuleFlowProcessInstanceImpl();
+    processInstance.setWorkingMemory(this);
     processInstance.setProcess(process);
     processInstance.start();
+    getRuleFlowEventSupport().fireRuleFlowProcessStarted(processInstance);
     return processInstance;
   }
  else {

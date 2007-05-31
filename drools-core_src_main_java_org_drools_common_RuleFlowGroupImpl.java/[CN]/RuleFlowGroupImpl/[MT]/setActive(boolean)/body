@@ -4,7 +4,16 @@
   }
   this.active=active;
   if (active) {
-    triggerActivations();
+    if (this.list.isEmpty()) {
+      if (this.autoDeactivate) {
+        WorkingMemoryAction action=new DeactivateCallback(this);
+        this.workingMemory.queueWorkingMemoryAction(action);
+      }
+    }
+ else {
+      triggerActivations();
+    }
+    ((EventSupport)this.workingMemory).getRuleFlowEventSupport().fireRuleFlowGroupActivated(this);
   }
  else {
     final LinkedListIterator it=this.list.iterator();
@@ -15,5 +24,6 @@
         activation.getActivationGroupNode().getActivationGroup().removeActivation(activation);
       }
     }
+    ((EventSupport)this.workingMemory).getRuleFlowEventSupport().fireRuleFlowGroupDeactivated(this);
   }
 }
