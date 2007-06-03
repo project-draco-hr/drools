@@ -1,22 +1,3 @@
 {
-  final FromDescr fromDescr=(FromDescr)descr;
-  final PatternBuilder patternBuilder=(PatternBuilder)context.getDialect().getBuilder(PatternDescr.class);
-  final Pattern pattern=patternBuilder.build(context,fromDescr.getReturnedPattern());
-  if (pattern == null) {
-    return null;
-  }
-  final AccessorDescr accessor=(AccessorDescr)fromDescr.getDataSource();
-  DataProvider dataProvider=null;
-  try {
-    final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),null,context.getPkg().getGlobals());
-    final ClassImportResolverFactory classImportResolverFactory=((MVELDialect)context.getDialect("mvel")).getClassImportResolverFactory();
-    factory.setNextFactory(classImportResolverFactory);
-    final Serializable compiled=MVEL.compileExpression(accessor.toString(),classImportResolverFactory.getImportedClasses());
-    dataProvider=new MVELDataProvider(compiled,factory);
-  }
- catch (  final Exception e) {
-    context.getErrors().add(new RuleError(context.getRule(),fromDescr,null,"Unable to build expression for 'from' node '" + accessor + "'"));
-    return null;
-  }
-  return new From(pattern,dataProvider);
+  return build(context,descr,null);
 }

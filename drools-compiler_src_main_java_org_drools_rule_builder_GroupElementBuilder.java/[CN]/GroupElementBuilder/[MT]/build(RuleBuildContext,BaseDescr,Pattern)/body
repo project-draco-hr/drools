@@ -1,0 +1,31 @@
+{
+  final ConditionalElementDescr cedescr=(ConditionalElementDescr)descr;
+  final GroupElement ge=newGroupElementFor(cedescr.getClass());
+  context.getBuildStack().push(ge);
+  if (prefixPattern != null) {
+    ge.addChild(prefixPattern);
+  }
+  for (final Iterator it=cedescr.getDescrs().iterator(); it.hasNext(); ) {
+    final BaseDescr child=(BaseDescr)it.next();
+    final Object builder=context.getDialect().getBuilder(child.getClass());
+    if (builder instanceof ConditionalElementBuilder) {
+      ConditionalElementBuilder ceBuilder=(ConditionalElementBuilder)builder;
+      final ConditionalElement ce=ceBuilder.build(context,child);
+      if (ce != null) {
+        ge.addChild(ce);
+      }
+    }
+ else     if (builder instanceof PatternBuilder) {
+      final PatternBuilder patternBuilder=(PatternBuilder)context.getDialect().getBuilder(child.getClass());
+      final Pattern pattern=patternBuilder.build(context,(PatternDescr)child);
+      if (pattern != null) {
+        ge.addChild(pattern);
+      }
+    }
+ else {
+      throw new RuntimeDroolsException("BUG: no builder found for descriptor class " + child.getClass());
+    }
+  }
+  context.getBuildStack().pop();
+  return ge;
+}

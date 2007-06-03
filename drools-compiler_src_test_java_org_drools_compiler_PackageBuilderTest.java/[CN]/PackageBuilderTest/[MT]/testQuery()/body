@@ -1,0 +1,25 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  final PackageDescr packageDescr=new PackageDescr("p1");
+  final QueryDescr queryDescr=new QueryDescr("query1",new String[]{"$type"});
+  packageDescr.addRule(queryDescr);
+  final AndDescr lhs=new AndDescr();
+  queryDescr.setLhs(lhs);
+  final PatternDescr pattern=new PatternDescr(Cheese.class.getName(),"stilton");
+  lhs.addDescr(pattern);
+  final FieldConstraintDescr literalDescr=new FieldConstraintDescr("type");
+  literalDescr.addRestriction(new VariableRestrictionDescr("==","$type"));
+  pattern.addConstraint(literalDescr);
+  queryDescr.setConsequence("modify(stilton);");
+  builder.addPackage(packageDescr);
+  assertLength(0,builder.getErrors().getErrors());
+  RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  ruleBase.addPackage(builder.getPackage());
+  StatefulSession session=ruleBase.newStatefulSession();
+  session.assertObject(new Cheese("stilton",15));
+  QueryResults results=session.getQueryResults("query1",new Object[]{"stilton"});
+  assertEquals(1,results.size());
+  Object object=results.get(0).get(0);
+  assertEquals(new Cheese("stilton",15),object);
+  results=session.getQueryResults("query1",new Object[]{"cheddar"});
+}

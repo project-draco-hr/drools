@@ -1,0 +1,20 @@
+{
+  final EvalDescr evalDescr=(EvalDescr)descr;
+  try {
+    final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),null,context.getPkg().getGlobals());
+    factory.setNextFactory(((MVELDialect)context.getDialect()).getClassImportResolverFactory());
+    final List[] usedIdentifiers=context.getDialect().getExpressionIdentifiers(context,evalDescr,evalDescr.getContent());
+    final Declaration[] declarations=new Declaration[usedIdentifiers[0].size()];
+    for (int i=0, size=usedIdentifiers[0].size(); i < size; i++) {
+      declarations[i]=context.getDeclarationResolver().getDeclaration((String)usedIdentifiers[0].get(i));
+    }
+    final EvalCondition eval=new EvalCondition(declarations);
+    final Serializable expr=MVEL.compileExpression((String)evalDescr.getContent(),((MVELDialect)context.getDialect()).getClassImportResolverFactory().getImportedClasses());
+    eval.setEvalExpression(new MVELEvalExpression(expr,factory));
+    return eval;
+  }
+ catch (  final Exception e) {
+    context.getErrors().add(new RuleError(context.getRule(),evalDescr,null,"Unable to build expression for 'predicate' node '" + evalDescr.getContent() + "'"));
+    return null;
+  }
+}

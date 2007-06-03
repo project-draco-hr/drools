@@ -1,0 +1,19 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_QueryWithParams.drl")));
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(builder.getPackage());
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  workingMemory.fireAllRules();
+  QueryResults results=workingMemory.getQueryResults("assertedobjquery",new String[]{"value1"});
+  assertEquals(1,results.size());
+  assertEquals(new AssertedObject("value1"),results.get(0).get(0));
+  results=workingMemory.getQueryResults("assertedobjquery",new String[]{"value3"});
+  assertEquals(0,results.size());
+  results=workingMemory.getQueryResults("assertedobjquery2",new String[]{null,"value2"});
+  assertEquals(1,results.size());
+  assertEquals(new AssertedObject("value2"),results.get(0).get(0));
+  results=workingMemory.getQueryResults("assertedobjquery2",new String[]{"value3","value2"});
+  assertEquals(1,results.size());
+  assertEquals(new AssertedObject("value2"),results.get(0).get(0));
+}
