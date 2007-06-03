@@ -1,0 +1,30 @@
+{
+  final FactHandle handle=assertObject(new DroolsQuery(query,arguments));
+  final QueryTerminalNode node=(QueryTerminalNode)this.queryResults.remove(query);
+  Query queryObj=null;
+  List list=null;
+  if (node == null) {
+    final org.drools.rule.Package[] pkgs=this.ruleBase.getPackages();
+    for (int i=0; i < pkgs.length; i++) {
+      final Rule rule=pkgs[i].getRule(query);
+      if ((rule != null) && (rule instanceof Query)) {
+        queryObj=(Query)rule;
+        break;
+      }
+    }
+    retractObject(handle);
+    if (queryObj == null) {
+      throw new IllegalArgumentException("Query '" + query + "' does not exist");
+    }
+    list=Collections.EMPTY_LIST;
+  }
+ else {
+    list=(List)this.nodeMemories.remove(node.getId());
+    retractObject(handle);
+    if (list == null) {
+      list=Collections.EMPTY_LIST;
+    }
+    queryObj=(Query)node.getRule();
+  }
+  return new QueryResults(list,queryObj,this);
+}
