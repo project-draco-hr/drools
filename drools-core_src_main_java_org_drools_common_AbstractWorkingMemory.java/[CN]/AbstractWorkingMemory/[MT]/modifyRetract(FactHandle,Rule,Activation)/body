@@ -1,0 +1,20 @@
+{
+  this.lock.lock();
+  int status=-1;
+  if (this.maintainTms) {
+    status=((InternalFactHandle)factHandle).getEqualityKey().getStatus();
+  }
+  final InternalFactHandle handle=(InternalFactHandle)factHandle;
+  if (handle.getId() == -1) {
+    return;
+  }
+  final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation,this.agenda.getActiveActivations(),this.agenda.getDormantActivations());
+  doRetract(handle,propagationContext);
+  if (this.maintainTms) {
+    EqualityKey key=handle.getEqualityKey();
+    key.removeFactHandle(handle);
+    if (key.isEmpty()) {
+      this.tms.remove(key);
+    }
+  }
+}
