@@ -1,0 +1,21 @@
+{
+  RuleModel m=new RuleModel();
+  m.name="test literal strings";
+  FactPattern p=new FactPattern("Person");
+  SingleFieldConstraint con=new SingleFieldConstraint();
+  con.fieldName="field1";
+  con.operator="==";
+  con.value="goo";
+  con.constraintValueType=SingleFieldConstraint.TYPE_VARIABLE;
+  p.addConstraint(con);
+  ConnectiveConstraint connective=new ConnectiveConstraint();
+  connective.constraintValueType=ISingleFieldConstraint.TYPE_LITERAL;
+  connective.operator="|| ==";
+  connective.value="blah";
+  con.connectives=new ConnectiveConstraint[1];
+  con.connectives[0]=connective;
+  m.addLhsItem(p);
+  String result=BRDRLPersistence.getInstance().marshal(m);
+  String expected="rule \"test literal strings\" " + " when " + "Person( field1 == goo  || == \"blah\" )"+ " then "+ "end";
+  assertEqualsIgnoreWhitespace(expected,result);
+}
