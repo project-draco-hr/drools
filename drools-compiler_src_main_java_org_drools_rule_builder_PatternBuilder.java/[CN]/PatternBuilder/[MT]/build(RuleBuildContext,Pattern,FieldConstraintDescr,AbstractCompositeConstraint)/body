@@ -5,6 +5,17 @@
     if (identifiers.length == 2 && pattern.getDeclaration() != null && identifiers[0].equals(pattern.getDeclaration().getIdentifier())) {
       fieldName=identifiers[1];
     }
+ else {
+      Dialect dialect=context.getDialect();
+      context.setDialect(context.getDialect("mvel"));
+      PredicateDescr predicateDescr=new PredicateDescr();
+      DrlDumper dumper=new DrlDumper();
+      dumper.visitFieldConstraintDescr(fieldConstraintDescr);
+      predicateDescr.setContent(dumper.getTemplate());
+      this.build(context,pattern,predicateDescr,container);
+      context.setDialect(dialect);
+      return;
+    }
   }
   final FieldExtractor extractor=getFieldExtractor(context,fieldConstraintDescr,pattern.getObjectType(),fieldName,true);
   if (extractor == null) {
