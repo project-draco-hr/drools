@@ -1,18 +1,36 @@
 {
   final ObjectHashMap memory=(ObjectHashMap)workingMemory.getNodeMemory(this);
   final Object object=handle.getObject();
-  Object key=null;
+  ObjectTypeConf ojectTypeConf;
   if (object instanceof FactImpl) {
-    key=((Fact)object).getFactTemplate().getName();
+    String key=((Fact)object).getFactTemplate().getName();
+    ojectTypeConf=(ObjectTypeConf)memory.get(key);
+    if (ojectTypeConf == null) {
+      ojectTypeConf=new ObjectTypeConf(null,this);
+      memory.put(key,ojectTypeConf,false);
+    }
   }
  else {
-    key=object.getClass();
+    Class cls=object.getClass();
+    if (object instanceof ShadowProxy) {
+      cls=cls.getSuperclass();
+    }
+    ojectTypeConf=(ObjectTypeConf)memory.get(cls);
+    if (ojectTypeConf == null) {
+      ojectTypeConf=new ObjectTypeConf(cls,this);
+      memory.put(cls,ojectTypeConf,false);
+    }
+    if (ojectTypeConf.isShadowEnabled()) {
+      if (!(handle.getObject() instanceof ShadowProxy)) {
+        handle.setObject(ojectTypeConf.getShadow(handle.getObject()));
+        handle.setShadowFact(true);
+      }
+ else {
+        ((ShadowProxy)handle.getObject()).updateProxy();
+      }
+    }
   }
-  ObjectTypeNode[] cachedNodes=(ObjectTypeNode[])memory.get(key);
-  if (cachedNodes == null) {
-    cachedNodes=getMatchingNodes(object);
-    memory.put(key,cachedNodes,false);
-  }
+  ObjectTypeNode[] cachedNodes=ojectTypeConf.getObjectTypeNodes(object);
   for (int i=0, length=cachedNodes.length; i < length; i++) {
     cachedNodes[i].assertObject(handle,context,workingMemory);
   }

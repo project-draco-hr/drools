@@ -1,24 +1,14 @@
 {
   final ObjectHashMap memory=(ObjectHashMap)workingMemory.getNodeMemory(this);
   final Object object=handle.getObject();
-  ObjectTypeNode[] cachedNodes;
+  ObjectTypeConf objectTypeConf;
   if (object instanceof ShadowProxy) {
-    cachedNodes=(ObjectTypeNode[])memory.get(object.getClass().getSuperclass());
+    objectTypeConf=(ObjectTypeConf)memory.get(object.getClass().getSuperclass());
   }
  else {
-    cachedNodes=(ObjectTypeNode[])memory.get(object.getClass());
+    objectTypeConf=(ObjectTypeConf)memory.get(object.getClass());
   }
-  if (cachedNodes == null) {
-    cachedNodes=getMatchingNodes(object);
-    Object key=null;
-    if (object instanceof FactImpl) {
-      key=((Fact)object).getFactTemplate().getName();
-    }
- else {
-      key=object.getClass();
-    }
-    memory.put(key,cachedNodes,false);
-  }
+  ObjectTypeNode[] cachedNodes=objectTypeConf.getObjectTypeNodes(object);
   if (cachedNodes == null) {
     return;
   }
