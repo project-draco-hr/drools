@@ -14,8 +14,15 @@
     context.getErrors().add(new RuleError(context.getRule(),queryDescr,e,"Unable to create Field Extractor for 'getArguments'"));
   }
   String[] params=queryDescr.getParameters();
-  for (int i=0; i < params.length; i++) {
-    pattern.addDeclaration(params[i],new ArrayExtractor(arrayExtractor,i));
+  String[] types=queryDescr.getParameterTypes();
+  int i=0;
+  try {
+    for (i=0; i < params.length; i++) {
+      pattern.addDeclaration(params[i],new ArrayExtractor(arrayExtractor,i,context.getDialect().getTypeResolver().resolveType(types[i])));
+    }
+  }
+ catch (  ClassNotFoundException e) {
+    context.getErrors().add(new RuleError(context.getRule(),queryDescr,e,"Unable to resolve type '" + types[i] + " for parameter"+ params[i]));
   }
   return pattern;
 }
