@@ -1,4 +1,7 @@
 {
+  if (byteArrayClassLoader == null) {
+    byteArrayClassLoader=new ByteArrayClassLoader((classLoader != null) ? classLoader : Thread.currentThread().getContextClassLoader());
+  }
   try {
     if (SELF_REFERENCE_FIELD.equals(fieldName)) {
       return new SelfReferenceClassFieldExtractor(clazz,fieldName);
@@ -16,7 +19,6 @@
       final Method getterMethod=(Method)inspector.getGetterMethods().get(fieldName);
       final String className=ClassFieldExtractorFactory.BASE_PACKAGE + "/" + Type.getInternalName(clazz)+ "$"+ getterMethod.getName();
       final byte[] bytes=dump(clazz,className,getterMethod,fieldType,clazz.isInterface());
-      final ByteArrayClassLoader byteArrayClassLoader=new ByteArrayClassLoader((classLoader != null) ? classLoader : Thread.currentThread().getContextClassLoader());
       final Class newClass=byteArrayClassLoader.defineClass(className.replace('/','.'),bytes,PROTECTION_DOMAIN);
       final Integer index=(Integer)inspector.getFieldNames().get(fieldName);
       final ValueType valueType=ValueType.determineValueType(fieldType);
@@ -25,6 +27,7 @@
     }
   }
  catch (  final Exception e) {
+    System.out.println(e);
     throw new RuntimeDroolsException(e);
   }
 }
