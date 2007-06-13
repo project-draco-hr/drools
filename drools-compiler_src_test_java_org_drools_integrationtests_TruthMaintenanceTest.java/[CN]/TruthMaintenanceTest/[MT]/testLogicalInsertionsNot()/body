@@ -1,0 +1,27 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LogicalInsertionsNot.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  List list;
+  final Person a=new Person("a");
+  final Cheese cheese=new Cheese("brie",1);
+  workingMemory.setGlobal("cheese",cheese);
+  workingMemory.fireAllRules();
+  list=IteratorToList.convert(workingMemory.iterateObjects());
+  assertEquals("i was not asserted by not a => i.",1,list.size());
+  assertEquals("i was not asserted by not a => i.",cheese,list.get(0));
+  final FactHandle h=workingMemory.insert(a);
+  list=IteratorToList.convert(workingMemory.iterateObjects());
+  assertEquals("a was not asserted or i not retracted.",1,list.size());
+  assertEquals("a was asserted.",a,list.get(0));
+  assertFalse("i was not rectracted.",list.contains(cheese));
+  assertEquals("agenda should be empty.",0,workingMemory.getAgenda().agendaSize());
+  workingMemory.retract(h);
+  workingMemory.fireAllRules();
+  list=IteratorToList.convert(workingMemory.iterateObjects());
+  assertEquals("i was not asserted by not a => i.",1,list.size());
+  assertEquals("i was not asserted by not a => i.",cheese,list.get(0));
+}

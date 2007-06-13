@@ -7,7 +7,7 @@
   final WorkingMemory workingMemory=ruleBase.newStatefulSession();
   final List events=new ArrayList();
   final WorkingMemoryEventListener listener=new DefaultWorkingMemoryEventListener(){
-    public void objectModified(    ObjectModifiedEvent event){
+    public void objectUpdated(    ObjectUpdatedEvent event){
       events.add(event);
     }
   }
@@ -16,14 +16,14 @@
   final Person bigCheese=new Person("big cheese");
   final Cheese cheddar=new Cheese("cheddar",15);
   bigCheese.setCheese(cheddar);
-  final FactHandle bigCheeseHandle=workingMemory.assertObject(bigCheese);
-  final FactHandle cheddarHandle=workingMemory.assertObject(cheddar);
+  final FactHandle bigCheeseHandle=workingMemory.insert(bigCheese);
+  final FactHandle cheddarHandle=workingMemory.insert(cheddar);
   workingMemory.fireAllRules();
-  ObjectModifiedEvent event=(ObjectModifiedEvent)events.get(0);
+  ObjectUpdatedEvent event=(ObjectUpdatedEvent)events.get(0);
   assertSame(cheddarHandle,event.getFactHandle());
   assertSame(cheddar,event.getOldObject());
   assertSame(cheddar,event.getObject());
-  event=(ObjectModifiedEvent)events.get(1);
+  event=(ObjectUpdatedEvent)events.get(1);
   assertSame(bigCheeseHandle,event.getFactHandle());
   assertSame(bigCheese,event.getOldObject());
   assertSame(bigCheese,event.getObject());

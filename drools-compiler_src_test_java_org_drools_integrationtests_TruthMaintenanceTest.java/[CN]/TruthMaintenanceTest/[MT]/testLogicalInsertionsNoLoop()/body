@@ -1,0 +1,17 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LogicalInsertionsNoLoop.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  List list;
+  final List l=new ArrayList();
+  final Person a=new Person("a");
+  workingMemory.setGlobal("a",a);
+  workingMemory.setGlobal("l",l);
+  workingMemory.fireAllRules();
+  list=IteratorToList.convert(workingMemory.iterateObjects(new ClassObjectFilter(a.getClass())));
+  assertEquals("a still in WM",0,list.size());
+  assertEquals("Rule should not loop",1,l.size());
+}

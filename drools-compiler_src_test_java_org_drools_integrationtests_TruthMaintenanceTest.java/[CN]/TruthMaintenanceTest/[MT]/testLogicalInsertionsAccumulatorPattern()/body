@@ -1,0 +1,27 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LogicalInsertionsAccumulatorPattern.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  workingMemory.setGlobal("ga","a");
+  workingMemory.setGlobal("gb","b");
+  workingMemory.setGlobal("gs",new Short((short)3));
+  workingMemory.fireAllRules();
+  List l;
+  final FactHandle h=workingMemory.insert(new Integer(6));
+  assertEquals(1,IteratorToList.convert(workingMemory.iterateObjects()).size());
+  workingMemory.fireAllRules();
+  l=IteratorToList.convert(workingMemory.iterateObjects(new ClassObjectFilter(CheeseEqual.class)));
+  assertEquals("There should be 2 CheeseEqual in Working Memory, 1 justified, 1 stated",2,l.size());
+  assertEquals(6,IteratorToList.convert(workingMemory.iterateObjects()).size());
+  workingMemory.retract(h);
+  l=IteratorToList.convert(workingMemory.iterateObjects(new ClassObjectFilter(CheeseEqual.class)));
+  assertEquals("There should be only 1 CheeseEqual in Working Memory, 1 stated (the justified should have been retracted). Check TruthMaintenanceSystem justifiedMap",1,l.size());
+  l=IteratorToList.convert(workingMemory.iterateObjects(new ClassObjectFilter(Short.class)));
+  assertEquals(1,l.size());
+  assertEquals(2,IteratorToList.convert(workingMemory.iterateObjects()).size());
+  workingMemory.fireAllRules();
+  assertEquals(0,IteratorToList.convert(workingMemory.iterateObjects()).size());
+}

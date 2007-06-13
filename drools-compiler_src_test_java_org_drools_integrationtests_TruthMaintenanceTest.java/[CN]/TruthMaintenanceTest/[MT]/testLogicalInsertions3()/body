@@ -1,0 +1,25 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_logicalInsertions3.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final List list=new ArrayList();
+  workingMemory.setGlobal("events",list);
+  final Sensor sensor=new Sensor(150,100);
+  final FactHandle sensorHandle=workingMemory.insert(sensor);
+  workingMemory.fireAllRules();
+  assertEquals(2,list.size());
+  assertEquals(2,IteratorToList.convert(workingMemory.iterateObjects()).size());
+  sensor.setTemperature(125);
+  workingMemory.update(sensorHandle,sensor);
+  workingMemory.fireAllRules();
+  assertEquals(3,list.size());
+  assertEquals(2,IteratorToList.convert(workingMemory.iterateObjects()).size());
+  sensor.setTemperature(80);
+  workingMemory.update(sensorHandle,sensor);
+  workingMemory.fireAllRules();
+  assertEquals(3,list.size());
+  assertEquals(1,IteratorToList.convert(workingMemory.iterateObjects()).size());
+}

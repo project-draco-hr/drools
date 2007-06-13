@@ -1,0 +1,34 @@
+{
+  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_UpdateActivationCreationNoLoop.drl"));
+  final RuleBase ruleBase=loadRuleBase(reader);
+  final InternalWorkingMemoryActions wm=(InternalWorkingMemoryActions)ruleBase.newStatefulSession();
+  final List created=new ArrayList();
+  final List cancelled=new ArrayList();
+  final AgendaEventListener l=new DefaultAgendaEventListener(){
+    public void activationCreated(    ActivationCreatedEvent event,    WorkingMemory workingMemory){
+      created.add(event);
+    }
+    public void activationCancelled(    ActivationCancelledEvent event,    WorkingMemory workingMemory){
+      cancelled.add(event);
+    }
+  }
+;
+  wm.addEventListener(l);
+  final Cheese stilton=new Cheese("stilton",15);
+  final FactHandle stiltonHandle=wm.insert(stilton);
+  final Person p1=new Person("p1");
+  p1.setCheese(stilton);
+  wm.insert(p1);
+  final Person p2=new Person("p2");
+  p2.setCheese(stilton);
+  wm.insert(p2);
+  final Person p3=new Person("p3");
+  p3.setCheese(stilton);
+  wm.insert(p3);
+  assertEquals(3,created.size());
+  assertEquals(0,cancelled.size());
+  final Activation item=((ActivationCreatedEvent)created.get(2)).getActivation();
+  wm.update(stiltonHandle,stilton,item.getRule(),item);
+  assertEquals(5,created.size());
+  assertEquals(3,cancelled.size());
+}
