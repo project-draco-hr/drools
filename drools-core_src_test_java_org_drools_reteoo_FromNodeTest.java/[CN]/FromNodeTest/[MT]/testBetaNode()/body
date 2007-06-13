@@ -1,8 +1,8 @@
 {
   final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
   final ReteooWorkingMemory workingMemory=new ReteooWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase());
-  final ClassFieldExtractor priceExtractor=new ClassFieldExtractor(Cheese.class,"price");
-  final ClassFieldExtractor ageExtractor=new ClassFieldExtractor(Person.class,"age");
+  final ClassFieldExtractor priceExtractor=ClassFieldExtractorCache.getExtractor(Cheese.class,"price");
+  final ClassFieldExtractor ageExtractor=ClassFieldExtractorCache.getExtractor(Person.class,"age");
   final Pattern pattern=new Pattern(0,new ClassObjectType(Person.class));
   final Declaration declaration=new Declaration("age",ageExtractor,pattern);
   final VariableConstraint variableConstraint=new VariableConstraint(priceExtractor,declaration,ValueType.PINTEGER_TYPE.getEvaluator(Operator.EQUAL));
@@ -20,13 +20,13 @@
   final MockTupleSink sink=new MockTupleSink(5);
   from.addTupleSink(sink);
   final Person person1=new Person("xxx1",30);
-  final FactHandle person1Handle=workingMemory.assertObject(person1);
+  final FactHandle person1Handle=workingMemory.insert(person1);
   final ReteTuple tuple1=new ReteTuple((DefaultFactHandle)person1Handle);
   from.assertTuple(tuple1,context,workingMemory);
   assertEquals(0,sink.getAsserted().size());
   cheese1.setPrice(30);
   final Person person2=new Person("xxx2",30);
-  final FactHandle person2Handle=workingMemory.assertObject(person2);
+  final FactHandle person2Handle=workingMemory.insert(person2);
   final ReteTuple tuple2=new ReteTuple((DefaultFactHandle)person2Handle);
   from.assertTuple(tuple2,context,workingMemory);
   final List asserted=sink.getAsserted();
@@ -36,7 +36,7 @@
   assertSame(cheese1,tuple.getFactHandles()[0].getObject());
   cheese2.setPrice(30);
   final Person person3=new Person("xxx2",30);
-  final FactHandle person3Handle=workingMemory.assertObject(person3);
+  final FactHandle person3Handle=workingMemory.insert(person3);
   final ReteTuple tuple3=new ReteTuple((DefaultFactHandle)person3Handle);
   from.assertTuple(tuple3,context,workingMemory);
   assertEquals(3,asserted.size());

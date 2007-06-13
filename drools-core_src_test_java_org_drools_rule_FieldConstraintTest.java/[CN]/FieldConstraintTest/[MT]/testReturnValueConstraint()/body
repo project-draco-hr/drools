@@ -1,7 +1,7 @@
 {
   final ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
   final InternalWorkingMemory workingMemory=(InternalWorkingMemory)ruleBase.newStatefulSession();
-  final FieldExtractor priceExtractor=new ClassFieldExtractor(Cheese.class,"price");
+  final FieldExtractor priceExtractor=ClassFieldExtractorCache.getExtractor(Cheese.class,"price");
   final Pattern pattern=new Pattern(0,new ClassObjectType(Cheese.class));
   final Declaration priceDeclaration=new Declaration("price1",priceExtractor,pattern);
   final ReturnValueExpression isDoubleThePrice=new ReturnValueExpression(){
@@ -19,10 +19,10 @@
   final ReturnValueRestriction restriction2=new ReturnValueRestriction(priceExtractor,isDoubleThePrice,new Declaration[]{priceDeclaration},new Declaration[0],new String[0],ValueType.INTEGER_TYPE.getEvaluator(Operator.GREATER));
   final ReturnValueConstraint constraint2=new ReturnValueConstraint(priceExtractor,restriction2);
   final Cheese cheddar0=new Cheese("cheddar",5);
-  final FactHandle f0=workingMemory.assertObject(cheddar0);
+  final FactHandle f0=workingMemory.insert(cheddar0);
   InstrumentedReteTuple tuple=new InstrumentedReteTuple(f0);
   final Cheese cheddar1=new Cheese("cheddar",10);
-  final InternalFactHandle f1=(InternalFactHandle)workingMemory.assertObject(cheddar1);
+  final InternalFactHandle f1=(InternalFactHandle)workingMemory.insert(cheddar1);
   tuple=new InstrumentedReteTuple(tuple,f1);
   final ReturnValueContextEntry context1=(ReturnValueContextEntry)constraint1.getContextEntry();
   context1.updateFromTuple(workingMemory,tuple);
@@ -31,6 +31,6 @@
   context2.updateFromTuple(workingMemory,tuple);
   assertFalse(constraint2.isAllowedCachedLeft(context2,f1.getObject()));
   final Cheese cheddar2=new Cheese("cheddar",11);
-  final InternalFactHandle f2=(InternalFactHandle)workingMemory.assertObject(cheddar2);
+  final InternalFactHandle f2=(InternalFactHandle)workingMemory.insert(cheddar2);
   assertTrue(constraint2.isAllowedCachedLeft(context2,f2.getObject()));
 }

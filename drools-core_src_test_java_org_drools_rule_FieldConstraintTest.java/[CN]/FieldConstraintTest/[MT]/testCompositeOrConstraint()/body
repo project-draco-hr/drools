@@ -1,11 +1,11 @@
 {
   final ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
   final InternalWorkingMemory workingMemory=(InternalWorkingMemory)ruleBase.newStatefulSession();
-  final ClassFieldExtractor extractor=new ClassFieldExtractor(Cheese.class,"type");
+  final ClassFieldExtractor extractor=ClassFieldExtractorCache.getExtractor(Cheese.class,"type");
   final FieldValue field=FieldFactory.getFieldValue("cheddar");
   final Evaluator evaluator=ValueType.STRING_TYPE.getEvaluator(Operator.EQUAL);
   final LiteralConstraint constraint1=new LiteralConstraint(extractor,evaluator,field);
-  final ClassFieldExtractor priceExtractor=new ClassFieldExtractor(Cheese.class,"price");
+  final ClassFieldExtractor priceExtractor=ClassFieldExtractorCache.getExtractor(Cheese.class,"price");
   final FieldValue priceField=FieldFactory.getFieldValue(10);
   final Evaluator priceEvaluator=ValueType.INTEGER_TYPE.getEvaluator(Operator.GREATER);
   final LiteralConstraint constraint2=new LiteralConstraint(priceExtractor,priceEvaluator,priceField);
@@ -13,7 +13,7 @@
   final OrConstraint constraint=new OrConstraint();
   constraint.addAlphaConstraint(constraint1);
   constraint.addAlphaConstraint(constraint2);
-  final InternalFactHandle cheddarHandle=(InternalFactHandle)workingMemory.assertObject(cheddar);
+  final InternalFactHandle cheddarHandle=(InternalFactHandle)workingMemory.insert(cheddar);
   assertTrue(constraint.isAllowed(cheddarHandle.getObject(),workingMemory));
   cheddar.setPrice(5);
   ((ShadowProxy)cheddarHandle.getObject()).updateProxy();

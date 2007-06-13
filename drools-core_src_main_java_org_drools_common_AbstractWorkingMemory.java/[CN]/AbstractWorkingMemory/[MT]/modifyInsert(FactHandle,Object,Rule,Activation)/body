@@ -1,0 +1,29 @@
+{
+  try {
+    final InternalFactHandle handle=(InternalFactHandle)factHandle;
+    final Object originalObject=(handle.isShadowFact()) ? ((ShadowProxy)handle.getObject()).getShadowedObject() : handle.getObject();
+    if (this.maintainTms) {
+      EqualityKey key=handle.getEqualityKey();
+      key=this.tms.get(object);
+      if (key == null) {
+        key=new EqualityKey(handle,0);
+        this.tms.put(key);
+      }
+ else {
+        key.addFactHandle(handle);
+      }
+      handle.setEqualityKey(key);
+    }
+    this.handleFactory.increaseFactHandleRecency(handle);
+    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.MODIFICATION,rule,activation,this.agenda.getActiveActivations(),this.agenda.getDormantActivations());
+    doInsert(handle,object,propagationContext);
+    this.workingMemoryEventSupport.fireObjectUpdated(propagationContext,factHandle,originalObject,object);
+    propagationContext.clearRetractedTuples();
+    if (!this.actionQueue.isEmpty()) {
+      executeQueuedActions();
+    }
+  }
+  finally {
+    this.lock.unlock();
+  }
+}
