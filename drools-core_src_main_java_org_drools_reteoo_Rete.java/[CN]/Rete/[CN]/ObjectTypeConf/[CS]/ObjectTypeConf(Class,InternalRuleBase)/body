@@ -1,7 +1,8 @@
 {
   this.cls=cls;
-  this.rete=rete;
-  if (cls == null) {
+  this.ruleBase=ruleBase;
+  Rete rete=ruleBase.getRete();
+  if (cls == null || !ruleBase.getConfiguration().isShadowed(cls.getName())) {
     return;
   }
   String pkgName=cls.getPackage().getName();
@@ -12,14 +13,14 @@
   Class shadowClass=null;
   final String shadowProxyName=ShadowProxyFactory.getProxyClassNameForClass(this.cls);
   try {
-    shadowClass=this.rete.getRuleBase().getMapBackedClassLoader().loadClass(shadowProxyName);
+    shadowClass=rete.getRuleBase().getMapBackedClassLoader().loadClass(shadowProxyName);
   }
  catch (  final ClassNotFoundException cnfe) {
     final byte[] proxyBytes=ShadowProxyFactory.getProxyBytes(cls);
     if (proxyBytes != null) {
-      this.rete.getRuleBase().getMapBackedClassLoader().addClass(shadowProxyName,proxyBytes);
+      rete.getRuleBase().getMapBackedClassLoader().addClass(shadowProxyName,proxyBytes);
       try {
-        shadowClass=this.rete.getRuleBase().getMapBackedClassLoader().loadClass(shadowProxyName);
+        shadowClass=rete.getRuleBase().getMapBackedClassLoader().loadClass(shadowProxyName);
       }
  catch (      ClassNotFoundException e) {
         throw new RuntimeException("Unable to find or generate the ShadowProxy implementation for '" + this.cls.getName() + "'");

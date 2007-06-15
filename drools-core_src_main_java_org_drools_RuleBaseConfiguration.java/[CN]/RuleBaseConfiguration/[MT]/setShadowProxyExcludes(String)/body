@@ -1,0 +1,33 @@
+{
+  if (excludes == null || "".equals(excludes.trim())) {
+    return;
+  }
+  if (this.shadowProxyExcludes == null) {
+    this.shadowProxyExcludes=new HashMap();
+  }
+  String[] items=excludes.split(" ");
+  for (int i=0; i < items.length; i++) {
+    String qualifiedNamespace=items[i].substring(0,items[i].lastIndexOf('.')).trim();
+    String name=items[i].substring(items[i].lastIndexOf('.') + 1).trim();
+    Object object=this.shadowProxyExcludes.get(qualifiedNamespace);
+    if (object == null) {
+      if (STAR.equals(name)) {
+        this.shadowProxyExcludes.put(qualifiedNamespace,STAR);
+      }
+ else {
+        List list=new ArrayList();
+        list.add(name);
+        this.shadowProxyExcludes.put(qualifiedNamespace,list);
+      }
+    }
+ else     if (name.equals(STAR)) {
+      this.shadowProxyExcludes.put(qualifiedNamespace,STAR);
+    }
+ else {
+      List list=(List)object;
+      if (!list.contains(object)) {
+        list.add(name);
+      }
+    }
+  }
+}
