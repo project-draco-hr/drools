@@ -1,5 +1,6 @@
 {
-  final List[] usedIdentifiers=context.getDialect().getExpressionIdentifiers(context,returnValueRestrictionDescr,returnValueRestrictionDescr.getContent());
+  Dialect.AnalysisResult analysis=context.getDialect().analyzeExpression(context,returnValueRestrictionDescr,returnValueRestrictionDescr.getContent());
+  final List[] usedIdentifiers=analysis.getBoundIdentifiers();
   final List tupleDeclarations=new ArrayList();
   final List factDeclarations=new ArrayList();
   for (int i=0, size=usedIdentifiers[0].size(); i < size; i++) {
@@ -11,8 +12,7 @@
       tupleDeclarations.add(declaration);
     }
   }
-  final int NOT_BOUND_INDEX=usedIdentifiers.length - 1;
-  createImplicitBindings(context,pattern,usedIdentifiers[NOT_BOUND_INDEX],factDeclarations);
+  createImplicitBindings(context,pattern,analysis.getNotBoundedIdentifiers(),factDeclarations);
   final Evaluator evaluator=getEvaluator(context,returnValueRestrictionDescr,extractor.getValueType(),returnValueRestrictionDescr.getEvaluator());
   if (evaluator == null) {
     return null;

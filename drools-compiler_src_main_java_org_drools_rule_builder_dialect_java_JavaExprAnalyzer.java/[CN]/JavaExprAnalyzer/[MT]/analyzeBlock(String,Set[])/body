@@ -4,5 +4,15 @@
   final TokenStream tokenStream=new CommonTokenStream(lexer);
   final JavaParser parser=new JavaParser(tokenStream);
   parser.block();
-  return analyze(parser.getIdentifiers(),availableIdentifiers);
+  JavaAnalysisResult result=new JavaAnalysisResult();
+  result.setIdentifiers(parser.getIdentifiers());
+  result.setLocalVariables(new HashMap());
+  for (Iterator it=parser.getLocalDeclarations().iterator(); it.hasNext(); ) {
+    JavaLocalDeclarationDescr descr=(JavaLocalDeclarationDescr)it.next();
+    for (Iterator identIt=descr.getIdentifiers().iterator(); identIt.hasNext(); ) {
+      JavaLocalDeclarationDescr.IdentifierDescr ident=(JavaLocalDeclarationDescr.IdentifierDescr)identIt.next();
+      result.addLocalVariable(ident.getIdentifier(),descr);
+    }
+  }
+  return analyze(result,availableIdentifiers);
 }

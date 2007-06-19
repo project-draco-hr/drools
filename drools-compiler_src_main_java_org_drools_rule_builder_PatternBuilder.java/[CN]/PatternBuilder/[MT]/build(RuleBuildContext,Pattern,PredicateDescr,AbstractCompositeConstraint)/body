@@ -1,8 +1,9 @@
 {
-  final List[] usedIdentifiers=context.getDialect().getExpressionIdentifiers(context,predicateDescr,predicateDescr.getContent());
-  if (usedIdentifiers == null) {
+  final Dialect.AnalysisResult analysis=context.getDialect().analyzeExpression(context,predicateDescr,predicateDescr.getContent());
+  if (analysis == null) {
     return;
   }
+  final List[] usedIdentifiers=analysis.getBoundIdentifiers();
   final List tupleDeclarations=new ArrayList();
   final List factDeclarations=new ArrayList();
   for (int i=0, size=usedIdentifiers[0].size(); i < size; i++) {
@@ -14,8 +15,7 @@
       tupleDeclarations.add(decl);
     }
   }
-  final int NOT_BOUND_INDEX=usedIdentifiers.length - 1;
-  this.createImplicitBindings(context,pattern,usedIdentifiers[NOT_BOUND_INDEX],factDeclarations);
+  this.createImplicitBindings(context,pattern,analysis.getNotBoundedIdentifiers(),factDeclarations);
   final Declaration[] previousDeclarations=(Declaration[])tupleDeclarations.toArray(new Declaration[tupleDeclarations.size()]);
   final Declaration[] localDeclarations=(Declaration[])factDeclarations.toArray(new Declaration[factDeclarations.size()]);
   final String[] requiredGlobals=(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]);

@@ -1,0 +1,31 @@
+{
+  TreeSet locals=new TreeSet(new Comparator(){
+    public int compare(    Object o1,    Object o2){
+      JavaLocalDeclarationDescr d1=(JavaLocalDeclarationDescr)o1;
+      JavaLocalDeclarationDescr d2=(JavaLocalDeclarationDescr)o2;
+      return d1.getStart() - d2.getStart();
+    }
+  }
+);
+  for (Iterator it=analysis.getLocalVariablesMap().values().iterator(); it.hasNext(); ) {
+    locals.add(it.next());
+  }
+  StringBuffer initCode=new StringBuffer();
+  int lastAdded=0;
+  for (Iterator it=locals.iterator(); it.hasNext(); ) {
+    JavaLocalDeclarationDescr d=(JavaLocalDeclarationDescr)it.next();
+    initCode.append(originalCode.substring(lastAdded,d.getStart()));
+    lastAdded=d.getEnd();
+    for (Iterator vars=d.getIdentifiers().iterator(); vars.hasNext(); ) {
+      JavaLocalDeclarationDescr.IdentifierDescr id=(JavaLocalDeclarationDescr.IdentifierDescr)vars.next();
+      initCode.append(originalCode.substring(id.getStart(),id.getEnd()));
+      initCode.append(";");
+      lastAdded=id.getEnd();
+      while (lastAdded < originalCode.length() && (Character.isWhitespace(originalCode.charAt(lastAdded)) || originalCode.charAt(lastAdded) == ';')) {
+        lastAdded++;
+      }
+    }
+  }
+  initCode.append(originalCode.substring(lastAdded));
+  return initCode.toString();
+}
