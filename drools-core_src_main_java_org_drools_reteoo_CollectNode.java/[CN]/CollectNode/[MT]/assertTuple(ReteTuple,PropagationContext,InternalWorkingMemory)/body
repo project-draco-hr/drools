@@ -2,6 +2,11 @@
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
   memory.getTupleMemory().add(leftTuple);
   final Collection result=this.collect.instantiateResultObject();
+  final InternalFactHandle resultHandle=workingMemory.getFactHandleFactory().newFactHandle(result);
+  CollectResult colresult=new CollectResult();
+  colresult.handle=resultHandle;
+  colresult.propagated=false;
+  memory.getCreatedHandles().put(leftTuple,colresult,false);
   final Iterator it=memory.getFactHandleMemory().iterator(leftTuple);
   this.constraints.updateFromTuple(workingMemory,leftTuple);
   for (FactEntry entry=(FactEntry)it.next(); entry != null; entry=(FactEntry)it.next()) {
@@ -20,9 +25,8 @@
   if (isAllowed) {
     this.resultsBinder.updateFromTuple(workingMemory,leftTuple);
     if (this.resultsBinder.isAllowedCachedLeft(result)) {
-      final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(result);
-      memory.getCreatedHandles().put(leftTuple,handle,false);
-      this.sink.propagateAssertTuple(leftTuple,handle,context,workingMemory);
+      colresult.propagated=true;
+      this.sink.propagateAssertTuple(leftTuple,resultHandle,context,workingMemory);
     }
   }
 }
