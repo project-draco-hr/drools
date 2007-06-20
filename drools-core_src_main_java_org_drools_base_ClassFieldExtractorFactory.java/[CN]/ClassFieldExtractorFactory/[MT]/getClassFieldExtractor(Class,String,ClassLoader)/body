@@ -1,13 +1,16 @@
 {
   if (byteArrayClassLoader == null) {
-    byteArrayClassLoader=new ByteArrayClassLoader((classLoader != null) ? classLoader : Thread.currentThread().getContextClassLoader());
+    if (classLoader == null) {
+      throw new RuntimeDroolsException("ClassFieldExtractorFactory cannot have a null parent ClassLoader");
+    }
+    byteArrayClassLoader=new ByteArrayClassLoader(classLoader);
   }
   try {
     if (SELF_REFERENCE_FIELD.equals(fieldName)) {
       return new SelfReferenceClassFieldExtractor(clazz,fieldName);
     }
  else     if (fieldName.indexOf('.') > -1 || fieldName.indexOf('[') > -1) {
-      return new MVELClassFieldExtractor(clazz,fieldName);
+      return new MVELClassFieldExtractor(clazz,fieldName,classLoader);
     }
  else {
       ClassFieldInspector inspector=(ClassFieldInspector)inspectors.get(clazz);

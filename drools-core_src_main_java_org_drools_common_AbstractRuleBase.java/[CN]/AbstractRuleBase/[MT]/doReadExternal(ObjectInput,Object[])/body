@@ -1,19 +1,22 @@
 {
-  this.pkgs=(Map)stream.readObject();
-  this.packageClassLoader=new CompositePackageClassLoader(Thread.currentThread().getContextClassLoader());
+  DroolsObjectInputStream parentStream=(DroolsObjectInputStream)stream;
+  parentStream.setRuleBase(this);
+  this.pkgs=(Map)parentStream.readObject();
+  this.packageClassLoader=new CompositePackageClassLoader(parentStream.getClassLoader());
   for (final Iterator it=this.pkgs.values().iterator(); it.hasNext(); ) {
     this.packageClassLoader.addClassLoader(((Package)it.next()).getPackageCompilationData().getClassLoader());
   }
-  this.classLoader=new MapBackedClassLoader(Thread.currentThread().getContextClassLoader());
+  this.classLoader=new MapBackedClassLoader(parentStream.getClassLoader());
   this.packageClassLoader.addClassLoader(this.classLoader);
-  final byte[] bytes=(byte[])stream.readObject();
-  final ObjectInputStreamWithLoader streamWithLoader=new ObjectInputStreamWithLoader(new ByteArrayInputStream(bytes),this.packageClassLoader);
-  this.id=(String)streamWithLoader.readObject();
-  this.factHandleFactory=(FactHandleFactory)streamWithLoader.readObject();
-  this.globals=(Map)streamWithLoader.readObject();
-  this.config=(RuleBaseConfiguration)streamWithLoader.readObject();
+  final byte[] bytes=(byte[])parentStream.readObject();
+  final DroolsObjectInputStream childStream=new DroolsObjectInputStream(new ByteArrayInputStream(bytes),this.packageClassLoader);
+  childStream.setRuleBase(this);
+  this.id=(String)childStream.readObject();
+  this.factHandleFactory=(FactHandleFactory)childStream.readObject();
+  this.globals=(Map)childStream.readObject();
+  this.config=(RuleBaseConfiguration)childStream.readObject();
   this.statefulSessions=new ObjectHashSet();
   for (int i=0, length=objects.length; i < length; i++) {
-    objects[i]=streamWithLoader.readObject();
+    objects[i]=childStream.readObject();
   }
 }
