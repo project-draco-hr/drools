@@ -1,0 +1,22 @@
+{
+  final Configuration config=this.xmlPackageReader.endConfiguration();
+  final QualifiedIdentifierRestrictionDescr qualifiedIdentifierRestricionDescr=(QualifiedIdentifierRestrictionDescr)this.xmlPackageReader.getCurrent();
+  final String expression=config.getText();
+  if (expression == null || expression.trim().equals("")) {
+    throw new SAXParseException("<qualified-identifier-restriction> must have an expression content",this.xmlPackageReader.getLocator());
+  }
+  qualifiedIdentifierRestricionDescr.setText(expression);
+  final LinkedList parents=this.xmlPackageReader.getParents();
+  final ListIterator it=parents.listIterator(parents.size());
+  it.previous();
+  Object parent=it.previous();
+  if (parent instanceof FieldConstraintDescr) {
+    final FieldConstraintDescr fieldConstraintDescr=(FieldConstraintDescr)parent;
+    fieldConstraintDescr.addRestriction(qualifiedIdentifierRestricionDescr);
+  }
+ else   if (parent instanceof RestrictionConnectiveDescr) {
+    final RestrictionConnectiveDescr restrictionConDescr=(RestrictionConnectiveDescr)parent;
+    restrictionConDescr.addRestriction(qualifiedIdentifierRestricionDescr);
+  }
+  return null;
+}
