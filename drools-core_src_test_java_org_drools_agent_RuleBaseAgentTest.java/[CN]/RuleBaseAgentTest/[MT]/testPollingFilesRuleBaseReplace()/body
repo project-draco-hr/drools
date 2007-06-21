@@ -1,0 +1,23 @@
+{
+  File dir=RuleBaseAssemblerTest.getTempDirectory();
+  Package p1=new Package("p1");
+  File p1f=new File(dir,"p43_.pkg");
+  RuleBaseAssemblerTest.writePackage(p1,p1f);
+  String path=dir.getPath() + "/" + "p43_.pkg";
+  Properties props=new Properties();
+  props.setProperty("file",path);
+  props.setProperty("poll","1");
+  props.setProperty("newInstance","true");
+  RuleBaseAgent ag=new RuleBaseAgent(props);
+  assertTrue(ag.isNewInstance());
+  assertTrue(ag.isPolling());
+  RuleBase rb=ag.getRuleBase();
+  assertEquals(1,rb.getPackages().length);
+  RuleBase rb_=ag.getRuleBase();
+  assertSame(rb,rb_);
+  RuleBaseAssemblerTest.writePackage(p1,p1f);
+  Thread.sleep(2100);
+  rb_=ag.getRuleBase();
+  assertNotSame(rb,rb_);
+  ag.stopPolling();
+}
