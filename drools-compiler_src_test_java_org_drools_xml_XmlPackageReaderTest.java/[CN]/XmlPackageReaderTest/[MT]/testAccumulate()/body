@@ -1,0 +1,19 @@
+{
+  final XmlPackageReader xmlPackageReader=new XmlPackageReader();
+  xmlPackageReader.read(new InputStreamReader(getClass().getResourceAsStream("test_ParseAccumulate.xml")));
+  final PackageDescr packageDescr=xmlPackageReader.getPackageDescr();
+  assertNotNull(packageDescr);
+  RuleDescr obj=(RuleDescr)packageDescr.getRules().get(0);
+  Object accumulateobj=obj.getLhs().getDescrs().get(0);
+  assertTrue(accumulateobj instanceof AccumulateDescr);
+  AccumulateDescr accumulatedescr=(AccumulateDescr)accumulateobj;
+  assertEquals("total += $cheese.getPrice();",accumulatedescr.getActionCode());
+  assertEquals("int total = 0;",accumulatedescr.getInitCode());
+  assertEquals("new Integer( total ) );",accumulatedescr.getResultCode());
+  PatternDescr sourcePattern=accumulatedescr.getSourcePattern();
+  PatternDescr resultPattern=accumulatedescr.getResultPattern();
+  assertNotNull(sourcePattern);
+  assertNotNull(resultPattern);
+  assertEquals("Cheese",resultPattern.getObjectType());
+  assertEquals("Person",sourcePattern.getObjectType());
+}

@@ -5,20 +5,16 @@
   final ListIterator ite=parents.listIterator(parents.size());
   ite.previous();
   final Object parent=ite.previous();
-  if (parent.getClass().getName().equals(CollectDescr.class.getName())) {
-    final CollectDescr parentDescr=(CollectDescr)parent;
-    parentDescr.setResultPattern(patternDescr);
+  if (parent instanceof PatternProcessorCeDescr) {
+    final PatternProcessorCeDescr parentDescr=(PatternProcessorCeDescr)parent;
+    parentDescr.setSourcePattern(patternDescr);
   }
- else   if (parent instanceof ConditionalElementDescr) {
+ else {
     final ConditionalElementDescr parentDescr=(ConditionalElementDescr)parent;
-    List conditionalDescriptors=parentDescr.getDescrs();
-    if (!conditionalDescriptors.isEmpty()) {
-      for (Iterator iterator=conditionalDescriptors.iterator(); iterator.hasNext(); ) {
-        Object obj=iterator.next();
-        if (obj.getClass().getName().intern().equals(CollectDescr.class.getName().intern())) {
-          return null;
-        }
-      }
+    final List conditionalDescriptors=parentDescr.getDescrs();
+    for (final Iterator iterator=conditionalDescriptors.iterator(); iterator.hasNext(); ) {
+      final Object obj=iterator.next();
+      if (obj instanceof PatternProcessorCeDescr)       return null;
     }
     parentDescr.addDescr(patternDescr);
   }
