@@ -1,0 +1,28 @@
+{
+  URLScanner scan=new URLScanner();
+  File dir=RuleBaseAssemblerTest.getTempDirectory();
+  Package p1=new Package("goo.ber");
+  Package p2=new Package("wee.waa");
+  File f1=URLScanner.getLocalCacheFileForURL(dir,new URL("http://goo.ber"));
+  File f2=URLScanner.getLocalCacheFileForURL(dir,new URL("http://wee.waa"));
+  RuleBaseAssemblerTest.writePackage(p1,f1);
+  RuleBaseAssemblerTest.writePackage(p2,f2);
+  Properties config=new Properties();
+  config.setProperty(RuleAgent.LOCAL_URL_CACHE,dir.getPath());
+  config.setProperty(RuleAgent.URLS,"http://goo.ber http://wee.waa");
+  scan.configure(config);
+  scan.httpClient=new IHttpClient(){
+    public LastUpdatedPing checkLastUpdated(    URL url) throws IOException {
+      throw new IOException();
+    }
+    public Package fetchPackage(    URL url) throws IOException {
+      throw new IOException();
+    }
+  }
+;
+  assertNotNull(scan.localCacheFileScanner);
+  assertNotNull(scan.localCacheDir);
+  RuleBase rb=RuleBaseFactory.newRuleBase();
+  scan.updateRuleBase(rb,true);
+  assertEquals(2,rb.getPackages().length);
+}

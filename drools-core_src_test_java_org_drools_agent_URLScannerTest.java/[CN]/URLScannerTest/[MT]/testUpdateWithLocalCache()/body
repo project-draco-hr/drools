@@ -1,0 +1,72 @@
+{
+  URLScanner scan=new URLScanner();
+  File dir=RuleBaseAssemblerTest.getTempDirectory();
+  Properties config=new Properties();
+  config.setProperty(RuleAgent.LOCAL_URL_CACHE,dir.getPath());
+  config.setProperty(RuleAgent.URLS,"http://goo.ber http://wee.waa");
+  scan.configure(config);
+  scan.httpClient=new IHttpClient(){
+    public LastUpdatedPing checkLastUpdated(    URL url) throws IOException {
+      LastUpdatedPing ping=new LastUpdatedPing();
+      ping.lastUpdated=123;
+      ping.responseMessage="200 OK";
+      return ping;
+    }
+    public Package fetchPackage(    URL url) throws IOException {
+      if (url.toExternalForm().equals("http://goo.ber")) {
+        return new Package("goo.ber");
+      }
+ else {
+        return new Package("wee.waa");
+      }
+    }
+  }
+;
+  assertNotNull(scan.localCacheFileScanner);
+  assertNotNull(scan.localCacheDir);
+  RuleBase rb=RuleBaseFactory.newRuleBase();
+  scan.updateRuleBase(rb,false);
+  assertEquals(2,rb.getPackages().length);
+  assertEquals("goo.ber",rb.getPackages()[0].getName());
+  assertEquals("wee.waa",rb.getPackages()[1].getName());
+  assertEquals(2,dir.list().length);
+  scan.httpClient=new IHttpClient(){
+    public LastUpdatedPing checkLastUpdated(    URL url) throws IOException {
+      LastUpdatedPing ping=new LastUpdatedPing();
+      if (url.toExternalForm().equals("http://wee.waa")) {
+        ping.lastUpdated=-1;
+        ping.responseMessage="XXX";
+      }
+ else {
+        ping.lastUpdated=123;
+        ping.responseMessage="200 OK";
+      }
+      return ping;
+    }
+    public Package fetchPackage(    URL url) throws IOException {
+      throw new IOException("poo");
+    }
+  }
+;
+  rb=RuleBaseFactory.newRuleBase();
+  assertEquals(0,rb.getPackages().length);
+  scan.updateRuleBase(rb,true);
+  assertEquals(2,rb.getPackages().length);
+  scan.httpClient=new IHttpClient(){
+    public LastUpdatedPing checkLastUpdated(    URL url) throws IOException {
+      LastUpdatedPing ping=new LastUpdatedPing();
+      ping.lastUpdated=1234;
+      ping.responseMessage="200 OK";
+      return ping;
+    }
+    public Package fetchPackage(    URL url) throws IOException {
+      throw new IOException("poo");
+    }
+  }
+;
+  scan.updateRuleBase(rb,true);
+  assertEquals(2,rb.getPackages().length);
+  rb=RuleBaseFactory.newRuleBase();
+  scan.updateRuleBase(rb,true);
+  assertEquals(2,rb.getPackages().length);
+}
