@@ -1,0 +1,31 @@
+{
+  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_AccumulateExternalFunction.drl"));
+  final RuleBase ruleBase=loadRuleBase(reader);
+  final WorkingMemory wm=ruleBase.newStatefulSession();
+  final List results=new ArrayList();
+  wm.setGlobal("results",results);
+  final Cheese[] cheese=new Cheese[]{new Cheese("stilton",10),new Cheese("stilton",2),new Cheese("stilton",11),new Cheese("brie",15),new Cheese("brie",17),new Cheese("provolone",8)};
+  final Person bob=new Person("Bob","stilton");
+  final FactHandle[] cheeseHandles=new FactHandle[cheese.length];
+  for (int i=0; i < cheese.length; i++) {
+    cheeseHandles[i]=wm.insert(cheese[i]);
+  }
+  final FactHandle bobHandle=wm.insert(bob);
+  wm.fireAllRules();
+  Assert.assertEquals(0,results.size());
+  final int index=1;
+  cheese[index].setPrice(9);
+  wm.update(cheeseHandles[index],cheese[index]);
+  wm.fireAllRules();
+  Assert.assertEquals(1,results.size());
+  Assert.assertEquals(10,((Number)results.get(results.size() - 1)).intValue());
+  bob.setLikes("brie");
+  wm.update(bobHandle,bob);
+  wm.fireAllRules();
+  Assert.assertEquals(2,results.size());
+  Assert.assertEquals(16,((Number)results.get(results.size() - 1)).intValue());
+  wm.retract(cheeseHandles[3]);
+  wm.retract(cheeseHandles[4]);
+  wm.fireAllRules();
+  Assert.assertEquals(2,results.size());
+}
