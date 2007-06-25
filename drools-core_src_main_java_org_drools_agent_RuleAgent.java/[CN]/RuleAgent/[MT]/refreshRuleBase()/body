@@ -1,6 +1,25 @@
 {
+  List changedPackages=new ArrayList();
   for (Iterator iter=providers.iterator(); iter.hasNext(); ) {
     PackageProvider prov=(PackageProvider)iter.next();
-    updateRuleBase(prov);
+    Package[] changes=checkForChanges(prov);
+    if (changes != null && changes.length > 0) {
+      changedPackages.addAll(Arrays.asList(changes));
+    }
+  }
+  if (changedPackages.size() > 0) {
+    listener.info("Applying changes to the rulebase.");
+    if (this.newInstance) {
+      listener.info("Creating a new rulebase as per settings.");
+      this.ruleBase=RuleBaseFactory.newRuleBase();
+      for (Iterator iter=changedPackages.iterator(); iter.hasNext(); ) {
+        Package element=(Package)iter.next();
+        this.packages.put(element.getName(),element);
+      }
+      PackageProvider.applyChanges(this.ruleBase,false,this.packages.values(),this.listener);
+    }
+ else {
+      PackageProvider.applyChanges(this.ruleBase,true,changedPackages,this.listener);
+    }
   }
 }
