@@ -1,0 +1,191 @@
+{
+  final Map settingsMap=((EclipseJavaCompilerSettings)pSettings).getMap();
+  final Collection problems=new ArrayList();
+  final ICompilationUnit[] compilationUnits=new ICompilationUnit[pSourceFiles.length];
+  for (int i=0; i < compilationUnits.length; i++) {
+    final String sourceFile=pSourceFiles[i];
+    if (pReader.isAvailable(sourceFile)) {
+      compilationUnits[i]=new CompilationUnit(pReader,sourceFile);
+    }
+ else {
+      final CompilationProblem problem=new CompilationProblem(){
+        public int getEndColumn(){
+          return 0;
+        }
+        public int getEndLine(){
+          return 0;
+        }
+        public String getFileName(){
+          return sourceFile;
+        }
+        public String getMessage(){
+          return "Source " + sourceFile + " could not be found";
+        }
+        public int getStartColumn(){
+          return 0;
+        }
+        public int getStartLine(){
+          return 0;
+        }
+        public boolean isError(){
+          return true;
+        }
+        public String toString(){
+          return getMessage();
+        }
+      }
+;
+      if (this.problemHandler != null) {
+        this.problemHandler.handle(problem);
+      }
+      problems.add(problem);
+    }
+  }
+  if (problems.size() > 0) {
+    final CompilationProblem[] result=new CompilationProblem[problems.size()];
+    problems.toArray(result);
+    return new org.drools.commons.jci.compilers.CompilationResult(result);
+  }
+  final IErrorHandlingPolicy policy=DefaultErrorHandlingPolicies.proceedWithAllProblems();
+  final IProblemFactory problemFactory=new DefaultProblemFactory(Locale.getDefault());
+  final INameEnvironment nameEnvironment=new INameEnvironment(){
+    public NameEnvironmentAnswer findType(    final char[][] pCompoundTypeName){
+      final StringBuffer result=new StringBuffer();
+      for (int i=0; i < pCompoundTypeName.length; i++) {
+        if (i != 0) {
+          result.append('.');
+        }
+        result.append(pCompoundTypeName[i]);
+      }
+      return findType(result.toString());
+    }
+    public NameEnvironmentAnswer findType(    final char[] pTypeName,    final char[][] pPackageName){
+      final StringBuffer result=new StringBuffer();
+      for (int i=0; i < pPackageName.length; i++) {
+        result.append(pPackageName[i]);
+        result.append('.');
+      }
+      result.append(pTypeName);
+      return findType(result.toString());
+    }
+    private NameEnvironmentAnswer findType(    final String pClazzName){
+      if (isPackage(pClazzName)) {
+        return null;
+      }
+      final String resourceName=ClassUtils.convertClassToResourcePath(pClazzName);
+      final byte[] clazzBytes=pStore.read(pClazzName);
+      if (clazzBytes != null) {
+        final char[] fileName=pClazzName.toCharArray();
+        try {
+          final ClassFileReader classFileReader=new ClassFileReader(clazzBytes,fileName,true);
+          return new NameEnvironmentAnswer(classFileReader,null);
+        }
+ catch (        final ClassFormatException e) {
+          throw new RuntimeException("ClassFormatException in loading class '" + fileName + "' with JCI.");
+        }
+      }
+      final InputStream is=pClassLoader.getResourceAsStream(resourceName);
+      if (is == null) {
+        return null;
+      }
+      final byte[] buffer=new byte[8192];
+      final ByteArrayOutputStream baos=new ByteArrayOutputStream(buffer.length);
+      int count;
+      try {
+        while ((count=is.read(buffer,0,buffer.length)) > 0) {
+          baos.write(buffer,0,count);
+        }
+        baos.flush();
+        final char[] fileName=pClazzName.toCharArray();
+        final ClassFileReader classFileReader=new ClassFileReader(baos.toByteArray(),fileName,true);
+        return new NameEnvironmentAnswer(classFileReader,null);
+      }
+ catch (      final IOException e) {
+        throw new RuntimeException("could not read class",e);
+      }
+catch (      final ClassFormatException e) {
+        throw new RuntimeException("wrong class format",e);
+      }
+ finally {
+        try {
+          baos.close();
+        }
+ catch (        final IOException oe) {
+          throw new RuntimeException("could not close output stream",oe);
+        }
+        try {
+          is.close();
+        }
+ catch (        final IOException ie) {
+          throw new RuntimeException("could not close input stream",ie);
+        }
+      }
+    }
+    private boolean isPackage(    final String pClazzName){
+      final InputStream is=pClassLoader.getResourceAsStream(ClassUtils.convertClassToResourcePath(pClazzName));
+      if (is != null) {
+        return false;
+      }
+      final String source=pClazzName.replace('.','/') + ".java";
+      if (pReader.isAvailable(source)) {
+        return false;
+      }
+      return true;
+    }
+    public boolean isPackage(    char[][] parentPackageName,    char[] pPackageName){
+      final StringBuffer result=new StringBuffer();
+      if (parentPackageName != null) {
+        for (int i=0; i < parentPackageName.length; i++) {
+          if (i != 0) {
+            result.append('.');
+          }
+          result.append(parentPackageName[i]);
+        }
+      }
+      if (parentPackageName != null && parentPackageName.length > 0) {
+        result.append('.');
+      }
+      result.append(pPackageName);
+      return isPackage(result.toString());
+    }
+    public void cleanup(){
+    }
+  }
+;
+  final ICompilerRequestor compilerRequestor=new ICompilerRequestor(){
+    public void acceptResult(    final CompilationResult pResult){
+      if (pResult.hasProblems()) {
+        final IProblem[] iproblems=pResult.getProblems();
+        for (int i=0; i < iproblems.length; i++) {
+          final IProblem iproblem=iproblems[i];
+          final CompilationProblem problem=new EclipseCompilationProblem(iproblem);
+          if (EclipseJavaCompiler.this.problemHandler != null) {
+            EclipseJavaCompiler.this.problemHandler.handle(problem);
+          }
+          problems.add(problem);
+        }
+      }
+      if (!pResult.hasErrors()) {
+        final ClassFile[] clazzFiles=pResult.getClassFiles();
+        for (int i=0; i < clazzFiles.length; i++) {
+          final ClassFile clazzFile=clazzFiles[i];
+          final char[][] compoundName=clazzFile.getCompoundName();
+          final StringBuffer clazzName=new StringBuffer();
+          for (int j=0; j < compoundName.length; j++) {
+            if (j != 0) {
+              clazzName.append('.');
+            }
+            clazzName.append(compoundName[j]);
+          }
+          pStore.write(clazzName.toString().replace('.','/') + ".class",clazzFile.getBytes());
+        }
+      }
+    }
+  }
+;
+  final Compiler compiler=new Compiler(nameEnvironment,policy,settingsMap,compilerRequestor,problemFactory,false);
+  compiler.compile(compilationUnits);
+  final CompilationProblem[] result=new CompilationProblem[problems.size()];
+  problems.toArray(result);
+  return new org.drools.commons.jci.compilers.CompilationResult(result);
+}
