@@ -1,9 +1,50 @@
 {
-  final Map settingsMap=this.settings;
+  final Map settingsMap=((EclipseJavaCompilerSettings)pSettings).getMap();
+  final Collection problems=new ArrayList();
   final ICompilationUnit[] compilationUnits=new ICompilationUnit[pSourceFiles.length];
   for (int i=0; i < compilationUnits.length; i++) {
     final String sourceFile=pSourceFiles[i];
-    compilationUnits[i]=new CompilationUnit(pReader,sourceFile);
+    if (pReader.isAvailable(sourceFile)) {
+      compilationUnits[i]=new CompilationUnit(pReader,sourceFile);
+    }
+ else {
+      final CompilationProblem problem=new CompilationProblem(){
+        public int getEndColumn(){
+          return 0;
+        }
+        public int getEndLine(){
+          return 0;
+        }
+        public String getFileName(){
+          return sourceFile;
+        }
+        public String getMessage(){
+          return "Source " + sourceFile + " could not be found";
+        }
+        public int getStartColumn(){
+          return 0;
+        }
+        public int getStartLine(){
+          return 0;
+        }
+        public boolean isError(){
+          return true;
+        }
+        public String toString(){
+          return getMessage();
+        }
+      }
+;
+      if (this.problemHandler != null) {
+        this.problemHandler.handle(problem);
+      }
+      problems.add(problem);
+    }
+  }
+  if (problems.size() > 0) {
+    final CompilationProblem[] result=new CompilationProblem[problems.size()];
+    problems.toArray(result);
+    return new org.apache.commons.jci.compilers.CompilationResult(result);
   }
   final IErrorHandlingPolicy policy=DefaultErrorHandlingPolicies.proceedWithAllProblems();
   final IProblemFactory problemFactory=new DefaultProblemFactory(Locale.getDefault());
@@ -40,7 +81,7 @@
           return new NameEnvironmentAnswer(classFileReader,null);
         }
  catch (        final ClassFormatException e) {
-          return null;
+          throw new RuntimeException("ClassFormatException in loading class '" + fileName + "' with JCI.");
         }
       }
       final InputStream is=pClassLoader.getResourceAsStream(resourceName);
@@ -60,25 +101,23 @@
         return new NameEnvironmentAnswer(classFileReader,null);
       }
  catch (      final IOException e) {
-        e.printStackTrace();
-        return null;
+        throw new RuntimeException("could not read class",e);
       }
 catch (      final ClassFormatException e) {
-        e.printStackTrace();
-        return null;
+        throw new RuntimeException("wrong class format",e);
       }
  finally {
         try {
           baos.close();
         }
  catch (        final IOException oe) {
-          oe.printStackTrace();
+          throw new RuntimeException("could not close output stream",oe);
         }
         try {
           is.close();
         }
  catch (        final IOException ie) {
-          ie.printStackTrace();
+          throw new RuntimeException("could not close input stream",ie);
         }
       }
     }
@@ -113,7 +152,6 @@ catch (      final ClassFormatException e) {
     }
   }
 ;
-  final Collection problems=new ArrayList();
   final ICompilerRequestor compilerRequestor=new ICompilerRequestor(){
     public void acceptResult(    final CompilationResult pResult){
       if (pResult.hasProblems()) {

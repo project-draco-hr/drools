@@ -1,10 +1,10 @@
 {
   final String className=Descriptor.toClassName(pType);
-  if (this.types.containsKey(pType)) {
-    return (IClass)this.types.get(pType);
+  if (types.containsKey(pType)) {
+    return (IClass)types.get(pType);
   }
   final String resourceNameFromClass=className.replace('.','/') + ".java";
-  final byte[] content=this.resourceReader.getBytes(resourceNameFromClass);
+  final byte[] content=resourceReader.getBytes(resourceNameFromClass);
   if (content == null) {
     return null;
   }
@@ -17,48 +17,49 @@
     uc.setCompileErrorHandler(new ErrorHandler(){
       public void handleError(      final String pMessage,      final Location pOptionalLocation) throws CompileException {
         final CompilationProblem problem=new JaninoCompilationProblem(pOptionalLocation,pMessage,true);
-        if (JaninoJavaCompiler.this.problemHandler != null) {
-          JaninoJavaCompiler.this.problemHandler.handle(problem);
+        if (problemHandler != null) {
+          problemHandler.handle(problem);
         }
-        CompilingIClassLoader.this.problems.add(problem);
+        problems.add(problem);
       }
     }
 );
     uc.setWarningHandler(new WarningHandler(){
       public void handleWarning(      final String pHandle,      final String pMessage,      final Location pOptionalLocation){
         final CompilationProblem problem=new JaninoCompilationProblem(pOptionalLocation,pMessage,false);
-        if (JaninoJavaCompiler.this.problemHandler != null) {
-          JaninoJavaCompiler.this.problemHandler.handle(problem);
+        if (problemHandler != null) {
+          problemHandler.handle(problem);
         }
-        CompilingIClassLoader.this.problems.add(problem);
+        problems.add(problem);
       }
     }
 );
     final ClassFile[] classFiles=uc.compileUnit(DebuggingInformation.ALL);
     for (int i=0; i < classFiles.length; i++) {
-      this.classes.put(classFiles[i].getThisClassName(),classFiles[i].toByteArray());
+      classes.put(classFiles[i].getThisClassName(),classFiles[i].toByteArray());
     }
     final IClass ic=uc.findClass(className);
     if (null != ic) {
-      this.types.put(pType,ic);
+      types.put(pType,ic);
     }
     return ic;
   }
  catch (  final LocatedException e) {
-    this.problems.add(new JaninoCompilationProblem(e));
+    problems.add(new JaninoCompilationProblem(e));
   }
 catch (  final IOException e) {
-    this.problems.add(new JaninoCompilationProblem(resourceNameFromClass,"IOException:" + e.getMessage(),true));
+    problems.add(new JaninoCompilationProblem(resourceNameFromClass,"IOException:" + e.getMessage(),true));
   }
 catch (  final Exception e) {
-    this.problems.add(new JaninoCompilationProblem(resourceNameFromClass,"Exception:" + e.getMessage(),true));
+    problems.add(new JaninoCompilationProblem(resourceNameFromClass,"Exception:" + e.getMessage(),true));
   }
  finally {
     if (scanner != null) {
       try {
         scanner.close();
       }
- catch (      final IOException e) {
+ catch (      IOException e) {
+        throw new RuntimeException("IOException occured while compiling " + className,e);
       }
     }
   }
