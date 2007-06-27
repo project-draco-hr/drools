@@ -3,6 +3,11 @@
     return null;
   }
   InternalFactHandle handle=null;
+  if (isSequential()) {
+    handle=this.handleFactory.newFactHandle(object);
+    insert(handle,object,rule,activation);
+    return handle;
+  }
   try {
     this.lock.lock();
     handle=(InternalFactHandle)this.assertMap.get(object);
@@ -91,12 +96,7 @@
     if (dynamic) {
       addPropertyChangeListener(object);
     }
-    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.ASSERTION,rule,activation,this.agenda.getActiveActivations(),this.agenda.getDormantActivations());
-    doInsert(handle,object,propagationContext);
-    this.workingMemoryEventSupport.fireObjectInserted(propagationContext,handle,object);
-    if (!this.actionQueue.isEmpty()) {
-      executeQueuedActions();
-    }
+    insert(handle,object,rule,activation);
   }
   finally {
     this.lock.unlock();
