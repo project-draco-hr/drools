@@ -1,11 +1,10 @@
 {
   final AccumulateDescr accumDescr=(AccumulateDescr)descr;
   final PatternBuilder patternBuilder=(PatternBuilder)context.getDialect().getBuilder(PatternDescr.class);
-  final Pattern sourcePattern=patternBuilder.build(context,accumDescr.getSourcePattern());
+  final Pattern sourcePattern=(Pattern)patternBuilder.build(context,accumDescr.getInputPattern());
   if (sourcePattern == null) {
     return null;
   }
-  final Pattern resultPattern=patternBuilder.build(context,accumDescr.getResultPattern());
   Accumulate accumulate=null;
   if (accumDescr.isExternalFunction()) {
     final JavaAnalysisResult analysis=(JavaAnalysisResult)context.getDialect().analyzeBlock(context,accumDescr,accumDescr.getExpression());
@@ -21,7 +20,7 @@
     final Map map=createVariableContext(className,(String)accumDescr.getExpression(),context,previousDeclarations,sourceDeclArr,requiredGlobals);
     AccumulateFunction function=context.getConfiguration().getAccumulateFunction(accumDescr.getFunctionIdentifier());
     JavaAccumulatorFunctionExecutor accumulator=new JavaAccumulatorFunctionExecutor(function);
-    accumulate=new Accumulate(sourcePattern,resultPattern,previousDeclarations,sourceDeclArr,accumulator);
+    accumulate=new Accumulate(sourcePattern,previousDeclarations,sourceDeclArr,accumulator);
     generatTemplates("returnValueMethod","returnValueInvoker",context,className,map,accumulator,accumDescr);
   }
  else {
@@ -69,16 +68,8 @@
       map.put("reverseCode",accumDescr.getReverseCode());
       map.put("supportsReverse","true");
     }
-    String resultType=null;
-    if (resultPattern.getObjectType() instanceof ClassObjectType) {
-      resultType=((ClassObjectType)resultPattern.getObjectType()).getClassType().getName();
-    }
- else {
-      resultType=resultPattern.getObjectType().getValueType().getClassType().getName();
-    }
-    map.put("resultType",resultType);
     map.put("hashCode",new Integer(actionCode.hashCode()));
-    accumulate=new Accumulate(sourcePattern,resultPattern,declarations,sourceDeclArr);
+    accumulate=new Accumulate(sourcePattern,declarations,sourceDeclArr);
     generatTemplates("accumulateInnerClass","accumulateInvoker",context,className,map,accumulate,accumDescr);
   }
   return accumulate;

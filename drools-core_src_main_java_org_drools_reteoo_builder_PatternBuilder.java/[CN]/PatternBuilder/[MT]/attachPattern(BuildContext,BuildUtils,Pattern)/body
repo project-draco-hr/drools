@@ -1,7 +1,17 @@
 {
   pattern.setOffset(context.getCurrentPatternOffset());
   context.incrementCurrentPatternOffset();
-  final List predicates=attachAlphaNodes(context,utils,pattern);
-  final BetaConstraints binder=utils.createBetaNodeConstraint(context,predicates);
-  return binder;
+  final List alphaConstraints=new LinkedList();
+  final List betaConstraints=new LinkedList();
+  this.createConstraints(context,utils,pattern,alphaConstraints,betaConstraints);
+  context.setBetaconstraints(betaConstraints);
+  if (pattern.getSource() == null) {
+    attachAlphaNodes(context,utils,pattern,alphaConstraints);
+  }
+ else {
+    context.setAlphaConstraints(alphaConstraints);
+    PatternSource source=pattern.getSource();
+    ReteooComponentBuilder builder=utils.getBuilderFor(source);
+    builder.build(context,utils,source);
+  }
 }

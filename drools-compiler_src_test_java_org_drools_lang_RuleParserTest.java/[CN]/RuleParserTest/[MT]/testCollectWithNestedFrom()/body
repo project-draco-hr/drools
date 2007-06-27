@@ -1,0 +1,19 @@
+{
+  final DRLParser parser=parseResource("collect_with_nested_from.drl");
+  parser.compilation_unit();
+  if (parser.hasErrors()) {
+    System.err.println(parser.getErrorMessages());
+  }
+  assertFalse(parser.hasErrors());
+  final PackageDescr pack=parser.getPackageDescr();
+  assertEquals(1,pack.getRules().size());
+  final RuleDescr rule=(RuleDescr)pack.getRules().get(0);
+  assertEquals(1,rule.getLhs().getDescrs().size());
+  final PatternDescr out=(PatternDescr)rule.getLhs().getDescrs().get(0);
+  final CollectDescr collect=(CollectDescr)out.getSource();
+  PatternDescr person=(PatternDescr)collect.getInputPattern();
+  assertEquals("Person",person.getObjectType());
+  final CollectDescr collect2=(CollectDescr)person.getSource();
+  final PatternDescr people=collect2.getInputPattern();
+  assertEquals("People",people.getObjectType());
+}

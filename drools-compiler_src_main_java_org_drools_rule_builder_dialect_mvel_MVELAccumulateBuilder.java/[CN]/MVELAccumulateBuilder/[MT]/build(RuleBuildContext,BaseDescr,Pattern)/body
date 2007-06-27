@@ -1,11 +1,10 @@
 {
   final AccumulateDescr accumDescr=(AccumulateDescr)descr;
   final PatternBuilder patternBuilder=(PatternBuilder)context.getDialect().getBuilder(PatternDescr.class);
-  final Pattern sourcePattern=patternBuilder.build(context,accumDescr.getSourcePattern());
+  final Pattern sourcePattern=(Pattern)patternBuilder.build(context,accumDescr.getInputPattern());
   if (sourcePattern == null) {
     return null;
   }
-  final Pattern resultPattern=patternBuilder.build(context,accumDescr.getResultPattern());
   final Declaration[] sourceDeclArr=(Declaration[])sourcePattern.getOuterDeclarations().values().toArray(new Declaration[0]);
   final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),sourcePattern.getOuterDeclarations(),context.getPkg().getGlobals());
   factory.setNextFactory(((MVELDialect)context.getDialect()).getClassImportResolverFactory());
@@ -42,6 +41,6 @@
     final Serializable result=MVEL.compileExpression((String)accumDescr.getResultCode(),((MVELDialect)context.getDialect()).getClassImportResolverFactory().getImportedClasses());
     accumulator=new MVELAccumulator(factory,init,action,reverse,result);
   }
-  final Accumulate accumulate=new Accumulate(sourcePattern,resultPattern,declarations,sourceDeclArr,accumulator);
+  final Accumulate accumulate=new Accumulate(sourcePattern,declarations,sourceDeclArr,accumulator);
   return accumulate;
 }

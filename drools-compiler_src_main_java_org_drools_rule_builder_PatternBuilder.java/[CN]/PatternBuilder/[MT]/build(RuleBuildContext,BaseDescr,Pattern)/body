@@ -1,0 +1,44 @@
+{
+  final PatternDescr patternDescr=(PatternDescr)descr;
+  if (patternDescr.getObjectType() == null || patternDescr.getObjectType().equals("")) {
+    context.getErrors().add(new RuleError(context.getRule(),patternDescr,null,"ObjectType not correctly defined"));
+    return null;
+  }
+  ObjectType objectType=null;
+  final FactTemplate factTemplate=context.getPkg().getFactTemplate(patternDescr.getObjectType());
+  if (factTemplate != null) {
+    objectType=new FactTemplateObjectType(factTemplate);
+  }
+ else {
+    try {
+      final Class userProvidedClass=context.getDialect().getTypeResolver().resolveType(patternDescr.getObjectType());
+      objectType=new ClassObjectType(userProvidedClass);
+    }
+ catch (    final ClassNotFoundException e) {
+      context.getErrors().add(new RuleError(context.getRule(),patternDescr,null,"Unable to resolve ObjectType '" + patternDescr.getObjectType() + "'"));
+      return null;
+    }
+  }
+  Pattern pattern;
+  if (patternDescr.getIdentifier() != null && !patternDescr.getIdentifier().equals("")) {
+    if (context.getDeclarationResolver().isDuplicated(patternDescr.getIdentifier())) {
+      context.getErrors().add(new RuleError(context.getRule(),patternDescr,null,"Duplicate declaration for variable '" + patternDescr.getIdentifier() + "' in the rule '"+ context.getRule().getName()+ "'"));
+    }
+    pattern=new Pattern(context.getNextPatternId(),0,objectType,patternDescr.getIdentifier());
+  }
+ else {
+    pattern=new Pattern(context.getNextPatternId(),0,objectType,null);
+  }
+  context.getBuildStack().push(pattern);
+  for (final Iterator it=patternDescr.getDescrs().iterator(); it.hasNext(); ) {
+    final Object object=it.next();
+    buildConstraint(context,pattern,object,null);
+  }
+  if (patternDescr.getSource() != null) {
+    RuleConditionBuilder builder=context.getDialect().getBuilder(patternDescr.getSource().getClass());
+    PatternSource source=(PatternSource)builder.build(context,patternDescr.getSource());
+    pattern.setSource(source);
+  }
+  context.getBuildStack().pop();
+  return pattern;
+}

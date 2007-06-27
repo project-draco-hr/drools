@@ -1,0 +1,25 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_CollectWithNestedFrom.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final List results=new ArrayList();
+  workingMemory.setGlobal("results",results);
+  final Person bob=new Person("bob","stilton");
+  Cheesery cheesery=new Cheesery();
+  cheesery.addCheese(new Cheese("stilton",10));
+  cheesery.addCheese(new Cheese("brie",20));
+  cheesery.addCheese(new Cheese("muzzarela",8));
+  cheesery.addCheese(new Cheese("stilton",5));
+  cheesery.addCheese(new Cheese("provolone",1));
+  workingMemory.insert(bob);
+  workingMemory.insert(cheesery);
+  workingMemory.fireAllRules();
+  assertEquals(1,results.size());
+  List cheeses=(List)results.get(0);
+  assertEquals(2,cheeses.size());
+  assertEquals(bob.getLikes(),((Cheese)cheeses.get(0)).getType());
+  assertEquals(bob.getLikes(),((Cheese)cheeses.get(1)).getType());
+}
