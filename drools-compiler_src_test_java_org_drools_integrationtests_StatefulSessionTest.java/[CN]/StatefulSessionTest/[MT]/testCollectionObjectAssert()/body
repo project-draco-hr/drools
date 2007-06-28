@@ -1,0 +1,18 @@
+{
+  StatefulSession session=getSession();
+  final Cheese stilton=new Cheese("stilton",5);
+  List collection=new ArrayList();
+  collection.add(stilton);
+  Future futureAssert=session.asyncInsert(collection);
+  Future futureFireAllRules=session.asyncFireAllRules();
+  int i=0;
+  while (!futureFireAllRules.isDone()) {
+    Thread.sleep(100);
+    if (i++ > 5) {
+      fail("Future should have finished by now");
+    }
+  }
+  assertTrue(futureAssert.getObject() instanceof List);
+  assertTrue(((List)futureAssert.getObject()).get(0) instanceof FactHandle);
+  assertEquals("stilton",list.get(0));
+}

@@ -1,0 +1,16 @@
+{
+  StatefulSession session=getExceptionSession();
+  final Cheese brie=new Cheese("brie",12);
+  Future futureAssert=session.asyncInsert(new Object[]{brie});
+  Future futureFireAllRules=session.asyncFireAllRules();
+  int i=0;
+  while (!futureFireAllRules.isDone()) {
+    Thread.sleep(100);
+    if (i++ > 5) {
+      fail("Future should have finished by now");
+    }
+  }
+  assertTrue(futureAssert.getObject() instanceof List);
+  assertTrue(((List)futureAssert.getObject()).get(0) instanceof FactHandle);
+  assertTrue(futureFireAllRules.getException() instanceof Exception);
+}
