@@ -1,11 +1,17 @@
 {
   this.workingMemory=workingMemory;
-  this.knowledgeHelper=new DefaultKnowledgeHelper(this.workingMemory);
+  if (((InternalRuleBase)this.workingMemory.getRuleBase()).getConfiguration().isSequential()) {
+    this.knowledgeHelper=new SequentialKnowledgeHelper(this.workingMemory);
+  }
+ else {
+    this.knowledgeHelper=new DefaultKnowledgeHelper(this.workingMemory);
+  }
   this.agendaGroups=new HashMap();
   this.activationGroups=new HashMap();
   this.ruleFlowGroups=new HashMap();
   this.focusStack=new LinkedList();
-  this.main=new AgendaGroupImpl(AgendaGroup.MAIN,((InternalRuleBase)this.workingMemory.getRuleBase()).getConfiguration().getConflictResolver());
+  AgendaGroupFactory factory=((InternalRuleBase)this.workingMemory.getRuleBase()).getConfiguration().getAgendaGroupFactory();
+  this.main=factory.createAgendaGroup(AgendaGroup.MAIN,((InternalRuleBase)this.workingMemory.getRuleBase()));
   this.agendaGroups.put(AgendaGroup.MAIN,this.main);
   this.focusStack.add(this.main);
 }

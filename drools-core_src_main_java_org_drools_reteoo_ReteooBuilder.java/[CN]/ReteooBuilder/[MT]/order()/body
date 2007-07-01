@@ -1,0 +1,33 @@
+{
+  Map map=new HashMap();
+  for (Iterator it=this.rules.values().iterator(); it.hasNext(); ) {
+    BaseNode[] nodes=(BaseNode[])it.next();
+    for (int i=0; i < nodes.length; i++) {
+      if (nodes[i] instanceof RuleTerminalNode) {
+        RuleTerminalNode node=(RuleTerminalNode)nodes[i];
+        String agendaGroup=node.getRule().getAgendaGroup();
+        if (agendaGroup == null || agendaGroup.equals("")) {
+          agendaGroup="MAIN";
+        }
+        List rules=(List)map.get(agendaGroup);
+        if (rules == null) {
+          rules=new ArrayList();
+          map.put(agendaGroup,rules);
+        }
+        rules.add(node);
+      }
+    }
+  }
+  for (Iterator it=map.entrySet().iterator(); it.hasNext(); ) {
+    Entry entry=(Entry)it.next();
+    String agendaGroup=(String)entry.getKey();
+    List rules=(List)entry.getValue();
+    Collections.sort(rules,RuleSequenceComparator.INSTANCE);
+    int i=0;
+    for (Iterator listIter=rules.iterator(); listIter.hasNext(); ) {
+      RuleTerminalNode node=(RuleTerminalNode)listIter.next();
+      node.setSequence(i++);
+    }
+    ruleBase.getAgendaGroupRuleTotals().put(agendaGroup,new Integer(i));
+  }
+}

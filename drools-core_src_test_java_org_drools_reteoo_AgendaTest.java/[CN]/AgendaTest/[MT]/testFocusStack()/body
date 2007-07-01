@@ -1,16 +1,7 @@
 {
-  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  final InternalRuleBase ruleBase=(InternalRuleBase)RuleBaseFactory.newRuleBase();
   final ReteooWorkingMemory workingMemory=(ReteooWorkingMemory)ruleBase.newStatefulSession();
-  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
-  final AgendaGroupImpl agendaGroup1=new AgendaGroupImpl("agendaGroup1",DepthConflictResolver.getInstance());
-  agenda.addAgendaGroup(agendaGroup1);
-  final AgendaGroupImpl agendaGroup2=new AgendaGroupImpl("agendaGroup2",DepthConflictResolver.getInstance());
-  agenda.addAgendaGroup(agendaGroup2);
-  final AgendaGroupImpl agendaGroup3=new AgendaGroupImpl("agendaGroup3",DepthConflictResolver.getInstance());
-  agenda.addAgendaGroup(agendaGroup3);
   final Consequence consequence=new Consequence(){
-    /** 
- */
     private static final long serialVersionUID=-5828597682602481200L;
     public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory){
     }
@@ -33,9 +24,16 @@
   final RuleTerminalNode node3=new RuleTerminalNode(9,new MockTupleSource(8),rule3,rule3.getLhs());
   rule3.setConsequence(consequence);
   final PropagationContext context3=new PropagationContextImpl(0,PropagationContext.ASSERTION,rule3,null);
+  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
+  final AgendaGroup agendaGroup1=new BinaryHeapQueueAgendaGroup("agendaGroup1",ruleBase);
+  agenda.addAgendaGroup(agendaGroup1);
+  final AgendaGroup agendaGroup2=new BinaryHeapQueueAgendaGroup("agendaGroup2",ruleBase);
+  agenda.addAgendaGroup(agendaGroup2);
+  final AgendaGroup agendaGroup3=new BinaryHeapQueueAgendaGroup("agendaGroup3",ruleBase);
+  agenda.addAgendaGroup(agendaGroup3);
   assertEquals(0,agenda.focusStackSize());
   node0.assertTuple(tuple,context0,workingMemory);
-  final AgendaGroupImpl main=(AgendaGroupImpl)agenda.getAgendaGroup(AgendaGroup.MAIN);
+  final AgendaGroup main=agenda.getAgendaGroup(AgendaGroup.MAIN);
   assertEquals(agenda.getFocus(),main);
   assertEquals(1,agenda.getFocus().size());
   node2.assertTuple(tuple,context2,workingMemory);

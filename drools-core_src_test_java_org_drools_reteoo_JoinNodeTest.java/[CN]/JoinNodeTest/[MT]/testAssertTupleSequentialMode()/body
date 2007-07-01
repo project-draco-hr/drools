@@ -1,0 +1,17 @@
+{
+  RuleBaseConfiguration conf=new RuleBaseConfiguration();
+  conf.setSequential(true);
+  this.workingMemory=new ReteooWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase(conf));
+  this.node=new JoinNode(15,this.tupleSource,this.objectSource,new DefaultBetaConstraints(new BetaNodeFieldConstraint[]{this.constraint},conf));
+  this.node.addTupleSink(this.sink);
+  this.memory=(BetaMemory)this.workingMemory.getNodeMemory(this.node);
+  this.workingMemory=new ReteooWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase(conf));
+  final DefaultFactHandle f0=new DefaultFactHandle(0,"cheese");
+  final ReteTuple tuple0=new ReteTuple(f0);
+  this.node.assertObject(f0,this.context,this.workingMemory);
+  this.node.assertTuple(tuple0,this.context,this.workingMemory);
+  assertEquals(1,this.sink.getAsserted().size());
+  assertNull(this.memory.getTupleMemory());
+  assertEquals(0,this.memory.getFactHandleMemory().size());
+  assertEquals(new ReteTuple(tuple0,f0),((Object[])this.sink.getAsserted().get(0))[0]);
+}
