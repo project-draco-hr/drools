@@ -1,0 +1,43 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("sequentialProfile.drl")));
+  final Package pkg=builder.getPackage();
+  Properties properties=new Properties();
+  properties.setProperty("drools.shadowProxyExcludes","org.drools.*");
+  RuleBaseConfiguration conf=new RuleBaseConfiguration(properties);
+  conf.setSequential(sequentialMode);
+  final RuleBase ruleBase=getRuleBase(conf);
+  ruleBase.addPackage(pkg);
+  final StatelessSession session=ruleBase.newStatelessSession();
+  final List list=new ArrayList();
+  session.setGlobal("list",list);
+  Object[] data=new Object[50000];
+  for (int i=0; i < data.length; i++) {
+    if (i % 2 == 0) {
+      final Person p=new Person("p" + i,"stilton");
+      data[i]=p;
+    }
+ else {
+      data[i]=new Cheese("cheddar",i);
+    }
+  }
+  if (timetoMeasureIterations == 0) {
+    long start=System.currentTimeMillis();
+    session.execute(data);
+    System.out.println("Time for " + message + ":"+ (System.currentTimeMillis() - start));
+    assertTrue(list.size() > 0);
+  }
+ else {
+    long start=System.currentTimeMillis();
+    long end=start + timetoMeasureIterations;
+    int count=0;
+    while (System.currentTimeMillis() < end) {
+      StatelessSession sess2=ruleBase.newStatelessSession();
+      List list2=new ArrayList();
+      sess2.setGlobal("list",list2);
+      sess2.execute(data);
+      count++;
+    }
+    System.out.println("Iterations in for " + message + " : "+ count);
+  }
+}
