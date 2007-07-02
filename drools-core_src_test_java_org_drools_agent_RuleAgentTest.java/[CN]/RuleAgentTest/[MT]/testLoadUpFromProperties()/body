@@ -1,0 +1,21 @@
+{
+  AnotherRuleAgentMock ag=new AnotherRuleAgentMock();
+  Map oldMap=ag.PACKAGE_PROVIDERS;
+  ag.PACKAGE_PROVIDERS=new HashMap();
+  ag.PACKAGE_PROVIDERS.put(RuleAgent.URLS,MockProvider.class);
+  ag.PACKAGE_PROVIDERS.put(RuleAgent.FILES,MockProvider.class);
+  ag.PACKAGE_PROVIDERS.put(RuleAgent.DIRECTORY,MockProvider.class);
+  Properties props=new Properties();
+  props.load(this.getClass().getResourceAsStream("/rule-agent-config.properties"));
+  MockEventListener evl=new MockEventListener();
+  ag.listener=evl;
+  ag.init(props);
+  assertTrue(ag.newInstance);
+  assertEquals(3,ag.provs.size());
+  assertEquals(30,ag.secondsToRefresh);
+  assertEquals("MyConfig",evl.name);
+  assertFalse(evl.exceptionCalled);
+  assertFalse(evl.warningCalled);
+  assertTrue(evl.infoCalled);
+  ag.PACKAGE_PROVIDERS=oldMap;
+}
