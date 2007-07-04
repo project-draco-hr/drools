@@ -1,18 +1,20 @@
 {
-  final Package pkg=(Package)this.pkgs.get(packageName);
-  final Rule rule=pkg.getRule(ruleName);
-  int lastAquiredLock=0;
-  final InternalWorkingMemory[] wms=getWorkingMemories();
-  try {
-    for (lastAquiredLock=0; lastAquiredLock < wms.length; lastAquiredLock++) {
-      wms[lastAquiredLock].getLock().lock();
+synchronized (this.pkgs) {
+    final Package pkg=(Package)this.pkgs.get(packageName);
+    final Rule rule=pkg.getRule(ruleName);
+    int lastAquiredLock=0;
+    final InternalWorkingMemory[] wms=getWorkingMemories();
+    try {
+      for (lastAquiredLock=0; lastAquiredLock < wms.length; lastAquiredLock++) {
+        wms[lastAquiredLock].getLock().lock();
+      }
+      removeRule(rule);
+      pkg.removeRule(rule);
     }
-    removeRule(rule);
-    pkg.removeRule(rule);
-  }
   finally {
-    for (lastAquiredLock--; lastAquiredLock > -1; lastAquiredLock--) {
-      wms[lastAquiredLock].getLock().unlock();
+      for (lastAquiredLock--; lastAquiredLock > -1; lastAquiredLock--) {
+        wms[lastAquiredLock].getLock().unlock();
+      }
     }
   }
 }
