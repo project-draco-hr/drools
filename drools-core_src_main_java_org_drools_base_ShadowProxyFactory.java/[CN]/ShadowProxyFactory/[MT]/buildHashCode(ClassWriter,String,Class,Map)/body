@@ -1,152 +1,28 @@
 {
   MethodVisitor mv;
-  boolean hasDoubleAttr=false;
 {
     mv=cw.visitMethod(Opcodes.ACC_PUBLIC,"hashCode",Type.getMethodDescriptor(Type.INT_TYPE,new Type[]{}),null,null);
     mv.visitCode();
-    final Label ls=new Label();
-    mv.visitLabel(ls);
-    mv.visitVarInsn(Opcodes.ALOAD,0);
-    mv.visitFieldInsn(Opcodes.GETFIELD,className,ShadowProxyFactory.HASHCACHE_FIELD_NAME,Type.getDescriptor(int.class));
-    final Label afterIfCachedLabel=new Label();
-    mv.visitJumpInsn(Opcodes.IFEQ,afterIfCachedLabel);
-    mv.visitVarInsn(Opcodes.ALOAD,0);
-    mv.visitFieldInsn(Opcodes.GETFIELD,className,ShadowProxyFactory.HASHCACHE_FIELD_NAME,Type.getDescriptor(int.class));
-    mv.visitInsn(Opcodes.IRETURN);
-    mv.visitLabel(afterIfCachedLabel);
-    final Label l0=new Label();
+    Label l0=new Label();
     mv.visitLabel(l0);
-    mv.visitIntInsn(Opcodes.BIPUSH,31);
-    mv.visitVarInsn(Opcodes.ISTORE,1);
-    final Label l1=new Label();
-    mv.visitLabel(l1);
-    mv.visitInsn(Opcodes.ICONST_1);
-    mv.visitVarInsn(Opcodes.ISTORE,2);
-    int count=0;
-    for (final Iterator it=fieldTypes.entrySet().iterator(); it.hasNext(); ) {
-      final Map.Entry entry=(Map.Entry)it.next();
-      final String fieldName=(String)entry.getKey();
-      final Method method=(Method)entry.getValue();
-      final Class fieldType=method.getReturnType();
-      final String fieldFlag=fieldName + ShadowProxyFactory.FIELD_SET_FLAG;
-      count++;
-      final Label goNext=new Label();
-      final Label l5=new Label();
-      mv.visitLabel(l5);
-      mv.visitVarInsn(Opcodes.ALOAD,0);
-      mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldFlag,Type.BOOLEAN_TYPE.getDescriptor());
-      final Label l6=new Label();
-      mv.visitJumpInsn(Opcodes.IFNE,l6);
-      final Label l7=new Label();
-      mv.visitLabel(l7);
-      mv.visitVarInsn(Opcodes.ALOAD,0);
-      mv.visitVarInsn(Opcodes.ALOAD,0);
-      mv.visitFieldInsn(Opcodes.GETFIELD,className,ShadowProxyFactory.DELEGATE_FIELD_NAME,Type.getDescriptor(clazz));
-      if (clazz.isInterface()) {
-        mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,Type.getInternalName(clazz),method.getName(),Type.getMethodDescriptor(method));
-      }
- else {
-        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(clazz),method.getName(),Type.getMethodDescriptor(method));
-      }
-      mv.visitFieldInsn(Opcodes.PUTFIELD,className,fieldName,Type.getDescriptor(fieldType));
-      final Label l8=new Label();
-      mv.visitLabel(l8);
-      mv.visitVarInsn(Opcodes.ALOAD,0);
-      mv.visitInsn(Opcodes.ICONST_1);
-      mv.visitFieldInsn(Opcodes.PUTFIELD,className,fieldFlag,Type.BOOLEAN_TYPE.getDescriptor());
-      mv.visitLabel(l6);
-      if (fieldType.isPrimitive()) {
-        final Label l2=new Label();
-        if (fieldType == Double.TYPE) {
-          hasDoubleAttr=true;
-          mv.visitVarInsn(Opcodes.ALOAD,0);
-          mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
-          mv.visitMethodInsn(Opcodes.INVOKESTATIC,Type.getInternalName(Double.class),"doubleToLongBits","(D)J");
-          mv.visitVarInsn(Opcodes.LSTORE,3);
-        }
-        mv.visitLabel(l2);
-        mv.visitIntInsn(Opcodes.BIPUSH,31);
-        mv.visitVarInsn(Opcodes.ILOAD,2);
-        mv.visitInsn(Opcodes.IMUL);
-        if (fieldType != Double.TYPE) {
-          mv.visitVarInsn(Opcodes.ALOAD,0);
-          mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
-        }
-        if (fieldType == Boolean.TYPE) {
-          final Label z1=new Label();
-          mv.visitJumpInsn(Opcodes.IFEQ,z1);
-          mv.visitIntInsn(Opcodes.SIPUSH,1231);
-          final Label z2=new Label();
-          mv.visitJumpInsn(Opcodes.GOTO,z2);
-          mv.visitLabel(z1);
-          mv.visitIntInsn(Opcodes.SIPUSH,1237);
-          mv.visitLabel(z2);
-        }
- else         if (fieldType == Double.TYPE) {
-          final Label d1=new Label();
-          mv.visitLabel(d1);
-          mv.visitVarInsn(Opcodes.LLOAD,3);
-          mv.visitVarInsn(Opcodes.LLOAD,3);
-          mv.visitIntInsn(Opcodes.BIPUSH,32);
-          mv.visitInsn(Opcodes.LUSHR);
-          mv.visitInsn(Opcodes.LXOR);
-          mv.visitInsn(Opcodes.L2I);
-        }
- else         if (fieldType == Float.TYPE) {
-          mv.visitMethodInsn(Opcodes.INVOKESTATIC,Type.getInternalName(Float.class),"floatToIntBits","(F)I");
-        }
- else         if (fieldType == Long.TYPE) {
-          mv.visitVarInsn(Opcodes.ALOAD,0);
-          mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
-          mv.visitIntInsn(Opcodes.BIPUSH,32);
-          mv.visitInsn(Opcodes.LUSHR);
-          mv.visitInsn(Opcodes.LXOR);
-          mv.visitInsn(Opcodes.L2I);
-        }
-        mv.visitInsn(Opcodes.IADD);
-        mv.visitVarInsn(Opcodes.ISTORE,2);
-      }
- else {
-        final Label l2=new Label();
-        mv.visitLabel(l2);
-        mv.visitIntInsn(Opcodes.BIPUSH,31);
-        mv.visitVarInsn(Opcodes.ILOAD,2);
-        mv.visitInsn(Opcodes.IMUL);
-        mv.visitVarInsn(Opcodes.ALOAD,0);
-        mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
-        final Label np1=new Label();
-        mv.visitJumpInsn(Opcodes.IFNONNULL,np1);
-        mv.visitInsn(Opcodes.ICONST_0);
-        final Label np2=new Label();
-        mv.visitJumpInsn(Opcodes.GOTO,np2);
-        mv.visitLabel(np1);
-        mv.visitVarInsn(Opcodes.ALOAD,0);
-        mv.visitFieldInsn(Opcodes.GETFIELD,className,fieldName,Type.getDescriptor(fieldType));
-        if (fieldType.isInterface()) {
-          mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,Type.getInternalName(fieldType),"hashCode","()I");
-        }
- else {
-          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(fieldType),"hashCode","()I");
-        }
-        mv.visitLabel(np2);
-        mv.visitInsn(Opcodes.IADD);
-        mv.visitVarInsn(Opcodes.ISTORE,2);
-      }
-      mv.visitLabel(goNext);
-    }
     mv.visitVarInsn(Opcodes.ALOAD,0);
-    mv.visitVarInsn(Opcodes.ILOAD,2);
-    mv.visitFieldInsn(Opcodes.PUTFIELD,className,ShadowProxyFactory.HASHCACHE_FIELD_NAME,Type.getDescriptor(int.class));
-    mv.visitVarInsn(Opcodes.ILOAD,2);
+    mv.visitFieldInsn(Opcodes.GETFIELD,className,HASHCACHE_FIELD_NAME,Type.INT_TYPE.getDescriptor());
+    Label l1=new Label();
+    mv.visitJumpInsn(Opcodes.IFNE,l1);
+    Label l2=new Label();
+    mv.visitLabel(l2);
+    mv.visitVarInsn(Opcodes.ALOAD,0);
+    mv.visitVarInsn(Opcodes.ALOAD,0);
+    mv.visitFieldInsn(Opcodes.GETFIELD,className,DELEGATE_FIELD_NAME,Type.getDescriptor(clazz));
+    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(clazz),"hashCode",Type.getMethodDescriptor(Type.INT_TYPE,new Type[0]));
+    mv.visitFieldInsn(Opcodes.PUTFIELD,className,HASHCACHE_FIELD_NAME,Type.INT_TYPE.getDescriptor());
+    mv.visitLabel(l1);
+    mv.visitVarInsn(Opcodes.ALOAD,0);
+    mv.visitFieldInsn(Opcodes.GETFIELD,className,HASHCACHE_FIELD_NAME,Type.INT_TYPE.getDescriptor());
     mv.visitInsn(Opcodes.IRETURN);
-    final Label lastLabel=new Label();
-    mv.visitLabel(lastLabel);
-    mv.visitLocalVariable("this","L" + className + ";",null,l0,lastLabel,0);
-    mv.visitLocalVariable("PRIME",Type.INT_TYPE.getDescriptor(),null,l0,lastLabel,1);
-    mv.visitLocalVariable("result",Type.INT_TYPE.getDescriptor(),null,l1,lastLabel,2);
-    if (hasDoubleAttr) {
-      mv.visitLocalVariable("temp",Type.LONG_TYPE.getDescriptor(),null,l1,lastLabel,3);
-    }
+    Label l3=new Label();
+    mv.visitLabel(l3);
+    mv.visitLocalVariable("this","L" + className + ";",null,l0,l3,0);
     mv.visitMaxs(0,0);
     mv.visitEnd();
   }

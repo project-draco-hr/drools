@@ -1,0 +1,28 @@
+{
+  try {
+    List originalList=new ArrayList();
+    originalList.add("a");
+    originalList.add("b");
+    originalList.add("c");
+    originalList.add("d");
+    final Class proxy=ShadowProxyFactory.getProxy(originalList.getClass());
+    final List listProxy=(List)proxy.getConstructor(new Class[]{originalList.getClass()}).newInstance(new Object[]{originalList});
+    ((ShadowProxy)listProxy).setShadowedObject(originalList);
+    Assert.assertEquals("a",listProxy.get(0));
+    Assert.assertTrue(listProxy.contains("c"));
+    Assert.assertSame(originalList,((ShadowProxy)listProxy).getShadowedObject());
+    Assert.assertEquals(listProxy,originalList);
+    originalList.remove("c");
+    originalList.add("e");
+    Assert.assertTrue(listProxy.contains("c"));
+    Assert.assertFalse(listProxy.contains("e"));
+    ((ShadowProxy)listProxy).updateProxy();
+    Assert.assertFalse(listProxy.contains("c"));
+    Assert.assertTrue(listProxy.contains("e"));
+    Assert.assertEquals(listProxy,originalList);
+  }
+ catch (  final Exception e) {
+    e.printStackTrace();
+    fail("Error: " + e.getMessage());
+  }
+}

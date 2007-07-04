@@ -2,28 +2,15 @@
   final ClassWriter cw=new ClassWriter(true);
   buildClassHeader(clazz,className,cw);
   buildField(ShadowProxyFactory.DELEGATE_FIELD_NAME,Type.getDescriptor(clazz),cw);
-  final Method getShadowed=ShadowProxy.class.getDeclaredMethod("getShadowedObject",new Class[]{});
+  final Method getShadowed=ShadowProxy.class.getDeclaredMethod(GET_SHADOWED_OBJECT,new Class[]{});
+  final Method setShadowed=ShadowProxy.class.getDeclaredMethod(SET_SHADOWED_OBJECT,new Class[]{Object.class});
   buildSimpleGetMethod(ShadowProxyFactory.DELEGATE_FIELD_NAME,clazz,getShadowed,className,clazz,cw);
-  final Map fieldTypes=new HashMap();
-  final Method[] methods=getMethods(clazz);
-  for (int i=0; i < methods.length; i++) {
-    if ((!Modifier.isFinal(methods[i].getModifiers())) && Modifier.isPublic(methods[i].getModifiers()) && (!Modifier.isStatic(methods[i].getModifiers()))) {
-      if ((!methods[i].getReturnType().equals(Void.TYPE)) && (methods[i].getParameterTypes().length == 0) && (!methods[i].getName().equals("hashCode"))&& (!methods[i].getName().equals("toString"))) {
-        final String fieldName=methods[i].getName();
-        buildField(fieldName,Type.getDescriptor(methods[i].getReturnType()),cw);
-        fieldTypes.put(fieldName,methods[i]);
-        buildField(fieldName + ShadowProxyFactory.FIELD_SET_FLAG,Type.BOOLEAN_TYPE.getDescriptor(),cw);
-        buildGetMethod(fieldName,methods[i].getReturnType(),fieldName + ShadowProxyFactory.FIELD_SET_FLAG,methods[i],className,clazz,cw);
-      }
- else       if ((!methods[i].getName().equals("hashCode")) && (!methods[i].getName().equals("equals"))) {
-        buildDelegateMethod(methods[i],clazz,className,cw);
-      }
-    }
+  buildSetShadowedObject(clazz,className,setShadowed,cw);
+  if (Collection.class.isAssignableFrom(clazz)) {
+    buildCollectionClass(clazz,className,cw);
   }
-  buildConstructor(clazz,className,cw);
-  buildUpdateProxyMethod(fieldTypes,className,cw);
-  buildEquals(cw,className,clazz,fieldTypes);
-  buildField(ShadowProxyFactory.HASHCACHE_FIELD_NAME,Type.getDescriptor(int.class),cw);
-  buildHashCode(cw,className,clazz,fieldTypes);
+ else {
+    buildRegularClass(clazz,className,cw);
+  }
   return cw.toByteArray();
 }
