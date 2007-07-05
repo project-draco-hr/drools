@@ -1,3 +1,17 @@
 {
-  return createRuleExecutionSet(new InputStreamReader(ruleExecutionSetStream),properties);
+  if (properties != null) {
+    String source=(String)properties.get(Constants.RES_SOURCE);
+    if (source == null) {
+      source=(String)properties.get("source");
+    }
+    if (source != null && source.equals(Constants.RES_SOURCE_TYPE_DECISION_TABLE)) {
+      final SpreadsheetCompiler converter=new SpreadsheetCompiler();
+      final String drl=converter.compile(ruleExecutionSetStream,InputType.XLS);
+      return createRuleExecutionSet(new StringReader(drl),properties);
+    }
+ else {
+      return createRuleExecutionSet(new InputStreamReader(ruleExecutionSetStream),properties);
+    }
+  }
+ else   return createRuleExecutionSet(new InputStreamReader(ruleExecutionSetStream),properties);
 }

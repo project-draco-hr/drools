@@ -1,0 +1,19 @@
+{
+  Map properties=new HashMap();
+  properties.put(Constants.RES_SOURCE,Constants.RES_SOURCE_TYPE_DECISION_TABLE);
+  RuleServiceProviderManager.registerRuleServiceProvider(ExampleRuleEngineFacade.RULE_SERVICE_PROVIDER,RuleServiceProviderImpl.class);
+  RuleServiceProvider ruleServiceProvider=RuleServiceProviderManager.getRuleServiceProvider(ExampleRuleEngineFacade.RULE_SERVICE_PROVIDER);
+  RuleAdministrator ruleAdministrator=ruleServiceProvider.getRuleAdministrator();
+  LocalRuleExecutionSetProvider ruleSetProvider=ruleAdministrator.getLocalRuleExecutionSetProvider(null);
+  RuleExecutionSet ruleExecutionSet=ruleSetProvider.createRuleExecutionSet(SpreadsheetIntegrationTest.class.getResourceAsStream("IntegrationExampleTest.xls"),properties);
+  ruleAdministrator.registerRuleExecutionSet("IntegrationExampleTest.xls",ruleExecutionSet,properties);
+  properties.clear();
+  final List list=new ArrayList();
+  properties.put("list",list);
+  RuleRuntime ruleRuntime=ruleServiceProvider.getRuleRuntime();
+  StatefulRuleSession session=(StatefulRuleSession)ruleRuntime.createRuleSession("IntegrationExampleTest.xls",properties,RuleRuntime.STATEFUL_SESSION_TYPE);
+  session.addObject(new Cheese("stilton",42));
+  session.addObject(new Person("michael","stilton",42));
+  session.executeRules();
+  assertEquals(1,list.size());
+}

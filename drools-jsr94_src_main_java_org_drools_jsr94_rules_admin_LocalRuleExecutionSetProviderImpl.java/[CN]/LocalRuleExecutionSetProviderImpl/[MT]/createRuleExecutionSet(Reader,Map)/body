@@ -1,17 +1,33 @@
 {
   try {
-    final PackageBuilder builder=new PackageBuilder();
-    Object dsl=null;
+    PackageBuilderConfiguration config=null;
+    if (properties != null) {
+      config=(PackageBuilderConfiguration)properties.get(Constants.RES_PACKAGEBUILDER_CONFIG);
+    }
+    PackageBuilder builder=null;
+    if (config != null) {
+      builder=new PackageBuilder(config);
+    }
+ else {
+      builder=new PackageBuilder();
+    }
+    Object dsrl=null;
     String source=null;
     if (properties != null) {
-      dsl=properties.get("dsl");
-      source=(String)properties.get("source");
+      dsrl=properties.get(Constants.RES_DSRL);
+      if (dsrl == null) {
+        dsrl=properties.get("dsl");
+      }
+      source=(String)properties.get(Constants.RES_SOURCE);
+      if (source == null) {
+        source=(String)properties.get("source");
+      }
     }
     if (source == null) {
       source="drl";
     }
-    if (dsl == null) {
-      if (source.equals("xml")) {
+    if (dsrl == null) {
+      if (source.equals(Constants.RES_SOURCE_TYPE_XML) || source.equals("xml")) {
         builder.addPackageFromXml(ruleExecutionSetReader);
       }
  else {
@@ -19,15 +35,15 @@
       }
     }
  else {
-      if (source.equals("xml")) {
+      if (source.equals(Constants.RES_SOURCE_TYPE_XML) || source.equals("xml")) {
         builder.addPackageFromXml(ruleExecutionSetReader);
       }
  else {
-        if (dsl instanceof Reader) {
-          builder.addPackageFromDrl(ruleExecutionSetReader,(Reader)dsl);
+        if (dsrl instanceof Reader) {
+          builder.addPackageFromDrl(ruleExecutionSetReader,(Reader)dsrl);
         }
  else {
-          builder.addPackageFromDrl(ruleExecutionSetReader,new StringReader((String)dsl));
+          builder.addPackageFromDrl(ruleExecutionSetReader,new StringReader((String)dsrl));
         }
       }
     }
