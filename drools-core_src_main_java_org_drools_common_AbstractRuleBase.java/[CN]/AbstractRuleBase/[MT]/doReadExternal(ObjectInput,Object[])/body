@@ -1,14 +1,20 @@
 {
-  DroolsObjectInputStream parentStream=(DroolsObjectInputStream)stream;
-  parentStream.setRuleBase(this);
-  this.pkgs=(Map)parentStream.readObject();
-  this.packageClassLoader=new CompositePackageClassLoader(parentStream.getClassLoader());
+  this.pkgs=(Map)stream.readObject();
+  if (stream instanceof DroolsObjectInputStream) {
+    DroolsObjectInputStream parentStream=(DroolsObjectInputStream)stream;
+    parentStream.setRuleBase(this);
+    this.packageClassLoader=new CompositePackageClassLoader(parentStream.getClassLoader());
+    this.classLoader=new MapBackedClassLoader(parentStream.getClassLoader());
+  }
+ else {
+    this.packageClassLoader=new CompositePackageClassLoader(Thread.currentThread().getContextClassLoader());
+    this.classLoader=new MapBackedClassLoader(Thread.currentThread().getContextClassLoader());
+  }
+  this.packageClassLoader.addClassLoader(this.classLoader);
   for (final Iterator it=this.pkgs.values().iterator(); it.hasNext(); ) {
     this.packageClassLoader.addClassLoader(((Package)it.next()).getPackageCompilationData().getClassLoader());
   }
-  this.classLoader=new MapBackedClassLoader(parentStream.getClassLoader());
-  this.packageClassLoader.addClassLoader(this.classLoader);
-  final byte[] bytes=(byte[])parentStream.readObject();
+  final byte[] bytes=(byte[])stream.readObject();
   final DroolsObjectInputStream childStream=new DroolsObjectInputStream(new ByteArrayInputStream(bytes),this.packageClassLoader);
   childStream.setRuleBase(this);
   this.id=(String)childStream.readObject();
