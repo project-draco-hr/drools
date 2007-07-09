@@ -1,11 +1,14 @@
 {
   context.getBuildStack().push(context.getRule().getLhs());
   try {
+    MVELDialect dialect=(MVELDialect)context.getDialect();
     final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),null,context.getPkg().getGlobals());
-    factory.setNextFactory(((MVELDialect)context.getDialect()).getClassImportResolverFactory());
+    factory.setNextFactory(dialect.getClassImportResolverFactory());
     MacroProcessor macroProcessor=new MacroProcessor();
     macroProcessor.setMacros(macros);
-    final Serializable expr=MVEL.compileExpression(macroProcessor.parse(delimitExpressions((String)context.getRuleDescr().getConsequence())),((MVELDialect)context.getDialect()).getClassImportResolverFactory().getImportedClasses(),this.interceptors);
+    String text=macroProcessor.parse(delimitExpressions((String)context.getRuleDescr().getConsequence()));
+    Dialect.AnalysisResult analysis=dialect.analyzeBlock(context,context.getRuleDescr(),dialect.getInterceptors(),text);
+    final Serializable expr=dialect.compile(text,analysis,dialect.getInterceptors(),context);
     context.getRule().setConsequence(new MVELConsequence(expr,factory));
   }
  catch (  final Exception e) {
