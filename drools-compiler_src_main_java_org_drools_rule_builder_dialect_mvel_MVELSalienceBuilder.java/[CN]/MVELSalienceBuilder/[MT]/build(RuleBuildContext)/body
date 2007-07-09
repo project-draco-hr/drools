@@ -2,9 +2,11 @@
   context.getBuildStack().push(context.getRule().getLhs());
   try {
     final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),null,context.getPkg().getGlobals());
-    final ClassImportResolverFactory classImportResolverFactory=((MVELDialect)context.getDialect("mvel")).getClassImportResolverFactory();
+    MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
+    final ClassImportResolverFactory classImportResolverFactory=dialect.getClassImportResolverFactory();
     factory.setNextFactory(classImportResolverFactory);
-    final Serializable expr=MVEL.compileExpression((String)context.getRuleDescr().getSalience(),classImportResolverFactory.getImportedClasses());
+    Dialect.AnalysisResult analysis=dialect.analyzeExpression(context,context.getRuleDescr(),(String)context.getRuleDescr().getSalience());
+    final Serializable expr=dialect.compile((String)context.getRuleDescr().getSalience(),analysis,context);
     MVELSalienceExpression salience=new MVELSalienceExpression(expr,factory);
     context.getRule().setSalience(salience);
   }

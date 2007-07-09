@@ -1,0 +1,18 @@
+{
+  final ParserContext parserContext=new ParserContext(getClassImportResolverFactory().getImportedClasses(),null,null);
+  parserContext.setStrictTypeEnforcement(true);
+  List list[]=analysis.getBoundIdentifiers();
+  DeclarationScopeResolver resolver=context.getDeclarationResolver();
+  for (Iterator it=list[0].iterator(); it.hasNext(); ) {
+    String identifier=(String)it.next();
+    Class cls=resolver.getDeclaration(identifier).getExtractor().getExtractToClass();
+    parserContext.addInput(identifier,cls);
+  }
+  Map globalTypes=context.getPkg().getGlobals();
+  for (Iterator it=list[1].iterator(); it.hasNext(); ) {
+    String identifier=(String)it.next();
+    parserContext.addInput(identifier,(Class)globalTypes.get(identifier));
+  }
+  ExpressionCompiler compiler=new ExpressionCompiler(text);
+  return compiler.compile(parserContext);
+}
