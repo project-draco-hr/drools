@@ -1,5 +1,7 @@
 {
-  final ParserContext parserContext=new ParserContext(getClassImportResolverFactory().getImportedClasses(),null,null);
+  Map imports=getClassImportResolverFactory().getImportedClasses();
+  imports.putAll(getStaticMethodImportResolverFactory().getImportedMethods());
+  final ParserContext parserContext=new ParserContext(imports,null,null);
   parserContext.setStrictTypeEnforcement(true);
   if (interceptors != null) {
     parserContext.setInterceptors(interceptors);
@@ -15,6 +17,11 @@
   for (Iterator it=list[1].iterator(); it.hasNext(); ) {
     String identifier=(String)it.next();
     parserContext.addInput(identifier,(Class)globalTypes.get(identifier));
+  }
+  Map localVars=((MVELAnalysisResult)analysis).getMvelVariables();
+  for (Iterator it=localVars.entrySet().iterator(); it.hasNext(); ) {
+    Entry entry=(Entry)it.next();
+    parserContext.addInput((String)entry.getKey(),(Class)entry.getValue());
   }
   parserContext.addInput("drools",KnowledgeHelper.class);
   ExpressionCompiler compiler=new ExpressionCompiler(text);
