@@ -1,0 +1,27 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(StateExampleUsingAgendGroup.class.getResourceAsStream("StateExampleUsingAgendGroup.drl")));
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  ruleBase.addPackage(builder.getPackage());
+  final StatefulSession session=ruleBase.newStatefulSession();
+  session.addEventListener(new DefaultAgendaEventListener(){
+    public void afterActivationFired(    final AfterActivationFiredEvent arg0){
+      super.afterActivationFired(arg0,session);
+    }
+  }
+);
+  final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(session);
+  logger.setFileName("log/state");
+  final State a=new State("A");
+  final State b=new State("B");
+  final State c=new State("C");
+  final State d=new State("D");
+  final boolean dynamic=true;
+  session.insert(a,dynamic);
+  session.insert(b,dynamic);
+  session.insert(c,dynamic);
+  session.insert(d,dynamic);
+  session.fireAllRules();
+  session.dispose();
+  logger.writeToDisk();
+}
