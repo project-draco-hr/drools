@@ -1,0 +1,29 @@
+{
+  try {
+    final PackageBuilder builder1=new PackageBuilder();
+    builder1.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RuleNameClashes1.drl")));
+    builder1.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RuleNameClashes3.drl")));
+    final Package pkg1=builder1.getPackage();
+    assertEquals(1,pkg1.getRules().length);
+    final RuleBase ruleBase=getRuleBase();
+    ruleBase.addPackage(pkg1);
+    final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+    final List results=new ArrayList();
+    workingMemory.setGlobal("results",results);
+    workingMemory.insert(new Cheese("stilton",10));
+    workingMemory.insert(new Cheese("brie",5));
+    workingMemory.fireAllRules();
+    assertEquals(results.toString(),0,results.size());
+    workingMemory.insert(new Cheese("muzzarella",7));
+    workingMemory.fireAllRules();
+    assertEquals(results.toString(),1,results.size());
+    assertTrue(results.contains("p1.r3"));
+  }
+ catch (  PackageMergeException e) {
+    fail("Should not raise exception when merging different packages into the same rulebase: " + e.getMessage());
+  }
+catch (  Exception e) {
+    e.printStackTrace();
+    fail("unexpected exception: " + e.getMessage());
+  }
+}
