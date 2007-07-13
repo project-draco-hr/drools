@@ -1,14 +1,14 @@
 {
-  final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  final AccumulateMemory memory=(AccumulateMemory)workingMemory.getNodeMemory(this);
   AccumulateResult accresult=new AccumulateResult();
   if (!workingMemory.isSequential()) {
-    memory.getTupleMemory().add(leftTuple);
-    memory.getCreatedHandles().put(leftTuple,accresult,false);
+    memory.betaMemory.getTupleMemory().add(leftTuple);
+    memory.betaMemory.getCreatedHandles().put(leftTuple,accresult,false);
   }
   final Object accContext=this.accumulate.createContext();
   accresult.context=accContext;
-  this.accumulate.init(accContext,leftTuple,workingMemory);
-  final Iterator it=memory.getFactHandleMemory().iterator(leftTuple);
+  this.accumulate.init(memory.workingMemoryContext,accContext,leftTuple,workingMemory);
+  final Iterator it=memory.betaMemory.getFactHandleMemory().iterator(leftTuple);
   this.constraints.updateFromTuple(workingMemory,leftTuple);
   for (FactEntry entry=(FactEntry)it.next(); entry != null; entry=(FactEntry)it.next()) {
     InternalFactHandle handle=entry.getFactHandle();
@@ -16,10 +16,10 @@
       if (this.unwrapRightObject) {
         handle=((ReteTuple)handle.getObject()).getLastHandle();
       }
-      this.accumulate.accumulate(accContext,leftTuple,handle,workingMemory);
+      this.accumulate.accumulate(memory.workingMemoryContext,accContext,leftTuple,handle,workingMemory);
     }
   }
-  final Object result=this.accumulate.getResult(accContext,leftTuple,workingMemory);
+  final Object result=this.accumulate.getResult(memory.workingMemoryContext,accContext,leftTuple,workingMemory);
   boolean isAllowed=true;
   for (int i=0, length=this.resultConstraints.length; i < length; i++) {
     if (!this.resultConstraints[i].isAllowed(result,workingMemory)) {

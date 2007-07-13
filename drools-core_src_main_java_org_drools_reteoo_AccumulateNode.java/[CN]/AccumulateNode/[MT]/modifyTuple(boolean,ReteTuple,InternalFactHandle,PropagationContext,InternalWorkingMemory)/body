@@ -1,6 +1,6 @@
 {
-  final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  AccumulateResult accresult=(AccumulateResult)memory.getCreatedHandles().get(leftTuple);
+  final AccumulateMemory memory=(AccumulateMemory)workingMemory.getNodeMemory(this);
+  AccumulateResult accresult=(AccumulateResult)memory.betaMemory.getCreatedHandles().get(leftTuple);
   if (accresult.handle != null) {
     this.sink.propagateRetractTuple(leftTuple,accresult.handle,context,workingMemory);
     workingMemory.getFactHandleFactory().destroyFactHandle(accresult.handle);
@@ -12,23 +12,23 @@
   if (context.getType() == PropagationContext.ASSERTION) {
     if (accresult.context == null) {
       final Object accContext=this.accumulate.createContext();
-      this.accumulate.init(accContext,leftTuple,workingMemory);
+      this.accumulate.init(memory.workingMemoryContext,accContext,leftTuple,workingMemory);
       accresult.context=accContext;
     }
-    this.accumulate.accumulate(accresult.context,leftTuple,handle,workingMemory);
+    this.accumulate.accumulate(memory.workingMemoryContext,accresult.context,leftTuple,handle,workingMemory);
   }
  else   if (context.getType() == PropagationContext.MODIFICATION) {
     if (isAssert) {
-      this.accumulate.accumulate(accresult.context,leftTuple,handle,workingMemory);
+      this.accumulate.accumulate(memory.workingMemoryContext,accresult.context,leftTuple,handle,workingMemory);
     }
  else {
-      this.accumulate.reverse(accresult.context,leftTuple,handle,workingMemory);
+      this.accumulate.reverse(memory.workingMemoryContext,accresult.context,leftTuple,handle,workingMemory);
     }
   }
  else {
-    this.accumulate.reverse(accresult.context,leftTuple,handle,workingMemory);
+    this.accumulate.reverse(memory.workingMemoryContext,accresult.context,leftTuple,handle,workingMemory);
   }
-  final Object result=this.accumulate.getResult(accresult.context,leftTuple,workingMemory);
+  final Object result=this.accumulate.getResult(memory.workingMemoryContext,accresult.context,leftTuple,workingMemory);
   boolean isAllowed=true;
   for (int i=0, length=this.resultConstraints.length; i < length; i++) {
     if (!this.resultConstraints[i].isAllowed(result,workingMemory)) {
