@@ -1,0 +1,32 @@
+{
+  Package pkg=new Package("org.pkg1");
+  PackageBuilderConfiguration cfg1=new PackageBuilderConfiguration();
+  MockDialectConfiguration mockConf=new MockDialectConfiguration();
+  cfg1.getDialectRegistry().addDialectConfiguration("mock",mockConf);
+  cfg1.setDefaultDialect("mock");
+  PackageBuilder builder=new PackageBuilder(pkg,cfg1);
+  MockDialect mockDialect2=(MockDialect)builder.getPackageBuilderConfiguration().getDefaultDialect();
+  assertSame(mockConf.getDialect(),mockDialect2);
+  assertSame(builder,mockDialect2.getPackageBuilder());
+  assertSame(pkg,mockDialect2.getPkg());
+  assertNull(mockDialect2.getRuleDescr());
+  RuleDescr ruleDescr=new RuleDescr("test rule");
+  ruleDescr.addAttribute(new AttributeDescr("dialect","mock"));
+  ruleDescr.setLhs(new AndDescr());
+  EvalDescr evalDescr=new EvalDescr();
+  ruleDescr.getLhs().addDescr(evalDescr);
+  PackageDescr pkgDescr=new PackageDescr("org.pkg1");
+  pkgDescr.addImport(new ImportDescr("java.util.HashMap"));
+  FunctionImportDescr functionImportDescr=new FunctionImportDescr();
+  functionImportDescr.setTarget("System.out.println");
+  pkgDescr.addFunctionImport(functionImportDescr);
+  pkgDescr.addRule(ruleDescr);
+  builder.addPackage(pkgDescr);
+  assertSame(ruleDescr,mockDialect2.getRuleDescr());
+  assertTrue(mockDialect2.getImport().contains("java.util.HashMap"));
+  assertTrue(mockDialect2.getStaticImport().contains("System.out.println"));
+  assertEquals("eval was built",evalDescr.getContent());
+  assertEquals("consequence was built",ruleDescr.getConsequence());
+  assertTrue(mockDialect2.isCompileAll());
+  assertNotNull(pkg.getRule("test rule"));
+}

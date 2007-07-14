@@ -8,13 +8,11 @@
   accumDescr.setActionCode("x += $price;");
   accumDescr.setResultCode("new Integer( x )");
   org.drools.rule.Package pkg=new org.drools.rule.Package("org.drools");
-  PackageBuilder pkgBuilder=new PackageBuilder(pkg);
-  DialectRegistry registry=new DialectRegistry();
-  Dialect java=new JavaDialect(pkgBuilder);
-  registry.addDialect("java",java);
+  final PackageBuilder pkgBulider=new PackageBuilder(pkg);
+  final PackageBuilderConfiguration conf=pkgBulider.getPackageBuilderConfiguration();
+  Dialect dialect=pkgBulider.getPackageBuilderConfiguration().getDialectRegistry().getDialectConfiguration("java").getDialect();
   RuleDescr ruleDescr=new RuleDescr("test rule");
-  PackageBuilderConfiguration conf=new PackageBuilderConfiguration();
-  RuleBuildContext context=new RuleBuildContext(conf,pkg,ruleDescr,registry,java);
+  RuleBuildContext context=new RuleBuildContext(conf,pkg,ruleDescr,conf.getDialectRegistry(),dialect);
   Accumulate accumulate=(Accumulate)builder.build(context,accumDescr);
   assertTrue(context.getErrors().toString(),context.getErrors().isEmpty());
 }
