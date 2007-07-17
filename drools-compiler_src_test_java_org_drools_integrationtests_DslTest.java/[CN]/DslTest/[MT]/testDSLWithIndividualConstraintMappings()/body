@@ -1,0 +1,20 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  final Reader source=new InputStreamReader(getClass().getResourceAsStream("test_dslWithIndividualConstraints.dslr"));
+  final Reader dsl=new InputStreamReader(getClass().getResourceAsStream("test_dslWithIndividualConstraints.dsl"));
+  builder.addPackageFromDrl(source,dsl);
+  final Package pkg=builder.getPackage();
+  assertTrue(pkg.getErrorSummary(),pkg.isValid());
+  assertEquals(pkg.getErrorSummary(),null,pkg.getErrorSummary());
+  assertEquals(0,builder.getErrors().getErrors().length);
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory wm=ruleBase.newStatefulSession();
+  List results=new ArrayList();
+  wm.setGlobal("results",results);
+  Cheese cheese=new Cheese("stilton",42);
+  wm.insert(cheese);
+  wm.fireAllRules();
+  assertEquals(1,results.size());
+  assertEquals(cheese,results.get(0));
+}
