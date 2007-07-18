@@ -1,36 +1,5 @@
 {
-  this.cls=cls;
+  this.cls=clazz;
   this.ruleBase=ruleBase;
-  Rete rete=ruleBase.getRete();
-  if (!ruleBase.getConfiguration().isShadowProxy() || cls == null || !ruleBase.getConfiguration().isShadowed(cls.getName())) {
-    return;
-  }
-  Package pkg=cls.getPackage();
-  String pkgName=(pkg != null) ? pkg.getName() : "";
-  if ("org.drools.reteoo".equals(pkgName) || "org.drools.base".equals(pkgName)) {
-    this.shadowEnabled=false;
-    return;
-  }
-  Class shadowClass=null;
-  final String shadowProxyName=ShadowProxyFactory.getProxyClassNameForClass(this.cls);
-  try {
-    shadowClass=rete.getRuleBase().getMapBackedClassLoader().loadClass(shadowProxyName);
-  }
- catch (  final ClassNotFoundException cnfe) {
-    final byte[] proxyBytes=ShadowProxyFactory.getProxyBytes(cls);
-    if (proxyBytes != null) {
-      rete.getRuleBase().getMapBackedClassLoader().addClass(shadowProxyName,proxyBytes);
-      try {
-        shadowClass=rete.getRuleBase().getMapBackedClassLoader().loadClass(shadowProxyName);
-      }
- catch (      ClassNotFoundException e) {
-        throw new RuntimeException("Unable to find or generate the ShadowProxy implementation for '" + this.cls.getName() + "'");
-      }
-    }
-  }
-  if (shadowClass != null) {
-    this.shadowClass=shadowClass;
-    this.shadowEnabled=true;
-    setInstantiator();
-  }
+  defineShadowProxyData(clazz);
 }

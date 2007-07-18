@@ -12,8 +12,18 @@
     mv.visitVarInsn(Opcodes.ALOAD,0);
     mv.visitFieldInsn(Opcodes.GETFIELD,className,DELEGATE_FIELD_NAME,Type.getDescriptor(clazz));
     mv.visitVarInsn(Opcodes.ALOAD,1);
+    mv.visitJumpInsn(Opcodes.IF_ACMPEQ,l1);
+    mv.visitVarInsn(Opcodes.ALOAD,0);
+    mv.visitFieldInsn(Opcodes.GETFIELD,className,DELEGATE_FIELD_NAME,Type.getDescriptor(clazz));
+    mv.visitVarInsn(Opcodes.ALOAD,1);
+    if (clazz.isInterface()) {
+      mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,Type.getInternalName(clazz),"equals",Type.getMethodDescriptor(Type.BOOLEAN_TYPE,new Type[]{Type.getType(Object.class)}));
+    }
+ else {
+      mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(clazz),"equals",Type.getMethodDescriptor(Type.BOOLEAN_TYPE,new Type[]{Type.getType(Object.class)}));
+    }
     Label l2=new Label();
-    mv.visitJumpInsn(Opcodes.IF_ACMPNE,l2);
+    mv.visitJumpInsn(Opcodes.IFEQ,l2);
     mv.visitLabel(l1);
     mv.visitInsn(Opcodes.ICONST_1);
     mv.visitInsn(Opcodes.IRETURN);
@@ -29,6 +39,35 @@
     mv.visitInsn(Opcodes.ICONST_0);
     mv.visitInsn(Opcodes.IRETURN);
     mv.visitLabel(l4);
+    Label c0=new Label();
+    mv.visitLabel(c0);
+    mv.visitVarInsn(Opcodes.ALOAD,1);
+    mv.visitTypeInsn(Opcodes.INSTANCEOF,className);
+    Label c1=new Label();
+    mv.visitJumpInsn(Opcodes.IFEQ,c1);
+    mv.visitVarInsn(Opcodes.ALOAD,0);
+    mv.visitFieldInsn(Opcodes.GETFIELD,className,DELEGATE_FIELD_NAME,Type.getDescriptor(clazz));
+    mv.visitVarInsn(Opcodes.ALOAD,1);
+    mv.visitTypeInsn(Opcodes.CHECKCAST,className);
+    mv.visitFieldInsn(Opcodes.GETFIELD,className,DELEGATE_FIELD_NAME,Type.getDescriptor(clazz));
+    Label c2=new Label();
+    mv.visitJumpInsn(Opcodes.IF_ACMPEQ,c2);
+    mv.visitVarInsn(Opcodes.ALOAD,0);
+    mv.visitFieldInsn(Opcodes.GETFIELD,className,DELEGATE_FIELD_NAME,Type.getDescriptor(clazz));
+    mv.visitVarInsn(Opcodes.ALOAD,1);
+    mv.visitTypeInsn(Opcodes.CHECKCAST,className);
+    mv.visitFieldInsn(Opcodes.GETFIELD,className,DELEGATE_FIELD_NAME,Type.getDescriptor(clazz));
+    if (clazz.isInterface()) {
+      mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,Type.getInternalName(clazz),"equals",Type.getMethodDescriptor(Type.BOOLEAN_TYPE,new Type[]{Type.getType(Object.class)}));
+    }
+ else {
+      mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(clazz),"equals",Type.getMethodDescriptor(Type.BOOLEAN_TYPE,new Type[]{Type.getType(Object.class)}));
+    }
+    mv.visitJumpInsn(Opcodes.IFEQ,c1);
+    mv.visitLabel(c2);
+    mv.visitInsn(Opcodes.ICONST_1);
+    mv.visitInsn(Opcodes.IRETURN);
+    mv.visitLabel(c1);
     mv.visitVarInsn(Opcodes.ALOAD,1);
     mv.visitTypeInsn(Opcodes.CHECKCAST,Type.getInternalName(clazz));
     mv.visitVarInsn(Opcodes.ASTORE,2);

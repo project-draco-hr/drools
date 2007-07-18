@@ -1,0 +1,30 @@
+{
+  Rete rete=this.ruleBase.getRete();
+  if (!ruleBase.getConfiguration().isShadowProxy() || clazz == null || !ruleBase.getConfiguration().isShadowed(clazz.getName())) {
+    this.shadowEnabled=false;
+    this.shadowClass=null;
+    this.instantiator=null;
+    return;
+  }
+  Package pkg=clazz.getPackage();
+  String pkgName=(pkg != null) ? pkg.getName() : "";
+  if ("org.drools.reteoo".equals(pkgName) || "org.drools.base".equals(pkgName)) {
+    this.shadowEnabled=false;
+    this.shadowClass=null;
+    this.instantiator=null;
+    return;
+  }
+  Class shadowClass=loadOrGenerateProxy(clazz,rete);
+  if (shadowClass == null) {
+    ObjectTypeNode[] nodes=this.getMatchingObjectTypes(clazz);
+    Class shadowClassRoot=clazz;
+    while (shadowClass == null && (shadowClassRoot=this.findAFeasibleSuperclassOrInterface(nodes,shadowClassRoot)) != null) {
+      shadowClass=loadOrGenerateProxy(shadowClassRoot,rete);
+    }
+  }
+  if (shadowClass != null) {
+    this.shadowClass=shadowClass;
+    this.shadowEnabled=true;
+    setInstantiator();
+  }
+}

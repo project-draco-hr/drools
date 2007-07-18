@@ -1,15 +1,13 @@
 {
-  final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
   final ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
   final ReteooWorkingMemory workingMemory=new ReteooWorkingMemory(1,ruleBase);
   final Rete source=ruleBase.getRete();
-  final Class shadowClass=ShadowProxyFactory.getProxy(Cheese.class);
   final ObjectTypeNode objectTypeNode=new ObjectTypeNode(1,new ClassObjectType(Cheese.class),source,3);
   final MockObjectSink sink=new MockObjectSink();
   objectTypeNode.addObjectSink(sink);
+  source.addObjectSink(objectTypeNode);
   final Object cheese=new Cheese("muzzarela",5);
   final InternalFactHandle handle1=(InternalFactHandle)workingMemory.insert(cheese);
-  objectTypeNode.assertObject(handle1,context,workingMemory);
   final List asserted=sink.getAsserted();
   assertLength(1,asserted);
   assertTrue(((InternalFactHandle)((Object[])asserted.get(0))[0]).getObject() instanceof ShadowProxy);
