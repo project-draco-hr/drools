@@ -1,0 +1,30 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_ruleflowClear.drl")));
+  builder.addRuleFlow(new InputStreamReader(getClass().getResourceAsStream("test_ruleflowClear.rfm")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final List list=new ArrayList();
+  workingMemory.setGlobal("list",list);
+  final List activations=new ArrayList();
+  AgendaEventListener listener=new DefaultAgendaEventListener(){
+    public void activationCancelled(    ActivationCancelledEvent event,    WorkingMemory workingMemory){
+      activations.add(event.getActivation());
+    }
+  }
+;
+  workingMemory.addEventListener(listener);
+  assertEquals(0,workingMemory.getAgenda().getRuleFlowGroup("flowgroup-1").size());
+  workingMemory.fireAllRules();
+  assertEquals(4,workingMemory.getAgenda().getRuleFlowGroup("flowgroup-1").size());
+  assertEquals(0,workingMemory.getAgenda().getAgendaGroup("MAIN").size());
+  final ProcessInstance processInstance=workingMemory.startProcess("ruleFlowClear");
+  assertEquals(4,workingMemory.getAgenda().getAgendaGroup("MAIN").size());
+  assertEquals(0,activations.size());
+  workingMemory.getAgenda().clearRuleFlowGroup("flowgroup-1");
+  assertEquals(0,workingMemory.getAgenda().getAgendaGroup("MAIN").size());
+  assertEquals(0,workingMemory.getAgenda().getRuleFlowGroup("flowgroup-1").size());
+  assertEquals(4,activations.size());
+}
