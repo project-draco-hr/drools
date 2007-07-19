@@ -1,0 +1,20 @@
+{
+  final EventSupport eventsupport=(EventSupport)this.workingMemory;
+  for (Iterator it=ruleFlowGroup.iterator(); it.hasNext(); ) {
+    RuleFlowGroupNode node=(RuleFlowGroupNode)it.next();
+    AgendaItem item=(AgendaItem)node.getActivation();
+    if (item != null) {
+      item.setActivated(false);
+      item.remove();
+      if (item.getActivationGroupNode() != null) {
+        item.getActivationGroupNode().getActivationGroup().removeActivation(item);
+      }
+    }
+    eventsupport.getAgendaEventSupport().fireActivationCancelled(item,this.workingMemory);
+  }
+  ((InternalRuleFlowGroup)ruleFlowGroup).clear();
+  if (ruleFlowGroup.isActive() && ruleFlowGroup.isAutoDeactivate()) {
+    WorkingMemoryAction action=new DeactivateCallback((InternalRuleFlowGroup)ruleFlowGroup);
+    this.workingMemory.queueWorkingMemoryAction(action);
+  }
+}
