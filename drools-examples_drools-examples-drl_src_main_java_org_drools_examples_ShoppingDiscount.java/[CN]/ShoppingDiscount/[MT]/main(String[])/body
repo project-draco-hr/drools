@@ -1,0 +1,19 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(ShoppingDiscount.class.getResourceAsStream("Shopping.drl")));
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  ruleBase.addPackage(builder.getPackage());
+  final StatefulSession session=ruleBase.newStatefulSession();
+  Customer mark=new Customer("mark",0);
+  session.insert(mark);
+  Product shoes=new Product("shoes",60);
+  session.insert(shoes);
+  Product hat=new Product("hat",60);
+  session.insert(hat);
+  session.insert(new Purchase(mark,shoes));
+  FactHandle hatPurchaseHandle=session.insert(new Purchase(mark,hat));
+  session.fireAllRules();
+  session.retract(hatPurchaseHandle);
+  System.out.println("Customer mark has returned the hat");
+  session.fireAllRules();
+}
