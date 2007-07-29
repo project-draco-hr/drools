@@ -1,11 +1,22 @@
 {
-  this.processes.add(process);
-  String rules=generateRules(process);
-  if (rules != null && rules.length() != 0) {
-    try {
-      packageBuilder.addPackageFromDrl(new StringReader(rules));
+  if (process instanceof RuleFlowProcess) {
+    RuleFlowProcessValidator validator=RuleFlowProcessValidatorImpl.getInstance();
+    RuleFlowProcessValidationError[] errors=validator.validateProcess((RuleFlowProcess)process);
+    if (errors.length != 0) {
+      for (int i=0; i < errors.length; i++) {
+        this.errors.add(new ParserError(errors[i].toString(),-1,-1));
+      }
     }
- catch (    Throwable t) {
+ else {
+      this.processes.add(process);
+      String rules=generateRules(process);
+      if (rules != null && rules.length() != 0) {
+        try {
+          packageBuilder.addPackageFromDrl(new StringReader(rules));
+        }
+ catch (        Throwable t) {
+        }
+      }
     }
   }
 }
