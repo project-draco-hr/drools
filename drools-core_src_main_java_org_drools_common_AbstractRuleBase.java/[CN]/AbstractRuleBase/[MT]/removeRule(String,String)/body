@@ -4,12 +4,17 @@ synchronized (this.pkgs) {
     final Rule rule=pkg.getRule(ruleName);
     int lastAquiredLock=0;
     final InternalWorkingMemory[] wms=getWorkingMemories();
+    PackageCompilationData compilationData=null;
     try {
       for (lastAquiredLock=0; lastAquiredLock < wms.length; lastAquiredLock++) {
         wms[lastAquiredLock].getLock().lock();
       }
       removeRule(rule);
-      pkg.removeRule(rule);
+      compilationData=pkg.removeRule(rule);
+      if (this.reloadPackageCompilationData == null) {
+        this.reloadPackageCompilationData=new ReloadPackageCompilationData();
+      }
+      this.reloadPackageCompilationData.addPackageCompilationData(compilationData);
     }
   finally {
       for (lastAquiredLock--; lastAquiredLock > -1; lastAquiredLock--) {
