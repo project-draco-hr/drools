@@ -8,7 +8,7 @@
   MVELDialect dialect=(MVELDialect)context.getDialect();
   final Declaration[] sourceDeclArr=(Declaration[])sourcePattern.getOuterDeclarations().values().toArray(new Declaration[0]);
   final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),sourcePattern.getOuterDeclarations(),context.getPkg().getGlobals());
-  factory.setNextFactory(dialect.getClassImportResolverFactory());
+  factory.setNextFactory(dialect.getStaticMethodImportResolverFactory());
   Accumulator accumulator=null;
   Declaration[] declarations=null;
   if (accumDescr.isExternalFunction()) {
@@ -18,7 +18,7 @@
     for (int i=0; i < size; i++) {
       declarations[i]=context.getDeclarationResolver().getDeclaration((String)analysis.getBoundIdentifiers()[0].get(i));
     }
-    final Serializable expression=MVEL.compileExpression((String)accumDescr.getExpression(),dialect.getClassImportResolverFactory().getImportedClasses());
+    final Serializable expression=dialect.compile((String)accumDescr.getExpression(),analysis,null,sourcePattern.getOuterDeclarations(),context);
     AccumulateFunction function=context.getConfiguration().getAccumulateFunction(accumDescr.getFunctionIdentifier());
     accumulator=new MVELAccumulatorFunctionExecutor(factory,expression,function);
   }

@@ -1,11 +1,12 @@
 {
   ExpressionCompiler compiler=new ExpressionCompiler(expr);
-  ParserContext parserContext=new ParserContext();
-  parserContext.setStrictTypeEnforcement(false);
   MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
-  Map imports=dialect.getClassImportResolverFactory().getImportedClasses();
-  imports.putAll(dialect.getStaticMethodImportResolverFactory().getImportedMethods());
-  parserContext.setImports(imports);
+  final ParserContext parserContext=new ParserContext(dialect.getImports(),null,context.getPkg().getName() + "." + context.getRuleDescr().getClassName());
+  for (Iterator it=dialect.getPackgeImports().values().iterator(); it.hasNext(); ) {
+    String packageImport=(String)it.next();
+    parserContext.addPackageImport(packageImport);
+  }
+  parserContext.setStrictTypeEnforcement(false);
   parserContext.setInterceptors(dialect.getInterceptors());
   compiler.compile(parserContext);
   MVELAnalysisResult result=analyze(compiler.getParserContextState().getInputs().keySet(),availableIdentifiers);
