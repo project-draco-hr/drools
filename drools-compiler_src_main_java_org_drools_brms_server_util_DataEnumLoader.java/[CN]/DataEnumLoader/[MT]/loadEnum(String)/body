@@ -1,0 +1,44 @@
+{
+  final Object mvelData;
+  try {
+    MVEL mvel=new MVEL();
+    mvelData=MVEL.eval("[ " + mvelSource + " ]",new HashMap());
+  }
+ catch (  RuntimeException e) {
+    addError("Unable to load enumeration data.");
+    addError(e.getMessage());
+    addError("Error type: " + e.getClass().getName());
+    return Collections.EMPTY_MAP;
+  }
+  if (!(mvelData instanceof Map)) {
+    addError("The expression is not a map, it is a " + mvelData.getClass().getName());
+    return Collections.EMPTY_MAP;
+  }
+  Map map=(Map)mvelData;
+  for (Iterator iter=map.keySet().iterator(); iter.hasNext(); ) {
+    String key=(String)iter.next();
+    Object list=map.get(key);
+    if (!(list instanceof List)) {
+      if (list == null) {
+        addError("The item with " + key + " is null.");
+      }
+ else {
+        addError("The item with " + key + " is not a list, it is a "+ list.getClass().getName());
+      }
+      return Collections.EMPTY_MAP;
+    }
+    List items=(List)list;
+    List newItems=new ArrayList();
+    for (int i=0; i < items.size(); i++) {
+      Object listItem=items.get(i);
+      if (!(listItem instanceof String)) {
+        newItems.add(listItem.toString());
+      }
+ else {
+        newItems.add(listItem);
+      }
+    }
+    map.put(key,newItems);
+  }
+  return map;
+}
