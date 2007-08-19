@@ -1,0 +1,36 @@
+{
+  try {
+    RuleBase ruleBase=readRule();
+    WorkingMemory workingMemory=ruleBase.newStatefulSession();
+    WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(workingMemory);
+    RecommendationService recommendationService=new RecommendationService();
+    workingMemory.setGlobal("recommendationService",recommendationService);
+    Patient patient=new Patient();
+    patient.setName("John Doe");
+    patient.setAge(20);
+    workingMemory.insert(patient);
+    Diagnose diagnose=new Diagnose(Terminology.DIAGNOSE_X_TYPE_UNKNOWN);
+    workingMemory.insert(diagnose);
+    workingMemory.fireAllRules();
+    List recommendations=recommendationService.getRecommendations();
+    for (Iterator iterator=recommendations.iterator(); iterator.hasNext(); ) {
+      System.out.println(iterator.next());
+    }
+    recommendations.clear();
+    diagnose=new Diagnose(Terminology.DIAGNOSE_X_TYPE_UNKNOWN);
+    workingMemory.insert(diagnose);
+    workingMemory.fireAllRules();
+    recommendations=recommendationService.getRecommendations();
+    for (Iterator iterator=recommendations.iterator(); iterator.hasNext(); ) {
+      System.out.println(iterator.next());
+    }
+    recommendations.clear();
+    diagnose=new Diagnose(Terminology.DIAGNOSE_X_TYPE2);
+    workingMemory.insert(diagnose);
+    workingMemory.fireAllRules();
+    logger.writeToDisk();
+  }
+ catch (  Throwable t) {
+    t.printStackTrace();
+  }
+}
