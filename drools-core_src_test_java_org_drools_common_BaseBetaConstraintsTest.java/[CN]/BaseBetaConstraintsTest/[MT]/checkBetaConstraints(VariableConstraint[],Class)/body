@@ -1,0 +1,45 @@
+{
+  RuleBaseConfiguration config=new RuleBaseConfiguration();
+  int depth=config.getCompositeKeyDepth();
+  BetaConstraints betaConstraints=null;
+  try {
+    betaConstraints=(BetaConstraints)cls.getConstructor(new Class[]{BetaNodeFieldConstraint[].class,RuleBaseConfiguration.class}).newInstance(new Object[]{constraints,config});
+  }
+ catch (  Exception e) {
+    throw new RuntimeException("could not invoke constructor for " + cls.getName());
+  }
+  constraints=convertToConstraints(betaConstraints.getConstraints());
+  List list=new ArrayList();
+  for (int i=0; i < constraints.length && list.size() < depth; i++) {
+    if (constraints[i].getEvaluator().getOperator() == Operator.EQUAL) {
+      list.add(new Integer(i));
+    }
+  }
+  int[] indexedPositions=new int[list.size()];
+  for (int i=0; i < list.size(); i++) {
+    indexedPositions[i]=i;
+  }
+  assertEquals((indexedPositions.length > 0),betaConstraints.isIndexed());
+  assertEquals(indexedPositions.length,betaConstraints.getIndexCount());
+  BetaMemory betaMemory=betaConstraints.createBetaMemory(config);
+  if (indexedPositions.length > 0) {
+    TupleIndexHashTable tupleHashTable=(TupleIndexHashTable)betaMemory.getTupleMemory();
+    assertTrue(tupleHashTable.isIndexed());
+    Index index=tupleHashTable.getIndex();
+    for (int i=0; i < indexedPositions.length; i++) {
+      checkSameConstraintForIndex(constraints[indexedPositions[i]],index.getFieldIndex(i));
+    }
+    FactHandleIndexHashTable factHashTable=(FactHandleIndexHashTable)betaMemory.getFactHandleMemory();
+    assertTrue(factHashTable.isIndexed());
+    index=factHashTable.getIndex();
+    for (int i=0; i < indexedPositions.length; i++) {
+      checkSameConstraintForIndex(constraints[indexedPositions[i]],index.getFieldIndex(i));
+    }
+  }
+ else {
+    TupleHashTable tupleHashTable=(TupleHashTable)betaMemory.getTupleMemory();
+    assertFalse(tupleHashTable.isIndexed());
+    FactHashTable factHashTable=(FactHashTable)betaMemory.getFactHandleMemory();
+    assertFalse(factHashTable.isIndexed());
+  }
+}
