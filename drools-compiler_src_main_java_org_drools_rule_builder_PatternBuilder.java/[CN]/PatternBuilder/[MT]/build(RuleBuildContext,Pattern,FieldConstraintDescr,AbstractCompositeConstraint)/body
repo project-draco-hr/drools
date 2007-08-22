@@ -6,7 +6,7 @@
   }
   if (fieldName.indexOf('.') > -1) {
     String[] identifiers=fieldName.split("\\.");
-    if (identifiers.length == 2 && pattern.getDeclaration() != null && identifiers[0].equals(pattern.getDeclaration().getIdentifier())) {
+    if (identifiers.length == 2 && ((pattern.getDeclaration() != null && identifiers[0].equals(pattern.getDeclaration().getIdentifier())) || ("this".equals(identifiers[0])))) {
       fieldName=identifiers[1];
     }
  else {
@@ -14,9 +14,16 @@
       return;
     }
   }
-  final FieldExtractor extractor=getFieldExtractor(context,fieldConstraintDescr,pattern.getObjectType(),fieldName,true);
+  final FieldExtractor extractor=getFieldExtractor(context,fieldConstraintDescr,pattern.getObjectType(),fieldName,false);
   if (extractor == null) {
-    return;
+    if (fieldConstraintDescr.getFieldName().startsWith("this.")) {
+      rewriteToEval(context,pattern,fieldConstraintDescr,container);
+      return;
+    }
+ else {
+      context.getErrors().add(new RuleError(context.getRule(),fieldConstraintDescr,null,"Unable to create Field Extractor for '" + fieldName + "' of '"+ pattern.getObjectType().toString()+ "' in rule '"+ context.getRule().getName()+ "'"));
+      return;
+    }
   }
   Restriction restriction=createRestriction(context,pattern,fieldConstraintDescr,fieldConstraintDescr.getRestriction(),extractor);
   if (restriction == null) {
