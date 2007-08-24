@@ -1,12 +1,13 @@
 {
   final Rule rule1=new Rule("test-rule1");
-  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
-  final Rete rete=new Rete((InternalRuleBase)ruleBase);
-  final ObjectTypeNode objectTypeNode=new ObjectTypeNode(0,new ClassObjectType(String.class),rete,3);
+  ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
+  IdGenerator idGenerator=ruleBase.getReteooBuilder().getIdGenerator();
+  final Rete rete=ruleBase.getRete();
+  final ObjectTypeNode objectTypeNode=new ObjectTypeNode(idGenerator.getNextId(),new ClassObjectType(String.class),rete,3);
   objectTypeNode.attach();
   final MockObjectSink sink=new MockObjectSink();
   objectTypeNode.addObjectSink(sink);
-  final RuleTerminalNode node=new RuleTerminalNode(2,new MockTupleSource(2),rule1,rule1.getLhs());
+  final RuleTerminalNode node=new RuleTerminalNode(idGenerator.getNextId(),new MockTupleSource(idGenerator.getNextId()),rule1,rule1.getLhs());
   final ReteooWorkingMemory workingMemory=(ReteooWorkingMemory)ruleBase.newStatefulSession();
   final Consequence consequence=new Consequence(){
     /** 
@@ -24,7 +25,7 @@
   final String logicalString1=new String("logical");
   final FactHandle logicalHandle1=workingMemory.insert(logicalString1,false,true,rule1,tuple1.getActivation());
   final Rule rule2=new Rule("test-rule2");
-  final RuleTerminalNode node2=new RuleTerminalNode(4,new MockTupleSource(3),rule2,rule2.getLhs());
+  final RuleTerminalNode node2=new RuleTerminalNode(idGenerator.getNextId(),new MockTupleSource(3),rule2,rule2.getLhs());
   rule2.setConsequence(consequence);
   final DefaultFactHandle handle2=new DefaultFactHandle(2,"cheese");
   final ReteTuple tuple2=new ReteTuple(handle2);

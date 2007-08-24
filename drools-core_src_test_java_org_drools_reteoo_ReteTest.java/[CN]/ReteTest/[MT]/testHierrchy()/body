@@ -1,0 +1,37 @@
+{
+  final ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
+  final ReteooWorkingMemory workingMemory=(ReteooWorkingMemory)ruleBase.newStatefulSession();
+  final Rete rete=ruleBase.getRete();
+  final IdGenerator idGenerator=ruleBase.getReteooBuilder().getIdGenerator();
+  final ObjectTypeNode listOtn=new ObjectTypeNode(idGenerator.getNextId(),new ClassObjectType(List.class),rete,3);
+  listOtn.attach();
+  FactHandle handle=workingMemory.insert(new ArrayList());
+  assertEquals(3,rete.getObjectTypeNodes().size());
+  assertSame(listOtn,rete.getObjectTypeNodes().get(new ClassObjectType(List.class)));
+  ObjectHashMap memory=(ObjectHashMap)workingMemory.getNodeMemory(rete);
+  ObjectTypeConf arrayConf=(ObjectTypeConf)memory.get(ArrayList.class);
+  final ObjectTypeNode arrayOtn=arrayConf.getConcreteObjectTypeNode();
+  assertEquals(2,arrayConf.getObjectTypeNodes().length);
+  List nodes=Arrays.asList(arrayConf.getObjectTypeNodes());
+  assertEquals(2,nodes.size());
+  assertTrue(nodes.contains(arrayOtn));
+  assertTrue(nodes.contains(listOtn));
+  workingMemory.retract(handle);
+  final MockObjectSink listSink=new MockObjectSink();
+  listOtn.addObjectSink(listSink);
+  final MockObjectSink arraySink=new MockObjectSink();
+  listOtn.addObjectSink(arraySink);
+  workingMemory.insert(new ArrayList());
+  assertEquals(1,listSink.getAsserted().size());
+  assertEquals(1,arraySink.getAsserted().size());
+  final ObjectTypeNode collectionOtn=new ObjectTypeNode(idGenerator.getNextId(),new ClassObjectType(Collection.class),rete,3);
+  final MockObjectSink collectionSink=new MockObjectSink();
+  collectionOtn.addObjectSink(collectionSink);
+  collectionOtn.attach(new InternalWorkingMemory[]{workingMemory});
+  assertEquals(1,collectionSink.getAsserted().size());
+  nodes=Arrays.asList(arrayConf.getObjectTypeNodes());
+  assertEquals(3,nodes.size());
+  assertTrue(nodes.contains(arrayOtn));
+  assertTrue(nodes.contains(listOtn));
+  assertTrue(nodes.contains(collectionOtn));
+}

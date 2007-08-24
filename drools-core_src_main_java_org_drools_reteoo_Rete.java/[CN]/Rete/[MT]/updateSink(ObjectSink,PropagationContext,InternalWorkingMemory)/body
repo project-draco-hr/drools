@@ -1,15 +1,18 @@
 {
   final ObjectHashMap memory=(ObjectHashMap)workingMemory.getNodeMemory(this);
   Iterator it=memory.iterator();
-  for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
-    ((ObjectTypeConf)entry.getValue()).resetCache();
-  }
   final ObjectTypeNode node=(ObjectTypeNode)sink;
-  it=workingMemory.getFactHandleMap().iterator();
+  ObjectType newObjectType=node.getObjectType();
   for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
-    final InternalFactHandle handle=(InternalFactHandle)entry.getValue();
-    if (node.matches(handle.getObject())) {
-      node.assertObject(handle,context,workingMemory);
+    ObjectTypeConf objectTypeConf=(ObjectTypeConf)entry.getValue();
+    if (newObjectType.isAssignableFrom(objectTypeConf.getConcreteObjectTypeNode().getObjectType())) {
+      objectTypeConf.resetCache();
+      ObjectTypeNode sourceNode=objectTypeConf.getConcreteObjectTypeNode();
+      FactHashTable table=(FactHashTable)workingMemory.getNodeMemory(sourceNode);
+      Iterator factIter=table.iterator();
+      for (FactEntry factEntry=(FactEntry)factIter.next(); factEntry != null; factEntry=(FactEntry)factIter.next()) {
+        sink.assertObject(factEntry.getFactHandle(),context,workingMemory);
+      }
     }
   }
 }
