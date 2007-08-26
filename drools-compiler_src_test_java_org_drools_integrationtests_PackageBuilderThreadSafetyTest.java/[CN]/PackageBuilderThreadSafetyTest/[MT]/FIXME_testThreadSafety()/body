@@ -1,0 +1,58 @@
+{
+  final List errors=new ArrayList();
+  final List exceptions=new ArrayList();
+  Thread[] threads=new Thread[_NUMBER_OF_THREADS];
+  for (int i=0; i < _NUMBER_OF_THREADS; i++) {
+    final int ID=i;
+    Thread testThread=new Thread(){
+      public void run(){
+        try {
+          this.setName("Thread[" + ID + "]");
+          PackageBuilderConfiguration packageBuilderConfig=new PackageBuilderConfiguration();
+          org.drools.compiler.PackageBuilder builder=null;
+          try {
+            builder=new org.drools.compiler.PackageBuilder(packageBuilderConfig);
+          }
+ catch (          Throwable t) {
+            t.printStackTrace();
+            throw new RuntimeException(t);
+          }
+          PackageDescr packageDescr=new PackageDescr("MyRulebase");
+          addImports(packageDescr);
+          addFunctions(packageDescr);
+          sleep(_SLEEP_TIME_MS);
+          builder.addPackage(packageDescr);
+          sleep(_SLEEP_TIME_MS);
+          builder.getPackage();
+          sleep(_SLEEP_TIME_MS);
+          if (builder.hasErrors()) {
+            System.out.println("ERROR in thread: " + ID);
+            errors.add(builder.getErrors());
+          }
+        }
+ catch (        Exception e) {
+          e.printStackTrace();
+          exceptions.add(e);
+        }
+      }
+    }
+;
+    threads[i]=testThread;
+    try {
+      testThread.start();
+    }
+ catch (    Exception e) {
+      assertTrue(false);
+    }
+  }
+  for (int i=0; i < _NUMBER_OF_THREADS; i++) {
+    try {
+      threads[i].join();
+    }
+ catch (    InterruptedException e) {
+      threads[i].interrupt();
+    }
+  }
+  assertTrue("Exceptions during package compilation (number=" + exceptions.size() + ")",exceptions.isEmpty());
+  assertTrue("PackageBuilderErrors during package compilation (number=" + errors.size() + ")",errors.isEmpty());
+}
