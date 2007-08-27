@@ -1,0 +1,58 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Redundancy.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Find part of redundant PatternPossibility combination"));
+  Collection<Object> data=new ArrayList<Object>();
+  AnalysisResultNormal analysisResult=new AnalysisResultNormal();
+  session.setGlobal("result",analysisResult);
+  String ruleName1="Rule 1";
+  String ruleName2="Rule 2";
+  Pattern p1=new Pattern();
+  p1.setRuleName(ruleName1);
+  Pattern p2=new Pattern();
+  p2.setRuleName(ruleName2);
+  LiteralRestriction lr1=new LiteralRestriction();
+  lr1.setRuleName(ruleName1);
+  LiteralRestriction lr2=new LiteralRestriction();
+  lr2.setRuleName(ruleName2);
+  PatternPossibility pp1=new PatternPossibility();
+  pp1.setPatternId(p1.getId());
+  pp1.setRuleName(ruleName1);
+  pp1.add(lr1);
+  PatternPossibility pp2=new PatternPossibility();
+  pp2.setPatternId(p2.getId());
+  pp2.setRuleName(ruleName2);
+  pp2.add(lr2);
+  Redundancy r1=new Redundancy(lr1,lr2);
+  Redundancy r2=new Redundancy(p1,p2);
+  data.add(p1);
+  data.add(p2);
+  data.add(lr1);
+  data.add(lr2);
+  data.add(pp1);
+  data.add(pp2);
+  data.add(r1);
+  data.add(r2);
+  StatelessSessionResult sessionResult=session.executeWithResults(data);
+  Map<String,Set<Redundancy>> map=new HashMap<String,Set<Redundancy>>();
+  Iterator iter=sessionResult.iterateObjects();
+  while (iter.hasNext()) {
+    Object o=(Object)iter.next();
+    if (o instanceof PartialRedundancy) {
+      PartialRedundancy pr=(PartialRedundancy)o;
+      String key=pr.getLeft().getRuleName() + ":" + pr.getRight().getRuleName();
+      if (map.containsKey(key)) {
+        Set<Redundancy> set=map.get(key);
+        set.add(pr.getRedundancy());
+      }
+ else {
+        Set<Redundancy> set=new HashSet<Redundancy>();
+        set.add(pr.getRedundancy());
+        map.put(key,set);
+      }
+    }
+  }
+  assertTrue(mapContains(map,ruleName1 + ":" + ruleName2,r1));
+  if (!map.isEmpty()) {
+    fail("More redundancies than was expected.");
+  }
+}

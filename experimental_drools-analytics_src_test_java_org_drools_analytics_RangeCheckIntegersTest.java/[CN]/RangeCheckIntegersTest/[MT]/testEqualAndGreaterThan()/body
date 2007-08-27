@@ -1,0 +1,23 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("RangeCheckIntegers.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Range check for integers, equal and greater than"));
+  Collection<Object> data=getTestData(this.getClass().getResourceAsStream("MissingRangesForInts.drl"));
+  AnalysisResultNormal analysisResult=new AnalysisResultNormal();
+  session.setGlobal("result",analysisResult);
+  StatelessSessionResult sessionResult=session.executeWithResults(data);
+  Iterator iter=sessionResult.iterateObjects();
+  Set<String> rulesThatHadErrors=new HashSet<String>();
+  while (iter.hasNext()) {
+    Object o=(Object)iter.next();
+    if (o instanceof Gap) {
+      rulesThatHadErrors.add(((Gap)o).getRuleName());
+    }
+  }
+  assertTrue(rulesThatHadErrors.remove("Missing int range 5b, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing not int range 11b, warning"));
+  if (!rulesThatHadErrors.isEmpty()) {
+    for (    String string : rulesThatHadErrors) {
+      fail("Rule " + string + " fired.");
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("RangeCheckIntegers.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Range check for integers, smaller and greater than"));
+  Collection<Object> data=getTestData(this.getClass().getResourceAsStream("MissingRangesForInts.drl"));
+  AnalysisResultNormal analysisResult=new AnalysisResultNormal();
+  session.setGlobal("result",analysisResult);
+  StatelessSessionResult sessionResult=session.executeWithResults(data);
+  Iterator iter=sessionResult.iterateObjects();
+  Set<String> rulesThatHadErrors=new HashSet<String>();
+  while (iter.hasNext()) {
+    Object o=(Object)iter.next();
+    if (o instanceof Gap) {
+      rulesThatHadErrors.add(((Gap)o).getRuleName());
+    }
+  }
+  assertTrue(rulesThatHadErrors.remove("Missing int range 1a, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing int range 1b, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing int range 2a, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing int range 2b, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing int range 3a, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing int range 3b, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing int range 4a, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing int range 4b, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing not int range 7a, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing not int range 7b, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing not int range 8a, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing not int range 8b, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing not int range 9a, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing not int range 9b, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing not int range 10a, warning"));
+  assertTrue(rulesThatHadErrors.remove("Missing not int range 10b, warning"));
+  if (!rulesThatHadErrors.isEmpty()) {
+    for (    String string : rulesThatHadErrors) {
+      fail("Rule " + string + " caused an error.");
+    }
+  }
+}
