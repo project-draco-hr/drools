@@ -1,14 +1,17 @@
 def eval_table(row):
-    row_pass = True
-    for condition in headers:
+
+    def check_condition(condition):
         col_index = condition[0]
+        if (not row.has_key(col_index)):
+            return True
         cell_value = row[col_index]
         predicate = (str(condition[1]) + str(cell_value))
-        if (not eval(predicate)):
-            row_pass = False
-            break
-    if row_pass:
-        for action in table['action_headers']:
+        return eval(predicate)
+    size = len(filter(check_condition, headers))
+    if (size == len(headers)):
+
+        def apply_actions(action):
             col_label = action[0]
             if row.has_key(col_label):
                 fact[action[1]] = row[col_label]
+        map(apply_actions, table['action_headers'])
