@@ -1,0 +1,31 @@
+{
+  if (solverRuleBase == null) {
+    try {
+      solverRuleBase=DroolsUtil.getInstance().readRuleBase(SUDOKU_SOLVER_DRL);
+    }
+ catch (    Exception ex) {
+      ex.printStackTrace();
+      throw new RuntimeException("Error Reading RuleBase for Solver");
+    }
+  }
+  if (solverStatefulSession != null) {
+    solverStatefulSession.removeEventListener(workingMemoryListener);
+  }
+  solverStatefulSession=solverRuleBase.newStatefulSession();
+  solverStatefulSession.addEventListener(workingMemoryListener);
+  for (int row=0; row < cellValues.length; row++) {
+    for (int col=0; col < cellValues[row].length; col++) {
+      if (cellValues[row][col] == null) {
+        for (int value=1; value < 10; value++) {
+          PossibleCellValue cellValue=new PossibleCellValue(value,row,col);
+          allCellValues.add(cellValue);
+        }
+      }
+ else {
+        ResolvedCellValue cellValue=new ResolvedCellValue(cellValues[row][col],row,col);
+        allCellValues.add(cellValue);
+      }
+    }
+  }
+  insertAllCellValues(solverStatefulSession);
+}
