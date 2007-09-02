@@ -22,14 +22,22 @@
     for (final Iterator it=packageDescr.getFactTemplates().iterator(); it.hasNext(); ) {
       addFactTemplate((FactTemplateDescr)it.next());
     }
-    for (final Iterator it=packageDescr.getFunctions().iterator(); it.hasNext(); ) {
-      FunctionDescr functionDescr=(FunctionDescr)it.next();
-      final String functionClassName=this.pkg.getName() + "." + ucFirst(functionDescr.getName());
-      functionDescr.setClassName(functionClassName);
-      this.pkg.addStaticImport(functionClassName + "." + functionDescr.getName());
-    }
-    for (final Iterator it=packageDescr.getFunctions().iterator(); it.hasNext(); ) {
-      addFunction((FunctionDescr)it.next());
+    if (!packageDescr.getFunctions().isEmpty()) {
+      for (final Iterator it=packageDescr.getFunctions().iterator(); it.hasNext(); ) {
+        FunctionDescr functionDescr=(FunctionDescr)it.next();
+        final String functionClassName=this.pkg.getName() + "." + ucFirst(functionDescr.getName());
+        functionDescr.setClassName(functionClassName);
+        this.pkg.addStaticImport(functionClassName + "." + functionDescr.getName());
+      }
+      for (final Iterator it=packageDescr.getFunctions().iterator(); it.hasNext(); ) {
+        addFunction((FunctionDescr)it.next());
+      }
+      this.configuration.getDialectRegistry().compileAll();
+      for (final Iterator it=packageDescr.getFunctions().iterator(); it.hasNext(); ) {
+        FunctionDescr functionDescr=(FunctionDescr)it.next();
+        final String functionClassName=this.pkg.getName() + "." + ucFirst(functionDescr.getName());
+        this.configuration.getDialectRegistry().addStaticImport(functionClassName + "." + functionDescr.getName());
+      }
     }
     for (final Iterator it=packageDescr.getRules().iterator(); it.hasNext(); ) {
       addRule((RuleDescr)it.next());

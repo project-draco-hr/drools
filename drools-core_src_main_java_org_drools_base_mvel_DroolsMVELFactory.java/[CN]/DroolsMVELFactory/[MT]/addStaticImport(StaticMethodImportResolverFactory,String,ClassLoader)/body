@@ -1,21 +1,18 @@
 {
-  if (staticImportEntry.endsWith("*")) {
-    return;
-  }
   int index=staticImportEntry.lastIndexOf('.');
   String className=staticImportEntry.substring(0,index);
   String methodName=staticImportEntry.substring(index + 1);
   try {
-    Class cls=this.pkg.getPackageCompilationData().getClassLoader().loadClass(className);
+    Class cls=classLoader.loadClass(className);
     Method[] methods=cls.getDeclaredMethods();
     for (int i=0; i < methods.length; i++) {
       if (methods[i].getName().equals(methodName)) {
-        this.imports.put(methodName,methods[i]);
+        factory.createVariable(methodName,methods[i]);
         break;
       }
     }
   }
  catch (  ClassNotFoundException e) {
-    this.results.add(new ImportError(staticImportEntry,-1));
+    throw new RuntimeException("Unable to dynamically load method '" + staticImportEntry + "'");
   }
 }
