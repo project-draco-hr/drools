@@ -1,5 +1,7 @@
 {
-  final FactHandle handle=insert(new DroolsQuery(query,arguments));
+  Object object=new DroolsQuery(query,arguments);
+  InternalFactHandle handle=this.handleFactory.newFactHandle(object);
+  insert(handle,object,null,null);
   final QueryTerminalNode node=(QueryTerminalNode)this.queryResults.remove(query);
   Query queryObj=null;
   List list=null;
@@ -12,7 +14,7 @@
         break;
       }
     }
-    retract(handle);
+    this.handleFactory.destroyFactHandle(handle);
     if (queryObj == null) {
       throw new IllegalArgumentException("Query '" + query + "' does not exist");
     }
@@ -20,11 +22,11 @@
   }
  else {
     list=(List)this.nodeMemories.remove(node.getId());
-    retract(handle);
     if (list == null) {
       list=Collections.EMPTY_LIST;
     }
     queryObj=(Query)node.getRule();
+    this.handleFactory.destroyFactHandle(handle);
   }
   return new QueryResults(list,queryObj,this);
 }

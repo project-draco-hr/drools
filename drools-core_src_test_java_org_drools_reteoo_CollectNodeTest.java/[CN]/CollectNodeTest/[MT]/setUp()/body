@@ -3,7 +3,9 @@
   this.rule=new Rule("test-rule");
   this.contextAssert=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
   this.contextRetract=new PropagationContextImpl(0,PropagationContext.RETRACTION,null,null);
-  this.workingMemory=new ReteooWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase());
+  ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
+  BuildContext buildContext=new BuildContext(ruleBase,ruleBase.getReteooBuilder().getIdGenerator());
+  this.workingMemory=(ReteooWorkingMemory)ruleBase.newStatefulSession();
   this.tupleSource=new MockTupleSource(4);
   this.objectSource=new MockObjectSource(4);
   this.sink=new MockTupleSink();
@@ -12,7 +14,7 @@
   final ObjectType resultObjType=new ClassObjectType(LinkedList.class);
   final Pattern resultPattern=new Pattern(1,resultObjType);
   this.collect=new Collect(sourcePattern,resultPattern);
-  this.node=new CollectNode(15,this.tupleSource,this.objectSource,this.collect);
+  this.node=new CollectNode(15,this.tupleSource,this.objectSource,new AlphaNodeFieldConstraint[0],EmptyBetaConstraints.getInstance(),EmptyBetaConstraints.getInstance(),this.collect,false,buildContext);
   this.node.addTupleSink(this.sink);
   this.memory=(BetaMemory)this.workingMemory.getNodeMemory(this.node);
   assertEquals(0,this.memory.getTupleMemory().size());
