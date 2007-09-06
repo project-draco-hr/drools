@@ -1,0 +1,33 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Redundancy.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter(RULE_NAME));
+  String ruleName1="Rule 1";
+  String ruleName2="Rule 2";
+  String ruleName3="Rule 3";
+  String ruleName4="Rule 4";
+  String ruleName5="Rule 5";
+  String ruleName6="Rule 6";
+  String ruleName7="Rule 7";
+  String ruleName8="Rule 8";
+  String ruleName9="Rule 9";
+  String ruleName10="Rule 10";
+  String ruleName11="Rule 11";
+  String ruleName12="Rule 12";
+  Collection<Object> data=createSubsumptantRuleData(ruleName1,ruleName2);
+  data.addAll(createSubsumptantRuleData(ruleName3,ruleName4));
+  data.addAll(createSubsumptantRuleData(ruleName5,ruleName6));
+  data.addAll(createSubsumptantPatternData(ruleName7,ruleName8));
+  data.addAll(createSubsumptantPatternData(ruleName9,ruleName10));
+  data.addAll(createSubsumptantPatternData(ruleName11,ruleName12));
+  StatelessSessionResult sessionResult=session.executeWithResults(data);
+  Map<String,Set<String>> map=createSubsumptionMap(sessionResult.iterateObjects());
+  assertTrue(TestBase.mapContains(map,ruleName2,ruleName1));
+  assertTrue(TestBase.mapContains(map,ruleName4,ruleName3));
+  assertTrue(TestBase.mapContains(map,ruleName6,ruleName5));
+  assertTrue(TestBase.mapContains(map,ruleName8,ruleName7));
+  assertTrue(TestBase.mapContains(map,ruleName10,ruleName9));
+  assertTrue(TestBase.mapContains(map,ruleName12,ruleName11));
+  if (!map.isEmpty()) {
+    fail("More subsumpt cases than was expected.");
+  }
+}
