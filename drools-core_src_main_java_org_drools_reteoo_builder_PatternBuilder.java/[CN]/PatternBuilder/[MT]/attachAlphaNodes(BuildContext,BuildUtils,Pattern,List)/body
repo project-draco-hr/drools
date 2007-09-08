@@ -1,14 +1,19 @@
 {
+  boolean objectMemory=context.hasObjectTypeMemory();
+  boolean alphaMemory=context.isAlphaMemoryAllowed();
   if (pattern.getObjectType() instanceof ClassObjectType) {
     if (DroolsQuery.class == ((ClassObjectType)pattern.getObjectType()).getClassType()) {
       context.setHasLeftMemory(false);
       context.setHasObjectTypeMemory(false);
       context.setHasTerminalNodeMemory(false);
+      context.setAlphaMemoryAllowed(false);
     }
   }
   context.setObjectSource((ObjectSource)utils.attachNode(context,new ObjectTypeNode(context.getNextId(),pattern.getObjectType(),context)));
   for (final Iterator it=alphaConstraints.iterator(); it.hasNext(); ) {
     final AlphaNodeFieldConstraint constraint=(AlphaNodeFieldConstraint)it.next();
-    context.setObjectSource((ObjectSource)utils.attachNode(context,new AlphaNode(context.getNextId(),(AlphaNodeFieldConstraint)constraint,context.getObjectSource(),context.getRuleBase().getConfiguration().isAlphaMemory(),context.getRuleBase().getConfiguration().getAlphaNodeHashingThreshold())));
+    context.setObjectSource((ObjectSource)utils.attachNode(context,new AlphaNode(context.getNextId(),(AlphaNodeFieldConstraint)constraint,context.getObjectSource(),context)));
   }
+  context.setHasObjectTypeMemory(objectMemory);
+  context.setAlphaMemoryAllowed(alphaMemory);
 }

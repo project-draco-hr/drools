@@ -1,15 +1,17 @@
 {
-  RuleBaseConfiguration conf=new RuleBaseConfiguration();
-  conf.setSequential(true);
-  final ReteooWorkingMemory workingMemory=new ReteooWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase(conf));
+  RuleBaseConfiguration config=new RuleBaseConfiguration();
+  config.setSequential(true);
+  ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase(config);
+  BuildContext buildContext=new BuildContext(ruleBase,((ReteooRuleBase)ruleBase).getReteooBuilder().getIdGenerator());
+  ReteooWorkingMemory workingMemory=new ReteooWorkingMemory(buildContext.getNextId(),ruleBase);
   final Rule rule=new Rule("test-rule");
   final PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null);
-  final MockObjectSource source=new MockObjectSource(15);
+  final MockObjectSource source=new MockObjectSource(buildContext.getNextId());
   final ClassFieldExtractor extractor=ClassFieldExtractorCache.getExtractor(Cheese.class,"type",getClass().getClassLoader());
   final FieldValue field=FieldFactory.getFieldValue("cheddar");
   final Evaluator evaluator=ValueType.OBJECT_TYPE.getEvaluator(Operator.EQUAL);
   final LiteralConstraint constraint=new LiteralConstraint(extractor,evaluator,field);
-  final AlphaNode alphaNode=new AlphaNode(2,constraint,source,true,3);
+  final AlphaNode alphaNode=new AlphaNode(buildContext.getNextId(),constraint,source,buildContext);
   final MockObjectSink sink=new MockObjectSink();
   alphaNode.addObjectSink(sink);
   final Cheese cheddar=new Cheese("cheddar",5);
