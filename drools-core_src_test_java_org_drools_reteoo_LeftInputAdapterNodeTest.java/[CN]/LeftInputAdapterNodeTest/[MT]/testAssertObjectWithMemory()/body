@@ -3,12 +3,10 @@
   ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
   IdGenerator idGenerator=ruleBase.getReteooBuilder().getIdGenerator();
   final InternalWorkingMemory workingMemory=(InternalWorkingMemory)ruleBase.newStatefulSession();
-  final LeftInputAdapterNode liaNode=new LeftInputAdapterNode(idGenerator.getNextId(),new MockObjectSource(idGenerator.getNextId()));
+  final LeftInputAdapterNode liaNode=new LeftInputAdapterNode(idGenerator.getNextId(),new MockObjectSource(idGenerator.getNextId()),buildContext);
   final MockTupleSink sink=new MockTupleSink();
   liaNode.addTupleSink(sink);
-  final Field field=BaseNode.class.getDeclaredField("hasMemory");
-  field.setAccessible(true);
-  field.set(liaNode,new Boolean(true));
+  liaNode.setObjectMemoryEnabled(true);
   final Object string1="cheese";
   final DefaultFactHandle f0=(DefaultFactHandle)workingMemory.insert(string1);
   liaNode.assertObject(f0,context,workingMemory);
