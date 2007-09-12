@@ -10,9 +10,10 @@ synchronized (this.pkgs) {
       for (lastAquiredLock=0; lastAquiredLock < wms.length; lastAquiredLock++) {
         wms[lastAquiredLock].getLock().lock();
       }
+      this.eventSupport.fireBeforePackageRemoved(pkg);
       final Rule[] rules=pkg.getRules();
       for (int i=0; i < rules.length; ++i) {
-        removeRule(rules[i]);
+        removeRule(pkg,rules[i]);
       }
       this.packageClassLoader.removeClassLoader(pkg.getPackageCompilationData().getClassLoader());
       pkg.clear();
@@ -34,6 +35,7 @@ synchronized (this.pkgs) {
         removeProcess((String)iter.next());
       }
       this.pkgs.remove(pkg.getName());
+      this.eventSupport.fireAfterPackageRemoved(pkg);
     }
   finally {
       for (lastAquiredLock--; lastAquiredLock > -1; lastAquiredLock--) {

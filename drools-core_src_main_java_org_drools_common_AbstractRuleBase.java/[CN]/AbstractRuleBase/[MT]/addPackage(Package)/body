@@ -8,6 +8,7 @@ synchronized (this.pkgs) {
       for (lastAquiredLock=0; lastAquiredLock < wms.length; lastAquiredLock++) {
         wms[lastAquiredLock].getLock().lock();
       }
+      this.eventSupport.fireBeforePackageAdded(newPkg);
       if (pkg != null) {
         mergePackage(pkg,newPkg);
       }
@@ -29,7 +30,7 @@ synchronized (this.pkgs) {
       this.globals.putAll(newGlobals);
       final Rule[] rules=newPkg.getRules();
       for (int i=0; i < rules.length; ++i) {
-        addRule(rules[i]);
+        addRule(newPkg,rules[i]);
       }
       if (newPkg.getRuleFlows() != Collections.EMPTY_MAP) {
         Map flows=newPkg.getRuleFlows();
@@ -39,6 +40,7 @@ synchronized (this.pkgs) {
         }
       }
       this.packageClassLoader.addClassLoader(newPkg.getPackageCompilationData().getClassLoader());
+      this.eventSupport.fireAfterPackageAdded(newPkg);
     }
   finally {
       for (lastAquiredLock--; lastAquiredLock > -1; lastAquiredLock--) {
