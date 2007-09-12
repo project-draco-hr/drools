@@ -1,0 +1,39 @@
+{
+  super.setUp();
+  ruleBase=RuleBaseFactory.newRuleBase();
+  listener1=new TestRuleBaseListener("(listener-1) ");
+  listener2=new TestRuleBaseListener("(listener-2) ");
+  ruleBase.addEventListener(listener1);
+  ruleBase.addEventListener(listener2);
+  final Rule rule1=new Rule("test1");
+  final ClassObjectType cheeseObjectType=new ClassObjectType(Cheese.class);
+  final Pattern pattern=new Pattern(0,cheeseObjectType);
+  final ClassFieldExtractor extractor=ClassFieldExtractorCache.getExtractor(Cheese.class,"type",getClass().getClassLoader());
+  final FieldValue field=FieldFactory.getFieldValue("cheddar");
+  final Evaluator evaluator=ValueType.STRING_TYPE.getEvaluator(Operator.EQUAL);
+  final LiteralConstraint constraint=new LiteralConstraint(extractor,evaluator,field);
+  pattern.addConstraint(constraint);
+  rule1.addPattern(pattern);
+  rule1.setConsequence(new Consequence(){
+    private static final long serialVersionUID=1L;
+    public void evaluate(    final KnowledgeHelper knowledgeHelper,    final WorkingMemory workingMemory) throws Exception {
+    }
+  }
+);
+  final Rule rule2=new Rule("test2");
+  final ClassObjectType cheeseObjectType2=new ClassObjectType(Cheese.class);
+  final Pattern pattern2=new Pattern(0,cheeseObjectType2);
+  final FieldValue field2=FieldFactory.getFieldValue("stilton");
+  final LiteralConstraint constraint2=new LiteralConstraint(extractor,evaluator,field2);
+  pattern2.addConstraint(constraint2);
+  rule2.addPattern(pattern2);
+  rule2.setConsequence(new Consequence(){
+    private static final long serialVersionUID=1L;
+    public void evaluate(    final KnowledgeHelper knowledgeHelper,    final WorkingMemory workingMemory) throws Exception {
+    }
+  }
+);
+  pkg=new Package("org.drools.test1");
+  pkg.addRule(rule1);
+  pkg.addRule(rule2);
+}
