@@ -5,7 +5,8 @@
   this.key=key;
   if (key != null) {
     int substr=0;
-    final Matcher m=varFinder.matcher(key.replaceAll("\\$","\\\\\\$"));
+    final String escapedKey=key.replaceAll("\\$","\\\\\\$");
+    final Matcher m=VAR_FINDER.matcher(escapedKey);
     final StringBuffer buf=new StringBuffer();
     int counter=1;
     if (!key.startsWith("^")) {
@@ -13,9 +14,16 @@
       substr+=buf.length();
       counter++;
     }
+    int lastMatch=0;
     while (m.find()) {
       if (this.variables == Collections.EMPTY_MAP) {
         this.variables=new HashMap(2);
+      }
+      String before=escapedKey.substring(lastMatch,m.start());
+      lastMatch=m.end() + 1;
+      Matcher m2=PAREN_FINDER.matcher(before);
+      while (m2.find()) {
+        counter++;
       }
       this.variables.put(m.group(2),new Integer(counter++));
       m.appendReplacement(buf,m.group(1) + "(.*?)");
