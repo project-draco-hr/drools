@@ -4,6 +4,23 @@
     String actionString=((DroolsConsequenceAction)action).getConsequence();
     ExpressionCompiler compiler=new ExpressionCompiler(actionString);
     ParserContext parserContext=new ParserContext();
+    List imports=getProcessInstance().getRuleFlowProcess().getImports();
+    if (imports != null) {
+      for (Iterator iterator=imports.iterator(); iterator.hasNext(); ) {
+        String importClassName=(String)iterator.next();
+        if (importClassName.endsWith(".*")) {
+          importClassName=importClassName.substring(0,importClassName.indexOf(".*"));
+          parserContext.addPackageImport(importClassName);
+        }
+ else {
+          try {
+            parserContext.addImport(Class.forName(importClassName));
+          }
+ catch (          ClassNotFoundException e) {
+          }
+        }
+      }
+    }
     Serializable expression=compiler.compile(parserContext);
     Map globalDefs=getProcessInstance().getRuleFlowProcess().getGlobals();
     Map globals=new HashMap();
