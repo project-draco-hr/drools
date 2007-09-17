@@ -1,9 +1,34 @@
 {
   if (property == null)   return Collections.EMPTY_LIST;
-  StringTokenizer st=new StringTokenizer(property,"\n\r\t ");
-  List list=new ArrayList();
-  while (st.hasMoreTokens()) {
-    list.add(st.nextToken());
+  char[] cs=property.toCharArray();
+  boolean inquotes=false;
+  List items=new ArrayList();
+  String current="";
+  for (int i=0; i < cs.length; i++) {
+    char c=cs[i];
+switch (c) {
+case '\"':
+      if (inquotes) {
+        items.add(current);
+        current="";
+      }
+    inquotes=!inquotes;
+  break;
+default :
+if (!inquotes && (c == ' ' || c == '\n' || c == '\r' || c == '\t')) {
+  if (current.trim() != "") {
+    items.add(current);
+    current="";
   }
-  return list;
+}
+ else {
+  current=current + c;
+}
+break;
+}
+}
+if (current.trim() != "") {
+items.add(current);
+}
+return items;
 }
