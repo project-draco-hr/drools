@@ -1,21 +1,33 @@
 {
-  Package p1_=null;
-  ObjectInputStream in;
-  try {
-    in=new DroolsObjectInputStream(new FileInputStream(pkgFile));
-    p1_=(Package)in.readObject();
-    in.close();
+  if (pkgFile.getName().endsWith(".drl")) {
+    try {
+      FileLoader fl=(FileLoader)Class.forName("org.drools.compiler.SourcePackageProvider").newInstance();
+      return fl.loadPackage(pkgFile);
+    }
+ catch (    Exception e) {
+      this.listener.exception(e);
+      return null;
+    }
   }
- catch (  FileNotFoundException e) {
-    this.listener.exception(e);
-    this.listener.warning("Was unable to find the file " + pkgFile.getPath());
+ else {
+    Package p1_=null;
+    ObjectInputStream in;
+    try {
+      in=new DroolsObjectInputStream(new FileInputStream(pkgFile));
+      p1_=(Package)in.readObject();
+      in.close();
+    }
+ catch (    FileNotFoundException e) {
+      this.listener.exception(e);
+      this.listener.warning("Was unable to find the file " + pkgFile.getPath());
+    }
+catch (    IOException e) {
+      this.listener.exception(e);
+    }
+catch (    ClassNotFoundException e) {
+      this.listener.exception(e);
+      this.listener.warning("Was unable to load a class when loading a package. Perhaps it is missing from this application.");
+    }
+    return p1_;
   }
-catch (  IOException e) {
-    this.listener.exception(e);
-  }
-catch (  ClassNotFoundException e) {
-    this.listener.exception(e);
-    this.listener.warning("Was unable to load a class when loading a package. Perhaps it is missing from this application.");
-  }
-  return p1_;
 }
