@@ -1,8 +1,11 @@
 {
   final AccumulateDescr accumDescr=(AccumulateDescr)descr;
-  final PatternBuilder patternBuilder=(PatternBuilder)context.getDialect().getBuilder(PatternDescr.class);
-  final Pattern sourcePattern=(Pattern)patternBuilder.build(context,accumDescr.getInputPattern());
-  if (sourcePattern == null) {
+  if (!accumDescr.hasValidInput()) {
+    return null;
+  }
+  final RuleConditionBuilder builder=context.getDialect().getBuilder(accumDescr.getInput().getClass());
+  final RuleConditionElement source=builder.build(context,accumDescr.getInput());
+  if (source == null) {
     return null;
   }
   Accumulate accumulate=null;
@@ -15,12 +18,13 @@
     }
     final Declaration[] previousDeclarations=(Declaration[])tupleDeclarations.toArray(new Declaration[tupleDeclarations.size()]);
     final String[] requiredGlobals=(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]);
-    final Declaration[] sourceDeclArr=(Declaration[])sourcePattern.getOuterDeclarations().values().toArray(new Declaration[0]);
+    final Declaration[] sourceDeclArr=(Declaration[])source.getOuterDeclarations().values().toArray(new Declaration[0]);
     final String className="accumulateExpression" + context.getNextId();
     final Map map=createVariableContext(className,(String)accumDescr.getExpression(),context,previousDeclarations,sourceDeclArr,requiredGlobals);
+    map.put("readLocalsFromTuple",accumDescr.isMultiPattern() ? Boolean.TRUE : Boolean.FALSE);
     AccumulateFunction function=context.getConfiguration().getAccumulateFunction(accumDescr.getFunctionIdentifier());
     JavaAccumulatorFunctionExecutor accumulator=new JavaAccumulatorFunctionExecutor(function);
-    accumulate=new Accumulate(sourcePattern,previousDeclarations,sourceDeclArr,accumulator);
+    accumulate=new Accumulate(source,previousDeclarations,sourceDeclArr,accumulator);
     generatTemplates("returnValueMethod","returnValueInvoker",context,className,map,accumulator,accumDescr);
   }
  else {
@@ -44,11 +48,12 @@
     for (int i=0, size=requiredDeclarations.size(); i < size; i++) {
       declarations[i]=context.getDeclarationResolver().getDeclaration((String)requiredDeclarations.get(i));
     }
-    final Declaration[] sourceDeclArr=(Declaration[])sourcePattern.getOuterDeclarations().values().toArray(new Declaration[0]);
+    final Declaration[] sourceDeclArr=(Declaration[])source.getOuterDeclarations().values().toArray(new Declaration[0]);
     final String[] globals=(String[])requiredGlobals.toArray(new String[requiredGlobals.size()]);
     final Map map=createVariableContext(className,null,context,declarations,null,globals);
     map.put("className",accumDescr.getClassName());
     map.put("innerDeclarations",sourceDeclArr);
+    map.put("isMultiPattern",accumDescr.isMultiPattern() ? Boolean.TRUE : Boolean.FALSE);
     final String initCode=this.fixInitCode(initCodeAnalysis,accumDescr.getInitCode());
     final String actionCode=accumDescr.getActionCode();
     final String resultCode=accumDescr.getResultCode();
@@ -74,7 +79,7 @@
       map.put("supportsReverse","true");
     }
     map.put("hashCode",new Integer(actionCode.hashCode()));
-    accumulate=new Accumulate(sourcePattern,declarations,sourceDeclArr);
+    accumulate=new Accumulate(source,declarations,sourceDeclArr);
     generatTemplates("accumulateInnerClass","accumulateInvoker",context,className,map,accumulate,accumDescr);
   }
   return accumulate;
