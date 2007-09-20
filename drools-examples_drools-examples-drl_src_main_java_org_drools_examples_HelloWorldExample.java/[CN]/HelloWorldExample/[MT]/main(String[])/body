@@ -1,10 +1,24 @@
 {
-  final RuleBase ruleBase=readRule();
+  final Reader source=new InputStreamReader(HelloWorldExample.class.getResourceAsStream("HelloWorld.drl"));
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(source);
+  if (builder.hasErrors()) {
+    System.out.println(builder.getErrors().toString());
+    throw new RuntimeException("Unable to compile \"HelloWorld.drl\".");
+  }
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  ruleBase.addPackage(pkg);
   final StatefulSession session=ruleBase.newStatefulSession();
+  session.addEventListener(new DebugAgendaEventListener());
+  session.addEventListener(new DebugWorkingMemoryEventListener());
+  final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(session);
+  logger.setFileName("log/helloworld");
   final Message message=new Message();
   message.setMessage("Hello World");
   message.setStatus(Message.HELLO);
   session.insert(message);
   session.fireAllRules();
+  logger.writeToDisk();
   session.dispose();
 }
