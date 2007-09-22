@@ -1,20 +1,71 @@
 {
-  final Map classFilesByName=new HashMap();
-  final CompilingIClassLoader icl=new CompilingIClassLoader(pResourceReader,classFilesByName,pClassLoader);
+  final Collection problems=new ArrayList();
+  final StringPattern[] pattern=StringPattern.PATTERNS_NONE;
+  final Compiler compiler=new Compiler(new ResourceFinder(){
+    public Resource findResource(    final String pSourceName){
+      final byte[] bytes=pResourceReader.getBytes(pSourceName);
+      if (bytes == null) {
+        return null;
+      }
+      return new JciResource(pSourceName,bytes);
+    }
+  }
+,new ClassLoaderIClassLoader(pClassLoader),new ResourceFinder(){
+    public Resource findResource(    final String pResourceName){
+      final byte[] bytes=pStore.read(pResourceName);
+      if (bytes == null) {
+        return null;
+      }
+      return new JciResource(pResourceName,bytes);
+    }
+  }
+,new ResourceCreator(){
+    public OutputStream createResource(    final String pResourceName) throws IOException {
+      return new JciOutputStream(pResourceName,pStore);
+    }
+    public boolean deleteResource(    final String pResourceName){
+      pStore.remove(pResourceName);
+      return true;
+    }
+  }
+,pSettings.getSourceEncoding(),false,pSettings.isDebug() ? DebuggingInformation.ALL : DebuggingInformation.NONE,new FilterWarningHandler(pattern,new WarningHandler(){
+    public void handleWarning(    final String pHandle,    final String pMessage,    final Location pLocation){
+      final CompilationProblem problem=new JaninoCompilationProblem(pLocation.getFileName(),pLocation,pMessage,false);
+      if (problemHandler != null) {
+        problemHandler.handle(problem);
+      }
+      problems.add(problem);
+    }
+  }
+));
+  compiler.setCompileErrorHandler(new ErrorHandler(){
+    public void handleError(    final String pMessage,    final Location pLocation) throws CompileException {
+      final CompilationProblem problem=new JaninoCompilationProblem(pLocation.getFileName(),pLocation,pMessage,true);
+      if (problemHandler != null) {
+        problemHandler.handle(problem);
+      }
+      problems.add(problem);
+    }
+  }
+);
+  final Resource[] resources=new Resource[pSourceNames.length];
   for (int i=0; i < pSourceNames.length; i++) {
-    try {
-      icl.loadIClass(Descriptor.fromClassName(ClassUtils.convertResourceToClassName(pSourceNames[i])));
-    }
- catch (    final ClassNotFoundException e) {
-      e.printStackTrace();
-    }
+    final byte[] source=pResourceReader.getBytes(pSourceNames[i]);
+    resources[i]=new JciResource(pSourceNames[i],source);
   }
-  for (Iterator i=classFilesByName.entrySet().iterator(); i.hasNext(); ) {
-    final Map.Entry entry=(Map.Entry)i.next();
-    final String clazzName=(String)entry.getKey();
-    pStore.write(ClassUtils.convertClassToResourcePath(clazzName),(byte[])entry.getValue());
+  try {
+    compiler.compile(resources);
   }
-  final Collection problems=icl.getProblems();
+ catch (  ScanException e) {
+    problems.add(new JaninoCompilationProblem(e));
+  }
+catch (  ParseException e) {
+    problems.add(new JaninoCompilationProblem(e));
+  }
+catch (  IOException e) {
+  }
+catch (  CompileException e) {
+  }
   final CompilationProblem[] result=new CompilationProblem[problems.size()];
   problems.toArray(result);
   return new CompilationResult(result);
