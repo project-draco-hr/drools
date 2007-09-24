@@ -1,0 +1,29 @@
+{
+  if (element instanceof Pattern) {
+    Pattern pattern=(Pattern)element;
+    for (Iterator it=pattern.getNestedElements().iterator(); it.hasNext(); ) {
+      processElement(resolver,contextStack,(RuleConditionElement)it.next());
+    }
+    for (Iterator it=pattern.getConstraints().iterator(); it.hasNext(); ) {
+      Object next=it.next();
+      if (next instanceof Declaration) {
+        continue;
+      }
+      Constraint constraint=(Constraint)next;
+      Declaration[] decl=constraint.getRequiredDeclarations();
+      for (int i=0; i < decl.length; i++) {
+        Declaration resolved=resolver.getDeclaration(decl[i].getIdentifier());
+        if (resolved != null && resolved != decl[i]) {
+          constraint.replaceDeclaration(decl[i],resolved);
+        }
+      }
+    }
+  }
+ else {
+    contextStack.push(element);
+    for (Iterator it=element.getNestedElements().iterator(); it.hasNext(); ) {
+      processElement(resolver,contextStack,(RuleConditionElement)it.next());
+    }
+    contextStack.pop();
+  }
+}
