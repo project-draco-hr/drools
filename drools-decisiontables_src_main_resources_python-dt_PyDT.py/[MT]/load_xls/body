@@ -3,5 +3,26 @@ def load_xls(file_name):
     book = xlrd.open_workbook(file_name)
     sh = book.sheet_by_index(0)
     print sh.name, sh.nrows, sh.ncols
+    (condition_headers, action_headers, data) = ([], [], [])
     for rx in range(sh.nrows):
-        print sh.row(rx)
+        if (rx == 0):
+            divider = 0
+            for cx in range(sh.ncols):
+                cv = sh.cell_value(rowx=rx, colx=cx)
+                if (cv == ''):
+                    continue
+                if ((cv == '*') or (cv == 'actions:')):
+                    divider = cx
+                elif (divider == 0):
+                    condition_headers.append([cx, cv])
+                else:
+                    action_headers.append([cx, cv])
+        else:
+            data_row = {}
+            for cx in range(sh.ncols):
+                cv = sh.cell_value(rowx=rx, colx=cx)
+                if (cv != ''):
+                    data_row[cx] = cv
+            if (len(data_row) > 0):
+                data.append(data_row)
+    return {'condition_headers': condition_headers, 'action_headers': action_headers, 'data': data, }
