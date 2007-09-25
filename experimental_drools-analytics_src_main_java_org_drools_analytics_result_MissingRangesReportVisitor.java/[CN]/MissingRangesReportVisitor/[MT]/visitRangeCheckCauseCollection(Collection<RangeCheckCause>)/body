@@ -1,0 +1,21 @@
+{
+  Map<String,Object> map=new HashMap<String,Object>();
+  map.put("header",processHeader(UrlFactory.THIS_FOLDER));
+  map.put("sourceFolder",UrlFactory.THIS_FOLDER);
+  map.put("ruleFolder",UrlFactory.RULE_FOLDER);
+  map.put("packageFolder",UrlFactory.PACKAGE_FOLDER);
+  map.put("cssStyle",createStyleTag(UrlFactory.CSS_FOLDER + "/" + UrlFactory.CSS_FILE_LIST));
+  MapTree<Integer,RangeCheckCause> mapTree=new MapTree<Integer,RangeCheckCause>();
+  for (  RangeCheckCause cause : causes) {
+    mapTree.put(cause.getField().getId(),cause);
+  }
+  Collection<String> lines=new ArrayList<String>();
+  for (  Integer i : mapTree.map.keySet()) {
+    Set<RangeCheckCause> set=mapTree.map.get(i);
+    lines.add(processRangeCheckCollection(set));
+  }
+  map.put("lines",lines);
+  String myTemplate=readFile("missingRanges.htm");
+  String result=TemplateInterpreter.evalToString(myTemplate,map);
+  return result;
+}
