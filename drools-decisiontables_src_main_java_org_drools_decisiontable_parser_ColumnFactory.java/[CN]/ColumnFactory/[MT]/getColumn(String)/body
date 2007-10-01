@@ -1,6 +1,12 @@
 {
-  if (value.endsWith("[]")) {
-    return new ArrayColumn(value.substring(0,value.length() - 2));
+  Matcher m=PATTERN.matcher(value);
+  if (!m.matches())   throw new IllegalArgumentException("value " + value + " is not a valid column definition");
+  String name=m.group(1);
+  String type=m.group(4);
+  type=type == null ? "String" : type;
+  boolean array=(m.group(2) != null) || (m.group(5) != null);
+  if (array) {
+    return new ArrayColumn(name,createColumn(name,type));
   }
-  return new Column(value);
+  return createColumn(name,type);
 }
