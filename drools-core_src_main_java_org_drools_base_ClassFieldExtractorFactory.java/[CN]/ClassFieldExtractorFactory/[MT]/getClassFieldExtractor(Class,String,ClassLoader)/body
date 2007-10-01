@@ -1,5 +1,5 @@
 {
-  if (byteArrayClassLoader == null) {
+  if (byteArrayClassLoader == null || byteArrayClassLoader.getParent() != classLoader) {
     if (classLoader == null) {
       throw new RuntimeDroolsException("ClassFieldExtractorFactory cannot have a null parent ClassLoader");
     }
@@ -21,7 +21,7 @@
       final Class fieldType=(Class)inspector.getFieldTypes().get(fieldName);
       final Method getterMethod=(Method)inspector.getGetterMethods().get(fieldName);
       if (fieldType != null && getterMethod != null) {
-        final String className=ClassFieldExtractorFactory.BASE_PACKAGE + "/" + Type.getInternalName(clazz)+ "$"+ getterMethod.getName();
+        final String className=ClassFieldExtractorFactory.BASE_PACKAGE + "/" + Type.getInternalName(clazz)+ Math.abs(System.identityHashCode(clazz))+ "$"+ getterMethod.getName();
         final byte[] bytes=dump(clazz,className,getterMethod,fieldType,clazz.isInterface());
         final Class newClass=byteArrayClassLoader.defineClass(className.replace('/','.'),bytes,PROTECTION_DOMAIN);
         final Integer index=(Integer)inspector.getFieldNames().get(fieldName);
