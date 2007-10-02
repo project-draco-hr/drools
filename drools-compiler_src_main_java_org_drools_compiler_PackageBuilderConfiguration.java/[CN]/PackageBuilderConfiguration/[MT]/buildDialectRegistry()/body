@@ -1,20 +1,9 @@
 {
   DialectRegistry registry=new DialectRegistry();
-  ClassLoader classLoader=Thread.currentThread().getContextClassLoader();
-  for (Iterator it=this.dialects.entrySet().iterator(); it.hasNext(); ) {
-    Entry entry=(Entry)it.next();
-    String str=(String)entry.getKey();
-    String dialectName=str.substring(str.lastIndexOf(".") + 1);
-    String dialectClass=(String)entry.getValue();
-    try {
-      Class cls=classLoader.loadClass(dialectClass);
-      DialectConfiguration dialectConf=(DialectConfiguration)cls.newInstance();
-      dialectConf.init(this);
-      registry.addDialectConfiguration(dialectName,dialectConf);
-    }
- catch (    Exception e) {
-      throw new RuntimeDroolsException("Unable to load dialect '" + dialectClass + ":"+ dialectName+ "'",e);
-    }
+  for (Iterator it=this.dialectConfigurations.values().iterator(); it.hasNext(); ) {
+    DialectConfiguration conf=(DialectConfiguration)it.next();
+    Dialect dialect=conf.getDialect();
+    registry.addDialect(conf.getDialect().getId(),dialect);
   }
   return registry;
 }
