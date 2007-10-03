@@ -13,8 +13,13 @@ synchronized (this.pkgs) {
     final InitialFactHandle handle=new InitialFactHandle(session.getFactHandleFactory().newFactHandle(new InitialFactHandleDummyObject()));
     session.queueWorkingMemoryAction(new WorkingMemoryReteAssertAction(handle,false,true,null,null));
   }
-  FireAllRulesBeforeUnlockEventListener listener=new DefaultFireAllRulesBeforeUnlockEventListener();
-  listener.setSession(session);
-  addEventListener(listener);
+  if (this.updateListenerFactory == null) {
+    this.updateListenerFactory=new RuleBaseUpdateListenerFactory();
+  }
+  String listenerName=this.config.getRuleBaseUpdateHandler();
+  if (listenerName != null && listenerName.length() > 0) {
+    RuleBaseUpdateListener listener=this.updateListenerFactory.createListener(listenerName,session);
+    addEventListener(listener);
+  }
   return session;
 }
