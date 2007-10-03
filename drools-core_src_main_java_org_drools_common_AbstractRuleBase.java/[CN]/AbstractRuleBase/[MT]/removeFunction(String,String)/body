@@ -4,7 +4,8 @@ synchronized (this.pkgs) {
     if (pkg == null) {
       throw new IllegalArgumentException("Package name '" + packageName + "' does not exist for this Rule Base.");
     }
-    PackageCompilationData compilationData=pkg.removeFunction(functionName);
+    this.eventSupport.fireBeforeFunctionRemoved(pkg,functionName);
+    final PackageCompilationData compilationData=pkg.removeFunction(functionName);
     if (compilationData == null) {
       throw new IllegalArgumentException("function name '" + packageName + "' does not exist in the Package '"+ packageName+ "'.");
     }
@@ -12,5 +13,6 @@ synchronized (this.pkgs) {
       this.reloadPackageCompilationData=new ReloadPackageCompilationData();
     }
     this.reloadPackageCompilationData.addPackageCompilationData(compilationData);
+    this.eventSupport.fireAfterFunctionRemoved(pkg,functionName);
   }
 }

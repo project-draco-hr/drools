@@ -2,51 +2,47 @@
   newPkg.checkValidity();
 synchronized (this.pkgs) {
     final Package pkg=(Package)this.pkgs.get(newPkg.getName());
-    int lastAquiredLock=0;
-    final InternalWorkingMemory[] wms=getWorkingMemories();
-    try {
-      for (lastAquiredLock=0; lastAquiredLock < wms.length; lastAquiredLock++) {
-        wms[lastAquiredLock].getLock().lock();
-      }
-      this.eventSupport.fireBeforePackageAdded(newPkg);
-      if (pkg != null) {
-        mergePackage(pkg,newPkg);
-      }
- else {
-        this.pkgs.put(newPkg.getName(),newPkg);
-      }
-      final Map newGlobals=newPkg.getGlobals();
-      for (final Iterator it=newGlobals.keySet().iterator(); it.hasNext(); ) {
-        final String identifier=(String)it.next();
-        final Class type=(Class)newGlobals.get(identifier);
-        final boolean f=this.globals.containsKey(identifier);
-        if (f) {
-          final boolean y=!this.globals.get(identifier).equals(type);
-          if (f && y) {
-            throw new PackageIntegrationException(pkg);
-          }
-        }
-      }
-      this.globals.putAll(newGlobals);
-      final Rule[] rules=newPkg.getRules();
-      for (int i=0; i < rules.length; ++i) {
-        addRule(newPkg,rules[i]);
-      }
-      if (newPkg.getRuleFlows() != Collections.EMPTY_MAP) {
-        Map flows=newPkg.getRuleFlows();
-        for (Iterator iter=flows.entrySet().iterator(); iter.hasNext(); ) {
-          Entry flow=(Entry)iter.next();
-          this.processes.put(flow.getKey(),flow.getValue());
-        }
-      }
-      this.packageClassLoader.addClassLoader(newPkg.getPackageCompilationData().getClassLoader());
-      this.eventSupport.fireAfterPackageAdded(newPkg);
+    boolean doUnlock=false;
+    if (!this.lock.isHeldByCurrentThread() && (this.wms == null || this.wms.length == 0)) {
+      lock();
+      doUnlock=true;
     }
-  finally {
-      for (lastAquiredLock--; lastAquiredLock > -1; lastAquiredLock--) {
-        wms[lastAquiredLock].fireAllRules();
-        wms[lastAquiredLock].getLock().unlock();
+    this.additionsSinceLock++;
+    this.eventSupport.fireBeforePackageAdded(newPkg);
+    if (pkg != null) {
+      mergePackage(pkg,newPkg);
+    }
+ else {
+      this.pkgs.put(newPkg.getName(),newPkg);
+    }
+    final Map newGlobals=newPkg.getGlobals();
+    for (final Iterator it=newGlobals.keySet().iterator(); it.hasNext(); ) {
+      final String identifier=(String)it.next();
+      final Class type=(Class)newGlobals.get(identifier);
+      final boolean f=this.globals.containsKey(identifier);
+      if (f) {
+        final boolean y=!this.globals.get(identifier).equals(type);
+        if (f && y) {
+          throw new PackageIntegrationException(pkg);
+        }
       }
+    }
+    this.globals.putAll(newGlobals);
+    final Rule[] rules=newPkg.getRules();
+    for (int i=0; i < rules.length; ++i) {
+      addRule(newPkg,rules[i]);
+    }
+    if (newPkg.getRuleFlows() != Collections.EMPTY_MAP) {
+      final Map flows=newPkg.getRuleFlows();
+      for (final Iterator iter=flows.entrySet().iterator(); iter.hasNext(); ) {
+        final Entry flow=(Entry)iter.next();
+        this.processes.put(flow.getKey(),flow.getValue());
+      }
+    }
+    this.packageClassLoader.addClassLoader(newPkg.getPackageCompilationData().getClassLoader());
+    this.eventSupport.fireAfterPackageAdded(newPkg);
+    if (doUnlock) {
+      unlock();
     }
   }
 }

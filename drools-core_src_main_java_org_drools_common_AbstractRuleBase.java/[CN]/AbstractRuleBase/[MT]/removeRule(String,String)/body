@@ -8,24 +8,21 @@ synchronized (this.pkgs) {
     if (rule == null) {
       throw new IllegalArgumentException("Rule name '" + ruleName + "' does not exist in the Package '"+ packageName+ "'.");
     }
-    int lastAquiredLock=0;
-    final InternalWorkingMemory[] wms=getWorkingMemories();
-    PackageCompilationData compilationData=null;
-    try {
-      for (lastAquiredLock=0; lastAquiredLock < wms.length; lastAquiredLock++) {
-        wms[lastAquiredLock].getLock().lock();
-      }
-      removeRule(pkg,rule);
-      compilationData=pkg.removeRule(rule);
-      if (this.reloadPackageCompilationData == null) {
-        this.reloadPackageCompilationData=new ReloadPackageCompilationData();
-      }
-      this.reloadPackageCompilationData.addPackageCompilationData(compilationData);
+    boolean doUnlock=false;
+    if (!this.lock.isHeldByCurrentThread() && (this.wms == null || this.wms.length == 0)) {
+      lock();
+      doUnlock=true;
     }
-  finally {
-      for (lastAquiredLock--; lastAquiredLock > -1; lastAquiredLock--) {
-        wms[lastAquiredLock].getLock().unlock();
-      }
+    this.removalsSinceLock++;
+    PackageCompilationData compilationData=null;
+    removeRule(pkg,rule);
+    compilationData=pkg.removeRule(rule);
+    if (this.reloadPackageCompilationData == null) {
+      this.reloadPackageCompilationData=new ReloadPackageCompilationData();
+    }
+    this.reloadPackageCompilationData.addPackageCompilationData(compilationData);
+    if (doUnlock) {
+      unlock();
     }
   }
 }
