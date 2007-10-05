@@ -1,0 +1,27 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_globalCustomResolver.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final Map map=new HashMap();
+  List list=new ArrayList();
+  String string="stilton";
+  map.put("list",list);
+  map.put("string",string);
+  Cheese bree=new Cheese();
+  bree.setPrice(100);
+  workingMemory.insert(bree);
+  workingMemory.setGlobalResolver(new GlobalResolver(){
+    public Object resolveGlobal(    String identifier){
+      return map.get(identifier);
+    }
+    public void setGlobal(    String identifier,    Object value){
+      map.put(identifier,value);
+    }
+  }
+);
+  workingMemory.fireAllRules();
+  assertEquals(new Integer(5),list.get(0));
+}
