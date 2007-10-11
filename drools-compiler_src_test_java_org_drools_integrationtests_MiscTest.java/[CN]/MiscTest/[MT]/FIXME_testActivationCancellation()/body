@@ -1,0 +1,33 @@
+{
+  PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(this.getClass().getResourceAsStream("test_ActivationCancellation.drl")));
+  assertFalse(builder.getErrors().toString(),builder.hasErrors());
+  RuleBase rb=RuleBaseFactory.newRuleBase();
+  rb.addPackage(builder.getPackage());
+  StatefulSession session=rb.newStatefulSession();
+  List list=new ArrayList();
+  session.addEventListener(new AgendaEventListener(){
+    public void activationCancelled(    ActivationCancelledEvent event,    WorkingMemory workingMemory){
+    }
+    public void activationCreated(    ActivationCreatedEvent event,    WorkingMemory workingMemory){
+    }
+    public void afterActivationFired(    AfterActivationFiredEvent event,    WorkingMemory workingMemory){
+    }
+    public void agendaGroupPopped(    AgendaGroupPoppedEvent event,    WorkingMemory workingMemory){
+    }
+    public void agendaGroupPushed(    AgendaGroupPushedEvent event,    WorkingMemory workingMemory){
+    }
+    public void beforeActivationFired(    BeforeActivationFiredEvent event,    WorkingMemory workingMemory){
+      if (event.getActivation().getRule().getName().equals("rule3")) {
+        event.getActivation().remove();
+      }
+    }
+  }
+);
+  session.setGlobal("list",list);
+  session.insert(new Cheese());
+  session.fireAllRules();
+  assertTrue(list.contains("rule1"));
+  assertTrue(list.contains("rule2"));
+  assertFalse(list.contains("rule3"));
+}
