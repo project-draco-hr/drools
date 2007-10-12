@@ -1,0 +1,19 @@
+{
+  HashSet set=new HashSet();
+  set.add("rule3");
+  PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(this.getClass().getResourceAsStream("test_rules.drl")));
+  assertFalse(builder.getErrors().toString(),builder.hasErrors());
+  RuleBase rb=RuleBaseFactory.newRuleBase();
+  rb.addPackage(builder.getPackage());
+  TestingEventListener ls=new TestingEventListener(set,rb,false);
+  StatefulSession session=rb.newStatefulSession();
+  session.addEventListener(ls);
+  session.insert(new Cheese());
+  session.fireAllRules();
+  assertEquals(new Integer(1),(Integer)ls.firingCounts.get("rule1"));
+  assertEquals(new Integer(1),(Integer)ls.firingCounts.get("rule2"));
+  assertEquals(new Integer(1),(Integer)ls.firingCounts.get("rule3"));
+  assertTrue(ls.firingCounts.containsKey("rule3"));
+  assertFalse(ls.firingCounts.containsKey("rule4"));
+}
