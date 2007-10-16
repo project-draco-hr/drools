@@ -1,0 +1,19 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_OutOfMemoryError.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  int i=0;
+  try {
+    for (i=0; i < 300000; i++) {
+      final StatefulSession session=ruleBase.newStatefulSession(true);
+      session.dispose();
+    }
+  }
+ catch (  Throwable e) {
+    System.out.println("Error at: " + i);
+    e.printStackTrace();
+    fail("Should not raise any error or exception.");
+  }
+}
