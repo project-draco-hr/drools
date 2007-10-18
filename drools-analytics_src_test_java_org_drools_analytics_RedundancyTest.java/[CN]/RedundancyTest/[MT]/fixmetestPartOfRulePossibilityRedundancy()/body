@@ -2,8 +2,8 @@
   StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("redundancy/Possibilities.drl"));
   session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Find part of redundant RulePossibility combination"));
   Collection<Object> data=new ArrayList<Object>();
-  AnalysisResultNormal analysisResult=new AnalysisResultNormal();
-  session.setGlobal("result",analysisResult);
+  AnalyticsResult result=AnalyticsDataFactory.getAnalyticsResult();
+  session.setGlobal("result",result);
   String ruleName1="Rule 1";
   String ruleName2="Rule 2";
   AnalyticsRule r1=new AnalyticsRule();
@@ -34,12 +34,14 @@
   data.add(redundancy2);
   StatelessSessionResult sessionResult=session.executeWithResults(data);
   Map<String,Set<Redundancy>> map=new HashMap<String,Set<Redundancy>>();
-  Iterator iter=sessionResult.iterateObjects();
+  Iterator<Object> iter=sessionResult.iterateObjects();
   while (iter.hasNext()) {
     Object o=(Object)iter.next();
     if (o instanceof PartialRedundancy) {
       PartialRedundancy pr=(PartialRedundancy)o;
-      String key=pr.getLeft().getRuleName() + ":" + pr.getRight().getRuleName();
+      AnalyticsComponent left=(AnalyticsComponent)pr.getLeft();
+      AnalyticsComponent right=(AnalyticsComponent)pr.getRight();
+      String key=left.getRuleName() + ":" + right.getRuleName();
       if (map.containsKey(key)) {
         Set<Redundancy> set=map.get(key);
         set.add(pr.getRedundancy());

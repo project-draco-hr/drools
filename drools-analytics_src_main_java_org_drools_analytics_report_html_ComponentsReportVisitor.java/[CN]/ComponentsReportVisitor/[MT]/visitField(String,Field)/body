@@ -1,0 +1,24 @@
+{
+  AnalyticsData data=AnalyticsDataFactory.getAnalyticsData();
+  AnalyticsResult result=AnalyticsDataFactory.getAnalyticsResult();
+  AnalyticsClass objectType=data.getClassById(field.getClassId());
+  Collection<AnalyticsRule> rules=data.getRulesByFieldId(field.getId());
+  Map<String,Object> map=new HashMap<String,Object>();
+  map.put("sourceFolder",sourceFolder);
+  map.put("ruleFolder",UrlFactory.RULE_FOLDER);
+  map.put("objectTypeFolder",UrlFactory.OBJECT_TYPE_FOLDER);
+  map.put("fieldFolder",UrlFactory.FIELD_FOLDER);
+  map.put("field",field);
+  map.put("objectType",objectType);
+  map.put("rules",rules);
+  if (field.getFieldType() == Field.FieldType.DOUBLE || field.getFieldType() == Field.FieldType.DATE || field.getFieldType() == Field.FieldType.INT) {
+    Collection<RangeCheckCause> causes=result.getRangeCheckCausesByFieldId(field.getId());
+    Collection<Restriction> restrictions=data.getRestrictionsByFieldId(field.getId());
+    map.put("ranges","Ranges:" + MissingRangesReportVisitor.visitRanges(UrlFactory.PREVIOUS_FOLDER,restrictions,causes));
+  }
+ else {
+    map.put("ranges","");
+  }
+  String myTemplate=readFile("field.htm");
+  return TemplateInterpreter.evalToString(myTemplate,map);
+}

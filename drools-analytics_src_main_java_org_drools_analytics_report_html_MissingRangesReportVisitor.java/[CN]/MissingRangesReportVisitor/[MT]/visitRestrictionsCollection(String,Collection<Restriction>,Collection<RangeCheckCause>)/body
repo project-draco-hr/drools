@@ -1,0 +1,44 @@
+{
+  DataTree<Object,DataRow> dt=new DataTree<Object,DataRow>();
+  Collection<String> stringRows=new ArrayList<String>();
+  for (  RangeCheckCause cause : causes) {
+    dt.put(cause.getValueAsObject(),new DataRow(null,null,cause.getEvaluator(),cause.getValueAsString()));
+  }
+  for (  Restriction r : restrictions) {
+    if (r instanceof LiteralRestriction) {
+      try {
+        LiteralRestriction restriction=(LiteralRestriction)r;
+        dt.put(restriction.getValueAsObject(),new DataRow(restriction.getRuleId(),restriction.getRuleName(),restriction.getEvaluator(),restriction.getValueAsString()));
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
+  DataRow previous=null;
+  for (Iterator<DataRow> iterator=dt.values().iterator(); iterator.hasNext(); ) {
+    DataRow current=iterator.next();
+    if (previous != null) {
+      if (previous.ruleId == null && current.ruleId == null && !previous.evaluator.equals("==") && !previous.evaluator.equals("!=") && !current.evaluator.equals("==") && !current.evaluator.equals("!=")) {
+        stringRows.add("Missing : " + previous + " .. "+ current);
+        current=iterator.next();
+      }
+ else       if (previous.ruleId != null && previous.ruleId.equals(current.ruleId)) {
+        stringRows.add(UrlFactory.getRuleUrl(sourceFolder,current.ruleId,current.ruleName) + " : " + previous.toString()+ " "+ current.toString());
+        current=iterator.next();
+      }
+ else       if (!iterator.hasNext()) {
+        processRangeOutput(previous,stringRows,sourceFolder);
+        processRangeOutput(current,stringRows,sourceFolder);
+      }
+ else {
+        processRangeOutput(previous,stringRows,sourceFolder);
+      }
+    }
+ else     if (!iterator.hasNext()) {
+      processRangeOutput(current,stringRows,sourceFolder);
+    }
+    previous=current;
+  }
+  return stringRows;
+}
