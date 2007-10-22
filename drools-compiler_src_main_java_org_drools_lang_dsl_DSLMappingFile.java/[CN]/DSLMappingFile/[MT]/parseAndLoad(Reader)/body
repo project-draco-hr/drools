@@ -4,9 +4,29 @@
   final BufferedReader dslFileReader=new BufferedReader(dsl);
   this.mapping=new DefaultDSLMapping();
   this.errors=new LinkedList();
+  StringBuffer sb=new StringBuffer();
+  boolean spacesAllowed=true;
   while ((line=dslFileReader.readLine()) != null) {
     linecounter++;
-    final Matcher mat=pattern.matcher(line);
+    String trimmedline=line.trim();
+    if (spacesAllowed) {
+      if (trimmedline.length() == 0) {
+        continue;
+      }
+      if (trimmedline.startsWith("#")) {
+        continue;
+      }
+    }
+    sb.append(trimmedline);
+    if (sb.charAt(sb.length() - 1) == '\\') {
+      sb.append(' ');
+      spacesAllowed=false;
+      continue;
+    }
+    String lineToParse=sb.toString();
+    spacesAllowed=true;
+    sb=new StringBuffer();
+    final Matcher mat=pattern.matcher(lineToParse);
     if (mat.matches()) {
       final String sectionStr=mat.group(2);
       final String metadataStr=mat.group(4);
@@ -32,7 +52,7 @@
       final DSLMappingEntry entry=new DefaultDSLMappingEntry(section,metadata,key,value);
       this.mapping.addEntry(entry);
     }
- else     if (!line.trim().startsWith("#")) {
+ else {
       final String error="Error parsing mapping entry: " + line;
       final DSLMappingParseException exception=new DSLMappingParseException(error,linecounter);
       this.errors.add(exception);
