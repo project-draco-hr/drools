@@ -11,12 +11,17 @@
   HashSet<String> ruleList=new HashSet<String>();
   ruleList.addAll(Arrays.asList(scenario.ruleTrace.rules));
   TestingEventListener listener=new TestingEventListener(ruleList,wm.getRuleBase(),scenario.ruleTrace.inclusive);
+  wm.addEventListener(listener);
   insertData(wm,this.populatedData);
-  wm.fireAllRules();
+  wm.fireAllRules(scenario.maxRuleFirings);
+  scenario.ruleTrace.firingCounts=listener.firingCounts;
   for (int i=0; i < scenario.assertions.length; i++) {
     Assertion assertion=scenario.assertions[i];
     if (assertion instanceof VerifyFact) {
       verify((VerifyFact)assertion);
+    }
+ else     if (assertion instanceof VerifyRuleFired) {
+      verify((VerifyRuleFired)assertion,scenario.ruleTrace.firingCounts);
     }
   }
 }
