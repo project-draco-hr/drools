@@ -1,7 +1,7 @@
 {
   this.scenario=scenario;
   this.workingMemory=wm;
-  scenario.lastRunResult=new Date();
+  scenario.executionTrace.lastRunResult=new Date();
   for (int i=0; i < scenario.facts.length; i++) {
     FactData fact=scenario.facts[i];
     Object f=eval("new " + resolver.getFullTypeName(fact.type) + "()");
@@ -15,8 +15,8 @@
     }
   }
   HashSet<String> ruleList=new HashSet<String>();
-  ruleList.addAll(Arrays.asList(scenario.ruleTrace.rules));
-  TestingEventListener listener=new TestingEventListener(ruleList,wm.getRuleBase(),scenario.ruleTrace.inclusive);
+  ruleList.addAll(Arrays.asList(scenario.executionTrace.rules));
+  TestingEventListener listener=new TestingEventListener(ruleList,wm.getRuleBase(),scenario.executionTrace.inclusive);
   wm.addEventListener(listener);
   if (scenario.scenarioSimulatedDate != null) {
     final Calendar now=Calendar.getInstance();
@@ -31,8 +31,8 @@
   applyData(wm,this.populatedData,this.globalData);
   long time=System.currentTimeMillis();
   wm.fireAllRules(scenario.maxRuleFirings);
-  scenario.executionTimeResult=System.currentTimeMillis() - time;
-  scenario.ruleTrace.firingCounts=listener.firingCounts;
+  scenario.executionTrace.executionTimeResult=System.currentTimeMillis() - time;
+  scenario.executionTrace.firingCounts=listener.firingCounts;
   for (int i=0; i < scenario.assertions.length; i++) {
     Assertion assertion=scenario.assertions[i];
     if (assertion instanceof VerifyFact) {
