@@ -2,13 +2,8 @@
   HashSet<String> set=new HashSet<String>();
   set.add("rule1");
   set.add("rule2");
-  PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(this.getClass().getResourceAsStream("test_rules.drl")));
-  assertFalse(builder.getErrors().toString(),builder.hasErrors());
-  RuleBase rb=RuleBaseFactory.newRuleBase();
-  rb.addPackage(builder.getPackage());
-  TestingEventListener ls=new TestingEventListener(set,rb,true);
-  StatefulSession session=rb.newStatefulSession();
+  StatefulSession session=getWorkingMemory("test_rules.drl");
+  TestingEventListener ls=new TestingEventListener(set,session.getRuleBase(),true);
   session.addEventListener(ls);
   session.insert(new Cheese());
   session.fireAllRules();
