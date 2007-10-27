@@ -1,0 +1,43 @@
+{
+  AnalyticsData data=AnalyticsDataFactory.getAnalyticsData();
+  AnalyticsClass clazz=data.getClassByPackageAndName(descr.getObjectType());
+  if (clazz == null) {
+    clazz=new AnalyticsClass();
+    clazz.setName(descr.getObjectType());
+    data.save(clazz);
+  }
+  currentClass=clazz;
+  Pattern pattern=new Pattern();
+  pattern.setRuleId(currentRule.getId());
+  pattern.setRuleName(currentRule.getRuleName());
+  pattern.setClassId(clazz.getId());
+  pattern.setPatternNot(solvers.getRuleSolver().isChildNot());
+  pattern.setPatternExists(solvers.getRuleSolver().isExists());
+  pattern.setPatternForall(solvers.getRuleSolver().isForall());
+  pattern.setOrderNumber(orderNumber);
+  pattern.setParent(parent);
+  data.save(pattern);
+  currentPattern=pattern;
+  if (descr.getIdentifier() != null) {
+    Variable variable=new Variable();
+    variable.setRuleId(currentRule.getId());
+    variable.setName(descr.getIdentifier());
+    variable.setObjectType(AnalyticsComponentType.CLASS);
+    variable.setObjectId(clazz.getId());
+    variable.setObjectName(descr.getObjectType());
+    data.save(variable);
+  }
+  if (descr.getSource() != null) {
+    AnalyticsComponent source=flatten(descr.getSource(),pattern);
+    pattern.setSourceId(source.getId());
+    pattern.setSourceType(source.getComponentType());
+  }
+ else {
+    pattern.setSourceId(0);
+    pattern.setSourceType(AnalyticsComponentType.NOTHING);
+  }
+  solvers.startPatternSolver(pattern);
+  flatten(descr.getConstraint(),pattern,0);
+  solvers.endPatternSolver();
+  return pattern.getId();
+}
