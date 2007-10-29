@@ -1,4 +1,5 @@
 {
+  long startTime=System.currentTimeMillis();
   if (solverRuleBase == null) {
     try {
       solverRuleBase=DroolsUtil.getInstance().readRuleBase(SUDOKU_SOLVER_DRL);
@@ -15,17 +16,20 @@
   solverStatefulSession.addEventListener(workingMemoryListener);
   for (int row=0; row < cellValues.length; row++) {
     for (int col=0; col < cellValues[row].length; col++) {
-      if (cellValues[row][col] == 0) {
+      cellValuesByRowAndCol[row][col]=new HashSet<Integer>();
+      if (cellValues[row][col] == null) {
         for (int value=1; value < 10; value++) {
           PossibleCellValue cellValue=new PossibleCellValue(value,row,col);
+          addCellValue(cellValue);
           allCellValues.add(cellValue);
         }
       }
  else {
         ResolvedCellValue cellValue=new ResolvedCellValue(cellValues[row][col],row,col);
-        allCellValues.add(cellValue);
+        addCellValue(cellValue);
       }
     }
   }
   insertAllCellValues(solverStatefulSession);
+  System.out.println("Setting up working memory and inserting all cell value POJOs took " + (System.currentTimeMillis() - startTime) + "ms.");
 }
