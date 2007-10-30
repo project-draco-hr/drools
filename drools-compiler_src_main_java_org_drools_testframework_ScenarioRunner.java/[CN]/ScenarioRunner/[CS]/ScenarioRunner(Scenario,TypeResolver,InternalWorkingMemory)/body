@@ -1,45 +1,47 @@
 {
   this.scenario=scenario;
   this.workingMemory=wm;
-  scenario.executionTrace.lastRunResult=new Date();
-  for (int i=0; i < scenario.facts.length; i++) {
-    FactData fact=scenario.facts[i];
-    Object f=eval("new " + resolver.getFullTypeName(fact.type) + "()");
-    if (fact.isGlobal) {
-      populateFields(fact,globalData,f);
-      globalData.put(fact.name,f);
-    }
+  scenario.lastRunResult=new Date();
+  TestingEventListener listener=null;
+  for (Iterator<Fixture> iterator=scenario.fixtures.iterator(); iterator.hasNext(); ) {
+    Fixture fx=iterator.next();
+    if (fx instanceof FactData) {
+      FactData fact=(FactData)fx;
+      Object f=eval("new " + resolver.getFullTypeName(fact.type) + "()");
+      if (fact.isGlobal) {
+        populateFields(fact,globalData,f);
+        globalData.put(fact.name,f);
+        wm.setGlobal(fact.name,f);
+      }
  else {
-      populateFields(fact,populatedData,f);
-      populatedData.put(fact.name,f);
-    }
-  }
-  HashSet<String> ruleList=new HashSet<String>();
-  ruleList.addAll(Arrays.asList(scenario.executionTrace.rules));
-  TestingEventListener listener=new TestingEventListener(ruleList,wm.getRuleBase(),scenario.executionTrace.inclusive);
-  wm.addEventListener(listener);
-  if (scenario.scenarioSimulatedDate != null) {
-    final Calendar now=Calendar.getInstance();
-    now.setTimeInMillis(scenario.scenarioSimulatedDate.getTime());
-    wm.setTimeMachine(new TimeMachine(){
-      @Override public Calendar getNow(){
-        return now;
+        populateFields(fact,populatedData,f);
+        populatedData.put(fact.name,f);
+        this.factHandles.put(fact.name,wm.insert(f));
       }
     }
-);
-  }
-  applyData(wm,this.populatedData,this.globalData);
-  long time=System.currentTimeMillis();
-  wm.fireAllRules(scenario.maxRuleFirings);
-  scenario.executionTrace.executionTimeResult=System.currentTimeMillis() - time;
-  scenario.executionTrace.firingCounts=listener.firingCounts;
-  for (int i=0; i < scenario.assertions.length; i++) {
-    Assertion assertion=scenario.assertions[i];
-    if (assertion instanceof VerifyFact) {
-      verify((VerifyFact)assertion);
+ else     if (fx instanceof ExecutionTrace) {
+      ExecutionTrace executionTrace=(ExecutionTrace)fx;
+      HashSet<String> ruleList=new HashSet<String>();
+      ruleList.addAll(Arrays.asList(executionTrace.rules));
+      listener=new TestingEventListener(ruleList,wm.getRuleBase(),executionTrace.inclusive);
+      wm.addEventListener(listener);
+      applyTimeMachine(wm,executionTrace);
+      long time=System.currentTimeMillis();
+      wm.fireAllRules(scenario.maxRuleFirings);
+      executionTrace.executionTimeResult=System.currentTimeMillis() - time;
+      executionTrace.firingCounts=listener.firingCounts;
     }
- else     if (assertion instanceof VerifyRuleFired) {
-      verify((VerifyRuleFired)assertion,listener.firingCounts);
+ else     if (fx instanceof Expectation) {
+      Expectation assertion=(Expectation)fx;
+      if (assertion instanceof VerifyFact) {
+        verify((VerifyFact)assertion);
+      }
+ else       if (assertion instanceof VerifyRuleFired) {
+        verify((VerifyRuleFired)assertion,(listener.firingCounts != null) ? listener.firingCounts : new HashMap<String,Integer>());
+      }
+    }
+ else {
+      throw new IllegalArgumentException("Not sure what to do with " + fx);
     }
   }
 }

@@ -1,0 +1,20 @@
+{
+  Scenario sc=new Scenario();
+  sc.fixtures.add(new FactData("Cheese","c1",new FieldData[]{new FieldData("price","1",false)},false));
+  ExecutionTrace ex=new ExecutionTrace();
+  sc.fixtures.add(ex);
+  sc.fixtures.add(new FactData("Cheese","c2",new FieldData[]{new FieldData("price","2",false)},false));
+  sc.fixtures.add(new VerifyFact("c1",new VerifyField[]{new VerifyField("type","rule1")}));
+  ex=new ExecutionTrace();
+  sc.fixtures.add(ex);
+  sc.fixtures.add(new VerifyFact("c1",new VerifyField[]{new VerifyField("type","rule2")}));
+  TypeResolver resolver=new ClassTypeResolver(new HashSet<Object>(),Thread.currentThread().getContextClassLoader());
+  resolver.addImport("org.drools.Cheese");
+  WorkingMemory wm=getWorkingMemory("test_stateful.drl");
+  ScenarioRunner run=new ScenarioRunner(sc,resolver,(InternalWorkingMemory)wm);
+  Cheese c1=(Cheese)run.populatedData.get("c1");
+  Cheese c2=(Cheese)run.populatedData.get("c2");
+  assertEquals("rule2",c1.getType());
+  assertEquals("rule2",c2.getType());
+  assertTrue(sc.wasSuccessful());
+}
