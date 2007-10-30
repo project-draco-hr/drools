@@ -7,17 +7,29 @@
     Fixture fx=iterator.next();
     if (fx instanceof FactData) {
       FactData fact=(FactData)fx;
-      Object f=eval("new " + resolver.getFullTypeName(fact.type) + "()");
+      Object f=(fact.isModify) ? this.populatedData.get(fact.name) : eval("new " + resolver.getFullTypeName(fact.type) + "()");
       if (fact.isGlobal) {
         populateFields(fact,globalData,f);
         globalData.put(fact.name,f);
         wm.setGlobal(fact.name,f);
+      }
+ else       if (fact.isModify) {
+        if (!this.factHandles.containsKey(fact.name)) {
+          throw new IllegalArgumentException("Was not a previously inserted fact. [" + fact.name + "]");
+        }
+        populateFields(fact,populatedData,f);
+        this.workingMemory.update(this.factHandles.get(fact.name),f);
       }
  else {
         populateFields(fact,populatedData,f);
         populatedData.put(fact.name,f);
         this.factHandles.put(fact.name,wm.insert(f));
       }
+    }
+ else     if (fx instanceof RetractFact) {
+      RetractFact f=(RetractFact)fx;
+      this.workingMemory.retract(this.factHandles.get(f.name));
+      this.populatedData.remove(f.name);
     }
  else     if (fx instanceof ExecutionTrace) {
       ExecutionTrace executionTrace=(ExecutionTrace)fx;

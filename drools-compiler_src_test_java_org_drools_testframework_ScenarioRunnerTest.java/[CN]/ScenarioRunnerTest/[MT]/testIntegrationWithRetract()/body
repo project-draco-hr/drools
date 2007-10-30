@@ -1,0 +1,18 @@
+{
+  Scenario sc=new Scenario();
+  sc.fixtures.add(new FactData("Cheese","c1",new FieldData[]{new FieldData("price","46",false),new FieldData("type","XXX",false)},false,false));
+  sc.fixtures.add(new FactData("Cheese","c2",new FieldData[]{new FieldData("price","42",false)},false,false));
+  sc.fixtures.add(new ExecutionTrace());
+  sc.fixtures.add(new VerifyFact("c1",new VerifyField[]{new VerifyField("type","XXX")}));
+  sc.fixtures.add(new RetractFact("c2"));
+  sc.fixtures.add(new ExecutionTrace());
+  sc.fixtures.add(new VerifyFact("c1",new VerifyField[]{new VerifyField("type","rule4")}));
+  TypeResolver resolver=new ClassTypeResolver(new HashSet<Object>(),Thread.currentThread().getContextClassLoader());
+  resolver.addImport("org.drools.Cheese");
+  WorkingMemory wm=getWorkingMemory("test_stateful.drl");
+  ScenarioRunner run=new ScenarioRunner(sc,resolver,(InternalWorkingMemory)wm);
+  Cheese c1=(Cheese)run.populatedData.get("c1");
+  assertEquals("rule4",c1.getType());
+  assertFalse(run.populatedData.containsKey("c2"));
+  assertTrue(sc.wasSuccessful());
+}
