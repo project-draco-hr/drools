@@ -3,17 +3,19 @@
   this.workingMemory=wm;
   scenario.lastRunResult=new Date();
   TestingEventListener listener=null;
+  for (Iterator iterator=scenario.globals.iterator(); iterator.hasNext(); ) {
+    FactData fact=(FactData)iterator.next();
+    Object f=eval("new " + resolver.getFullTypeName(fact.type) + "()");
+    populateFields(fact,globalData,f);
+    globalData.put(fact.name,f);
+    wm.setGlobal(fact.name,f);
+  }
   for (Iterator<Fixture> iterator=scenario.fixtures.iterator(); iterator.hasNext(); ) {
     Fixture fx=iterator.next();
     if (fx instanceof FactData) {
       FactData fact=(FactData)fx;
       Object f=(fact.isModify) ? this.populatedData.get(fact.name) : eval("new " + resolver.getFullTypeName(fact.type) + "()");
-      if (fact.isGlobal) {
-        populateFields(fact,globalData,f);
-        globalData.put(fact.name,f);
-        wm.setGlobal(fact.name,f);
-      }
- else       if (fact.isModify) {
+      if (fact.isModify) {
         if (!this.factHandles.containsKey(fact.name)) {
           throw new IllegalArgumentException("Was not a previously inserted fact. [" + fact.name + "]");
         }
