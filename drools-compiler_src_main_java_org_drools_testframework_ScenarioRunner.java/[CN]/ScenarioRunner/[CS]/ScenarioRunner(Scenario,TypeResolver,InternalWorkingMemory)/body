@@ -2,6 +2,9 @@
   this.scenario=scenario;
   this.workingMemory=wm;
   scenario.lastRunResult=new Date();
+  HashSet<String> ruleList=new HashSet<String>();
+  ruleList.addAll(scenario.rules);
+  TestingEventListener.stubOutRules(ruleList,wm.getRuleBase(),scenario.inclusive);
   TestingEventListener listener=null;
   for (Iterator iterator=scenario.globals.iterator(); iterator.hasNext(); ) {
     FactData fact=(FactData)iterator.next();
@@ -35,14 +38,14 @@
     }
  else     if (fx instanceof ExecutionTrace) {
       ExecutionTrace executionTrace=(ExecutionTrace)fx;
-      HashSet<String> ruleList=new HashSet<String>();
-      ruleList.addAll(Arrays.asList(executionTrace.rules));
-      listener=new TestingEventListener(ruleList,wm.getRuleBase(),executionTrace.inclusive);
+      if (listener != null)       wm.removeEventListener(listener);
+      listener=new TestingEventListener();
       wm.addEventListener(listener);
       applyTimeMachine(wm,executionTrace);
       long time=System.currentTimeMillis();
       wm.fireAllRules(scenario.maxRuleFirings);
       executionTrace.executionTimeResult=System.currentTimeMillis() - time;
+      executionTrace.numberOfRulesFired=listener.totalFires;
     }
  else     if (fx instanceof Expectation) {
       Expectation assertion=(Expectation)fx;
