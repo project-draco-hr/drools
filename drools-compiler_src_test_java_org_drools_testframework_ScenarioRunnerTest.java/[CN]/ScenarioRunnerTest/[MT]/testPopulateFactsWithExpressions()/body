@@ -1,17 +1,15 @@
 {
   Scenario sc=new Scenario();
-  FactData[] facts=new FactData[]{new FactData("Cheese","c1",new FieldData[]{new FieldData("type","cheddar"),new FieldData("price","42")},false),new FactData("Person","p1",new FieldData[]{new FieldData("name","mic"),new FieldData("age","=30 + 3")},false)};
+  FactData[] facts=new FactData[]{new FactData("Cheese","c1",new FieldData[]{new FieldData("type","cheddar"),new FieldData("price","42")},false),new FactData("Cheese","c2",new FieldData[]{new FieldData("type","= c1.type")},false)};
   sc.fixtures.addAll(Arrays.asList(facts));
   TypeResolver resolver=new ClassTypeResolver(new HashSet<Object>(),Thread.currentThread().getContextClassLoader());
   resolver.addImport("org.drools.Cheese");
-  resolver.addImport("org.drools.Person");
   ScenarioRunner runner=new ScenarioRunner(sc,resolver,new MockWorkingMemory());
   assertTrue(runner.populatedData.containsKey("c1"));
-  assertTrue(runner.populatedData.containsKey("p1"));
+  assertTrue(runner.populatedData.containsKey("c2"));
   Cheese c=(Cheese)runner.populatedData.get("c1");
   assertEquals("cheddar",c.getType());
   assertEquals(42,c.getPrice());
-  Person p=(Person)runner.populatedData.get("p1");
-  assertEquals("mic",p.getName());
-  assertEquals(33,p.getAge());
+  Cheese c2=(Cheese)runner.populatedData.get("c2");
+  assertEquals(c.getType(),c2.getType());
 }
