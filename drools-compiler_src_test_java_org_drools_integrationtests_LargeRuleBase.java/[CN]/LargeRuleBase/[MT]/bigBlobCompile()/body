@@ -1,0 +1,36 @@
+{
+  StringBuffer buf=new StringBuffer();
+  buf.append(getHeader());
+  for (int i=0; i < 5000; i++) {
+    String name="x" + i;
+    int status=i;
+    String r=getTemplate1(name,status);
+    buf.append(r);
+  }
+  long time=System.currentTimeMillis();
+  DrlParser ps=new DrlParser();
+  PackageDescr pkg=ps.parse(new StringReader(buf.toString()));
+  System.err.println("Time taken for parsing: " + (System.currentTimeMillis() - time));
+  time=System.currentTimeMillis();
+  PackageBuilder b=new PackageBuilder();
+  b.addPackage(pkg);
+  Assert.assertFalse(b.getErrors().toString(),b.hasErrors());
+  System.err.println("Time taken for compiling: " + (System.currentTimeMillis() - time));
+  time=System.currentTimeMillis();
+  Package p=b.getPackage();
+  RuleBase rb=RuleBaseFactory.newRuleBase();
+  rb.addPackage(p);
+  System.err.println("Time taken rete building: " + (System.currentTimeMillis() - time));
+  File f=new File("foo.rulebase");
+  if (f.exists())   f.delete();
+  time=System.currentTimeMillis();
+  ObjectOutputStream out=new ObjectOutputStream(new FileOutputStream(f));
+  out.writeObject(rb);
+  out.flush();
+  out.close();
+  System.err.println("Time taken serializing rulebase: " + (System.currentTimeMillis() - time));
+  time=System.currentTimeMillis();
+  ObjectInputStream in=new ObjectInputStream(new FileInputStream(f));
+  RuleBase rb_=(RuleBase)in.readObject();
+  System.err.println("Time taken de-serializing rulebase: " + (System.currentTimeMillis() - time));
+}
