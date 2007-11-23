@@ -1,0 +1,28 @@
+{
+  final Package pkg=new Package("pkg1");
+  ActionDescr actionDescr=new ActionDescr();
+  actionDescr.setText("list.add( \"hello world\" );");
+  PackageBuilder pkgBuilder=new PackageBuilder(pkg);
+  final PackageBuilderConfiguration conf=pkgBuilder.getPackageBuilderConfiguration();
+  JavaDialect javaDialect=(JavaDialect)pkgBuilder.getDialectRegistry().getDialect("java");
+  ProcessDescr processDescr=new ProcessDescr();
+  processDescr.setClassName("Process1");
+  processDescr.setName("Process1");
+  RuleFlowProcessImpl process=new RuleFlowProcessImpl();
+  process.setName("Process1");
+  process.setPackageName("pkg1");
+  ProcessBuildContext context=new ProcessBuildContext(conf,pkgBuilder.getPackage(),null,processDescr,pkgBuilder.getDialectRegistry(),javaDialect);
+  context.init(conf,pkg,null,pkgBuilder.getDialectRegistry(),javaDialect,null);
+  pkgBuilder.addPackageFromDrl(new StringReader("package pkg1;\nglobal java.util.List list;\n"));
+  ActionNodeImpl actionNode=new ActionNodeImpl();
+  javaDialect.getActionBuilder().build(context,actionNode,actionDescr);
+  javaDialect.addAction(context);
+  javaDialect.compileAll();
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  ruleBase.addPackage(pkgBuilder.getPackage());
+  final WorkingMemory wm=ruleBase.newStatefulSession();
+  List list=new ArrayList();
+  wm.setGlobal("list",list);
+  ((Action)actionNode.getAction()).execute(wm);
+  assertEquals("hello world",list.get(0));
+}

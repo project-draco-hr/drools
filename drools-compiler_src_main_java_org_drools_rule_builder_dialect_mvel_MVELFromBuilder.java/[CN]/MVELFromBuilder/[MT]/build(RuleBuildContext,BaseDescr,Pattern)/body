@@ -6,12 +6,12 @@
     final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),null,context.getPkg().getGlobals());
     MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
     String text=(String)accessor.toString();
-    Dialect.AnalysisResult analysis=dialect.analyzeExpression(context,descr,text);
+    Dialect.AnalysisResult analysis=dialect.analyzeExpression(context,descr,text,new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()});
     final Serializable expr=dialect.compile(text,analysis,null,null,context);
     dataProvider=new MVELDataProvider(expr,factory);
   }
  catch (  final Exception e) {
-    context.getErrors().add(new RuleError(context.getRule(),fromDescr,null,"Unable to build expression for 'from' node '" + accessor + "'"));
+    context.getErrors().add(new DescrBuildError(context.getParentDescr(),fromDescr,null,"Unable to build expression for 'from' node '" + accessor + "'"));
     return null;
   }
   return new From(dataProvider);

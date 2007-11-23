@@ -1,0 +1,17 @@
+{
+  RuleFlowProcess rfp=(RuleFlowProcess)process;
+  ProcessDescr processDescr=new ProcessDescr();
+  processDescr.setClassName(rfp.getName());
+  processDescr.setName(rfp.getPackageName());
+  ProcessBuildContext context=new ProcessBuildContext(this.configuration,pkg,process,processDescr,this.dialectRegistry,this.dialect);
+  for (  Node node : rfp.getNodes()) {
+    if (node instanceof ActionNode) {
+      ActionNodeImpl actionNode=(ActionNodeImpl)node;
+      DroolsConsequenceAction action=(DroolsConsequenceAction)actionNode.getAction();
+      ActionDescr actionDescr=new ActionDescr();
+      actionDescr.setText(action.getConsequence());
+      context.getDialect().getActionBuilder().build(context,actionNode,actionDescr);
+    }
+  }
+  ((JavaDialect)context.getDialect()).addAction(context);
+}

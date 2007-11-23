@@ -1,0 +1,13 @@
+{
+  String text=actionDescr.getText();
+  try {
+    MVELDialect dialect=(MVELDialect)context.getDialect();
+    Dialect.AnalysisResult analysis=dialect.analyzeBlock(context,actionDescr,dialect.getInterceptors(),text,new Set[]{Collections.EMPTY_SET,context.getPkg().getGlobals().keySet()},null);
+    final Serializable expr=dialect.compile(text,analysis,dialect.getInterceptors(),null,context);
+    final DroolsMVELFactory factory=new DroolsMVELFactory(null,null,context.getPkg().getGlobals(),analysis.getBoundIdentifiers());
+    actionNode.setAction(new MVELAction(expr,factory));
+  }
+ catch (  final Exception e) {
+    context.getErrors().add(new DescrBuildError(context.getParentDescr(),actionDescr,null,"Unable to build expression for 'action' '" + actionDescr.getText() + "'"));
+  }
+}

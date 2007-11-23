@@ -3,12 +3,12 @@
   try {
     final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),null,context.getPkg().getGlobals());
     MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
-    Dialect.AnalysisResult analysis=dialect.analyzeExpression(context,context.getRuleDescr(),(String)context.getRuleDescr().getSalience());
+    Dialect.AnalysisResult analysis=dialect.analyzeExpression(context,context.getRuleDescr(),(String)context.getRuleDescr().getSalience(),new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()});
     final Serializable expr=dialect.compile((String)context.getRuleDescr().getSalience(),analysis,null,null,context);
     MVELSalienceExpression salience=new MVELSalienceExpression(expr,factory);
     context.getRule().setSalience(salience);
   }
  catch (  final Exception e) {
-    context.getErrors().add(new RuleError(context.getRule(),context.getRuleDescr(),null,"Unable to build expression for 'salience' node '" + context.getRuleDescr().getSalience() + "'"));
+    context.getErrors().add(new DescrBuildError(context.getParentDescr(),context.getRuleDescr(),null,"Unable to build expression for 'salience' node '" + context.getRuleDescr().getSalience() + "'"));
   }
 }
