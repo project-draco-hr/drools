@@ -1,12 +1,14 @@
 {
   super.setState(state);
   if (state == ProcessInstanceImpl.STATE_COMPLETED) {
+    ((EventSupport)this.workingMemory).getRuleFlowEventSupport().fireBeforeRuleFlowProcessCompleted(this,this.workingMemory);
     while (!nodeInstances.isEmpty()) {
       RuleFlowNodeInstance nodeInstance=(RuleFlowNodeInstance)nodeInstances.get(0);
       nodeInstance.cancel();
     }
     workingMemory.removeEventListener((AgendaEventListener)this);
     workingMemory.removeEventListener((RuleFlowEventListener)this);
-    ((EventSupport)this.workingMemory).getRuleFlowEventSupport().fireRuleFlowProcessCompleted(this,this.workingMemory);
+    workingMemory.removeProcessInstance(this);
+    ((EventSupport)this.workingMemory).getRuleFlowEventSupport().fireAfterRuleFlowProcessCompleted(this,this.workingMemory);
   }
 }
