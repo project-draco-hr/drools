@@ -1,0 +1,23 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Notes.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Find redundant pattern possibilities from rule possibilities"));
+  Collection<Object> objects=new ArrayList<Object>();
+  PatternPossibility left=new PatternPossibility();
+  PatternPossibility right=new PatternPossibility();
+  Redundancy redundancy=new Redundancy(Redundancy.RedundancyType.STRONG,left,right);
+  RulePossibility possibility=new RulePossibility();
+  possibility.add(left);
+  possibility.add(right);
+  objects.add(left);
+  objects.add(right);
+  objects.add(redundancy);
+  objects.add(possibility);
+  AnalyticsDataFactory.clearAnalyticsResult();
+  AnalyticsResult result=AnalyticsDataFactory.getAnalyticsResult();
+  session.setGlobal("result",result);
+  session.executeWithResults(objects);
+  Collection<AnalyticsMessageBase> notes=result.getBySeverity(AnalyticsMessage.Severity.NOTE);
+  assertEquals(1,notes.size());
+  AnalyticsMessageBase note=notes.iterator().next();
+  assertTrue(note.getFaulty().equals(redundancy));
+}
