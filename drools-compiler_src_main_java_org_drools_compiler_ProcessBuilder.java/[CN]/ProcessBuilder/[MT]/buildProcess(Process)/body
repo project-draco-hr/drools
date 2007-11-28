@@ -8,7 +8,6 @@
       }
     }
  else {
-      this.processes.add(process);
       String rules=generateRules(process);
       try {
         packageBuilder.addPackageFromDrl(new StringReader(rules));
@@ -18,6 +17,15 @@
       }
 catch (      DroolsParserException e) {
         e.printStackTrace(System.err);
+      }
+      buildNodes(process);
+      this.packageBuilder.getPackage().addRuleFlow(process);
+      Package pkg=this.packageBuilder.getPackage();
+      if (pkg != null) {
+        this.packageBuilder.getDialectRegistry().compileAll();
+        if (pkg.getPackageCompilationData().isDirty()) {
+          pkg.getPackageCompilationData().reload();
+        }
       }
     }
   }
