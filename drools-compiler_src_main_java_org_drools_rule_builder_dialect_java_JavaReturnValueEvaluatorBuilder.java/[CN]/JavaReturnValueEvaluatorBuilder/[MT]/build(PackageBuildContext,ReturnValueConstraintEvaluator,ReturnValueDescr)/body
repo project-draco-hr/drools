@@ -1,0 +1,12 @@
+{
+  final String className="returnValueEvaluator" + context.getNextId();
+  JavaDialect dialect=(JavaDialect)context.getDialect("java");
+  Dialect.AnalysisResult analysis=dialect.analyzeBlock(context,descr,descr.getText(),new Set[]{Collections.EMPTY_SET,context.getPkg().getGlobals().keySet()});
+  if (analysis == null) {
+    return;
+  }
+  final List[] usedIdentifiers=analysis.getBoundIdentifiers();
+  final Map map=createVariableContext(className,descr.getText(),(ProcessBuildContext)context,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]));
+  map.put("text",descr.getText());
+  generatTemplates("returnValueEvaluatorMethod","returnValueEvaluatorInvoker",(ProcessBuildContext)context,className,map,constraintNode,descr);
+}
