@@ -1,0 +1,23 @@
+{
+  setup();
+  System.out.println("Waiting for messages...");
+  System.out.println("Press [return] to quit\n");
+  ArrayList<Resource> resources=new ArrayList<Resource>();
+  SimpleEventGenerator myGenerator=new SimpleEventGenerator(wm,new SimpleEventListener(wm),PseudoSessionClock.timeInMinutes(15));
+  for (int i=0; i < NUMBER_RESOURCES; i++) {
+    Resource res=new Resource("mach" + i);
+    resources.add(res);
+    wm.insert(res.getOpStatus());
+    SlidingWindow sw=new SlidingWindow(0,res.getId(),PseudoSessionClock.timeInMinutes(10),PseudoSessionClock.timeInMinutes(2));
+    wm.insert(sw);
+    myGenerator.addEventSource("Conveyor" + i,new ProductionEvent(res.getId()),MIN_OCCUR_PRODUCTION_EVENT,AVG_OCCUR_PRODUCTION_EVENT,0,0);
+  }
+  myGenerator.generate();
+  BufferedReader waiter=new BufferedReader(new InputStreamReader(System.in));
+  try {
+    waiter.readLine();
+  }
+ catch (  IOException e) {
+    e.printStackTrace();
+  }
+}

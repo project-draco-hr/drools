@@ -1,7 +1,7 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
   final Collection result=this.collect.instantiateResultObject();
-  final InternalFactHandle resultHandle=workingMemory.getFactHandleFactory().newFactHandle(result);
+  final InternalFactHandle resultHandle=workingMemory.getFactHandleFactory().newFactHandle(result,false,workingMemory);
   CollectResult colresult=new CollectResult();
   colresult.handle=resultHandle;
   colresult.propagated=false;
@@ -13,7 +13,7 @@
   this.constraints.updateFromTuple(workingMemory,leftTuple);
   for (FactEntry entry=(FactEntry)it.next(); entry != null; entry=(FactEntry)it.next()) {
     InternalFactHandle handle=entry.getFactHandle();
-    if (this.constraints.isAllowedCachedLeft(handle.getObject())) {
+    if (this.constraints.isAllowedCachedLeft(handle)) {
       if (this.unwrapRightObject) {
         handle=((ReteTuple)handle.getObject()).getLastHandle();
       }
@@ -22,14 +22,14 @@
   }
   boolean isAllowed=true;
   for (int i=0, length=this.resultConstraints.length; i < length; i++) {
-    if (!this.resultConstraints[i].isAllowed(result,workingMemory)) {
+    if (!this.resultConstraints[i].isAllowed(resultHandle,workingMemory)) {
       isAllowed=false;
       break;
     }
   }
   if (isAllowed) {
     this.resultsBinder.updateFromTuple(workingMemory,leftTuple);
-    if (this.resultsBinder.isAllowedCachedLeft(result)) {
+    if (this.resultsBinder.isAllowedCachedLeft(resultHandle)) {
       colresult.propagated=true;
       this.sink.propagateAssertTuple(leftTuple,resultHandle,context,workingMemory);
     }

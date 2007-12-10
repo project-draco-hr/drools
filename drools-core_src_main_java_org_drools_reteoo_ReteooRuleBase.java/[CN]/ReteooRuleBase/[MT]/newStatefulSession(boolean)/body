@@ -1,21 +1,3 @@
 {
-  if (this.config.isSequential()) {
-    throw new RuntimeException("Cannot have a stateful rule session, with sequential configuration set to true");
-  }
-  ReteooStatefulSession session=null;
-synchronized (this.pkgs) {
-    ExecutorService executor=ExecutorServiceFactory.createExecutorService(this.config.getExecutorService());
-    ;
-    session=new ReteooStatefulSession(nextWorkingMemoryCounter(),this,executor);
-    executor.setCommandExecutor(new CommandExecutor(session));
-    if (keepReference) {
-      super.addStatefulSession(session);
-      for (Iterator it=session.getRuleBaseUpdateListeners().iterator(); it.hasNext(); ) {
-        addEventListener((RuleBaseEventListener)it.next());
-      }
-    }
-    final InitialFactHandle handle=new InitialFactHandle(session.getFactHandleFactory().newFactHandle(new InitialFactHandleDummyObject()));
-    session.queueWorkingMemoryAction(new WorkingMemoryReteAssertAction(handle,false,true,null,null));
-  }
-  return session;
+  return newStatefulSession(keepReference,null);
 }

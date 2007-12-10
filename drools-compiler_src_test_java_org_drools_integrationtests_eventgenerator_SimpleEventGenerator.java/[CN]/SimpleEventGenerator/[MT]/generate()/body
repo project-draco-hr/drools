@@ -1,0 +1,18 @@
+{
+  EventOccurrence currentEGT;
+  Event currentEvent;
+  Collections.sort(nextEventSource,new EventGenerationTimeComparator());
+  while (!nextEventSource.isEmpty()) {
+    currentEGT=nextEventSource.removeFirst();
+    currentEvent=(Event)currentEGT.getEvent().clone();
+    myClock.setTime(currentEGT.getNextOccurrenceTime());
+    sendGeneratedEvent(currentEvent);
+    wm.update(clockHandle,myClock);
+    boolean occIsValid=currentEGT.calculateNextEventOccurrence();
+    if (occIsValid && (isEndInfinite() || currentEGT.getNextOccurrenceTime() < this.generationEndTime)) {
+      int index=Collections.binarySearch(nextEventSource,currentEGT,new EventGenerationTimeComparator());
+      if (index < 0)       nextEventSource.add(-index - 1,currentEGT);
+    }
+  }
+  ;
+}
