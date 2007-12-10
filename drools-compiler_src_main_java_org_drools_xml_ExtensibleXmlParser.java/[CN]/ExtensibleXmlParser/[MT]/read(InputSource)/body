@@ -1,0 +1,48 @@
+{
+  SAXParser localParser=null;
+  if (this.parser == null) {
+    final SAXParserFactory factory=SAXParserFactory.newInstance();
+    factory.setNamespaceAware(true);
+    final String isValidatingString=System.getProperty("drools.schema.validating");
+    if (System.getProperty("drools.schema.validating") != null) {
+      this.isValidating=Boolean.getBoolean("drools.schema.validating");
+    }
+    if (this.isValidating == true) {
+      factory.setValidating(true);
+      try {
+        localParser=factory.newSAXParser();
+      }
+ catch (      final ParserConfigurationException e) {
+        throw new RuntimeException(e.getMessage());
+      }
+      try {
+        localParser.setProperty(ExtensibleXmlParser.JAXP_SCHEMA_LANGUAGE,ExtensibleXmlParser.W3C_XML_SCHEMA);
+      }
+ catch (      final SAXNotRecognizedException e) {
+        boolean hideWarnings=Boolean.getBoolean("drools.schema.hidewarnings");
+        if (!hideWarnings) {
+          System.err.println("Your SAX parser is not JAXP 1.2 compliant - turning off validation.");
+        }
+        localParser=null;
+      }
+    }
+    if (localParser == null) {
+      try {
+        this.isValidating=false;
+        factory.setValidating(this.isValidating);
+        localParser=factory.newSAXParser();
+      }
+ catch (      final ParserConfigurationException e) {
+        throw new RuntimeException(e.getMessage());
+      }
+    }
+  }
+ else {
+    localParser=this.parser;
+  }
+  if (!localParser.isNamespaceAware()) {
+    throw new RuntimeException("parser must be namespace-aware");
+  }
+  localParser.parse(in,this);
+  return this.data;
+}
