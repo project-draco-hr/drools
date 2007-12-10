@@ -1,0 +1,22 @@
+{
+  final Configuration config=xmlPackageReader.endConfiguration();
+  final RuleDescr ruleDescr=(RuleDescr)xmlPackageReader.getCurrent();
+  final AndDescr lhs=ruleDescr.getLhs();
+  if (lhs == null) {
+    throw new SAXParseException("<rule> requires a LHS",xmlPackageReader.getLocator());
+  }
+  final Configuration rhs=config.getChild("rhs");
+  if (rhs == null) {
+    throw new SAXParseException("<rule> requires a <rh> child element",xmlPackageReader.getLocator());
+  }
+  ruleDescr.setConsequence(rhs.getText());
+  final Configuration[] attributes=config.getChildren("rule-attribute");
+  for (int i=0, length=attributes.length; i < length; i++) {
+    final String name=attributes[i].getAttribute("name");
+    emptyAttributeCheck("rule-attribute","name",name,xmlPackageReader);
+    final String value=attributes[i].getAttribute("value");
+    ruleDescr.addAttribute(new AttributeDescr(name,value));
+  }
+  ((PackageDescr)xmlPackageReader.getData()).addRule(ruleDescr);
+  return ruleDescr;
+}

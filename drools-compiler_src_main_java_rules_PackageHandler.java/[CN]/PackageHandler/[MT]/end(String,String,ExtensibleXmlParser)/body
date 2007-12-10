@@ -1,0 +1,36 @@
+{
+  final PackageDescr packageDescr=(PackageDescr)xmlPackageReader.getData();
+  final Configuration config=xmlPackageReader.endConfiguration();
+  final Configuration[] imports=config.getChildren("import");
+  for (int i=0, length=imports.length; i < length; i++) {
+    final String importEntry=imports[i].getAttribute("name");
+    if (importEntry == null || importEntry.trim().equals("")) {
+      throw new SAXParseException("<import> cannot be blank",xmlPackageReader.getLocator());
+    }
+    packageDescr.addImport(new ImportDescr(importEntry));
+  }
+  final Configuration[] importfunctions=config.getChildren("importfunction");
+  for (int i=0, length=importfunctions.length; i < length; i++) {
+    final String importfunctionEntry=importfunctions[i].getAttribute("name");
+    if (importfunctionEntry == null || importfunctionEntry.trim().equals("")) {
+      throw new SAXParseException("<importfunction> cannot be blank",xmlPackageReader.getLocator());
+    }
+    FunctionImportDescr funcdescr=new FunctionImportDescr();
+    funcdescr.setTarget(importfunctionEntry);
+    packageDescr.addFunctionImport(funcdescr);
+  }
+  final Configuration[] globals=config.getChildren("global");
+  for (int i=0, length=globals.length; i < length; i++) {
+    final String identifier=globals[i].getAttribute("identifier");
+    if (identifier == null || identifier.trim().equals("")) {
+      throw new SAXParseException("<global> must have an identifier",xmlPackageReader.getLocator());
+    }
+    final String type=globals[i].getAttribute("type");
+    if (type == null || type.trim().equals("")) {
+      throw new SAXParseException("<global> must have specify a type",xmlPackageReader.getLocator());
+    }
+    final GlobalDescr global=new GlobalDescr(identifier,type);
+    packageDescr.addGlobal(global);
+  }
+  return packageDescr;
+}
