@@ -1,0 +1,23 @@
+{
+  final String text="Foo( bar > 1 || == 1 )\n";
+  final AndDescr descrs=new AndDescr();
+  final CharStream charStream=new ANTLRStringStream(text);
+  final DRLLexer lexer=new DRLLexer(charStream);
+  final TokenStream tokenStream=new CommonTokenStream(lexer);
+  final DRLParser parser=new DRLParser(tokenStream);
+  parser.setLineOffset(descrs.getLine());
+  parser.normal_lhs_block(descrs);
+  assertFalse(parser.getErrorMessages().toString(),parser.hasErrors());
+  assertEquals(1,descrs.getDescrs().size());
+  PatternDescr pat=(PatternDescr)descrs.getDescrs().get(0);
+  FieldConstraintDescr fieldConstr=(FieldConstraintDescr)pat.getConstraint().getDescrs().get(0);
+  RestrictionConnectiveDescr or=(RestrictionConnectiveDescr)fieldConstr.getRestrictions().get(0);
+  LiteralRestrictionDescr gt1=(LiteralRestrictionDescr)or.getRestrictions().get(0);
+  LiteralRestrictionDescr eq1=(LiteralRestrictionDescr)or.getRestrictions().get(1);
+  assertEquals(">",gt1.getEvaluator());
+  assertEquals(false,gt1.isNegated());
+  assertEquals(1,((Number)eq1.getValue()).intValue());
+  assertEquals("==",eq1.getEvaluator());
+  assertEquals(false,eq1.isNegated());
+  assertEquals(1,((Number)eq1.getValue()).intValue());
+}
