@@ -1,0 +1,54 @@
+{
+  String uri=properties.getProperty("uri",null);
+  if (uri == null || uri.trim().equals("")) {
+    throw new RuntimeException("Semantic Module URI property must not be empty");
+  }
+  DefaultSemanticModule module=new DefaultSemanticModule(uri);
+  for (  Entry<Object,Object> entry : properties.entrySet()) {
+    String elementName=(String)entry.getKey();
+    if ("uri".equals(elementName)) {
+      continue;
+    }
+    if (elementName == null || elementName.trim().equals("")) {
+      throw new RuntimeException("Element name must be specified for Semantic Module handler");
+    }
+    String handlerName=(String)entry.getValue();
+    if (handlerName == null || handlerName.trim().equals("")) {
+      throw new RuntimeException("Handler name must be specified for Semantic Module");
+    }
+    Handler handler=null;
+    try {
+      handler=(Handler)this.classLoader.loadClass(handlerName).newInstance();
+    }
+ catch (    Exception e) {
+    }
+    if (handler == null) {
+      try {
+        handler=(Handler)getClass().getClassLoader().loadClass(handlerName).newInstance();
+      }
+ catch (      Exception e) {
+      }
+    }
+    if (handler == null) {
+      try {
+        handler=(Handler)Thread.currentThread().getContextClassLoader().loadClass(handlerName).newInstance();
+      }
+ catch (      Exception e) {
+      }
+    }
+    if (handler == null) {
+      try {
+        handler=(Handler)ClassLoader.getSystemClassLoader().loadClass(handlerName).newInstance();
+      }
+ catch (      Exception e) {
+      }
+    }
+    if (handler == null) {
+      throw new RuntimeException("Unable to load Semantic Module handler '" + elementName + ":"+ handlerName+ "'");
+    }
+ else {
+      module.addHandler(elementName,handler);
+    }
+  }
+  this.semanticModules.addSemanticModule(module);
+}
