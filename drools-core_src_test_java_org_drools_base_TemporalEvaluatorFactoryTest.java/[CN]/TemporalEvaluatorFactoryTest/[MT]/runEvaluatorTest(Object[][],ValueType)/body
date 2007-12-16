@@ -1,0 +1,25 @@
+{
+  final Extractor extractor=new MockExtractor();
+  for (int i=0; i < data.length; i++) {
+    final Object[] row=data[i];
+    boolean isNegated=((String)row[1]).startsWith("not ");
+    System.out.println((String)row[1]);
+    String evaluatorStr=isNegated ? ((String)row[1]).substring(4) : (String)row[1];
+    boolean isConstrained=evaluatorStr.endsWith("]");
+    String parameters=null;
+    if (isConstrained) {
+      parameters=evaluatorStr.split("\\[")[1];
+      evaluatorStr=evaluatorStr.split("\\[")[0];
+      parameters=parameters.split("\\]")[0];
+    }
+    EvaluatorDefinition evalDef=registry.getEvaluatorDefinition(evaluatorStr);
+    assertNotNull(evalDef);
+    @SuppressWarnings("unused") final Evaluator evaluator=evalDef.getEvaluator(valueType,evaluatorStr,isNegated,parameters);
+    System.out.println(evaluator);
+    checkEvaluatorMethodWith2Extractors(valueType,extractor,row,evaluator);
+    checkEvaluatorMethodCachedRight(valueType,extractor,row,evaluator);
+    checkEvaluatorMethodCachedLeft(valueType,extractor,row,evaluator);
+    checkEvaluatorMethodWithFieldValue(valueType,extractor,row,evaluator);
+    assertEquals(valueType,evaluator.getValueType());
+  }
+}

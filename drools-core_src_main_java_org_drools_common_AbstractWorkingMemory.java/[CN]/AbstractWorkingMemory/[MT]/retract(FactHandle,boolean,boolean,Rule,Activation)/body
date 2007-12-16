@@ -1,37 +1,3 @@
 {
-  try {
-    this.lock.lock();
-    this.ruleBase.executeQueuedActions();
-    final InternalFactHandle handle=(InternalFactHandle)factHandle;
-    if (handle.getId() == -1) {
-      return;
-    }
-    removePropertyChangeListener(handle);
-    if (activation != null) {
-      activation.getPropagationContext().releaseResources();
-    }
-    final PropagationContext propagationContext=new PropagationContextImpl(this.propagationIdCounter++,PropagationContext.RETRACTION,rule,activation,this.agenda.getActiveActivations(),this.agenda.getDormantActivations());
-    doRetract(handle,propagationContext);
-    if (this.maintainTms) {
-      final EqualityKey key=handle.getEqualityKey();
-      if (key.getStatus() == EqualityKey.JUSTIFIED) {
-        this.tms.removeLogicalDependencies(handle);
-      }
-      key.removeFactHandle(handle);
-      handle.setEqualityKey(null);
-      if (key.isEmpty()) {
-        this.tms.remove(key);
-      }
-    }
-    final Object object=handle.getObject();
-    this.workingMemoryEventSupport.fireObjectRetracted(propagationContext,handle,object,this);
-    removeHandleFromMaps(handle);
-    this.handleFactory.destroyFactHandle(handle);
-    if (!this.actionQueue.isEmpty()) {
-      executeQueuedActions();
-    }
-  }
-  finally {
-    this.lock.unlock();
-  }
+  this.retract(EntryPoint.DEFAULT,factHandle,removeLogical,updateEqualsMap,rule,activation);
 }

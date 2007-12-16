@@ -1,0 +1,22 @@
+{
+  this.ruleBase=ruleBase;
+  this.factTemplate=factTemplate;
+  this.entryPoint=entryPoint;
+  ObjectType objectType=new FactTemplateObjectType(factTemplate);
+  this.concreteObjectTypeNode=(ObjectTypeNode)ruleBase.getRete().getObjectTypeNodes(entryPoint).get(objectType);
+  if (this.concreteObjectTypeNode == null) {
+    BuildContext context=new BuildContext(ruleBase,((ReteooRuleBase)ruleBase.getRete().getRuleBase()).getReteooBuilder().getIdGenerator());
+    if (context.getRuleBase().getConfiguration().isSequential()) {
+      context.setTupleMemoryEnabled(false);
+      context.setObjectTypeNodeMemoryEnabled(false);
+      context.setTerminalNodeMemoryEnabled(false);
+    }
+ else {
+      context.setTupleMemoryEnabled(true);
+      context.setObjectTypeNodeMemoryEnabled(true);
+      context.setTerminalNodeMemoryEnabled(true);
+    }
+    this.concreteObjectTypeNode=PatternBuilder.attachObjectTypeNode(context,objectType);
+  }
+  this.cache=new ObjectTypeNode[]{this.concreteObjectTypeNode};
+}
