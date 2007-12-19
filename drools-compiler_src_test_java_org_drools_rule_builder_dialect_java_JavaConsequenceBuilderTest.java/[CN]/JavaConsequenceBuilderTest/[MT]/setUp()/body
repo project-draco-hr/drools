@@ -1,0 +1,15 @@
+{
+  super.setUp();
+  builder=new JavaConsequenceBuilder();
+  Package pkg=new Package("org.drools");
+  pkg.addImport(new ImportDeclaration("org.drools.Cheese"));
+  PackageBuilderConfiguration conf=new PackageBuilderConfiguration();
+  PackageBuilder builder=new PackageBuilder(pkg,conf);
+  String consequence=" System.out.println(\"this is a test\");\n " + " modify( $cheese ) { setPrice( 10 ), setAge( age ) }\n " + " System.out.println(\"we are done\");\n ";
+  ruleDescr=new RuleDescr("test modify block");
+  ruleDescr.setConsequence(consequence);
+  Rule rule=new Rule(ruleDescr.getName());
+  rule.addPattern(new Pattern(0,new ClassObjectType(Cheese.class),"$cheese"));
+  context=new RuleBuildContext(conf,pkg,ruleDescr,builder.getDialectRegistry(),builder.getDefaultDialect());
+  context.getBuildStack().push(rule.getLhs());
+}

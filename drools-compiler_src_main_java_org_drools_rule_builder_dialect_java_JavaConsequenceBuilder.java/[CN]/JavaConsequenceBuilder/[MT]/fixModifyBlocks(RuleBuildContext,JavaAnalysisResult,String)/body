@@ -1,0 +1,43 @@
+{
+  MVELDialect mvel=(MVELDialect)context.getDialect("mvel");
+  TreeSet blocks=new TreeSet(new Comparator(){
+    public int compare(    Object o1,    Object o2){
+      JavaModifyBlockDescr d1=(JavaModifyBlockDescr)o1;
+      JavaModifyBlockDescr d2=(JavaModifyBlockDescr)o2;
+      return d1.getStart() - d2.getStart();
+    }
+  }
+);
+  for (Iterator it=analysis.getModifyBlocks().iterator(); it.hasNext(); ) {
+    blocks.add(it.next());
+  }
+  StringBuffer consequence=new StringBuffer();
+  int lastAdded=0;
+  for (Iterator it=blocks.iterator(); it.hasNext(); ) {
+    JavaModifyBlockDescr d=(JavaModifyBlockDescr)it.next();
+    consequence.append(originalCode.substring(lastAdded,d.getStart() - 1));
+    lastAdded=d.getEnd();
+    Dialect.AnalysisResult mvelAnalysis=mvel.analyzeBlock(context,context.getRuleDescr(),mvel.getInterceptors(),d.getModifyExpression(),new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()},null);
+    final ExecutableStatement expr=(ExecutableStatement)mvel.compile(d.getModifyExpression(),mvelAnalysis,mvel.getInterceptors(),null,context);
+    Class ret=expr.getKnownEgressType();
+    if (ret == null) {
+      context.getErrors().add(new DescrBuildError(context.getParentDescr(),context.getRuleDescr(),originalCode,"Unable to determine the resulting type of the expression: " + d.getModifyExpression() + "\n"));
+      return null;
+    }
+    consequence.append(ret.getName());
+    consequence.append(" __obj__ = (");
+    consequence.append(ret.getName());
+    consequence.append(") ");
+    consequence.append(d.getModifyExpression());
+    consequence.append(";\n");
+    consequence.append("modifyRetract( __obj__ );\n");
+    for (Iterator exprIt=d.getExpressions().iterator(); exprIt.hasNext(); ) {
+      consequence.append("__obj__.");
+      consequence.append(exprIt.next());
+      consequence.append(";\n");
+    }
+    consequence.append("modifyInsert( __obj__ );");
+  }
+  consequence.append(originalCode.substring(lastAdded));
+  return consequence.toString();
+}
