@@ -9,7 +9,41 @@
       a.addPackageDescr(descr);
     }
     a.fireAnalysis();
-    a.writeComponentsHTML("C:\\");
+    a.writeComponentsHTML("/Users/michaelneale/foo.html");
+    AnalyticsResult result=a.getResult();
+    Collection<AnalyticsMessageBase> msgs=result.getBySeverity(AnalyticsMessageBase.Severity.ERROR);
+    for (Iterator iterator=msgs.iterator(); iterator.hasNext(); ) {
+      AnalyticsMessageBase msg=(AnalyticsMessageBase)iterator.next();
+      System.out.println("ERR: " + msg.getMessage());
+    }
+    msgs=result.getBySeverity(AnalyticsMessageBase.Severity.WARNING);
+    for (Iterator iterator=msgs.iterator(); iterator.hasNext(); ) {
+      AnalyticsMessageBase msg=(AnalyticsMessageBase)iterator.next();
+      System.out.println("WARN (" + msg.getClass().getSimpleName() + "): "+ msg.getMessage());
+      System.out.println("\t FAULT: [" + msg.getClass().getSimpleName() + "] "+ msg.getFaulty());
+      if (msg instanceof AnalyticsMessage) {
+        System.out.println("\t CAUSES (message):");
+        AnalyticsMessage amsg=(AnalyticsMessage)msg;
+        for (Iterator iterator2=amsg.getCauses().iterator(); iterator2.hasNext(); ) {
+          Cause c=(Cause)iterator2.next();
+          System.out.println("\t\t [" + c.getClass().getSimpleName() + "]"+ c);
+        }
+      }
+ else       if (msg instanceof AnalyticsRangeCheckMessage) {
+        System.out.println("\t CAUSES (range):");
+        AnalyticsRangeCheckMessage amsg=(AnalyticsRangeCheckMessage)msg;
+        for (Iterator iterator2=amsg.getCauses().iterator(); iterator2.hasNext(); ) {
+          Cause c=(Cause)iterator2.next();
+          System.out.println("\t\t" + c);
+        }
+      }
+    }
+    msgs=result.getBySeverity(AnalyticsMessageBase.Severity.NOTE);
+    for (Iterator iterator=msgs.iterator(); iterator.hasNext(); ) {
+      AnalyticsMessageBase msg=(AnalyticsMessageBase)iterator.next();
+      System.out.println("NOTE: " + msg.getMessage());
+      System.out.println("\t" + msg.getFaulty());
+    }
   }
  catch (  Throwable t) {
     t.printStackTrace();
