@@ -1,63 +1,11 @@
 {
-  if (node instanceof RuleSetNode) {
-    final RuleFlowNodeInstance result=(RuleFlowNodeInstance)getAgenda().getRuleFlowGroup(((RuleSetNode)node).getRuleFlowGroup());
-    result.setNodeId(node.getId());
-    addNodeInstance(result);
-    return result;
+  PvmNodeConf conf=this.nodeRegistry.getRuleFlowNodeConf(node);
+  if (conf == null) {
+    throw new IllegalArgumentException("Illegal node type: " + node.getClass());
   }
- else   if (node instanceof Split) {
-    RuleFlowNodeInstance result=getFirstNodeInstance(node.getId());
-    if (result == null) {
-      result=new RuleFlowSplitInstanceImpl();
-      result.setNodeId(node.getId());
-      addNodeInstance(result);
-    }
-    return result;
+  RuleFlowNodeInstance nodeInstance=conf.getNodeInstance(node,this);
+  if (nodeInstance == null) {
+    throw new IllegalArgumentException("Illegal node type: " + node.getClass());
   }
- else   if (node instanceof Join) {
-    RuleFlowNodeInstance result=getFirstNodeInstance(node.getId());
-    if (result == null) {
-      result=new RuleFlowJoinInstanceImpl();
-      result.setNodeId(node.getId());
-      addNodeInstance(result);
-    }
-    return result;
-  }
- else   if (node instanceof StartNode) {
-    final RuleFlowNodeInstance result=new StartNodeInstanceImpl();
-    result.setNodeId(node.getId());
-    addNodeInstance(result);
-    return result;
-  }
- else   if (node instanceof EndNode) {
-    final RuleFlowNodeInstance result=new EndNodeInstanceImpl();
-    result.setNodeId(node.getId());
-    addNodeInstance(result);
-    return result;
-  }
- else   if (node instanceof MilestoneNode) {
-    final RuleFlowNodeInstance result=new MilestoneNodeInstanceImpl();
-    result.setNodeId(node.getId());
-    addNodeInstance(result);
-    return result;
-  }
- else   if (node instanceof SubFlowNode) {
-    final RuleFlowNodeInstance result=new SubFlowNodeInstanceImpl();
-    result.setNodeId(node.getId());
-    addNodeInstance(result);
-    return result;
-  }
- else   if (node instanceof ActionNode) {
-    final RuleFlowNodeInstance result=new ActionNodeInstanceImpl();
-    result.setNodeId(node.getId());
-    addNodeInstance(result);
-    return result;
-  }
- else   if (node instanceof WorkItemNode) {
-    final RuleFlowNodeInstance result=new TaskNodeInstanceImpl();
-    result.setNodeId(node.getId());
-    addNodeInstance(result);
-    return result;
-  }
-  throw new IllegalArgumentException("Illegal node type: " + node.getClass());
+  return nodeInstance;
 }
