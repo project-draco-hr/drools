@@ -1,20 +1,20 @@
 {
-  final Configuration config=xmlPackageReader.endConfiguration();
-  FunctionDescr functionDescr=(FunctionDescr)xmlPackageReader.getCurrent();
+  final Configuration config=parser.endConfiguration();
+  FunctionDescr functionDescr=(FunctionDescr)parser.getCurrent();
   final Configuration[] parameters=config.getChildren("parameter");
   for (int i=0, length=parameters.length; i < length; i++) {
     final String identifier=parameters[i].getAttribute("identifier");
     final String type=parameters[i].getAttribute("type");
-    emptyAttributeCheck("parameter","identifier",identifier,xmlPackageReader);
-    emptyAttributeCheck("parameter","type",type,xmlPackageReader);
+    emptyAttributeCheck("parameter","identifier",identifier,parser);
+    emptyAttributeCheck("parameter","type",type,parser);
     functionDescr.addParameter(type,identifier);
   }
   final Configuration body=config.getChild("body");
   if (body == null) {
-    throw new SAXParseException("function must have a <body>",xmlPackageReader.getLocator());
+    throw new SAXParseException("function must have a <body>",parser.getLocator());
   }
   functionDescr.setText(body.getText());
-  final PackageDescr packageDescr=(PackageDescr)xmlPackageReader.getData();
+  final PackageDescr packageDescr=(PackageDescr)parser.getData();
   packageDescr.addFunction(functionDescr);
   return functionDescr;
 }
