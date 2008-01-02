@@ -1,45 +1,9 @@
 {
-  if (classLoader == null) {
-    classLoader=Thread.currentThread().getContextClassLoader();
-    if (classLoader == null) {
-      classLoader=this.getClass().getClassLoader();
-    }
+  URL url=ConfFileUtils.getURL(moduleLocation,this.classLoader,getClass());
+  if (url == null) {
+    throw new IllegalArgumentException(moduleLocation + " is specified but cannot be found.'");
   }
-  Properties properties=null;
-  String userHome=System.getProperty("user.home");
-  if (userHome.endsWith("\\") || userHome.endsWith("/")) {
-    properties=loadProperties(userHome + moduleLocation);
-  }
- else {
-    properties=loadProperties(userHome + "/" + moduleLocation);
-  }
-  if (properties == null) {
-    properties=loadProperties(moduleLocation);
-  }
-  if (properties == null) {
-    ClassLoader confClassLoader=classLoader;
-    if (confClassLoader != null) {
-      properties=loadProperties(confClassLoader.getResource("META-INF/" + moduleLocation));
-    }
-  }
-  if (properties == null) {
-    ClassLoader confClassLoader=getClass().getClassLoader();
-    if (confClassLoader != null && confClassLoader != classLoader) {
-      properties=loadProperties(confClassLoader.getResource("META-INF/" + moduleLocation));
-    }
-  }
-  if (properties == null) {
-    ClassLoader confClassLoader=Thread.currentThread().getContextClassLoader();
-    if (confClassLoader != null && confClassLoader != classLoader) {
-      properties=loadProperties(confClassLoader.getResource("META-INF/" + moduleLocation));
-    }
-  }
-  if (properties == null) {
-    ClassLoader confClassLoader=ClassLoader.getSystemClassLoader();
-    if (confClassLoader != null && confClassLoader != classLoader) {
-      properties=loadProperties(confClassLoader.getResource("META-INF/" + moduleLocation));
-    }
-  }
+  Properties properties=ConfFileUtils.getProperties(url);
   if (properties == null) {
     throw new IllegalArgumentException(moduleLocation + " is specified but cannot be found.'");
   }
