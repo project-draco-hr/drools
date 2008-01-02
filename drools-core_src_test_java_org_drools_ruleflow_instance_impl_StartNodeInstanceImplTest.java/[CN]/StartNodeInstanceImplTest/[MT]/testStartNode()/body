@@ -1,0 +1,25 @@
+{
+  RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  StatefulSession session=ruleBase.newStatefulSession();
+  NodeImpl mockNode=new NodeImpl(){
+  }
+;
+  RuleFlowProcessImpl process=new RuleFlowProcessImpl();
+  Node startNode=new StartNodeImpl();
+  startNode.setId(1);
+  startNode.setName("start node");
+  mockNode.setId(2);
+  new ConnectionImpl(startNode,mockNode,Connection.TYPE_NORMAL);
+  process.addNode(startNode);
+  process.addNode(mockNode);
+  RuleFlowProcessInstanceImpl processInstance=new RuleFlowProcessInstanceImpl();
+  processInstance.setProcess(process);
+  processInstance.setWorkingMemory((InternalWorkingMemory)session);
+  MockNodeInstanceFactory factory=new MockNodeInstanceFactory(new MockNodeInstance(mockNode));
+  processInstance.registerNodeInstanceFactory(mockNode.getClass(),factory);
+  assertEquals(ProcessInstance.STATE_PENDING,processInstance.getState());
+  processInstance.start();
+  assertEquals(ProcessInstance.STATE_ACTIVE,processInstance.getState());
+  MockNodeInstance nodeInstance=factory.getMockNodeInstance();
+  assertSame(startNode,((RuleFlowNodeInstanceImpl)nodeInstance.getList().get(0)).getNode());
+}

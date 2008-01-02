@@ -1,0 +1,47 @@
+{
+  URL url=null;
+  String userHome=System.getProperty("user.home");
+  if (userHome.endsWith("\\") || userHome.endsWith("/")) {
+    url=getURLForFile(userHome + confName);
+  }
+ else {
+    url=getURLForFile(userHome + "/" + confName);
+  }
+  if (url == null) {
+    url=getURLForFile(confName);
+  }
+  if (cls != null) {
+    url=cls.getResource(confName);
+  }
+  if (url == null && classLoader != null) {
+    ClassLoader confClassLoader=classLoader;
+    if (confClassLoader != null) {
+      url=confClassLoader.getResource("META-INF/" + confName);
+    }
+  }
+  if (url == null) {
+    ClassLoader confClassLoader=ConfFileUtils.class.getClassLoader();
+    if (confClassLoader != null && confClassLoader != classLoader) {
+      url=confClassLoader.getResource("META-INF/" + confName);
+    }
+  }
+  if (url == null && cls != null) {
+    ClassLoader confClassLoader=cls.getClassLoader();
+    if (confClassLoader != null && confClassLoader != classLoader) {
+      url=confClassLoader.getResource("META-INF/" + confName);
+    }
+  }
+  if (url == null) {
+    ClassLoader confClassLoader=Thread.currentThread().getContextClassLoader();
+    if (confClassLoader != null && confClassLoader != classLoader) {
+      url=confClassLoader.getResource("META-INF/" + confName);
+    }
+  }
+  if (url == null) {
+    ClassLoader confClassLoader=ClassLoader.getSystemClassLoader();
+    if (confClassLoader != null && confClassLoader != classLoader) {
+      url=confClassLoader.getResource("META-INF/" + confName);
+    }
+  }
+  return url;
+}
