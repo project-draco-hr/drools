@@ -1,0 +1,17 @@
+{
+  Properties properties=new Properties();
+  properties.put("semanticModules","mydsl.conf");
+  PackageBuilderConfiguration conf=new PackageBuilderConfiguration(properties);
+  PackageBuilder builder=new PackageBuilder(conf);
+  builder.addProcessFromXml(new InputStreamReader(TestXmlDsl.class.getResourceAsStream("XmlDslTest.xml")));
+  System.out.println(builder.getErrors());
+  RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  ruleBase.addPackage(builder.getPackage());
+  StatefulSession session=ruleBase.newStatefulSession();
+  List list=new ArrayList();
+  session.setGlobal("list",list);
+  session.startProcess("process name");
+  assertEquals(2,list.size());
+  assertEquals("action node was here",list.get(0));
+  assertEquals("dsl was here",list.get(1));
+}
