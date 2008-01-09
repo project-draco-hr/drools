@@ -1,0 +1,67 @@
+{
+  if (!Node.CONNECTION_DEFAULT_TYPE.equals(type)) {
+    throw new IllegalArgumentException("A Split only accepts default incoming connections!");
+  }
+  final Split split=getSplit();
+switch (split.getType()) {
+case Split.TYPE_AND:
+    getNodeInstanceContainer().removeNodeInstance(this);
+  List<Connection> outgoing=split.getDefaultOutgoingConnections();
+for (final Iterator<Connection> iterator=outgoing.iterator(); iterator.hasNext(); ) {
+  final Connection connection=(Connection)iterator.next();
+  getNodeInstanceContainer().getNodeInstance(connection.getTo()).trigger(this,connection.getToType());
+}
+break;
+case Split.TYPE_XOR:
+outgoing=split.getDefaultOutgoingConnections();
+int priority=Integer.MAX_VALUE;
+Connection selected=null;
+for (final Iterator<Connection> iterator=outgoing.iterator(); iterator.hasNext(); ) {
+final Connection connection=(Connection)iterator.next();
+ConstraintEvaluator constraint=(ConstraintEvaluator)split.getConstraint(connection);
+if (constraint != null && constraint.getPriority() < priority) {
+if (constraint.evaluate(this,connection,constraint)) {
+selected=connection;
+priority=constraint.getPriority();
+break;
+}
+}
+}
+getNodeInstanceContainer().removeNodeInstance(this);
+if (selected == null) {
+throw new IllegalArgumentException("XOR split could not find at least one valid outgoing connection for split " + getSplit().getName());
+}
+getNodeInstanceContainer().getNodeInstance(selected.getTo()).trigger(this,selected.getToType());
+break;
+case Split.TYPE_OR:
+getNodeInstanceContainer().removeNodeInstance(this);
+outgoing=split.getDefaultOutgoingConnections();
+boolean found=false;
+List<Connection> outgoingCopy=new ArrayList<Connection>(outgoing);
+while (!outgoingCopy.isEmpty()) {
+priority=Integer.MAX_VALUE;
+Connection selectedConnection=null;
+ConstraintEvaluator selectedConstraint=null;
+for (final Iterator<Connection> iterator=outgoingCopy.iterator(); iterator.hasNext(); ) {
+final Connection connection=(Connection)iterator.next();
+ConstraintEvaluator constraint=(ConstraintEvaluator)split.getConstraint(connection);
+if (constraint != null && constraint.getPriority() < priority) {
+priority=constraint.getPriority();
+selectedConnection=connection;
+selectedConstraint=constraint;
+}
+}
+if (selectedConstraint.evaluate(this,selectedConnection,selectedConstraint)) {
+getNodeInstanceContainer().getNodeInstance(selectedConnection.getTo()).trigger(this,selectedConnection.getToType());
+found=true;
+}
+outgoingCopy.remove(selectedConnection);
+}
+if (!found) {
+throw new IllegalArgumentException("OR split could not find at least one valid outgoing connection for split " + getSplit().getName());
+}
+break;
+default :
+throw new IllegalArgumentException("Illegal split type " + split.getType());
+}
+}

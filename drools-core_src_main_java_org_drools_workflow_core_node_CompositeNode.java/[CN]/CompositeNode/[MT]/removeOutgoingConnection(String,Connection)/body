@@ -1,0 +1,12 @@
+{
+  super.removeOutgoingConnection(type,connection);
+  CompositeNode.NodeAndType outNode=getLinkedOutgoingNode(type);
+  List<Connection> connections=outNode.getNode().getOutgoingConnections(outNode.getType());
+  for (Iterator<Connection> iterator=connections.iterator(); iterator.hasNext(); ) {
+    Connection internalConnection=iterator.next();
+    if (((CompositeNodeEnd)internalConnection.getTo()).getOutNode().equals(connection.getTo())) {
+      ((ConnectionImpl)internalConnection).terminate();
+      removeNode(internalConnection.getTo());
+    }
+  }
+}

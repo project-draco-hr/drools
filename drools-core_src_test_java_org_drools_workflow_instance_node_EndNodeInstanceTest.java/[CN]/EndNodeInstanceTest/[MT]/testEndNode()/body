@@ -1,0 +1,23 @@
+{
+  RuleBaseConfiguration conf=new RuleBaseConfiguration();
+  RuleBase ruleBase=RuleBaseFactory.newRuleBase(conf);
+  StatefulSession session=ruleBase.newStatefulSession();
+  MockNode mockNode=new MockNode();
+  MockNodeInstanceFactory factory=new MockNodeInstanceFactory(new MockNodeInstance(mockNode));
+  conf.getProcessNodeInstanceFactoryRegistry().register(mockNode.getClass(),factory);
+  WorkflowProcessImpl process=new WorkflowProcessImpl();
+  Node endNode=new EndNode();
+  endNode.setId(1);
+  endNode.setName("end node");
+  mockNode.setId(2);
+  new ConnectionImpl(mockNode,Node.CONNECTION_DEFAULT_TYPE,endNode,Node.CONNECTION_DEFAULT_TYPE);
+  process.addNode(mockNode);
+  process.addNode(endNode);
+  RuleFlowProcessInstance processInstance=new RuleFlowProcessInstance();
+  processInstance.setState(ProcessInstance.STATE_ACTIVE);
+  processInstance.setProcess(process);
+  processInstance.setWorkingMemory((InternalWorkingMemory)session);
+  MockNodeInstance mockNodeInstance=(MockNodeInstance)processInstance.getNodeInstance(mockNode);
+  mockNodeInstance.triggerCompleted();
+  assertEquals(ProcessInstance.STATE_COMPLETED,processInstance.getState());
+}

@@ -1,0 +1,15 @@
+{
+  if (!Node.CONNECTION_DEFAULT_TYPE.equals(type)) {
+    throw new IllegalArgumentException("A MilestoneNode only accepts default incoming connections!");
+  }
+  RuleFlowGroup systemRuleFlowGroup=getProcessInstance().getAgenda().getRuleFlowGroup("DROOLS_SYSTEM");
+  String rule="RuleFlow-Milestone-" + getProcessInstance().getProcess().getId() + "-"+ getNode().getId();
+  for (Iterator activations=systemRuleFlowGroup.iterator(); activations.hasNext(); ) {
+    Activation activation=((RuleFlowGroupNode)activations.next()).getActivation();
+    if (rule.equals(activation.getRule().getName())) {
+      triggerCompleted();
+      return;
+    }
+  }
+  getProcessInstance().getWorkingMemory().addEventListener(this);
+}

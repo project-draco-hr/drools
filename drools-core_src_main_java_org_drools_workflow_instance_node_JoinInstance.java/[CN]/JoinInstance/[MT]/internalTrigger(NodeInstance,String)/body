@@ -1,0 +1,38 @@
+{
+  if (!Node.CONNECTION_DEFAULT_TYPE.equals(type)) {
+    throw new IllegalArgumentException("An ActionNode only accepts default incoming connections!");
+  }
+  final Join join=getJoin();
+switch (join.getType()) {
+case Join.TYPE_XOR:
+    triggerCompleted();
+  break;
+case Join.TYPE_AND:
+Node node=getNodeInstanceContainer().getNodeContainer().getNode(from.getNodeId());
+Integer count=(Integer)this.triggers.get(node);
+if (count == null) {
+this.triggers.put(node,new Integer(1));
+}
+ else {
+this.triggers.put(node,new Integer(count.intValue() + 1));
+}
+if (checkAllActivated()) {
+decreaseAllTriggers();
+triggerCompleted();
+}
+break;
+case Join.TYPE_DISCRIMINATOR:
+boolean triggerCompleted=triggers.isEmpty();
+node=getNodeInstanceContainer().getNodeContainer().getNode(from.getNodeId());
+triggers.put(node,new Integer(1));
+if (checkAllActivated()) {
+resetAllTriggers();
+}
+if (triggerCompleted) {
+triggerCompleted();
+}
+break;
+default :
+throw new IllegalArgumentException("Illegal join type " + join.getType());
+}
+}

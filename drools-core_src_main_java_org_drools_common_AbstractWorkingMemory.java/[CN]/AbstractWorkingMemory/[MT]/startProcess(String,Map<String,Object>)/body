@@ -1,0 +1,24 @@
+{
+  final Process process=((InternalRuleBase)getRuleBase()).getProcess(processId);
+  if (process == null) {
+    throw new IllegalArgumentException("Unknown process ID: " + processId);
+  }
+  ProcessInstanceFactory factory=processInstanceFactories.get(process.getType());
+  if (factory == null) {
+    throw new IllegalArgumentException("Could not create process instance for type: " + process.getType());
+  }
+  ProcessInstance processInstance=factory.createProcessInstance();
+  processInstance.setWorkingMemory(this);
+  processInstance.setProcess(process);
+  processInstance.setId(++processCounter);
+  processInstances.put(new Long(processInstance.getId()),processInstance);
+  if (parameters != null) {
+    for (    Map.Entry<String,Object> entry : parameters.entrySet()) {
+      processInstance.setVariable(entry.getKey(),entry.getValue());
+    }
+  }
+  getRuleFlowEventSupport().fireBeforeRuleFlowProcessStarted(processInstance,this);
+  processInstance.start();
+  getRuleFlowEventSupport().fireAfterRuleFlowProcessStarted(processInstance,this);
+  return processInstance;
+}

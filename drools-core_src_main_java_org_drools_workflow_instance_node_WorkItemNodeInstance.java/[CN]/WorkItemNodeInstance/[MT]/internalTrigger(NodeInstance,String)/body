@@ -1,0 +1,14 @@
+{
+  WorkItemNode workItemNode=getWorkItemNode();
+  Work work=workItemNode.getWork();
+  workItem=new WorkItemImpl();
+  workItem.setName(work.getName());
+  workItem.setProcessInstanceId(getProcessInstance().getId());
+  workItem.setParameters(work.getParameters());
+  for (Iterator<Map.Entry<String,String>> iterator=workItemNode.getInMappings().entrySet().iterator(); iterator.hasNext(); ) {
+    Map.Entry<String,String> mapping=iterator.next();
+    workItem.setParameter(mapping.getKey(),getProcessInstance().getVariable(mapping.getValue()));
+  }
+  getProcessInstance().addWorkItemListener(this);
+  getProcessInstance().getWorkingMemory().getWorkItemManager().executeWorkItem(workItem);
+}
