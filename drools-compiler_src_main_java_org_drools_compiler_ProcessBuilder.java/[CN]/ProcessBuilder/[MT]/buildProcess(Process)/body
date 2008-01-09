@@ -1,31 +1,37 @@
 {
-  if (process instanceof RuleFlowProcess) {
-    RuleFlowProcessValidator validator=RuleFlowProcessValidatorImpl.getInstance();
-    RuleFlowProcessValidationError[] errors=validator.validateProcess((RuleFlowProcess)process);
+  boolean hasErrors=false;
+  ProcessValidator validator=processValidators.get(process.getType());
+  if (validator == null) {
+    System.out.println("Could not find validator for process " + process.getType() + ".");
+    System.out.println("Continuing without validation of the process " + process.getName() + "["+ process.getId()+ "]");
+  }
+ else {
+    ProcessValidationError[] errors=validator.validateProcess((WorkflowProcess)process);
     if (errors.length != 0) {
+      hasErrors=true;
       for (int i=0; i < errors.length; i++) {
         this.errors.add(new ParserError(errors[i].toString(),-1,-1));
       }
     }
- else {
-      String rules=generateRules(process);
-      try {
-        packageBuilder.addPackageFromDrl(new StringReader(rules));
-      }
- catch (      IOException e) {
-        e.printStackTrace(System.err);
-      }
-catch (      DroolsParserException e) {
-        e.printStackTrace(System.err);
-      }
-      buildNodes(process);
-      this.packageBuilder.getPackage().addRuleFlow(process);
-      Package pkg=this.packageBuilder.getPackage();
-      if (pkg != null) {
-        this.packageBuilder.getDialectRegistry().compileAll();
-        if (pkg.getPackageCompilationData().isDirty()) {
-          pkg.getPackageCompilationData().reload();
-        }
+  }
+  if (!hasErrors) {
+    String rules=generateRules(process);
+    try {
+      packageBuilder.addPackageFromDrl(new StringReader(rules));
+    }
+ catch (    IOException e) {
+      e.printStackTrace(System.err);
+    }
+catch (    DroolsParserException e) {
+      e.printStackTrace(System.err);
+    }
+    buildNodes(process);
+    this.packageBuilder.getPackage().addRuleFlow(process);
+    Package pkg=this.packageBuilder.getPackage();
+    if (pkg != null) {
+      this.packageBuilder.getDialectRegistry().compileAll();
+      if (pkg.getPackageCompilationData().isDirty()) {
+        pkg.getPackageCompilationData().reload();
       }
     }
   }

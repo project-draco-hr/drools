@@ -1,0 +1,30 @@
+{
+  if (getState() == STATE_PENDING) {
+    setState(STATE_ACTIVE);
+  }
+  BPELReceive receive=findBPELReceive(partnerLink,portType,operation);
+  if (receive == null) {
+    throw new IllegalArgumentException("Could not find BPELReceive for " + partnerLink + ", "+ portType+ ", "+ operation);
+  }
+  BPELActivity activity=receive;
+  List<BPELActivity> parents=new ArrayList<BPELActivity>();
+  while (!activity.getNodeContainer().equals(getBPELProcess())) {
+    activity=(BPELActivity)activity.getNodeContainer();
+    parents.add(0,activity);
+  }
+  NodeInstanceContainer nodeInstanceContainer=this;
+  for (Iterator<BPELActivity> iterator=parents.iterator(); iterator.hasNext(); ) {
+    BPELActivity parent=iterator.next();
+    NodeInstance nodeInstance=nodeInstanceContainer.getFirstNodeInstance(parent.getId());
+    if (nodeInstance != null) {
+      nodeInstanceContainer=(NodeInstanceContainer)nodeInstance;
+    }
+ else     if (receive.isCreateInstance()) {
+      nodeInstanceContainer=(NodeInstanceContainer)nodeInstanceContainer.getNodeInstance(parent);
+    }
+ else {
+      return;
+    }
+  }
+  ((BPELReceiveInstance)nodeInstanceContainer.getNodeInstance(receive)).triggerCompleted(message);
+}
