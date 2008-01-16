@@ -1,0 +1,15 @@
+{
+  final ObjectTypeNode node=(ObjectTypeNode)sink;
+  final ObjectType newObjectType=node.getObjectType();
+  for (  ObjectTypeConf objectTypeConf : workingMemory.getObjectTypeConfMap(this.entryPoint).values()) {
+    if (newObjectType.isAssignableFrom(objectTypeConf.getConcreteObjectTypeNode().getObjectType())) {
+      objectTypeConf.resetCache();
+      ObjectTypeNode sourceNode=objectTypeConf.getConcreteObjectTypeNode();
+      FactHashTable table=(FactHashTable)workingMemory.getNodeMemory(sourceNode);
+      Iterator factIter=table.iterator();
+      for (FactEntry factEntry=(FactEntry)factIter.next(); factEntry != null; factEntry=(FactEntry)factIter.next()) {
+        sink.assertObject(factEntry.getFactHandle(),context,workingMemory);
+      }
+    }
+  }
+}

@@ -5,23 +5,15 @@
   this.globalResolver=new MapGlobalResolver();
   this.maintainTms=this.ruleBase.getConfiguration().isMaintainTms();
   this.sequential=this.ruleBase.getConfiguration().isSequential();
+  this.nodeMemories=new ConcurrentNodeMemories(this.ruleBase);
   if (this.maintainTms) {
     this.tms=new TruthMaintenanceSystem(this);
   }
  else {
     this.tms=null;
   }
-  this.assertMap=new ObjectHashMap();
   final RuleBaseConfiguration conf=this.ruleBase.getConfiguration();
-  if (conf.getAssertBehaviour() == AssertBehaviour.IDENTITY) {
-    this.assertMap.setComparator(new IdentityAssertMapComparator());
-    this.identityMap=assertMap;
-  }
- else {
-    this.assertMap.setComparator(new EqualityAssertMapComparator());
-    this.identityMap=new ObjectHashMap();
-    this.identityMap.setComparator(new IdentityAssertMapComparator());
-  }
+  this.objectStore=new SingleThreadedObjectStore(conf,this.lock);
   if (conf.getLogicalOverride() == LogicalOverride.DISCARD) {
     this.discardOnLogicalOverride=true;
   }

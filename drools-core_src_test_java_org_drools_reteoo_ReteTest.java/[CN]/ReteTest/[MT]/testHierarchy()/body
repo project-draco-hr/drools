@@ -2,11 +2,11 @@
   final ReteooWorkingMemory workingMemory=(ReteooWorkingMemory)this.ruleBase.newStatefulSession();
   final Rete rete=ruleBase.getRete();
   final IdGenerator idGenerator=ruleBase.getReteooBuilder().getIdGenerator();
-  final ObjectTypeNode listOtn=new ObjectTypeNode(idGenerator.getNextId(),new ClassObjectType(List.class),buildContext);
+  final ObjectTypeNode listOtn=new ObjectTypeNode(idGenerator.getNextId(),this.entryPoint,new ClassObjectType(List.class),buildContext);
   listOtn.attach();
   FactHandle handle=workingMemory.insert(new ArrayList());
   assertEquals(3,rete.getObjectTypeNodes().size());
-  assertSame(listOtn,rete.getObjectTypeNodes().get(new ClassObjectType(List.class)));
+  assertSame(listOtn,rete.getObjectTypeNodes(EntryPoint.DEFAULT).get(new ClassObjectType(List.class)));
   Map memory=workingMemory.getObjectTypeConfMap(EntryPoint.DEFAULT);
   ObjectTypeConf arrayConf=(ObjectTypeConf)memory.get(ArrayList.class);
   final ObjectTypeNode arrayOtn=arrayConf.getConcreteObjectTypeNode();
@@ -23,7 +23,7 @@
   workingMemory.insert(new ArrayList());
   assertEquals(1,listSink.getAsserted().size());
   assertEquals(1,arraySink.getAsserted().size());
-  final ObjectTypeNode collectionOtn=new ObjectTypeNode(idGenerator.getNextId(),new ClassObjectType(Collection.class),buildContext);
+  final ObjectTypeNode collectionOtn=new ObjectTypeNode(idGenerator.getNextId(),this.entryPoint,new ClassObjectType(Collection.class),buildContext);
   final MockObjectSink collectionSink=new MockObjectSink();
   collectionOtn.addObjectSink(collectionSink);
   collectionOtn.attach(new InternalWorkingMemory[]{workingMemory});

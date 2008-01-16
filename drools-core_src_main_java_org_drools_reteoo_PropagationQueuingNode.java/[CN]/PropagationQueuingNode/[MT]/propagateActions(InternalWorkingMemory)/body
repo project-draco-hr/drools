@@ -1,0 +1,12 @@
+{
+  final PropagationQueueingNodeMemory memory=(PropagationQueueingNodeMemory)workingMemory.getNodeMemory(this);
+  memory.isQueued().set(false);
+  Action next=memory.getNext();
+  for (int counter=0; next != null && counter < PROPAGATION_SLICE_LIMIT; next=memory.getNext(), counter++) {
+    next.execute(this.sink,workingMemory);
+  }
+  if (memory.hasNext()) {
+    memory.isQueued().set(true);
+    workingMemory.queueWorkingMemoryAction(this.action);
+  }
+}
