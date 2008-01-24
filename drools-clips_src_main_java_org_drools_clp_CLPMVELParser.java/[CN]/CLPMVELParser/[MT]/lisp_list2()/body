@@ -9,8 +9,20 @@
       match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_lisp_list21300);
       if (failed)       return sExpression;
       t=(Token)input.LT(1);
-      match(input,NAME,FOLLOW_NAME_in_lisp_list21310);
-      if (failed)       return sExpression;
+      if (input.LA(1) == NAME || input.LA(1) == VAR) {
+        input.consume();
+        errorRecovery=false;
+        failed=false;
+      }
+ else {
+        if (backtracking > 0) {
+          failed=true;
+          return sExpression;
+        }
+        MismatchedSetException mse=new MismatchedSetException(null,input);
+        recoverFromMismatchedSet(input,mse,FOLLOW_set_in_lisp_list21310);
+        throw mse;
+      }
       if (backtracking == 0) {
         list.add(new SymbolLispAtom2(t.getText()));
       }
@@ -27,7 +39,7 @@
 switch (alt18) {
 case 1:
 {
-            pushFollow(FOLLOW_lisp_atom2_in_lisp_list21321);
+            pushFollow(FOLLOW_lisp_atom2_in_lisp_list21325);
             a=lisp_atom2();
             _fsp--;
             if (failed)             return sExpression;
@@ -38,7 +50,7 @@ case 1:
         break;
 case 2:
 {
-        pushFollow(FOLLOW_lisp_list2_in_lisp_list21332);
+        pushFollow(FOLLOW_lisp_list2_in_lisp_list21336);
         a=lisp_list2();
         _fsp--;
         if (failed)         return sExpression;
@@ -59,7 +71,7 @@ throw eee;
 cnt18++;
 }
  while (true);
-match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_lisp_list21360);
+match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_lisp_list21364);
 if (failed) return sExpression;
 if (backtracking == 0) {
 sExpression=new LispForm2((SExpression[])list.toArray(new SExpression[list.size()]));
