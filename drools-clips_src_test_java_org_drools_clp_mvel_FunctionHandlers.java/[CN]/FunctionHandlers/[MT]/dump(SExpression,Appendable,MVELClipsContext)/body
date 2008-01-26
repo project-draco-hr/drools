@@ -1,0 +1,23 @@
+{
+  if (sExpression instanceof LispAtom) {
+    appendable.append(((LispAtom)sExpression).getValue());
+  }
+ else {
+    LispForm form=(LispForm)sExpression;
+    String functionName=((LispAtom)form.getSExpressions()[0]).getValue();
+    Function function=FunctionHandlers.getInstance().getFunction(functionName);
+    if (function != null) {
+      function.dump(form,appendable,context);
+    }
+ else {
+      appendable.append(functionName + "(");
+      for (int i=1, length=form.getSExpressions().length; i < length; i++) {
+        dump(form.getSExpressions()[i],appendable,context);
+        if (i < length - 1) {
+          appendable.append(", ");
+        }
+      }
+      appendable.append(")");
+    }
+  }
+}

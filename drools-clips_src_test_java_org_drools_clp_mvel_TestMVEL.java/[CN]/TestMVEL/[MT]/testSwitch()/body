@@ -1,9 +1,17 @@
 {
-  String expr="(switch (?x) (case a then (printout t a)) (case b then (printout t b)) (default (printout t b)) )";
+  String expr="(switch (?x) (case a then (printout t hello)(printout t 1)) (case b then (printout t hello)(printout t 2)) (default (printout t hello)(printout t 3)) )";
   SExpression[] lisplists=evalString(expr);
   StringBuilderAppendable appendable=new StringBuilderAppendable();
   for (  SExpression sExpression : lisplists) {
-    FunctionHandlers.getInstance().dump(sExpression,appendable);
+    FunctionHandlers.dump(sExpression,appendable,context);
   }
-  System.out.println(appendable);
+  vars.put("_Q_x","a");
+  MVEL.eval(appendable.toString(),vars);
+  assertEquals("hello1",new String(baos.toByteArray()));
+  vars.put("_Q_x","M");
+  MVEL.eval(appendable.toString(),vars);
+  assertEquals("hello1hello3",new String(baos.toByteArray()));
+  vars.put("_Q_x","b");
+  eval(appendable.toString());
+  assertEquals("hello1hello3hello2",new String(baos.toByteArray()));
 }
