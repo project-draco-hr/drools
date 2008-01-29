@@ -1,0 +1,29 @@
+{
+  Appendable builder=new StringBuilderAppendable();
+  String name=ruleDescr.getName().trim();
+  if (name.charAt(0) == '"') {
+    name=name.substring(1);
+  }
+  if (name.charAt(name.length() - 1) == '"') {
+    name=name.substring(0,name.length() - 1);
+  }
+  builder.append("function " + name + "(");
+  for (int i=0, length=ruleDescr.getParameterNames().size(); i < length; i++) {
+    builder.append(ruleDescr.getParameterNames().get(i));
+    if (i < length - 1) {
+      builder.append(", ");
+    }
+  }
+  builder.append(") {\n");
+  List list=(List)ruleDescr.getContent();
+  for (Iterator it=list.iterator(); it.hasNext(); ) {
+    FunctionHandlers.dump((LispForm)it.next(),builder,this);
+  }
+  builder.append("}");
+  ExpressionCompiler compiler=new ExpressionCompiler(builder.toString());
+  Serializable s1=compiler.compile();
+  Map<String,org.mvel.ast.Function> map=CompilerTools.extractAllDeclaredFunctions((CompiledExpression)s1);
+  for (  org.mvel.ast.Function function : map.values()) {
+    addFunction(function);
+  }
+}

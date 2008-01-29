@@ -1,19 +1,12 @@
 {
   String function="(deffunction max (?a ?b) (if (> ?a ?b) then (return ?a) else (return ?b) ) )";
-  SExpression[] lisplists=evalString(function);
-  StringBuilderAppendable appendable=new StringBuilderAppendable();
-  for (  SExpression sExpression : lisplists) {
-    FunctionHandlers.dump(sExpression,appendable,context);
-  }
-  eval(appendable.toString());
+  this.shell.eval(function);
   String expr="(if (eq (max 3 5) 5) then (printout t hello) )";
-  lisplists=evalString(expr);
-  appendable=new StringBuilderAppendable();
-  for (  SExpression sExpression : lisplists) {
-    FunctionHandlers.dump(sExpression,appendable,context);
-  }
-  eval(appendable.toString());
-  vars.put("_Q_a","10");
-  vars.put("_Q_b","20");
+  this.shell.eval(expr);
   assertEquals("hello",new String(baos.toByteArray()));
+  expr="(if (eq (max ?a ?b) 5) then (printout t hello) )";
+  this.shell.addVariable("?a","3");
+  this.shell.addVariable("?b","5");
+  this.shell.eval(expr);
+  assertEquals("hellohello",new String(baos.toByteArray()));
 }
