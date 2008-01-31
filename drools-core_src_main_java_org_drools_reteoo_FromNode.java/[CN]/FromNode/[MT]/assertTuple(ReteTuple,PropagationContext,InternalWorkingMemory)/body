@@ -2,7 +2,7 @@
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
   memory.getTupleMemory().add(leftTuple);
   final LinkedList list=new LinkedList();
-  this.betaConstraints.updateFromTuple(workingMemory,leftTuple);
+  this.betaConstraints.updateFromTuple(memory.getContext(),workingMemory,leftTuple);
   for (final java.util.Iterator it=this.dataProvider.getResults(leftTuple,workingMemory,context); it.hasNext(); ) {
     final Object object=it.next();
     final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(object,false,workingMemory);
@@ -15,7 +15,7 @@
         }
       }
     }
-    if (isAllowed && this.betaConstraints.isAllowedCachedLeft(handle)) {
+    if (isAllowed && this.betaConstraints.isAllowedCachedLeft(memory.getContext(),handle)) {
       list.add(new LinkedListEntry(handle));
       this.sink.propagateAssertTuple(leftTuple,handle,context,workingMemory);
     }
@@ -23,7 +23,7 @@
       workingMemory.getFactHandleFactory().destroyFactHandle(handle);
     }
   }
-  this.betaConstraints.resetTuple();
+  this.betaConstraints.resetTuple(memory.getContext());
   if (!list.isEmpty()) {
     memory.getCreatedHandles().put(leftTuple,list);
   }

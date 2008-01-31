@@ -9,10 +9,10 @@
   accresult.context=accContext;
   this.accumulate.init(memory.workingMemoryContext,accContext,leftTuple,workingMemory);
   final Iterator it=memory.betaMemory.getFactHandleMemory().iterator(leftTuple);
-  this.constraints.updateFromTuple(workingMemory,leftTuple);
+  this.constraints.updateFromTuple(memory.betaMemory.getContext(),workingMemory,leftTuple);
   for (FactEntry entry=(FactEntry)it.next(); entry != null; entry=(FactEntry)it.next()) {
     InternalFactHandle handle=entry.getFactHandle();
-    if (this.constraints.isAllowedCachedLeft(handle)) {
+    if (this.constraints.isAllowedCachedLeft(memory.betaMemory.getContext(),handle)) {
       if (this.unwrapRightObject) {
         ReteTuple tuple=(ReteTuple)handle.getObject();
         handle=tuple.getLastHandle();
@@ -23,7 +23,7 @@
       }
     }
   }
-  this.constraints.resetTuple();
+  this.constraints.resetTuple(memory.betaMemory.getContext());
   final Object result=this.accumulate.getResult(memory.workingMemoryContext,accContext,leftTuple,workingMemory);
   if (result == null) {
     throw new RuntimeDroolsException("Accumulate must not return a null value.");
@@ -37,8 +37,8 @@
     }
   }
   if (isAllowed) {
-    this.resultBinder.updateFromTuple(workingMemory,leftTuple);
-    if (this.resultBinder.isAllowedCachedLeft(handle)) {
+    this.resultBinder.updateFromTuple(memory.resultsContext,workingMemory,leftTuple);
+    if (this.resultBinder.isAllowedCachedLeft(memory.resultsContext,handle)) {
       accresult.handle=handle;
       this.sink.propagateAssertTuple(leftTuple,handle,context,workingMemory);
     }
