@@ -4,7 +4,11 @@
   ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase(config);
   BuildContext buildContext=new BuildContext(ruleBase,((ReteooRuleBase)ruleBase).getReteooBuilder().getIdGenerator());
   ReteooWorkingMemory workingMemory=(ReteooWorkingMemory)ruleBase.newStatefulSession();
-  final AlphaNode alphaNode=new AlphaNode(buildContext.getNextId(),null,null,buildContext);
-  final FactHashTable memory=(FactHashTable)workingMemory.getNodeMemory(alphaNode);
+  final ClassFieldExtractor extractor=cache.getExtractor(Cheese.class,"type",getClass().getClassLoader());
+  final FieldValue field=FieldFactory.getFieldValue("cheddar");
+  final Evaluator evaluator=equals.getEvaluator(ValueType.OBJECT_TYPE,Operator.EQUAL);
+  final LiteralConstraint constraint=new LiteralConstraint(extractor,evaluator,field);
+  final AlphaNode alphaNode=new AlphaNode(buildContext.getNextId(),constraint,null,buildContext);
+  final AlphaMemory memory=(AlphaMemory)workingMemory.getNodeMemory(alphaNode);
   assertNotNull(memory);
 }

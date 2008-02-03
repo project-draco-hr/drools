@@ -27,6 +27,7 @@
   final String[] requiredGlobals=new String[]{};
   final ReturnValueRestriction returnValue=new ReturnValueRestriction(extractor,previousDeclarations,localDeclarations,requiredGlobals,context.getConfiguration().getEvaluatorRegistry().getEvaluator(ValueType.PINTEGER_TYPE,Operator.EQUAL));
   builder.build(context,usedIdentifiers,previousDeclarations,localDeclarations,returnValue,returnValueDescr);
+  ContextEntry retValContext=returnValue.createContextEntry();
   final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   final InternalWorkingMemory wm=(InternalWorkingMemory)ruleBase.newStatefulSession();
   final Cheese stilton=new Cheese("stilton",10);
@@ -37,8 +38,8 @@
   tuple=new ReteTuple(tuple,f1);
   final Cheese brie=new Cheese("brie",20);
   final InternalFactHandle f2=(InternalFactHandle)wm.insert(brie);
-  assertTrue(returnValue.isAllowed(extractor,f2,tuple,wm));
+  assertTrue(returnValue.isAllowed(extractor,f2,tuple,wm,retValContext));
   brie.setPrice(18);
   wm.update(f2,brie);
-  assertFalse(returnValue.isAllowed(extractor,f2,tuple,wm));
+  assertFalse(returnValue.isAllowed(extractor,f2,tuple,wm,retValContext));
 }

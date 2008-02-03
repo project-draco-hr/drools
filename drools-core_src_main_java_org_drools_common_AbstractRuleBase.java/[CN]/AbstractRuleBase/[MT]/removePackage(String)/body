@@ -9,35 +9,39 @@ synchronized (this.pkgs) {
       lock();
       doUnlock=true;
     }
-    this.removalsSinceLock++;
-    this.eventSupport.fireBeforePackageRemoved(pkg);
-    final Rule[] rules=pkg.getRules();
-    for (int i=0; i < rules.length; ++i) {
-      removeRule(pkg,rules[i]);
-    }
-    this.packageClassLoader.removeClassLoader(pkg.getPackageCompilationData().getClassLoader());
-    final Set referencedGlobals=new HashSet();
-    for (final Iterator it=this.pkgs.values().iterator(); it.hasNext(); ) {
-      final org.drools.rule.Package pkgref=(org.drools.rule.Package)it.next();
-      if (pkgref != pkg) {
-        referencedGlobals.addAll(pkgref.getGlobals().keySet());
+    try {
+      this.removalsSinceLock++;
+      this.eventSupport.fireBeforePackageRemoved(pkg);
+      final Rule[] rules=pkg.getRules();
+      for (int i=0; i < rules.length; ++i) {
+        removeRule(pkg,rules[i]);
       }
-    }
-    for (final Iterator it=pkg.getGlobals().keySet().iterator(); it.hasNext(); ) {
-      final String globalName=(String)it.next();
-      if (!referencedGlobals.contains(globalName)) {
-        this.globals.remove(globalName);
+      this.packageClassLoader.removeClassLoader(pkg.getPackageCompilationData().getClassLoader());
+      final Set referencedGlobals=new HashSet();
+      for (final Iterator it=this.pkgs.values().iterator(); it.hasNext(); ) {
+        final org.drools.rule.Package pkgref=(org.drools.rule.Package)it.next();
+        if (pkgref != pkg) {
+          referencedGlobals.addAll(pkgref.getGlobals().keySet());
+        }
       }
+      for (final Iterator it=pkg.getGlobals().keySet().iterator(); it.hasNext(); ) {
+        final String globalName=(String)it.next();
+        if (!referencedGlobals.contains(globalName)) {
+          this.globals.remove(globalName);
+        }
+      }
+      final Map flows=pkg.getRuleFlows();
+      for (final Iterator iter=flows.keySet().iterator(); iter.hasNext(); ) {
+        removeProcess((String)iter.next());
+      }
+      this.pkgs.remove(pkg.getName());
+      pkg.clear();
+      this.eventSupport.fireAfterPackageRemoved(pkg);
     }
-    final Map flows=pkg.getRuleFlows();
-    for (final Iterator iter=flows.keySet().iterator(); iter.hasNext(); ) {
-      removeProcess((String)iter.next());
-    }
-    this.pkgs.remove(pkg.getName());
-    pkg.clear();
-    this.eventSupport.fireAfterPackageRemoved(pkg);
-    if (doUnlock) {
-      unlock();
+  finally {
+      if (doUnlock) {
+        unlock();
+      }
     }
   }
 }
