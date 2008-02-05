@@ -5,14 +5,14 @@ synchronized (this.pkgs) {
       throw new IllegalArgumentException("Package name '" + packageName + "' does not exist for this Rule Base.");
     }
     this.eventSupport.fireBeforeFunctionRemoved(pkg,functionName);
-    final PackageCompilationData compilationData=pkg.removeFunction(functionName);
-    if (compilationData == null) {
+    if (!pkg.getFunctions().containsKey(functionName)) {
       throw new IllegalArgumentException("function name '" + packageName + "' does not exist in the Package '"+ packageName+ "'.");
     }
+    pkg.removeFunction(functionName);
     if (this.reloadPackageCompilationData == null) {
       this.reloadPackageCompilationData=new ReloadPackageCompilationData();
     }
-    this.reloadPackageCompilationData.addPackageCompilationData(compilationData);
+    this.reloadPackageCompilationData.addDialectDatas(pkg.getDialectDatas());
     this.eventSupport.fireAfterFunctionRemoved(pkg,functionName);
   }
 }

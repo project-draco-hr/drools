@@ -1,20 +1,7 @@
 {
   final Map globals=pkg.getGlobals();
   final Map<String,ImportDeclaration> imports=pkg.getImports();
-  final PackageCompilationData compilationData=pkg.getPackageCompilationData();
-  final PackageCompilationData newCompilationData=newPkg.getPackageCompilationData();
-  final String[] files=newCompilationData.list();
-  for (int i=0, length=files.length; i < length; i++) {
-    compilationData.write(files[i],newCompilationData.read(files[i]));
-  }
   imports.putAll(newPkg.getImports());
-  compilationData.putAllInvokers(newCompilationData.getInvokers());
-  if (compilationData.isDirty()) {
-    if (this.reloadPackageCompilationData == null) {
-      this.reloadPackageCompilationData=new ReloadPackageCompilationData();
-    }
-    this.reloadPackageCompilationData.addPackageCompilationData(compilationData);
-  }
   for (final Iterator it=newPkg.getGlobals().keySet().iterator(); it.hasNext(); ) {
     final String identifier=(String)it.next();
     final Class type=(Class)globals.get(identifier);
@@ -37,4 +24,9 @@
       pkg.addRuleFlow(flow);
     }
   }
+  pkg.getDialectDatas().merge(newPkg.getDialectDatas());
+  if (this.reloadPackageCompilationData == null) {
+    this.reloadPackageCompilationData=new ReloadPackageCompilationData();
+  }
+  this.reloadPackageCompilationData.addDialectDatas(pkg.getDialectDatas());
 }
