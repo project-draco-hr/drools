@@ -1,5 +1,16 @@
 {
   StringBuilderAppendable appendable=new StringBuilderAppendable();
-  FunctionHandlers.dump(lispForm,appendable,this);
-  MVEL.eval(appendable.toString(),this.vars);
+  FunctionHandlers.dump(lispForm,appendable);
+  ParserContext context=new ParserContext();
+  for (Iterator it=this.directImports.entrySet().iterator(); it.hasNext(); ) {
+    Entry entry=(Entry)it.next();
+    context.addImport((String)entry.getKey(),(Class)entry.getValue());
+  }
+  for (Iterator it=this.dynamicImports.iterator(); it.hasNext(); ) {
+    String importText=((String)it.next()).trim();
+    context.addPackageImport(importText.substring(0,importText.length() - 2));
+  }
+  ExpressionCompiler expr=new ExpressionCompiler(appendable.toString());
+  Serializable executable=expr.compile(context);
+  MVEL.executeExpression(executable,this,this.factory);
 }
