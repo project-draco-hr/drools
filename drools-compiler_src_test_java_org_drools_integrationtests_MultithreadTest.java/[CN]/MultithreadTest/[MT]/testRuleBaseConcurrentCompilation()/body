@@ -1,0 +1,30 @@
+{
+  final int THREAD_COUNT=30;
+  try {
+    boolean success=true;
+    final PackageBuilder builder=new PackageBuilder();
+    builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_MultithreadRulebaseSharing.drl")));
+    RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+    ruleBase.addPackage(builder.getPackage());
+    final Thread[] t=new Thread[THREAD_COUNT];
+    final RulebaseRunner[] r=new RulebaseRunner[THREAD_COUNT];
+    for (int i=0; i < t.length; i++) {
+      r[i]=new RulebaseRunner(i,ruleBase);
+      t[i]=new Thread(r[i],"thread-" + i);
+      t[i].start();
+    }
+    for (int i=0; i < t.length; i++) {
+      t[i].join();
+      if (r[i].getStatus() == RulebaseRunner.Status.FAIL) {
+        success=false;
+      }
+    }
+    if (!success) {
+      fail("Multithread test failed. Look at the stack traces for details. ");
+    }
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail("Should not raise any exception: " + e.getMessage());
+  }
+}
