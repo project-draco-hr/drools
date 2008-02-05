@@ -1,0 +1,15 @@
+{
+  if (stream instanceof DroolsObjectInputStream) {
+    DroolsObjectInputStream droolsStream=(DroolsObjectInputStream)stream;
+    this.parentClassLoader=droolsStream.getClassLoader();
+  }
+ else {
+    this.parentClassLoader=Thread.currentThread().getContextClassLoader();
+  }
+  this.classLoader=new CompositePackageClassLoader(this.parentClassLoader);
+  this.lineMappings=(Map)stream.readObject();
+  final byte[] bytes=(byte[])stream.readObject();
+  final DroolsObjectInputStream streamWithLoader=new DroolsObjectInputStream(new ByteArrayInputStream(bytes),this.classLoader);
+  streamWithLoader.setDialectDatas(this);
+  this.dialects=(Map)streamWithLoader.readObject();
+}
