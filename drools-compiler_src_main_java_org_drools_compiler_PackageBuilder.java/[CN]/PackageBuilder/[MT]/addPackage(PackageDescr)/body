@@ -2,8 +2,12 @@
   validatePackageName(packageDescr);
   validateUniqueRuleNames(packageDescr);
   String dialectName=null;
-  if (dialectName == null && this.dialect == null) {
-    this.dialect=this.dialectRegistry.getDialect(this.configuration.getDefaultDialect());
+  for (Iterator it=packageDescr.getAttributes().iterator(); it.hasNext(); ) {
+    AttributeDescr value=(AttributeDescr)it.next();
+    if ("dialect".equals(value.getName())) {
+      dialectName=value.getValue();
+      break;
+    }
   }
   if (dialectName != null) {
     this.dialect=this.dialectRegistry.getDialect(dialectName);
@@ -25,21 +29,10 @@
     if (!packageDescr.getFunctions().isEmpty()) {
       for (final Iterator it=packageDescr.getFunctions().iterator(); it.hasNext(); ) {
         FunctionDescr functionDescr=(FunctionDescr)it.next();
-        final String functionClassName=this.pkg.getName() + "." + ucFirst(functionDescr.getName());
-        functionDescr.setClassName(functionClassName);
-        this.pkg.addStaticImport(functionClassName + "." + functionDescr.getName());
-      }
-      for (final Iterator it=packageDescr.getFunctions().iterator(); it.hasNext(); ) {
-        FunctionDescr functionDescr=(FunctionDescr)it.next();
         functionDescr.setDialect(this.dialect.getId());
         addFunction(functionDescr);
       }
       this.dialectRegistry.compileAll();
-      for (final Iterator it=packageDescr.getFunctions().iterator(); it.hasNext(); ) {
-        FunctionDescr functionDescr=(FunctionDescr)it.next();
-        final String functionClassName=this.pkg.getName() + "." + ucFirst(functionDescr.getName());
-        this.dialectRegistry.addStaticImport(functionClassName + "." + functionDescr.getName());
-      }
     }
     for (final Iterator it=packageDescr.getRules().iterator(); it.hasNext(); ) {
       addRule((RuleDescr)it.next());
