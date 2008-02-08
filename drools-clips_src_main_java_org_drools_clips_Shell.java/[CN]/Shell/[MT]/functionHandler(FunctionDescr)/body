@@ -20,10 +20,17 @@
     FunctionHandlers.dump((LispForm)it.next(),builder);
   }
   builder.append("}");
-  ExpressionCompiler compiler=new ExpressionCompiler(builder.toString());
-  Serializable s1=compiler.compile();
-  Map<String,org.mvel.ast.Function> map=CompilerTools.extractAllDeclaredFunctions((CompiledExpression)s1);
-  for (  org.mvel.ast.Function function : map.values()) {
-    addFunction(function);
+  functionDescr.setContent(builder.toString());
+  functionDescr.setDialect("mvel");
+  PackageDescr pkgDescr=createPackageDescr("MAIN");
+  pkgDescr.addFunction(functionDescr);
+  PackageBuilderConfiguration conf=new PackageBuilderConfiguration();
+  conf.getDialectConfiguration("mvel");
+  MVELDialectConfiguration mvelConf=(MVELDialectConfiguration)conf.getDialectConfiguration("mvel");
+  mvelConf.setLangLevel(5);
+  PackageBuilder pkgBuilder=new PackageBuilder(conf);
+  pkgBuilder.addPackage(pkgDescr);
+  if (pkgBuilder.getErrors().isEmpty()) {
+    this.ruleBase.addPackage(pkgBuilder.getPackage());
   }
 }
