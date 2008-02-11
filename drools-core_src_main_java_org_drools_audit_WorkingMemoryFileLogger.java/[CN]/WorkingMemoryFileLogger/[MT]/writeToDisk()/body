@@ -1,10 +1,18 @@
 {
-  ObjectOutputStream out=null;
+  if (!initialized) {
+    initializeLog();
+  }
+  FileWriter fileWriter=null;
   try {
+    fileWriter=new FileWriter(this.fileName + (this.nbOfFile == 0 ? ".log" : this.nbOfFile + ".log"),!split);
     final XStream xstream=new XStream();
-    out=xstream.createObjectOutputStream(new FileWriter(this.fileName + (this.nbOfFile == 0 ? ".log" : this.nbOfFile + ".log"),false));
-    out.writeObject(this.events);
-    this.nbOfFile++;
+    for (    LogEvent event : this.events) {
+      fileWriter.write(xstream.toXML(event) + "\n");
+    }
+    if (split) {
+      this.nbOfFile++;
+      initialized=false;
+    }
     clear();
   }
  catch (  final FileNotFoundException exc) {
@@ -14,9 +22,9 @@ catch (  final Throwable t) {
     t.printStackTrace(System.err);
   }
  finally {
-    if (out != null) {
+    if (fileWriter != null) {
       try {
-        out.close();
+        fileWriter.close();
       }
  catch (      Exception e) {
       }
