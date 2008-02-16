@@ -1,0 +1,37 @@
+{
+  SpreadsheetCompiler compiler=new SpreadsheetCompiler();
+  String drl=compiler.compile(getSpreadsheetStream(),InputType.XLS);
+  RuleBase ruleBase=buildRuleBase(drl);
+  StatefulSession session=ruleBase.newStatefulSession();
+  final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(session);
+  logger.setFileName("log/trouble_ticket");
+  final Customer a=new Customer("A","Drools","Gold");
+  final Customer b=new Customer("B","Drools","Platinum");
+  final Customer c=new Customer("C","Drools","Silver");
+  final Customer d=new Customer("D","Drools","Silver");
+  final Ticket t1=new Ticket(a);
+  final Ticket t2=new Ticket(b);
+  final Ticket t3=new Ticket(c);
+  final Ticket t4=new Ticket(d);
+  session.insert(a);
+  session.insert(b);
+  session.insert(c);
+  session.insert(d);
+  session.insert(t1);
+  session.insert(t2);
+  final FactHandle ft3=session.insert(t3);
+  session.insert(t4);
+  session.fireAllRules();
+  t3.setStatus("Done");
+  session.update(ft3,t3);
+  try {
+    System.err.println("[[ Sleeping 5 seconds ]]");
+    Thread.sleep(5000);
+  }
+ catch (  final InterruptedException e) {
+    e.printStackTrace();
+  }
+  System.err.println("[[ awake ]]");
+  session.dispose();
+  logger.writeToDisk();
+}
