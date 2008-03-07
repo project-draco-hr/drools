@@ -1,0 +1,34 @@
+{
+  List<FactPattern> patterns=new ArrayList<FactPattern>();
+  for (int i=0; i < conditionCols.size(); i++) {
+    ConditionCol c=(ConditionCol)conditionCols.get(i);
+    String cell=row[i + 2 + numOfAttributes];
+    if (validCell(cell)) {
+      FactPattern fp=find(patterns,c.boundName);
+      if (fp == null) {
+        fp=new FactPattern(c.factType);
+        fp.boundName=c.boundName;
+        patterns.add(fp);
+      }
+switch (c.constraintValueType) {
+case ISingleFieldConstraint.TYPE_LITERAL:
+case ISingleFieldConstraint.TYPE_RET_VALUE:
+        SingleFieldConstraint sfc=new SingleFieldConstraint(c.factField);
+      sfc.operator=c.operator;
+    sfc.constraintValueType=c.constraintValueType;
+  sfc.value=cell;
+fp.addConstraint(sfc);
+break;
+case ISingleFieldConstraint.TYPE_PREDICATE:
+SingleFieldConstraint pred=new SingleFieldConstraint();
+pred.constraintValueType=c.constraintValueType;
+pred.value=cell;
+fp.addConstraint(pred);
+break;
+default :
+throw new IllegalArgumentException("Unknown constraintValueType: " + c.constraintValueType);
+}
+}
+}
+rm.lhs=patterns.toArray(new IPattern[patterns.size()]);
+}
