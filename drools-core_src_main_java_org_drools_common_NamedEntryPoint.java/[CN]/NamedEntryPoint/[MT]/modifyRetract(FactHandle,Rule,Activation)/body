@@ -1,0 +1,18 @@
+{
+  try {
+    this.lock.lock();
+    this.ruleBase.executeQueuedActions();
+    final InternalFactHandle handle=(InternalFactHandle)factHandle;
+    if (handle.getId() == -1) {
+      return;
+    }
+    if (activation != null) {
+      activation.getPropagationContext().releaseResources();
+    }
+    final PropagationContext propagationContext=new PropagationContextImpl(this.wm.getNextPropagationIdCounter(),PropagationContext.MODIFICATION,rule,activation,-1,-1,entryPoint);
+    this.entryPointNode.retractObject(handle,propagationContext,this.wm);
+  }
+  finally {
+    this.lock.unlock();
+  }
+}

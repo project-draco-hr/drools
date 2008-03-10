@@ -1,0 +1,24 @@
+{
+  try {
+    this.lock.lock();
+    this.ruleBase.executeQueuedActions();
+    final InternalFactHandle handle=(InternalFactHandle)factHandle;
+    if (handle.getId() == -1) {
+      return;
+    }
+    removePropertyChangeListener(handle);
+    if (activation != null) {
+      activation.getPropagationContext().releaseResources();
+    }
+    final PropagationContext propagationContext=new PropagationContextImpl(this.wm.getNextPropagationIdCounter(),PropagationContext.RETRACTION,rule,activation,-1,-1,this.entryPoint);
+    this.entryPointNode.retractObject(handle,propagationContext,this.wm);
+    final Object object=handle.getObject();
+    this.wm.getWorkingMemoryEventSupport().fireObjectRetracted(propagationContext,handle,object,this.wm);
+    this.objectStore.removeHandle(handle);
+    this.handleFactory.destroyFactHandle(handle);
+    this.wm.executeQueuedActions();
+  }
+  finally {
+    this.lock.unlock();
+  }
+}

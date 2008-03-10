@@ -1,3 +1,32 @@
 {
-  this.modifyInsert(EntryPoint.DEFAULT,factHandle,object,rule,activation);
+  try {
+    this.lock.lock();
+    this.ruleBase.executeQueuedActions();
+    final InternalFactHandle handle=(InternalFactHandle)factHandle;
+    final Object originalObject=(handle.isShadowFact()) ? ((ShadowProxy)handle.getObject()).getShadowedObject() : handle.getObject();
+    if (this.maintainTms) {
+      EqualityKey key=handle.getEqualityKey();
+      key=this.tms.get(object);
+      if (key == null) {
+        key=new EqualityKey(handle,0);
+        this.tms.put(key);
+      }
+ else {
+        key.addFactHandle(handle);
+      }
+      handle.setEqualityKey(key);
+    }
+    this.handleFactory.increaseFactHandleRecency(handle);
+    if (activation != null) {
+      activation.getPropagationContext().releaseResources();
+    }
+    final PropagationContext propagationContext=new PropagationContextImpl(getNextPropagationIdCounter(),PropagationContext.MODIFICATION,rule,activation,this.agenda.getActiveActivations(),this.agenda.getDormantActivations(),entryPoint);
+    this.entryPointNode.assertObject(handle,propagationContext,this.typeConfReg.getObjectTypeConf(this.entryPoint,object),this);
+    this.workingMemoryEventSupport.fireObjectUpdated(propagationContext,factHandle,originalObject,object,this);
+    propagationContext.clearRetractedTuples();
+    executeQueuedActions();
+  }
+  finally {
+    this.lock.unlock();
+  }
 }
