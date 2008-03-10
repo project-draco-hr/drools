@@ -1,0 +1,50 @@
+{
+  List<LabelledAction> actions=new ArrayList<LabelledAction>();
+  for (int i=0; i < actionCols.size(); i++) {
+    ActionCol c=actionCols.get(i);
+    String cell=row[condAndAttrs + i + 2];
+    if (validCell(cell)) {
+      if (c instanceof ActionInsertFactCol) {
+        ActionInsertFactCol ac=(ActionInsertFactCol)c;
+        LabelledAction a=find(actions,ac.boundName);
+        if (a == null) {
+          a=new LabelledAction();
+          a.boundName=ac.boundName;
+          ActionInsertFact ins=new ActionInsertFact(ac.factType);
+          a.action=ins;
+          actions.add(a);
+        }
+        ActionInsertFact ins=(ActionInsertFact)a.action;
+        ActionFieldValue val=new ActionFieldValue(ac.factField,cell,ac.type);
+        ins.addFieldValue(val);
+      }
+ else       if (c instanceof ActionRetractFactCol) {
+        ActionRetractFactCol rf=(ActionRetractFactCol)c;
+        LabelledAction a=find(actions,rf.boundName);
+        if (a == null) {
+          a=new LabelledAction();
+          a.action=new ActionRetractFact(rf.boundName);
+          a.boundName=rf.boundName;
+          actions.add(a);
+        }
+      }
+ else       if (c instanceof ActionSetFieldCol) {
+        ActionSetFieldCol sf=(ActionSetFieldCol)c;
+        LabelledAction a=find(actions,sf.boundName);
+        if (a == null) {
+          a=new LabelledAction();
+          a.boundName=sf.boundName;
+          a.action=new ActionSetField(sf.boundName);
+          actions.add(a);
+        }
+        ActionSetField asf=(ActionSetField)a.action;
+        ActionFieldValue val=new ActionFieldValue(sf.factField,cell,sf.type);
+        asf.addFieldValue(val);
+      }
+    }
+  }
+  rm.rhs=new IAction[actions.size()];
+  for (int i=0; i < rm.rhs.length; i++) {
+    rm.rhs[i]=actions.get(i).action;
+  }
+}
