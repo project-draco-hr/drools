@@ -1,3 +1,18 @@
 {
-  return false;
+  boolean hasConstraints=false;
+  for (int i=0; i < sinks.length && !hasConstraints; i++) {
+    if (sinks[i] instanceof AlphaNode || sinks[i] instanceof AccumulateNode || sinks[i] instanceof CollectNode|| sinks[i] instanceof FromNode) {
+      hasConstraints=true;
+    }
+ else     if (sinks[i] instanceof BetaNode && ((BetaNode)sinks[i]).getConstraints().length > 0) {
+      hasConstraints=this.usesDeclaration(((BetaNode)sinks[i]).getConstraints());
+    }
+    if (!hasConstraints && sinks[i] instanceof ObjectSource) {
+      hasConstraints=!this.canSkipOnModify(((ObjectSource)sinks[i]).getSinkPropagator().getSinks());
+    }
+ else     if (!hasConstraints && sinks[i] instanceof TupleSource) {
+      hasConstraints=!this.canSkipOnModify(((TupleSource)sinks[i]).getSinkPropagator().getSinks());
+    }
+  }
+  return !hasConstraints;
 }
