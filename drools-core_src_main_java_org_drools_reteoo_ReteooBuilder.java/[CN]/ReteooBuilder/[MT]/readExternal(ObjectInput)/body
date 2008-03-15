@@ -1,0 +1,21 @@
+{
+  boolean isDrools=in instanceof DroolsObjectInputStream;
+  DroolsObjectInputStream droolsStream;
+  ByteArrayInputStream bytes;
+  if (isDrools) {
+    bytes=null;
+    droolsStream=(DroolsObjectInputStream)in;
+  }
+ else {
+    bytes=new ByteArrayInputStream((byte[])in.readObject());
+    droolsStream=new DroolsObjectInputStream((InputStream)new ObjectInputStream(bytes));
+  }
+  this.rules=(Map)in.readObject();
+  this.idGenerator=(IdGenerator)in.readObject();
+  this.ordered=in.readBoolean();
+  this.ruleBase=(InternalRuleBase)droolsStream.readObject();
+  this.ruleBuilder=new ReteooRuleBuilder();
+  if (!isDrools) {
+    bytes.close();
+  }
+}

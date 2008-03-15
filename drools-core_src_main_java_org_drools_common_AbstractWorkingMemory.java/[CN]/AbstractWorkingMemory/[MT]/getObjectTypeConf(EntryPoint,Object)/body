@@ -1,0 +1,33 @@
+{
+  Map<Object,ObjectTypeConf> map=this.typeConfMap.get(entrypoint);
+  if (map == null) {
+    map=new ConcurrentHashMap<Object,ObjectTypeConf>();
+    this.typeConfMap.put(entrypoint,map);
+  }
+  ObjectTypeConf objectTypeConf;
+  if (object instanceof Fact) {
+    String key=((Fact)object).getFactTemplate().getName();
+    objectTypeConf=map.get(key);
+    if (objectTypeConf == null) {
+      objectTypeConf=new FactTemplateTypeConf(entrypoint,((Fact)object).getFactTemplate(),this.ruleBase);
+      this.addObjectTypeConf(entrypoint,key,objectTypeConf);
+    }
+    object=key;
+  }
+ else {
+    Class cls=null;
+    if (object instanceof ShadowProxy) {
+      cls=((ShadowProxy)object).getShadowedObject().getClass();
+    }
+ else {
+      cls=object.getClass();
+    }
+    objectTypeConf=map.get(cls);
+    if (objectTypeConf == null) {
+      final boolean isEvent=this.ruleBase.isEvent(cls);
+      objectTypeConf=new ClassObjectTypeConf(entrypoint,cls,isEvent,this.ruleBase);
+      this.addObjectTypeConf(entrypoint,cls,objectTypeConf);
+    }
+  }
+  return objectTypeConf;
+}

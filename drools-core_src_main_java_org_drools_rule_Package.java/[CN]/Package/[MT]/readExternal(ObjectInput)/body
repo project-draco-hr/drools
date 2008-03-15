@@ -1,15 +1,18 @@
 {
-  this.dialectDatas=(DialectDatas)stream.readObject();
-  this.name=(String)stream.readObject();
-  this.imports=(Map<String,ImportDeclaration>)stream.readObject();
-  this.staticImports=(Set)stream.readObject();
-  this.typeDeclarations=(Map<String,TypeDeclaration>)stream.readObject();
-  this.functions=(Map)stream.readObject();
-  this.factTemplates=(Map)stream.readObject();
-  this.ruleFlows=(Map)stream.readObject();
-  this.globals=(Map)stream.readObject();
-  this.valid=stream.readBoolean();
-  final byte[] bytes=(byte[])stream.readObject();
-  final DroolsObjectInputStream streamWithLoader=new DroolsObjectInputStream(new ByteArrayInputStream(bytes),this.dialectDatas.getClassLoader());
-  this.rules=(Map)streamWithLoader.readObject();
+  boolean isDroolsStream=stream instanceof DroolsObjectInputStream;
+  ObjectInput in=isDroolsStream ? stream : new DroolsObjectInputStream(new ByteArrayInputStream((byte[])stream.readObject()));
+  this.dialectDatas=(DialectDatas)in.readObject();
+  if (!isDroolsStream)   ((DroolsObjectInput)in).setClassLoader(this.dialectDatas.getClassLoader());
+  this.name=(String)in.readObject();
+  this.imports=(Map<String,ImportDeclaration>)in.readObject();
+  this.staticImports=(Set)in.readObject();
+  this.functions=(Map<String,Function>)in.readObject();
+  this.factTemplates=(Map)in.readObject();
+  this.ruleFlows=(Map)in.readObject();
+  this.globals=(Map)in.readObject();
+  this.valid=in.readBoolean();
+  this.rules=(Map)in.readObject();
+  if (!isDroolsStream) {
+    in.close();
+  }
 }

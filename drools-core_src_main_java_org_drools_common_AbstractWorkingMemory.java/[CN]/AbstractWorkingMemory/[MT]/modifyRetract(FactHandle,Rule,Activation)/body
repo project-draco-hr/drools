@@ -1,29 +1,3 @@
 {
-  try {
-    this.lock.lock();
-    this.ruleBase.executeQueuedActions();
-    int status=-1;
-    if (this.maintainTms) {
-      status=((InternalFactHandle)factHandle).getEqualityKey().getStatus();
-    }
-    final InternalFactHandle handle=(InternalFactHandle)factHandle;
-    if (handle.getId() == -1) {
-      return;
-    }
-    if (activation != null) {
-      activation.getPropagationContext().releaseResources();
-    }
-    final PropagationContext propagationContext=new PropagationContextImpl(getNextPropagationIdCounter(),PropagationContext.MODIFICATION,rule,activation,this.agenda.getActiveActivations(),this.agenda.getDormantActivations(),entryPoint);
-    this.entryPointNode.retractObject(handle,propagationContext,this.typeConfReg.getObjectTypeConf(this.entryPoint,handle.getObject()),this);
-    if (this.maintainTms) {
-      EqualityKey key=handle.getEqualityKey();
-      key.removeFactHandle(handle);
-      if (key.isEmpty()) {
-        this.tms.remove(key);
-      }
-    }
-  }
-  finally {
-    this.lock.unlock();
-  }
+  this.modifyRetract(EntryPoint.DEFAULT,factHandle,rule,activation);
 }

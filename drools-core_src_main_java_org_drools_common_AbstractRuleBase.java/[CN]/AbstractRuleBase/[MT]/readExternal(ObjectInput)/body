@@ -1,0 +1,41 @@
+{
+  DroolsObjectInput droolsStream=null;
+  boolean isDrools=in instanceof DroolsObjectInputStream;
+  if (isDrools) {
+    droolsStream=(DroolsObjectInput)in;
+  }
+ else {
+    byte[] bytes=(byte[])in.readObject();
+    droolsStream=new DroolsObjectInputStream(new ByteArrayInputStream(bytes));
+  }
+  this.pkgs=(Map)droolsStream.readObject();
+  this.config=(RuleBaseConfiguration)droolsStream.readObject();
+  Map store=(Map)droolsStream.readObject();
+  this.packageClassLoader=new CompositePackageClassLoader(droolsStream.getClassLoader());
+  droolsStream.setClassLoader(packageClassLoader);
+  this.classLoader=new MapBackedClassLoader(this.packageClassLoader,store);
+  this.packageClassLoader.addClassLoader(this.classLoader);
+  this.objenesis=createObjenesis();
+  for (  final Object object : this.pkgs.values()) {
+    this.packageClassLoader.addClassLoader(((Package)object).getDialectDatas().getClassLoader());
+  }
+  this.id=(String)droolsStream.readObject();
+  this.workingMemoryCounter=droolsStream.readInt();
+  this.config.setClassLoader(droolsStream.getClassLoader());
+  this.processes=(Map)droolsStream.readObject();
+  this.agendaGroupRuleTotals=(Map)droolsStream.readObject();
+  this.factHandleFactory=(FactHandleFactory)droolsStream.readObject();
+  this.globals=(Map)droolsStream.readObject();
+  this.reloadPackageCompilationData=(ReloadPackageCompilationData)droolsStream.readObject();
+  this.eventSupport=(RuleBaseEventSupport)droolsStream.readObject();
+  this.eventSupport.setRuleBase(this);
+  this.statefulSessions=new ObjectHashSet();
+  wms=(InternalWorkingMemory[])droolsStream.readObject();
+  lastAquiredLock=droolsStream.readInt();
+  lock=(ReentrantLock)droolsStream.readObject();
+  additionsSinceLock=droolsStream.readInt();
+  removalsSinceLock=droolsStream.readInt();
+  if (!isDrools) {
+    droolsStream.close();
+  }
+}

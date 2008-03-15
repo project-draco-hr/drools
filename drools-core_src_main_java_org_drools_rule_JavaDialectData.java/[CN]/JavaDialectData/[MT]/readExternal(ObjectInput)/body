@@ -1,11 +1,12 @@
 {
-  DroolsObjectInputStream droolsStream=(DroolsObjectInputStream)stream;
-  this.datas=droolsStream.getDialectDatas();
-  this.classLoader=new PackageClassLoader(this.datas.getParentClassLoader());
+  DroolsObjectInputStream droolsStream=stream instanceof DroolsObjectInputStream ? (DroolsObjectInputStream)stream : new DroolsObjectInputStream(stream);
+  this.datas=(DialectDatas)droolsStream.readObject();
+  this.classLoader=(PackageClassLoader)droolsStream.readObject();
   this.datas.addClassLoader(this.classLoader);
+  droolsStream.setClassLoader(this.classLoader);
+  droolsStream.setDialectDatas(this.datas);
   this.store=(Map)stream.readObject();
   this.AST=stream.readObject();
-  final byte[] bytes=(byte[])stream.readObject();
-  final DroolsObjectInputStream streamWithLoader=new DroolsObjectInputStream(new ByteArrayInputStream(bytes),this.classLoader);
-  this.invokerLookups=(Map)streamWithLoader.readObject();
+  this.invokerLookups=(Map)droolsStream.readObject();
+  this.dirty=droolsStream.readBoolean();
 }

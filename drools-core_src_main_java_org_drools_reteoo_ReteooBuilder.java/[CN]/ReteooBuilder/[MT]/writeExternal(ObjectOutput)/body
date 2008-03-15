@@ -1,0 +1,21 @@
+{
+  boolean isDrools=out instanceof DroolsObjectOutputStream;
+  DroolsObjectOutputStream droolsStream;
+  ByteArrayOutputStream bytes;
+  if (isDrools) {
+    bytes=null;
+    droolsStream=(DroolsObjectOutputStream)out;
+  }
+ else {
+    bytes=new ByteArrayOutputStream();
+    droolsStream=new DroolsObjectOutputStream((OutputStream)new ObjectOutputStream(bytes));
+  }
+  droolsStream.writeObject(rules);
+  droolsStream.writeObject(idGenerator);
+  droolsStream.writeBoolean(ordered);
+  droolsStream.writeObject(ruleBase);
+  if (!isDrools) {
+    bytes.close();
+    out.writeObject(bytes.toByteArray());
+  }
+}

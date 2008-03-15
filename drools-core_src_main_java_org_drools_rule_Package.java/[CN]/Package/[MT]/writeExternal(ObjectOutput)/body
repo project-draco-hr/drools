@@ -1,16 +1,27 @@
 {
-  stream.writeObject(this.dialectDatas);
-  stream.writeObject(this.name);
-  stream.writeObject(this.imports);
-  stream.writeObject(this.staticImports);
-  stream.writeObject(this.typeDeclarations);
-  stream.writeObject(this.functions);
-  stream.writeObject(this.factTemplates);
-  stream.writeObject(this.ruleFlows);
-  stream.writeObject(this.globals);
-  stream.writeBoolean(this.valid);
-  final ByteArrayOutputStream bos=new ByteArrayOutputStream();
-  final ObjectOutput out=new ObjectOutputStream(bos);
+  boolean isDroolsStream=stream instanceof DroolsObjectOutputStream;
+  ByteArrayOutputStream bytes=null;
+  ObjectOutput out;
+  if (isDroolsStream) {
+    out=stream;
+  }
+ else {
+    bytes=new ByteArrayOutputStream();
+    out=new DroolsObjectOutputStream(bytes);
+  }
+  out.writeObject(this.dialectDatas);
+  out.writeObject(this.name);
+  out.writeObject(this.imports);
+  out.writeObject(this.staticImports);
+  out.writeObject(this.functions);
+  out.writeObject(this.factTemplates);
+  out.writeObject(this.ruleFlows);
+  out.writeObject(this.globals);
+  out.writeBoolean(this.valid);
   out.writeObject(this.rules);
-  stream.writeObject(bos.toByteArray());
+  if (!isDroolsStream) {
+    bytes.flush();
+    bytes.close();
+    stream.writeObject(bytes.toByteArray());
+  }
 }
