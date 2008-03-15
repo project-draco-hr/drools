@@ -2,8 +2,9 @@
   final PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_globalCustomResolver.drl")));
   final Package pkg=builder.getPackage();
-  final RuleBase ruleBase=getRuleBase();
+  RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
   final WorkingMemory workingMemory=ruleBase.newStatefulSession();
   final Map map=new HashMap();
   List list=new ArrayList();
@@ -11,6 +12,10 @@
   map.put("list",list);
   map.put("string",string);
   workingMemory.setGlobalResolver(new GlobalResolver(){
+    public void readExternal(    ObjectInput in) throws IOException, ClassNotFoundException {
+    }
+    public void writeExternal(    ObjectOutput out) throws IOException {
+    }
     public Object resolveGlobal(    String identifier){
       return map.get(identifier);
     }

@@ -2,8 +2,9 @@
   PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicFunction1.drl")));
   final Package pkg=builder.getPackage();
-  final RuleBase ruleBase=getRuleBase();
+  RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
   final WorkingMemory workingMemory=ruleBase.newStatefulSession();
   final List list=new ArrayList();
   workingMemory.setGlobal("list",list);
@@ -22,14 +23,14 @@
   }
   builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicFunction2.drl")));
-  ruleBase.addPackage(serialisePackage(builder.getPackage()));
+  ruleBase.addPackage(SerializationHelper.serializeObject(builder.getPackage()));
   final Cheese brie=new Cheese("brie",5);
   workingMemory.insert(brie);
   workingMemory.fireAllRules();
   assertEquals(new Integer(6),list.get(1));
   builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicFunction3.drl")));
-  ruleBase.addPackage(serialisePackage(builder.getPackage()));
+  ruleBase.addPackage(SerializationHelper.serializeObject(builder.getPackage()));
   final Cheese feta=new Cheese("feta",5);
   workingMemory.insert(feta);
   workingMemory.fireAllRules();

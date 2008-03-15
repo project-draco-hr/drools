@@ -2,9 +2,10 @@
   final PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_globalsAsConstraints.drl")));
   final Package pkg=builder.getPackage();
-  final RuleBase ruleBase=getRuleBase();
+  RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  WorkingMemory workingMemory=ruleBase.newStatefulSession();
   final List results=new ArrayList();
   workingMemory.setGlobal("results",results);
   final List cheeseTypes=new ArrayList();
@@ -13,12 +14,14 @@
   cheeseTypes.add("muzzarela");
   final Cheese stilton=new Cheese("stilton",5);
   workingMemory.insert(stilton);
+  workingMemory=SerializationHelper.serializeObject(workingMemory);
   workingMemory.fireAllRules();
-  assertEquals(1,results.size());
-  assertEquals("memberOf",results.get(0));
+  assertEquals(1,((List)workingMemory.getGlobal("results")).size());
+  assertEquals("memberOf",((List)workingMemory.getGlobal("results")).get(0));
   final Cheese brie=new Cheese("brie",5);
   workingMemory.insert(brie);
+  workingMemory=SerializationHelper.serializeObject(workingMemory);
   workingMemory.fireAllRules();
-  assertEquals(2,results.size());
-  assertEquals("not memberOf",results.get(1));
+  assertEquals(2,((List)workingMemory.getGlobal("results")).size());
+  assertEquals("not memberOf",((List)workingMemory.getGlobal("results")).get(1));
 }

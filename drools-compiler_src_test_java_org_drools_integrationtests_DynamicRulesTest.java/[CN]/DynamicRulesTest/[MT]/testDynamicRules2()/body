@@ -1,13 +1,15 @@
 {
-  final RuleBase ruleBase=getRuleBase();
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  RuleBase ruleBase=getRuleBase();
+  WorkingMemory workingMemory=ruleBase.newStatefulSession();
   final FactA a=new FactA("hello",new Integer(1),new Float(3.14));
   final FactB b=new FactB("hello",new Integer(2),new Float(6.28));
   workingMemory.insert(a);
   workingMemory.insert(b);
   final PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicRules2.drl")));
-  final Package pkg=serialisePackage(builder.getPackage());
+  final Package pkg=SerializationHelper.serializeObject(builder.getPackage());
   ruleBase.addPackage(pkg);
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  workingMemory=SerializationHelper.serializeObject(workingMemory);
   workingMemory.fireAllRules();
 }

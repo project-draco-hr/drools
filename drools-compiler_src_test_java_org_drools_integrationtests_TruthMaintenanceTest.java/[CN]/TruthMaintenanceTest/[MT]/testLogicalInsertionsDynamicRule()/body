@@ -3,7 +3,7 @@
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LogicalInsertionsDynamicRule.drl")));
   final Package pkg=builder.getPackage();
   org.drools.reteoo.ReteooRuleBase reteooRuleBase=null;
-  final RuleBase ruleBase=getRuleBase();
+  RuleBase ruleBase=getRuleBase();
   if (ruleBase instanceof org.drools.reteoo.ReteooRuleBase) {
     reteooRuleBase=(org.drools.reteoo.ReteooRuleBase)ruleBase;
   }
@@ -27,7 +27,9 @@
   builder.addPackageFromDrl(reader);
   final Package pkg2=builder.getPackage();
   ruleBase.addPackage(pkg2);
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
   workingMemory.fireAllRules();
+  ruleBase=workingMemory.getRuleBase();
   list=IteratorToList.convert(workingMemory.iterateObjects(new ClassObjectFilter(Person.class)));
   assertEquals(3,list.size());
   assertTrue(list.contains(new Person(c1.getType())));
@@ -58,6 +60,7 @@
   if (reteooRuleBase != null) {
     reteooRuleBase.removeRule(ruleBase.getPackages()[1].getName(),ruleBase.getPackages()[1].getRules()[0].getName());
   }
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
   assertEquals(0,ruleBase.getPackages()[0].getRules().length);
   assertEquals(0,ruleBase.getPackages()[1].getRules().length);
   list=IteratorToList.convert(workingMemory.iterateObjects(new ClassObjectFilter(Person.class)));

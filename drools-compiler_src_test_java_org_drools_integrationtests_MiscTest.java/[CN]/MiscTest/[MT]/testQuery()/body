@@ -2,11 +2,13 @@
   final PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("simple_query_test.drl")));
   final Package pkg=builder.getPackage();
-  final RuleBase ruleBase=getRuleBase();
+  RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  WorkingMemory workingMemory=ruleBase.newStatefulSession();
   final Cheese stilton=new Cheese("stinky",5);
   workingMemory.insert(stilton);
+  workingMemory=SerializationHelper.serializeObject(workingMemory);
   final QueryResults results=workingMemory.getQueryResults("simple query");
   assertEquals(1,results.size());
 }

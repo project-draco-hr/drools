@@ -1,20 +1,23 @@
 {
   final PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RemovePackage.drl")));
-  final RuleBase ruleBase=getRuleBase();
+  RuleBase ruleBase=getRuleBase();
   final String packageName=builder.getPackage().getName();
-  ruleBase.addPackage(serialisePackage(builder.getPackage()));
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  ruleBase.addPackage(SerializationHelper.serializeObject(builder.getPackage()));
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  WorkingMemory workingMemory=ruleBase.newStatefulSession();
   workingMemory.insert(new Precondition("genericcode","genericvalue"));
   workingMemory.fireAllRules();
-  final RuleBase ruleBaseWM=workingMemory.getRuleBase();
+  RuleBase ruleBaseWM=workingMemory.getRuleBase();
   ruleBaseWM.removePackage(packageName);
   final PackageBuilder builder1=new PackageBuilder();
   builder1.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RemovePackage.drl")));
-  ruleBaseWM.addPackage(serialisePackage(builder1.getPackage()));
+  ruleBaseWM.addPackage(SerializationHelper.serializeObject(builder1.getPackage()));
+  ruleBaseWM=SerializationHelper.serializeObject(ruleBaseWM);
+  workingMemory=SerializationHelper.serializeObject(workingMemory);
   workingMemory.fireAllRules();
   ruleBaseWM.removePackage(packageName);
-  ruleBaseWM.addPackage(serialisePackage(builder1.getPackage()));
+  ruleBaseWM.addPackage(SerializationHelper.serializeObject(builder1.getPackage()));
   ruleBaseWM.removePackage(packageName);
-  ruleBaseWM.addPackage(serialisePackage(builder1.getPackage()));
+  ruleBaseWM.addPackage(SerializationHelper.serializeObject(builder1.getPackage()));
 }

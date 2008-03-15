@@ -4,12 +4,10 @@
   builder.addPackageFromDrl(reader);
   final Package pkg=builder.getPackage();
   assertEquals(builder.getErrors().toString(),0,builder.getErrors().getErrors().length);
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkg);
+  RuleBase ruleBase=getRuleBase(pkg);
   Map map=new HashMap();
   map.put("x",ruleBase);
-  final byte[] ast=serializeOut(map);
-  map=(Map)serializeIn(ast);
+  map=SerializationHelper.serializeObject(map);
   ruleBase=(RuleBase)map.get("x");
   final Rule[] rules=ruleBase.getPackages()[0].getRules();
   assertEquals(3,rules.length);
@@ -20,7 +18,7 @@
   p.setShortPrimitive((short)2);
   p.setIntPrimitive((int)3);
   workingMemory.insert(p);
-  final byte[] wm=serializeOut(workingMemory);
+  final byte[] wm=SerializationHelper.serializeOut(workingMemory);
   workingMemory=ruleBase.newStatefulSession(new ByteArrayInputStream(wm));
   assertEquals(1,IteratorToList.convert(workingMemory.iterateObjects()).size());
   assertEquals(p,IteratorToList.convert(workingMemory.iterateObjects()).get(0));

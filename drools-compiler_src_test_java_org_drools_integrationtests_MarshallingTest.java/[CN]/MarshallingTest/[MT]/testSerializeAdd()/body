@@ -2,8 +2,9 @@
   RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic1.drl")));
-  Package pkg=serialisePackage(builder.getPackage());
+  Package pkg=SerializationHelper.serializeObject(builder.getPackage());
   ruleBase.addPackage(pkg);
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
   StatefulSession session=ruleBase.newStatefulSession();
   List list=new ArrayList();
   session.setGlobal("list",list);
@@ -12,10 +13,8 @@
   session.fireAllRules();
   assertEquals(list.size(),1);
   assertEquals("stilton",list.get(0));
-  byte[] serializedSession=serializeOut(session);
+  byte[] serializedSession=SerializationHelper.serializeOut(session);
   session.dispose();
-  byte[] serializedRulebase=serializeOut(ruleBase);
-  ruleBase=(RuleBase)serializeIn(serializedRulebase);
   session=ruleBase.newStatefulSession(new ByteArrayInputStream(serializedSession));
   list=(List)session.getGlobal("list");
   assertNotNull(list);
@@ -23,7 +22,7 @@
   assertEquals("stilton",list.get(0));
   builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic3.drl")));
-  pkg=serialisePackage(builder.getPackage());
+  pkg=SerializationHelper.serializeObject(builder.getPackage());
   ruleBase.addPackage(pkg);
   InternalFactHandle stilton2=(InternalFactHandle)session.insert(new Cheese("stilton",10));
   InternalFactHandle brie2=(InternalFactHandle)session.insert(new Cheese("brie",10));

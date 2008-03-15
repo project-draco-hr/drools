@@ -2,8 +2,7 @@
   final PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("thread_class_test.drl")));
   assertFalse(builder.hasErrors());
-  final RuleBase rb=RuleBaseFactory.newRuleBase();
-  rb.addPackage(builder.getPackage());
+  final RuleBase rb=getRuleBase(builder.getPackage());
   int numThreads=100;
   Thread[] ts=new Thread[numThreads];
   for (int i=0; i < numThreads; i++) {
@@ -14,6 +13,12 @@
         while (true) {
           start=System.currentTimeMillis();
           StatelessSession sess=rb.newStatelessSession();
+          try {
+            sess=SerializationHelper.serializeObject(sess);
+          }
+ catch (          Exception ex) {
+            throw new RuntimeException(ex);
+          }
           Person p=new Person();
           p.setName("Michael");
           Address add1=new Address();

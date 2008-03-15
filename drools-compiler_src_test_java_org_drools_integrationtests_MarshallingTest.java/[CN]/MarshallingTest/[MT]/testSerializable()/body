@@ -2,14 +2,12 @@
   final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_Serializable.drl"));
   final PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(reader);
-  final Package pkg=serialisePackage(builder.getPackage());
+  final Package pkg=SerializationHelper.serializeObject(builder.getPackage());
   assertEquals(0,builder.getErrors().getErrors().length);
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkg);
+  RuleBase ruleBase=getRuleBase(pkg);
   Map map=new HashMap();
   map.put("x",ruleBase);
-  final byte[] ast=serializeOut(map);
-  map=(Map)serializeIn(ast);
+  map=SerializationHelper.serializeObject(map);
   ruleBase=(RuleBase)map.get("x");
   final Rule[] rules=ruleBase.getPackages()[0].getRules();
   assertEquals(4,rules.length);
@@ -21,7 +19,7 @@
   workingMemory.setGlobal("list",new ArrayList());
   final Person bob=new Person("bob");
   workingMemory.insert(bob);
-  final byte[] wm=serializeOut(workingMemory);
+  final byte[] wm=SerializationHelper.serializeOut(workingMemory);
   workingMemory=ruleBase.newStatefulSession(new ByteArrayInputStream(wm));
   assertEquals(1,IteratorToList.convert(workingMemory.iterateObjects()).size());
   assertEquals(bob,IteratorToList.convert(workingMemory.iterateObjects()).get(0));
