@@ -13,6 +13,7 @@
     this.tms=null;
   }
   final RuleBaseConfiguration conf=this.ruleBase.getConfiguration();
+  this.propagationIdCounter=new AtomicLong();
   this.objectStore=new SingleThreadedObjectStore(conf,this.lock);
   if (LogicalOverride.DISCARD.equals(conf.getLogicalOverride())) {
     this.discardOnLogicalOverride=true;
@@ -22,5 +23,8 @@
   }
   this.workItemManager=new WorkItemManager(this);
   this.processInstanceFactories.put(RuleFlowProcess.RULEFLOW_TYPE,new RuleFlowProcessInstanceFactory());
-  this.typeConfMap=new ConcurrentHashMap<EntryPoint,Map<Object,ObjectTypeConf>>();
+  this.entryPoints=new ConcurrentHashMap();
+  this.entryPoints.put("DEFAULT",this);
+  this.entryPoint=EntryPoint.DEFAULT;
+  initTransient();
 }
