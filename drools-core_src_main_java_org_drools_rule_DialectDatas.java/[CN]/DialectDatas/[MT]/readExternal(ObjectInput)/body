@@ -1,10 +1,12 @@
 {
   this.dialects=(Map<String,DialectData>)stream.readObject();
   this.classLoader=(CompositePackageClassLoader)stream.readObject();
-  setParentClassLoader((ClassLoader)stream.readObject());
+  setParentClassLoader(this.classLoader.getParent());
   if (stream instanceof DroolsObjectInput) {
-    ((DroolsObjectInput)stream).setClassLoader(this.classLoader);
-    ((DroolsObjectInput)stream).setDialectDatas(this);
+    DroolsObjectInput droolsStream=(DroolsObjectInput)stream;
+    addClassLoader(droolsStream.getClassLoader());
+    droolsStream.setClassLoader(this.classLoader);
+    droolsStream.setDialectDatas(this);
   }
   this.lineMappings=(Map)stream.readObject();
 }
