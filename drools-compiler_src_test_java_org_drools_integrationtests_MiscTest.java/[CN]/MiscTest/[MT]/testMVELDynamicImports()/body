@@ -1,0 +1,25 @@
+{
+  String rule="package org.xxx;\n";
+  rule+="import org.drools.*\n";
+  rule+="global java.util.List list\n";
+  rule+="rule \"Test Rule\"\n";
+  rule+="    dialect \"mvel\"";
+  rule+="when\n";
+  rule+="then\n";
+  rule+="    p = new Person( \"diablo\", new Cheese (\"cheddar\") );";
+  rule+="    c = new Cheese( \"y\" );";
+  rule+="    list.add( p );\n";
+  rule+="end";
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new StringReader(rule));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final StatefulSession session=ruleBase.newStatefulSession();
+  List list=new ArrayList();
+  session.setGlobal("list",list);
+  session.fireAllRules();
+  assertEquals(1,list.size());
+  Person p=new Person("diablo",new Cheese("cheddar"));
+  assertEquals(p,list.get(0));
+}
