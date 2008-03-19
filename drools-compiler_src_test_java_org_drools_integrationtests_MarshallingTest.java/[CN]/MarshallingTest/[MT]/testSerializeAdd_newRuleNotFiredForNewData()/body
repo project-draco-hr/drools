@@ -2,7 +2,7 @@
   RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic1_0.drl")));
-  Package pkg=serialisePackage(builder.getPackage());
+  Package pkg=SerializationHelper.serializeObject(builder.getPackage());
   ruleBase.addPackage(pkg);
   List results=new ArrayList();
   StatefulSession session=ruleBase.newStatefulSession();
@@ -10,17 +10,17 @@
   InternalFactHandle stilton1=(InternalFactHandle)session.insert(new Cheese("stilton",10));
   InternalFactHandle brie1=(InternalFactHandle)session.insert(new Cheese("brie",10));
   session.fireAllRules();
-  byte[] serializedSession=serializeOut(session);
-  byte[] serializedRulebase=serializeOut(ruleBase);
+  byte[] serializedSession=SerializationHelper.serializeOut(session);
+  byte[] serializedRulebase=SerializationHelper.serializeOut(ruleBase);
   session.dispose();
   assertEquals(1,results.size());
   assertEquals(stilton1.getObject(),results.get(0));
-  ruleBase=(RuleBase)serializeIn(serializedRulebase);
+  ruleBase=(RuleBase)SerializationHelper.serializeIn(serializedRulebase);
   session=ruleBase.newStatefulSession(new ByteArrayInputStream(serializedSession));
   results=(List)session.getGlobal("results");
   builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic1_1.drl")));
-  pkg=serialisePackage(builder.getPackage());
+  pkg=SerializationHelper.serializeObject(builder.getPackage());
   ruleBase.addPackage(pkg);
   InternalFactHandle stilton2=(InternalFactHandle)session.insert(new Cheese("stilton",20));
   InternalFactHandle brie2=(InternalFactHandle)session.insert(new Cheese("brie",20));
@@ -33,7 +33,7 @@
   assertEquals(brie3.getObject(),results.get(3));
   serializedSession=null;
   serializedRulebase=null;
-  serializedSession=serializeOut(session);
-  serializedRulebase=serializeOut(ruleBase);
+  serializedSession=SerializationHelper.serializeOut(session);
+  serializedRulebase=SerializationHelper.serializeOut(ruleBase);
   session.dispose();
 }
