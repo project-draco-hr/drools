@@ -1,0 +1,39 @@
+{
+  final CollectMemory memory=(CollectMemory)workingMemory.getNodeMemory(this);
+  final Collection result=this.collect.instantiateResultObject();
+  final InternalFactHandle resultHandle=workingMemory.getFactHandleFactory().newFactHandle(result,false,workingMemory);
+  CollectResult colresult=new CollectResult();
+  colresult.handle=resultHandle;
+  colresult.propagated=false;
+  if (this.tupleMemoryEnabled) {
+    memory.betaMemory.getTupleMemory().add(leftTuple);
+    memory.betaMemory.getCreatedHandles().put(leftTuple,colresult,false);
+  }
+  final Iterator it=memory.betaMemory.getFactHandleMemory().iterator(leftTuple);
+  this.constraints.updateFromTuple(memory.betaMemory.getContext(),workingMemory,leftTuple);
+  for (FactEntry entry=(FactEntry)it.next(); entry != null; entry=(FactEntry)it.next()) {
+    InternalFactHandle handle=entry.getFactHandle();
+    if (this.constraints.isAllowedCachedLeft(memory.betaMemory.getContext(),handle)) {
+      if (this.unwrapRightObject) {
+        handle=((LeftTuple)handle.getObject()).getLastHandle();
+      }
+      result.add(handle.getObject());
+    }
+  }
+  this.constraints.resetTuple(memory.betaMemory.getContext());
+  boolean isAllowed=true;
+  for (int i=0, length=this.resultConstraints.length; i < length; i++) {
+    if (!this.resultConstraints[i].isAllowed(resultHandle,workingMemory,memory.alphaContexts[i])) {
+      isAllowed=false;
+      break;
+    }
+  }
+  if (isAllowed) {
+    this.resultsBinder.updateFromTuple(memory.resultsContext,workingMemory,leftTuple);
+    if (this.resultsBinder.isAllowedCachedLeft(memory.resultsContext,resultHandle)) {
+      colresult.propagated=true;
+      this.sink.propagateAssertLeftTuple(leftTuple,resultHandle,context,workingMemory);
+    }
+    this.resultsBinder.resetTuple(memory.resultsContext);
+  }
+}

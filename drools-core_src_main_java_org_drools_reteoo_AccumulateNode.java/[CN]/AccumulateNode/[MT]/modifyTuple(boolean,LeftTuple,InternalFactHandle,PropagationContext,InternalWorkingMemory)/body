@@ -1,0 +1,59 @@
+{
+  final AccumulateMemory memory=(AccumulateMemory)workingMemory.getNodeMemory(this);
+  AccumulateResult accresult=(AccumulateResult)memory.betaMemory.getCreatedHandles().get(leftTuple);
+  if (accresult.handle != null) {
+    this.sink.propagateRetractLeftTuple(leftTuple,accresult.handle,context,workingMemory);
+    workingMemory.getFactHandleFactory().destroyFactHandle(accresult.handle);
+    accresult.handle=null;
+  }
+  LeftTuple tuple=leftTuple;
+  if (this.unwrapRightObject) {
+    tuple=(LeftTuple)handle.getObject();
+    handle=tuple.getLastHandle();
+  }
+  if (context.getType() == PropagationContext.ASSERTION) {
+    if (accresult.context == null) {
+      final Object accContext=this.accumulate.createContext();
+      this.accumulate.init(memory.workingMemoryContext,accContext,leftTuple,workingMemory);
+      accresult.context=accContext;
+    }
+    this.accumulate.accumulate(memory.workingMemoryContext,accresult.context,tuple,handle,workingMemory);
+  }
+ else   if (context.getType() == PropagationContext.MODIFICATION || context.getType() == PropagationContext.RULE_ADDITION || context.getType() == PropagationContext.RULE_REMOVAL) {
+    if (isAssert) {
+      this.accumulate.accumulate(memory.workingMemoryContext,accresult.context,tuple,handle,workingMemory);
+    }
+ else {
+      this.accumulate.reverse(memory.workingMemoryContext,accresult.context,tuple,handle,workingMemory);
+    }
+  }
+ else {
+    this.accumulate.reverse(memory.workingMemoryContext,accresult.context,tuple,handle,workingMemory);
+  }
+  final Object result=this.accumulate.getResult(memory.workingMemoryContext,accresult.context,leftTuple,workingMemory);
+  if (result == null) {
+    throw new RuntimeDroolsException("Accumulate must not return a null value.");
+  }
+  boolean isAllowed=true;
+  final InternalFactHandle createdHandle=workingMemory.getFactHandleFactory().newFactHandle(result,false,workingMemory);
+  for (int i=0, length=this.resultConstraints.length; i < length; i++) {
+    if (!this.resultConstraints[i].isAllowed(createdHandle,workingMemory,memory.alphaContexts[i])) {
+      isAllowed=false;
+      break;
+    }
+  }
+  if (isAllowed) {
+    this.resultBinder.updateFromTuple(memory.resultsContext,workingMemory,leftTuple);
+    if (this.resultBinder.isAllowedCachedLeft(memory.resultsContext,createdHandle)) {
+      accresult.handle=createdHandle;
+      this.sink.propagateAssertLeftTuple(leftTuple,createdHandle,context,workingMemory);
+    }
+ else {
+      workingMemory.getFactHandleFactory().destroyFactHandle(createdHandle);
+    }
+    this.resultBinder.resetTuple(memory.resultsContext);
+  }
+ else {
+    workingMemory.getFactHandleFactory().destroyFactHandle(createdHandle);
+  }
+}

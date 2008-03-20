@@ -1,0 +1,52 @@
+{
+  final AccumulateMemory memory=(AccumulateMemory)workingMemory.getNodeMemory(this);
+  AccumulateResult accresult=new AccumulateResult();
+  if (this.tupleMemoryEnabled) {
+    memory.betaMemory.getTupleMemory().add(leftTuple);
+    memory.betaMemory.getCreatedHandles().put(leftTuple,accresult,false);
+  }
+  final Object accContext=this.accumulate.createContext();
+  accresult.context=accContext;
+  this.accumulate.init(memory.workingMemoryContext,accContext,leftTuple,workingMemory);
+  final Iterator it=memory.betaMemory.getFactHandleMemory().iterator(leftTuple);
+  this.constraints.updateFromTuple(memory.betaMemory.getContext(),workingMemory,leftTuple);
+  for (FactEntry entry=(FactEntry)it.next(); entry != null; entry=(FactEntry)it.next()) {
+    InternalFactHandle handle=entry.getFactHandle();
+    if (this.constraints.isAllowedCachedLeft(memory.betaMemory.getContext(),handle)) {
+      if (this.unwrapRightObject) {
+        LeftTuple tuple=(LeftTuple)handle.getObject();
+        handle=tuple.getLastHandle();
+        this.accumulate.accumulate(memory.workingMemoryContext,accContext,tuple,handle,workingMemory);
+      }
+ else {
+        this.accumulate.accumulate(memory.workingMemoryContext,accContext,leftTuple,handle,workingMemory);
+      }
+    }
+  }
+  this.constraints.resetTuple(memory.betaMemory.getContext());
+  final Object result=this.accumulate.getResult(memory.workingMemoryContext,accContext,leftTuple,workingMemory);
+  if (result == null) {
+    throw new RuntimeDroolsException("Accumulate must not return a null value.");
+  }
+  boolean isAllowed=true;
+  final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(result,false,workingMemory);
+  for (int i=0, length=this.resultConstraints.length; i < length; i++) {
+    if (!this.resultConstraints[i].isAllowed(handle,workingMemory,memory.alphaContexts[i])) {
+      isAllowed=false;
+      break;
+    }
+  }
+  if (isAllowed) {
+    this.resultBinder.updateFromTuple(memory.resultsContext,workingMemory,leftTuple);
+    if (this.resultBinder.isAllowedCachedLeft(memory.resultsContext,handle)) {
+      accresult.handle=handle;
+      this.sink.propagateAssertLeftTuple(leftTuple,handle,context,workingMemory);
+    }
+ else {
+      workingMemory.getFactHandleFactory().destroyFactHandle(handle);
+    }
+  }
+ else {
+    workingMemory.getFactHandleFactory().destroyFactHandle(handle);
+  }
+}

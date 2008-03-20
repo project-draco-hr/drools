@@ -5,22 +5,22 @@
   }
   final Iterator it=memory.getTupleMemory().iterator(handle);
   this.constraints.updateFromFactHandle(memory.getContext(),workingMemory,handle);
-  for (ReteTuple tuple=(ReteTuple)it.next(); tuple != null; tuple=(ReteTuple)it.next()) {
-    if (this.constraints.isAllowedCachedRight(memory.getContext(),tuple)) {
-      if (tuple.getMatch() == handle) {
-        tuple.setMatch(null);
-        final Iterator tupleIt=memory.getFactHandleMemory().iterator(tuple);
-        this.constraints.updateFromTuple(memory.getContext(),workingMemory,tuple);
+  for (LeftTuple leftTuple=(LeftTuple)it.next(); leftTuple != null; leftTuple=(LeftTuple)it.next()) {
+    if (this.constraints.isAllowedCachedRight(memory.getContext(),leftTuple)) {
+      if (leftTuple.getMatch() == handle) {
+        leftTuple.setMatch(null);
+        final Iterator tupleIt=memory.getFactHandleMemory().iterator(leftTuple);
+        this.constraints.updateFromTuple(memory.getContext(),workingMemory,leftTuple);
         for (FactEntry entry=(FactEntry)tupleIt.next(); entry != null; entry=(FactEntry)tupleIt.next()) {
           final InternalFactHandle rightHandle=entry.getFactHandle();
           if (this.constraints.isAllowedCachedLeft(memory.getContext(),rightHandle)) {
-            tuple.setMatch(rightHandle);
+            leftTuple.setMatch(rightHandle);
             break;
           }
         }
         this.constraints.resetTuple(memory.getContext());
-        if (tuple.getMatch() == null) {
-          this.sink.propagateAssertTuple(tuple,context,workingMemory);
+        if (leftTuple.getMatch() == null) {
+          this.sink.propagateAssertLeftTuple(leftTuple,context,workingMemory);
         }
       }
     }
