@@ -1,0 +1,21 @@
+{
+  GuidedDecisionTable dt=new GuidedDecisionTable();
+  ConditionCol c=new ConditionCol();
+  c.boundName="x";
+  c.factType="Context";
+  c.constraintValueType=ISingleFieldConstraint.TYPE_LITERAL;
+  dt.conditionCols.add(c);
+  ActionSetFieldCol asf=new ActionSetFieldCol();
+  asf.boundName="x";
+  asf.factField="age";
+  asf.type="String";
+  dt.actionCols.add(asf);
+  String[][] data=new String[][]{new String[]{"1","desc","y","old"}};
+  dt.data=data;
+  String drl=GuidedDTDRLPersistence.getInstance().marshal(dt);
+  assertTrue(drl.indexOf("Context( )") > -1);
+  assertTrue(drl.indexOf("x.setAge") > drl.indexOf("Context( )"));
+  dt.data=new String[][]{new String[]{"1","desc","","old"}};
+  drl=GuidedDTDRLPersistence.getInstance().marshal(dt);
+  assertEquals(-1,drl.indexOf("Context( )"));
+}
