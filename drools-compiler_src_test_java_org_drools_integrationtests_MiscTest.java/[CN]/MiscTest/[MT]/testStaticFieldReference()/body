@@ -6,6 +6,7 @@
   ruleBase.addPackage(pkg);
   ruleBase=SerializationHelper.serializeObject(ruleBase);
   WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  workingMemory=ruleBase.newStatefulSession(new ByteArrayInputStream(SerializationHelper.serializeOut(workingMemory)));
   List list=new ArrayList();
   workingMemory.setGlobal("list",list);
   final Cheesery cheesery1=new Cheesery();
@@ -16,10 +17,18 @@
   cheesery2.setStatus(Cheesery.MAKING_CHEESE);
   cheesery2.setMaturity(Maturity.YOUNG);
   workingMemory.insert(cheesery2);
-  workingMemory=SerializationHelper.serializeObject(workingMemory);
+  workingMemory.fireAllRules();
+  assertEquals(2,list.size());
+  assertSame(cheesery1,list.get(0));
+  assertEquals(cheesery1,list.get(0));
+  assertSame(cheesery2,list.get(1));
+  assertEquals(cheesery2,list.get(1));
+  workingMemory=ruleBase.newStatefulSession(new ByteArrayInputStream(SerializationHelper.serializeOut(workingMemory)));
   list=(List)workingMemory.getGlobal("list");
   workingMemory.fireAllRules();
   assertEquals(2,list.size());
-  assertTrue(cheesery1.equals(list.get(0)));
-  assertTrue(cheesery2.equals(list.get(1)));
+  assertNotSame(cheesery1,list.get(0));
+  assertEquals(cheesery1,list.get(0));
+  assertNotSame(cheesery2,list.get(1));
+  assertEquals(cheesery2,list.get(1));
 }
