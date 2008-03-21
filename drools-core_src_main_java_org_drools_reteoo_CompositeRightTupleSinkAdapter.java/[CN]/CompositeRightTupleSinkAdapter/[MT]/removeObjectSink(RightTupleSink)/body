@@ -1,0 +1,33 @@
+{
+  if (sink instanceof AlphaNode) {
+    final AlphaNode alphaNode=(AlphaNode)sink;
+    final AlphaNodeFieldConstraint fieldConstraint=alphaNode.getConstraint();
+    if (fieldConstraint instanceof LiteralConstraint) {
+      final LiteralConstraint literalConstraint=(LiteralConstraint)fieldConstraint;
+      final Evaluator evaluator=literalConstraint.getEvaluator();
+      final FieldValue value=literalConstraint.getField();
+      if (evaluator.getOperator() == Operator.EQUAL && literalConstraint.getFieldExtractor().getValueType() != ValueType.OBJECT_TYPE) {
+        final int index=literalConstraint.getFieldExtractor().getIndex();
+        final FieldIndex fieldIndex=unregisterFieldIndex(index);
+        if (fieldIndex.isHashed()) {
+          HashKey hashKey=new HashKey(index,value,fieldIndex.getFieldExtractor());
+          this.hashedSinkMap.remove(hashKey);
+          if (fieldIndex.getCount() <= this.alphaNodeHashingThreshold - 1) {
+            unHashSinks(fieldIndex);
+          }
+        }
+ else {
+          this.hashableSinks.remove((RightTupleSinkNode)sink);
+        }
+        if (this.hashableSinks != null && this.hashableSinks.isEmpty()) {
+          this.hashableSinks=null;
+        }
+        return;
+      }
+    }
+  }
+  this.otherSinks.remove((RightTupleSinkNode)sink);
+  if (this.otherSinks.isEmpty()) {
+    this.otherSinks=null;
+  }
+}

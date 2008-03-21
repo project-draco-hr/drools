@@ -1,0 +1,27 @@
+{
+  final Object object=factHandle.getObject();
+  if (this.hashedFieldIndexes != null) {
+    for (FieldIndex fieldIndex=(FieldIndex)this.hashedFieldIndexes.getFirst(); fieldIndex != null; fieldIndex=(FieldIndex)fieldIndex.getNext()) {
+      if (!fieldIndex.isHashed()) {
+        continue;
+      }
+      final int index=fieldIndex.getIndex();
+      final FieldExtractor extractor=fieldIndex.getFieldExtactor();
+      HashKey hashKey=new HashKey(index,object,fieldIndex.getFieldExtractor());
+      final RightTupleSink sink=(RightTupleSink)this.hashedSinkMap.get(hashKey);
+      if (sink != null) {
+        sink.assertObject(factHandle,context,workingMemory);
+      }
+    }
+  }
+  if (this.hashableSinks != null) {
+    for (RightTupleSinkNode sink=this.hashableSinks.getFirst(); sink != null; sink=sink.getNextRightTupleSinkNode()) {
+      sink.assertObject(factHandle,context,workingMemory);
+    }
+  }
+  if (this.otherSinks != null) {
+    for (RightTupleSinkNode sink=this.otherSinks.getFirst(); sink != null; sink=sink.getNextRightTupleSinkNode()) {
+      sink.assertObject(factHandle,context,workingMemory);
+    }
+  }
+}
