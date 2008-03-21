@@ -1,0 +1,48 @@
+{
+  if (rightTuple.getMemory() != null) {
+    RightTupleList memory=rightTuple.getMemory();
+    memory.remove(rightTuple);
+    if (memory.first == null) {
+      final int index=indexOf(memory.hashCode(),this.table.length);
+      RightTupleList previous=null;
+      RightTupleList current=(RightTupleList)this.table[index];
+      while (current != memory) {
+        previous=current;
+        current=(RightTupleList)current.getNext();
+      }
+      if (previous != null) {
+        previous.next=current.next;
+      }
+ else {
+        this.table[index]=current.next;
+      }
+      this.size--;
+    }
+    return;
+  }
+  final Object object=rightTuple.getFactHandle().getObject();
+  final int hashCode=this.index.hashCodeOf(object);
+  final int index=indexOf(hashCode,this.table.length);
+  RightTupleList previous=null;
+  RightTupleList current=(RightTupleList)this.table[index];
+  while (current != null) {
+    if (current.matches(object,hashCode)) {
+      current.remove(rightTuple);
+      this.factSize--;
+      if (current.first == null) {
+        if (previous != null) {
+          previous.next=current.next;
+        }
+ else {
+          this.table[index]=current.next;
+        }
+        this.size--;
+      }
+      break;
+    }
+    previous=current;
+    current=(RightTupleList)current.next;
+  }
+  rightTuple.setNext(null);
+  rightTuple.setPrevious(null);
+}
