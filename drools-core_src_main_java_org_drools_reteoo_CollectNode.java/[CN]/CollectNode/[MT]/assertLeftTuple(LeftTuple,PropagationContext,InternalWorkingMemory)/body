@@ -2,22 +2,21 @@
   final CollectMemory memory=(CollectMemory)workingMemory.getNodeMemory(this);
   final Collection result=this.collect.instantiateResultObject();
   final InternalFactHandle resultHandle=workingMemory.getFactHandleFactory().newFactHandle(result,false,workingMemory);
-  CollectResult colresult=new CollectResult();
-  colresult.handle=resultHandle;
-  colresult.propagated=false;
+  final RightTuple resultTuple=new RightTuple(resultHandle,this);
   if (this.tupleMemoryEnabled) {
     memory.betaMemory.getLeftTupleMemory().add(leftTuple);
-    memory.betaMemory.getCreatedHandles().put(leftTuple,colresult,false);
+    memory.betaMemory.getCreatedHandles().put(leftTuple,resultTuple,false);
   }
-  final Iterator it=memory.betaMemory.getRightTupleMemory().iterator(leftTuple);
   this.constraints.updateFromTuple(memory.betaMemory.getContext(),workingMemory,leftTuple);
-  for (FactEntry entry=(FactEntry)it.next(); entry != null; entry=(FactEntry)it.next()) {
-    InternalFactHandle handle=entry.getFactHandle();
+  for (RightTuple rightTuple=memory.betaMemory.getRightTupleMemory().getFirst(leftTuple); rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
+    InternalFactHandle handle=rightTuple.getFactHandle();
     if (this.constraints.isAllowedCachedLeft(memory.betaMemory.getContext(),handle)) {
       if (this.unwrapRightObject) {
         handle=((LeftTuple)handle.getObject()).getLastHandle();
       }
       result.add(handle.getObject());
+      leftTuple.setRightParentNext(rightTuple.getBetaChildren());
+      rightTuple.setBetaChildren(leftTuple);
     }
   }
   this.constraints.resetTuple(memory.betaMemory.getContext());
@@ -31,8 +30,7 @@
   if (isAllowed) {
     this.resultsBinder.updateFromTuple(memory.resultsContext,workingMemory,leftTuple);
     if (this.resultsBinder.isAllowedCachedLeft(memory.resultsContext,resultHandle)) {
-      colresult.propagated=true;
-      this.sink.propagateAssertLeftTuple(leftTuple,resultHandle,context,workingMemory);
+      this.sink.propagateAssertLeftTuple(leftTuple,resultTuple,context,workingMemory);
     }
     this.resultsBinder.resetTuple(memory.resultsContext);
   }
