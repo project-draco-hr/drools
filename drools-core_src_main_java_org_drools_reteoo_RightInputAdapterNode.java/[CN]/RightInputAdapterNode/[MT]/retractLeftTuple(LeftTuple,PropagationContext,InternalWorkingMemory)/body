@@ -1,6 +1,13 @@
 {
   final ObjectHashMap memory=(ObjectHashMap)workingMemory.getNodeMemory(this);
-  final InternalFactHandle handle=(InternalFactHandle)memory.remove(tuple);
-  this.sink.propagateRetractObject(handle,context,workingMemory,true);
-  workingMemory.getFactHandleFactory().destroyFactHandle(handle);
+  final InternalFactHandle factHandle=(InternalFactHandle)memory.remove(tuple);
+  for (RightTuple rightTuple=factHandle.getRightTuple(); rightTuple != null; rightTuple=(RightTuple)rightTuple.getHandleNext()) {
+    rightTuple.getRightTupleSink().retractRightTuple(rightTuple,context,workingMemory);
+  }
+  factHandle.setRightTuple(null);
+  for (LeftTuple leftTuple=factHandle.getLeftTuple(); leftTuple != null; leftTuple=(LeftTuple)leftTuple.getLeftParentNext()) {
+    leftTuple.getSink().retractLeftTuple(leftTuple,context,workingMemory);
+  }
+  factHandle.setLeftTuple(null);
+  workingMemory.getFactHandleFactory().destroyFactHandle(factHandle);
 }
