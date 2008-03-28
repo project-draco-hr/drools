@@ -6,11 +6,18 @@
   final RightTupleIndexHashTable map=new RightTupleIndexHashTable(new FieldIndex[]{fieldIndex});
   final TestClass c1=new TestClass(0,new TestClass(20,"stilton"));
   final InternalFactHandle ch1=new DefaultFactHandle(1,c1);
-  map.add(ch1);
+  map.add(new RightTuple(ch1,null));
   final TestClass c2=new TestClass(0,new TestClass(20,"cheddar"));
   final InternalFactHandle ch2=new DefaultFactHandle(2,c2);
-  map.add(ch2);
+  map.add(new RightTuple(ch2,null));
   assertEquals(2,map.size());
   assertEquals(1,tablePopulationSize(map));
-  final FieldIndexEntry entry=(FieldIndexEntry)getEntries(map)[0];
+  Entry[] entries=getEntries(map);
+  assertEquals(1,entries.length);
+  RightTupleList list=(RightTupleList)entries[0];
+  assertSame(ch2,list.first.getFactHandle());
+  assertNull(list.first.getNext());
+  assertSame(ch1,((RightTupleList)list.next).first.getFactHandle());
+  assertNull(((RightTupleList)list.next).first.getNext());
+  assertNull(((RightTupleList)list.next).next);
 }
