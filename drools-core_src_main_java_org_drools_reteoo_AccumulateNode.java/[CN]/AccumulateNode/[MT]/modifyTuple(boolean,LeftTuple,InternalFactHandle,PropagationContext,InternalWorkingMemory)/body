@@ -1,11 +1,7 @@
 {
   final AccumulateMemory memory=(AccumulateMemory)workingMemory.getNodeMemory(this);
-  AccumulateResult accresult=(AccumulateResult)memory.betaMemory.getCreatedHandles().get(leftTuple);
-  if (accresult.handle != null) {
-    this.sink.propagateRetractLeftTuple(leftTuple,accresult.handle,context,workingMemory);
-    workingMemory.getFactHandleFactory().destroyFactHandle(accresult.handle);
-    accresult.handle=null;
-  }
+  AccumulateResult accresult=(AccumulateResult)memory.resultMap.get(leftTuple);
+  this.sink.propagateRetractLeftTupleDestroyRightTuple(leftTuple,context,workingMemory);
   LeftTuple tuple=leftTuple;
   if (this.unwrapRightObject) {
     tuple=(LeftTuple)handle.getObject();
@@ -36,6 +32,7 @@
   }
   boolean isAllowed=true;
   final InternalFactHandle createdHandle=workingMemory.getFactHandleFactory().newFactHandle(result,false,workingMemory);
+  final RightTuple resultTuple=new RightTuple(handle,this);
   for (int i=0, length=this.resultConstraints.length; i < length; i++) {
     if (!this.resultConstraints[i].isAllowed(createdHandle,workingMemory,memory.alphaContexts[i])) {
       isAllowed=false;
@@ -45,8 +42,7 @@
   if (isAllowed) {
     this.resultBinder.updateFromTuple(memory.resultsContext,workingMemory,leftTuple);
     if (this.resultBinder.isAllowedCachedLeft(memory.resultsContext,createdHandle)) {
-      accresult.handle=createdHandle;
-      this.sink.propagateAssertLeftTuple(leftTuple,createdHandle,context,workingMemory);
+      this.sink.propagateAssertLeftTuple(leftTuple,resultTuple,context,workingMemory);
     }
  else {
       workingMemory.getFactHandleFactory().destroyFactHandle(createdHandle);

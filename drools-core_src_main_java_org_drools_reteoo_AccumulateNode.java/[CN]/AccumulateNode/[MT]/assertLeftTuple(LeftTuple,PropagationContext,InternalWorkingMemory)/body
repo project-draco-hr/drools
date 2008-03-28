@@ -3,15 +3,14 @@
   AccumulateResult accresult=new AccumulateResult();
   if (this.tupleMemoryEnabled) {
     memory.betaMemory.getLeftTupleMemory().add(leftTuple);
-    memory.betaMemory.getCreatedHandles().put(leftTuple,accresult,false);
+    memory.resultMap.put(leftTuple,accresult,false);
   }
   final Object accContext=this.accumulate.createContext();
   accresult.context=accContext;
   this.accumulate.init(memory.workingMemoryContext,accContext,leftTuple,workingMemory);
-  final Iterator it=memory.betaMemory.getRightTupleMemory().iterator(leftTuple);
   this.constraints.updateFromTuple(memory.betaMemory.getContext(),workingMemory,leftTuple);
-  for (FactEntry entry=(FactEntry)it.next(); entry != null; entry=(FactEntry)it.next()) {
-    InternalFactHandle handle=entry.getFactHandle();
+  for (RightTuple rightTuple=memory.betaMemory.getRightTupleMemory().getFirst(leftTuple); rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
+    InternalFactHandle handle=rightTuple.getFactHandle();
     if (this.constraints.isAllowedCachedLeft(memory.betaMemory.getContext(),handle)) {
       if (this.unwrapRightObject) {
         LeftTuple tuple=(LeftTuple)handle.getObject();
@@ -30,6 +29,7 @@
   }
   boolean isAllowed=true;
   final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(result,false,workingMemory);
+  final RightTuple resultTuple=new RightTuple(handle,this);
   for (int i=0, length=this.resultConstraints.length; i < length; i++) {
     if (!this.resultConstraints[i].isAllowed(handle,workingMemory,memory.alphaContexts[i])) {
       isAllowed=false;
@@ -39,8 +39,7 @@
   if (isAllowed) {
     this.resultBinder.updateFromTuple(memory.resultsContext,workingMemory,leftTuple);
     if (this.resultBinder.isAllowedCachedLeft(memory.resultsContext,handle)) {
-      accresult.handle=handle;
-      this.sink.propagateAssertLeftTuple(leftTuple,handle,context,workingMemory);
+      this.sink.propagateAssertLeftTuple(leftTuple,resultTuple,context,workingMemory);
     }
  else {
       workingMemory.getFactHandleFactory().destroyFactHandle(handle);
