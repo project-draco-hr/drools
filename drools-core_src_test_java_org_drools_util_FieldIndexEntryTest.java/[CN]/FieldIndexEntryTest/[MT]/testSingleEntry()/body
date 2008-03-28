@@ -2,18 +2,19 @@
   final ClassFieldExtractor extractor=cache.getExtractor(Cheese.class,"type",getClass().getClassLoader());
   final FieldIndex fieldIndex=new FieldIndex(extractor,null,equals.getEvaluator(ValueType.STRING_TYPE,Operator.EQUAL));
   final SingleIndex singleIndex=new SingleIndex(new FieldIndex[]{fieldIndex},1);
-  final FieldIndexEntry index=new FieldIndexEntry(singleIndex,"stilton".hashCode());
-  assertNull(index.getFirst());
+  final RightTupleList index=new RightTupleList(singleIndex,"stilton".hashCode());
+  assertNull(index.first);
   assertEquals("stilton".hashCode(),index.hashCode());
   final Cheese stilton1=new Cheese("stilton",35);
   final InternalFactHandle h1=new DefaultFactHandle(1,stilton1);
-  index.add(h1);
-  final FactEntryImpl entry1=index.getFirst();
+  RightTuple h1RightTuple=new RightTuple(h1,null);
+  index.add(h1RightTuple);
+  final RightTuple entry1=index.first;
   assertSame(h1,entry1.getFactHandle());
   assertNull(entry1.getNext());
   assertSame(entry1,index.get(h1));
-  final FactEntryImpl entry2=index.get(h1);
+  final RightTuple entry2=index.get(new RightTuple(h1,null));
   assertSame(entry1,entry2);
-  index.remove(h1);
-  assertNull(index.getFirst());
+  index.remove(h1RightTuple);
+  assertNull(index.first);
 }
