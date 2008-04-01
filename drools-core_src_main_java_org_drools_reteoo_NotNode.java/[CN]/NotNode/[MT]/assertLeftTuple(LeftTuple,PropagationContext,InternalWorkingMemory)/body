@@ -4,12 +4,14 @@
   for (RightTuple rightTuple=memory.getRightTupleMemory().getLast(leftTuple); rightTuple != null; rightTuple=(RightTuple)rightTuple.getPrevious()) {
     if (this.constraints.isAllowedCachedLeft(memory.getContext(),rightTuple.getFactHandle())) {
       leftTuple.setBlocker(rightTuple);
-      LeftTuple blockedPrevious=rightTuple.getBlocked();
-      if (blockedPrevious != null) {
-        leftTuple.setBlockedNext(blockedPrevious);
-        blockedPrevious.setBlockedPrevious(leftTuple);
+      if (this.tupleMemoryEnabled) {
+        LeftTuple blockedPrevious=rightTuple.getBlocked();
+        if (blockedPrevious != null) {
+          leftTuple.setBlockedNext(blockedPrevious);
+          blockedPrevious.setBlockedPrevious(leftTuple);
+        }
+        rightTuple.setBlocked(leftTuple);
       }
-      rightTuple.setBlocked(leftTuple);
       break;
     }
   }
@@ -18,6 +20,6 @@
     if (this.tupleMemoryEnabled) {
       memory.getLeftTupleMemory().add(leftTuple);
     }
-    this.sink.propagateAssertLeftTuple(leftTuple,context,workingMemory);
+    this.sink.propagateAssertLeftTuple(leftTuple,context,workingMemory,this.tupleMemoryEnabled);
   }
 }
