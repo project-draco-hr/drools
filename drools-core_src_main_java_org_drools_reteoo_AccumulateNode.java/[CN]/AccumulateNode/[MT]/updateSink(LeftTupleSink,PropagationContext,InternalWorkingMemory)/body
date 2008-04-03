@@ -2,10 +2,9 @@
   final AccumulateMemory memory=(AccumulateMemory)workingMemory.getNodeMemory(this);
   final Iterator tupleIter=memory.betaMemory.getLeftTupleMemory().iterator();
   for (LeftTuple leftTuple=(LeftTuple)tupleIter.next(); leftTuple != null; leftTuple=(LeftTuple)tupleIter.next()) {
-    LeftTuple childLeftTuple=leftTuple.getBetaChildren();
-    if (childLeftTuple != null) {
-      RightTuple rightTuple=childLeftTuple.getRightParent();
-      sink.assertLeftTuple(new LeftTuple(leftTuple,rightTuple,sink,this.tupleMemoryEnabled),context,workingMemory);
+    AccumulateContext accctx=(AccumulateContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
+    if (accctx.propagated) {
+      sink.assertLeftTuple(new LeftTuple(leftTuple,accctx.result,sink,this.tupleMemoryEnabled),context,workingMemory);
     }
   }
 }

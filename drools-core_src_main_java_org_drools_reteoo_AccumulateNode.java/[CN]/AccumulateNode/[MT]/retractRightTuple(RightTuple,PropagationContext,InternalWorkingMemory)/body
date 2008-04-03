@@ -1,20 +1,18 @@
 {
   final AccumulateMemory memory=(AccumulateMemory)workingMemory.getNodeMemory(this);
   memory.betaMemory.getRightTupleMemory().remove(rightTuple);
-  InternalFactHandle handle=rightTuple.getFactHandle();
-  this.constraints.updateFromFactHandle(memory.betaMemory.getContext(),workingMemory,handle);
-  Entry[] tuples=memory.betaMemory.getLeftTupleMemory().toArray();
-  for (int i=0; i < tuples.length; i++) {
-    LeftTuple tuple=(LeftTuple)tuples[i];
-    if (this.constraints.isAllowedCachedRight(memory.betaMemory.getContext(),tuple)) {
-      if (this.accumulate.supportsReverse()) {
-        this.modifyTuple(false,tuple,handle,context,workingMemory);
-      }
- else {
-        this.retractLeftTuple(tuple,context,workingMemory);
-        this.assertLeftTuple(tuple,context,workingMemory);
-      }
+  for (LeftTuple childTuple=rightTuple.getBetaChildren(); childTuple != null; ) {
+    LeftTuple tmp=childTuple.getRightParentNext();
+    if (this.accumulate.supportsReverse()) {
+      this.modifyTuple(false,childTuple.getParent(),rightTuple,context,workingMemory,memory);
     }
+ else {
+      LeftTuple match=childTuple.getParent();
+      childTuple.unlinkFromLeftParent();
+      childTuple.unlinkFromRightParent();
+      this.retractLeftTuple(match,context,workingMemory);
+      this.assertLeftTuple(match,context,workingMemory);
+    }
+    childTuple=tmp;
   }
-  this.constraints.resetFactHandle(memory.betaMemory.getContext());
 }

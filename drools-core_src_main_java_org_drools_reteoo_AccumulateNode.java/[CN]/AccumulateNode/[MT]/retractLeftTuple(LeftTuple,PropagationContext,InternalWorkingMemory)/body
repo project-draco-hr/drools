@@ -1,6 +1,15 @@
 {
   final AccumulateMemory memory=(AccumulateMemory)workingMemory.getNodeMemory(this);
   memory.betaMemory.getLeftTupleMemory().remove(leftTuple);
-  memory.resultMap.remove(leftTuple);
-  this.sink.propagateRetractLeftTupleDestroyRightTuple(leftTuple,context,workingMemory);
+  final AccumulateContext accctx=(AccumulateContext)memory.betaMemory.getCreatedHandles().remove(leftTuple);
+  LeftTuple child=getFirstMatch(leftTuple,accctx);
+  while (child != null) {
+    LeftTuple tmp=child.getLeftParentNext();
+    child.unlinkFromLeftParent();
+    child.unlinkFromRightParent();
+    child=tmp;
+  }
+  if (accctx.propagated) {
+    this.sink.propagateRetractLeftTupleDestroyRightTuple(leftTuple,context,workingMemory);
+  }
 }

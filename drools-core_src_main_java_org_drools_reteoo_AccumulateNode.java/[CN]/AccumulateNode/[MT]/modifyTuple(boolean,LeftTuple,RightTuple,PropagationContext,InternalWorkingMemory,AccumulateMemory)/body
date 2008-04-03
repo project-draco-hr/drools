@@ -1,0 +1,45 @@
+{
+  final AccumulateContext accctx=(AccumulateContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
+  if (accctx.propagated) {
+    LeftTuple firstMatch=getFirstMatch(leftTuple,accctx);
+    if (firstMatch != null) {
+      firstMatch.getLeftParentPrevious().setLeftParentNext(null);
+      firstMatch.setLeftParentPrevious(null);
+    }
+    this.sink.propagateRetractLeftTuple(leftTuple,context,workingMemory);
+    leftTuple.setBetaChildren(firstMatch);
+    accctx.propagated=false;
+  }
+  if (isAssert) {
+    new LeftTuple(leftTuple,rightTuple,this,this.tupleMemoryEnabled);
+  }
+ else {
+    removeMatchingChild(leftTuple,rightTuple);
+  }
+  InternalFactHandle handle=rightTuple.getFactHandle();
+  LeftTuple tuple=leftTuple;
+  if (this.unwrapRightObject) {
+    tuple=((LeftTuple)handle.getObject());
+    handle=tuple.getLastHandle();
+  }
+  if (context.getType() == PropagationContext.ASSERTION) {
+    this.accumulate.accumulate(memory.workingMemoryContext,accctx.context,tuple,handle,workingMemory);
+  }
+ else   if (context.getType() == PropagationContext.MODIFICATION || context.getType() == PropagationContext.RULE_ADDITION || context.getType() == PropagationContext.RULE_REMOVAL) {
+    if (isAssert) {
+      this.accumulate.accumulate(memory.workingMemoryContext,accctx.context,tuple,handle,workingMemory);
+    }
+ else {
+      this.accumulate.reverse(memory.workingMemoryContext,accctx.context,tuple,handle,workingMemory);
+    }
+  }
+ else {
+    this.accumulate.reverse(memory.workingMemoryContext,accctx.context,tuple,handle,workingMemory);
+  }
+  final Object result=this.accumulate.getResult(memory.workingMemoryContext,accctx.context,leftTuple,workingMemory);
+  if (result == null) {
+    throw new RuntimeDroolsException("Accumulate must not return a null value.");
+  }
+  accctx.result.getFactHandle().setObject(result);
+  evaluateResultConstraints(leftTuple,context,workingMemory,memory,accctx);
+}
