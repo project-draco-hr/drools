@@ -2,14 +2,19 @@
   final FromMemory memory=(FromMemory)workingMemory.getNodeMemory(this);
   final Iterator tupleIter=memory.betaMemory.getLeftTupleMemory().iterator();
   for (LeftTuple leftTuple=(LeftTuple)tupleIter.next(); leftTuple != null; leftTuple=(LeftTuple)tupleIter.next()) {
-    LeftTuple child=leftTuple.getBetaChildren();
-    RightTuple match=null;
-    while (child != null) {
-      if (match != child.getRightParent()) {
-        match=child.getRightParent();
-        sink.assertLeftTuple(new LeftTuple(leftTuple,match,sink,this.tupleMemoryEnabled),context,workingMemory);
+    if (this.sink.size() == 1) {
+      assertLeftTuple(leftTuple,context,workingMemory);
+    }
+ else {
+      LeftTuple child=leftTuple.getBetaChildren();
+      RightTuple match=null;
+      while (child != null) {
+        if (match != child.getRightParent()) {
+          match=child.getRightParent();
+          sink.assertLeftTuple(new LeftTuple(leftTuple,match,sink,this.tupleMemoryEnabled),context,workingMemory);
+        }
+        child=child.getLeftParentNext();
       }
-      child=child.getLeftParentNext();
     }
   }
 }
