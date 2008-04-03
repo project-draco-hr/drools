@@ -1,5 +1,16 @@
 {
+  if (this.getId() == 7)   System.out.println("RetractLeft : " + leftTuple);
   final CollectMemory memory=(CollectMemory)workingMemory.getNodeMemory(this);
   memory.betaMemory.getLeftTupleMemory().remove(leftTuple);
-  this.sink.propagateRetractLeftTupleDestroyRightTuple(leftTuple,context,workingMemory);
+  final CollectContext colctx=(CollectContext)memory.betaMemory.getCreatedHandles().remove(leftTuple);
+  LeftTuple child=getFirstMatch(leftTuple,colctx);
+  while (child != null) {
+    LeftTuple tmp=child.getLeftParentNext();
+    child.unlinkFromLeftParent();
+    child.unlinkFromRightParent();
+    child=tmp;
+  }
+  if (colctx.propagated) {
+    this.sink.propagateRetractLeftTupleDestroyRightTuple(leftTuple,context,workingMemory);
+  }
 }

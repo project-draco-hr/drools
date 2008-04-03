@@ -1,10 +1,13 @@
 {
+  if (this.getId() == 7)   System.out.println("AssertLeft  : " + leftTuple);
   final CollectMemory memory=(CollectMemory)workingMemory.getNodeMemory(this);
   final Collection result=this.collect.instantiateResultObject();
   final InternalFactHandle resultHandle=workingMemory.getFactHandleFactory().newFactHandle(result,false,workingMemory);
-  final RightTuple resultTuple=new RightTuple(resultHandle,this);
+  final CollectContext colctx=new CollectContext();
+  colctx.resultTuple=new RightTuple(resultHandle,this);
   if (this.tupleMemoryEnabled) {
     memory.betaMemory.getLeftTupleMemory().add(leftTuple);
+    memory.betaMemory.getCreatedHandles().put(leftTuple,colctx);
   }
   this.constraints.updateFromTuple(memory.betaMemory.getContext(),workingMemory,leftTuple);
   for (RightTuple rightTuple=memory.betaMemory.getRightTupleMemory().getFirst(leftTuple); rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
@@ -14,23 +17,11 @@
         handle=((LeftTuple)handle.getObject()).getLastHandle();
       }
       result.add(handle.getObject());
-      leftTuple.setRightParentNext(rightTuple.getBetaChildren());
-      rightTuple.setBetaChildren(leftTuple);
+      if (this.tupleMemoryEnabled) {
+        new LeftTuple(leftTuple,rightTuple,this,this.tupleMemoryEnabled);
+      }
     }
   }
   this.constraints.resetTuple(memory.betaMemory.getContext());
-  boolean isAllowed=true;
-  for (int i=0, length=this.resultConstraints.length; i < length; i++) {
-    if (!this.resultConstraints[i].isAllowed(resultHandle,workingMemory,memory.alphaContexts[i])) {
-      isAllowed=false;
-      break;
-    }
-  }
-  if (isAllowed) {
-    this.resultsBinder.updateFromTuple(memory.resultsContext,workingMemory,leftTuple);
-    if (this.resultsBinder.isAllowedCachedLeft(memory.resultsContext,resultHandle)) {
-      this.sink.propagateAssertLeftTuple(leftTuple,resultTuple,context,workingMemory,this.tupleMemoryEnabled);
-    }
-    this.resultsBinder.resetTuple(memory.resultsContext);
-  }
+  evaluateResultConstraints(leftTuple,context,workingMemory,memory,colctx);
 }

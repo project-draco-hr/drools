@@ -1,0 +1,44 @@
+{
+  final CollectContext colctx=(CollectContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
+  if (colctx.propagated) {
+    LeftTuple firstMatch=getFirstMatch(leftTuple,colctx);
+    if (firstMatch != null) {
+      firstMatch.getLeftParentPrevious().setLeftParentNext(null);
+    }
+    this.sink.propagateRetractLeftTuple(leftTuple,context,workingMemory);
+    leftTuple.setBetaChildren(firstMatch);
+    colctx.propagated=false;
+  }
+  if (isAssert) {
+    new LeftTuple(leftTuple,rightTuple,this,this.tupleMemoryEnabled);
+  }
+ else {
+    if (leftTuple.getBetaChildren() != null) {
+      LeftTuple match=leftTuple.getBetaChildren();
+      while (match.getRightParent() != rightTuple) {
+        match=match.getLeftParentNext();
+      }
+      match.unlinkFromLeftParent();
+      match.unlinkFromRightParent();
+    }
+  }
+  InternalFactHandle handle=rightTuple.getFactHandle();
+  if (this.unwrapRightObject) {
+    handle=((LeftTuple)handle.getObject()).getLastHandle();
+  }
+  if (context.getType() == PropagationContext.ASSERTION) {
+    ((Collection)colctx.resultTuple.getFactHandle().getObject()).add(handle.getObject());
+  }
+ else   if (context.getType() == PropagationContext.RETRACTION) {
+    ((Collection)colctx.resultTuple.getFactHandle().getObject()).remove(handle.getObject());
+  }
+ else   if (context.getType() == PropagationContext.MODIFICATION || context.getType() == PropagationContext.RULE_ADDITION || context.getType() == PropagationContext.RULE_REMOVAL) {
+    if (isAssert) {
+      ((Collection)colctx.resultTuple.getFactHandle().getObject()).add(handle.getObject());
+    }
+ else {
+      ((Collection)colctx.resultTuple.getFactHandle().getObject()).remove(handle.getObject());
+    }
+  }
+  evaluateResultConstraints(leftTuple,context,workingMemory,memory,colctx);
+}
