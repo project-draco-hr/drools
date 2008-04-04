@@ -18,11 +18,12 @@
   p.setShortPrimitive((short)2);
   p.setIntPrimitive((int)3);
   workingMemory.insert(p);
-  final byte[] wm=SerializationHelper.serializeOut(workingMemory);
+  final byte[] wm=DroolsStreamUtils.streamOut(workingMemory);
   workingMemory=ruleBase.newStatefulSession(new ByteArrayInputStream(wm));
   assertEquals(1,IteratorToList.convert(workingMemory.iterateObjects()).size());
   assertEquals(p,IteratorToList.convert(workingMemory.iterateObjects()).get(0));
   assertEquals(3,workingMemory.getAgenda().agendaSize());
+  workingMemory=SerializationHelper.serializeObject(workingMemory);
   workingMemory.fireAllRules();
   final List list=(List)workingMemory.getGlobal("list");
   assertEquals(3,list.size());

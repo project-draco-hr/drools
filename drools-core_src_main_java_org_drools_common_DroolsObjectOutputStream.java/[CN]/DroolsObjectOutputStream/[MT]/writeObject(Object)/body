@@ -1,17 +1,17 @@
 {
   if (object == null) {
-    writeNull();
+    dataOutput.writeByte(RT_NULL);
   }
  else {
     Class clazz=object.getClass();
     if (clazz == EMPTY_SET_CLASS) {
-      writeEmptySet();
+      dataOutput.writeByte(RT_EMPTY_SET);
     }
  else     if (clazz == EMPTY_LIST_CLASS) {
-      writeEmptyList();
+      dataOutput.writeByte(RT_EMPTY_LIST);
     }
  else     if (clazz == EMPTY_MAP_CLASS) {
-      writeEmptyMap();
+      dataOutput.writeByte(RT_EMPTY_MAP);
     }
  else {
       if (clazz == String.class)       object=((String)object).intern();
@@ -19,42 +19,26 @@
       if (handle < 0) {
         handle=-handle;
         if (Externalizable.class.isAssignableFrom(clazz)) {
-          writeRecordType(RT_EXTERNALIZABLE);
-          writeHandle(handle);
+          dataOutput.writeByte(RT_EXTERNALIZABLE);
+          dataOutput.writeInt(handle);
           writeObject(clazz);
           ((Externalizable)object).writeExternal(this);
         }
- else         if (String.class.isAssignableFrom(clazz)) {
-          writeString((String)object,handle);
-        }
  else         if (Map.class.isAssignableFrom(clazz)) {
           Map map=(Map)object;
-          writeRecordType(RT_MAP);
-          writeHandle(handle);
+          dataOutput.writeByte(RT_MAP);
+          dataOutput.writeInt(handle);
           writeObject(clazz);
-          writeInt(map.size());
+          dataOutput.writeInt(map.size());
           for (          Object obj : map.entrySet()) {
             Map.Entry entry=(Map.Entry)obj;
             writeObject(entry.getKey());
             writeObject(entry.getValue());
           }
         }
- else         if (Collection.class.isAssignableFrom(clazz)) {
-          Collection collection=(Collection)object;
-          writeRecordType(RT_COLLECTION);
-          writeHandle(handle);
-          writeObject(clazz);
-          writeInt(collection.size());
-          for (          Object obj : collection) {
-            writeObject(obj);
-          }
-        }
- else         if (clazz == Class.class) {
-          writeClass((Class)object,handle);
-        }
  else         if (clazz.isArray()) {
-          writeRecordType(RT_ARRAY);
-          writeHandle(handle);
+          dataOutput.writeByte(RT_ARRAY);
+          dataOutput.writeInt(handle);
           writeObject(clazz);
           Class componentType=clazz.getComponentType();
           if (componentType.isPrimitive()) {
@@ -63,22 +47,38 @@
  else {
             Object[] array=(Object[])object;
             int length=array.length;
-            writeInt(length);
+            dataOutput.writeInt(length);
             for (int i=0; i < length; ++i) {
               writeObject(array[i]);
             }
           }
         }
+ else         if (Collection.class.isAssignableFrom(clazz)) {
+          Collection collection=(Collection)object;
+          dataOutput.writeByte(RT_COLLECTION);
+          dataOutput.writeInt(handle);
+          writeObject(clazz);
+          dataOutput.writeInt(collection.size());
+          for (          Object obj : collection) {
+            writeObject(obj);
+          }
+        }
+ else         if (String.class.isAssignableFrom(clazz)) {
+          writeString((String)object,handle);
+        }
+ else         if (clazz == Class.class) {
+          writeClass((Class)object,handle);
+        }
  else         if (AtomicReferenceArray.class.isAssignableFrom(clazz)) {
           AtomicReferenceArray array=(AtomicReferenceArray)object;
-          writeRecordType(RT_ATOMICREFERENCEARRAY);
-          writeHandle(handle);
-          writeInt(array.length());
+          dataOutput.writeByte(RT_ATOMICREFERENCEARRAY);
+          dataOutput.writeInt(handle);
+          dataOutput.writeInt(array.length());
           for (int i=0; i < array.length(); i++)           writeObject(array.get(i));
         }
  else         if (Serializable.class.isAssignableFrom(clazz)) {
-          writeRecordType(RT_SERIALIZABLE);
-          writeHandle(handle);
+          dataOutput.writeByte(RT_SERIALIZABLE);
+          dataOutput.writeInt(handle);
           dataOutput.writeObject(object);
         }
  else {
@@ -86,10 +86,10 @@
         }
       }
  else {
-        writeRecordType(RT_REFERENCE);
-        writeHandle(handle);
+        dataOutput.writeByte(RT_REFERENCE);
+        dataOutput.writeInt(handle);
       }
     }
   }
-  flush();
+  dataOutput.flush();
 }
