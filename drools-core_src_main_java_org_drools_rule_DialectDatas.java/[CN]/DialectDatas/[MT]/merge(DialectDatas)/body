@@ -1,13 +1,14 @@
 {
-  for (Iterator it=newDatas.dialects.entrySet().iterator(); it.hasNext(); ) {
-    Entry entry=(Entry)it.next();
-    DialectData data=(DialectData)this.dialects.get(entry.getKey());
-    data.merge((DialectData)entry.getValue());
-  }
-  if (this.lineMappings != null) {
-    this.lineMappings.putAll(newDatas.getLineMappings());
-  }
+  for (  Entry<String,DialectData> entry : newDatas.dialects.entrySet()) {
+    DialectData data=this.dialects.get(entry.getKey());
+    if (data == null) {
+      DialectData dialectData=entry.getValue().clone();
+      dialectData.setDialectDatas(this);
+      this.dialects.put(entry.getKey(),dialectData);
+    }
  else {
-    this.lineMappings=newDatas.getLineMappings();
+      data.merge(entry.getValue());
+    }
   }
+  getLineMappings().putAll(newDatas.getLineMappings());
 }

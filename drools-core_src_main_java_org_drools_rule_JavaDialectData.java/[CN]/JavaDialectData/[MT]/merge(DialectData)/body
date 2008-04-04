@@ -1,8 +1,14 @@
 {
   JavaDialectData newJavaData=(JavaDialectData)newData;
-  final String[] files=newJavaData.list();
-  for (int i=0, length=files.length; i < length; i++) {
-    write(files[i],newJavaData.read(files[i]));
+  this.dirty=newData.isDirty();
+  if (this.classLoader == null) {
+    this.classLoader=new PackageClassLoader(newJavaData.getClassLoader().getParent(),this);
+    this.dirty=true;
+  }
+  for (  String file : newJavaData.list()) {
+    if (getStore().put(file,newJavaData.read(file)) != null) {
+      this.dirty=true;
+    }
   }
   putAllInvokers(newJavaData.getInvokers());
 }

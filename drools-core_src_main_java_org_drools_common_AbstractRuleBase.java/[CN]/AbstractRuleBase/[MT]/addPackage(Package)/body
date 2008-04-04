@@ -1,7 +1,7 @@
 {
   newPkg.checkValidity();
 synchronized (this.pkgs) {
-    final Package pkg=(Package)this.pkgs.get(newPkg.getName());
+    Package pkg=this.pkgs.get(newPkg.getName());
     boolean doUnlock=false;
     if (!this.lock.isHeldByCurrentThread() && (this.wms == null || this.wms.length == 0)) {
       lock();
@@ -9,42 +9,48 @@ synchronized (this.pkgs) {
     }
     this.additionsSinceLock++;
     this.eventSupport.fireBeforePackageAdded(newPkg);
-    if (pkg != null) {
-      mergePackage(pkg,newPkg);
+    if (pkg == null) {
+      pkg=new Package(newPkg.getName(),newPkg.getDialectDatas().getParentClassLoader());
+      pkgs.put(pkg.getName(),pkg);
+      this.packageClassLoader.addClassLoader(pkg.getDialectDatas().getClassLoader());
     }
  else {
-      this.pkgs.put(newPkg.getName(),newPkg);
+      this.packageClassLoader.addClassLoader(newPkg.getDialectDatas().getClassLoader());
     }
+    mergePackage(pkg,newPkg);
     final Map newGlobals=newPkg.getGlobals();
-    for (final Iterator it=newGlobals.keySet().iterator(); it.hasNext(); ) {
-      final String identifier=(String)it.next();
-      final Class type=(Class)newGlobals.get(identifier);
-      final boolean f=this.globals.containsKey(identifier);
-      if (f) {
-        final boolean y=!this.globals.get(identifier).equals(type);
-        if (f && y) {
-          throw new PackageIntegrationException(pkg);
+    if (newGlobals != null) {
+      for (final Iterator it=newGlobals.keySet().iterator(); it.hasNext(); ) {
+        final String identifier=(String)it.next();
+        final Class type=(Class)newGlobals.get(identifier);
+        final boolean f=this.globals.containsKey(identifier);
+        if (f) {
+          final boolean y=!this.globals.get(identifier).equals(type);
+          if (f && y) {
+            throw new PackageIntegrationException(pkg);
+          }
         }
       }
+      this.globals.putAll(newGlobals);
     }
-    this.globals.putAll(newGlobals);
-    for (    TypeDeclaration type : newPkg.getTypeDeclarations().values()) {
-      if (!this.classTypeDeclaration.containsKey(type.getTypeClass())) {
-        this.classTypeDeclaration.put(type.getTypeClass(),type);
+    if (newPkg.getTypeDeclarations() != null) {
+      for (      TypeDeclaration type : newPkg.getTypeDeclarations().values()) {
+        if (!this.classTypeDeclaration.containsKey(type.getTypeClass())) {
+          this.classTypeDeclaration.put(type.getTypeClass(),type);
+        }
       }
     }
     final Rule[] rules=newPkg.getRules();
     for (int i=0; i < rules.length; ++i) {
       addRule(newPkg,rules[i]);
     }
-    if (newPkg.getRuleFlows() != Collections.EMPTY_MAP) {
+    if (newPkg.getRuleFlows() != null) {
       final Map flows=newPkg.getRuleFlows();
       for (final Iterator iter=flows.entrySet().iterator(); iter.hasNext(); ) {
         final Entry flow=(Entry)iter.next();
         this.processes.put(flow.getKey(),flow.getValue());
       }
     }
-    this.packageClassLoader.addClassLoader(newPkg.getDialectDatas().getClassLoader());
     this.eventSupport.fireAfterPackageAdded(newPkg);
     if (doUnlock) {
       unlock();

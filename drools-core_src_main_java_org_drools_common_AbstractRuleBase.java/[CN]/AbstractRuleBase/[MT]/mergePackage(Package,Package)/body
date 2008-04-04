@@ -2,20 +2,32 @@
   final Map globals=pkg.getGlobals();
   final Map<String,ImportDeclaration> imports=pkg.getImports();
   imports.putAll(newPkg.getImports());
-  for (final Iterator it=newPkg.getGlobals().keySet().iterator(); it.hasNext(); ) {
-    final String identifier=(String)it.next();
-    final Class type=(Class)globals.get(identifier);
-    if (globals.containsKey(identifier) && !globals.get(identifier).equals(type)) {
-      throw new PackageIntegrationException("Unable to merge new Package",newPkg);
+  if (newPkg.getGlobals() != null) {
+    for (final Iterator it=newPkg.getGlobals().keySet().iterator(); it.hasNext(); ) {
+      final String identifier=(String)it.next();
+      final Class type=(Class)globals.get(identifier);
+      if (globals.containsKey(identifier) && !globals.get(identifier).equals(type)) {
+        throw new PackageIntegrationException("Unable to merge new Package",newPkg);
+      }
+    }
+    if (globals == Collections.EMPTY_MAP) {
+      for (      Object object : newPkg.getGlobals().entrySet()) {
+        Map.Entry entry=(Map.Entry)object;
+        pkg.addGlobal((String)entry.getKey(),(Class)entry.getValue());
+      }
+    }
+ else {
+      globals.putAll(newPkg.getGlobals());
     }
   }
-  globals.putAll(newPkg.getGlobals());
-  for (  TypeDeclaration type : newPkg.getTypeDeclarations().values()) {
-    if (!this.classTypeDeclaration.containsKey(type.getTypeClass())) {
-      this.classTypeDeclaration.put(type.getTypeClass(),type);
-    }
-    if (!pkg.getTypeDeclarations().containsKey(type.getTypeName())) {
-      pkg.addTypeDeclaration(type);
+  if (newPkg.getTypeDeclarations() != null) {
+    for (    TypeDeclaration type : newPkg.getTypeDeclarations().values()) {
+      if (!this.classTypeDeclaration.containsKey(type.getTypeClass())) {
+        this.classTypeDeclaration.put(type.getTypeClass(),type);
+      }
+      if (!pkg.getTypeDeclarations().containsKey(type.getTypeName())) {
+        pkg.addTypeDeclaration(type);
+      }
     }
   }
   final Rule[] newRules=newPkg.getRules();
@@ -26,7 +38,7 @@
     }
     pkg.addRule(newRule);
   }
-  if (newPkg.getRuleFlows() != Collections.EMPTY_MAP) {
+  if (newPkg.getRuleFlows() != null) {
     final Map flows=newPkg.getRuleFlows();
     for (final Iterator iter=flows.values().iterator(); iter.hasNext(); ) {
       final Process flow=(Process)iter.next();
@@ -34,6 +46,12 @@
     }
   }
   pkg.getDialectDatas().merge(newPkg.getDialectDatas());
+  if (newPkg.getFunctions() != null) {
+    for (    Object object : newPkg.getFunctions().entrySet()) {
+      Map.Entry entry=(Map.Entry)object;
+      pkg.addFunction((Function)entry.getValue());
+    }
+  }
   if (this.reloadPackageCompilationData == null) {
     this.reloadPackageCompilationData=new ReloadPackageCompilationData();
   }
