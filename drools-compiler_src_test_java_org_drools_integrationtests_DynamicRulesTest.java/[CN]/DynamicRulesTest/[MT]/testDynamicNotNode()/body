@@ -1,0 +1,36 @@
+{
+  final PackageBuilder builderInit=new PackageBuilder();
+  builderInit.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_CollectDynamicRules1.drl")));
+  final Package pkgInit=builderInit.getPackage();
+  RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkgInit);
+  WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  List results=new ArrayList();
+  workingMemory.setGlobal("results",results);
+  final Cheese a=new Cheese("stilton",10);
+  final Cheese b=new Cheese("stilton",15);
+  final Cheese c=new Cheese("stilton",20);
+  workingMemory.insert(a);
+  FactHandle handle=workingMemory.insert(b);
+  workingMemory.insert(c);
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicNotNode.drl")));
+  final Package pkg=builder.getPackage();
+  ruleBase.addPackage(SerializationHelper.serializeObject(pkg));
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  workingMemory=SerializationHelper.serializeObject(workingMemory);
+  results=(List)workingMemory.getGlobal("results");
+  workingMemory.fireAllRules();
+  assertEquals(0,results.size());
+  ruleBase.removePackage("org.drools");
+  workingMemory.retract(handle);
+  final PackageBuilder builder1=new PackageBuilder();
+  builder1.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicNotNode.drl")));
+  final Package pkg1=builder.getPackage();
+  ruleBase.addPackage(SerializationHelper.serializeObject(pkg1));
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  workingMemory=SerializationHelper.serializeObject(workingMemory);
+  results=(List)workingMemory.getGlobal("results");
+  workingMemory.fireAllRules();
+  assertEquals(1,results.size());
+}
