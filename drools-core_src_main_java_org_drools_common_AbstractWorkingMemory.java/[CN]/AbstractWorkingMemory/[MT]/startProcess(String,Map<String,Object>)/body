@@ -1,4 +1,7 @@
 {
+  if (!this.actionQueue.isEmpty()) {
+    executeQueuedActions();
+  }
   final Process process=((InternalRuleBase)getRuleBase()).getProcess(processId);
   if (process == null) {
     throw new IllegalArgumentException("Unknown process ID: " + processId);
@@ -12,9 +15,21 @@
   processInstance.setProcess(process);
   processInstance.setId(++processCounter);
   processInstances.put(new Long(processInstance.getId()),processInstance);
+  VariableScope variableScope=(VariableScope)process.getDefaultContext(VariableScope.VARIABLE_SCOPE);
+  VariableScopeInstance variableScopeInstance=(VariableScopeInstance)processInstance.getContextInstance(VariableScope.VARIABLE_SCOPE);
+  if (variableScope != null) {
+    for (    Variable variable : variableScope.getVariables()) {
+      variableScopeInstance.setVariable(variable.getName(),variable.getValue());
+    }
+  }
   if (parameters != null) {
-    for (    Map.Entry<String,Object> entry : parameters.entrySet()) {
-      processInstance.setVariable(entry.getKey(),entry.getValue());
+    if (variableScope != null) {
+      for (      Map.Entry<String,Object> entry : parameters.entrySet()) {
+        variableScopeInstance.setVariable(entry.getKey(),entry.getValue());
+      }
+    }
+ else {
+      throw new IllegalArgumentException("This process does not support parameters!");
     }
   }
   getRuleFlowEventSupport().fireBeforeRuleFlowProcessStarted(processInstance,this);

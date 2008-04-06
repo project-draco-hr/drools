@@ -1,8 +1,15 @@
 {
-  getNodeInstanceContainer().removeNodeInstance(this);
   for (Iterator<Map.Entry<String,String>> iterator=getWorkItemNode().getOutMappings().entrySet().iterator(); iterator.hasNext(); ) {
     Map.Entry<String,String> mapping=iterator.next();
-    getProcessInstance().setVariable(mapping.getValue(),workItem.getResult(mapping.getKey()));
+    VariableScopeInstance variableScopeInstance=(VariableScopeInstance)resolveContextInstance(VariableScope.VARIABLE_SCOPE,mapping.getValue());
+    if (variableScopeInstance != null) {
+      variableScopeInstance.setVariable(mapping.getValue(),workItem.getResult(mapping.getKey()));
+    }
+ else {
+      System.err.println("Could not find variable scope for variable " + mapping.getValue());
+      System.err.println("when trying to complete Work Item " + workItem.getName());
+      System.err.println("Continuing without setting variable.");
+    }
   }
-  getNodeInstanceContainer().getNodeInstance(getWorkItemNode().getTo().getTo()).trigger(this,getWorkItemNode().getTo().getToType());
+  triggerCompleted();
 }

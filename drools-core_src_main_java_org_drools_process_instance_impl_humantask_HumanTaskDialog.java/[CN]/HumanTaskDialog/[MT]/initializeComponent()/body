@@ -1,0 +1,172 @@
+{
+  JPanel panel=new JPanel();
+  panel.setLayout(new GridBagLayout());
+  getRootPane().setLayout(new BorderLayout());
+  getRootPane().add(panel,BorderLayout.CENTER);
+  JLabel nameLabel=new JLabel("Name");
+  GridBagConstraints c=new GridBagConstraints();
+  c.anchor=GridBagConstraints.WEST;
+  c.insets=new Insets(5,5,5,5);
+  panel.add(nameLabel,c);
+  String taskName=(String)workItem.getParameter("TaskName");
+  JTextField nameField=new JTextField(taskName == null ? "" : taskName);
+  nameField.setEditable(false);
+  c=new GridBagConstraints();
+  c.weightx=1;
+  c.fill=GridBagConstraints.HORIZONTAL;
+  c.insets=new Insets(5,5,5,5);
+  panel.add(nameField,c);
+  JLabel priorityLabel=new JLabel("Priority");
+  c=new GridBagConstraints();
+  c.gridy=1;
+  c.anchor=GridBagConstraints.WEST;
+  c.insets=new Insets(5,5,5,5);
+  panel.add(priorityLabel,c);
+  String priority=(String)workItem.getParameter("Priority");
+  JTextField priorityField=new JTextField(priority == null ? "" : priority);
+  priorityField.setEditable(false);
+  c=new GridBagConstraints();
+  c.gridy=1;
+  c.weightx=1;
+  c.fill=GridBagConstraints.HORIZONTAL;
+  c.insets=new Insets(5,5,5,5);
+  panel.add(priorityField,c);
+  JLabel commentLabel=new JLabel("Comment");
+  c=new GridBagConstraints();
+  c.gridy=2;
+  c.anchor=GridBagConstraints.WEST;
+  c.insets=new Insets(5,5,5,5);
+  panel.add(commentLabel,c);
+  String comment=(String)workItem.getParameter("Comment");
+  JTextArea params=new JTextArea(comment == null ? "" : comment);
+  params.setEditable(false);
+  c=new GridBagConstraints();
+  c.gridy=2;
+  c.weightx=1;
+  c.weighty=1;
+  c.fill=GridBagConstraints.BOTH;
+  c.insets=new Insets(5,5,5,5);
+  panel.add(params,c);
+  int additionalParameters=0;
+  for (  Map.Entry<String,Object> entry : workItem.getParameters().entrySet()) {
+    String name=entry.getKey();
+    if (!"TaskName".equals(name) && !"Priority".equals(name) && !"Comment".equals(name)&& !"ActorId".equals(name)) {
+      additionalParameters++;
+      JLabel label=new JLabel(name);
+      c=new GridBagConstraints();
+      c.gridy=2 + additionalParameters;
+      c.anchor=GridBagConstraints.WEST;
+      c.insets=new Insets(5,5,5,5);
+      panel.add(label,c);
+      JTextField field=new JTextField(workItem.getParameter(name).toString());
+      field.setEditable(false);
+      c=new GridBagConstraints();
+      c.gridy=2 + additionalParameters;
+      c.weightx=1;
+      c.fill=GridBagConstraints.HORIZONTAL;
+      c.insets=new Insets(5,5,5,5);
+      panel.add(field,c);
+    }
+  }
+  JPanel resultPanel=new JPanel();
+  resultPanel.setLayout(new GridBagLayout());
+  resultPanel.setBorder(new TitledBorder("Results"));
+  JLabel resultNameLabel=new JLabel("Name");
+  c=new GridBagConstraints();
+  c.insets=new Insets(5,5,5,5);
+  resultPanel.add(resultNameLabel,c);
+  resultNameField=new JTextField();
+  c=new GridBagConstraints();
+  c.weightx=1;
+  c.fill=GridBagConstraints.HORIZONTAL;
+  c.insets=new Insets(5,5,5,5);
+  resultPanel.add(resultNameField,c);
+  JLabel resultValueLabel=new JLabel("Value");
+  c=new GridBagConstraints();
+  c.insets=new Insets(5,5,5,5);
+  resultPanel.add(resultValueLabel,c);
+  resultValueField=new JTextField();
+  c=new GridBagConstraints();
+  c.weightx=1;
+  c.fill=GridBagConstraints.HORIZONTAL;
+  c.insets=new Insets(5,5,5,5);
+  resultPanel.add(resultValueField,c);
+  JButton addResultButton=new JButton("Add");
+  addResultButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      addResult();
+    }
+  }
+);
+  c=new GridBagConstraints();
+  c.fill=GridBagConstraints.HORIZONTAL;
+  c.insets=new Insets(5,5,5,5);
+  resultPanel.add(addResultButton,c);
+  resultList=new JList();
+  resultList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+  resultList.addListSelectionListener(new ListSelectionListener(){
+    public void valueChanged(    ListSelectionEvent e){
+      removeResultButton.setEnabled(resultList.getSelectedIndex() != -1);
+    }
+  }
+);
+  c=new GridBagConstraints();
+  c.gridy=1;
+  c.gridwidth=4;
+  c.weightx=1;
+  c.weighty=1;
+  c.fill=GridBagConstraints.BOTH;
+  c.insets=new Insets(5,5,5,5);
+  JScrollPane scrollPane=new JScrollPane();
+  scrollPane.setViewportView(resultList);
+  resultPanel.add(scrollPane,c);
+  removeResultButton=new JButton("Remove");
+  removeResultButton.setEnabled(false);
+  removeResultButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent e){
+      removeResult();
+    }
+  }
+);
+  c=new GridBagConstraints();
+  c.gridy=1;
+  c.anchor=GridBagConstraints.NORTH;
+  c.insets=new Insets(5,5,5,5);
+  resultPanel.add(removeResultButton,c);
+  c=new GridBagConstraints();
+  c.gridy=3 + additionalParameters;
+  c.gridwidth=2;
+  c.weighty=1;
+  c.fill=GridBagConstraints.BOTH;
+  panel.add(resultPanel,c);
+  JPanel bottomPanel=new JPanel();
+  bottomPanel.setLayout(new GridBagLayout());
+  completeButton=new JButton("Complete");
+  completeButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent event){
+      complete();
+    }
+  }
+);
+  c=new GridBagConstraints();
+  c.weightx=1;
+  c.anchor=GridBagConstraints.EAST;
+  c.insets=new Insets(5,5,5,5);
+  bottomPanel.add(completeButton,c);
+  abortButton=new JButton("Abort");
+  abortButton.addActionListener(new ActionListener(){
+    public void actionPerformed(    ActionEvent event){
+      abort();
+    }
+  }
+);
+  c=new GridBagConstraints();
+  c.insets=new Insets(5,5,5,5);
+  bottomPanel.add(abortButton,c);
+  c=new GridBagConstraints();
+  c.gridy=4 + additionalParameters;
+  c.gridwidth=2;
+  c.fill=GridBagConstraints.BOTH;
+  c.insets=new Insets(5,5,5,5);
+  panel.add(bottomPanel,c);
+}
