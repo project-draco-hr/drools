@@ -1,9 +1,13 @@
 {
   TemplateRegistry registry=getRuleTemplateRegistry();
-  context.getMethods().add(TemplateInterpreter.parse(registry.getTemplate(ruleTemplate),null,vars,registry));
+  context.getMethods().add(TemplateRuntime.execute(registry.getNamedTemplate(ruleTemplate),null,new MapVariableResolverFactory(vars),registry));
   registry=getInvokerTemplateRegistry();
   final String invokerClassName=context.getPkg().getName() + "." + context.getRuleDescr().getClassName()+ StringUtils.ucFirst(className)+ "Invoker";
-  context.getInvokers().put(invokerClassName,TemplateInterpreter.parse(registry.getTemplate(invokerTemplate),null,vars,registry));
+  Object debug;
+  context.getInvokers().put(invokerClassName,debug=TemplateRuntime.execute(registry.getNamedTemplate(invokerTemplate),null,new MapVariableResolverFactory(vars),registry));
+  System.out.println("----");
+  System.out.println(String.valueOf(debug));
+  System.out.println("----");
   context.getInvokerLookups().put(invokerClassName,invokerLookup);
   context.getDescrLookups().put(invokerClassName,descrLookup);
 }
