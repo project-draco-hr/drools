@@ -1,0 +1,36 @@
+{
+  RuleFlowProcess process=new RuleFlowProcess(){
+    private static final long serialVersionUID=400L;
+    int id=0;
+    public void addNode(    Node node){
+      node.setId(++id);
+      super.addNode(node);
+    }
+  }
+;
+  process.addNode(new StartNode());
+  process.addNode(new EndNode());
+  process.addNode(new ActionNode());
+  process.addNode(new Split());
+  process.addNode(new Join());
+  process.addNode(new MilestoneNode());
+  process.addNode(new RuleSetNode());
+  process.addNode(new SubProcessNode());
+  process.addNode(new WorkItemNode());
+  XmlRuleFlowProcessDumper dumper=new XmlRuleFlowProcessDumper();
+  String xml=dumper.dump(process,false);
+  if (xml == null) {
+    throw new IllegalArgumentException("Failed to persist empty nodes!");
+  }
+  XmlProcessReader reader=new XmlProcessReader(new PackageBuilderConfiguration().getSemanticModules());
+  process=(RuleFlowProcess)reader.read(new StringReader(xml));
+  if (process == null) {
+    throw new IllegalArgumentException("Failed to reload process!");
+  }
+  assertEquals(9,process.getNodes().length);
+  String xml2=dumper.dump(process,false);
+  if (xml2 == null) {
+    throw new IllegalArgumentException("Failed to persist empty nodes!");
+  }
+  assertEquals(xml,xml2);
+}

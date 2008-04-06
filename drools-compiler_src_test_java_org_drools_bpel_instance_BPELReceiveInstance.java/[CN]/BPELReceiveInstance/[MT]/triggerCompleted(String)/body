@@ -1,7 +1,11 @@
 {
   String variable=getBPELReceive().getVariable();
   if (variable != null) {
-    getProcessInstance().setVariable(variable,message);
+    VariableScopeInstance variableScope=(VariableScopeInstance)resolveContextInstance(VariableScope.VARIABLE_SCOPE,variable);
+    if (variableScope == null) {
+      throw new IllegalArgumentException("Variable " + variable + " not found!");
+    }
+    variableScope.setVariable(variable,message);
   }
   Connection to=getBPELReceive().getTo();
   getNodeInstanceContainer().removeNodeInstance(this);
