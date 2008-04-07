@@ -1,0 +1,42 @@
+{
+  ObjectSinkNodeList sinks=adapter.getHashableSinks();
+  if (sinks != null) {
+    for (ObjectSinkNode sink=sinks.getFirst(); sink != null; sink=sink.getNextObjectSinkNode()) {
+      compileAlphaNodeSingleConstraint(sink,indent);
+    }
+  }
+  sinks=adapter.getOthers();
+  if (sinks != null) {
+    for (ObjectSinkNode sink=sinks.getFirst(); sink != null; sink=sink.getNextObjectSinkNode()) {
+      compileAlphaNodeSingleConstraint(sink,indent);
+    }
+  }
+  ObjectHashMap map=adapter.getHashedSinkMap();
+  if (map != null) {
+    ObjectEntry[] entries=new ObjectEntry[map.size()];
+    Iterator it=map.iterator();
+    int i=0;
+    for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
+      entries[i++]=entry;
+    }
+    Arrays.sort(entries,new Comparator(){
+      public int compare(      Object o1,      Object o2){
+        ObjectEntry entry1=(ObjectEntry)o1;
+        ObjectEntry entry2=(ObjectEntry)o2;
+        return ((ObjectSink)entry1.getValue()).getId() - ((ObjectSink)entry2.getValue()).getId();
+      }
+    }
+);
+    builder.append(getIndent(indent) + "HashKey key = new HashKey(handle);\n");
+    builder.append(getIndent(indent) + "swtich ((ObjectSink)this.hashedSinkedMap(key)).getId() {\n");
+    for (    ObjectEntry entry : entries) {
+      ObjectSink sink=(ObjectSink)entry.getValue();
+      builder.append(getIndent(indent + 4) + "case " + sink.getId()+ ": {\n");
+      if (sink instanceof AlphaNode) {
+        compileAlphaNodes(((AlphaNode)sink).getSinkPropagator(),indent + 8);
+      }
+      builder.append(getIndent(indent + 4) + "};\n");
+    }
+    builder.append(getIndent(indent) + "};\n");
+  }
+}
