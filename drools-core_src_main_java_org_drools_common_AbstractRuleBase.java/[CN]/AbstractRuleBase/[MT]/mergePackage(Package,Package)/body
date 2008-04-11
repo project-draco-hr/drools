@@ -1,15 +1,8 @@
 {
-  final Map globals=pkg.getGlobals();
   final Map<String,ImportDeclaration> imports=pkg.getImports();
   imports.putAll(newPkg.getImports());
   if (newPkg.getGlobals() != null) {
-    for (final Iterator it=newPkg.getGlobals().keySet().iterator(); it.hasNext(); ) {
-      final String identifier=(String)it.next();
-      final Class type=(Class)globals.get(identifier);
-      if (globals.containsKey(identifier) && !globals.get(identifier).equals(type)) {
-        throw new PackageIntegrationException("Unable to merge new Package",newPkg);
-      }
-    }
+    final Map globals=pkg.getGlobals();
     if (globals == Collections.EMPTY_MAP) {
       for (      Object object : newPkg.getGlobals().entrySet()) {
         Map.Entry entry=(Map.Entry)object;
@@ -47,9 +40,8 @@
   }
   pkg.getDialectDatas().merge(newPkg.getDialectDatas());
   if (newPkg.getFunctions() != null) {
-    for (    Object object : newPkg.getFunctions().entrySet()) {
-      Map.Entry entry=(Map.Entry)object;
-      pkg.addFunction((Function)entry.getValue());
+    for (    Map.Entry<String,Function> entry : newPkg.getFunctions().entrySet()) {
+      pkg.addFunction(entry.getValue());
     }
   }
   if (this.reloadPackageCompilationData == null) {
