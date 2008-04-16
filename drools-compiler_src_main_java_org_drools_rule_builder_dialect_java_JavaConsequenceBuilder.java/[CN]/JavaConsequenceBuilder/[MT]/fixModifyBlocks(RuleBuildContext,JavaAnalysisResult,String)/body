@@ -25,21 +25,29 @@
       return null;
     }
     String retString=ClassUtils.canonicalName(ret);
-    consequence.append("{\n");
+    consequence.append("{ ");
     consequence.append(retString);
     consequence.append(" __obj__ = (");
     consequence.append(retString);
     consequence.append(") ");
     consequence.append(d.getModifyExpression());
-    consequence.append(";\n");
-    consequence.append("modifyRetract( __obj__ );\n");
+    consequence.append("; ");
+    consequence.append("modifyRetract( __obj__ ); ");
+    String originalBlock=originalCode.substring(d.getStart() - 1,d.getEnd());
+    int end=originalBlock.indexOf("{");
+    addLineBreaks(consequence,originalBlock.substring(0,end));
+    int start=end + 1;
     for (Iterator exprIt=d.getExpressions().iterator(); exprIt.hasNext(); ) {
+      String exprStr=(String)exprIt.next();
+      end=originalBlock.indexOf(exprStr,start);
+      addLineBreaks(consequence,originalBlock.substring(start,end));
       consequence.append("__obj__.");
-      consequence.append(exprIt.next());
-      consequence.append(";\n");
+      consequence.append(exprStr);
+      consequence.append("; ");
+      start=end + exprStr.length();
     }
-    consequence.append("modifyInsert( __obj__ );");
-    consequence.append("}\n");
+    addLineBreaks(consequence,originalBlock.substring(end));
+    consequence.append("modifyInsert( __obj__ ); }");
   }
   consequence.append(originalCode.substring(lastAdded));
   return consequence.toString();
