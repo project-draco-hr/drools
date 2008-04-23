@@ -1,0 +1,56 @@
+{
+  MethodVisitor mv;
+{
+    mv=cw.visitMethod(Opcodes.ACC_PUBLIC,"toString","()Ljava/lang/String;",null,null);
+    mv.visitCode();
+    Label l0=null;
+    if (this.debug) {
+      l0=new Label();
+      mv.visitLabel(l0);
+    }
+    mv.visitTypeInsn(Opcodes.NEW,"java/lang/StringBuffer");
+    mv.visitInsn(Opcodes.DUP);
+    mv.visitMethodInsn(Opcodes.INVOKESPECIAL,"java/lang/StringBuffer","<init>","()V");
+    mv.visitVarInsn(Opcodes.ASTORE,1);
+    mv.visitVarInsn(Opcodes.ALOAD,1);
+    mv.visitVarInsn(Opcodes.ALOAD,0);
+    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,classDef.getClassNameAsInternal(),"getClass","()Ljava/lang/Class;");
+    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,"java/lang/Class","getSimpleName","()Ljava/lang/String;");
+    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,"java/lang/StringBuffer","append","(Ljava/lang/String;)Ljava/lang/StringBuffer;");
+    mv.visitLdcInsn("( ");
+    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,"java/lang/StringBuffer","append","(Ljava/lang/String;)Ljava/lang/StringBuffer;");
+    boolean previous=false;
+    for (    FieldDefinition field : classDef.getFields()) {
+      if (previous) {
+        mv.visitLdcInsn(", ");
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,"java/lang/StringBuffer","append","(Ljava/lang/String;)Ljava/lang/StringBuffer;");
+      }
+      mv.visitLdcInsn(field.getName());
+      mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,"java/lang/StringBuffer","append","(Ljava/lang/String;)Ljava/lang/StringBuffer;");
+      mv.visitLdcInsn("=");
+      mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,"java/lang/StringBuffer","append","(Ljava/lang/String;)Ljava/lang/StringBuffer;");
+      mv.visitVarInsn(Opcodes.ALOAD,0);
+      mv.visitFieldInsn(Opcodes.GETFIELD,classDef.getClassNameAsInternal(),field.getName(),field.getInternalType());
+      if (field.isPrimitive()) {
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,"java/lang/StringBuffer","append",Type.getMethodDescriptor(Type.getType(StringBuffer.class),new Type[]{Type.getType(field.getInternalType())}));
+      }
+ else {
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,"java/lang/StringBuffer","append",Type.getMethodDescriptor(Type.getType(StringBuffer.class),new Type[]{Type.getType(Object.class)}));
+      }
+      previous=true;
+    }
+    mv.visitLdcInsn(" )");
+    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,"java/lang/StringBuffer","append","(Ljava/lang/String;)Ljava/lang/StringBuffer;");
+    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,"java/lang/StringBuffer","toString","()Ljava/lang/String;");
+    mv.visitInsn(Opcodes.ARETURN);
+    Label lastLabel=null;
+    if (this.debug) {
+      lastLabel=new Label();
+      mv.visitLabel(lastLabel);
+      mv.visitLocalVariable("this",classDef.getInternalName(),null,l0,lastLabel,0);
+      mv.visitLocalVariable("buf",Type.getDescriptor(StringBuffer.class),null,l0,lastLabel,1);
+    }
+    mv.visitMaxs(0,0);
+    mv.visitEnd();
+  }
+}

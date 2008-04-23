@@ -1,0 +1,26 @@
+{
+  try {
+    ClassBuilder builder=new ClassBuilder();
+    ClassDefinition classDef=new ClassDefinition("br.com.auster.TestClass1",null,new String[]{"java.io.Serializable"});
+    FieldDefinition intDef=new FieldDefinition("intAttr","int");
+    FieldDefinition stringDef=new FieldDefinition("stringAttr","java.lang.String");
+    classDef.addField(intDef);
+    classDef.addField(stringDef);
+    Class clazz=builder.buildAndLoadClass(classDef);
+    byte[] data=builder.buildClass(classDef);
+    Assert.assertSame("Returned class should be the same",clazz,classDef.getDefinedClass());
+    Assert.assertEquals("Class name should be equal",classDef.getClassName(),clazz.getName());
+    Serializable instance=(Serializable)clazz.newInstance();
+    String stringValue="Atributo String ok";
+    stringDef.setValue(instance,stringValue);
+    Assert.assertEquals("Attribute should have been correctly set",stringValue,stringDef.getValue(instance));
+    int intValue=50;
+    intDef.setValue(instance,new Integer(intValue));
+    Assert.assertEquals("Attribute should have been correctly set",intValue,((Integer)intDef.getValue(instance)).intValue());
+    clazz=builder.buildAndLoadClass(classDef);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    Assert.fail("Error creating class");
+  }
+}
