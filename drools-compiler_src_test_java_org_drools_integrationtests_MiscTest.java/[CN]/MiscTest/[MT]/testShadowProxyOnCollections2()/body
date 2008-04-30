@@ -1,0 +1,21 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_ShadowProxyOnCollections2.drl")));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  final StatefulSession workingMemory=ruleBase.newStatefulSession();
+  final List results=new ArrayList();
+  workingMemory.setGlobal("results",results);
+  List list=new ArrayList();
+  list.add("example1");
+  list.add("example2");
+  MockPersistentSet mockPersistentSet=new MockPersistentSet(false);
+  mockPersistentSet.addAll(list);
+  org.drools.ObjectWithSet objectWithSet=new ObjectWithSet();
+  objectWithSet.setSet(mockPersistentSet);
+  workingMemory.insert(objectWithSet);
+  workingMemory.fireAllRules();
+  assertEquals(1,results.size());
+  assertEquals("show",objectWithSet.getMessage());
+}
