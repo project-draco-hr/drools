@@ -65,4 +65,20 @@
   serializedSession=DroolsStreamUtils.streamOut(session);
   serializedRulebase=DroolsStreamUtils.streamOut(ruleBase);
   session.dispose();
+  ruleBase=(RuleBase)DroolsStreamUtils.streamIn(serializedRulebase);
+  session=ruleBase.newStatefulSession(new ByteArrayInputStream(serializedSession));
+  results=(List)session.getGlobal("results");
+  InternalFactHandle stilton5=(InternalFactHandle)session.insert(new Cheese("stilton",30));
+  InternalFactHandle brie5=(InternalFactHandle)session.insert(new Cheese("brie",30));
+  InternalFactHandle bob7=(InternalFactHandle)session.insert(new Person("bob",30));
+  InternalFactHandle bob8=(InternalFactHandle)session.insert(new Person("bob",40));
+  session.fireAllRules();
+  assertEquals(8,results.size());
+  assertEquals(bob8.getObject(),results.get(6));
+  assertEquals(bob7.getObject(),results.get(7));
+  serializedSession=null;
+  serializedRulebase=null;
+  serializedSession=DroolsStreamUtils.streamOut(session);
+  serializedRulebase=DroolsStreamUtils.streamOut(ruleBase);
+  session.dispose();
 }
