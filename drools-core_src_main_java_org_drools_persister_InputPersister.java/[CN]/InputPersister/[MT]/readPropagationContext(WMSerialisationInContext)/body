@@ -1,0 +1,31 @@
+{
+  ObjectInputStream stream=context.stream;
+  InternalRuleBase ruleBase=context.ruleBase;
+  InternalWorkingMemory wm=context.wm;
+  int type=stream.readInt();
+  Rule rule=null;
+  if (stream.readBoolean()) {
+    String pkgName=stream.readUTF();
+    String ruleName=stream.readUTF();
+    Package pkg=ruleBase.getPackage(pkgName);
+    rule=pkg.getRule(ruleName);
+  }
+  LeftTuple leftTuple=null;
+  if (stream.readBoolean()) {
+    int tuplePos=stream.readInt();
+    leftTuple=(LeftTuple)context.terminalTupleMap.get(tuplePos);
+  }
+  int factHandleId=stream.readInt();
+  InternalFactHandle factHandle=context.handles.get(factHandleId);
+  long propagationNumber=stream.readLong();
+  int activeActivations=stream.readInt();
+  int dormantActivations=stream.readInt();
+  String entryPointId=stream.readUTF();
+  EntryPoint entryPoint=context.entryPoints.get(entryPointId);
+  if (entryPoint == null) {
+    entryPoint=new EntryPoint(entryPointId);
+    context.entryPoints.put(entryPointId,entryPoint);
+  }
+  PropagationContext pc=new PropagationContextImpl(propagationNumber,type,rule,leftTuple,factHandle,activeActivations,dormantActivations,entryPoint);
+  context.propagationContexts.put(propagationNumber,pc);
+}

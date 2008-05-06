@@ -1,0 +1,24 @@
+{
+  ObjectInputStream stream=context.stream;
+  InternalRuleBase ruleBase=context.ruleBase;
+  InternalWorkingMemory wm=context.wm;
+  long activationNumber=stream.readLong();
+  LeftTuple leftTuple=context.terminalTupleMap.get(stream.readInt());
+  int salience=stream.readInt();
+  String pkgName=(String)stream.readObject();
+  String ruleName=(String)stream.readObject();
+  Package pkg=ruleBase.getPackage(pkgName);
+  Rule rule=pkg.getRule(ruleName);
+  RuleTerminalNode ruleTerminalNode=(RuleTerminalNode)context.sinks.get(stream.readInt());
+  GroupElement subRule=ruleTerminalNode.getSubRule();
+  PropagationContext pc=context.propagationContexts.get(stream.readLong());
+  AgendaItem activation=new AgendaItem(activationNumber,leftTuple,salience,pc,rule,subRule);
+  boolean activated=stream.readBoolean();
+  activation.setActivated(activated);
+  if (activated) {
+    String agendaGroupName=(String)stream.readObject();
+    BinaryHeapQueue agendaGroup=(BinaryHeapQueue)((DefaultAgenda)wm.getAgenda()).getAgendaGroup(agendaGroupName);
+    agendaGroup.enqueue(activation);
+  }
+  return activation;
+}

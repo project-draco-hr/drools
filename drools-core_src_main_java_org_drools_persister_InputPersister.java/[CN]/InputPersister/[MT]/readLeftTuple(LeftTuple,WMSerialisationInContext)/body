@@ -1,0 +1,57 @@
+{
+  ObjectInputStream stream=context.stream;
+  InternalRuleBase ruleBase=context.ruleBase;
+  InternalWorkingMemory wm=context.wm;
+  Map<Integer,BaseNode> sinks=context.sinks;
+  LeftTupleSink sink=parentLeftTuple.getLeftTupleSink();
+  if (sink instanceof JoinNode) {
+    BetaMemory memory=(BetaMemory)context.wm.getNodeMemory((BetaNode)sink);
+    memory.getLeftTupleMemory().add(parentLeftTuple);
+    int type=stream.readInt();
+    if (type == PersisterEnums.RIGHT_TUPLE) {
+      type=PersisterEnums.REPEAT;
+      while (type == PersisterEnums.REPEAT) {
+        LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
+        int factHandleId=stream.readInt();
+        RightTupleKey key=new RightTupleKey(factHandleId,sink);
+        RightTuple rightTuple=context.rightTuples.get(key);
+        LeftTuple childLeftTuple=new LeftTuple(parentLeftTuple,rightTuple,childSink,true);
+        readLeftTuple(childLeftTuple,context);
+      }
+    }
+  }
+ else   if (sink instanceof NotNode) {
+    BetaMemory memory=(BetaMemory)context.wm.getNodeMemory((BetaNode)sink);
+    int type=stream.readInt();
+    if (type == PersisterEnums.LEFT_TUPLE_NOT_BLOCKED) {
+      memory.getLeftTupleMemory().add(parentLeftTuple);
+      type=stream.readInt();
+      if (type == PersisterEnums.LEFT_TUPLE) {
+        type=PersisterEnums.REPEAT;
+        while (type == PersisterEnums.REPEAT) {
+          LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
+          LeftTuple childLeftTuple=new LeftTuple(parentLeftTuple,childSink,true);
+          readLeftTuple(childLeftTuple,context);
+        }
+      }
+    }
+ else {
+      int factHandleId=stream.readInt();
+      RightTupleKey key=new RightTupleKey(factHandleId,sink);
+      RightTuple rightTuple=context.rightTuples.get(key);
+      LeftTuple blockedPrevious=rightTuple.getBlocked();
+      if (blockedPrevious != null) {
+        parentLeftTuple.setBlockedNext(blockedPrevious);
+        blockedPrevious.setBlockedPrevious(parentLeftTuple);
+      }
+      rightTuple.setBlocked(parentLeftTuple);
+    }
+  }
+ else   if (sink instanceof RuleTerminalNode) {
+    RuleTerminalNode ruleTerminalNode=(RuleTerminalNode)sink;
+    TerminalNodeMemory memory=(TerminalNodeMemory)wm.getNodeMemory(ruleTerminalNode);
+    memory.getTupleMemory().add(parentLeftTuple);
+    int pos=context.terminalTupleMap.size();
+    context.terminalTupleMap.put(pos,parentLeftTuple);
+  }
+}
