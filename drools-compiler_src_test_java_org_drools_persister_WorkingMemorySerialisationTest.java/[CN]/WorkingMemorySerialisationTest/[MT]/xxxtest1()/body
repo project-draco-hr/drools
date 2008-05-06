@@ -1,0 +1,33 @@
+{
+  String rule="package org.test;\n";
+  rule+="import org.drools.Person\n";
+  rule+="global java.util.List list\n";
+  rule+="rule \"Rule 1\"\n";
+  rule+="when\n";
+  rule+="    $p : Person( ) \n";
+  rule+="then\n";
+  rule+="    list.add( $p );\n";
+  rule+="end";
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new StringReader(rule));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  ruleBase.addPackage(pkg);
+  Map<Integer,BaseNode> nodes=RuleBaseNodes.getNodeMap((InternalRuleBase)ruleBase);
+  assertEquals(2,nodes.size());
+  assertEquals("Person",((ClassObjectType)((ObjectTypeNode)nodes.get(3)).getObjectType()).getClassType().getSimpleName());
+  assertEquals("Rule 1",((RuleTerminalNode)nodes.get(5)).getRule().getName());
+  StatefulSession session=ruleBase.newStatefulSession();
+  List list=new ArrayList();
+  session.setGlobal("list",list);
+  Person p=new Person("bobba fet",32);
+  session.insert(p);
+  PlaceholderResolverStrategyFactory factory=new PlaceholderResolverStrategyFactory();
+  factory.addPlaceholderResolverStrategy(new SerializablePlaceholderResolverStrategy());
+  ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  OutputPersister op=new OutputPersister((InternalRuleBase)ruleBase,(InternalWorkingMemory)session,new ObjectOutputStream(baos),factory);
+  op.write();
+  ByteArrayInputStream bais=new ByteArrayInputStream(baos.toByteArray());
+  InputPersister ip=new InputPersister((InternalRuleBase)ruleBase,new ObjectInputStream(bais),factory);
+  WorkingMemory wm2=ip.read();
+}
