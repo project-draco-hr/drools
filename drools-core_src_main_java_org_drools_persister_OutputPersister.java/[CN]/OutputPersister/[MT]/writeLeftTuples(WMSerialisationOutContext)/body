@@ -1,0 +1,14 @@
+{
+  ObjectOutputStream stream=context.stream;
+  InternalWorkingMemory wm=context.wm;
+  for (Iterator it=wm.getObjectStore().iterateFactHandles(); it.hasNext(); ) {
+    InternalFactHandle handle=(InternalFactHandle)it.next();
+    for (LeftTuple leftTuple=handle.getLeftTuple(); leftTuple != null; leftTuple=(LeftTuple)leftTuple.getLeftParentNext()) {
+      stream.writeInt(PersisterEnums.LEFT_TUPLE);
+      stream.writeInt(leftTuple.getLeftTupleSink().getId());
+      stream.writeInt(leftTuple.getLastHandle().getId());
+      writeLeftTuple(leftTuple,context);
+    }
+  }
+  stream.writeInt(PersisterEnums.END);
+}

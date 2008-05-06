@@ -2,20 +2,15 @@
   ObjectOutputStream stream=context.stream;
   Map<LeftTuple,Integer> tuples=context.terminalTupleMap;
   if (!tuples.isEmpty()) {
-    stream.writeInt(PersisterEnums.PROPAGATION_CONTEXT);
-  }
-  Map<Long,PropagationContext> pcMap=new HashMap<Long,PropagationContext>();
-  int i=0;
-  for (  LeftTuple leftTuple : tuples.keySet()) {
-    if (i != 0) {
-      stream.writeInt(PersisterEnums.REPEAT);
+    Map<Long,PropagationContext> pcMap=new HashMap<Long,PropagationContext>();
+    for (    LeftTuple leftTuple : tuples.keySet()) {
+      PropagationContext pc=leftTuple.getActivation().getPropagationContext();
+      if (!pcMap.containsKey(pc.getPropagationNumber())) {
+        stream.writeInt(PersisterEnums.PROPAGATION_CONTEXT);
+        writePropagationContext(context,pc);
+        pcMap.put(pc.getPropagationNumber(),pc);
+      }
     }
-    PropagationContext pc=leftTuple.getActivation().getPropagationContext();
-    if (!pcMap.containsKey(pc.getPropagationNumber())) {
-      writePropagationContext(context,pc);
-      pcMap.put(pc.getPropagationNumber(),pc);
-    }
-    i++;
   }
   stream.writeInt(PersisterEnums.END);
 }

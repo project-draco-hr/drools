@@ -25,24 +25,11 @@
         i++;
       }
     }
-    stream.writeInt(PersisterEnums.END);
-  }
-  for (Iterator it=wm.getObjectStore().iterateFactHandles(); it.hasNext(); ) {
-    InternalFactHandle handle=(InternalFactHandle)it.next();
-    if (handle.getLeftTuple() != null) {
-      stream.writeInt(PersisterEnums.LEFT_TUPLE);
-      int i=0;
-      for (LeftTuple leftTuple=handle.getLeftTuple(); leftTuple != null; leftTuple=(LeftTuple)leftTuple.getLeftParentNext()) {
-        if (i != 0) {
-          stream.writeInt(PersisterEnums.REPEAT);
-        }
-        stream.writeInt(leftTuple.getLeftTupleSink().getId());
-        stream.writeInt(leftTuple.getLastHandle().getId());
-        writeLeftTuple(leftTuple,context);
-      }
+ else {
       stream.writeInt(PersisterEnums.END);
     }
   }
+  writeLeftTuples(context);
   writePropagationContexts(context);
   writeActivations(context);
   stream.writeInt(PersisterEnums.END);
