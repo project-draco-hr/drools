@@ -1,0 +1,16 @@
+{
+  SessionClock clock=((TemporalSession<SessionClock>)workingMemory).getSessionClock();
+  long currentTime=clock.getCurrentTime();
+  PriorityQueue<RightTuple> queue=(PriorityQueue<RightTuple>)context;
+  RightTuple tuple=queue.peek();
+  while (tuple != null && isExpired(currentTime,tuple)) {
+    this.expiringTuple=tuple;
+    queue.remove();
+    final PropagationContext propagationContext=new PropagationContextImpl(((ReteooTemporalSession<SessionClock>)workingMemory).getNextPropagationIdCounter(),PropagationContext.RETRACTION,null,null,tuple.getFactHandle());
+    tuple.getRightTupleSink().retractRightTuple(tuple,propagationContext,workingMemory);
+    tuple.unlinkFromRightParent();
+    this.expiringTuple=null;
+    tuple=queue.peek();
+  }
+  updateNextExpiration(tuple,workingMemory,queue);
+}
