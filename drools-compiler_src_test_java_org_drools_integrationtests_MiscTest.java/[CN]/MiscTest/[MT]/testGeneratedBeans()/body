@@ -1,0 +1,26 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_GeneratedBeans.drl")));
+  assertFalse("" + builder.getErrors(),builder.hasErrors());
+  Package p=builder.getPackage();
+  assertEquals(2,p.getRules().length);
+  ClassBuilder cb=new ClassBuilder();
+  ClassDefinition def=new ClassDefinition("org.drools.generatedbeans.Cheese");
+  def.addField(new FieldDefinition("type","java.lang.String"));
+  byte[] classdata=cb.buildClass(def);
+  MapBackedClassLoader cl=new MapBackedClassLoader(this.getClass().getClassLoader());
+  cl.addClass("org.drools.generatedbeans.Cheese",classdata);
+  RuleBase ruleBase=RuleBaseFactory.newRuleBase(new RuleBaseConfiguration(cl));
+  ruleBase=RuleBaseFactory.newRuleBase(new RuleBaseConfiguration(p.getDialectDatas().getClassLoader()));
+  ruleBase.addPackage(p);
+  Class cc=p.getDialectDatas().getClassLoader().loadClass("org.drools.generatedbeans.Cheese");
+  Object cheese=cc.newInstance();
+  WorkingMemory wm=ruleBase.newStatefulSession();
+  List result=new ArrayList();
+  wm.setGlobal("list",result);
+  wm.insert(cheese);
+  wm.fireAllRules();
+  assertEquals(1,result.size());
+  Integer r=(Integer)result.get(0);
+  assertEquals(new Integer(5),r);
+}
