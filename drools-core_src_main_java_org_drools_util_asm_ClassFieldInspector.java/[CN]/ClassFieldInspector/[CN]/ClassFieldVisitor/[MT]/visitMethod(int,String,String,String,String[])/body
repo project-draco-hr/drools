@@ -1,11 +1,11 @@
 {
   final int mask=this.includeFinalMethods ? Opcodes.ACC_PUBLIC : Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL;
   if ((access & mask) == Opcodes.ACC_PUBLIC) {
-    if (desc.startsWith("()") && (!name.equals("<init>")) && (!name.equals("<clinit>"))) {
+    if ((desc.startsWith("()") && (!name.equals("<init>")) && (!name.equals("<clinit>"))) || (name.startsWith("set"))) {
       try {
         final Method method=this.clazz.getMethod(name,(Class[])null);
-        if (method.getReturnType() != void.class) {
-          final int fieldIndex=this.inspector.methods.size();
+        if (method.getReturnType() != void.class || (method.getName().startsWith("set") && (method.getParameterTypes().length == 1))) {
+          final int fieldIndex=this.inspector.fieldNames.size();
           this.inspector.addToMapping(method,fieldIndex);
         }
       }

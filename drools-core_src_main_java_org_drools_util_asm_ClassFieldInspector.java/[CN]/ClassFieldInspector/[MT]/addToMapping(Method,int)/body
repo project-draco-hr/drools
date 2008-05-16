@@ -4,7 +4,7 @@
   if (name.startsWith("is")) {
     offset=2;
   }
- else   if (name.startsWith("get")) {
+ else   if (name.startsWith("get") || name.startsWith("set")) {
     offset=3;
   }
  else {
@@ -13,13 +13,18 @@
   final String fieldName=calcFieldName(name,offset);
   if (this.fieldNames.containsKey(fieldName)) {
     if (offset != 0 && this.nonGetters.contains(fieldName)) {
-      removeOldField(fieldName);
-      storeField(method,index,fieldName);
+      Integer oldIndex=removeOldField(fieldName);
+      storeField(method,oldIndex,fieldName);
+      storeGetterSetter(method,fieldName);
       this.nonGetters.remove(fieldName);
+    }
+ else     if (offset != 0) {
+      storeGetterSetter(method,fieldName);
     }
   }
  else {
-    storeField(method,index,fieldName);
+    storeField(method,new Integer(index),fieldName);
+    storeGetterSetter(method,fieldName);
     if (offset == 0) {
       this.nonGetters.add(fieldName);
     }

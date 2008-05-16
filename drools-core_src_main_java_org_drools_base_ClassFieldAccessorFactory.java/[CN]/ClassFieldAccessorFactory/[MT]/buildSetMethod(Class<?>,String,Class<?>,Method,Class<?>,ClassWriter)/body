@@ -1,0 +1,36 @@
+{
+  MethodVisitor mv;
+{
+    Method overridingMethod;
+    try {
+      overridingMethod=superClass.getMethod(getOverridingSetMethodName(fieldType),new Class[]{Object.class,fieldType.isPrimitive() ? fieldType : Object.class});
+    }
+ catch (    final Exception e) {
+      throw new RuntimeDroolsException("This is a bug. Please report back to JBoss Rules team.",e);
+    }
+    mv=cw.visitMethod(Opcodes.ACC_PUBLIC,overridingMethod.getName(),Type.getMethodDescriptor(overridingMethod),null,null);
+    mv.visitCode();
+    final Label l0=new Label();
+    mv.visitLabel(l0);
+    mv.visitVarInsn(Opcodes.ALOAD,1);
+    mv.visitTypeInsn(Opcodes.CHECKCAST,Type.getInternalName(originalClass));
+    mv.visitVarInsn(Type.getType(fieldType).getOpcode(Opcodes.ILOAD),2);
+    if (!fieldType.isPrimitive()) {
+      mv.visitTypeInsn(Opcodes.CHECKCAST,Type.getInternalName(fieldType));
+    }
+    if (originalClass.isInterface()) {
+      mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,Type.getInternalName(originalClass),setterMethod.getName(),Type.getMethodDescriptor(setterMethod));
+    }
+ else {
+      mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(originalClass),setterMethod.getName(),Type.getMethodDescriptor(setterMethod));
+    }
+    mv.visitInsn(Opcodes.RETURN);
+    final Label l1=new Label();
+    mv.visitLabel(l1);
+    mv.visitLocalVariable("this","L" + className + ";",null,l0,l1,0);
+    mv.visitLocalVariable("bean",Type.getDescriptor(Object.class),null,l0,l1,1);
+    mv.visitLocalVariable("value",Type.getDescriptor(fieldType),null,l0,l1,2);
+    mv.visitMaxs(0,0);
+    mv.visitEnd();
+  }
+}
