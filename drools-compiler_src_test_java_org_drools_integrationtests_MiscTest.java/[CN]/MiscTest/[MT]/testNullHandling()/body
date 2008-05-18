@@ -5,19 +5,19 @@
   RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
   ruleBase=SerializationHelper.serializeObject(ruleBase);
-  WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  StatefulSession session=ruleBase.newStatefulSession();
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  session.setGlobal("list",list);
   final Cheese nullCheese=new Cheese(null,2);
-  workingMemory.insert(nullCheese);
+  session.insert(nullCheese);
   final Person notNullPerson=new Person("shoes butt back");
   notNullPerson.setBigDecimal(new BigDecimal("42.42"));
-  workingMemory.insert(notNullPerson);
+  session.insert(notNullPerson);
   final Person nullPerson=new Person("whee");
   nullPerson.setBigDecimal(null);
-  workingMemory.insert(nullPerson);
-  workingMemory=SerializationHelper.serializeObject(workingMemory);
-  workingMemory.fireAllRules();
-  System.out.println(((List)workingMemory.getGlobal("list")).get(0));
-  assertEquals(3,((List)workingMemory.getGlobal("list")).size());
+  session.insert(nullPerson);
+  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session.fireAllRules();
+  System.out.println(((List)session.getGlobal("list")).get(0));
+  assertEquals(3,((List)session.getGlobal("list")).size());
 }

@@ -5,16 +5,16 @@
   RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
   ruleBase=SerializationHelper.serializeObject(ruleBase);
-  WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  StatefulSession session=ruleBase.newStatefulSession();
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  session.setGlobal("list",list);
   final PersonInterface bill=new Person("bill",null,12);
   bill.setBigDecimal(new BigDecimal("42"));
   final PersonInterface ben=new Person("ben",null,13);
   ben.setBigDecimal(new BigDecimal("43"));
-  workingMemory.insert(bill);
-  workingMemory.insert(ben);
-  workingMemory=SerializationHelper.serializeObject(workingMemory);
-  workingMemory.fireAllRules();
-  assertEquals(1,((List)workingMemory.getGlobal("list")).size());
+  session.insert(bill);
+  session.insert(ben);
+  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session.fireAllRules();
+  assertEquals(1,((List)session.getGlobal("list")).size());
 }

@@ -1,29 +1,27 @@
 {
   String rule="package org.test;\n";
-  rule+="import org.drools.Person\n";
   rule+="global java.util.List list\n";
   rule+="rule \"Rule 1\"\n";
   rule+="when\n";
-  rule+="    $p : Person( ) \n";
   rule+="then\n";
-  rule+="    list.add( $p );\n";
+  rule+="    list.add( \"fired\" );\n";
   rule+="end";
   final PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new StringReader(rule));
+  assertTrue(builder.getErrors().isEmpty());
   final Package pkg=builder.getPackage();
   final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   ruleBase.addPackage(pkg);
   Map<Integer,BaseNode> nodes=RuleBaseNodes.getNodeMap((InternalRuleBase)ruleBase);
   assertEquals(2,nodes.size());
-  assertEquals("Person",((ClassObjectType)((ObjectTypeNode)nodes.get(3)).getObjectType()).getClassType().getSimpleName());
+  assertEquals("InitialFact",((ClassObjectType)((ObjectTypeNode)nodes.get(3)).getObjectType()).getClassType().getSimpleName());
   assertEquals("Rule 1",((RuleTerminalNode)nodes.get(5)).getRule().getName());
   StatefulSession session=ruleBase.newStatefulSession();
   List list=new ArrayList();
   session.setGlobal("list",list);
-  Person p=new Person("bobba fet",32);
-  session.insert(p);
-  WorkingMemory wm2=getSerialisedWorkingMemory(session);
-  wm2.fireAllRules();
-  assertEquals(1,((List)wm2.getGlobal("list")).size());
-  assertEquals(p,((List)wm2.getGlobal("list")).get(0));
+  session=getSerialisedStatefulSession(session);
+  session.fireAllRules();
+  session=getSerialisedStatefulSession(session);
+  assertEquals(1,((List)session.getGlobal("list")).size());
+  assertEquals("fired",((List)session.getGlobal("list")).get(0));
 }

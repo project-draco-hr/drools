@@ -5,13 +5,13 @@
   RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
   ruleBase=SerializationHelper.serializeObject(ruleBase);
-  WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  StatefulSession session=ruleBase.newStatefulSession();
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
-  workingMemory.setGlobal("string","stilton");
+  session.setGlobal("list",list);
+  session.setGlobal("string","stilton");
   final Cheese stilton=new Cheese("stilton",5);
-  workingMemory.insert(stilton);
-  workingMemory=SerializationHelper.serializeObject(workingMemory);
-  workingMemory.fireAllRules();
-  assertEquals(new Integer(5),((List)workingMemory.getGlobal("list")).get(0));
+  session.insert(stilton);
+  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session.fireAllRules();
+  assertEquals(new Integer(5),((List)session.getGlobal("list")).get(0));
 }

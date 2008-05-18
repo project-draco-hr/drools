@@ -5,13 +5,13 @@
   RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
   ruleBase=SerializationHelper.serializeObject(ruleBase);
-  WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  StatefulSession session=ruleBase.newStatefulSession();
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  session.setGlobal("list",list);
   final PersonInterface bill=new Person("bill",null,12);
   bill.setAlive(true);
-  workingMemory.insert(bill);
-  workingMemory=SerializationHelper.serializeObject(workingMemory);
-  workingMemory.fireAllRules();
-  assertEquals(bill,((List)workingMemory.getGlobal("list")).get(0));
+  session.insert(bill);
+  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session.fireAllRules();
+  assertEquals(bill,((List)session.getGlobal("list")).get(0));
 }

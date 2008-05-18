@@ -1,17 +1,17 @@
 {
   RuleBase ruleBase=getRuleBase();
-  WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  StatefulSession session=ruleBase.newStatefulSession();
   final Cheese a=new Cheese("stilton",10);
   final Cheese b=new Cheese("stilton",15);
   final Cheese c=new Cheese("stilton",20);
-  workingMemory.insert(a);
-  workingMemory.insert(b);
-  workingMemory.insert(c);
+  session.insert(a);
+  session.insert(b);
+  session.insert(c);
   final PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicRules.drl")));
   final Package pkg=builder.getPackage();
   ruleBase.addPackage(SerializationHelper.serializeObject(pkg));
   ruleBase=SerializationHelper.serializeObject(ruleBase);
-  workingMemory=SerializationHelper.serializeObject(workingMemory);
-  workingMemory.fireAllRules();
+  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session.fireAllRules();
 }

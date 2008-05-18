@@ -5,16 +5,16 @@
   RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
   ruleBase=SerializationHelper.serializeObject(ruleBase);
-  WorkingMemory workingMemory=ruleBase.newStatefulSession();
-  workingMemory.setGlobal("two",new Integer(2));
+  StatefulSession session=ruleBase.newStatefulSession();
+  session.setGlobal("two",new Integer(2));
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  session.setGlobal("list",list);
   final PersonInterface peter=new Person("peter",null,12);
-  workingMemory.insert(peter);
+  session.insert(peter);
   final PersonInterface jane=new Person("jane",null,10);
-  workingMemory.insert(jane);
-  workingMemory=SerializationHelper.serializeObject(workingMemory);
-  workingMemory.fireAllRules();
-  assertEquals(jane,((List)workingMemory.getGlobal("list")).get(0));
-  assertEquals(peter,((List)workingMemory.getGlobal("list")).get(1));
+  session.insert(jane);
+  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session.fireAllRules();
+  assertEquals(jane,((List)session.getGlobal("list")).get(0));
+  assertEquals(peter,((List)session.getGlobal("list")).get(1));
 }

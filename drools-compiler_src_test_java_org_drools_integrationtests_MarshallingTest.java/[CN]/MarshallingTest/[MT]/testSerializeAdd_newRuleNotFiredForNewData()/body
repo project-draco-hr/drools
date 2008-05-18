@@ -10,13 +10,17 @@
   InternalFactHandle stilton1=(InternalFactHandle)session.insert(new Cheese("stilton",10));
   InternalFactHandle brie1=(InternalFactHandle)session.insert(new Cheese("brie",10));
   session.fireAllRules();
-  byte[] serializedSession=DroolsStreamUtils.streamOut(session);
+  GlobalResolver resolver=session.getGlobalResolver();
+  ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  Marshaller marshaller=new Marshaller();
+  ruleBase.writeStatefulSession(session,baos,marshaller);
   byte[] serializedRulebase=DroolsStreamUtils.streamOut(ruleBase);
   session.dispose();
   assertEquals(1,results.size());
   assertEquals(stilton1.getObject(),results.get(0));
   ruleBase=(RuleBase)DroolsStreamUtils.streamIn(serializedRulebase);
-  session=ruleBase.newStatefulSession(new ByteArrayInputStream(serializedSession));
+  session=ruleBase.readStatefulSession(new ByteArrayInputStream(baos.toByteArray()),marshaller);
+  session.setGlobalResolver(resolver);
   results=(List)session.getGlobal("results");
   builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic1_1.drl")));
@@ -31,9 +35,8 @@
   assertEquals(stilton2.getObject(),results.get(2));
   assertEquals(brie2.getObject(),results.get(4));
   assertEquals(brie3.getObject(),results.get(3));
-  serializedSession=null;
   serializedRulebase=null;
-  serializedSession=DroolsStreamUtils.streamOut(session);
+  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
   serializedRulebase=DroolsStreamUtils.streamOut(ruleBase);
   session.dispose();
 }

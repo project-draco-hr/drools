@@ -1,14 +1,14 @@
 {
   final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_ExplicitAnd.drl"));
   final RuleBase ruleBase=loadRuleBase(reader);
-  WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  StatefulSession session=ruleBase.newStatefulSession();
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
-  workingMemory.insert(new Message("hola"));
-  workingMemory.fireAllRules();
+  session.setGlobal("list",list);
+  session.insert(new Message("hola"));
+  session.fireAllRules();
   assertEquals(0,list.size());
-  workingMemory.insert(new Cheese("brie",33));
-  workingMemory=SerializationHelper.serializeObject(workingMemory);
-  workingMemory.fireAllRules();
-  assertEquals(1,((List)workingMemory.getGlobal("list")).size());
+  session.insert(new Cheese("brie",33));
+  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session.fireAllRules();
+  assertEquals(1,((List)session.getGlobal("list")).size());
 }

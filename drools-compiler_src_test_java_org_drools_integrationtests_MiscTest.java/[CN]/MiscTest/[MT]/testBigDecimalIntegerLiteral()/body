@@ -4,14 +4,14 @@
   final Package pkg=builder.getPackage();
   final RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
-  WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  StatefulSession session=ruleBase.newStatefulSession();
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  session.setGlobal("list",list);
   final PersonInterface bill=new Person("bill",null,12);
   bill.setBigDecimal(new BigDecimal("42"));
   bill.setBigInteger(new BigInteger("42"));
-  workingMemory.insert(bill);
-  workingMemory=SerializationHelper.serializeObject(workingMemory);
-  workingMemory.fireAllRules();
-  assertEquals(6,((List)workingMemory.getGlobal("list")).size());
+  session.insert(bill);
+  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session.fireAllRules();
+  assertEquals(6,((List)session.getGlobal("list")).size());
 }

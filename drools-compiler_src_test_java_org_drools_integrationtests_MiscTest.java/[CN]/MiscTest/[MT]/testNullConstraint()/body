@@ -5,15 +5,15 @@
   RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
   ruleBase=SerializationHelper.serializeObject(ruleBase);
-  WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  StatefulSession session=ruleBase.newStatefulSession();
   final List foo=new ArrayList();
-  workingMemory.setGlobal("messages",foo);
+  session.setGlobal("messages",foo);
   final PersonInterface p1=new Person(null,"food",40);
   final Primitives p2=new Primitives();
   p2.setArrayAttribute(null);
-  workingMemory.insert(p1);
-  workingMemory.insert(p2);
-  workingMemory=SerializationHelper.serializeObject(workingMemory);
-  workingMemory.fireAllRules();
-  assertEquals(2,((List)workingMemory.getGlobal("messages")).size());
+  session.insert(p1);
+  session.insert(p2);
+  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session.fireAllRules();
+  assertEquals(2,((List)session.getGlobal("messages")).size());
 }
