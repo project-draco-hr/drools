@@ -24,7 +24,17 @@
   this.config.setClassLoader(droolsStream.getClassLoader());
   this.processes=(Map)droolsStream.readObject();
   this.agendaGroupRuleTotals=(Map)droolsStream.readObject();
-  this.factHandleFactory=(FactHandleFactory)droolsStream.readObject();
+  Class cls=null;
+  try {
+    cls=droolsStream.getClassLoader().loadClass(droolsStream.readUTF());
+    this.factHandleFactory=(FactHandleFactory)cls.newInstance();
+  }
+ catch (  InstantiationException e) {
+    DroolsObjectInputStream.newInvalidClassException(cls,e);
+  }
+catch (  IllegalAccessException e) {
+    DroolsObjectInputStream.newInvalidClassException(cls,e);
+  }
   this.globals=(Map)droolsStream.readObject();
   this.reloadPackageCompilationData=(ReloadPackageCompilationData)droolsStream.readObject();
   this.eventSupport=(RuleBaseEventSupport)droolsStream.readObject();

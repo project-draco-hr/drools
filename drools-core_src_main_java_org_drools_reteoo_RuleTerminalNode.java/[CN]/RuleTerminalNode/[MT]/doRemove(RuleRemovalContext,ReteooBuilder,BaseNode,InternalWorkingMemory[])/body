@@ -3,14 +3,16 @@
     final InternalWorkingMemory workingMemory=workingMemories[i];
     final TerminalNodeMemory memory=(TerminalNodeMemory)workingMemory.getNodeMemory(this);
     final Iterator it=memory.getTupleMemory().iterator();
-    for (LeftTuple tuple=(LeftTuple)it.next(); tuple != null; tuple=(LeftTuple)it.next()) {
-      final Activation activation=tuple.getActivation();
+    for (LeftTuple leftTuple=(LeftTuple)it.next(); leftTuple != null; leftTuple=(LeftTuple)it.next()) {
+      final Activation activation=leftTuple.getActivation();
       if (activation.isActivated()) {
         activation.remove();
         ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCancelled(activation,workingMemory);
       }
       final PropagationContext propagationContext=new PropagationContextImpl(workingMemory.getNextPropagationIdCounter(),PropagationContext.RULE_REMOVAL,null,null,null);
       workingMemory.getTruthMaintenanceSystem().removeLogicalDependencies(activation,propagationContext,this.rule);
+      leftTuple.unlinkFromLeftParent();
+      leftTuple.unlinkFromRightParent();
     }
     workingMemory.executeQueuedActions();
     workingMemory.clearNodeMemory(this);

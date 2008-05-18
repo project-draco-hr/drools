@@ -1,0 +1,47 @@
+{
+  ObjectInputStream stream=context.stream;
+  InternalRuleBase ruleBase=context.ruleBase;
+  PlaceholderResolverStrategyFactory resolverStrategyFactory=context.resolverStrategyFactory;
+  InternalWorkingMemory wm=context.wm;
+  if (stream.readBoolean()) {
+    InternalFactHandle initialFactHandle=wm.getInitialFactHandle();
+    int sinkId=stream.readInt();
+    ObjectTypeNode initialFactNode=(ObjectTypeNode)context.sinks.get(sinkId);
+    ObjectHashSet initialFactMemory=(ObjectHashSet)context.wm.getNodeMemory(initialFactNode);
+    initialFactMemory.add(initialFactHandle);
+    readRightTuples(initialFactHandle,context);
+  }
+  int size=stream.readInt();
+  InternalFactHandle[] handles=new InternalFactHandle[size];
+  for (int i=0; i < size; i++) {
+    int id=stream.readInt();
+    long recency=stream.readLong();
+    int strategyIndex=stream.readInt();
+    PlaceholderResolverStrategy strategy=resolverStrategyFactory.getStrategy(strategyIndex);
+    ObjectPlaceholder placeHolder=strategy.read(stream);
+    Object object=placeHolder.resolveObject();
+    InternalFactHandle handle=new DefaultFactHandle(id,object,recency);
+    context.handles.put(id,handle);
+    handles[i]=handle;
+    context.wm.getObjectStore().addHandle(handle,object);
+    readRightTuples(handle,context);
+  }
+  EntryPointNode node=ruleBase.getRete().getEntryPointNode(EntryPoint.DEFAULT);
+  Map<ObjectType,ObjectTypeNode> objectTypeNodes=node.getObjectTypeNodes();
+  for (  InternalFactHandle handle : handles) {
+    Object object=handle.getObject();
+    ClassObjectType objectType=new ClassObjectType(object.getClass());
+    ObjectTypeNode objectTypeNode=objectTypeNodes.get(objectType);
+    ObjectHashSet set=(ObjectHashSet)context.wm.getNodeMemory(objectTypeNode);
+    set.add(handle,false);
+  }
+  InternalFactHandle handle=wm.getInitialFactHandle();
+  while (stream.readInt() == PersisterEnums.LEFT_TUPLE) {
+    LeftTupleSink sink=(LeftTupleSink)context.sinks.get(stream.readInt());
+    LeftTuple leftTuple=new LeftTuple(handle,sink,true);
+    readLeftTuple(leftTuple,context);
+  }
+  readLeftTuples(context);
+  readPropagationContexts(context);
+  readActivations(context);
+}

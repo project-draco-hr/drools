@@ -1,0 +1,18 @@
+{
+  ObjectOutputStream stream=context.stream;
+  Entry<LeftTuple,Integer>[] entries=context.terminalTupleMap.entrySet().toArray(new Entry[context.terminalTupleMap.size()]);
+  Arrays.sort(entries,TupleSorter.instance);
+  if (entries.length != 0) {
+    Map<Long,PropagationContext> pcMap=new HashMap<Long,PropagationContext>();
+    for (    Entry<LeftTuple,Integer> entry : entries) {
+      LeftTuple leftTuple=entry.getKey();
+      PropagationContext pc=leftTuple.getActivation().getPropagationContext();
+      if (!pcMap.containsKey(pc.getPropagationNumber())) {
+        stream.writeInt(PersisterEnums.PROPAGATION_CONTEXT);
+        writePropagationContext(context,pc);
+        pcMap.put(pc.getPropagationNumber(),pc);
+      }
+    }
+  }
+  stream.writeInt(PersisterEnums.END);
+}

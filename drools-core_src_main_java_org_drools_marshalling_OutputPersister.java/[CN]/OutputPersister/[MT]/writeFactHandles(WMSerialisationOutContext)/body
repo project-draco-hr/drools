@@ -1,0 +1,25 @@
+{
+  ObjectOutputStream stream=context.stream;
+  InternalWorkingMemory wm=context.wm;
+  PlaceholderResolverStrategyFactory resolverStrategyFactory=context.resolverStrategyFactory;
+  writeInitialFactHandleRightTuples(context);
+  stream.writeInt(wm.getObjectStore().size());
+  for (  InternalFactHandle handle : orderFacts(wm.getObjectStore())) {
+    stream.writeInt(handle.getId());
+    stream.writeLong(handle.getRecency());
+    context.out.println("Object : int:" + handle.getId() + " long:"+ handle.getRecency());
+    context.out.println(handle.getObject());
+    Object object=handle.getObject();
+    if (object instanceof ShadowProxy) {
+      object=((ShadowProxy)object).getShadowedObject();
+    }
+    PlaceholderResolverStrategy strategy=resolverStrategyFactory.getStrategy(handle.getObject());
+    stream.writeInt(strategy.getIndex());
+    strategy.write(stream,object);
+    writeRightTuples(handle,context);
+  }
+  writeInitialFactHandleLeftTuples(context);
+  writeLeftTuples(context);
+  writePropagationContexts(context);
+  writeActivations(context);
+}

@@ -1,0 +1,33 @@
+{
+  ObjectOutputStream stream=context.stream;
+  stream.writeLong(agendaItem.getActivationNumber());
+  stream.writeInt(context.terminalTupleMap.get(leftTuple));
+  stream.writeInt(agendaItem.getSalience());
+  Rule rule=agendaItem.getRule();
+  stream.writeUTF(rule.getPackage());
+  stream.writeUTF(rule.getName());
+  context.out.println("Rule " + rule.getPackage() + "."+ rule.getName());
+  context.out.println("AgendaItem long:" + agendaItem.getPropagationContext().getPropagationNumber());
+  stream.writeLong(agendaItem.getPropagationContext().getPropagationNumber());
+  if (agendaItem.getActivationGroupNode() != null) {
+    stream.writeBoolean(true);
+    context.out.println("ActivationGroup bool:" + true);
+    stream.writeUTF(agendaItem.getActivationGroupNode().getActivationGroup().getName());
+    context.out.println("ActivationGroup string:" + agendaItem.getActivationGroupNode().getActivationGroup().getName());
+  }
+ else {
+    stream.writeBoolean(false);
+    context.out.println("ActivationGroup bool:" + false);
+  }
+  stream.writeBoolean(agendaItem.isActivated());
+  context.out.println("AgendaItem bool:" + agendaItem.isActivated());
+  org.drools.util.LinkedList list=agendaItem.getLogicalDependencies();
+  if (list != null && !list.isEmpty()) {
+    for (LogicalDependency node=(LogicalDependency)list.getFirst(); node != null; node=(LogicalDependency)node.getNext()) {
+      stream.writeInt(PersisterEnums.LOGICAL_DEPENDENCY);
+      stream.writeInt(((InternalFactHandle)node.getFactHandle()).getId());
+      context.out.println("Logical Depenency : int " + ((InternalFactHandle)node.getFactHandle()).getId());
+    }
+  }
+  stream.writeInt(PersisterEnums.END);
+}

@@ -1,0 +1,18 @@
+{
+  ObjectInputStream stream=context.stream;
+  TruthMaintenanceSystem tms=context.wm.getTruthMaintenanceSystem();
+  while (stream.readInt() == PersisterEnums.EQUALITY_KEY) {
+    int status=stream.readInt();
+    int factHandleId=stream.readInt();
+    InternalFactHandle handle=(InternalFactHandle)context.handles.get(factHandleId);
+    EqualityKey key=new EqualityKey(handle,status);
+    handle.setEqualityKey(key);
+    while (stream.readInt() == PersisterEnums.FACT_HANDLE) {
+      factHandleId=stream.readInt();
+      handle=(InternalFactHandle)context.handles.get(factHandleId);
+      key.addFactHandle(handle);
+      handle.setEqualityKey(key);
+    }
+    tms.put(key);
+  }
+}

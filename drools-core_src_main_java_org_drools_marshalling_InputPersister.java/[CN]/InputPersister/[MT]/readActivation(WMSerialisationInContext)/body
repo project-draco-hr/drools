@@ -1,0 +1,48 @@
+{
+  ObjectInputStream stream=context.stream;
+  InternalRuleBase ruleBase=context.ruleBase;
+  InternalWorkingMemory wm=context.wm;
+  long activationNumber=stream.readLong();
+  int pos=stream.readInt();
+  LeftTuple leftTuple=context.terminalTupleMap.get(pos);
+  int salience=stream.readInt();
+  String pkgName=stream.readUTF();
+  String ruleName=stream.readUTF();
+  Package pkg=ruleBase.getPackage(pkgName);
+  Rule rule=pkg.getRule(ruleName);
+  RuleTerminalNode ruleTerminalNode=(RuleTerminalNode)leftTuple.getLeftTupleSink();
+  GroupElement subRule=ruleTerminalNode.getSubRule();
+  PropagationContext pc=context.propagationContexts.get(stream.readLong());
+  AgendaItem activation=new AgendaItem(activationNumber,leftTuple,salience,pc,rule,subRule);
+  leftTuple.setActivation(activation);
+  if (stream.readBoolean()) {
+    String activationGroupName=stream.readUTF();
+    wm.getAgenda().getActivationGroup(activationGroupName).addActivation(activation);
+  }
+  boolean activated=stream.readBoolean();
+  activation.setActivated(activated);
+  InternalAgendaGroup agendaGroup;
+  if (rule.getAgendaGroup() == null || rule.getAgendaGroup().equals("") || rule.getAgendaGroup().equals(AgendaGroup.MAIN)) {
+    agendaGroup=(InternalAgendaGroup)wm.getAgenda().getAgendaGroup(AgendaGroup.MAIN);
+  }
+ else {
+    agendaGroup=(InternalAgendaGroup)wm.getAgenda().getAgendaGroup(rule.getAgendaGroup());
+  }
+  activation.setAgendaGroup(agendaGroup);
+  if (activated) {
+    if (rule.getRuleFlowGroup() == null) {
+      agendaGroup.add(activation);
+    }
+ else {
+      InternalRuleFlowGroup rfg=(InternalRuleFlowGroup)wm.getAgenda().getRuleFlowGroup(rule.getRuleFlowGroup());
+      rfg.addActivation(activation);
+    }
+  }
+  TruthMaintenanceSystem tms=context.wm.getTruthMaintenanceSystem();
+  while (stream.readInt() == PersisterEnums.LOGICAL_DEPENDENCY) {
+    int factHandleId=stream.readInt();
+    InternalFactHandle handle=(InternalFactHandle)context.handles.get(factHandleId);
+    tms.addLogicalDependency(handle,activation,pc,rule);
+  }
+  return activation;
+}
