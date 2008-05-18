@@ -1,0 +1,32 @@
+{
+  String rule="package org.test;\n";
+  rule+="import org.drools.Person\n";
+  rule+="global java.util.List list\n";
+  rule+="rule \"Rule 1\"\n";
+  rule+="  ruleflow-group \"hello\"\n";
+  rule+="when\n";
+  rule+="    $p : Person( ) \n";
+  rule+="then\n";
+  rule+="    list.add( $p );\n";
+  rule+="end";
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new StringReader(rule));
+  String process="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + "<process xmlns=\"http://drools.org/drools-4.0/process\"\n" + "    xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n"+ "    xs:schemaLocation=\"http://drools.org/drools-4.0/process drools-processes-4.0.xsd\"\n"+ "    type=\"RuleFlow\" name=\"ruleflow\" id=\"org.test.ruleflow\" package-name=\"org.test\" >\n"+ "  <header>\n"+ "  </header>\n"+ "  <nodes>\n"+ "    <start id=\"1\" name=\"Start\" />\n"+ "    <ruleSet id=\"2\" name=\"Hello\" ruleFlowGroup=\"hello\" />\n"+ "    <end id=\"3\" name=\"End\" />\n"+ "  </nodes>\n"+ "  <connections>\n"+ "    <connection from=\"1\" to=\"2\"/>\n"+ "    <connection from=\"2\" to=\"3\"/>\n"+ "  </connections>\n"+ "</process>";
+  builder.addProcessFromXml(new StringReader(process));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  ruleBase.addPackage(pkg);
+  StatefulSession session=ruleBase.newStatefulSession();
+  List list=new ArrayList();
+  session.setGlobal("list",list);
+  Person p=new Person("bobba fet",32);
+  session.insert(p);
+  session.startProcess("org.test.ruleflow");
+  assertEquals(1,session.getProcessInstances().size());
+  session=getSerialisedStatefulSession(session);
+  assertEquals(1,session.getProcessInstances().size());
+  session.fireAllRules();
+  assertEquals(1,((List)session.getGlobal("list")).size());
+  assertEquals(p,((List)session.getGlobal("list")).get(0));
+  assertEquals(0,session.getProcessInstances().size());
+}
