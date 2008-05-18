@@ -1,0 +1,35 @@
+{
+  ObjectInputStream stream=context.stream;
+  NodeInstanceImpl nodeInstance=null;
+  long id=stream.readLong();
+  long nodeId=stream.readLong();
+  int nodeType=stream.readInt();
+switch (nodeType) {
+case PersisterEnums.RULE_SET_NODE_INSTANCE:
+    nodeInstance=new RuleSetNodeInstance();
+  break;
+case PersisterEnums.WORK_ITEM_NODE_INSTANCE:
+nodeInstance=new WorkItemNodeInstance();
+((WorkItemNodeInstance)nodeInstance).internalSetWorkItemId(stream.readLong());
+break;
+case PersisterEnums.SUB_PROCESS_NODE_INSTANCE:
+nodeInstance=new SubProcessNodeInstance();
+((SubProcessNodeInstance)nodeInstance).internalSetProcessInstanceId(stream.readLong());
+break;
+case PersisterEnums.MILESTONE_NODE_INSTANCE:
+nodeInstance=new MilestoneNodeInstance();
+break;
+case PersisterEnums.TIMER_NODE_INSTANCE:
+nodeInstance=new TimerNodeInstance();
+((TimerNodeInstance)nodeInstance).internalSetTimerId(stream.readLong());
+break;
+default :
+throw new IllegalArgumentException("Unknown node type: " + nodeType);
+}
+nodeInstance.setNodeId(nodeId);
+nodeInstance.setNodeInstanceContainer(processInstance);
+nodeInstance.setProcessInstance(processInstance);
+nodeInstance.setId(id);
+((EventNodeInstance)nodeInstance).addEventListeners();
+return nodeInstance;
+}

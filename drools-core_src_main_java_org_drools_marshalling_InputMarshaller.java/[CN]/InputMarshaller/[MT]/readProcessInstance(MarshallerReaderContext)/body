@@ -1,0 +1,17 @@
+{
+  ObjectInputStream stream=context.stream;
+  InternalRuleBase ruleBase=context.ruleBase;
+  InternalWorkingMemory wm=context.wm;
+  RuleFlowProcessInstance processInstance=new RuleFlowProcessInstance();
+  processInstance.setId(stream.readLong());
+  processInstance.setProcess(ruleBase.getProcess(stream.readUTF()));
+  processInstance.setState(stream.readInt());
+  long nodeInstanceCounter=stream.readLong();
+  processInstance.setWorkingMemory(wm);
+  while (stream.readInt() == PersisterEnums.NODE_INSTANCE) {
+    readNodeInstance(context,processInstance);
+  }
+  processInstance.internalSetNodeInstanceCounter(nodeInstanceCounter);
+  wm.addProcessInstance(processInstance);
+  return processInstance;
+}
