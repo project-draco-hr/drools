@@ -8,36 +8,68 @@
       l0=new Label();
       mv.visitLabel(l0);
     }
-    mv.visitInsn(Opcodes.ICONST_0);
+    mv.visitInsn(Opcodes.ICONST_1);
     mv.visitVarInsn(Opcodes.ISTORE,1);
-    for (    FieldDefinition field : classDef.getFields()) {
+    for (    FieldDefinition field : classDef.getFieldsDefinitions()) {
       if (field.isKey()) {
         mv.visitVarInsn(Opcodes.ILOAD,1);
-        if (field.isPrimitive()) {
-          mv.visitTypeInsn(Opcodes.NEW,field.getBoxTypeName());
-          mv.visitInsn(Opcodes.DUP);
-          mv.visitVarInsn(Opcodes.ALOAD,0);
-          mv.visitFieldInsn(Opcodes.GETFIELD,classDef.getClassNameAsInternal(),field.getName(),field.getInternalType());
-          mv.visitMethodInsn(Opcodes.INVOKESPECIAL,field.getBoxTypeName(),"<init>",Type.getMethodDescriptor(Type.VOID_TYPE,new Type[]{Type.getType(field.getInternalType())}));
+        mv.visitIntInsn(Opcodes.BIPUSH,31);
+        mv.visitVarInsn(Opcodes.ILOAD,1);
+        mv.visitInsn(Opcodes.IMUL);
+        mv.visitVarInsn(Opcodes.ALOAD,0);
+        mv.visitFieldInsn(Opcodes.GETFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
+        if ("boolean".equals(field.getTypeName())) {
+          Label blabel1=new Label();
+          mv.visitJumpInsn(Opcodes.IFEQ,blabel1);
+          mv.visitIntInsn(Opcodes.SIPUSH,1231);
+          Label blabel2=new Label();
+          mv.visitJumpInsn(Opcodes.GOTO,blabel2);
+          mv.visitLabel(blabel1);
+          mv.visitIntInsn(Opcodes.SIPUSH,1237);
+          mv.visitLabel(blabel2);
         }
- else {
+ else         if ("long".equals(field.getTypeName())) {
           mv.visitVarInsn(Opcodes.ALOAD,0);
-          mv.visitFieldInsn(Opcodes.GETFIELD,classDef.getClassNameAsInternal(),field.getName(),field.getInternalType());
+          mv.visitFieldInsn(Opcodes.GETFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
+          mv.visitIntInsn(Opcodes.BIPUSH,32);
+          mv.visitInsn(Opcodes.LUSHR);
+          mv.visitInsn(Opcodes.LXOR);
+          mv.visitInsn(Opcodes.L2I);
         }
-        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,field.getBoxTypeName(),"hashCode","()I");
+ else         if ("float".equals(field.getTypeName())) {
+          mv.visitMethodInsn(Opcodes.INVOKESTATIC,Type.getInternalName(Float.class),"floatToIntBits","(F)I");
+        }
+ else         if ("double".equals(field.getTypeName())) {
+          mv.visitMethodInsn(Opcodes.INVOKESTATIC,Type.getInternalName(Double.class),"doubleToLongBits","(D)J");
+          mv.visitInsn(Opcodes.DUP2);
+          mv.visitIntInsn(Opcodes.BIPUSH,32);
+          mv.visitInsn(Opcodes.LUSHR);
+          mv.visitInsn(Opcodes.LXOR);
+          mv.visitInsn(Opcodes.L2I);
+        }
+ else         if (!isPrimitive(field.getTypeName())) {
+          Label olabel1=new Label();
+          mv.visitJumpInsn(Opcodes.IFNONNULL,olabel1);
+          mv.visitInsn(Opcodes.ICONST_0);
+          Label olabel2=new Label();
+          mv.visitJumpInsn(Opcodes.GOTO,olabel2);
+          mv.visitLabel(olabel1);
+          mv.visitVarInsn(Opcodes.ALOAD,0);
+          mv.visitFieldInsn(Opcodes.GETFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
+          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,getInternalType(field.getTypeName()),"hashCode","()I");
+          mv.visitLabel(olabel2);
+        }
         mv.visitInsn(Opcodes.IADD);
         mv.visitVarInsn(Opcodes.ISTORE,1);
       }
     }
     mv.visitVarInsn(Opcodes.ILOAD,1);
-    mv.visitIntInsn(Opcodes.SIPUSH,9653);
-    mv.visitInsn(Opcodes.IREM);
     mv.visitInsn(Opcodes.IRETURN);
     Label lastLabel=null;
     if (this.debug) {
       lastLabel=new Label();
       mv.visitLabel(lastLabel);
-      mv.visitLocalVariable("this",classDef.getInternalName(),null,l0,lastLabel,0);
+      mv.visitLocalVariable("this",getTypeDescriptor(classDef.getClassName()),null,l0,lastLabel,0);
       mv.visitLocalVariable("hash",Type.getDescriptor(int.class),null,l0,lastLabel,1);
     }
     mv.visitMaxs(0,0);

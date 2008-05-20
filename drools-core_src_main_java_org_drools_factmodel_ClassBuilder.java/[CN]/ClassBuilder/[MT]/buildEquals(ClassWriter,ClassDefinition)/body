@@ -16,38 +16,42 @@
     mv.visitInsn(Opcodes.IRETURN);
     mv.visitLabel(l1);
     mv.visitVarInsn(Opcodes.ALOAD,1);
-    Label l3=new Label();
-    mv.visitJumpInsn(Opcodes.IFNULL,l3);
-    mv.visitVarInsn(Opcodes.ALOAD,1);
-    mv.visitTypeInsn(Opcodes.INSTANCEOF,classDef.getClassNameAsInternal());
-    Label l4=new Label();
-    mv.visitJumpInsn(Opcodes.IFNE,l4);
-    mv.visitLabel(l3);
+    Label l2=new Label();
+    mv.visitJumpInsn(Opcodes.IFNONNULL,l2);
     mv.visitInsn(Opcodes.ICONST_0);
     mv.visitInsn(Opcodes.IRETURN);
-    mv.visitLabel(l4);
+    mv.visitLabel(l2);
+    mv.visitVarInsn(Opcodes.ALOAD,0);
+    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(Object.class),"getClass",Type.getMethodDescriptor(Type.getType(Class.class),new Type[]{}));
     mv.visitVarInsn(Opcodes.ALOAD,1);
-    mv.visitTypeInsn(Opcodes.CHECKCAST,classDef.getClassNameAsInternal());
+    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,Type.getInternalName(Object.class),"getClass",Type.getMethodDescriptor(Type.getType(Class.class),new Type[]{}));
+    Label l3=new Label();
+    mv.visitJumpInsn(Opcodes.IF_ACMPEQ,l3);
+    mv.visitInsn(Opcodes.ICONST_0);
+    mv.visitInsn(Opcodes.IRETURN);
+    mv.visitLabel(l3);
+    mv.visitVarInsn(Opcodes.ALOAD,1);
+    mv.visitTypeInsn(Opcodes.CHECKCAST,getInternalType(classDef.getClassName()));
     mv.visitVarInsn(Opcodes.ASTORE,2);
     int count=0;
-    for (    FieldDefinition field : classDef.getFields()) {
+    for (    FieldDefinition field : classDef.getFieldsDefinitions()) {
       if (field.isKey()) {
         count++;
         Label goNext=new Label();
-        if (field.isPrimitive()) {
+        if (isPrimitive(field.getTypeName())) {
           mv.visitVarInsn(Opcodes.ALOAD,0);
-          mv.visitFieldInsn(Opcodes.GETFIELD,classDef.getClassNameAsInternal(),field.getName(),field.getInternalType());
+          mv.visitFieldInsn(Opcodes.GETFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
           mv.visitVarInsn(Opcodes.ALOAD,2);
-          mv.visitFieldInsn(Opcodes.GETFIELD,classDef.getClassNameAsInternal(),field.getName(),field.getInternalType());
-          if (field.getType().equals("long")) {
+          mv.visitFieldInsn(Opcodes.GETFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
+          if (field.getTypeName().equals("long")) {
             mv.visitInsn(Opcodes.LCMP);
             mv.visitJumpInsn(Opcodes.IFEQ,goNext);
           }
- else           if (field.getType().equals("double")) {
+ else           if (field.getTypeName().equals("double")) {
             mv.visitInsn(Opcodes.DCMPL);
             mv.visitJumpInsn(Opcodes.IFEQ,goNext);
           }
- else           if (field.getType().equals("float")) {
+ else           if (field.getTypeName().equals("float")) {
             mv.visitInsn(Opcodes.FCMPL);
             mv.visitJumpInsn(Opcodes.IFEQ,goNext);
           }
@@ -59,22 +63,22 @@
         }
  else {
           mv.visitVarInsn(Opcodes.ALOAD,0);
-          mv.visitFieldInsn(Opcodes.GETFIELD,classDef.getClassNameAsInternal(),field.getName(),field.getInternalType());
+          mv.visitFieldInsn(Opcodes.GETFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
           Label secondIfPart=new Label();
           mv.visitJumpInsn(Opcodes.IFNONNULL,secondIfPart);
           mv.visitVarInsn(Opcodes.ALOAD,2);
-          mv.visitFieldInsn(Opcodes.GETFIELD,classDef.getClassNameAsInternal(),field.getName(),field.getInternalType());
+          mv.visitFieldInsn(Opcodes.GETFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
           Label returnFalse=new Label();
           mv.visitJumpInsn(Opcodes.IFNONNULL,returnFalse);
           mv.visitLabel(secondIfPart);
           mv.visitVarInsn(Opcodes.ALOAD,0);
-          mv.visitFieldInsn(Opcodes.GETFIELD,classDef.getClassNameAsInternal(),field.getName(),field.getInternalType());
+          mv.visitFieldInsn(Opcodes.GETFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
           mv.visitJumpInsn(Opcodes.IFNULL,goNext);
           mv.visitVarInsn(Opcodes.ALOAD,0);
-          mv.visitFieldInsn(Opcodes.GETFIELD,classDef.getClassNameAsInternal(),field.getName(),field.getInternalType());
+          mv.visitFieldInsn(Opcodes.GETFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
           mv.visitVarInsn(Opcodes.ALOAD,2);
-          mv.visitFieldInsn(Opcodes.GETFIELD,classDef.getClassNameAsInternal(),field.getName(),field.getInternalType());
-          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,field.getBoxTypeName(),"equals","(Ljava/lang/Object;)Z");
+          mv.visitFieldInsn(Opcodes.GETFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
+          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,getInternalType(field.getTypeName()),"equals","(Ljava/lang/Object;)Z");
           mv.visitJumpInsn(Opcodes.IFNE,goNext);
           mv.visitLabel(returnFalse);
           mv.visitInsn(Opcodes.ICONST_0);
@@ -94,9 +98,9 @@
     if (this.debug) {
       lastLabel=new Label();
       mv.visitLabel(lastLabel);
-      mv.visitLocalVariable("this",classDef.getInternalName(),null,l0,lastLabel,0);
+      mv.visitLocalVariable("this",getTypeDescriptor(classDef.getClassName()),null,l0,lastLabel,0);
       mv.visitLocalVariable("obj",Type.getDescriptor(Object.class),null,l0,lastLabel,1);
-      mv.visitLocalVariable("other",classDef.getInternalName(),null,l0,lastLabel,2);
+      mv.visitLocalVariable("other",getTypeDescriptor(classDef.getClassName()),null,l0,lastLabel,2);
     }
     mv.visitMaxs(0,0);
     mv.visitEnd();

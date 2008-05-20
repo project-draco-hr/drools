@@ -1,0 +1,32 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_GeneratedBeans.drl")));
+  assertFalse(builder.getErrors().toString(),builder.hasErrors());
+  Package p=builder.getPackage();
+  assertEquals(2,p.getRules().length);
+  RuleBaseConfiguration conf=new RuleBaseConfiguration();
+  conf.setShadowProxy(false);
+  RuleBase ruleBase=RuleBaseFactory.newRuleBase(conf);
+  ruleBase.addPackage(p);
+  FactType cheeseFact=ruleBase.getFactType("org.drools.generatedbeans.Cheese");
+  Object cheese=cheeseFact.newInstance();
+  cheeseFact.getField("type").getFieldAccessor().setValue(cheese,"stilton");
+  assertEquals("Cheese( type=stilton )",cheese.toString());
+  assertEquals("stilton",cheeseFact.getField("type").getFieldAccessor().getValue(cheese));
+  StatefulSession wm=ruleBase.newStatefulSession();
+  List result=new ArrayList();
+  wm.setGlobal("list",result);
+  wm.insert(cheese);
+  wm.fireAllRules();
+  assertEquals(1,result.size());
+  assertEquals(new Integer(5),result.get(0));
+  FactType personFact=ruleBase.getFactType("org.drools.generatedbeans.Person");
+  Object person=personFact.newInstance();
+  personFact.getField("likes").getFieldAccessor().setValue(person,cheese);
+  personFact.getField("age").getFieldAccessor().setIntValue(person,7);
+  assertEquals("Person( age=7, likes=Cheese( type=stilton ) )",person.toString());
+  wm.insert(person);
+  wm.fireAllRules();
+  assertEquals(2,result.size());
+  assertEquals("OK",result.get(1));
+}

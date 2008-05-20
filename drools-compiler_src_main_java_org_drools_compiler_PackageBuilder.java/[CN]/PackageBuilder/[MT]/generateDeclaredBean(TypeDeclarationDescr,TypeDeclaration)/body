@@ -1,0 +1,24 @@
+{
+  ClassBuilder cb=new ClassBuilder();
+  String fullName=this.pkg.getName() + "." + typeDescr.getTypeName();
+  ClassDefinition def=new ClassDefinition(fullName);
+  Map<String,TypeFieldDescr> flds=typeDescr.getFields();
+  try {
+    for (    TypeFieldDescr field : flds.values()) {
+      String fullFieldType=typeResolver.resolveType(field.getPattern().getObjectType()).getName();
+      def.addField(new FieldDefinition(field.getFieldName(),fullFieldType));
+    }
+    byte[] d=cb.buildClass(def);
+    if (this.generatedBeanClassLoader == null) {
+      CompositePackageClassLoader ccl=(CompositePackageClassLoader)this.pkg.getDialectDatas().getClassLoader();
+      this.generatedBeanClassLoader=new MapBackedClassLoader(this.configuration.getClassLoader());
+      ccl.addClassLoader(this.generatedBeanClassLoader);
+    }
+    this.generatedBeanClassLoader.addClass(fullName,d);
+    type.setTypeClassDef(def);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    this.results.add(new TypeDeclarationError("Unable to create a class for declared type " + fullName + ": "+ e.getMessage()+ ";",typeDescr.getLine()));
+  }
+}

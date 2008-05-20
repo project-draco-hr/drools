@@ -26,10 +26,19 @@
       Class clazz;
       try {
         if (typeDescr.getFields().size() > 0) {
-          generateDeclaredBean(typeDescr);
+          generateDeclaredBean(typeDescr,type);
         }
         clazz=typeResolver.resolveType(className);
         type.setTypeClass(clazz);
+        if (type.getTypeClassDef() != null) {
+          try {
+            buildFieldAccessors(type);
+          }
+ catch (          Exception e) {
+            this.results.add(new TypeDeclarationError("Error creating field accessors for '" + className + "' for type '"+ type.getTypeName()+ "'",typeDescr.getLine()));
+            continue;
+          }
+        }
       }
  catch (      final ClassNotFoundException e) {
         this.results.add(new TypeDeclarationError("Class not found '" + className + "' for type '"+ type.getTypeName()+ "'",typeDescr.getLine()));
