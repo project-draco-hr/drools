@@ -4,6 +4,13 @@
   stream.writeUTF(processInstance.getProcessId());
   stream.writeInt(processInstance.getState());
   stream.writeLong(processInstance.getNodeInstanceCounter());
+  VariableScopeInstance variableScopeInstance=(VariableScopeInstance)processInstance.getContextInstance(VariableScope.VARIABLE_SCOPE);
+  Map<String,Object> variables=variableScopeInstance.getVariables();
+  stream.writeInt(variables.size());
+  for (  Map.Entry<String,Object> entry : variables.entrySet()) {
+    stream.writeUTF(entry.getKey());
+    stream.writeObject(entry.getValue());
+  }
   for (  NodeInstance nodeInstance : processInstance.getNodeInstances()) {
     stream.writeInt(PersisterEnums.NODE_INSTANCE);
     writeNodeInstance(context,nodeInstance);
