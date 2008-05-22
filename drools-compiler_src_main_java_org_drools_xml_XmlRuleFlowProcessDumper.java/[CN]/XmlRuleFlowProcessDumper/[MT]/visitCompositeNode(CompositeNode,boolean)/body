@@ -1,0 +1,35 @@
+{
+  visitNode("composite",compositeNode,includeMeta);
+  xmlDump.append(">" + EOL);
+  xmlDump.append("      <nodes>" + EOL);
+  for (  Node subNode : compositeNode.getNodes()) {
+    visitNode(subNode,includeMeta);
+  }
+  xmlDump.append("      </nodes>" + EOL);
+  List<Connection> connections=new ArrayList<Connection>();
+  for (  Node node : compositeNode.getNodes()) {
+    if (!(node instanceof CompositeNode.CompositeNodeEnd)) {
+      for (      Connection connection : node.getIncomingConnections(Node.CONNECTION_DEFAULT_TYPE)) {
+        if (!(connection.getFrom() instanceof CompositeNode.CompositeNodeStart)) {
+          connections.add(connection);
+        }
+      }
+    }
+  }
+  xmlDump.append("      <connections>" + EOL);
+  for (  Connection connection : connections) {
+    visitConnection(connection,includeMeta);
+  }
+  xmlDump.append("      </connections>" + EOL);
+  xmlDump.append("      <in-ports>" + EOL);
+  for (  Map.Entry<String,CompositeNode.NodeAndType> entry : compositeNode.getLinkedIncomingNodes().entrySet()) {
+    xmlDump.append("        <in-port type=\"" + entry.getKey() + "\" nodeId=\""+ entry.getValue().getNodeId()+ "\" nodeInType=\""+ entry.getValue().getType()+ "\" />"+ EOL);
+  }
+  xmlDump.append("      </in-ports>" + EOL);
+  xmlDump.append("      <out-ports>" + EOL);
+  for (  Map.Entry<String,CompositeNode.NodeAndType> entry : compositeNode.getLinkedOutgoingNodes().entrySet()) {
+    xmlDump.append("        <out-port type=\"" + entry.getKey() + "\" nodeId=\""+ entry.getValue().getNodeId()+ "\" nodeOutType=\""+ entry.getValue().getType()+ "\" />"+ EOL);
+  }
+  xmlDump.append("      </out-ports>" + EOL);
+  endElement("composite");
+}
