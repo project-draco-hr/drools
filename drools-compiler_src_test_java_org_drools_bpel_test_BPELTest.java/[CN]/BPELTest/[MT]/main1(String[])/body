@@ -1,13 +1,13 @@
 {
   BPELProcess process=getProcess();
   Properties properties=new Properties();
+  properties.put("processInstanceFactoryRegistry","bpelProcessInstanceFactory.conf");
   properties.put("processNodeInstanceFactoryRegistry","bpelProcessNodeInstanceFactory.conf");
   properties.put("processContextInstanceFactoryRegistry","bpelProcessContextInstanceFactory.conf");
   RuleBaseConfiguration ruleBaseConf=new RuleBaseConfiguration(properties);
   AbstractRuleBase ruleBase=(AbstractRuleBase)RuleBaseFactory.newRuleBase(ruleBaseConf);
   ruleBase.addProcess(process);
   InternalWorkingMemory workingMemory=new ReteooWorkingMemory(1,ruleBase);
-  workingMemory.registerProcessInstanceFactory(BPELProcess.BPEL_TYPE,new BPELProcessInstanceFactory());
   WorkItemHandler handler=new WebServiceInvocationHandler();
   workingMemory.getWorkItemManager().registerWorkItemHandler("WebServiceInvocation",handler);
   WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(workingMemory);
@@ -18,12 +18,6 @@
   workItem=findWebServiceInvocation(workingMemory,"invoicing","lns:computePricePT","initiatePriceCalculation");
   replyWebServiceInvocation(workingMemory,workItem,null);
   workItem=findWebServiceInvocation(workingMemory,"shipping","lns:shippingPT","requestShipping");
-  replyWebServiceInvocation(workingMemory,workItem,"SHIPPING");
-  workItem=findWebServiceInvocation(workingMemory,"invoicing","lns:computePricePT","sendShippingPrice");
-  replyWebServiceInvocation(workingMemory,workItem,null);
-  webServiceInvocation(processInstance,"shipping","lns:shippingCallbackPT","sendSchedule","SCHEDULE");
-  webServiceInvocation(processInstance,"invoicing","lns:invoiceCallbackPT","sendInvoice","INVOICE");
-  workItem=findWebServiceInvocation(workingMemory,"scheduling","lns:schedulingPT","sendShippingSchedule");
-  replyWebServiceInvocation(workingMemory,workItem,null);
+  replyWebServiceInvocationFault(workingMemory,workItem,"cannotCompleteOrder","SHIPPING FAULT");
   logger.writeToDisk();
 }
