@@ -1,0 +1,73 @@
+{
+  ObjectOutputStream stream=context.stream;
+  InternalRuleBase ruleBase=context.ruleBase;
+  InternalWorkingMemory wm=context.wm;
+  LeftTupleSink sink=leftTuple.getLeftTupleSink();
+switch (sink.getType()) {
+case NodeTypeEnums.JoinNode:
+{
+      context.out.println("JoinNode");
+      for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentPrevious()) {
+        stream.writeShort(PersisterEnums.RIGHT_TUPLE);
+        stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
+        stream.writeInt(childLeftTuple.getRightParent().getFactHandle().getId());
+        context.out.println("RightTuple int:" + childLeftTuple.getLeftTupleSink().getId() + " int:"+ childLeftTuple.getRightParent().getFactHandle().getId());
+        writeLeftTuple(childLeftTuple,context,recurse);
+      }
+      stream.writeShort(PersisterEnums.END);
+      break;
+    }
+case NodeTypeEnums.EvalConditionNode:
+{
+    context.out.println("EvalConditionNode");
+    for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentPrevious()) {
+      stream.writeShort(PersisterEnums.LEFT_TUPLE);
+      stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
+      writeLeftTuple(childLeftTuple,context,recurse);
+    }
+    stream.writeShort(PersisterEnums.END);
+    break;
+  }
+case NodeTypeEnums.NotNode:
+{
+  if (leftTuple.getBlocker() == null) {
+    stream.writeShort(PersisterEnums.LEFT_TUPLE_NOT_BLOCKED);
+    for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)leftTuple.getLeftParentPrevious()) {
+      stream.writeShort(PersisterEnums.LEFT_TUPLE);
+      stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
+      writeLeftTuple(childLeftTuple,context,recurse);
+    }
+    stream.writeShort(PersisterEnums.END);
+  }
+ else {
+    stream.writeShort(PersisterEnums.LEFT_TUPLE_BLOCKED);
+    stream.writeInt(leftTuple.getBlocker().getFactHandle().getId());
+  }
+  break;
+}
+case NodeTypeEnums.ExistsNode:
+{
+if (leftTuple.getBlocker() == null) {
+  stream.writeShort(PersisterEnums.LEFT_TUPLE_NOT_BLOCKED);
+}
+ else {
+  stream.writeShort(PersisterEnums.LEFT_TUPLE_BLOCKED);
+  stream.writeInt(leftTuple.getBlocker().getFactHandle().getId());
+  for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)leftTuple.getLeftParentPrevious()) {
+    stream.writeShort(PersisterEnums.LEFT_TUPLE);
+    stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
+    writeLeftTuple(childLeftTuple,context,recurse);
+  }
+  stream.writeShort(PersisterEnums.END);
+}
+break;
+}
+case NodeTypeEnums.RuleTerminalNode:
+{
+context.out.println("RuleTerminalNode");
+int pos=context.terminalTupleMap.size();
+context.terminalTupleMap.put(leftTuple,pos);
+break;
+}
+}
+}

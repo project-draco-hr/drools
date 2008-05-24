@@ -4,70 +4,82 @@
   InternalWorkingMemory wm=context.wm;
   Map<Integer,BaseNode> sinks=context.sinks;
   LeftTupleSink sink=parentLeftTuple.getLeftTupleSink();
-  if (sink instanceof JoinNode) {
-    BetaMemory memory=(BetaMemory)context.wm.getNodeMemory((BetaNode)sink);
-    memory.getLeftTupleMemory().add(parentLeftTuple);
-    while (stream.readInt() == PersisterEnums.RIGHT_TUPLE) {
-      LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
-      int factHandleId=stream.readInt();
-      RightTupleKey key=new RightTupleKey(factHandleId,sink);
-      RightTuple rightTuple=context.rightTuples.get(key);
-      LeftTuple childLeftTuple=new LeftTuple(parentLeftTuple,rightTuple,childSink,true);
-      readLeftTuple(childLeftTuple,context);
+switch (sink.getType()) {
+case NodeTypeEnums.JoinNode:
+{
+      BetaMemory memory=(BetaMemory)context.wm.getNodeMemory((BetaNode)sink);
+      memory.getLeftTupleMemory().add(parentLeftTuple);
+      while (stream.readShort() == PersisterEnums.RIGHT_TUPLE) {
+        LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
+        int factHandleId=stream.readInt();
+        RightTupleKey key=new RightTupleKey(factHandleId,sink);
+        RightTuple rightTuple=context.rightTuples.get(key);
+        LeftTuple childLeftTuple=new LeftTuple(parentLeftTuple,rightTuple,childSink,true);
+        readLeftTuple(childLeftTuple,context);
+      }
+      break;
     }
-  }
- else   if (sink instanceof EvalConditionNode) {
+case NodeTypeEnums.EvalConditionNode:
+{
     final EvalMemory memory=(EvalMemory)context.wm.getNodeMemory((EvalConditionNode)sink);
     memory.tupleMemory.add(parentLeftTuple);
-    while (stream.readInt() == PersisterEnums.LEFT_TUPLE) {
+    while (stream.readShort() == PersisterEnums.LEFT_TUPLE) {
+      LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
+      LeftTuple childLeftTuple=new LeftTuple(parentLeftTuple,childSink,true);
+      readLeftTuple(childLeftTuple,context);
+    }
+    break;
+  }
+case NodeTypeEnums.NotNode:
+{
+  BetaMemory memory=(BetaMemory)context.wm.getNodeMemory((BetaNode)sink);
+  int type=stream.readShort();
+  if (type == PersisterEnums.LEFT_TUPLE_NOT_BLOCKED) {
+    memory.getLeftTupleMemory().add(parentLeftTuple);
+    while (stream.readShort() == PersisterEnums.LEFT_TUPLE) {
       LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
       LeftTuple childLeftTuple=new LeftTuple(parentLeftTuple,childSink,true);
       readLeftTuple(childLeftTuple,context);
     }
   }
- else   if (sink instanceof NotNode) {
-    BetaMemory memory=(BetaMemory)context.wm.getNodeMemory((BetaNode)sink);
-    int type=stream.readInt();
-    if (type == PersisterEnums.LEFT_TUPLE_NOT_BLOCKED) {
-      memory.getLeftTupleMemory().add(parentLeftTuple);
-      while (stream.readInt() == PersisterEnums.LEFT_TUPLE) {
-        LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
-        LeftTuple childLeftTuple=new LeftTuple(parentLeftTuple,childSink,true);
-        readLeftTuple(childLeftTuple,context);
-      }
-    }
  else {
-      int factHandleId=stream.readInt();
-      RightTupleKey key=new RightTupleKey(factHandleId,sink);
-      RightTuple rightTuple=context.rightTuples.get(key);
-      parentLeftTuple.setBlocker(rightTuple);
-      rightTuple.setBlocked(parentLeftTuple);
-    }
+    int factHandleId=stream.readInt();
+    RightTupleKey key=new RightTupleKey(factHandleId,sink);
+    RightTuple rightTuple=context.rightTuples.get(key);
+    parentLeftTuple.setBlocker(rightTuple);
+    rightTuple.setBlocked(parentLeftTuple);
   }
- else   if (sink instanceof ExistsNode) {
-    BetaMemory memory=(BetaMemory)context.wm.getNodeMemory((BetaNode)sink);
-    int type=stream.readInt();
-    if (type == PersisterEnums.LEFT_TUPLE_NOT_BLOCKED) {
-      memory.getLeftTupleMemory().add(parentLeftTuple);
-    }
+  break;
+}
+case NodeTypeEnums.ExistsNode:
+{
+BetaMemory memory=(BetaMemory)context.wm.getNodeMemory((BetaNode)sink);
+int type=stream.readShort();
+if (type == PersisterEnums.LEFT_TUPLE_NOT_BLOCKED) {
+  memory.getLeftTupleMemory().add(parentLeftTuple);
+}
  else {
-      int factHandleId=stream.readInt();
-      RightTupleKey key=new RightTupleKey(factHandleId,sink);
-      RightTuple rightTuple=context.rightTuples.get(key);
-      parentLeftTuple.setBlocker(rightTuple);
-      rightTuple.setBlocked(parentLeftTuple);
-      while (stream.readInt() == PersisterEnums.LEFT_TUPLE) {
-        LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
-        LeftTuple childLeftTuple=new LeftTuple(parentLeftTuple,childSink,true);
-        readLeftTuple(childLeftTuple,context);
-      }
-    }
+  int factHandleId=stream.readInt();
+  RightTupleKey key=new RightTupleKey(factHandleId,sink);
+  RightTuple rightTuple=context.rightTuples.get(key);
+  parentLeftTuple.setBlocker(rightTuple);
+  rightTuple.setBlocked(parentLeftTuple);
+  while (stream.readShort() == PersisterEnums.LEFT_TUPLE) {
+    LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
+    LeftTuple childLeftTuple=new LeftTuple(parentLeftTuple,childSink,true);
+    readLeftTuple(childLeftTuple,context);
   }
- else   if (sink instanceof RuleTerminalNode) {
-    RuleTerminalNode ruleTerminalNode=(RuleTerminalNode)sink;
-    TerminalNodeMemory memory=(TerminalNodeMemory)wm.getNodeMemory(ruleTerminalNode);
-    memory.getTupleMemory().add(parentLeftTuple);
-    int pos=context.terminalTupleMap.size();
-    context.terminalTupleMap.put(pos,parentLeftTuple);
-  }
+}
+break;
+}
+case NodeTypeEnums.RuleTerminalNode:
+{
+RuleTerminalNode ruleTerminalNode=(RuleTerminalNode)sink;
+TerminalNodeMemory memory=(TerminalNodeMemory)wm.getNodeMemory(ruleTerminalNode);
+memory.getTupleMemory().add(parentLeftTuple);
+int pos=context.terminalTupleMap.size();
+context.terminalTupleMap.put(pos,parentLeftTuple);
+break;
+}
+}
 }
