@@ -2,8 +2,20 @@
   if (!Node.CONNECTION_DEFAULT_TYPE.equals(type)) {
     throw new IllegalArgumentException("A SubProcess node only accepts default incoming connections!");
   }
-  ProcessInstance processInstance=getProcessInstance().getWorkingMemory().startProcess(getSubFlowNode().getProcessId());
-  if (!getSubFlowNode().isWaitForCompletion() || processInstance.getState() == ProcessInstance.STATE_COMPLETED) {
+  Map<String,Object> parameters=new HashMap<String,Object>();
+  for (  Map.Entry<String,String> mapping : getSubProcessNode().getInMappings().entrySet()) {
+    VariableScopeInstance variableScopeInstance=(VariableScopeInstance)resolveContextInstance(VariableScope.VARIABLE_SCOPE,mapping.getValue());
+    if (variableScopeInstance != null) {
+      parameters.put(mapping.getKey(),variableScopeInstance.getVariable(mapping.getValue()));
+    }
+ else {
+      System.err.println("Could not find variable scope for variable " + mapping.getValue());
+      System.err.println("when trying to execute SubProcess node " + getSubProcessNode().getName());
+      System.err.println("Continuing without setting parameter.");
+    }
+  }
+  ProcessInstance processInstance=getProcessInstance().getWorkingMemory().startProcess(getSubProcessNode().getProcessId(),parameters);
+  if (!getSubProcessNode().isWaitForCompletion() || processInstance.getState() == ProcessInstance.STATE_COMPLETED) {
     triggerCompleted();
   }
  else {
