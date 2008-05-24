@@ -1,6 +1,9 @@
 {
   boolean isDroolsStream=stream instanceof DroolsObjectInputStream;
-  ObjectInput in=isDroolsStream ? stream : new DroolsObjectInputStream(new ByteArrayInputStream((byte[])stream.readObject()));
+  DroolsObjectInputStream in=isDroolsStream ? (DroolsObjectInputStream)stream : new DroolsObjectInputStream(new ByteArrayInputStream((byte[])stream.readObject()));
+  Map store=(Map)in.readObject();
+  this.packageScopeClassLoader=new MapBackedClassLoader(in.getClassLoader(),store);
+  in.setClassLoader(this.packageScopeClassLoader);
   this.dialectDatas=(DialectDatas)in.readObject();
   this.typeDeclarations=(Map)in.readObject();
   this.name=(String)in.readObject();
@@ -12,6 +15,7 @@
   this.globals=(Map<String,Class>)in.readObject();
   this.valid=in.readBoolean();
   this.rules=(Map)in.readObject();
+  in.setClassLoader(this.packageScopeClassLoader.getParent());
   if (!isDroolsStream) {
     in.close();
   }

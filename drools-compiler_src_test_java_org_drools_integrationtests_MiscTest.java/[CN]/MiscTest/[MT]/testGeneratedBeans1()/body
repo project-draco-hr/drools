@@ -1,5 +1,7 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
+  final PackageBuilderConfiguration pbconf=new PackageBuilderConfiguration();
+  pbconf.setDumpDir(new File("target"));
+  final PackageBuilder builder=new PackageBuilder(pbconf);
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_GeneratedBeans.drl")));
   assertFalse(builder.getErrors().toString(),builder.hasErrors());
   Package p=builder.getPackage();
@@ -8,6 +10,7 @@
   conf.setShadowProxy(false);
   RuleBase ruleBase=RuleBaseFactory.newRuleBase(conf);
   ruleBase.addPackage(p);
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
   FactType cheeseFact=ruleBase.getFactType("org.drools.generatedbeans.Cheese");
   Object cheese=cheeseFact.newInstance();
   cheeseFact.getField("type").getFieldAccessor().setValue(cheese,"stilton");
@@ -28,5 +31,5 @@
   wm.insert(person);
   wm.fireAllRules();
   assertEquals(2,result.size());
-  assertEquals("OK",result.get(1));
+  assertEquals(person,result.get(1));
 }

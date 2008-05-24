@@ -8,12 +8,18 @@
   this.globals=Collections.EMPTY_MAP;
   this.factTemplates=Collections.EMPTY_MAP;
   this.functions=Collections.EMPTY_MAP;
-  if (parentClassLoader == null) {
-    parentClassLoader=Thread.currentThread().getContextClassLoader();
+  if (packageClassLoader == null) {
+    ClassLoader parentClassLoader=null;
     if (parentClassLoader == null) {
-      parentClassLoader=getClass().getClassLoader();
+      parentClassLoader=Thread.currentThread().getContextClassLoader();
+      if (parentClassLoader == null) {
+        parentClassLoader=getClass().getClassLoader();
+      }
     }
+    this.packageScopeClassLoader=new MapBackedClassLoader(parentClassLoader);
   }
-  this.packageScopeClassLoader=new MapBackedClassLoader(parentClassLoader);
+ else {
+    this.packageScopeClassLoader=packageClassLoader;
+  }
   this.dialectDatas=new DialectDatas(this.packageScopeClassLoader);
 }
