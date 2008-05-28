@@ -1,18 +1,6 @@
 {
   timer.setId(++timerId);
-  timers.put(timer,processInstance.getId());
-  TimerTask timerTask=new TimerTask(){
-    public void run(){
-      timerTriggered(timer);
-    }
-  }
-;
-  java.util.Timer utilTimer=new java.util.Timer();
-  utilTimers.put(timer,utilTimer);
-  if (timer.getPeriod() > 0) {
-    utilTimer.schedule(timerTask,timer.getDelay(),timer.getPeriod());
-  }
- else {
-    utilTimer.schedule(timerTask,timer.getPeriod());
-  }
+  ProcessJobContext ctx=new ProcessJobContext(timer,processInstance.getId(),this.workingMemory);
+  JobHandle jobHandle=this.scheduler.scheduleJob(ProcessJob.instance,ctx,new TimerTrigger(timer.getDelay(),timer.getPeriod()));
+  timer.setJobHandle(jobHandle);
 }
