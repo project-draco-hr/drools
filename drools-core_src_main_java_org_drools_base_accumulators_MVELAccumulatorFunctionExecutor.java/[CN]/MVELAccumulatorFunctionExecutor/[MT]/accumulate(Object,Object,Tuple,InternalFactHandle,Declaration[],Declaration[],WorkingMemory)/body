@@ -2,5 +2,8 @@
   DroolsMVELFactory factory=(DroolsMVELFactory)workingMemoryContext;
   factory.setContext(leftTuple,null,handle.getObject(),workingMemory,null);
   final Object value=MVEL.executeExpression(this.expression,this.dummy,factory);
-  this.function.accumulate(context,value);
+  if (this.function.supportsReverse()) {
+    ((MVELAccumulatorFunctionContext)context).reverseSupport.put(new ReverseSupportKey(leftTuple,handle),value);
+  }
+  this.function.accumulate(((MVELAccumulatorFunctionContext)context).context,value);
 }
