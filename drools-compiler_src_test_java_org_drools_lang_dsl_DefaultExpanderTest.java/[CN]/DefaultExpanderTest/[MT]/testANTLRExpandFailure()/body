@@ -1,0 +1,17 @@
+{
+  DSLTokenizedMappingFile file=new DSLTokenizedMappingFile();
+  String dsl="[when]foo=Foo()\n[then]bar {num}=baz({num});";
+  file.parseAndLoad(new StringReader(dsl));
+  assertEquals(0,file.getErrors().size());
+  DefaultExpander ex=new DefaultExpander();
+  ex.addDSLMapping(file.getMapping());
+  String source="rule 'q'\nagenda-group 'x'\nwhen\n    foo  \nthen\n    bar 42\nend";
+  String drl=ex.expand(source);
+  assertFalse(ex.hasErrors());
+  ex=new DefaultExpander();
+  ex.addDSLMapping(file.getMapping());
+  source="rule 'q' agenda-group 'x'\nwhen\n    foos \nthen\n    bar 42\n end";
+  drl=ex.expand(source);
+  assertTrue(ex.hasErrors());
+  assertEquals(1,ex.getErrors().size());
+}
