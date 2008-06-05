@@ -10,9 +10,6 @@
   }
   MVELDialect dialect=(MVELDialect)context.getDialect();
   final Declaration[] sourceDeclArr=(Declaration[])source.getOuterDeclarations().values().toArray(new Declaration[0]);
-  final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),source.getOuterDeclarations(),context.getPkg().getGlobals());
-  MVELDialectData data=(MVELDialectData)context.getPkg().getDialectDatas().getDialectData("mvel");
-  factory.setNextFactory(data.getFunctionFactory());
   Accumulator accumulator=null;
   Declaration[] declarations=null;
   if (accumDescr.isExternalFunction()) {
@@ -24,6 +21,9 @@
     }
     final Serializable expression=dialect.compile((String)accumDescr.getExpression(),analysis,null,source.getOuterDeclarations(),null,context);
     AccumulateFunction function=context.getConfiguration().getAccumulateFunction(accumDescr.getFunctionIdentifier());
+    final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),source.getOuterDeclarations(),context.getPkg().getGlobals());
+    MVELDialectData data=(MVELDialectData)context.getPkg().getDialectDatas().getDialectData("mvel");
+    factory.setNextFactory(data.getFunctionFactory());
     accumulator=new MVELAccumulatorFunctionExecutor(factory,expression,function);
   }
  else {
@@ -33,8 +33,9 @@
     final List requiredDeclarations=new ArrayList(initCodeAnalysis.getBoundIdentifiers()[0]);
     requiredDeclarations.addAll(actionCodeAnalysis.getBoundIdentifiers()[0]);
     requiredDeclarations.addAll(resultCodeAnalysis.getBoundIdentifiers()[0]);
+    Dialect.AnalysisResult reverseCodeAnalysis=null;
     if (accumDescr.getReverseCode() != null) {
-      final Dialect.AnalysisResult reverseCodeAnalysis=context.getDialect().analyzeBlock(context,accumDescr,accumDescr.getActionCode(),new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()});
+      reverseCodeAnalysis=context.getDialect().analyzeBlock(context,accumDescr,accumDescr.getActionCode(),new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()});
       requiredDeclarations.addAll(reverseCodeAnalysis.getBoundIdentifiers()[0]);
     }
     declarations=new Declaration[requiredDeclarations.size()];
@@ -48,6 +49,18 @@
       reverse=dialect.compile((String)accumDescr.getReverseCode(),resultCodeAnalysis,null,source.getOuterDeclarations(),initCodeAnalysis.getMvelVariables(),context);
     }
     final Serializable result=dialect.compile((String)accumDescr.getResultCode(),resultCodeAnalysis,null,source.getOuterDeclarations(),initCodeAnalysis.getMvelVariables(),context);
+    DroolsMVELFactory factory=null;
+    if (reverse == null) {
+      factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),source.getOuterDeclarations(),context.getPkg().getGlobals());
+    }
+ else {
+      Set<String> shadow=new HashSet<String>(source.getOuterDeclarations().keySet());
+      shadow.retainAll(reverseCodeAnalysis.getNotBoundedIdentifiers());
+      shadow.addAll(reverseCodeAnalysis.getBoundIdentifiers()[0]);
+      factory=new DroolsMVELShadowFactory(context.getDeclarationResolver().getDeclarations(),source.getOuterDeclarations(),context.getPkg().getGlobals(),shadow);
+    }
+    MVELDialectData data=(MVELDialectData)context.getPkg().getDialectDatas().getDialectData("mvel");
+    factory.setNextFactory(data.getFunctionFactory());
     accumulator=new MVELAccumulator(factory,init,action,reverse,result);
   }
   final Accumulate accumulate=new Accumulate(source,declarations,sourceDeclArr,accumulator);
