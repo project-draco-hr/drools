@@ -1,19 +1,19 @@
 {
-  final Configuration config=parser.endConfiguration();
+  final Element element=parser.endElementBuilder();
   FunctionDescr functionDescr=(FunctionDescr)parser.getCurrent();
-  final Configuration[] parameters=config.getChildren("parameter");
-  for (int i=0, length=parameters.length; i < length; i++) {
-    final String identifier=parameters[i].getAttribute("identifier");
-    final String type=parameters[i].getAttribute("type");
+  final NodeList parameters=element.getElementsByTagName("parameter");
+  for (int i=0, length=parameters.getLength(); i < length; i++) {
+    final String identifier=((Element)parameters.item(i)).getAttribute("identifier");
+    final String type=((Element)parameters.item(i)).getAttribute("type");
     emptyAttributeCheck("parameter","identifier",identifier,parser);
     emptyAttributeCheck("parameter","type",type,parser);
     functionDescr.addParameter(type,identifier);
   }
-  final Configuration body=config.getChild("body");
-  if (body == null) {
+  NodeList list=element.getElementsByTagName("body");
+  if (list.getLength() == 0) {
     throw new SAXParseException("function must have a <body>",parser.getLocator());
   }
-  functionDescr.setText(body.getText());
+  functionDescr.setText(((org.w3c.dom.Text)list.item(0).getChildNodes().item(0)).getWholeText());
   final PackageDescr packageDescr=(PackageDescr)parser.getData();
   packageDescr.addFunction(functionDescr);
   return functionDescr;
