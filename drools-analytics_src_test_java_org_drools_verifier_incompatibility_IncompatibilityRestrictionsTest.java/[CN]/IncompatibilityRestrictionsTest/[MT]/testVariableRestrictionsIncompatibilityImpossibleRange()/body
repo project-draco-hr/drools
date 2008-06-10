@@ -1,0 +1,41 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Restrictions.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Incoherent VariableRestrictions in pattern possibility, impossible range"));
+  Collection<Object> data=new ArrayList<Object>();
+  Variable variable1=new Variable();
+  variable1.setObjectId(0);
+  variable1.setObjectType(VerifierComponentType.FIELD);
+  VariableRestriction r1=new VariableRestriction();
+  r1.setOperator(Operator.GREATER);
+  r1.setPatternId(0);
+  r1.setFieldId(0);
+  r1.setVariable(variable1);
+  VariableRestriction r2=new VariableRestriction();
+  r2.setOperator(Operator.LESS);
+  r2.setPatternId(0);
+  r2.setFieldId(0);
+  r2.setVariable(variable1);
+  Variable variable2=new Variable();
+  variable2.setObjectId(1);
+  variable2.setObjectType(VerifierComponentType.FIELD);
+  VariableRestriction r3=new VariableRestriction();
+  r3.setOperator(Operator.GREATER_OR_EQUAL);
+  r3.setPatternId(1);
+  r3.setFieldId(1);
+  r3.setVariable(variable2);
+  VariableRestriction r4=new VariableRestriction();
+  r4.setOperator(Operator.EQUAL);
+  r4.setPatternId(1);
+  r4.setFieldId(1);
+  r4.setVariable(variable2);
+  data.add(r1);
+  data.add(r2);
+  data.add(r3);
+  data.add(r4);
+  StatelessSessionResult sessionResult=session.executeWithResults(data);
+  Map<Cause,Set<Cause>> map=createIncompatibilityMap(CauseType.RESTRICTION,sessionResult.iterateObjects());
+  assertTrue((TestBase.causeMapContains(map,r1,r2) ^ TestBase.causeMapContains(map,r2,r1)));
+  if (!map.isEmpty()) {
+    fail("More incompatibilities than was expected.");
+  }
+}

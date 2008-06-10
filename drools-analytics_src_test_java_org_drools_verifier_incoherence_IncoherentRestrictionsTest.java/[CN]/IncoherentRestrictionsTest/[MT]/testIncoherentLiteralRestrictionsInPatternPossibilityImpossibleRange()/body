@@ -1,16 +1,16 @@
 {
   StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Restrictions.drl"));
   session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Incoherent LiteralRestrictions with ranges in pattern possibility, impossible range"));
-  AnalyticsResult result=AnalyticsResultFactory.createAnalyticsResult();
-  Collection<? extends Object> testData=getTestData(this.getClass().getResourceAsStream("RestrictionsTest.drl"),result.getAnalyticsData());
+  VerifierResult result=VerifierResultFactory.createVerifierResult();
+  Collection<? extends Object> testData=getTestData(this.getClass().getResourceAsStream("RestrictionsTest.drl"),result.getVerifierData());
   session.setGlobal("result",result);
   session.executeWithResults(testData);
-  Iterator<AnalyticsMessageBase> iter=result.getBySeverity(Severity.ERROR).iterator();
+  Iterator<VerifierMessageBase> iter=result.getBySeverity(Severity.ERROR).iterator();
   Set<String> rulesThatHadErrors=new HashSet<String>();
   while (iter.hasNext()) {
     Object o=(Object)iter.next();
-    if (o instanceof AnalyticsMessage) {
-      Pattern pattern=(Pattern)((AnalyticsMessage)o).getFaulty();
+    if (o instanceof VerifierMessage) {
+      Pattern pattern=(Pattern)((VerifierMessage)o).getFaulty();
       rulesThatHadErrors.add(pattern.getRuleName());
     }
   }
