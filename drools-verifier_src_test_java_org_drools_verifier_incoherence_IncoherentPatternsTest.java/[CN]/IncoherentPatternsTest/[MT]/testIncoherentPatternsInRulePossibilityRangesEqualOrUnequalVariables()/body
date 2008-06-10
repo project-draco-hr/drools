@@ -1,16 +1,16 @@
 {
   StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Patterns.drl"));
   session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Incoherent Patterns in rule possibility, ranges when not conflicts with equal or unequal variables"));
-  AnalyticsResult result=AnalyticsResultFactory.createAnalyticsResult();
-  Collection<? extends Object> testData=getTestData(this.getClass().getResourceAsStream("PatternsTest.drl"),result.getAnalyticsData());
+  VerifierResult result=VerifierResultFactory.createVerifierResult();
+  Collection<? extends Object> testData=getTestData(this.getClass().getResourceAsStream("PatternsTest.drl"),result.getVerifierData());
   session.setGlobal("result",result);
   session.executeWithResults(testData);
-  Iterator<AnalyticsMessageBase> iter=result.getBySeverity(Severity.WARNING).iterator();
+  Iterator<VerifierMessageBase> iter=result.getBySeverity(Severity.WARNING).iterator();
   Set<String> rulesThatHadErrors=new HashSet<String>();
   while (iter.hasNext()) {
     Object o=(Object)iter.next();
-    if (o instanceof AnalyticsMessage) {
-      AnalyticsRule rule=(AnalyticsRule)((AnalyticsMessage)o).getFaulty();
+    if (o instanceof VerifierMessage) {
+      VerifierRule rule=(VerifierRule)((VerifierMessage)o).getFaulty();
       rulesThatHadErrors.add(rule.getRuleName());
     }
   }

@@ -1,0 +1,44 @@
+{
+  VerifierClass clazz=data.getClassByPackageAndName(descr.getObjectType());
+  if (clazz == null) {
+    clazz=new VerifierClass();
+    clazz.setName(descr.getObjectType());
+    data.add(clazz);
+  }
+  currentClass=clazz;
+  Pattern pattern=new Pattern();
+  pattern.setRuleId(currentRule.getId());
+  pattern.setRuleName(currentRule.getRuleName());
+  pattern.setClassId(clazz.getId());
+  pattern.setName(clazz.getName());
+  pattern.setPatternNot(solvers.getRuleSolver().isChildNot());
+  pattern.setPatternExists(solvers.getRuleSolver().isExists());
+  pattern.setPatternForall(solvers.getRuleSolver().isForall());
+  pattern.setOrderNumber(orderNumber);
+  pattern.setParent(parent);
+  data.add(pattern);
+  currentPattern=pattern;
+  if (descr.getIdentifier() != null) {
+    Variable variable=new Variable();
+    variable.setRuleId(currentRule.getId());
+    variable.setRuleName(currentRule.getRuleName());
+    variable.setName(descr.getIdentifier());
+    variable.setObjectType(VerifierComponentType.CLASS);
+    variable.setObjectId(clazz.getId());
+    variable.setObjectName(descr.getObjectType());
+    data.add(variable);
+  }
+  if (descr.getSource() != null) {
+    VerifierComponent source=flatten(descr.getSource(),pattern);
+    pattern.setSourceId(source.getId());
+    pattern.setSourceType(source.getComponentType());
+  }
+ else {
+    pattern.setSourceId(0);
+    pattern.setSourceType(VerifierComponentType.NOTHING);
+  }
+  solvers.startPatternSolver(pattern);
+  flatten(descr.getConstraint(),pattern,0);
+  solvers.endPatternSolver();
+  return pattern.getId();
+}

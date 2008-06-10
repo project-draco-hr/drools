@@ -1,0 +1,21 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Restrictions.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Opposite LiteralRestrictions with ranges, greater - less or equal"));
+  Collection<Object> data=new ArrayList<Object>();
+  LiteralRestriction r1=new LiteralRestriction();
+  r1.setFieldId(0);
+  r1.setOperator(Operator.GREATER);
+  r1.setValue("1");
+  LiteralRestriction r2=new LiteralRestriction();
+  r2.setFieldId(0);
+  r2.setOperator(Operator.LESS_OR_EQUAL);
+  r2.setValue("1");
+  data.add(r1);
+  data.add(r2);
+  StatelessSessionResult sessionResult=session.executeWithResults(data);
+  Map<Cause,Set<Cause>> map=createOppositesMap(CauseType.RESTRICTION,sessionResult.iterateObjects());
+  assertTrue((TestBase.causeMapContains(map,r1,r2) ^ TestBase.causeMapContains(map,r2,r1)));
+  if (!map.isEmpty()) {
+    fail("More opposites than was expected.");
+  }
+}
