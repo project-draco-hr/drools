@@ -1,0 +1,23 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("rangeChecks/Dates.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Range check for dates, if smaller than or equal is missing"));
+  AnalyticsResult result=AnalyticsResultFactory.createAnalyticsResult();
+  Collection<? extends Object> testData=getTestData(this.getClass().getResourceAsStream("MissingRangesForDates.drl"),result.getAnalyticsData());
+  session.setGlobal("result",result);
+  StatelessSessionResult sessionResult=session.executeWithResults(testData);
+  Iterator<Object> iter=sessionResult.iterateObjects();
+  Set<String> rulesThatHadErrors=new HashSet<String>();
+  while (iter.hasNext()) {
+    Object o=(Object)iter.next();
+    if (o instanceof Gap) {
+      rulesThatHadErrors.add(((Gap)o).getRuleName());
+    }
+  }
+  assertTrue(rulesThatHadErrors.remove("Date gap rule 4a"));
+  assertTrue(rulesThatHadErrors.remove("Date gap rule 5a"));
+  if (!rulesThatHadErrors.isEmpty()) {
+    for (    String string : rulesThatHadErrors) {
+      fail("Rule " + string + " caused an error.");
+    }
+  }
+}

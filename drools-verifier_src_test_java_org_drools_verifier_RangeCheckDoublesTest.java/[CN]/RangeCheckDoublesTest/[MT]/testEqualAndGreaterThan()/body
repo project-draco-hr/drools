@@ -1,0 +1,25 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("rangeChecks/Doubles.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Range check for doubles, equal and greater than"));
+  AnalyticsResult result=AnalyticsResultFactory.createAnalyticsResult();
+  Collection<? extends Object> testData=getTestData(this.getClass().getResourceAsStream("MissingRangesForDoubles.drl"),result.getAnalyticsData());
+  session.setGlobal("result",result);
+  StatelessSessionResult sessionResult=session.executeWithResults(testData);
+  Iterator<Object> iter=sessionResult.iterateObjects();
+  Set<String> rulesThatHadErrors=new HashSet<String>();
+  while (iter.hasNext()) {
+    Object o=(Object)iter.next();
+    if (o instanceof Gap) {
+      rulesThatHadErrors.add(((Gap)o).getRuleName());
+    }
+  }
+  assertTrue(rulesThatHadErrors.remove("Double gap rule 1"));
+  assertTrue(rulesThatHadErrors.remove("Double gap rule 7b"));
+  assertTrue(rulesThatHadErrors.remove("Double gap rule 3"));
+  assertTrue(rulesThatHadErrors.remove("Double gap rule 9b"));
+  if (!rulesThatHadErrors.isEmpty()) {
+    for (    String string : rulesThatHadErrors) {
+      fail("Rule " + string + " caused an error.");
+    }
+  }
+}

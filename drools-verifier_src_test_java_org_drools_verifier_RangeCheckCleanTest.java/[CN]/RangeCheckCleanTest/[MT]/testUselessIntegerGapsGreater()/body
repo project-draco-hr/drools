@@ -1,0 +1,68 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("rangeChecks/Clean.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Remove useless integer gaps greater or greater and equal"));
+  Collection<Object> testData=new ArrayList<Object>();
+  Field f=new Field();
+  testData.add(f);
+  LiteralRestriction lower=new LiteralRestriction();
+  lower.setRuleName("> 10 covered");
+  lower.setFieldId(f.getId());
+  lower.setOperator(Operator.GREATER);
+  lower.setValue("10");
+  testData.add(lower);
+  LiteralRestriction r1=new LiteralRestriction();
+  r1.setRuleName("== 50 covered");
+  r1.setFieldId(f.getId());
+  r1.setOperator(Operator.EQUAL);
+  r1.setValue("50");
+  testData.add(r1);
+  Gap g1=new Gap(f,Operator.GREATER,r1);
+  g1.setFiredRuleName("above");
+  testData.add(g1);
+  Gap g2=new Gap(f,Operator.LESS,r1);
+  g2.setFiredRuleName("below");
+  testData.add(g2);
+  LiteralRestriction r2=new LiteralRestriction();
+  r2.setRuleName("< 70 covered");
+  r2.setFieldId(f.getId());
+  r2.setOperator(Operator.LESS);
+  r2.setValue("70");
+  testData.add(r2);
+  Gap g3=new Gap(f,Operator.GREATER_OR_EQUAL,r2);
+  g3.setFiredRuleName("70gap");
+  testData.add(g3);
+  LiteralRestriction higher=new LiteralRestriction();
+  higher.setRuleName("< 100 covered");
+  higher.setFieldId(f.getId());
+  higher.setOperator(Operator.LESS);
+  higher.setValue("100");
+  testData.add(higher);
+  AnalyticsResult result=AnalyticsResultFactory.createAnalyticsResult();
+  session.setGlobal("result",result);
+  StatelessSessionResult sessionResult=session.executeWithResults(testData);
+  Iterator<Object> iter=sessionResult.iterateObjects();
+  Set<String> rulesThatHadErrors=new HashSet<String>();
+  while (iter.hasNext()) {
+    Object o=(Object)iter.next();
+    if (o instanceof Field) {
+    }
+ else     if (o instanceof Gap) {
+      rulesThatHadErrors.add(((Gap)o).getFiredRuleName());
+    }
+ else     if (o instanceof AnalyticsComponent) {
+      rulesThatHadErrors.add(((AnalyticsComponent)o).getRuleName());
+    }
+  }
+  assertTrue(rulesThatHadErrors.remove("> 10 covered"));
+  assertTrue(rulesThatHadErrors.remove("== 50 covered"));
+  assertTrue(rulesThatHadErrors.remove("< 70 covered"));
+  assertTrue(rulesThatHadErrors.remove("< 100 covered"));
+  assertFalse(rulesThatHadErrors.contains("below"));
+  assertFalse(rulesThatHadErrors.contains("above"));
+  assertFalse(rulesThatHadErrors.contains("70gap"));
+  if (!rulesThatHadErrors.isEmpty()) {
+    for (    String string : rulesThatHadErrors) {
+      fail("Rule " + string + " caused an error.");
+    }
+  }
+}
