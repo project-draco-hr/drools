@@ -1,22 +1,12 @@
 {
-  String line=null;
-  int linecounter=0;
-  final BufferedReader dslFileReader=new BufferedReader(dsl);
-  this.mapping=new DefaultDSLMapping();
   this.errors=new LinkedList();
-  StringBuffer sb=new StringBuffer();
-  while ((line=dslFileReader.readLine()) != null) {
-    linecounter++;
-    String trimmedline=line.trim() + "\n";
-    try {
-      final DSLMappingEntry entry=buildEntry(trimmedline);
-      if (entry != null)       this.mapping.addEntry(entry);
-    }
- catch (    Exception re) {
-      final String error="Error parsing mapping entry: " + line;
-      final DSLMappingParseException exception=new DSLMappingParseException(error,linecounter);
-      this.errors.add(exception);
-    }
+  try {
+    this.mapping=buildFileMapping(dsl);
+  }
+ catch (  Exception e) {
+    final String error="Error parsing mapping file: " + e.getMessage();
+    final DSLMappingParseException exception=new DSLMappingParseException(error,-1);
+    this.errors.add(exception);
   }
   return this.errors.isEmpty();
 }
