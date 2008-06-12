@@ -1,18 +1,38 @@
 {
   Map dataEnumLookupFields=loadDataEnumLookupFields();
-  String typeField=(String)dataEnumLookupFields.get(pat.factType + "." + field);
   if (pat.constraintList != null && pat.constraintList.constraints != null) {
-    FieldConstraint[] cons=pat.constraintList.constraints;
-    for (int i=0; i < cons.length; i++) {
-      FieldConstraint con=cons[i];
-      if (con instanceof SingleFieldConstraint) {
-        SingleFieldConstraint sfc=(SingleFieldConstraint)con;
-        if (sfc.fieldName.equals(typeField)) {
-          String key=pat.factType + "." + field+ "["+ typeField+ "="+ sfc.value+ "]";
-          return (String[])this.dataEnumLists.get(key);
+    Object _typeField=dataEnumLookupFields.get(pat.factType + "." + field);
+    if (_typeField instanceof String) {
+      String typeField=(String)_typeField;
+      FieldConstraint[] cons=pat.constraintList.constraints;
+      for (int i=0; i < cons.length; i++) {
+        FieldConstraint con=cons[i];
+        if (con instanceof SingleFieldConstraint) {
+          SingleFieldConstraint sfc=(SingleFieldConstraint)con;
+          if (sfc.fieldName.equals(typeField)) {
+            String key=pat.factType + "." + field+ "["+ typeField+ "="+ sfc.value+ "]";
+            return DropDownData.create((String[])this.dataEnumLists.get(key));
+          }
         }
       }
     }
+ else     if (_typeField != null) {
+      String[] fieldsNeeded=(String[])_typeField;
+      String queryString=getQueryString(pat.factType,field,this.dataEnumLists);
+      String[] valuePairs=new String[fieldsNeeded.length];
+      for (int i=0; i < fieldsNeeded.length; i++) {
+        for (int j=0; j < pat.constraintList.constraints.length; j++) {
+          FieldConstraint con=pat.constraintList.constraints[j];
+          if (con instanceof SingleFieldConstraint) {
+            SingleFieldConstraint sfc=(SingleFieldConstraint)con;
+            if (sfc.fieldName.equals(fieldsNeeded[i])) {
+              valuePairs[i]=fieldsNeeded[i] + "=" + sfc.value;
+            }
+          }
+        }
+      }
+      return DropDownData.create(queryString,valuePairs);
+    }
   }
-  return getEnumValues(pat.factType,field);
+  return DropDownData.create(getEnumValues(pat.factType,field));
 }

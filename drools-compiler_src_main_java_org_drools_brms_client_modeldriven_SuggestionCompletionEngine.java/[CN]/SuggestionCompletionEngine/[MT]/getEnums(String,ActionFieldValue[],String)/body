@@ -1,14 +1,32 @@
 {
-  Map dataEnumLookupFields=loadDataEnumLookupFields();
-  String typeField=(String)dataEnumLookupFields.get(type + "." + field);
   if (currentValues != null) {
-    for (int i=0; i < currentValues.length; i++) {
-      ActionFieldValue val=currentValues[i];
-      if (val.field.equals(typeField)) {
-        String key=type + "." + field+ "["+ typeField+ "="+ val.value+ "]";
-        return (String[])this.dataEnumLists.get(key);
+    Map dataEnumLookupFields=loadDataEnumLookupFields();
+    Object _typeField=dataEnumLookupFields.get(type + "." + field);
+    if (_typeField instanceof String) {
+      String typeField=(String)dataEnumLookupFields.get(type + "." + field);
+      for (int i=0; i < currentValues.length; i++) {
+        ActionFieldValue val=currentValues[i];
+        if (val.field.equals(typeField)) {
+          String key=type + "." + field+ "["+ typeField+ "="+ val.value+ "]";
+          return DropDownData.create((String[])this.dataEnumLists.get(key));
+        }
       }
     }
+ else     if (_typeField != null) {
+      String[] fieldsNeeded=(String[])_typeField;
+      String queryString=getQueryString(type,field,this.dataEnumLists);
+      String[] valuePairs=new String[fieldsNeeded.length];
+      for (int i=0; i < fieldsNeeded.length; i++) {
+        for (int j=0; j < currentValues.length; j++) {
+          ActionFieldValue con=currentValues[j];
+          if (con.field.equals(fieldsNeeded[i])) {
+            valuePairs[i]=fieldsNeeded[i] + "=" + con.value;
+          }
+        }
+      }
+      return DropDownData.create(queryString,valuePairs);
+    }
   }
-  return (String[])this.dataEnumLists.get(type + "." + field);
+  String[] vals=(String[])this.dataEnumLists.get(type + "." + field);
+  return DropDownData.create(vals);
 }
