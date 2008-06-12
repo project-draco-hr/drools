@@ -29,6 +29,8 @@
   variable.setValue(2);
   variables.add(variable);
   process.getVariableScope().setVariables(variables);
+  process.getSwimlaneContext().addSwimlane(new Swimlane("actor1"));
+  process.getSwimlaneContext().addSwimlane(new Swimlane("actor2"));
   StartNode startNode=new StartNode();
   startNode.setName("start");
   startNode.setMetaData("x",1);
@@ -130,6 +132,23 @@
   process.addNode(workItemNode);
   connection=new ConnectionImpl(subProcess,Node.CONNECTION_DEFAULT_TYPE,workItemNode,Node.CONNECTION_DEFAULT_TYPE);
   connection.setMetaData("bendpoints","[]");
+  HumanTaskNode humanTaskNode=new HumanTaskNode();
+  work=humanTaskNode.getWork();
+  parameterDefinitions=new HashSet<ParameterDefinition>();
+  parameterDefinition=new ParameterDefinitionImpl("TaskName",new StringDataType());
+  parameterDefinitions.add(parameterDefinition);
+  parameterDefinition=new ParameterDefinitionImpl("ActorId",new StringDataType());
+  parameterDefinitions.add(parameterDefinition);
+  parameterDefinition=new ParameterDefinitionImpl("Priority",new StringDataType());
+  parameterDefinitions.add(parameterDefinition);
+  parameterDefinition=new ParameterDefinitionImpl("Comment",new StringDataType());
+  parameterDefinitions.add(parameterDefinition);
+  work.setParameterDefinitions(parameterDefinitions);
+  work.setParameter("TaskName","Do something");
+  work.setParameter("ActorId","John Doe");
+  workItemNode.setWaitForCompletion(false);
+  process.addNode(humanTaskNode);
+  connection=new ConnectionImpl(workItemNode,Node.CONNECTION_DEFAULT_TYPE,humanTaskNode,Node.CONNECTION_DEFAULT_TYPE);
   TimerNode timerNode=new TimerNode();
   timerNode.setName("timer");
   timerNode.setMetaData("x",1);
@@ -141,7 +160,7 @@
   timer.setPeriod(1000);
   timerNode.setTimer(timer);
   process.addNode(timerNode);
-  new ConnectionImpl(workItemNode,Node.CONNECTION_DEFAULT_TYPE,timerNode,Node.CONNECTION_DEFAULT_TYPE);
+  new ConnectionImpl(humanTaskNode,Node.CONNECTION_DEFAULT_TYPE,timerNode,Node.CONNECTION_DEFAULT_TYPE);
   EndNode endNode=new EndNode();
   endNode.setName("end");
   endNode.setMetaData("x",1);
@@ -159,7 +178,7 @@
   if (process == null) {
     throw new IllegalArgumentException("Failed to reload process!");
   }
-  assertEquals(10,process.getNodes().length);
+  assertEquals(11,process.getNodes().length);
   String xml2=XmlRuleFlowProcessDumper.INSTANCE.dump(process,true);
   if (xml2 == null) {
     throw new IllegalArgumentException("Failed to persist empty nodes!");
