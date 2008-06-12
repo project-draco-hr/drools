@@ -1,22 +1,6 @@
 {
   WorkItemNode workItemNode=getWorkItemNode();
-  Work work=workItemNode.getWork();
-  workItem=new WorkItemImpl();
-  workItem.setName(work.getName());
-  workItem.setProcessInstanceId(getProcessInstance().getId());
-  workItem.setParameters(new HashMap<String,Object>(work.getParameters()));
-  for (Iterator<Map.Entry<String,String>> iterator=workItemNode.getInMappings().entrySet().iterator(); iterator.hasNext(); ) {
-    Map.Entry<String,String> mapping=iterator.next();
-    VariableScopeInstance variableScopeInstance=(VariableScopeInstance)resolveContextInstance(VariableScope.VARIABLE_SCOPE,mapping.getValue());
-    if (variableScopeInstance != null) {
-      workItem.setParameter(mapping.getKey(),variableScopeInstance.getVariable(mapping.getValue()));
-    }
- else {
-      System.err.println("Could not find variable scope for variable " + mapping.getValue());
-      System.err.println("when trying to execute Work Item " + work.getName());
-      System.err.println("Continuing without setting parameter.");
-    }
-  }
+  WorkItem workItem=createWorkItem(workItemNode);
   if (workItemNode.isWaitForCompletion()) {
     addEventListeners();
   }

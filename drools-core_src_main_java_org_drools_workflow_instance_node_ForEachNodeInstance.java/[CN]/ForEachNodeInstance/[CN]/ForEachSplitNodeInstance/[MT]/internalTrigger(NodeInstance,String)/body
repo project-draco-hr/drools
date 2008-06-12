@@ -1,0 +1,16 @@
+{
+  String collectionExpression=getForEachNode().getCollectionExpression();
+  Collection<?> collection=evaluateCollectionExpression(collectionExpression);
+  getNodeInstanceContainer().removeNodeInstance(this);
+  List<NodeInstance> nodeInstances=new ArrayList<NodeInstance>();
+  for (  Object o : collection) {
+    String variableName=getForEachNode().getVariableName();
+    CompositeNodeInstance nodeInstance=(CompositeNodeInstance)getNodeInstanceContainer().getNodeInstance(getForEachSplitNode().getTo().getTo());
+    VariableScopeInstance variableScopeInstance=(VariableScopeInstance)nodeInstance.resolveContextInstance(VariableScope.VARIABLE_SCOPE,variableName);
+    variableScopeInstance.setVariable(variableName,o);
+    nodeInstances.add(nodeInstance);
+  }
+  for (  NodeInstance nodeInstance : nodeInstances) {
+    nodeInstance.trigger(this,getForEachSplitNode().getTo().getToType());
+  }
+}
