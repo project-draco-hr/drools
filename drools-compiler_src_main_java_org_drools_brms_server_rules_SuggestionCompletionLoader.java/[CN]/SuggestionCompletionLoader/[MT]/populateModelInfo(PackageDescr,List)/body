@@ -18,5 +18,33 @@ catch (      NoClassDefFoundError e) {
       }
     }
   }
+  Set<String> declaredTypes=new HashSet<String>();
+  for (final Iterator<TypeDeclarationDescr> it=pkgDescr.getTypeDeclarations().iterator(); it.hasNext(); ) {
+    TypeDeclarationDescr td=it.next();
+    if (td.getFields().size() > 0) {
+      String declaredType=td.getTypeName();
+      declaredTypes.add(declaredType);
+      this.builder.addFactType(declaredType);
+      List<String> fieldNames=new ArrayList<String>();
+      for (      Map.Entry<String,TypeFieldDescr> f : td.getFields().entrySet()) {
+        String fieldName=f.getKey();
+        fieldNames.add(fieldName);
+        String fieldClass=f.getValue().getPattern().getObjectType();
+        if (declaredTypes.contains(fieldClass)) {
+          this.builder.addFieldType(declaredType + "." + fieldName,SuggestionCompletionEngine.TYPE_OBJECT);
+        }
+ else {
+          try {
+            Class clz=resolver.resolveType(fieldClass);
+            this.builder.addFieldType(declaredType + "." + fieldName,getFieldType(clz));
+          }
+ catch (          ClassNotFoundException e) {
+            this.errors.add("Class of field not found: " + fieldClass);
+          }
+        }
+      }
+      this.builder.addFieldsForType(declaredType,fieldNames.toArray(new String[fieldNames.size()]));
+    }
+  }
   populateFactTemplateTypes(pkgDescr,resolver);
 }
