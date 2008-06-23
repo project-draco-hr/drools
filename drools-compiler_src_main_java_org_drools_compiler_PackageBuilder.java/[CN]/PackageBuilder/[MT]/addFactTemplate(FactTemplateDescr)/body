@@ -1,16 +1,17 @@
 {
   final List fields=new ArrayList();
   int index=0;
+  PackageRegistry pkgRegistry=this.pkgRegistryMap.get(this.defaultNamespace);
   for (final Iterator it=factTemplateDescr.getFields().iterator(); it.hasNext(); ) {
     final FieldTemplateDescr fieldTemplateDescr=(FieldTemplateDescr)it.next();
     FieldTemplate fieldTemplate=null;
     try {
-      fieldTemplate=new FieldTemplateImpl(fieldTemplateDescr.getName(),index++,getTypeResolver().resolveType(fieldTemplateDescr.getClassType()));
+      fieldTemplate=new FieldTemplateImpl(fieldTemplateDescr.getName(),index++,pkgRegistry.getTypeResolver().resolveType(fieldTemplateDescr.getClassType()));
     }
  catch (    final ClassNotFoundException e) {
-      this.results.add(new FieldTemplateError(this.pkg,fieldTemplateDescr,null,"Unable to resolve Class '" + fieldTemplateDescr.getClassType() + "'"));
+      this.results.add(new FieldTemplateError(pkgRegistry.getPackage(),fieldTemplateDescr,null,"Unable to resolve Class '" + fieldTemplateDescr.getClassType() + "'"));
     }
     fields.add(fieldTemplate);
   }
-  final FactTemplate factTemplate=new FactTemplateImpl(this.pkg,factTemplateDescr.getName(),(FieldTemplate[])fields.toArray(new FieldTemplate[fields.size()]));
+  final FactTemplate factTemplate=new FactTemplateImpl(pkgRegistry.getPackage(),factTemplateDescr.getName(),(FieldTemplate[])fields.toArray(new FieldTemplate[fields.size()]));
 }

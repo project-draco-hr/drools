@@ -3,19 +3,12 @@
     configuration=new PackageBuilderConfiguration();
   }
   this.configuration=configuration;
+  this.defaultNamespace=pkg.getName();
+  this.defaultDialect=this.configuration.getDefaultDialect();
+  this.pkgRegistryMap=new HashMap<String,PackageRegistry>();
   this.results=new ArrayList();
-  this.pkg=pkg;
   this.classFieldExtractorCache=ClassFieldAccessorCache.getInstance();
-  if (this.pkg != null) {
-    ClassLoader cl=this.pkg.getDialectDatas().getClassLoader();
-    this.typeResolver=new ClassTypeResolver(new HashSet<String>(this.pkg.getImports().keySet()),cl);
-    this.typeResolver.addImport(this.pkg.getName() + ".*");
-  }
- else {
-  }
-  this.dialectRegistry=this.configuration.buildDialectRegistry();
-  this.dialect=this.dialectRegistry.getDialect(this.configuration.getDefaultDialect());
-  if (this.pkg != null) {
-    this.dialectRegistry.initAll(this);
-  }
+  PackageRegistry pkgRegistry=new PackageRegistry(this,pkg);
+  pkgRegistry.setDialect(this.defaultDialect);
+  this.pkgRegistryMap.put(pkg.getName(),pkgRegistry);
 }

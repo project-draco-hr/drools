@@ -1,5 +1,20 @@
 {
+  PackageRegistry defaultRegistry;
+  if (isEmpty(packageDescr.getName())) {
+    defaultRegistry=this.pkgRegistryMap.get(this.defaultNamespace);
+  }
+ else {
+    defaultRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
+  }
+  PackageRegistry pkgRegistry=null;
   for (  TypeDeclarationDescr typeDescr : packageDescr.getTypeDeclarations()) {
+    if (isEmpty(typeDescr.getNamespace())) {
+      typeDescr.setNamespace(defaultRegistry.getPackage().getName());
+      pkgRegistry=defaultRegistry;
+    }
+ else {
+      pkgRegistry=this.pkgRegistryMap.get(typeDescr.getNamespace());
+    }
     TypeDeclaration type=new TypeDeclaration(typeDescr.getTypeName());
     String role=typeDescr.getMetaAttribute(TypeDeclaration.Role.ID);
     if (role != null) {
@@ -8,7 +23,7 @@
     String templateName=typeDescr.getMetaAttribute(TypeDeclaration.ATTR_TEMPLATE);
     if (templateName != null) {
       type.setFormat(TypeDeclaration.Format.TEMPLATE);
-      FactTemplate template=this.pkg.getFactTemplate(templateName);
+      FactTemplate template=pkgRegistry.getPackage().getFactTemplate(templateName);
       if (template != null) {
         type.setTypeTemplate(template);
       }
@@ -26,13 +41,13 @@
       Class clazz;
       try {
         if (typeDescr.getFields().size() > 0) {
-          generateDeclaredBean(typeDescr,type);
+          generateDeclaredBean(typeDescr,type,pkgRegistry);
         }
-        clazz=typeResolver.resolveType(className);
+        clazz=pkgRegistry.getTypeResolver().resolveType(className);
         type.setTypeClass(clazz);
         if (type.getTypeClassDef() != null) {
           try {
-            buildFieldAccessors(type);
+            buildFieldAccessors(type,pkgRegistry);
           }
  catch (          Exception e) {
             this.results.add(new TypeDeclarationError("Error creating field accessors for '" + className + "' for type '"+ type.getTypeName()+ "'",typeDescr.getLine()));
@@ -55,6 +70,6 @@
       InternalReadAccessor extractor=ClassFieldAccessorCache.getInstance().getReader(type.getTypeClass(),duration,this.configuration.getClassLoader());
       type.setDurationExtractor(extractor);
     }
-    this.pkg.addTypeDeclaration(type);
+    pkgRegistry.getPackage().addTypeDeclaration(type);
   }
 }

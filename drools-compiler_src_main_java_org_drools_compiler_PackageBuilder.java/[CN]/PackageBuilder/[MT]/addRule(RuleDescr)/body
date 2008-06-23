@@ -1,9 +1,16 @@
 {
   if (ruleDescr instanceof QueryDescr) {
   }
-  RuleBuildContext context=new RuleBuildContext(this.configuration,pkg,ruleDescr,this.dialectRegistry,this.dialect);
+  PackageRegistry pkgRegistry=this.pkgRegistryMap.get(ruleDescr.getNamespace());
+  DialectCompiletimeRegistry ctr=pkgRegistry.getDialectCompiletimeRegistry();
+  RuleBuildContext context=new RuleBuildContext(this.configuration,ruleDescr,ctr,pkgRegistry.getPackage(),ctr.getDialect(pkgRegistry.getDialect()));
   this.ruleBuilder.build(context);
   this.results.addAll(context.getErrors());
   context.getDialect().addRule(context);
-  this.pkg.addRule(context.getRule());
+  if (this.ruleBase != null) {
+    if (pkgRegistry.getPackage().getRule(ruleDescr.getName()) != null) {
+      this.ruleBase.removeRule(pkgRegistry.getPackage(),pkgRegistry.getPackage().getRule(ruleDescr.getName()));
+    }
+  }
+  pkgRegistry.getPackage().addRule(context.getRule());
 }

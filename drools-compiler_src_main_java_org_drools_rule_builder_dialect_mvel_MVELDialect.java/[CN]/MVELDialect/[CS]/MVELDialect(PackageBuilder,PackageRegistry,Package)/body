@@ -1,0 +1,24 @@
+{
+  this.pkg=pkg;
+  this.packageRegistry=pkgRegistry;
+  this.configuration=(MVELDialectConfiguration)builder.getPackageBuilderConfiguration().getDialectConfiguration("mvel");
+  setLanguageLevel(this.configuration.getLangLevel());
+  this.classFieldExtractorCache=builder.getClassFieldExtractorCache();
+  this.strictMode=this.configuration.isStrict();
+  MVEL.setThreadSafe(true);
+  this.imports=new HashMap();
+  this.packageImports=new HashMap();
+  this.interceptors=new HashMap(1);
+  this.interceptors.put("Modify",new ModifyInterceptor());
+  this.results=new ArrayList();
+  MVELDialectRuntimeData data=null;
+  if (pkg.getDialectRuntimeRegistry().getDialectData(ID) == null) {
+    data=new MVELDialectRuntimeData(this.pkg.getDialectRuntimeRegistry());
+    this.pkg.getDialectRuntimeRegistry().setDialectData(ID,data);
+  }
+  this.results=new ArrayList();
+  this.src=new MemoryResourceReader();
+  if (this.pkg != null) {
+    this.addImport(this.pkg.getName() + ".*");
+  }
+}

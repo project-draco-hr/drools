@@ -1,8 +1,17 @@
 {
-  this.pkg=new Package(packageDescr.getName(),this.configuration.getClassLoader());
-  ClassLoader cl=this.pkg.getDialectDatas().getClassLoader();
-  this.typeResolver=new ClassTypeResolver(new HashSet<String>(),cl);
-  this.typeResolver.addImport(this.pkg.getName() + ".*");
-  this.dialectRegistry.initAll(this);
+  Package pkg;
+  if (this.ruleBase != null && this.ruleBase.getPackage(packageDescr.getName()) != null) {
+    pkg=this.ruleBase.getPackage(packageDescr.getName());
+  }
+ else {
+    pkg=new Package(packageDescr.getName(),this.configuration.getClassLoader());
+    if (this.ruleBase != null) {
+      this.ruleBase.addPackage(pkg);
+      pkg=this.ruleBase.getPackage(packageDescr.getName());
+    }
+  }
+  PackageRegistry pkgRegistry=new PackageRegistry(this,pkg);
+  this.pkgRegistryMap.put(packageDescr.getName(),pkgRegistry);
   mergePackage(packageDescr);
+  return pkgRegistry;
 }
