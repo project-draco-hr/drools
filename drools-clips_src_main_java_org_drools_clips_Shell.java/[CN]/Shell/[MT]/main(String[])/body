@@ -1,0 +1,44 @@
+{
+  StringBuffer buf=new StringBuffer();
+  FunctionHandlers handlers=FunctionHandlers.getInstance();
+  handlers.registerFunction(new PlusFunction());
+  handlers.registerFunction(new MultiplyFunction());
+  handlers.registerFunction(new ModifyFunction());
+  handlers.registerFunction(new CreateListFunction());
+  handlers.registerFunction(new PrintoutFunction());
+  handlers.registerFunction(new PrognFunction());
+  handlers.registerFunction(new IfFunction());
+  handlers.registerFunction(new LessThanFunction());
+  handlers.registerFunction(new MoreThanFunction());
+  handlers.registerFunction(new EqFunction());
+  handlers.registerFunction(new SwitchFunction());
+  handlers.registerFunction(new ReturnFunction());
+  handlers.registerFunction(new RunFunction());
+  handlers.registerFunction(new BindFunction());
+  handlers.registerFunction(new NewFunction());
+  handlers.registerFunction(new SetFunction());
+  handlers.registerFunction(new GetFunction());
+  handlers.registerFunction(new CallFunction());
+  handlers.registerFunction(new AssertFunction());
+  Shell shell=new Shell();
+  ByteArrayOutputStream out=new ByteArrayOutputStream();
+  shell.addRouter("t",new PrintStream(out));
+  while (true) {
+    byte name[]=new byte[256];
+    System.out.print("Drools>");
+    Thread.sleep(1);
+    System.in.read(name);
+    String cmd=(new String(name)).trim();
+    if (cmd.equals("(exit)") || cmd.equals("(quit)"))     break;
+    buf.append(cmd);
+    if (isBalancedBrackets(buf)) {
+      shell.eval(buf.toString());
+      String output=new String(out.toByteArray());
+      if (output != null && output.trim().length() > 0) {
+        System.out.println(output);
+      }
+      out.reset();
+      buf=new StringBuffer();
+    }
+  }
+}
