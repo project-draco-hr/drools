@@ -2,8 +2,6 @@
   final EvalDescr evalDescr=(EvalDescr)descr;
   try {
     final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),null,context.getPkg().getGlobals());
-    MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
-    factory.setNextFactory(data.getFunctionFactory());
     Dialect.AnalysisResult analysis=context.getDialect().analyzeExpression(context,evalDescr,evalDescr.getContent(),new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()});
     final List[] usedIdentifiers=analysis.getBoundIdentifiers();
     final Declaration[] declarations=new Declaration[usedIdentifiers[0].size()];
@@ -12,7 +10,7 @@
     }
     final EvalCondition eval=new EvalCondition(declarations);
     Serializable expr=((MVELDialect)context.getDialect()).compile((String)evalDescr.getContent(),analysis,null,null,null,context);
-    eval.setEvalExpression(new MVELEvalExpression(expr,factory));
+    eval.setEvalExpression(new MVELEvalExpression(expr,factory,context.getDialect().getId()));
     return eval;
   }
  catch (  final Exception e) {

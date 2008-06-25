@@ -1,13 +1,13 @@
 {
   String text=descr.getText();
   try {
-    MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
+    MVELDialect dialect=(MVELDialect)context.getDialect();
     Dialect.AnalysisResult analysis=dialect.analyzeBlock(context,descr,dialect.getInterceptors(),text,new Set[]{Collections.EMPTY_SET,context.getPkg().getGlobals().keySet()},null);
     final Serializable expr=dialect.compile(text,analysis,dialect.getInterceptors(),null,null,context);
     final DroolsMVELFactory factory=new DroolsMVELFactory(null,null,context.getPkg().getGlobals(),analysis.getBoundIdentifiers());
     MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
     factory.setNextFactory(data.getFunctionFactory());
-    constraintNode.setEvaluator(new MVELReturnValueEvaluator(expr,factory));
+    constraintNode.setEvaluator(new MVELReturnValueEvaluator(expr,factory,context.getDialect().getId()));
   }
  catch (  final Exception e) {
     context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to build expression for 'returnValuEvaluator' '" + descr.getText() + "'"));
