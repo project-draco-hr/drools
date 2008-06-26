@@ -5,7 +5,11 @@
     compiler.setDebugSymbols(true);
   }
 synchronized (COMPILER_LOCK) {
+    ClassLoader tempClassLoader=Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(pkg.getPackageScopeClassLoader());
     AbstractParser.setLanguageLevel(languageLevel);
-    return compiler.compile(parserContext);
+    Serializable expr=compiler.compile(parserContext);
+    Thread.currentThread().setContextClassLoader(tempClassLoader);
+    return expr;
   }
 }

@@ -8,32 +8,34 @@
   if (interceptors != null) {
     parserContext.setInterceptors(interceptors);
   }
-  List list[]=analysis.getBoundIdentifiers();
-  if (context instanceof RuleBuildContext) {
-    DeclarationScopeResolver resolver=((RuleBuildContext)context).getDeclarationResolver();
-    for (Iterator it=list[0].iterator(); it.hasNext(); ) {
+  if (analysis != null) {
+    List list[]=analysis.getBoundIdentifiers();
+    if (context instanceof RuleBuildContext) {
+      DeclarationScopeResolver resolver=((RuleBuildContext)context).getDeclarationResolver();
+      for (Iterator it=list[0].iterator(); it.hasNext(); ) {
+        String identifier=(String)it.next();
+        Class cls=resolver.getDeclaration(identifier).getExtractor().getExtractToClass();
+        parserContext.addInput(identifier,cls);
+      }
+    }
+    Map globalTypes=context.getPkg().getGlobals();
+    for (Iterator it=list[1].iterator(); it.hasNext(); ) {
       String identifier=(String)it.next();
-      Class cls=resolver.getDeclaration(identifier).getExtractor().getExtractToClass();
-      parserContext.addInput(identifier,cls);
+      parserContext.addInput(identifier,(Class)globalTypes.get(identifier));
     }
-  }
-  Map globalTypes=context.getPkg().getGlobals();
-  for (Iterator it=list[1].iterator(); it.hasNext(); ) {
-    String identifier=(String)it.next();
-    parserContext.addInput(identifier,(Class)globalTypes.get(identifier));
-  }
-  if (otherInputVariables != null) {
-    for (Iterator it=otherInputVariables.entrySet().iterator(); it.hasNext(); ) {
-      Entry entry=(Entry)it.next();
-      parserContext.addInput((String)entry.getKey(),(Class)entry.getValue());
+    if (otherInputVariables != null) {
+      for (Iterator it=otherInputVariables.entrySet().iterator(); it.hasNext(); ) {
+        Entry entry=(Entry)it.next();
+        parserContext.addInput((String)entry.getKey(),(Class)entry.getValue());
+      }
     }
-  }
-  if (outerDeclarations != null) {
-    for (Iterator it=outerDeclarations.entrySet().iterator(); it.hasNext(); ) {
-      Entry entry=(Entry)it.next();
-      parserContext.addInput((String)entry.getKey(),((Declaration)entry.getValue()).getExtractor().getExtractToClass());
+    if (outerDeclarations != null) {
+      for (Iterator it=outerDeclarations.entrySet().iterator(); it.hasNext(); ) {
+        Entry entry=(Entry)it.next();
+        parserContext.addInput((String)entry.getKey(),((Declaration)entry.getValue()).getExtractor().getExtractToClass());
+      }
     }
+    parserContext.addInput("drools",KnowledgeHelper.class);
   }
-  parserContext.addInput("drools",KnowledgeHelper.class);
   return parserContext;
 }
