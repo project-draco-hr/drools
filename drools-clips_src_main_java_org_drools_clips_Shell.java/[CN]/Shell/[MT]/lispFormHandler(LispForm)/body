@@ -4,6 +4,10 @@
   ParserContext context=new ParserContext();
   String namespace=this.session.getAgenda().getFocus().getName();
   Package pkg=this.ruleBase.getPackage(namespace);
+  if (pkg == null) {
+    this.packageBuilder.addPackage(createPackageDescr(namespace));
+    pkg=this.ruleBase.getPackage(namespace);
+  }
   if (pkg != null) {
     try {
       for (Iterator it=pkg.getImports().entrySet().iterator(); it.hasNext(); ) {
@@ -24,7 +28,10 @@
     MVELDialectRuntimeData data=(MVELDialectRuntimeData)pkg.getDialectRuntimeRegistry().getDialectData("clips");
     this.factory.setNextFactory(data.getFunctionFactory());
   }
+  ClassLoader tempClassLoader=Thread.currentThread().getContextClassLoader();
+  Thread.currentThread().setContextClassLoader(pkg.getPackageScopeClassLoader());
   ExpressionCompiler expr=new ExpressionCompiler(appendable.toString());
   Serializable executable=expr.compile(context);
   MVEL.executeExpression(executable,this,this.factory);
+  Thread.currentThread().setContextClassLoader(tempClassLoader);
 }

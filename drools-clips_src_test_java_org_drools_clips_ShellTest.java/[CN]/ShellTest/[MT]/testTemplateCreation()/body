@@ -1,25 +1,7 @@
 {
   this.shell.eval("(deftemplate Person (slot name (type String) ) (slot age (type int) ) )");
-  this.shell.eval("(defrule yyy  => (printout t yy \" \" (eq 1 1) ) ) )");
-  Package pkg=shell.getStatefulSession().getRuleBase().getPackage("MAIN");
-  Rule rule=pkg.getRule("yyy");
-  assertEquals("yyy",rule.getName());
-  this.shell.eval("(defrule xxx (Person (name ?name&bob) (age 30) ) (Person  (name ?name) (age 35)) => (printout t xx \" \" (eq 1 1) ) )");
-  rule=pkg.getRule("xxx");
-  assertEquals("xxx",rule.getName());
-  assertEquals(2,pkg.getRules().length);
-  WorkingMemory wm=shell.getStatefulSession();
-  Class personClass=this.shell.getStatefulSession().getRuleBase().getPackage("MAIN").getPackageScopeClassLoader().loadClass("MAIN.Person");
-  Method nameMethod=personClass.getMethod("setName",new Class[]{String.class});
-  Method ageMethod=personClass.getMethod("setAge",new Class[]{int.class});
-  Object bob1=personClass.newInstance();
-  nameMethod.invoke(bob1,"bob");
-  ageMethod.invoke(bob1,30);
-  Object bob2=personClass.newInstance();
-  nameMethod.invoke(bob2,"bob");
-  ageMethod.invoke(bob2,35);
-  wm.insert(bob1);
-  wm.insert(bob2);
-  wm.fireAllRules();
-  assertEquals("yy truexx true",new String(this.baos.toByteArray()));
+  this.shell.eval("(defrule xxx (Person (name ?name&bob) (age 30) ) => (printout t hello bob ) )");
+  this.shell.eval("(assert (Person (name bob) (age 30) ) )");
+  this.shell.eval("(run)");
+  assertEquals("hellobob",new String(this.baos.toByteArray()));
 }
