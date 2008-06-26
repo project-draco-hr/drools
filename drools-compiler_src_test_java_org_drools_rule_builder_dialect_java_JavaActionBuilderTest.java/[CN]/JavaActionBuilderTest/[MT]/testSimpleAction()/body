@@ -16,7 +16,9 @@
   context.init(conf,pkg,null,dialectRegistry,javaDialect,null);
   pkgBuilder.addPackageFromDrl(new StringReader("package pkg1;\nglobal java.util.List list;\n"));
   ActionNode actionNode=new ActionNode();
-  javaDialect.getActionBuilder().build(context,actionNode,actionDescr);
+  DroolsAction action=new DroolsConsequenceAction("java",null);
+  actionNode.setAction(action);
+  javaDialect.getActionBuilder().build(context,action,actionDescr);
   javaDialect.addProcess(context);
   javaDialect.compileAll();
   assertEquals(0,javaDialect.getResults().size());
@@ -26,6 +28,6 @@
   List list=new ArrayList();
   wm.setGlobal("list",list);
   KnowledgeHelper knowledgeHelper=new DefaultKnowledgeHelper();
-  ((Action)actionNode.getAction()).execute(knowledgeHelper,wm);
+  ((Action)actionNode.getAction().getMetaData("Action")).execute(knowledgeHelper,wm);
   assertEquals("hello world",list.get(0));
 }
