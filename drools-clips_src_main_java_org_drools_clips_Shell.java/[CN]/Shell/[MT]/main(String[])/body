@@ -25,25 +25,42 @@
   ByteArrayOutputStream out=new ByteArrayOutputStream();
   shell.addRouter("t",new PrintStream(out));
   System.out.print("Drools>");
+  StringBuffer sessionLog=new StringBuffer();
   while (true) {
     byte name[]=new byte[256];
-    Thread.sleep(1);
     System.in.read(name);
     String cmd=(new String(name)).trim();
-    if (cmd.equals("(exit)") || cmd.equals("(quit)"))     break;
+    if (cmd.equals("(exit)") || cmd.equals("(quit)")) {
+      sessionLog.append(cmd);
+      break;
+    }
     buf.append(cmd);
     if (isBalancedBrackets(buf)) {
-      shell.eval(buf.toString());
-      String output=new String(out.toByteArray());
-      if (output != null && output.trim().length() > 0) {
-        System.out.println(output);
+      String exp=buf.toString();
+      if (exp.startsWith("(save ")) {
+        String file=getFileName(exp);
+        System.out.println("Saving transcript to [" + file + "]");
+        writeFile(file,sessionLog);
+        sessionLog=new StringBuffer();
+        System.out.print("Drools>");
       }
  else {
+        sessionLog.append(cmd + "\n");
+        if (exp.startsWith("(load ")) {
+          String file=getFileName(exp);
+          System.out.println("Loading transcript from [" + file + "]");
+          exp=loadFile(file);
+        }
+        shell.eval(exp);
+        String output=new String(out.toByteArray());
+        if (output != null && output.trim().length() > 0) {
+          System.out.println(output);
+        }
+        out.reset();
+        System.out.print("Drools>");
+        buf=new StringBuffer();
       }
-      out.reset();
-      System.out.print("Drools>");
-      buf=new StringBuffer();
     }
   }
-  System.out.println("Goobye !");
+  System.out.println("Goodbye, and good luck !");
 }
