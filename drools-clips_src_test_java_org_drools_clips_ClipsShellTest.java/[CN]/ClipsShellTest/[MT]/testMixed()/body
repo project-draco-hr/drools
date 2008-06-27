@@ -1,0 +1,28 @@
+{
+  this.shell.eval("(import org.drools.Cheese)");
+  String str="";
+  str+="(deftemplate Person ";
+  str+="  (slot name ";
+  str+="    (type String) ) ";
+  str+="  (slot age";
+  str+="    (type String) ) ";
+  str+="  (slot location";
+  str+="    (type String) ) ";
+  str+="  (slot cheese";
+  str+="    (type String) ) ";
+  str+=")";
+  this.shell.eval(str);
+  this.shell.eval("(deffunction max (?a ?b) (if (> ?a ?b) then (return ?a) else (return ?b) ) )");
+  str="";
+  str+="(defrule sendsomecheese ";
+  str+="  (Person (name ?name) (age ?personAge) (cheese ?cheeseType) (location \"london\") ) ";
+  str+="  (Cheese (type ?cheeseType) (price ?cheesePrice&:(eq (max ?personAge ?cheesePrice) ?cheesePrice)  ) )";
+  str+="\n=>\n";
+  str+="  (printout t \"send some \" ?cheeseType \" \" to \" \" ?name) ";
+  str+=")";
+  this.shell.eval(str);
+  this.shell.eval("(assert (Person (name mark) (location \"london\") (cheese \"cheddar\") (age 25) ) )");
+  this.shell.eval("(assert (Cheese (type \"cheddar\") (price  30) ) ) ");
+  this.shell.eval("(run)");
+  assertEquals("send some cheddar to mark",new String(this.baos.toByteArray()));
+}
