@@ -21,6 +21,23 @@
     i.setName("Laptop");
     itemCatalog.addItem(i);
     session.setGlobal("itemCatalog",itemCatalog);
+    session.getWorkItemManager().registerWorkItemHandler("Shipping",new ShippingWorkItemHandler(session));
+    session.getWorkItemManager().registerWorkItemHandler("Email",new WorkItemHandler(){
+      public void executeWorkItem(      WorkItem workItem,      WorkItemManager manager){
+        System.out.println("***********************************************************");
+        System.out.println("Sending email:");
+        System.out.println("From: " + workItem.getParameter("From"));
+        System.out.println("To: " + workItem.getParameter("To"));
+        System.out.println("Subject: " + workItem.getParameter("Subject"));
+        System.out.println("Text: ");
+        System.out.println(workItem.getParameter("Text"));
+        System.out.println("***********************************************************");
+        manager.completeWorkItem(workItem.getId(),null);
+      }
+      public void abortWorkItem(      WorkItem workItem,      WorkItemManager manager){
+      }
+    }
+);
     UIWorkItemHandler handler=new UIWorkItemHandler();
     session.getWorkItemManager().registerWorkItemHandler("Human Task",handler);
     handler.setVisible(true);
