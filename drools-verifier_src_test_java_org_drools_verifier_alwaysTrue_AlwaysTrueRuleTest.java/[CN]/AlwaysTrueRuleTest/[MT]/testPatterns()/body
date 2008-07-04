@@ -1,0 +1,48 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Rules.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Rule that is always true"));
+  VerifierResult result=VerifierResultFactory.createVerifierResult();
+  Collection<Object> data=new ArrayList<Object>();
+  session.setGlobal("result",result);
+  VerifierRule rule1=new VerifierRule();
+  RulePossibility rp1=new RulePossibility();
+  rp1.setRuleId(rule1.getId());
+  AlwaysTrue alwaysTrue1=new AlwaysTrue(rp1);
+  RulePossibility rp2=new RulePossibility();
+  rp2.setRuleId(rule1.getId());
+  AlwaysTrue alwaysTrue2=new AlwaysTrue(rp2);
+  VerifierRule rule2=new VerifierRule();
+  RulePossibility rp3=new RulePossibility();
+  rp3.setRuleId(rule2.getId());
+  RulePossibility rp4=new RulePossibility();
+  rp4.setRuleId(rule2.getId());
+  AlwaysTrue alwaysTrue4=new AlwaysTrue(rp4);
+  data.add(rule1);
+  data.add(rp1);
+  data.add(rp2);
+  data.add(alwaysTrue1);
+  data.add(alwaysTrue2);
+  data.add(rule2);
+  data.add(rp3);
+  data.add(rp4);
+  data.add(alwaysTrue4);
+  session.executeWithResults(data);
+  Iterator<VerifierMessageBase> iter=result.getBySeverity(Severity.WARNING).iterator();
+  boolean works=false;
+  while (iter.hasNext()) {
+    Object o=(Object)iter.next();
+    if (o instanceof VerifierMessage) {
+      VerifierMessage message=(VerifierMessage)o;
+      if (message.getFaulty().equals(rule1)) {
+        works=true;
+      }
+ else {
+        fail("There can be only one. (And this is not the one)");
+      }
+    }
+  }
+  assertEquals(0,result.getBySeverity(Severity.ERROR).size());
+  assertEquals(1,result.getBySeverity(Severity.WARNING).size());
+  assertEquals(0,result.getBySeverity(Severity.NOTE).size());
+  assertTrue(works);
+}

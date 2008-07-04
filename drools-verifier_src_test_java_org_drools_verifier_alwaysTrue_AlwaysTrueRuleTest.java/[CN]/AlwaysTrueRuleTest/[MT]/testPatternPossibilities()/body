@@ -1,0 +1,65 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Rules.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Rule possibility that is always true"));
+  VerifierResult result=VerifierResultFactory.createVerifierResult();
+  Collection<Object> data=new ArrayList<Object>();
+  session.setGlobal("result",result);
+  VerifierRule rule1=new VerifierRule();
+  RulePossibility rp1=new RulePossibility();
+  PatternPossibility pp1=new PatternPossibility();
+  pp1.setRuleId(rule1.getId());
+  AlwaysTrue alwaysTrue1=new AlwaysTrue(pp1);
+  PatternPossibility pp2=new PatternPossibility();
+  pp2.setRuleId(rule1.getId());
+  AlwaysTrue alwaysTrue2=new AlwaysTrue(pp2);
+  rp1.add(pp1);
+  rp1.add(pp2);
+  VerifierRule rule2=new VerifierRule();
+  RulePossibility rp2=new RulePossibility();
+  PatternPossibility pp3=new PatternPossibility();
+  pp3.setRuleId(rule2.getId());
+  PatternPossibility pp4=new PatternPossibility();
+  pp4.setRuleId(rule2.getId());
+  AlwaysTrue alwaysTrue4=new AlwaysTrue(pp4);
+  rp2.add(pp3);
+  rp2.add(pp4);
+  data.add(rule1);
+  data.add(rp1);
+  data.add(pp1);
+  data.add(pp2);
+  data.add(alwaysTrue1);
+  data.add(alwaysTrue2);
+  data.add(rule2);
+  data.add(rp2);
+  data.add(pp3);
+  data.add(pp4);
+  data.add(alwaysTrue4);
+  StatelessSessionResult sessionResult=session.executeWithResults(data);
+  Iterator iter=sessionResult.iterateObjects();
+  boolean rp1true=false;
+  boolean rp2true=false;
+  boolean rp3true=false;
+  boolean rp4true=false;
+  while (iter.hasNext()) {
+    Object o=(Object)iter.next();
+    if (o instanceof AlwaysTrue) {
+      AlwaysTrue alwaysTrue=(AlwaysTrue)o;
+      if (!rp1true) {
+        rp1true=alwaysTrue.getCause().equals(pp1);
+      }
+      if (!rp2true) {
+        rp2true=alwaysTrue.getCause().equals(pp2);
+      }
+      if (!rp3true) {
+        rp3true=alwaysTrue.getCause().equals(pp3);
+      }
+      if (!rp4true) {
+        rp4true=alwaysTrue.getCause().equals(pp4);
+      }
+    }
+  }
+  assertTrue(rp1true);
+  assertTrue(rp2true);
+  assertFalse(rp3true);
+  assertTrue(rp4true);
+}

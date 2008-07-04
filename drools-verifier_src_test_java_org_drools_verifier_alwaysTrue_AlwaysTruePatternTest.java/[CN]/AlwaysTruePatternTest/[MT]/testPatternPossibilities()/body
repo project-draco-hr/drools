@@ -1,0 +1,81 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Patterns.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Pattern possibility that is always true"));
+  VerifierResult result=VerifierResultFactory.createVerifierResult();
+  Collection<Object> data=new ArrayList<Object>();
+  session.setGlobal("result",result);
+  Pattern pattern1=new Pattern();
+  Restriction r1=new LiteralRestriction();
+  Restriction r2=new LiteralRestriction();
+  Opposites o1=new Opposites(r1,r2);
+  PatternPossibility pp1=new PatternPossibility();
+  pp1.setPatternId(pattern1.getId());
+  pp1.add(r1);
+  pp1.add(r2);
+  Restriction r3=new VariableRestriction();
+  Restriction r4=new VariableRestriction();
+  Opposites o2=new Opposites(r1,r2);
+  PatternPossibility pp2=new PatternPossibility();
+  pp2.setPatternId(pattern1.getId());
+  pp2.add(r1);
+  pp2.add(r2);
+  Pattern pattern2=new Pattern();
+  Restriction r5=new LiteralRestriction();
+  Restriction r6=new LiteralRestriction();
+  PatternPossibility pp3=new PatternPossibility();
+  pp3.setPatternId(pattern2.getId());
+  pp3.add(r5);
+  pp3.add(r6);
+  Restriction r7=new VariableRestriction();
+  Restriction r8=new VariableRestriction();
+  Opposites o4=new Opposites(r7,r8);
+  PatternPossibility pp4=new PatternPossibility();
+  pp4.setPatternId(pattern2.getId());
+  pp4.add(r7);
+  pp4.add(r8);
+  data.add(pattern1);
+  data.add(r1);
+  data.add(r2);
+  data.add(r3);
+  data.add(r4);
+  data.add(o1);
+  data.add(o2);
+  data.add(pp1);
+  data.add(pp2);
+  data.add(pattern2);
+  data.add(r5);
+  data.add(r6);
+  data.add(r7);
+  data.add(r8);
+  data.add(o4);
+  data.add(pp3);
+  data.add(pp4);
+  StatelessSessionResult sessionResult=session.executeWithResults(data);
+  Iterator iter=sessionResult.iterateObjects();
+  boolean pp1true=false;
+  boolean pp2true=false;
+  boolean pp3true=false;
+  boolean pp4true=false;
+  while (iter.hasNext()) {
+    Object o=(Object)iter.next();
+    if (o instanceof AlwaysTrue) {
+      AlwaysTrue alwaysTrue=(AlwaysTrue)o;
+      if (!pp1true) {
+        pp1true=alwaysTrue.getCause().equals(pp1);
+      }
+      if (!pp2true) {
+        pp2true=alwaysTrue.getCause().equals(pp2);
+      }
+      if (!pp3true) {
+        pp3true=alwaysTrue.getCause().equals(pp3);
+      }
+      if (!pp4true) {
+        pp4true=alwaysTrue.getCause().equals(pp4);
+      }
+    }
+  }
+  assertTrue(pp1true);
+  assertTrue(pp2true);
+  assertFalse(pp3true);
+  assertTrue(pp4true);
+}
