@@ -1,19 +1,25 @@
 {
-  Class clazz=findLoadedClass(name);
-  if (clazz == null) {
-    clazz=fastFindClass(name);
-    if (clazz == null) {
-      final ClassLoader parent=getParent();
-      if (parent != null) {
-        clazz=Class.forName(name,true,parent);
+  Class cls=findLoadedClass(name);
+  if (cls == null) {
+    cls=fastFindClass(name);
+    if (cls == null) {
+      for (      final ClassLoader parent : this.parents) {
+        try {
+          cls=Class.forName(name,true,parent);
+        }
+ catch (        ClassNotFoundException e) {
+        }
+        if (cls != null) {
+          break;
+        }
       }
- else {
+      if (cls == null) {
         return null;
       }
     }
   }
   if (resolve) {
-    resolveClass(clazz);
+    resolveClass(cls);
   }
-  return clazz;
+  return cls;
 }
