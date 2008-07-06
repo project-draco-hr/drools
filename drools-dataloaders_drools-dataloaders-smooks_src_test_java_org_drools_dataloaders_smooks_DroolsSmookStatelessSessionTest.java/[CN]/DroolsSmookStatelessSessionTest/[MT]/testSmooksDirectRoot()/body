@@ -1,0 +1,16 @@
+{
+  PackageBuilder pkgBuilder=new PackageBuilder();
+  pkgBuilder.addPackageFromDrl(new InputStreamReader(DroolsSmookStatelessSessionTest.class.getResourceAsStream("test_SmooksDirectRoot.drl")));
+  assertFalse(pkgBuilder.hasErrors());
+  RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  ruleBase.addPackage(pkgBuilder.getPackage());
+  StatelessSession session=ruleBase.newStatelessSession();
+  List list=new ArrayList();
+  session.setGlobal("list",list);
+  Smooks smooks=new Smooks(getClass().getResourceAsStream("smooks-config.xml"));
+  DroolsSmooksConfiguration conf=new DroolsSmooksConfiguration("orderItem",null);
+  DroolsSmooksStatelessSession dataLoader=new DroolsSmooksStatelessSession(session,smooks,conf);
+  dataLoader.executeFilter(new StreamSource(getClass().getResourceAsStream("SmooksDirectRoot.xml")));
+  assertEquals(1,list.size());
+  assertEquals("example.OrderItem",list.get(0).getClass().getName());
+}

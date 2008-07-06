@@ -1,0 +1,27 @@
+{
+  JavaResult result=new JavaResult();
+  ClassLoader previousClassLoader=Thread.currentThread().getContextClassLoader();
+  Thread.currentThread().setContextClassLoader(((InternalRuleBase)this.session.getRuleBase()).getCompositePackageClassLoader());
+  ExecutionContext executionContext=this.smooks.createExecutionContext();
+  smooks.filter(source,result,executionContext);
+  Thread.currentThread().setContextClassLoader(previousClassLoader);
+  Map handles=new HashMap<FactHandle,Object>();
+  Object object=result.getBean(this.configuration.getRoodId());
+  if (object == null) {
+    return handles;
+  }
+  if (this.getterExpr != null) {
+    Iterable it=(Iterable)MVEL.executeExpression(this.getterExpr,object);
+    if (it != null) {
+      for (      Object item : it) {
+        FactHandle handle=this.session.insert(item);
+        handles.put(handle,object);
+      }
+    }
+  }
+ else {
+    FactHandle handle=this.session.insert(object);
+    handles.put(handle,object);
+  }
+  return handles;
+}
