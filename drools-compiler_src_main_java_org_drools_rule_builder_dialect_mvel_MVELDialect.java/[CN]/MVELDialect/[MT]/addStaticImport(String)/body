@@ -7,15 +7,22 @@
   String methodName=staticImportEntry.substring(index + 1);
   try {
     Class cls=this.pkg.getDialectRuntimeRegistry().getClassLoader().loadClass(className);
-    Method[] methods=cls.getDeclaredMethods();
-    for (int i=0; i < methods.length; i++) {
-      if (methods[i].getName().equals(methodName)) {
-        this.imports.put(methodName,methods[i]);
-        break;
+    if (cls != null) {
+      for (      Method method : cls.getDeclaredMethods()) {
+        if (method.getName().equals(methodName)) {
+          this.imports.put(methodName,method);
+          return;
+        }
+      }
+      for (      Field field : cls.getFields()) {
+        if (field.isAccessible() && field.getName().equals(methodName)) {
+          this.imports.put(methodName,field);
+          return;
+        }
       }
     }
   }
  catch (  ClassNotFoundException e) {
-    this.results.add(new ImportError(staticImportEntry,-1));
   }
+  this.results.add(new ImportError(staticImportEntry,-1));
 }
