@@ -1,20 +1,51 @@
 {
   String text=descr.getText();
-  Variable variable=data.getVariableByRuleAndVariableName(currentRule.getRuleName(),text.substring(0,text.indexOf(".")));
-  QualifiedIdentifierRestriction restriction=new QualifiedIdentifierRestriction();
-  restriction.setRuleId(currentRule.getId());
-  restriction.setPatternId(currentPattern.getId());
-  restriction.setPatternIsNot(currentPattern.isPatternNot());
-  restriction.setConstraintId(currentConstraint.getId());
-  restriction.setFieldId(currentConstraint.getFieldId());
-  restriction.setOperator(Operator.determineOperator(descr.getEvaluator(),descr.isNegated()));
-  restriction.setVariableId(variable.getId());
-  restriction.setVariableName(text.substring(0,text.indexOf(".")));
-  restriction.setVariablePath(text.substring(text.indexOf(".")));
-  restriction.setOrderNumber(orderNumber);
-  restriction.setParent(parent);
-  currentField.setFieldType(Field.FieldType.VARIABLE);
-  variable.setObjectType(VerifierComponentType.FIELD);
-  data.add(restriction);
-  solvers.addRestriction(restriction);
+  String base=text.substring(0,text.indexOf("."));
+  String fieldName=text.substring(text.indexOf("."));
+  Variable variable=data.getVariableByRuleAndVariableName(currentRule.getRuleName(),base);
+  if (variable != null) {
+    QualifiedIdentifierRestriction restriction=new QualifiedIdentifierRestriction();
+    restriction.setRuleId(currentRule.getId());
+    restriction.setPatternId(currentPattern.getId());
+    restriction.setPatternIsNot(currentPattern.isPatternNot());
+    restriction.setConstraintId(currentConstraint.getId());
+    restriction.setFieldId(currentConstraint.getFieldId());
+    restriction.setOperator(Operator.determineOperator(descr.getEvaluator(),descr.isNegated()));
+    restriction.setVariableId(variable.getId());
+    restriction.setVariableName(base);
+    restriction.setVariablePath(fieldName);
+    restriction.setOrderNumber(orderNumber);
+    restriction.setParent(parent);
+    currentField.setFieldType(Field.FieldType.VARIABLE);
+    variable.setObjectType(VerifierComponentType.FIELD);
+    data.add(restriction);
+    solvers.addRestriction(restriction);
+  }
+ else {
+    EnumField enumField=(EnumField)data.getFieldByObjectTypeAndFieldName(base,fieldName);
+    if (enumField == null) {
+      ObjectType objectType=findOrCreateNewObjectType(base);
+      enumField=new EnumField();
+      enumField.setObjectTypeId(objectType.getId());
+      enumField.setClassName(objectType.getName());
+      enumField.setName(fieldName);
+      objectType.getFields().add(enumField);
+      data.add(enumField);
+    }
+    EnumRestriction restriction=new EnumRestriction();
+    restriction.setRuleId(currentRule.getId());
+    restriction.setPatternId(currentPattern.getId());
+    restriction.setPatternIsNot(currentPattern.isPatternNot());
+    restriction.setConstraintId(currentConstraint.getId());
+    restriction.setFieldId(currentConstraint.getFieldId());
+    restriction.setOperator(Operator.determineOperator(descr.getEvaluator(),descr.isNegated()));
+    restriction.setEnumBaseId(enumField.getId());
+    restriction.setEnumBase(base);
+    restriction.setEnumName(fieldName);
+    restriction.setOrderNumber(orderNumber);
+    restriction.setParent(parent);
+    currentField.setFieldType(Field.FieldType.ENUM);
+    data.add(restriction);
+    solvers.addRestriction(restriction);
+  }
 }
