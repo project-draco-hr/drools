@@ -1,12 +1,22 @@
 {
-  if (this.files == null)   return new Package[0];
-  List list=new ArrayList();
+  PackageChangeInfo info=new PackageChangeInfo();
+  if (this.files == null)   return info;
+  if (pathToPackage == null)   pathToPackage=new HashMap<String,String>();
   for (int i=0; i < files.length; i++) {
     File f=files[i];
-    if (hasChanged(f.getPath(),this.lastUpdated,f.lastModified())) {
+    if (!f.exists()) {
+      String name=pathToPackage.get(f.getPath());
+      if (name != null) {
+        info.addRemovedPackage(name);
+      }
+    }
+ else     if (hasChanged(f.getPath(),this.lastUpdated,f.lastModified())) {
       Package p=readPackage(f);
-      if (p != null)       list.add(p);
+      if (p != null) {
+        info.addPackage(p);
+        pathToPackage.put(f.getPath(),p.getName());
+      }
     }
   }
-  return (Package[])list.toArray(new Package[list.size()]);
+  return info;
 }

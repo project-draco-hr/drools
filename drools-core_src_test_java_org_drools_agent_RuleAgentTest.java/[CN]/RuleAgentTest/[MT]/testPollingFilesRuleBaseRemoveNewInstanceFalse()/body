@@ -1,0 +1,29 @@
+{
+  File dir=RuleBaseAssemblerTest.getTempDirectory();
+  Package p1=new Package("p1");
+  File p1f=new File(dir,"p43_.pkg");
+  RuleBaseAssemblerTest.writePackage(p1,p1f);
+  Package p2=new Package("p2");
+  File p2f=new File(dir,"p44_.pkg");
+  RuleBaseAssemblerTest.writePackage(p2,p2f);
+  String path=dir.getPath() + "/" + "p43_.pkg "+ dir.getPath()+ "/p44_.pkg";
+  Properties props=new Properties();
+  props.setProperty("file",path);
+  props.setProperty("newInstance","false");
+  RuleAgent ag=RuleAgent.newRuleAgent(props);
+  assertFalse(ag.isNewInstance());
+  RuleBase rb=ag.getRuleBase();
+  assertEquals(2,rb.getPackages().length);
+  boolean success=p2f.delete();
+  assertTrue(success);
+  ag.refreshRuleBase();
+  assertEquals(1,rb.getPackages().length);
+  Thread.sleep(1000);
+  RuleBaseAssemblerTest.writePackage(p1,p1f);
+  Thread.sleep(1000);
+  ag.refreshRuleBase();
+  assertEquals(1,rb.getPackages().length);
+  ag.refreshRuleBase();
+  ag.refreshRuleBase();
+  assertEquals(1,rb.getPackages().length);
+}

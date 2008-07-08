@@ -1,25 +1,33 @@
 {
-  List changedPackages=new ArrayList();
+  List<Package> changedPackages=new ArrayList<Package>();
+  List<String> removedPackages=new ArrayList<String>();
   for (Iterator iter=providers.iterator(); iter.hasNext(); ) {
     PackageProvider prov=(PackageProvider)iter.next();
-    Package[] changes=checkForChanges(prov);
-    if (changes != null && changes.length > 0) {
-      changedPackages.addAll(Arrays.asList(changes));
+    PackageChangeInfo info=checkForChanges(prov);
+    Collection<Package> changes=info.getChangedPackages();
+    Collection<String> removed=info.getRemovedPackages();
+    if (changes != null && changes.size() > 0) {
+      changedPackages.addAll(changes);
+    }
+    if (removed != null && removed.size() > 0) {
+      removedPackages.addAll(removed);
     }
   }
-  if (changedPackages.size() > 0) {
+  if (changedPackages.size() > 0 || removedPackages.size() > 0) {
     listener.info("Applying changes to the rulebase.");
     if (this.newInstance) {
       listener.info("Creating a new rulebase as per settings.");
       this.ruleBase=RuleBaseFactory.newRuleBase(this.ruleBaseConf);
-      for (Iterator iter=changedPackages.iterator(); iter.hasNext(); ) {
-        Package element=(Package)iter.next();
+      for (      String name : removedPackages) {
+        this.packages.remove(name);
+      }
+      for (      Package element : changedPackages) {
         this.packages.put(element.getName(),element);
       }
       PackageProvider.applyChanges(this.ruleBase,false,this.packages.values(),this.listener);
     }
  else {
-      PackageProvider.applyChanges(this.ruleBase,true,changedPackages,this.listener);
+      PackageProvider.applyChanges(this.ruleBase,true,changedPackages,removedPackages,this.listener);
     }
   }
 }

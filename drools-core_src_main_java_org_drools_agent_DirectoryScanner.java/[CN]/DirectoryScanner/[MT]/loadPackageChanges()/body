@@ -1,9 +1,25 @@
 {
-  if (currentList.length != dir.listFiles().length) {
-    listener.info("Extra files detected in the directory " + dir.getPath());
-    currentList=dir.listFiles();
-    scanner=new FileScanner();
-    scanner.setFiles(currentList);
+  Map<String,String> pathToPackage=scanner.pathToPackage;
+  Collection<String> removedPackageNames=new ArrayList<String>();
+  if (pathToPackage != null) {
+    Map<String,String> tempPathToPackage=new HashMap<String,String>();
+    File[] files=dir.listFiles();
+    for (int i=0; i < files.length; i++) {
+      File f=files[i];
+      String path=f.getPath();
+      if (pathToPackage.containsKey(path)) {
+        tempPathToPackage.put(path,pathToPackage.get(path));
+        pathToPackage.remove(path);
+      }
+    }
+    if (pathToPackage.size() > 0 || files.length != tempPathToPackage.size()) {
+      removedPackageNames.addAll(pathToPackage.values());
+      listener.info("File changes detected in the directory " + dir.getPath());
+      scanner.setFiles(files);
+    }
+    scanner.pathToPackage=tempPathToPackage;
   }
-  return scanner.loadPackageChanges();
+  PackageChangeInfo info=scanner.loadPackageChanges();
+  info.addRemovedPackages(removedPackageNames);
+  return info;
 }
