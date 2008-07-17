@@ -10,26 +10,9 @@ synchronized (this.pkgs) {
     this.additionsSinceLock++;
     this.eventSupport.fireBeforePackageAdded(newPkg);
     if (pkg == null) {
-      pkg=new Package(newPkg.getName(),newPkg.getPackageScopeClassLoader());
+      pkg=new Package(newPkg.getName(),new MapBackedClassLoader(newPkg.getPackageScopeClassLoader().getParent()));
       pkgs.put(pkg.getName(),pkg);
       this.packageClassLoader.addClassLoader(pkg.getDialectRuntimeRegistry().getClassLoader());
-    }
- else {
-      pkg.getPackageScopeClassLoader().getStore().putAll(newPkg.getPackageScopeClassLoader().getStore());
-      this.packageClassLoader.addClassLoader(newPkg.getDialectRuntimeRegistry().getClassLoader());
-    }
-    final Map<String,Class> newGlobals=newPkg.getGlobals();
-    if (newGlobals != null) {
-      for (      final Map.Entry<String,Class> entry : newGlobals.entrySet()) {
-        final String identifier=entry.getKey();
-        final Class type=entry.getValue();
-        if (this.globals.containsKey(identifier) && !this.globals.get(identifier).equals(type)) {
-          throw new PackageIntegrationException(pkg);
-        }
- else {
-          this.globals.put(identifier,type);
-        }
-      }
     }
     mergePackage(pkg,newPkg);
     if (newPkg.getTypeDeclarations() != null) {
