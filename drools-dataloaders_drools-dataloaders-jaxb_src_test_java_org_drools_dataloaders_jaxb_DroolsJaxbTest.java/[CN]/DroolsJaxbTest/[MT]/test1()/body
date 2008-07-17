@@ -1,0 +1,14 @@
+{
+  Options xjcOpts=new Options();
+  xjcOpts.setSchemaLanguage(Language.XMLSCHEMA);
+  PackageBuilder pkgBuilder=new PackageBuilder();
+  InputStream stream=getClass().getResourceAsStream("test.xsd");
+  String[] classNames=DroolsJaxbHelper.addModel(new InputStreamReader(stream),pkgBuilder,xjcOpts,"xsd");
+  assertFalse(pkgBuilder.hasErrors());
+  RuleBase rb=RuleBaseFactory.newRuleBase();
+  rb.addPackage(pkgBuilder.getPackage());
+  JAXBContext jaxbCtx=DroolsJaxbHelper.newInstance(classNames,rb);
+  Unmarshaller unmarshaller=jaxbCtx.createUnmarshaller();
+  JAXBElement elm=(JAXBElement)unmarshaller.unmarshal(getClass().getResourceAsStream("data.xml"));
+  assertEquals("com.oracle.sample3.USAddress",elm.getValue().getClass().getName());
+}

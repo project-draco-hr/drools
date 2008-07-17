@@ -1,0 +1,22 @@
+{
+  JAXBElement elm=(JAXBElement)unmarshaller.unmarshal(reader);
+  Object object=elm.getValue().getClass().getName();
+  Map handles=new HashMap<FactHandle,Object>();
+  if (object == null) {
+    return handles;
+  }
+  if (this.getterExpr != null) {
+    Iterable it=(Iterable)MVEL.executeExpression(this.getterExpr,object);
+    if (it != null) {
+      for (      Object item : it) {
+        FactHandle handle=this.session.insert(item);
+        handles.put(handle,object);
+      }
+    }
+  }
+ else {
+    FactHandle handle=this.session.insert(object);
+    handles.put(handle,object);
+  }
+  return handles;
+}
