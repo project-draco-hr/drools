@@ -1,9 +1,13 @@
 {
-  clazz=(Class<?>)is.readObject();
+  String clsName=(String)is.readObject();
   fieldName=(String)is.readObject();
   if (is instanceof DroolsObjectInput) {
     DroolsObjectInput droolsInput=(DroolsObjectInput)is;
+    this.clazz=droolsInput.getClassLoader().loadClass(clsName);
     reader=droolsInput.getExtractorFactory().getReader(clazz,fieldName,droolsInput.getClassLoader());
   }
- else   reader=ClassFieldAccessorCache.getInstance().getReader(clazz,fieldName,getClass().getClassLoader());
+ else {
+    this.clazz=getClass().getClassLoader().loadClass(clsName);
+    reader=ClassFieldAccessorCache.getInstance().getReader(clazz,fieldName,getClass().getClassLoader());
+  }
 }
