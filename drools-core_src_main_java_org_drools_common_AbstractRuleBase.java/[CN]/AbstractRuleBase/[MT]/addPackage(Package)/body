@@ -10,9 +10,13 @@ synchronized (this.pkgs) {
     this.additionsSinceLock++;
     this.eventSupport.fireBeforePackageAdded(newPkg);
     if (pkg == null) {
-      pkg=new Package(newPkg.getName(),new MapBackedClassLoader(newPkg.getPackageScopeClassLoader().getParent()));
+      pkg=new Package(newPkg.getName(),newPkg.getPackageScopeClassLoader());
       pkgs.put(pkg.getName(),pkg);
       this.packageClassLoader.addClassLoader(pkg.getDialectRuntimeRegistry().getClassLoader());
+    }
+ else {
+      pkg.getPackageScopeClassLoader().getStore().putAll(newPkg.getPackageScopeClassLoader().getStore());
+      this.packageClassLoader.addClassLoader(newPkg.getDialectRuntimeRegistry().getClassLoader());
     }
     mergePackage(pkg,newPkg);
     if (newPkg.getTypeDeclarations() != null) {
