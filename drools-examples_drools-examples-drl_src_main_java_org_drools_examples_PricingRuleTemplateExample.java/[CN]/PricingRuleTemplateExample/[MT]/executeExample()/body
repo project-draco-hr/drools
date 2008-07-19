@@ -1,0 +1,21 @@
+{
+  final ExternalSpreadsheetCompiler converter=new ExternalSpreadsheetCompiler();
+  final List<DataListener> listeners=new ArrayList<DataListener>();
+  TemplateDataListener l1=new TemplateDataListener(10,3,getBasePricingRulesStream());
+  listeners.add(l1);
+  TemplateDataListener l2=new TemplateDataListener(30,3,getPromotionalPricingRulesStream());
+  listeners.add(l2);
+  converter.compile(getSpreadsheetStream(),InputType.XLS,listeners);
+  String baseRules=l1.renderDRL();
+  String promotionalRules=l2.renderDRL();
+  final RuleBase rb=buildRuleBase(baseRules,promotionalRules);
+  WorkingMemory wm=rb.newStatefulSession();
+  Driver driver=new Driver();
+  Policy policy=new Policy();
+  wm.insert(driver);
+  wm.insert(policy);
+  wm.fireAllRules();
+  System.out.println("BASE PRICE IS: " + policy.getBasePrice());
+  System.out.println("DISCOUNT IS: " + policy.getDiscountPercent());
+  return policy.getBasePrice();
+}
