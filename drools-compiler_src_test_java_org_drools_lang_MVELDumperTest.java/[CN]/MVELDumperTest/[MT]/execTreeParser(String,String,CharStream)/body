@@ -1,0 +1,56 @@
+{
+  Object treeRuleReturn=null;
+  try {
+    DRLLexer lexer=new DRLLexer(charStream);
+    CommonTokenStream tokens=new CommonTokenStream(lexer);
+    DRLParser parser=new DRLParser(tokens);
+    parser.setTreeAdaptor(new DroolsTreeAdaptor());
+    Method ruleName=Class.forName("org.drools.lang.DRLParser").getMethod(testRuleName);
+    Object ruleReturn=ruleName.invoke(parser);
+    if (!parser.hasErrors()) {
+      Class _return=Class.forName("org.drools.lang.DRLParser" + "$" + testRuleName + "_return");
+      Method returnName=_return.getMethod("getTree");
+      DroolsTree tree=(DroolsTree)returnName.invoke(ruleReturn);
+      CommonTreeNodeStream nodes=new CommonTreeNodeStream(tree);
+      nodes.setTokenStream(tokens);
+      DescrBuilderTree walker=new DescrBuilderTree(nodes);
+      Method treeRuleName=Class.forName("org.drools.lang.DescrBuilderTree").getMethod(testTreeRuleName);
+      treeRuleReturn=treeRuleName.invoke(walker);
+    }
+    if (treeRuleReturn != null) {
+      if (treeRuleReturn.toString().indexOf(testTreeRuleName + "_return") > 0) {
+        try {
+          Class _treeReturn=Class.forName("org.drools.lang.DescrBuilderTree" + "$" + testTreeRuleName + "_return");
+          Field[] fields=_treeReturn.getDeclaredFields();
+          for (          Field field : fields) {
+            if (field.getType().getName().contains("org.drools.lang.descr.")) {
+              return field.get(treeRuleReturn);
+            }
+          }
+        }
+ catch (        Exception e) {
+          System.err.println(e);
+        }
+      }
+    }
+  }
+ catch (  ClassNotFoundException e) {
+    e.printStackTrace();
+  }
+catch (  SecurityException e) {
+    e.printStackTrace();
+  }
+catch (  NoSuchMethodException e) {
+    e.printStackTrace();
+  }
+catch (  IllegalAccessException e) {
+    e.printStackTrace();
+  }
+catch (  InvocationTargetException e) {
+    e.printStackTrace();
+  }
+catch (  Exception e) {
+    e.printStackTrace();
+  }
+  return treeRuleReturn;
+}

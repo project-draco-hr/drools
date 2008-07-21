@@ -1,12 +1,19 @@
 {
   try {
-    parser.compilation_unit();
+    DroolsTree resultTree=(DroolsTree)parser.compilation_unit().getTree();
     makeErrorList(parser);
+    if (!this.hasErrors()) {
+      CommonTreeNodeStream nodes=new CommonTreeNodeStream(resultTree);
+      nodes.setTokenStream(parser.getTokenStream());
+      DescrBuilderTree walker=new DescrBuilderTree(nodes);
+      walker.compilation_unit();
+      return walker.getPackageDescr();
+    }
+ else {
+      return null;
+    }
   }
- catch (  final RecognitionException e) {
-    throw new DroolsParserException(e);
-  }
-catch (  Exception e) {
+ catch (  Exception e) {
     throw new DroolsParserException("Unknown error while parsing. This is a bug. Please contact the Development team.",e);
   }
 }
