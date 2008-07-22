@@ -1,7 +1,14 @@
 {
-  super.addIncomingConnection(type,connection);
-  CompositeNodeStart start=new CompositeNodeStart(connection.getFrom(),type);
-  addNode(start);
-  CompositeNode.NodeAndType inNode=getLinkedIncomingNode(type);
-  new ConnectionImpl(start,Node.CONNECTION_DEFAULT_TYPE,inNode.getNode(),inNode.getType());
+  if (connection.getFrom().getNodeContainer() == this) {
+    linkOutgoingConnections(connection.getFrom().getId(),connection.getFromType(),Node.CONNECTION_DEFAULT_TYPE);
+  }
+ else {
+    super.addIncomingConnection(type,connection);
+    CompositeNode.NodeAndType inNode=internalGetLinkedIncomingNode(type);
+    if (inNode != null) {
+      CompositeNodeStart start=new CompositeNodeStart(connection.getFrom(),type);
+      internalAddNode(start);
+      new ConnectionImpl(start,Node.CONNECTION_DEFAULT_TYPE,inNode.getNode(),inNode.getType());
+    }
+  }
 }
