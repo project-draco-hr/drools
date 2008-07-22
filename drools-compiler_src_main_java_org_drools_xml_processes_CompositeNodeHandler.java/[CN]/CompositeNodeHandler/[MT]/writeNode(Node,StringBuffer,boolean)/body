@@ -1,38 +1,31 @@
 {
+  super.writeNode(getNodeName(),node,xmlDump,includeMeta);
   CompositeNode compositeNode=(CompositeNode)node;
-  writeNode("composite",compositeNode,xmlDump,includeMeta);
+  writeAttributes(compositeNode,xmlDump,includeMeta);
   xmlDump.append(">" + EOL);
+  List<Node> subNodes=getSubNodes(compositeNode);
   xmlDump.append("      <nodes>" + EOL);
-  for (  Node subNode : compositeNode.getNodes()) {
-    if ((!(subNode instanceof CompositeNode.CompositeNodeStart)) && (!(subNode instanceof CompositeNode.CompositeNodeEnd))) {
-      XmlRuleFlowProcessDumper.INSTANCE.visitNode(subNode,xmlDump,includeMeta);
-    }
+  for (  Node subNode : subNodes) {
+    XmlRuleFlowProcessDumper.INSTANCE.visitNode(subNode,xmlDump,includeMeta);
   }
   xmlDump.append("      </nodes>" + EOL);
-  List<Connection> connections=new ArrayList<Connection>();
-  for (  Node subNode : compositeNode.getNodes()) {
-    if (!(subNode instanceof CompositeNode.CompositeNodeEnd)) {
-      for (      Connection connection : subNode.getIncomingConnections(Node.CONNECTION_DEFAULT_TYPE)) {
-        if (!(connection.getFrom() instanceof CompositeNode.CompositeNodeStart)) {
-          connections.add(connection);
-        }
-      }
-    }
-  }
+  List<Connection> connections=getSubConnections(compositeNode);
   xmlDump.append("      <connections>" + EOL);
   for (  Connection connection : connections) {
     XmlRuleFlowProcessDumper.INSTANCE.visitConnection(connection,xmlDump,includeMeta);
   }
   xmlDump.append("      </connections>" + EOL);
+  Map<String,CompositeNode.NodeAndType> inPorts=getInPorts(compositeNode);
   xmlDump.append("      <in-ports>" + EOL);
-  for (  Map.Entry<String,CompositeNode.NodeAndType> entry : compositeNode.getLinkedIncomingNodes().entrySet()) {
+  for (  Map.Entry<String,CompositeNode.NodeAndType> entry : inPorts.entrySet()) {
     xmlDump.append("        <in-port type=\"" + entry.getKey() + "\" nodeId=\""+ entry.getValue().getNodeId()+ "\" nodeInType=\""+ entry.getValue().getType()+ "\" />"+ EOL);
   }
   xmlDump.append("      </in-ports>" + EOL);
+  Map<String,CompositeNode.NodeAndType> outPorts=getOutPorts(compositeNode);
   xmlDump.append("      <out-ports>" + EOL);
-  for (  Map.Entry<String,CompositeNode.NodeAndType> entry : compositeNode.getLinkedOutgoingNodes().entrySet()) {
+  for (  Map.Entry<String,CompositeNode.NodeAndType> entry : outPorts.entrySet()) {
     xmlDump.append("        <out-port type=\"" + entry.getKey() + "\" nodeId=\""+ entry.getValue().getNodeId()+ "\" nodeOutType=\""+ entry.getValue().getType()+ "\" />"+ EOL);
   }
   xmlDump.append("      </out-ports>" + EOL);
-  endNode("composite",xmlDump);
+  endNode(getNodeName(),xmlDump);
 }

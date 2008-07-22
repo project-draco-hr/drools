@@ -165,6 +165,19 @@
   timerNode.setTimer(timer);
   process.addNode(timerNode);
   new ConnectionImpl(humanTaskNode,Node.CONNECTION_DEFAULT_TYPE,timerNode,Node.CONNECTION_DEFAULT_TYPE);
+  ForEachNode forEachNode=new ForEachNode();
+  forEachNode.setCollectionExpression("collection");
+  forEachNode.setVariable("variableName",new ObjectDataType());
+  forEachNode.setWaitForCompletion(false);
+  ActionNode subActionNode1=new ActionNode();
+  forEachNode.getCompositeNode().addNode(subActionNode1);
+  ActionNode subActionNode2=new ActionNode();
+  forEachNode.getCompositeNode().addNode(subActionNode2);
+  new ConnectionImpl(subActionNode1,Node.CONNECTION_DEFAULT_TYPE,subActionNode2,Node.CONNECTION_DEFAULT_TYPE);
+  forEachNode.getCompositeNode().linkIncomingConnections(Node.CONNECTION_DEFAULT_TYPE,subActionNode1.getId(),Node.CONNECTION_DEFAULT_TYPE);
+  forEachNode.getCompositeNode().linkOutgoingConnections(subActionNode2.getId(),Node.CONNECTION_DEFAULT_TYPE,Node.CONNECTION_DEFAULT_TYPE);
+  process.addNode(forEachNode);
+  new ConnectionImpl(timerNode,Node.CONNECTION_DEFAULT_TYPE,forEachNode,Node.CONNECTION_DEFAULT_TYPE);
   EndNode endNode=new EndNode();
   endNode.setName("end");
   endNode.setMetaData("x",1);
@@ -172,17 +185,17 @@
   endNode.setMetaData("width",3);
   endNode.setMetaData("height",4);
   process.addNode(endNode);
-  new ConnectionImpl(timerNode,Node.CONNECTION_DEFAULT_TYPE,endNode,Node.CONNECTION_DEFAULT_TYPE);
+  new ConnectionImpl(forEachNode,Node.CONNECTION_DEFAULT_TYPE,endNode,Node.CONNECTION_DEFAULT_TYPE);
   String xml=XmlRuleFlowProcessDumper.INSTANCE.dump(process,true);
   if (xml == null) {
-    throw new IllegalArgumentException("Failed to persist empty nodes!");
+    throw new IllegalArgumentException("Failed to persist full nodes!");
   }
   XmlProcessReader reader=new XmlProcessReader(new PackageBuilderConfiguration().getSemanticModules());
   process=(RuleFlowProcess)reader.read(new StringReader(xml));
   if (process == null) {
     throw new IllegalArgumentException("Failed to reload process!");
   }
-  assertEquals(11,process.getNodes().length);
+  assertEquals(12,process.getNodes().length);
   String xml2=XmlRuleFlowProcessDumper.INSTANCE.dump(process,true);
   if (xml2 == null) {
     throw new IllegalArgumentException("Failed to persist empty nodes!");
