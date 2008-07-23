@@ -1,0 +1,77 @@
+{
+  RuleFlowProcess process=new RuleFlowProcess();
+  process.setId("org.drools.process.event");
+  process.setName("Event Process");
+  List<Variable> variables=new ArrayList<Variable>();
+  Variable variable=new Variable();
+  variable.setName("event");
+  ObjectDataType personDataType=new ObjectDataType();
+  personDataType.setClassName("org.drools.Person");
+  variable.setType(personDataType);
+  variables.add(variable);
+  process.getVariableScope().setVariables(variables);
+  StartNode startNode=new StartNode();
+  startNode.setName("Start");
+  startNode.setId(1);
+  process.addNode(startNode);
+  EventNode eventNode=new EventNode();
+  EventTypeFilter eventFilter=new EventTypeFilter();
+  eventFilter.setType("myEvent");
+  eventNode.addEventFilter(eventFilter);
+  eventNode.setId(3);
+  process.addNode(eventNode);
+  final List<String> myList=new ArrayList<String>();
+  ActionNode actionNode=new ActionNode();
+  actionNode.setName("Print");
+  DroolsAction action=new DroolsConsequenceAction("java",null);
+  action.setMetaData("Action",new Action(){
+    public void execute(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory,    ActionContext context) throws Exception {
+      myList.add("Executed action");
+    }
+  }
+);
+  actionNode.setAction(action);
+  actionNode.setId(4);
+  process.addNode(actionNode);
+  new ConnectionImpl(eventNode,Node.CONNECTION_DEFAULT_TYPE,actionNode,Node.CONNECTION_DEFAULT_TYPE);
+  EventNode eventNode2=new EventNode();
+  eventFilter=new EventTypeFilter();
+  eventFilter.setType("myEvent");
+  eventNode2.addEventFilter(eventFilter);
+  eventNode2.setId(5);
+  process.addNode(eventNode2);
+  ActionNode actionNode2=new ActionNode();
+  actionNode2.setName("Print");
+  action=new DroolsConsequenceAction("java",null);
+  action.setMetaData("Action",new Action(){
+    public void execute(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory,    ActionContext context) throws Exception {
+      myList.add("Executed action");
+    }
+  }
+);
+  actionNode2.setAction(action);
+  actionNode2.setId(6);
+  process.addNode(actionNode2);
+  new ConnectionImpl(eventNode2,Node.CONNECTION_DEFAULT_TYPE,actionNode2,Node.CONNECTION_DEFAULT_TYPE);
+  Join join=new Join();
+  join.setName("AND Join");
+  join.setType(Join.TYPE_AND);
+  join.setId(7);
+  process.addNode(join);
+  new ConnectionImpl(startNode,Node.CONNECTION_DEFAULT_TYPE,join,Node.CONNECTION_DEFAULT_TYPE);
+  new ConnectionImpl(actionNode,Node.CONNECTION_DEFAULT_TYPE,join,Node.CONNECTION_DEFAULT_TYPE);
+  new ConnectionImpl(actionNode2,Node.CONNECTION_DEFAULT_TYPE,join,Node.CONNECTION_DEFAULT_TYPE);
+  EndNode endNode=new EndNode();
+  endNode.setName("EndNode");
+  endNode.setId(8);
+  process.addNode(endNode);
+  new ConnectionImpl(join,Node.CONNECTION_DEFAULT_TYPE,endNode,Node.CONNECTION_DEFAULT_TYPE);
+  AbstractRuleBase ruleBase=(AbstractRuleBase)RuleBaseFactory.newRuleBase();
+  ruleBase.addProcess(process);
+  InternalWorkingMemory workingMemory=new ReteooWorkingMemory(1,ruleBase);
+  ProcessInstance processInstance=workingMemory.startProcess("org.drools.process.event");
+  assertEquals(0,myList.size());
+  processInstance.signalEvent("myEvent",null);
+  assertEquals(2,myList.size());
+  assertEquals(ProcessInstance.STATE_COMPLETED,processInstance.getState());
+}

@@ -1,0 +1,19 @@
+{
+  List<EventListener> listeners=eventListeners.get(type);
+  if (listeners != null) {
+    for (    EventListener listener : listeners) {
+      listener.signalEvent(type,event);
+    }
+  }
+ else {
+    for (    Node node : getWorkflowProcess().getNodes()) {
+      if (node instanceof EventNode) {
+        if (acceptsEvent((EventNode)node,type,event)) {
+          EventNodeInstance eventNodeInstance=(EventNodeInstance)getNodeInstance(node);
+          eventNodeInstance.setEvent(type,event);
+          eventNodeInstance.trigger(null,null);
+        }
+      }
+    }
+  }
+}
