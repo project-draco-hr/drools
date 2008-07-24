@@ -1,12 +1,13 @@
 {
   super.removeIncomingConnection(type,connection);
-  CompositeNode.NodeAndType inNode=internalGetLinkedIncomingNode(type);
-  List<Connection> connections=inNode.getNode().getIncomingConnections(inNode.getType());
-  for (Iterator<Connection> iterator=connections.iterator(); iterator.hasNext(); ) {
-    Connection internalConnection=iterator.next();
-    if (((CompositeNodeStart)internalConnection.getFrom()).getInNode().equals(connection.getFrom())) {
-      ((ConnectionImpl)internalConnection).terminate();
-      removeNode(internalConnection.getFrom());
+  CompositeNode.NodeAndType nodeAndType=internalGetLinkedIncomingNode(type);
+  for (  Connection inConnection : nodeAndType.getNode().getIncomingConnections(nodeAndType.getType())) {
+    if (((CompositeNodeStart)inConnection.getFrom()).getInNodeId() == connection.getFrom().getId()) {
+      Node compositeNodeStart=inConnection.getFrom();
+      ((ConnectionImpl)inConnection).terminate();
+      removeNode(compositeNodeStart);
+      return;
     }
   }
+  throw new IllegalArgumentException("Could not find internal incoming connection for node");
 }

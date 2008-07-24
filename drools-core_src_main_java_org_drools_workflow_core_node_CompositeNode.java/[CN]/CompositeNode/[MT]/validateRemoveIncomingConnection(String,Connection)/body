@@ -1,4 +1,10 @@
 {
   CompositeNode.NodeAndType nodeAndType=internalGetLinkedIncomingNode(type);
-  ((NodeImpl)nodeAndType.getNode()).validateRemoveIncomingConnection(nodeAndType.getType(),connection);
+  for (  Connection inConnection : nodeAndType.getNode().getIncomingConnections(nodeAndType.getType())) {
+    if (((CompositeNodeStart)inConnection.getFrom()).getInNodeId() == connection.getFrom().getId()) {
+      ((NodeImpl)nodeAndType.getNode()).validateRemoveIncomingConnection(nodeAndType.getType(),inConnection);
+      return;
+    }
+  }
+  throw new IllegalArgumentException("Could not find internal incoming connection for node");
 }
