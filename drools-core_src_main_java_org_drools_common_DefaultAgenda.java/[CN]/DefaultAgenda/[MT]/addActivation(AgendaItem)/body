@@ -1,0 +1,51 @@
+{
+  if (activation.getRule().getAutoFocus()) {
+    this.setFocus(activation.getRule().getAgendaGroup());
+  }
+  addItemToActivationGroup(activation);
+  InternalAgendaGroup agendaGroup=(InternalAgendaGroup)this.getAgendaGroup(activation.getRule().getAgendaGroup());
+  activation.setAgendaGroup(agendaGroup);
+  if (activation.getRule().getRuleFlowGroup() == null) {
+    if (activation.getPropagationContext().getType() == PropagationContext.MODIFICATION) {
+      if (activation.getRule().isLockOnActive() && agendaGroup.isActive()) {
+        Activation justifier=activation.getPropagationContext().removeRetractedTuple(activation.getRule(),(LeftTuple)activation.getTuple());
+        if (justifier == null) {
+          return;
+        }
+ else         if (activation.getRule().hasLogicalDependency()) {
+          copyLogicalDependencies(activation.getPropagationContext(),workingMemory,activation,justifier);
+        }
+      }
+ else       if (activation.getRule().hasLogicalDependency()) {
+        Activation justifier=activation.getPropagationContext().removeRetractedTuple(activation.getRule(),(LeftTuple)activation.getTuple());
+        copyLogicalDependencies(activation.getPropagationContext(),workingMemory,activation,justifier);
+      }
+    }
+ else     if (activation.getRule().isLockOnActive() && agendaGroup.isActive()) {
+      return;
+    }
+    agendaGroup.add(activation);
+  }
+ else {
+    InternalRuleFlowGroup rfg=(InternalRuleFlowGroup)this.getRuleFlowGroup(activation.getRule().getRuleFlowGroup());
+    if (activation.getPropagationContext().getType() == PropagationContext.MODIFICATION) {
+      if (activation.getRule().isLockOnActive() && rfg.isActive()) {
+        Activation justifier=activation.getPropagationContext().removeRetractedTuple(activation.getRule(),(LeftTuple)activation.getTuple());
+        if (justifier == null) {
+          return;
+        }
+ else         if (activation.getRule().hasLogicalDependency()) {
+          copyLogicalDependencies(activation.getPropagationContext(),workingMemory,activation,justifier);
+        }
+      }
+ else       if (activation.getRule().hasLogicalDependency()) {
+        Activation justifier=activation.getPropagationContext().removeRetractedTuple(activation.getRule(),(LeftTuple)activation.getTuple());
+        copyLogicalDependencies(activation.getPropagationContext(),workingMemory,activation,justifier);
+      }
+    }
+ else     if (activation.getRule().isLockOnActive() && rfg.isActive()) {
+      return;
+    }
+    rfg.addActivation(activation);
+  }
+}
