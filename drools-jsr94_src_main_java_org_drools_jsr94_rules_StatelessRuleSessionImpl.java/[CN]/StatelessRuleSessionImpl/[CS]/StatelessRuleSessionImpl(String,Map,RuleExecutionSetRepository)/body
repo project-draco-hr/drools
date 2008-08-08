@@ -1,7 +1,14 @@
 {
   super(repository);
   setProperties(properties);
-  final RuleExecutionSetImpl ruleSet=(RuleExecutionSetImpl)repository.getRuleExecutionSet(bindUri);
+  RuleExecutionSetImpl ruleSet=null;
+  try {
+    ruleSet=(RuleExecutionSetImpl)repository.getRuleExecutionSet(bindUri,properties);
+  }
+ catch (  RuleExecutionSetRepositoryException e) {
+    String s="Error while retrieving rule execution set bound to: " + bindUri;
+    throw new RuleSessionCreateException(s,e);
+  }
   if (ruleSet == null) {
     throw new RuleExecutionSetNotFoundException("RuleExecutionSet unbound: " + bindUri);
   }

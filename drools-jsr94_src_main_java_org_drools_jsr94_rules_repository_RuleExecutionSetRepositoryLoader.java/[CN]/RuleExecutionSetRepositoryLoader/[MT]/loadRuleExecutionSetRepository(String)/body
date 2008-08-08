@@ -1,0 +1,40 @@
+{
+  Object factory=null;
+  String factoryName=null;
+  ClassLoader cL=Thread.currentThread().getContextClassLoader();
+  String propertyName="org.drools.jsr94.rules.repository.RuleExecutionSetRepository";
+  String fileName="META-INF/services/" + propertyName;
+  InputStream in=cL.getResourceAsStream(fileName);
+  if (in != null) {
+    BufferedReader reader=null;
+    try {
+      reader=new BufferedReader(new InputStreamReader(in,"UTF-8"));
+      factoryName=reader.readLine();
+      if (factoryName != null) {
+        factory=createFactory(cL,factoryName);
+      }
+    }
+ catch (    UnsupportedEncodingException e) {
+      throw new IllegalStateException("Failed to load " + propertyName + ": "+ factoryName,e);
+    }
+catch (    IOException e) {
+      throw new IllegalStateException("Failed to load " + propertyName + ": "+ factoryName,e);
+    }
+ finally {
+      close(reader);
+    }
+  }
+  if (factory == null) {
+  }
+  if (factory == null) {
+    PrivilegedAction action=new PropertyAccessAction(propertyName);
+    factoryName=(String)AccessController.doPrivileged(action);
+    if (factoryName != null) {
+      factory=createFactory(cL,factoryName);
+    }
+  }
+  if (factory == null && defaultFactoryName != null) {
+    factory=createFactory(cL,defaultFactoryName);
+  }
+  return (RuleExecutionSetRepository)factory;
+}
