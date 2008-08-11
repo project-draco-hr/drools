@@ -1,7 +1,7 @@
 {
   final PackageBuilderConfiguration pbconf=new PackageBuilderConfiguration();
   final PackageBuilder builder=new PackageBuilder(pbconf);
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_GeneratedBeans.drl")));
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_GeneratedBeans2.drl")));
   assertFalse(builder.getErrors().toString(),builder.hasErrors());
   Package p=builder.getPackage();
   assertEquals(2,p.getRules().length);
@@ -13,15 +13,21 @@
   Object cheese=cheeseFact.newInstance();
   cheeseFact.set(cheese,"type","stilton");
   assertEquals("stilton",cheeseFact.get(cheese,"type"));
+  Object cheese2=cheeseFact.newInstance();
+  cheeseFact.set(cheese2,"type","stilton");
+  assertEquals(cheese,cheese2);
   FactType personType=ruleBase.getFactType("org.drools.generatedbeans.Person");
   Object ps=personType.newInstance();
+  personType.set(ps,"name","mark");
+  personType.set(ps,"last","proctor");
   personType.set(ps,"age",42);
-  Map<String,Object> personMap=personType.getAsMap(ps);
-  assertEquals(42,personMap.get("age"));
-  personMap.put("age",43);
-  personType.setFromMap(ps,personMap);
-  assertEquals(43,personType.get(ps,"age"));
-  assertEquals("stilton",cheeseFact.getField("type").getFieldAccessor().getValue(cheese));
+  Object ps2=personType.newInstance();
+  personType.set(ps2,"name","mark");
+  personType.set(ps2,"last","proctor");
+  personType.set(ps2,"age",30);
+  assertEquals(ps,ps2);
+  personType.set(ps2,"last","little");
+  assertFalse(ps.equals(ps2));
   StatefulSession wm=ruleBase.newStatefulSession();
   Object cg=cheeseFact.newInstance();
   wm.setGlobal("cg",cg);

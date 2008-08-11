@@ -6,7 +6,10 @@
   try {
     for (    TypeFieldDescr field : flds.values()) {
       String fullFieldType=pkgRegistry.getTypeResolver().resolveType(field.getPattern().getObjectType()).getName();
-      def.addField(new FieldDefinition(field.getFieldName(),fullFieldType));
+      FieldDefinition fieldDef=new FieldDefinition(field.getFieldName(),fullFieldType);
+      boolean isKey=field.getMetaAttributes().containsKey("key");
+      fieldDef.setKey(isKey);
+      def.addField(fieldDef);
     }
     byte[] d=cb.buildClass(def);
     pkgRegistry.getPackage().getPackageScopeClassLoader().addClass(fullName,d);
