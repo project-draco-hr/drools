@@ -1,11 +1,16 @@
 {
   parser.startElementBuilder(localName,attrs);
-  Variable variable=(Variable)parser.getParent();
+  TypeObject typeable=(TypeObject)parser.getParent();
   final String name=attrs.getValue("name");
   emptyAttributeCheck(localName,"name",name,parser);
   DataType dataType=null;
   try {
     dataType=(DataType)Class.forName(name).newInstance();
+    if (dataType instanceof ObjectDataType) {
+      final String className=attrs.getValue("className");
+      emptyAttributeCheck(localName,"className",className,parser);
+      ((ObjectDataType)dataType).setClassName(className);
+    }
   }
  catch (  ClassNotFoundException e) {
     throw new SAXParseException("Could not find datatype " + name,parser.getLocator());
@@ -16,6 +21,6 @@ catch (  InstantiationException e) {
 catch (  IllegalAccessException e) {
     throw new SAXParseException("Could not access datatype " + name,parser.getLocator());
   }
-  variable.setType(dataType);
+  typeable.setType(dataType);
   return dataType;
 }

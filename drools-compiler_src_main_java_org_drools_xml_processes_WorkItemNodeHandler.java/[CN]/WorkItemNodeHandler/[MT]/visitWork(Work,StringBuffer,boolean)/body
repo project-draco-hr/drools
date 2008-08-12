@@ -2,19 +2,15 @@
   if (work != null) {
     xmlDump.append("      <work name=\"" + work.getName() + "\" >"+ EOL);
     for (    ParameterDefinition paramDefinition : work.getParameterDefinitions()) {
-      xmlDump.append("        <parameter name=\"" + paramDefinition.getName() + "\" "+ "type=\""+ paramDefinition.getType().getClass().getName()+ "\" ");
+      DataType dataType=paramDefinition.getType();
+      xmlDump.append("        <parameter name=\"" + paramDefinition.getName() + "\" >"+ EOL+ "  ");
+      XmlWorkflowProcessDumper.visitDataType(dataType,xmlDump);
       Object value=work.getParameter(paramDefinition.getName());
-      if (value == null) {
-        xmlDump.append("/>" + EOL);
+      if (value != null) {
+        xmlDump.append("  ");
+        XmlWorkflowProcessDumper.visitValue(value,dataType,xmlDump);
       }
- else {
-        if (value instanceof String) {
-          xmlDump.append(">" + XmlDumper.replaceIllegalChars((String)value) + "</parameter>"+ EOL);
-        }
- else {
-          throw new IllegalArgumentException("Unsupported value type: " + value);
-        }
-      }
+      xmlDump.append("        </parameter>" + EOL);
     }
     xmlDump.append("      </work>" + EOL);
   }
