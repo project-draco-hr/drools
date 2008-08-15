@@ -2,6 +2,12 @@
   InputSource source=new InputSource(new CachingRewindableReader(reader));
   source.setSystemId(systemId.trim().startsWith(".") ? systemId : "." + systemId);
   xjcOpts.addGrammar(source);
+  try {
+    xjcOpts.parseArguments(new String[]{"-npa"});
+  }
+ catch (  BadCommandLineException e) {
+    throw new IllegalArgumentException("Unable to parse arguments",e);
+  }
   ErrorReceiver errorReceiver=new JaxbErrorReceiver4Drools();
   Model model=ModelLoader.load(xjcOpts,new JCodeModel(),errorReceiver);
   final Outline outline=model.generateCode(xjcOpts,errorReceiver);
@@ -11,13 +17,12 @@
   List<String> classNames=new ArrayList<String>();
   for (  Entry<String,byte[]> entry : codeWriter.getMap().entrySet()) {
     String name=entry.getKey();
-    if (name.endsWith("package-info.java")) {
-      continue;
-    }
     String pkgName=null;
     int dotPos=name.lastIndexOf('.');
     pkgName=name.substring(0,dotPos);
-    classNames.add(pkgName);
+    if (!name.endsWith("package-info.java")) {
+      classNames.add(pkgName);
+    }
     dotPos=pkgName.lastIndexOf('.');
     if (dotPos != -1) {
       pkgName=pkgName.substring(0,dotPos);
