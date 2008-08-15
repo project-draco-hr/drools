@@ -1,0 +1,70 @@
+{
+  Map<String,Object> resolvedImports=new HashMap<String,Object>(importClasses.length + importMethods.length + importFields.length);
+  String lastName=null;
+  try {
+    for (    String name : importClasses) {
+      lastName=name;
+      Class cls=loadClass(classLoader,name);
+      resolvedImports.put(cls.getSimpleName(),cls);
+    }
+    for (    String name : importMethods) {
+      lastName=name;
+      int lastDot=name.lastIndexOf('.');
+      String className=name.substring(0,lastDot);
+      Class cls=loadClass(classLoader,className);
+      String methodName=name.substring(lastDot + 1);
+      Method method=null;
+      for (      Method item : cls.getMethods()) {
+        if (methodName.equals(item.getName())) {
+          method=item;
+        }
+      }
+      resolvedImports.put(method.getName(),method);
+    }
+    for (    String name : importFields) {
+      int lastDot=name.lastIndexOf('.');
+      String className=name.substring(0,lastDot);
+      Class cls=loadClass(classLoader,className);
+      String fieldName=name.substring(lastDot + 1);
+      Field field=cls.getField(fieldName);
+      resolvedImports.put(field.getName(),field);
+    }
+  }
+ catch (  ClassNotFoundException e) {
+    e.printStackTrace();
+    throw new RuntimeDroolsException("Unable to resolve import '" + lastName + "'");
+  }
+catch (  SecurityException e) {
+    e.printStackTrace();
+    throw new RuntimeDroolsException("Unable to resolve import '" + lastName + "'");
+  }
+catch (  NoSuchFieldException e) {
+    e.printStackTrace();
+    throw new RuntimeDroolsException("Unable to resolve import '" + lastName + "'");
+  }
+  final ParserContext parserContext=new ParserContext(resolvedImports,null,"xxx");
+  for (  String pkgImport : this.pkgImports) {
+    parserContext.addPackageImport(pkgImport);
+  }
+  parserContext.setInterceptors(interceptors);
+  parserContext.setStrictTypeEnforcement(strictMode);
+  resolvedInputs=new HashMap<String,Class>(inputIdentifiers.length);
+  String lastIdentifier=null;
+  String lastType=null;
+  try {
+    for (int i=0, length=inputIdentifiers.length; i < length; i++) {
+      lastIdentifier=inputIdentifiers[i];
+      lastType=inputTypes[i];
+      Class cls=loadClass(classLoader,inputTypes[i]);
+      resolvedInputs.put(inputIdentifiers[i],cls);
+      parserContext.addInput(inputIdentifiers[i],cls);
+    }
+  }
+ catch (  ClassNotFoundException e) {
+    e.printStackTrace();
+    throw new RuntimeDroolsException("Unable to resolve class '" + lastType + "' for identifier '"+ lastIdentifier);
+  }
+  parserContext.addInput("drools",KnowledgeHelper.class);
+  resolvedInputs.put("drools",KnowledgeHelper.class);
+  return compile(expression,classLoader,parserContext,languageLevel);
+}

@@ -1,10 +1,10 @@
 {
   this.id=id;
   this.pkg=pkg;
+  this.pkgBuilder=builder;
   this.packageRegistry=pkgRegistry;
   this.configuration=(MVELDialectConfiguration)builder.getPackageBuilderConfiguration().getDialectConfiguration("mvel");
   setLanguageLevel(this.configuration.getLangLevel());
-  this.classFieldExtractorCache=builder.getClassFieldExtractorCache();
   this.strictMode=this.configuration.isStrict();
   MVEL.setThreadSafe(true);
   this.imports=new HashMap();
@@ -14,8 +14,9 @@
   this.results=new ArrayList();
   MVELDialectRuntimeData data=null;
   if (pkg.getDialectRuntimeRegistry().getDialectData(getId()) == null) {
-    data=new MVELDialectRuntimeData(this.pkg.getDialectRuntimeRegistry());
+    data=new MVELDialectRuntimeData();
     this.pkg.getDialectRuntimeRegistry().setDialectData(getId(),data);
+    data.onAdd(this.pkg.getDialectRuntimeRegistry(),this.pkgBuilder.getRootClassLoader());
   }
   this.results=new ArrayList();
   this.src=new MemoryResourceReader();

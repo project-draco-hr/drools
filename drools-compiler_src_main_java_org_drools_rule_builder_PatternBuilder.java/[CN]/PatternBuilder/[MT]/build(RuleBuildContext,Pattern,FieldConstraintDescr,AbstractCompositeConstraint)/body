@@ -14,7 +14,7 @@
       return;
     }
   }
-  final InternalReadAccessor extractor=getFieldExtractor(context,fieldConstraintDescr,pattern.getObjectType(),fieldName,false);
+  final InternalReadAccessor extractor=getFieldReadAccessor(context,fieldConstraintDescr,pattern.getObjectType(),fieldName,null,false);
   if (extractor == null) {
     if (fieldConstraintDescr.getFieldName().startsWith("this.")) {
       rewriteToEval(context,pattern,fieldConstraintDescr,container);
@@ -35,12 +35,18 @@
   }
  else   if (restriction instanceof LiteralRestriction) {
     constraint=new LiteralConstraint(extractor,(LiteralRestriction)restriction);
+    registerReadAccessor(context,pattern.getObjectType(),fieldName,(LiteralConstraint)constraint);
+    registerReadAccessor(context,pattern.getObjectType(),fieldName,(LiteralRestriction)restriction);
   }
  else   if (restriction instanceof VariableRestriction) {
     constraint=new VariableConstraint(extractor,(VariableRestriction)restriction);
+    registerReadAccessor(context,pattern.getObjectType(),fieldName,(VariableRestriction)restriction);
+    registerReadAccessor(context,pattern.getObjectType(),fieldName,(VariableRestriction)restriction);
   }
  else   if (restriction instanceof ReturnValueRestriction) {
     constraint=new ReturnValueConstraint(extractor,(ReturnValueRestriction)restriction);
+    registerReadAccessor(context,pattern.getObjectType(),fieldName,(ReturnValueConstraint)constraint);
+    registerReadAccessor(context,pattern.getObjectType(),fieldName,(ReturnValueRestriction)restriction);
   }
  else {
     context.getErrors().add(new DescrBuildError(context.getParentDescr(),fieldConstraintDescr,null,"This is a bug: Unkown restriction type '" + restriction.getClass() + "' for pattern '"+ pattern.getObjectType().toString()+ "' in rule '"+ context.getRule().getName()+ "'"));

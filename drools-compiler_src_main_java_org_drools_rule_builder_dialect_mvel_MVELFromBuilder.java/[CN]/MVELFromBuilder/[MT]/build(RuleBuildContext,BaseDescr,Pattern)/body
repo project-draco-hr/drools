@@ -1,18 +1,22 @@
 {
   final FromDescr fromDescr=(FromDescr)descr;
   final AccessorDescr accessor=(AccessorDescr)fromDescr.getDataSource();
-  DataProvider dataProvider=null;
+  From from=null;
   try {
-    final DroolsMVELFactory factory=new DroolsMVELFactory(context.getDeclarationResolver().getDeclarations(),null,context.getPkg().getGlobals());
     MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
     String text=(String)accessor.toString();
     Dialect.AnalysisResult analysis=dialect.analyzeExpression(context,descr,text,new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()});
-    final Serializable expr=dialect.compile(text,analysis,null,null,null,context);
-    dataProvider=new MVELDataProvider(expr,factory,context.getDialect().getId());
+    Declaration[] previousDeclarations=(Declaration[])context.getDeclarationResolver().getDeclarations().values().toArray(new Declaration[context.getDeclarationResolver().getDeclarations().size()]);
+    MVELCompilationUnit unit=dialect.getMVELCompilationUnit(text,analysis,previousDeclarations,null,null,context);
+    MVELDataProvider dataProvider=new MVELDataProvider(unit,context.getDialect().getId());
+    from=new From(dataProvider);
+    MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData(dialect.getId());
+    data.addCompileable(from,dataProvider);
+    dataProvider.compile(context.getPackageBuilder().getRootClassLoader());
   }
  catch (  final Exception e) {
-    context.getErrors().add(new DescrBuildError(context.getParentDescr(),fromDescr,null,"Unable to build expression for 'from' node '" + accessor + "'"));
+    context.getErrors().add(new DescrBuildError(context.getParentDescr(),fromDescr,null,"Unable to build expression for 'from' : " + e.getMessage() + " '"+ accessor+ "'"));
     return null;
   }
-  return new From(dataProvider);
+  return from;
 }

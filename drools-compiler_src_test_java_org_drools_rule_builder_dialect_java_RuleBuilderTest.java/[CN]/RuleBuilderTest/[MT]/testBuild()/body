@@ -1,8 +1,10 @@
 {
   final DrlParser parser=new DrlParser();
+  final PackageBuilder pkgBuilder=new PackageBuilder();
+  pkgBuilder.addPackage(new PackageDescr("org.drools"));
+  Package pkg=pkgBuilder.getPackage();
   final PackageDescr pkgDescr=parser.parse(new InputStreamReader(getClass().getResourceAsStream("nestedConditionalElements.drl")));
   Assert.assertFalse(parser.getErrors().toString(),parser.hasErrors());
-  final Package pkg=new Package("org.drools");
   final RuleDescr ruleDescr=(RuleDescr)pkgDescr.getRules().get(0);
   final String ruleClassName="RuleClassName.java";
   ruleDescr.setClassName(ruleClassName);
@@ -11,11 +13,10 @@
   typeResolver.addImport(pkgDescr.getName() + ".*");
   typeResolver.addImport("java.lang.*");
   final RuleBuilder builder=new RuleBuilder();
-  final PackageBuilder pkgBuilder=new PackageBuilder(pkg);
   final PackageBuilderConfiguration conf=pkgBuilder.getPackageBuilderConfiguration();
   DialectCompiletimeRegistry dialectRegistry=pkgBuilder.getPackageRegistry(pkg.getName()).getDialectCompiletimeRegistry();
   Dialect dialect=dialectRegistry.getDialect("java");
-  RuleBuildContext context=new RuleBuildContext(conf,ruleDescr,dialectRegistry,pkg,dialect);
+  RuleBuildContext context=new RuleBuildContext(pkgBuilder,ruleDescr,dialectRegistry,pkg,dialect);
   builder.build(context);
   Assert.assertTrue(context.getErrors().toString(),context.getErrors().isEmpty());
   final Rule rule=context.getRule();

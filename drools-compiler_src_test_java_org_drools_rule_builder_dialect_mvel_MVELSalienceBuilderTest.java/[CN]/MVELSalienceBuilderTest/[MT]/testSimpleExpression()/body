@@ -7,7 +7,7 @@
   final PackageBuilderConfiguration conf=pkgBuilder.getPackageBuilderConfiguration();
   DialectCompiletimeRegistry dialectRegistry=pkgBuilder.getPackageRegistry(pkg.getName()).getDialectCompiletimeRegistry();
   MVELDialect mvelDialect=(MVELDialect)dialectRegistry.getDialect("mvel");
-  final InstrumentedBuildContent context=new InstrumentedBuildContent(conf,ruleDescr,dialectRegistry,pkg,mvelDialect);
+  final InstrumentedBuildContent context=new InstrumentedBuildContent(pkgBuilder,ruleDescr,dialectRegistry,pkg,mvelDialect);
   final InstrumentedDeclarationScopeResolver declarationResolver=new InstrumentedDeclarationScopeResolver();
   final ObjectType personObjeectType=new ClassObjectType(Person.class);
   final Pattern pattern=new Pattern(0,personObjeectType);
@@ -24,5 +24,6 @@
   final LeftTuple tuple=new LeftTuple(f0,null,true);
   SalienceBuilder salienceBuilder=new MVELSalienceBuilder();
   salienceBuilder.build(context);
+  ((MVELSalienceExpression)context.getRule().getSalience()).compile(Thread.currentThread().getContextClassLoader());
   assertEquals(25,context.getRule().getSalience().getValue(tuple,wm));
 }

@@ -5,9 +5,9 @@
   final PackageBuilderConfiguration conf=pkgBuilder.getPackageBuilderConfiguration();
   DialectCompiletimeRegistry dialectRegistry=pkgBuilder.getPackageRegistry(pkg.getName()).getDialectCompiletimeRegistry();
   MVELDialect mvelDialect=(MVELDialect)dialectRegistry.getDialect("mvel");
-  final InstrumentedBuildContent context=new InstrumentedBuildContent(conf,ruleDescr,dialectRegistry,pkg,mvelDialect);
+  final InstrumentedBuildContent context=new InstrumentedBuildContent(pkgBuilder,ruleDescr,dialectRegistry,pkg,mvelDialect);
   final InstrumentedDeclarationScopeResolver declarationResolver=new InstrumentedDeclarationScopeResolver();
-  final InternalReadAccessor extractor=cache.getReader(Cheese.class,"price",getClass().getClassLoader());
+  final InternalReadAccessor extractor=store.getReader(Cheese.class,"price",getClass().getClassLoader());
   final Pattern patternA=new Pattern(0,new ClassObjectType(int.class));
   final Pattern patternB=new Pattern(1,new ClassObjectType(int.class));
   final Declaration a=new Declaration("a",extractor,patternA);
@@ -28,6 +28,7 @@
   final String[] requiredGlobals=new String[]{};
   final ReturnValueRestriction returnValue=new ReturnValueRestriction(extractor,previousDeclarations,localDeclarations,requiredGlobals,context.getConfiguration().getEvaluatorRegistry().getEvaluator(ValueType.PINTEGER_TYPE,Operator.EQUAL));
   builder.build(context,usedIdentifiers,previousDeclarations,localDeclarations,returnValue,returnValueDescr);
+  ((MVELReturnValueExpression)returnValue.getExpression()).compile(Thread.currentThread().getContextClassLoader());
   ContextEntry retValContext=returnValue.createContextEntry();
   final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   final InternalWorkingMemory wm=(InternalWorkingMemory)ruleBase.newStatefulSession();

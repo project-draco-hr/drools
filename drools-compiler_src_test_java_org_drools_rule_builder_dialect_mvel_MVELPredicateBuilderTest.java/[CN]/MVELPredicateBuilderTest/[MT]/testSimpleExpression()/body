@@ -5,9 +5,9 @@
   final PackageBuilderConfiguration conf=pkgBuilder.getPackageBuilderConfiguration();
   PackageRegistry pkgRegistry=pkgBuilder.getPackageRegistry(pkg.getName());
   MVELDialect mvelDialect=(MVELDialect)pkgRegistry.getDialectCompiletimeRegistry().getDialect("mvel");
-  final InstrumentedBuildContent context=new InstrumentedBuildContent(conf,ruleDescr,pkgRegistry.getDialectCompiletimeRegistry(),pkg,mvelDialect);
+  final InstrumentedBuildContent context=new InstrumentedBuildContent(pkgBuilder,ruleDescr,pkgRegistry.getDialectCompiletimeRegistry(),pkg,mvelDialect);
   final InstrumentedDeclarationScopeResolver declarationResolver=new InstrumentedDeclarationScopeResolver();
-  final InternalReadAccessor extractor=cache.getReader(Cheese.class,"price",getClass().getClassLoader());
+  final InternalReadAccessor extractor=store.getReader(Cheese.class,"price",getClass().getClassLoader());
   final Pattern patternA=new Pattern(0,new ClassObjectType(Cheese.class));
   final Pattern patternB=new Pattern(1,new ClassObjectType(Cheese.class));
   final Declaration a=new Declaration("a",extractor,patternA);
@@ -27,6 +27,7 @@
   final Declaration[] localDeclarations=new Declaration[]{b};
   final PredicateConstraint predicate=new PredicateConstraint(null,localDeclarations);
   builder.build(context,usedIdentifiers,previousDeclarations,localDeclarations,predicate,predicateDescr);
+  ((MVELPredicateExpression)predicate.getPredicateExpression()).compile(Thread.currentThread().getContextClassLoader());
   final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   final InternalWorkingMemory wm=(InternalWorkingMemory)ruleBase.newStatefulSession();
   final Cheese stilton=new Cheese("stilton",10);

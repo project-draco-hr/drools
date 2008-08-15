@@ -1,0 +1,44 @@
+{
+  for (  Entry<AccessorKey,BaseLookupEntry> entry : other.lookup.entrySet()) {
+switch (entry.getValue().getAccessorType()) {
+case FieldAccessor:
+{
+        FieldLookupEntry lookupEntry=(FieldLookupEntry)this.lookup.get(entry.getKey());
+        if (lookupEntry == null) {
+          lookupEntry=(FieldLookupEntry)entry.getValue();
+          this.lookup.put(entry.getKey(),lookupEntry);
+          if (lookupEntry.getClassFieldReader() != null) {
+            wire(lookupEntry.getClassFieldReader());
+          }
+          if (lookupEntry.getClassFieldWriter() != null) {
+            wire(lookupEntry.getClassFieldWriter());
+          }
+        }
+ else {
+          for (          Acceptor target : entry.getValue().getAccessorTargets()) {
+            if (target instanceof AcceptsReadAccessor) {
+              ((AcceptsReadAccessor)target).setReadAccessor(lookupEntry.getClassFieldReader());
+            }
+ else             if (target instanceof AcceptsWriteAccessor) {
+              ((AcceptsWriteAccessor)target).setWriteAccessor(lookupEntry.getClassFieldWriter());
+            }
+            lookupEntry.addAccessorTarget(target);
+          }
+        }
+        break;
+      }
+case ClassObjectType:
+{
+      ClassObjectTypeLookupEntry lookupEntry=(ClassObjectTypeLookupEntry)this.lookup.get(entry.getKey());
+      if (lookupEntry == null) {
+        lookupEntry=new ClassObjectTypeLookupEntry(cache.getClassObjectType(((ClassObjectTypeLookupEntry)entry.getValue()).getClassObjectType()));
+        this.lookup.put(entry.getKey(),lookupEntry);
+      }
+      for (      Acceptor target : entry.getValue().getAccessorTargets()) {
+        ((AcceptsClassObjectType)target).setClassObjectType(lookupEntry.getClassObjectType());
+        lookupEntry.addAccessorTarget(target);
+      }
+    }
+}
+}
+}

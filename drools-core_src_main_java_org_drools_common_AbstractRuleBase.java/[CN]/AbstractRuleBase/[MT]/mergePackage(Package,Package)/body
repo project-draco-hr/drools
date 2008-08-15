@@ -1,19 +1,26 @@
 {
   final Map<String,ImportDeclaration> imports=pkg.getImports();
   imports.putAll(newPkg.getImports());
-  if (newPkg.getGlobals() != null && newPkg.getGlobals() != Collections.EMPTY_MAP) {
-    Map<String,Class> globals=pkg.getGlobals();
-    for (    final Map.Entry<String,Class> entry : newPkg.getGlobals().entrySet()) {
-      final String identifier=entry.getKey();
-      final Class type=entry.getValue();
-      if (globals.containsKey(identifier) && !globals.get(identifier).equals(type)) {
-        throw new PackageIntegrationException(pkg);
-      }
+  String lastType=null;
+  try {
+    if (newPkg.getGlobals() != null && newPkg.getGlobals() != Collections.EMPTY_MAP) {
+      Map<String,String> globals=pkg.getGlobals();
+      for (      final Map.Entry<String,String> entry : newPkg.getGlobals().entrySet()) {
+        final String identifier=entry.getKey();
+        final String type=entry.getValue();
+        lastType=type;
+        if (globals.containsKey(identifier) && !globals.get(identifier).equals(type)) {
+          throw new PackageIntegrationException(pkg);
+        }
  else {
-        pkg.addGlobal(identifier,type);
-        this.globals.put(identifier,type);
+          pkg.addGlobal(identifier,this.rootClassLoader.loadClass(type));
+          this.globals.put(identifier,this.rootClassLoader.loadClass(type));
+        }
       }
     }
+  }
+ catch (  ClassNotFoundException e) {
+    throw new RuntimeDroolsException("Unable to resolve class '" + lastType + "'");
   }
   if (newPkg.getTypeDeclarations() != null) {
     for (    TypeDeclaration type : newPkg.getTypeDeclarations().values()) {
@@ -22,7 +29,6 @@
       }
     }
   }
-  pkg.getPackageScopeClassLoader().getStore().putAll(newPkg.getPackageScopeClassLoader().getStore());
   final Rule[] newRules=newPkg.getRules();
   for (int i=0; i < newRules.length; i++) {
     final Rule newRule=newRules[i];
@@ -38,14 +44,4 @@
       pkg.addProcess(flow);
     }
   }
-  pkg.getDialectRuntimeRegistry().merge(newPkg.getDialectRuntimeRegistry());
-  if (newPkg.getFunctions() != null) {
-    for (    Map.Entry<String,Function> entry : newPkg.getFunctions().entrySet()) {
-      pkg.addFunction(entry.getValue());
-    }
-  }
-  if (this.reloadPackageCompilationData == null) {
-    this.reloadPackageCompilationData=new ReloadPackageCompilationData();
-  }
-  this.reloadPackageCompilationData.addDialectDatas(pkg.getDialectRuntimeRegistry());
 }

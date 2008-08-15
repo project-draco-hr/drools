@@ -9,7 +9,7 @@
   final PackageBuilderConfiguration conf=pkgBuilder.getPackageBuilderConfiguration();
   DialectCompiletimeRegistry dialectRegistry=pkgBuilder.getPackageRegistry(pkg.getName()).getDialectCompiletimeRegistry();
   MVELDialect mvelDialect=(MVELDialect)dialectRegistry.getDialect("mvel");
-  final InstrumentedBuildContent context=new InstrumentedBuildContent(conf,ruleDescr,dialectRegistry,pkg,mvelDialect);
+  final InstrumentedBuildContent context=new InstrumentedBuildContent(pkgBuilder,ruleDescr,dialectRegistry,pkg,mvelDialect);
   final InstrumentedDeclarationScopeResolver declarationResolver=new InstrumentedDeclarationScopeResolver();
   final ObjectType cheeseObjeectType=new ClassObjectType(Cheese.class);
   final Pattern pattern=new Pattern(0,cheeseObjeectType);
@@ -31,6 +31,7 @@
   final AgendaItem item=new AgendaItem(0,tuple,10,new PropagationContextImpl(1,1,null,null,null),context.getRule(),null);
   final DefaultKnowledgeHelper kbHelper=new DefaultKnowledgeHelper(wm);
   kbHelper.setActivation(item);
+  ((MVELConsequence)context.getRule().getConsequence()).compile(Thread.currentThread().getContextClassLoader());
   context.getRule().getConsequence().evaluate(kbHelper,wm);
   assertEquals(5,cheddar.getPrice());
 }

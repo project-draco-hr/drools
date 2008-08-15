@@ -1,0 +1,65 @@
+{
+  String[] pkgImports=new String[this.packageImports.size()];
+  int i=0;
+  for (Iterator it=this.packageImports.values().iterator(); it.hasNext(); ) {
+    pkgImports[i]=(String)it.next();
+  }
+  List<String> importClasses=new ArrayList<String>();
+  List<String> importMethods=new ArrayList<String>();
+  List<String> importFields=new ArrayList<String>();
+  for (Iterator it=this.imports.values().iterator(); it.hasNext(); ) {
+    Object object=it.next();
+    if (object instanceof Class) {
+      importClasses.add(((Class)object).getName());
+    }
+ else     if (object instanceof Method) {
+      Method method=(Method)object;
+      importMethods.add(method.getDeclaringClass().getName() + "." + method.getName());
+    }
+ else {
+      Field field=(Field)object;
+      importFields.add(field.getDeclaringClass().getName() + "." + field.getName());
+    }
+  }
+  Map<String,Class> resolvedInputs=new HashMap<String,Class>();
+  String[] globalIdentifiers=new String[]{};
+  String[] otherIdentifiers=otherInputVariables == null ? new String[]{} : new String[otherInputVariables.size()];
+  if (analysis != null) {
+    List list[]=analysis.getBoundIdentifiers();
+    Map globalTypes=context.getPackageBuilder().getGlobals();
+    globalIdentifiers=new String[list[1].size()];
+    i=0;
+    for (Iterator it=list[1].iterator(); it.hasNext(); ) {
+      String identifier=(String)it.next();
+      globalIdentifiers[i++]=identifier;
+      resolvedInputs.put(identifier,(Class)globalTypes.get(identifier));
+    }
+    if (previousDeclarations != null) {
+      for (      Declaration declr : previousDeclarations) {
+        resolvedInputs.put(declr.getIdentifier(),declr.getExtractor().getExtractToClass());
+      }
+    }
+    if (localDeclarations != null) {
+      for (      Declaration declr : localDeclarations) {
+        resolvedInputs.put(declr.getIdentifier(),declr.getExtractor().getExtractToClass());
+      }
+    }
+    if (otherInputVariables != null) {
+      i=0;
+      for (Iterator it=otherInputVariables.entrySet().iterator(); it.hasNext(); ) {
+        Entry entry=(Entry)it.next();
+        otherIdentifiers[i++]=(String)entry.getKey();
+        resolvedInputs.put((String)entry.getKey(),(Class)entry.getValue());
+      }
+    }
+  }
+  String[] inputIdentifiers=new String[resolvedInputs.size()];
+  String[] inputTypes=new String[resolvedInputs.size()];
+  i=0;
+  for (  Entry<String,Class> entry : resolvedInputs.entrySet()) {
+    inputIdentifiers[i]=entry.getKey();
+    inputTypes[i++]=entry.getValue().getName();
+  }
+  MVELCompilationUnit compilationUnit=new MVELCompilationUnit(expression,pkgImports,importClasses.toArray(new String[importClasses.size()]),importMethods.toArray(new String[importMethods.size()]),importFields.toArray(new String[importFields.size()]),globalIdentifiers,previousDeclarations,localDeclarations,otherIdentifiers,inputIdentifiers,inputTypes,languageLevel,strictMode);
+  return compilationUnit;
+}

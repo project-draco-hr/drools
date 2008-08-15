@@ -5,27 +5,25 @@
     droolsStream=(DroolsObjectInput)in;
   }
  else {
-    byte[] bytes=(byte[])in.readObject();
-    droolsStream=new DroolsObjectInputStream(new ByteArrayInputStream(bytes));
+    droolsStream=new DroolsObjectInputStream((ObjectInputStream)in);
   }
-  this.pkgs=(Map)droolsStream.readObject();
+  this.rootClassLoader=new CompositeClassLoader(droolsStream.getParentClassLoader());
+  droolsStream.setClassLoader(this.rootClassLoader);
+  droolsStream.setRuleBase(this);
+  this.classFieldAccessorCache=new ClassFieldAccessorCache(this.rootClassLoader);
   this.config=(RuleBaseConfiguration)droolsStream.readObject();
-  Map store=(Map)droolsStream.readObject();
-  this.packageClassLoader=new CompositePackageClassLoader(droolsStream.getClassLoader());
-  droolsStream.setClassLoader(packageClassLoader);
-  this.classLoader=new MapBackedClassLoader(this.packageClassLoader,store);
-  this.packageClassLoader.addClassLoader(this.classLoader);
+  this.config.setClassLoader(droolsStream.getParentClassLoader());
+  this.pkgs=(Map)droolsStream.readObject();
   for (  final Object object : this.pkgs.values()) {
-    this.packageClassLoader.addClassLoader(((Package)object).getDialectRuntimeRegistry().getClassLoader());
+    ((Package)object).getDialectRuntimeRegistry().onAdd(this.rootClassLoader);
   }
   this.id=(String)droolsStream.readObject();
   this.workingMemoryCounter=droolsStream.readInt();
-  this.config.setClassLoader(droolsStream.getClassLoader());
   this.processes=(Map)droolsStream.readObject();
   this.agendaGroupRuleTotals=(Map)droolsStream.readObject();
   Class cls=null;
   try {
-    cls=droolsStream.getClassLoader().loadClass(droolsStream.readUTF());
+    cls=droolsStream.getParentClassLoader().loadClass(droolsStream.readUTF());
     this.factHandleFactory=(FactHandleFactory)cls.newInstance();
   }
  catch (  InstantiationException e) {
@@ -34,18 +32,17 @@
 catch (  IllegalAccessException e) {
     DroolsObjectInputStream.newInvalidClassException(cls,e);
   }
+  for (  final Object object : this.pkgs.values()) {
+    ((Package)object).getDialectRuntimeRegistry().onBeforeExecute();
+    ((Package)object).getClassFieldAccessorStore().setClassFieldAccessorCache(this.classFieldAccessorCache);
+    ((Package)object).getClassFieldAccessorStore().wire();
+  }
+  this.populateTypeDeclarationMaps();
   this.globals=(Map)droolsStream.readObject();
-  this.reloadPackageCompilationData=(ReloadPackageCompilationData)droolsStream.readObject();
   this.eventSupport=(RuleBaseEventSupport)droolsStream.readObject();
   this.eventSupport.setRuleBase(this);
   this.statefulSessions=new ObjectHashSet();
-  wms=(InternalWorkingMemory[])droolsStream.readObject();
-  lastAquiredLock=droolsStream.readInt();
-  lock=(ReentrantLock)droolsStream.readObject();
-  additionsSinceLock=droolsStream.readInt();
-  removalsSinceLock=droolsStream.readInt();
   if (!isDrools) {
     droolsStream.close();
   }
-  this.populateTypeDeclarationMaps();
 }

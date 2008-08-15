@@ -1,9 +1,6 @@
 {
   boolean isDroolsStream=stream instanceof DroolsObjectInputStream;
   DroolsObjectInputStream in=isDroolsStream ? (DroolsObjectInputStream)stream : new DroolsObjectInputStream(new ByteArrayInputStream((byte[])stream.readObject()));
-  Map store=(Map)in.readObject();
-  this.packageScopeClassLoader=new MapBackedClassLoader(in.getClassLoader(),store);
-  in.setClassLoader(this.packageScopeClassLoader);
   this.dialectRuntimeRegistry=(DialectRuntimeRegistry)in.readObject();
   this.typeDeclarations=(Map)in.readObject();
   this.name=(String)in.readObject();
@@ -12,10 +9,10 @@
   this.functions=(Map<String,Function>)in.readObject();
   this.factTemplates=(Map)in.readObject();
   this.ruleFlows=(Map)in.readObject();
-  this.globals=(Map<String,Class>)in.readObject();
+  this.globals=(Map<String,String>)in.readObject();
   this.valid=in.readBoolean();
   this.rules=(Map)in.readObject();
-  in.setClassLoader(this.packageScopeClassLoader.getParent());
+  this.classFieldAccessorStore=(ClassFieldAccessorStore)in.readObject();
   if (!isDroolsStream) {
     in.close();
   }

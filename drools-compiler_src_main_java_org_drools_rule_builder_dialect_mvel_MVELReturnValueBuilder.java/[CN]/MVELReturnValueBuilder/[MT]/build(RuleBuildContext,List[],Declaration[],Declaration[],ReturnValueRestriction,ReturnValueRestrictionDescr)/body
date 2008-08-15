@@ -1,14 +1,15 @@
 {
-  Map previousMap=new HashMap();
-  for (int i=0, length=previousDeclarations.length; i < length; i++) {
-    previousMap.put(previousDeclarations[i].getIdentifier(),previousDeclarations[i]);
+  try {
+    MVELDialect dialect=(MVELDialect)context.getDialect(context.getDialect().getId());
+    Dialect.AnalysisResult analysis=context.getDialect().analyzeExpression(context,returnValueRestrictionDescr,returnValueRestrictionDescr.getContent(),new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()});
+    MVELCompilationUnit unit=dialect.getMVELCompilationUnit((String)returnValueRestrictionDescr.getContent(),analysis,previousDeclarations,localDeclarations,null,context);
+    MVELReturnValueExpression expr=new MVELReturnValueExpression(unit,context.getDialect().getId());
+    returnValueRestriction.setReturnValueExpression(expr);
+    MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData(context.getDialect().getId());
+    data.addCompileable(returnValueRestriction,expr);
+    expr.compile(context.getPackageBuilder().getRootClassLoader());
   }
-  Map localMap=new HashMap();
-  for (int i=0, length=localDeclarations.length; i < length; i++) {
-    localMap.put(localDeclarations[i].getIdentifier(),localDeclarations[i]);
+ catch (  final Exception e) {
+    context.getErrors().add(new DescrBuildError(context.getParentDescr(),context.getRuleDescr(),null,"Unable to build expression for 'returnValue' : " + e.getMessage() + "'"+ context.getRuleDescr().getSalience()+ "'"));
   }
-  final DroolsMVELFactory factory=new DroolsMVELFactory(previousMap,localMap,context.getPkg().getGlobals());
-  Dialect.AnalysisResult analysis=context.getDialect().analyzeExpression(context,returnValueRestrictionDescr,returnValueRestrictionDescr.getContent(),new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()});
-  final Serializable expr=((MVELDialect)context.getDialect()).compile((String)returnValueRestrictionDescr.getContent(),analysis,null,null,null,context);
-  returnValueRestriction.setReturnValueExpression(new MVELReturnValueExpression(expr,factory,context.getDialect().getId()));
 }

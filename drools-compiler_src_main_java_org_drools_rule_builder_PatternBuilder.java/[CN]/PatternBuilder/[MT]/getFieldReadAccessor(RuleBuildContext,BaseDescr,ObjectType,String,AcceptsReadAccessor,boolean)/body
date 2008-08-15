@@ -1,0 +1,21 @@
+{
+  InternalReadAccessor reader=null;
+  if (ValueType.FACTTEMPLATE_TYPE.equals(objectType.getValueType())) {
+    final FactTemplate factTemplate=((FactTemplateObjectType)objectType).getFactTemplate();
+    reader=new FactTemplateFieldExtractor(factTemplate,factTemplate.getFieldTemplateIndex(fieldName));
+    if (target != null) {
+      target.setReadAccessor(reader);
+    }
+  }
+ else {
+    try {
+      reader=context.getPkg().getClassFieldAccessorStore().getReader(((ClassObjectType)objectType).getClassName(),fieldName,target);
+    }
+ catch (    final Exception e) {
+      if (reportError) {
+        context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,e,"Unable to create Field Extractor for '" + fieldName + "'"));
+      }
+    }
+  }
+  return reader;
+}

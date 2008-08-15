@@ -1,0 +1,36 @@
+{
+  Map<String,Class> resolvedGlobals=null;
+  if (inputIdentifiers != null) {
+    resolvedGlobals=new HashMap<String,Class>(inputIdentifiers.length);
+    for (int i=0, length=globalIdentifiers.length; i < length; i++) {
+      String identifier=globalIdentifiers[i];
+      resolvedGlobals.put(identifier,resolvedInputs.get(identifier));
+    }
+  }
+  Map<String,Declaration> previousDeclarationsMap=null;
+  if (previousDeclarations != null) {
+    previousDeclarationsMap=new HashMap<String,Declaration>(previousDeclarations.length);
+    for (    Declaration declr : previousDeclarations) {
+      previousDeclarationsMap.put(declr.getIdentifier(),declr);
+    }
+  }
+  Map<String,Declaration> localDeclarationsMap=null;
+  if (localDeclarations != null) {
+    localDeclarationsMap=new HashMap<String,Declaration>(localDeclarations.length);
+    for (    Declaration declr : localDeclarations) {
+      localDeclarationsMap.put(declr.getIdentifier(),declr);
+    }
+  }
+  DroolsMVELFactory factory=null;
+  if (shadowIdentifiers == null) {
+    factory=new DroolsMVELFactory(previousDeclarationsMap,localDeclarationsMap,resolvedGlobals,inputIdentifiers);
+  }
+ else {
+    Set<String> set=new HashSet<String>(shadowIdentifiers.length);
+    for (    String string : shadowIdentifiers) {
+      set.add(string);
+    }
+    factory=new DroolsMVELShadowFactory(previousDeclarationsMap,localDeclarationsMap,resolvedGlobals,inputIdentifiers,set);
+  }
+  return factory;
+}

@@ -10,22 +10,34 @@ synchronized (this.pkgs) {
     this.additionsSinceLock++;
     this.eventSupport.fireBeforePackageAdded(newPkg);
     if (pkg == null) {
-      pkg=new Package(newPkg.getName(),newPkg.getPackageScopeClassLoader());
+      pkg=new Package(newPkg.getName());
+      pkg.setClassFieldAccessorCache(this.classFieldAccessorCache);
       pkgs.put(pkg.getName(),pkg);
-      this.packageClassLoader.addClassLoader(pkg.getDialectRuntimeRegistry().getClassLoader());
     }
- else {
-      pkg.getPackageScopeClassLoader().getStore().putAll(newPkg.getPackageScopeClassLoader().getStore());
-      this.packageClassLoader.addClassLoader(newPkg.getDialectRuntimeRegistry().getClassLoader());
+    pkg.getDialectRuntimeRegistry().merge(newPkg.getDialectRuntimeRegistry(),this.rootClassLoader);
+    if (newPkg.getFunctions() != null) {
+      for (      Map.Entry<String,Function> entry : newPkg.getFunctions().entrySet()) {
+        pkg.addFunction(entry.getValue());
+      }
     }
-    mergePackage(pkg,newPkg);
-    if (newPkg.getTypeDeclarations() != null) {
-      for (      TypeDeclaration type : newPkg.getTypeDeclarations().values()) {
-        if (!this.classTypeDeclaration.containsKey(type.getTypeClass())) {
-          this.classTypeDeclaration.put(type.getTypeClass(),type);
+    pkg.getClassFieldAccessorStore().merge(newPkg.getClassFieldAccessorStore());
+    pkg.getDialectRuntimeRegistry().onBeforeExecute();
+    TypeDeclaration lastType=null;
+    try {
+      if (newPkg.getTypeDeclarations() != null) {
+        for (        TypeDeclaration type : newPkg.getTypeDeclarations().values()) {
+          lastType=type;
+          type.setTypeClass(this.rootClassLoader.loadClass(pkg.getName() + "." + type.getTypeName()));
+          if (!this.classTypeDeclaration.containsKey(type.getTypeClass())) {
+            this.classTypeDeclaration.put(type.getTypeClass(),type);
+          }
         }
       }
     }
+ catch (    ClassNotFoundException e) {
+      throw new RuntimeDroolsException("unable to resolve Type Declaration class '" + lastType.getTypeName());
+    }
+    mergePackage(pkg,newPkg);
     final Rule[] rules=newPkg.getRules();
     for (int i=0; i < rules.length; ++i) {
       addRule(newPkg,rules[i]);
