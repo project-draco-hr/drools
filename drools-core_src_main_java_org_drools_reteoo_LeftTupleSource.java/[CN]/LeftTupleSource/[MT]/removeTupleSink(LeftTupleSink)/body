@@ -9,7 +9,12 @@
     final CompositeLeftTupleSinkAdapter sinkAdapter=(CompositeLeftTupleSinkAdapter)this.sink;
     sinkAdapter.removeTupleSink(tupleSink);
     if (sinkAdapter.size() == 1) {
-      this.sink=new SingleLeftTupleSinkAdapter(sinkAdapter.getSinks()[0]);
+      if (this.partitionsEnabled && !this.partitionId.equals(tupleSink.getPartitionId())) {
+        this.sink=new AsyncSingleLeftTupleSinkAdapter(this.getPartitionId(),sinkAdapter.getSinks()[0]);
+      }
+ else {
+        this.sink=new SingleLeftTupleSinkAdapter(this.getPartitionId(),sinkAdapter.getSinks()[0]);
+      }
     }
   }
 }
