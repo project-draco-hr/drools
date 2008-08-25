@@ -5,6 +5,10 @@
   if (nodeInstance instanceof RuleSetNodeInstance) {
     stream.writeShort(PersisterEnums.RULE_SET_NODE_INSTANCE);
   }
+ else   if (nodeInstance instanceof HumanTaskNodeInstance) {
+    stream.writeShort(PersisterEnums.HUMAN_TASK_NODE_INSTANCE);
+    stream.writeLong(((HumanTaskNodeInstance)nodeInstance).getWorkItem().getId());
+  }
  else   if (nodeInstance instanceof WorkItemNodeInstance) {
     stream.writeShort(PersisterEnums.WORK_ITEM_NODE_INSTANCE);
     stream.writeLong(((WorkItemNodeInstance)nodeInstance).getWorkItem().getId());
@@ -28,6 +32,33 @@
       stream.writeLong(entry.getKey());
       stream.writeInt(entry.getValue());
     }
+  }
+ else   if (nodeInstance instanceof CompositeContextNodeInstance) {
+    stream.writeShort(PersisterEnums.COMPOSITE_NODE_INSTANCE);
+    CompositeContextNodeInstance compositeNodeInstance=(CompositeContextNodeInstance)nodeInstance;
+    VariableScopeInstance variableScopeInstance=(VariableScopeInstance)compositeNodeInstance.getContextInstance(VariableScope.VARIABLE_SCOPE);
+    Map<String,Object> variables=variableScopeInstance.getVariables();
+    stream.writeInt(variables.size());
+    for (    Map.Entry<String,Object> entry : variables.entrySet()) {
+      stream.writeUTF(entry.getKey());
+      stream.writeObject(entry.getValue());
+    }
+    for (    NodeInstance subNodeInstance : compositeNodeInstance.getNodeInstances()) {
+      stream.writeShort(PersisterEnums.NODE_INSTANCE);
+      writeNodeInstance(context,subNodeInstance);
+    }
+    stream.writeShort(PersisterEnums.END);
+  }
+ else   if (nodeInstance instanceof ForEachNodeInstance) {
+    stream.writeShort(PersisterEnums.FOR_EACH_NODE_INSTANCE);
+    ForEachNodeInstance forEachNodeInstance=(ForEachNodeInstance)nodeInstance;
+    for (    NodeInstance subNodeInstance : forEachNodeInstance.getNodeInstances()) {
+      if (subNodeInstance instanceof CompositeContextNodeInstance) {
+        stream.writeShort(PersisterEnums.NODE_INSTANCE);
+        writeNodeInstance(context,subNodeInstance);
+      }
+    }
+    stream.writeShort(PersisterEnums.END);
   }
  else {
     throw new IllegalArgumentException("Unknown node instance type: " + nodeInstance);

@@ -8,6 +8,10 @@ switch (nodeType) {
 case PersisterEnums.RULE_SET_NODE_INSTANCE:
     nodeInstance=new RuleSetNodeInstance();
   break;
+case PersisterEnums.HUMAN_TASK_NODE_INSTANCE:
+nodeInstance=new HumanTaskNodeInstance();
+((HumanTaskNodeInstance)nodeInstance).internalSetWorkItemId(stream.readLong());
+break;
 case PersisterEnums.WORK_ITEM_NODE_INSTANCE:
 nodeInstance=new WorkItemNodeInstance();
 ((WorkItemNodeInstance)nodeInstance).internalSetWorkItemId(stream.readLong());
@@ -36,11 +40,37 @@ triggers.put(l,count);
 ((JoinInstance)nodeInstance).internalSetTriggers(triggers);
 }
 break;
+case PersisterEnums.COMPOSITE_NODE_INSTANCE:
+nodeInstance=new CompositeContextNodeInstance();
+int nbVariables=stream.readInt();
+if (nbVariables > 0) {
+VariableScopeInstance variableScopeInstance=(VariableScopeInstance)processInstance.getContextInstance(VariableScope.VARIABLE_SCOPE);
+for (int i=0; i < nbVariables; i++) {
+String name=stream.readUTF();
+try {
+Object value=stream.readObject();
+variableScopeInstance.setVariable(name,value);
+}
+ catch (ClassNotFoundException e) {
+throw new IllegalArgumentException("Could not reload variable " + name);
+}
+}
+}
+while (stream.readShort() == PersisterEnums.NODE_INSTANCE) {
+readNodeInstance(context,(CompositeContextNodeInstance)nodeInstance,processInstance);
+}
+break;
+case PersisterEnums.FOR_EACH_NODE_INSTANCE:
+nodeInstance=new ForEachNodeInstance();
+while (stream.readShort() == PersisterEnums.NODE_INSTANCE) {
+readNodeInstance(context,(ForEachNodeInstance)nodeInstance,processInstance);
+}
+break;
 default :
 throw new IllegalArgumentException("Unknown node type: " + nodeType);
 }
 nodeInstance.setNodeId(nodeId);
-nodeInstance.setNodeInstanceContainer(processInstance);
+nodeInstance.setNodeInstanceContainer(nodeInstanceContainer);
 nodeInstance.setProcessInstance(processInstance);
 nodeInstance.setId(id);
 if (nodeInstance instanceof EventBasedNodeInstance) {

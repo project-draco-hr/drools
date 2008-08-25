@@ -1,0 +1,19 @@
+{
+  PersistenceManager persistenceManager=new MemoryPersistenceManager(new StatefulSessionSnapshotter(session));
+  persistenceManager.save();
+  Transaction transaction=persistenceManager.getTransaction();
+  try {
+    Object result=command.execute(session);
+    transaction.commit();
+    return result;
+  }
+ catch (  Throwable t) {
+    try {
+      transaction.rollback();
+      throw new RuntimeException("Could not execute command",t);
+    }
+ catch (    XAException e) {
+      throw new RuntimeException("Could not rollback transaction",e);
+    }
+  }
+}
