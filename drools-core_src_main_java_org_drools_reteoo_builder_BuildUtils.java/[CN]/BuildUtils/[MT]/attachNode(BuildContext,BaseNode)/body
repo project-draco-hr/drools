@@ -1,2 +1,54 @@
 {
+  BaseNode node=null;
+  RuleBasePartitionId partition=null;
+  if (candidate instanceof EntryPointNode) {
+    EntryPointNode epn=context.getRuleBase().getRete().getEntryPointNode(((EntryPointNode)candidate).getEntryPoint());
+    if (epn != null) {
+      node=epn;
+    }
+    partition=RuleBasePartitionId.MAIN_PARTITION;
+  }
+ else   if (candidate instanceof ObjectTypeNode) {
+    ObjectTypeNode otn=(ObjectTypeNode)candidate;
+    Map<ObjectType,ObjectTypeNode> map=context.getRuleBase().getRete().getObjectTypeNodes(context.getCurrentEntryPoint());
+    if (map != null) {
+      otn=map.get(otn.getObjectType());
+      if (otn != null) {
+        node=otn;
+      }
+    }
+    partition=RuleBasePartitionId.MAIN_PARTITION;
+  }
+ else   if (isSharingEnabledForNode(context,candidate)) {
+    if ((context.getTupleSource() != null) && (candidate instanceof LeftTupleSink)) {
+      node=context.getTupleSource().getSinkPropagator().getMatchingNode(candidate);
+    }
+ else     if ((context.getObjectSource() != null) && (candidate instanceof ObjectSink)) {
+      node=context.getObjectSource().getSinkPropagator().getMatchingNode(candidate);
+    }
+ else {
+      throw new RuntimeDroolsException("This is a bug on node sharing verification. Please report to development team.");
+    }
+    if (node != null) {
+      context.releaseId(candidate.getId());
+    }
+  }
+  if (node == null) {
+    node=candidate;
+    if (partition == null) {
+      if (context.getPartitionId() == null) {
+        context.setPartitionId(context.getRuleBase().createNewPartitionId());
+      }
+      partition=context.getPartitionId();
+    }
+    node.setPartitionId(partition);
+    if (context.getWorkingMemories().length == 0) {
+      node.attach();
+    }
+ else {
+      node.attach(context.getWorkingMemories());
+    }
+    context.getNodes().add(node);
+  }
+  return node;
 }
