@@ -42,9 +42,22 @@ triggers.put(l,count);
 break;
 case PersisterEnums.COMPOSITE_NODE_INSTANCE:
 nodeInstance=new CompositeContextNodeInstance();
+break;
+case PersisterEnums.FOR_EACH_NODE_INSTANCE:
+nodeInstance=new ForEachNodeInstance();
+break;
+default :
+throw new IllegalArgumentException("Unknown node type: " + nodeType);
+}
+nodeInstance.setNodeId(nodeId);
+nodeInstance.setNodeInstanceContainer(nodeInstanceContainer);
+nodeInstance.setProcessInstance(processInstance);
+nodeInstance.setId(id);
+switch (nodeType) {
+case PersisterEnums.COMPOSITE_NODE_INSTANCE:
 int nbVariables=stream.readInt();
 if (nbVariables > 0) {
-VariableScopeInstance variableScopeInstance=(VariableScopeInstance)processInstance.getContextInstance(VariableScope.VARIABLE_SCOPE);
+VariableScopeInstance variableScopeInstance=(VariableScopeInstance)((CompositeContextNodeInstance)nodeInstance).getContextInstance(VariableScope.VARIABLE_SCOPE);
 for (int i=0; i < nbVariables; i++) {
 String name=stream.readUTF();
 try {
@@ -61,18 +74,12 @@ readNodeInstance(context,(CompositeContextNodeInstance)nodeInstance,processInsta
 }
 break;
 case PersisterEnums.FOR_EACH_NODE_INSTANCE:
-nodeInstance=new ForEachNodeInstance();
 while (stream.readShort() == PersisterEnums.NODE_INSTANCE) {
 readNodeInstance(context,(ForEachNodeInstance)nodeInstance,processInstance);
 }
 break;
 default :
-throw new IllegalArgumentException("Unknown node type: " + nodeType);
 }
-nodeInstance.setNodeId(nodeId);
-nodeInstance.setNodeInstanceContainer(nodeInstanceContainer);
-nodeInstance.setProcessInstance(processInstance);
-nodeInstance.setId(id);
 if (nodeInstance instanceof EventBasedNodeInstance) {
 ((EventBasedNodeInstance)nodeInstance).addEventListeners();
 }

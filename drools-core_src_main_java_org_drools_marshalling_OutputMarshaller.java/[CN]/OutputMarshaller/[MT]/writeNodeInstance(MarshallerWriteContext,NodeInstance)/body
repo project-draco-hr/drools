@@ -28,9 +28,16 @@
     stream.writeShort(PersisterEnums.JOIN_NODE_INSTANCE);
     Map<Long,Integer> triggers=((JoinInstance)nodeInstance).getTriggers();
     stream.writeInt(triggers.size());
-    for (    Map.Entry<Long,Integer> entry : triggers.entrySet()) {
-      stream.writeLong(entry.getKey());
-      stream.writeInt(entry.getValue());
+    List<Long> keys=new ArrayList<Long>(triggers.keySet());
+    Collections.sort(keys,new Comparator<Long>(){
+      public int compare(      Long o1,      Long o2){
+        return o1.compareTo(o2);
+      }
+    }
+);
+    for (    Long key : keys) {
+      stream.writeLong(key);
+      stream.writeInt(triggers.get(key));
     }
   }
  else   if (nodeInstance instanceof CompositeContextNodeInstance) {
@@ -38,12 +45,26 @@
     CompositeContextNodeInstance compositeNodeInstance=(CompositeContextNodeInstance)nodeInstance;
     VariableScopeInstance variableScopeInstance=(VariableScopeInstance)compositeNodeInstance.getContextInstance(VariableScope.VARIABLE_SCOPE);
     Map<String,Object> variables=variableScopeInstance.getVariables();
-    stream.writeInt(variables.size());
-    for (    Map.Entry<String,Object> entry : variables.entrySet()) {
-      stream.writeUTF(entry.getKey());
-      stream.writeObject(entry.getValue());
+    List<String> keys=new ArrayList<String>(variables.keySet());
+    Collections.sort(keys,new Comparator<String>(){
+      public int compare(      String o1,      String o2){
+        return o1.compareTo(o2);
+      }
     }
-    for (    NodeInstance subNodeInstance : compositeNodeInstance.getNodeInstances()) {
+);
+    stream.writeInt(keys.size());
+    for (    String key : keys) {
+      stream.writeUTF(key);
+      stream.writeObject(variables.get(key));
+    }
+    List<NodeInstance> nodeInstances=new ArrayList<NodeInstance>(compositeNodeInstance.getNodeInstances());
+    Collections.sort(nodeInstances,new Comparator<NodeInstance>(){
+      public int compare(      NodeInstance o1,      NodeInstance o2){
+        return (int)(o1.getId() - o2.getId());
+      }
+    }
+);
+    for (    NodeInstance subNodeInstance : nodeInstances) {
       stream.writeShort(PersisterEnums.NODE_INSTANCE);
       writeNodeInstance(context,subNodeInstance);
     }
@@ -52,7 +73,14 @@
  else   if (nodeInstance instanceof ForEachNodeInstance) {
     stream.writeShort(PersisterEnums.FOR_EACH_NODE_INSTANCE);
     ForEachNodeInstance forEachNodeInstance=(ForEachNodeInstance)nodeInstance;
-    for (    NodeInstance subNodeInstance : forEachNodeInstance.getNodeInstances()) {
+    List<NodeInstance> nodeInstances=new ArrayList<NodeInstance>(forEachNodeInstance.getNodeInstances());
+    Collections.sort(nodeInstances,new Comparator<NodeInstance>(){
+      public int compare(      NodeInstance o1,      NodeInstance o2){
+        return (int)(o1.getId() - o2.getId());
+      }
+    }
+);
+    for (    NodeInstance subNodeInstance : nodeInstances) {
       if (subNodeInstance instanceof CompositeContextNodeInstance) {
         stream.writeShort(PersisterEnums.NODE_INSTANCE);
         writeNodeInstance(context,subNodeInstance);
