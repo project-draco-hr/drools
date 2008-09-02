@@ -1,8 +1,9 @@
 {
-  PersistenceManager persistenceManager=new MemoryPersistenceManager(new StatefulSessionSnapshotter(session));
-  persistenceManager.save();
-  Transaction transaction=persistenceManager.getTransaction();
+  Persister<StatefulSession> persister=new MemoryPersister<StatefulSession>(new StatefulSessionSnapshotter(session));
+  persister.save();
+  Transaction transaction=persister.getTransaction();
   try {
+    transaction.start();
     Object result=command.execute(session);
     transaction.commit();
     return result;
