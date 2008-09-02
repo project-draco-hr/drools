@@ -1,13 +1,13 @@
 {
   try {
+    if (isEditor) {
+      parser.enableEditorInterface();
+    }
     DroolsTree resultTree=(DroolsTree)parser.compilation_unit().getTree();
+    editorSentences=parser.getEditorInterface();
     makeErrorList(parser);
-    if (!this.hasErrors()) {
-      CommonTreeNodeStream nodes=new CommonTreeNodeStream(resultTree);
-      nodes.setTokenStream(parser.getTokenStream());
-      DescrBuilderTree walker=new DescrBuilderTree(nodes);
-      walker.compilation_unit();
-      return walker.getPackageDescr();
+    if (isEditor || !this.hasErrors()) {
+      return walk(parser.getTokenStream(),resultTree);
     }
  else {
       return null;
