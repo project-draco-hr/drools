@@ -1,0 +1,19 @@
+{
+  this.halt.set(false);
+  while (continueFiring(-1)) {
+    boolean fired=fireNextItem(agendaFilter);
+    if (!fired) {
+      try {
+synchronized (this.halt) {
+          this.halt.wait();
+        }
+      }
+ catch (      InterruptedException e) {
+        this.halt.set(true);
+      }
+    }
+ else {
+      this.workingMemory.executeQueuedActions();
+    }
+  }
+}

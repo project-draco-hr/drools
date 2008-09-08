@@ -1,23 +1,16 @@
 {
-  this.halt=false;
   if (isSequential()) {
     for (Iterator it=this.liaPropagations.iterator(); it.hasNext(); ) {
       ((LIANodePropagation)it.next()).doPropagation(this);
     }
   }
   executeQueuedActions();
-  boolean noneFired=true;
-  if (!this.firing) {
-    try {
-      this.firing=true;
-      while (continueFiring(fireLimit) && this.agenda.fireNextItem(agendaFilter)) {
-        fireLimit=updateFireLimit(fireLimit);
-        noneFired=false;
-        executeQueuedActions();
-      }
+  try {
+    if (this.firing.compareAndSet(false,true)) {
+      this.agenda.fireAllRules(agendaFilter,fireLimit);
     }
+  }
   finally {
-      this.firing=false;
-    }
+    this.firing.set(false);
   }
 }
