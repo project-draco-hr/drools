@@ -1,0 +1,27 @@
+{
+  String className=this.chainedProperties.getProperty("workItemManagerFactory","org.drools.process.instance.impl.DefaultWorkItemManagerFactory");
+  Class<WorkItemManagerFactory> clazz=null;
+  try {
+    clazz=(Class<WorkItemManagerFactory>)Thread.currentThread().getContextClassLoader().loadClass(className);
+  }
+ catch (  ClassNotFoundException e) {
+  }
+  if (clazz == null) {
+    try {
+      clazz=(Class<WorkItemManagerFactory>)RuleBaseConfiguration.class.getClassLoader().loadClass(className);
+    }
+ catch (    ClassNotFoundException e) {
+    }
+  }
+  if (clazz != null) {
+    try {
+      this.workItemManagerFactory=clazz.newInstance();
+    }
+ catch (    Exception e) {
+      throw new IllegalArgumentException("Unable to instantiate work item manager factory '" + className + "'",e);
+    }
+  }
+ else {
+    throw new IllegalArgumentException("Work item manager factory '" + className + "' not found");
+  }
+}

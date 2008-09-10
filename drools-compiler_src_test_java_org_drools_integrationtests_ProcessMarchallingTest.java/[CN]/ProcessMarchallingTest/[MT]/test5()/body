@@ -1,0 +1,14 @@
+{
+  String process="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + "<process xmlns=\"http://drools.org/drools-4.0/process\"\n" + "  xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n"+ "  xs:schemaLocation=\"http://drools.org/drools-4.0/process drools-processes-4.0.xsd\"\n"+ "  type=\"RuleFlow\" name=\"ruleflow\" id=\"com.sample.ruleflow\" package-name=\"com.sample\" >\n"+ "\n"+ "    <header>\n"+ "    </header>\n"+ "\n"+ "    <nodes>\n"+ "      <start id=\"1\" name=\"Start\" />\n"+ "      <timer id=\"4\" name=\"Timer\" delay=\"200\" />\n"+ "      <end id=\"3\" name=\"End\" />\n"+ "    </nodes>\n"+ "\n"+ "    <connections>\n"+ "      <connection from=\"1\" to=\"4\" />\n"+ "      <connection from=\"4\" to=\"3\" />\n"+ "    </connections>\n"+ "\n"+ "</process>\n";
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addProcessFromXml(new StringReader(process));
+  final Package pkg=builder.getPackage();
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  ruleBase.addPackage(pkg);
+  StatefulSession session=ruleBase.newStatefulSession();
+  session.startProcess("com.sample.ruleflow",null);
+  assertEquals(1,session.getProcessInstances().size());
+  session=getSerialisedStatefulSession(session);
+  Thread.sleep(400);
+  assertEquals(0,session.getProcessInstances().size());
+}

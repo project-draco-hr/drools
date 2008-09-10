@@ -1,0 +1,27 @@
+{
+  String className=this.chainedProperties.getProperty("processInstanceManagerFactory","org.drools.process.instance.impl.DefaultProcessInstanceManagerFactory");
+  Class<ProcessInstanceManagerFactory> clazz=null;
+  try {
+    clazz=(Class<ProcessInstanceManagerFactory>)Thread.currentThread().getContextClassLoader().loadClass(className);
+  }
+ catch (  ClassNotFoundException e) {
+  }
+  if (clazz == null) {
+    try {
+      clazz=(Class<ProcessInstanceManagerFactory>)RuleBaseConfiguration.class.getClassLoader().loadClass(className);
+    }
+ catch (    ClassNotFoundException e) {
+    }
+  }
+  if (clazz != null) {
+    try {
+      this.processInstanceManagerFactory=clazz.newInstance();
+    }
+ catch (    Exception e) {
+      throw new IllegalArgumentException("Unable to instantiate process instance manager factory '" + className + "'");
+    }
+  }
+ else {
+    throw new IllegalArgumentException("Process instance manager factory '" + className + "' not found");
+  }
+}

@@ -5,23 +5,29 @@
   Package pkg=builder.getPackage();
   RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   ruleBase.addPackage(pkg);
-  WorkingMemory workingMemory=ruleBase.newStatefulSession();
-  List myList=new ArrayList();
-  workingMemory.setGlobal("myList",myList);
-  ProcessInstance processInstance=workingMemory.startProcess("org.drools.timer");
+  StatefulSession session=ruleBase.newStatefulSession();
+  List<Message> myList=new ArrayList<Message>();
+  session.setGlobal("myList",myList);
+  ProcessInstance processInstance=session.startProcess("org.drools.timer");
   assertEquals(0,myList.size());
   assertEquals(ProcessInstance.STATE_ACTIVE,processInstance.getState());
+  assertEquals(1,session.getTimerManager().getTimers().size());
+  session=getSerialisedStatefulSession(session);
+  assertEquals(1,session.getTimerManager().getTimers().size());
+  System.out.println("Sleep1");
   try {
     Thread.sleep(600);
   }
  catch (  InterruptedException e) {
   }
   assertEquals(0,myList.size());
+  System.out.println("Sleep2");
   try {
     Thread.sleep(1300);
   }
  catch (  InterruptedException e) {
   }
+  session.fireAllRules();
   assertEquals(5,myList.size());
   assertEquals(ProcessInstance.STATE_COMPLETED,processInstance.getState());
 }
