@@ -1,16 +1,25 @@
 {
   PackageBuilder builder=new PackageBuilder();
-  Reader source=new StringReader("package org.drools\n" + "\n" + "import org.drools.Message\n"+ "\n"+ "rule MyRule\n"+ "  when\n"+ "    Number( intValue >= 5 ) from accumulate ( m: Message( ), count( m ) )\n"+ "  then\n"+ "    System.out.println(\"Found messages\");\n"+ "end");
+  Reader source=new StringReader("package org.drools\n" + "\n" + "import org.drools.Message\n"+ "global java.util.List results\n"+ "\n"+ "rule MyRule\n"+ "  when\n"+ "    $n : Number( intValue >= 2 ) from accumulate ( m: Message( ), count( m ) )\n"+ "  then\n"+ "    results.add($n);\n"+ "end");
   builder.addPackageFromDrl(source);
   Package pkg=builder.getPackage();
   RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   ruleBase.addPackage(pkg);
   StatefulSession session=ruleBase.newStatefulSession();
+  session.setGlobal("results",new ArrayList());
+  session=getSerialisedStatefulSession(session);
   session.insert(new Message());
+  session=getSerialisedStatefulSession(session);
+  List results=(List)session.getGlobal("results");
+  session.insert(new Message());
+  session.insert(new Message());
+  session.fireAllRules();
+  assertEquals(3,((Number)results.get(0)).intValue());
   session=getSerialisedStatefulSession(session);
   session.insert(new Message());
   session.insert(new Message());
-  session.insert(new Message());
-  session.insert(new Message());
+  session=getSerialisedStatefulSession(session);
   assertEquals(1,session.getAgenda().getActivations().length);
+  session.fireAllRules();
+  assertEquals(5,((Number)results.get(1)).intValue());
 }

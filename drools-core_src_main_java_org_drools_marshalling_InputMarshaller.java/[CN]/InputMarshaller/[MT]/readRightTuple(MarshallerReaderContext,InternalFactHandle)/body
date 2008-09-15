@@ -1,8 +1,20 @@
 {
   ObjectInputStream stream=context.stream;
   RightTupleSink sink=(RightTupleSink)context.sinks.get(stream.readInt());
-  BetaMemory memory=(BetaMemory)context.wm.getNodeMemory((BetaNode)sink);
   RightTuple rightTuple=new RightTuple(factHandle,sink);
   context.rightTuples.put(new RightTupleKey(factHandle.getId(),sink),rightTuple);
-  memory.getRightTupleMemory().add(rightTuple);
+  BetaMemory memory=null;
+switch (sink.getType()) {
+case NodeTypeEnums.AccumulateNode:
+{
+      memory=((AccumulateMemory)context.wm.getNodeMemory((BetaNode)sink)).betaMemory;
+      break;
+    }
+default :
+{
+    memory=(BetaMemory)context.wm.getNodeMemory((BetaNode)sink);
+    break;
+  }
+}
+memory.getRightTupleMemory().add(rightTuple);
 }

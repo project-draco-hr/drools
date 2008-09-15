@@ -71,6 +71,42 @@ if (type == PersisterEnums.LEFT_TUPLE_NOT_BLOCKED) {
 }
 break;
 }
+case NodeTypeEnums.AccumulateNode:
+{
+AccumulateMemory memory=(AccumulateMemory)context.wm.getNodeMemory((BetaNode)sink);
+memory.betaMemory.getLeftTupleMemory().add(parentLeftTuple);
+AccumulateContext accctx=new AccumulateContext();
+memory.betaMemory.getCreatedHandles().put(parentLeftTuple,accctx,false);
+InternalFactHandle handle=readFactHandle(context);
+accctx.result=new RightTuple(handle,(RightTupleSink)sink);
+accctx.context=(Serializable)stream.readObject();
+accctx.propagated=stream.readBoolean();
+short head=-1;
+while ((head=stream.readShort()) != PersisterEnums.END) {
+switch (head) {
+case PersisterEnums.RIGHT_TUPLE:
+{
+    int factHandleId=stream.readInt();
+    RightTupleKey key=new RightTupleKey(factHandleId,sink);
+    RightTuple rightTuple=context.rightTuples.get(key);
+    new LeftTuple(parentLeftTuple,rightTuple,sink,true);
+    break;
+  }
+case PersisterEnums.LEFT_TUPLE:
+{
+  LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
+  LeftTuple childLeftTuple=new LeftTuple(parentLeftTuple,accctx.result,childSink,true);
+  readLeftTuple(childLeftTuple,context);
+  break;
+}
+default :
+{
+throw new RuntimeDroolsException("Marshalling error. This is a bug. Please contact the development team.");
+}
+}
+}
+break;
+}
 case NodeTypeEnums.RuleTerminalNode:
 {
 RuleTerminalNode ruleTerminalNode=(RuleTerminalNode)sink;

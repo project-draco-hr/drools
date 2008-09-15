@@ -14,16 +14,10 @@
   int size=stream.readInt();
   InternalFactHandle[] handles=new InternalFactHandle[size];
   for (int i=0; i < size; i++) {
-    int id=stream.readInt();
-    long recency=stream.readLong();
-    int strategyIndex=stream.readInt();
-    PlaceholderResolverStrategy strategy=resolverStrategyFactory.getStrategy(strategyIndex);
-    ObjectPlaceholder placeHolder=strategy.read(stream);
-    Object object=placeHolder.resolveObject();
-    InternalFactHandle handle=new DefaultFactHandle(id,object,recency);
-    context.handles.put(id,handle);
+    InternalFactHandle handle=readFactHandle(context);
+    context.handles.put(handle.getId(),handle);
     handles[i]=handle;
-    context.wm.getObjectStore().addHandle(handle,object);
+    context.wm.getObjectStore().addHandle(handle,handle.getObject());
     readRightTuples(handle,context);
   }
   EntryPointNode node=ruleBase.getRete().getEntryPointNode(EntryPoint.DEFAULT);
