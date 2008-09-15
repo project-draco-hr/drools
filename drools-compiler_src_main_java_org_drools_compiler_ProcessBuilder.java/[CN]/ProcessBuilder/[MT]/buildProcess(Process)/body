@@ -25,13 +25,19 @@
 catch (    DroolsParserException e) {
       e.printStackTrace(System.err);
     }
-    buildNodes(process);
-    this.packageBuilder.getPackage().addProcess(process);
-    Package pkg=this.packageBuilder.getPackage();
-    if (pkg != null) {
-      PackageRegistry pkgRegistry=this.packageBuilder.getPackageRegistry(pkg.getName());
-      pkgRegistry.compileAll();
-      pkgRegistry.getDialectRuntimeRegistry().onBeforeExecute();
+    ProcessDescr processDescr=new ProcessDescr();
+    processDescr.setName(process.getPackageName());
+    PackageRegistry pkgRegistry=this.packageBuilder.getPackageRegistry(this.packageBuilder.getPackage().getName());
+    DialectCompiletimeRegistry dialectRegistry=pkgRegistry.getDialectCompiletimeRegistry();
+    Dialect dialect=dialectRegistry.getDialect("java");
+    dialect.init(processDescr);
+    ProcessBuildContext buildContext=new ProcessBuildContext(this.packageBuilder,this.packageBuilder.getPackage(),process,processDescr,dialectRegistry,dialect);
+    buildContexts(process,buildContext);
+    if (process instanceof WorkflowProcess) {
+      buildNodes((WorkflowProcess)process,buildContext);
     }
+    this.packageBuilder.getPackage().addProcess(process);
+    pkgRegistry.compileAll();
+    pkgRegistry.getDialectRuntimeRegistry().onBeforeExecute();
   }
 }

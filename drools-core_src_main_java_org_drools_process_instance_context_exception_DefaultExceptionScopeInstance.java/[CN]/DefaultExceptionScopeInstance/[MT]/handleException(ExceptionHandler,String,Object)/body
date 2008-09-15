@@ -1,0 +1,28 @@
+{
+  if (handler instanceof ActionExceptionHandler) {
+    Action action=(Action)((ActionExceptionHandler)handler).getAction().getMetaData("Action");
+    try {
+      KnowledgeHelper knowledgeHelper=createKnowledgeHelper();
+      ProcessContext context=new ProcessContext();
+      ProcessInstance processInstance=getProcessInstance();
+      ContextInstanceContainer contextInstanceContainer=getContextInstanceContainer();
+      if (contextInstanceContainer instanceof NodeInstance) {
+        context.setNodeInstance((NodeInstance)contextInstanceContainer);
+      }
+ else {
+        context.setProcessInstance(processInstance);
+      }
+      String faultVariable=handler.getFaultVariable();
+      if (faultVariable != null) {
+        context.setVariable(faultVariable,params);
+      }
+      action.execute(knowledgeHelper,processInstance.getWorkingMemory(),context);
+    }
+ catch (    Exception e) {
+      throw new RuntimeException("unable to execute Action",e);
+    }
+  }
+ else {
+    throw new IllegalArgumentException("Unknown exception handler " + handler);
+  }
+}

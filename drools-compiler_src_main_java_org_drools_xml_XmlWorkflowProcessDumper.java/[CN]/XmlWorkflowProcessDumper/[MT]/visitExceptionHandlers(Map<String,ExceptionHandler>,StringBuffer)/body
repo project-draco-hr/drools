@@ -1,0 +1,26 @@
+{
+  if (exceptionHandlers != null && exceptionHandlers.size() > 0) {
+    xmlDump.append("    <exceptionHandlers>" + EOL);
+    for (    Map.Entry<String,ExceptionHandler> entry : exceptionHandlers.entrySet()) {
+      ExceptionHandler exceptionHandler=entry.getValue();
+      if (exceptionHandler instanceof ActionExceptionHandler) {
+        ActionExceptionHandler actionExceptionHandler=(ActionExceptionHandler)exceptionHandler;
+        xmlDump.append("      <exceptionHandler faultName=\"" + entry.getKey() + "\" type=\"action\" ");
+        String faultVariable=exceptionHandler.getFaultVariable();
+        if (faultVariable != null && faultVariable.length() > 0) {
+          xmlDump.append("faultVariable=\"" + faultVariable + "\" ");
+        }
+        xmlDump.append(">" + EOL);
+        DroolsAction action=actionExceptionHandler.getAction();
+        if (action != null) {
+          AbstractNodeHandler.writeAction(action,xmlDump);
+        }
+        xmlDump.append("      </exceptionHandler>" + EOL);
+      }
+ else {
+        throw new IllegalArgumentException("Unknown exception handler type: " + exceptionHandler);
+      }
+    }
+    xmlDump.append("    </exceptionHandlers>" + EOL);
+  }
+}

@@ -9,8 +9,16 @@
     for (    Node node : getWorkflowProcess().getNodes()) {
       if (node instanceof EventNodeInterface) {
         if (((EventNodeInterface)node).acceptsEvent(type,event)) {
-          EventNodeInstanceInterface eventNodeInstance=(EventNodeInstanceInterface)getNodeInstance(node);
-          eventNodeInstance.triggerEvent(type,event);
+          List<NodeInstance> nodeInstances=getNodeInstances(node.getId());
+          if (nodeInstances != null && !nodeInstances.isEmpty()) {
+            for (            NodeInstance nodeInstance : nodeInstances) {
+              ((EventNodeInstanceInterface)nodeInstance).signalEvent(type,event);
+            }
+          }
+ else {
+            EventNodeInstanceInterface eventNodeInstance=(EventNodeInstanceInterface)getNodeInstance(node);
+            eventNodeInstance.signalEvent(type,event);
+          }
         }
       }
     }

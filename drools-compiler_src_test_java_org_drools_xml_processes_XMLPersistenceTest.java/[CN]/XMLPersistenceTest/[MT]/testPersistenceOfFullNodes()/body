@@ -36,7 +36,7 @@
   variable.setValue(person);
   variables.add(variable);
   variable=new Variable();
-  variable.setName("variable3");
+  variable.setName("variable4");
   ListDataType listDataType=new ListDataType();
   listDataType.setType(new ObjectDataType("java.lang.Integer"));
   variable.setType(listDataType);
@@ -52,6 +52,16 @@
   swimlane=new Swimlane();
   swimlane.setName("actor2");
   process.getSwimlaneContext().addSwimlane(swimlane);
+  ActionExceptionHandler exceptionHandler=new ActionExceptionHandler();
+  exceptionHandler.setFaultVariable("faultVariable");
+  DroolsConsequenceAction action=new DroolsConsequenceAction("dialect","consequence");
+  exceptionHandler.setAction(action);
+  process.getExceptionScope().setExceptionHandler("myFault",exceptionHandler);
+  exceptionHandler=new ActionExceptionHandler();
+  exceptionHandler.setFaultVariable("faultVariable2");
+  action=new DroolsConsequenceAction("dialect2","consequence2");
+  exceptionHandler.setAction(action);
+  process.getExceptionScope().setExceptionHandler("myFault2",exceptionHandler);
   StartNode startNode=new StartNode();
   startNode.setName("start");
   startNode.setMetaData("x",1);
@@ -65,7 +75,7 @@
   actionNode.setMetaData("y",2);
   actionNode.setMetaData("width",3);
   actionNode.setMetaData("height",4);
-  DroolsConsequenceAction action=new DroolsConsequenceAction("dialect","consequence");
+  action=new DroolsConsequenceAction("dialect","consequence");
   actionNode.setAction(action);
   process.addNode(actionNode);
   RuleSetNode ruleSetNode=new RuleSetNode();
@@ -76,6 +86,15 @@
   ruleSetNode.setMetaData("height",4);
   ruleSetNode.setRuleFlowGroup("ruleFlowGroup");
   process.addNode(ruleSetNode);
+  FaultNode faultNode=new FaultNode();
+  faultNode.setName("action");
+  faultNode.setMetaData("x",1);
+  faultNode.setMetaData("y",2);
+  faultNode.setMetaData("width",3);
+  faultNode.setMetaData("height",4);
+  faultNode.setFaultName("faultName");
+  faultNode.setFaultVariable("faultVariable");
+  process.addNode(faultNode);
   Split split=new Split();
   split.setName("split");
   split.setMetaData("x",1);
@@ -148,6 +167,7 @@
   connection=new ConnectionImpl(milestone,Node.CONNECTION_DEFAULT_TYPE,subProcess,Node.CONNECTION_DEFAULT_TYPE);
   connection.setMetaData("bendpoints","[10,10]");
   WorkItemNode workItemNode=new WorkItemNode();
+  workItemNode.setName("WorkItem");
   Work work=new WorkImpl();
   work.setName("workname");
   Set<ParameterDefinition> parameterDefinitions=new HashSet<ParameterDefinition>();
@@ -166,6 +186,7 @@
   connection=new ConnectionImpl(subProcess,Node.CONNECTION_DEFAULT_TYPE,workItemNode,Node.CONNECTION_DEFAULT_TYPE);
   connection.setMetaData("bendpoints","[]");
   HumanTaskNode humanTaskNode=new HumanTaskNode();
+  humanTaskNode.setName("Human Task");
   work=humanTaskNode.getWork();
   parameterDefinitions=new HashSet<ParameterDefinition>();
   parameterDefinition=new ParameterDefinitionImpl("TaskName",new StringDataType());
@@ -195,6 +216,7 @@
   process.addNode(timerNode);
   new ConnectionImpl(humanTaskNode,Node.CONNECTION_DEFAULT_TYPE,timerNode,Node.CONNECTION_DEFAULT_TYPE);
   ForEachNode forEachNode=new ForEachNode();
+  forEachNode.setName("ForEach");
   forEachNode.setCollectionExpression("collection");
   forEachNode.setVariable("variableName",new ObjectDataType());
   forEachNode.setWaitForCompletion(false);
@@ -207,6 +229,34 @@
   forEachNode.getCompositeNode().linkOutgoingConnections(subActionNode2.getId(),Node.CONNECTION_DEFAULT_TYPE,Node.CONNECTION_DEFAULT_TYPE);
   process.addNode(forEachNode);
   new ConnectionImpl(timerNode,Node.CONNECTION_DEFAULT_TYPE,forEachNode,Node.CONNECTION_DEFAULT_TYPE);
+  CompositeContextNode compositeNode=new CompositeContextNode();
+  compositeNode.setName("Composite");
+  VariableScope variableScope=new VariableScope();
+  compositeNode.addContext(variableScope);
+  compositeNode.setDefaultContext(variableScope);
+  variableScope.setVariables(variables);
+  ExceptionScope exceptionScope=new ExceptionScope();
+  compositeNode.addContext(exceptionScope);
+  compositeNode.setDefaultContext(exceptionScope);
+  exceptionHandler=new ActionExceptionHandler();
+  exceptionHandler.setFaultVariable("faultVariable");
+  action=new DroolsConsequenceAction("dialect","consequence");
+  exceptionHandler.setAction(action);
+  exceptionScope.setExceptionHandler("MyFault",exceptionHandler);
+  exceptionHandler=new ActionExceptionHandler();
+  exceptionHandler.setFaultVariable("faultVariable2");
+  action=new DroolsConsequenceAction("dialect2","consequence2");
+  exceptionHandler.setAction(action);
+  exceptionScope.setExceptionHandler("MyFault2",exceptionHandler);
+  subActionNode1=new ActionNode();
+  compositeNode.addNode(subActionNode1);
+  subActionNode2=new ActionNode();
+  compositeNode.addNode(subActionNode2);
+  new ConnectionImpl(subActionNode1,Node.CONNECTION_DEFAULT_TYPE,subActionNode2,Node.CONNECTION_DEFAULT_TYPE);
+  compositeNode.linkIncomingConnections(Node.CONNECTION_DEFAULT_TYPE,subActionNode1.getId(),Node.CONNECTION_DEFAULT_TYPE);
+  compositeNode.linkOutgoingConnections(subActionNode2.getId(),Node.CONNECTION_DEFAULT_TYPE,Node.CONNECTION_DEFAULT_TYPE);
+  process.addNode(compositeNode);
+  new ConnectionImpl(forEachNode,Node.CONNECTION_DEFAULT_TYPE,compositeNode,Node.CONNECTION_DEFAULT_TYPE);
   EndNode endNode=new EndNode();
   endNode.setName("end");
   endNode.setTerminate(false);
@@ -215,7 +265,7 @@
   endNode.setMetaData("width",3);
   endNode.setMetaData("height",4);
   process.addNode(endNode);
-  new ConnectionImpl(forEachNode,Node.CONNECTION_DEFAULT_TYPE,endNode,Node.CONNECTION_DEFAULT_TYPE);
+  new ConnectionImpl(compositeNode,Node.CONNECTION_DEFAULT_TYPE,endNode,Node.CONNECTION_DEFAULT_TYPE);
   String xml=XmlRuleFlowProcessDumper.INSTANCE.dump(process,true);
   if (xml == null) {
     throw new IllegalArgumentException("Failed to persist full nodes!");
@@ -225,7 +275,12 @@
   if (process == null) {
     throw new IllegalArgumentException("Failed to reload process!");
   }
-  assertEquals(13,process.getNodes().length);
+  assertEquals(15,process.getNodes().length);
+  assertEquals(2,process.getImports().size());
+  assertEquals(2,process.getGlobals().size());
+  assertEquals(4,process.getVariableScope().getVariables().size());
+  assertEquals(2,process.getSwimlaneContext().getSwimlanes().size());
+  assertEquals(2,process.getExceptionScope().getExceptionHandlers().size());
   String xml2=XmlRuleFlowProcessDumper.INSTANCE.dump(process,true);
   if (xml2 == null) {
     throw new IllegalArgumentException("Failed to persist empty nodes!");

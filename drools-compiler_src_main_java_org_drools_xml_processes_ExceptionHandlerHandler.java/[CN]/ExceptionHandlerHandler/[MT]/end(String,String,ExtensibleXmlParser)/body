@@ -1,0 +1,33 @@
+{
+  final Element element=parser.endElementBuilder();
+  ContextContainer contextContainer=(ContextContainer)parser.getParent();
+  final String type=element.getAttribute("type");
+  emptyAttributeCheck(localName,"type",type,parser);
+  final String faultName=element.getAttribute("faultName");
+  emptyAttributeCheck(localName,"faultName",type,parser);
+  final String faultVariable=element.getAttribute("faultVariable");
+  ExceptionHandler exceptionHandler=null;
+  if ("action".equals(type)) {
+    exceptionHandler=new ActionExceptionHandler();
+    org.w3c.dom.Node xmlNode=element.getFirstChild();
+    if (xmlNode instanceof Element) {
+      Element actionXml=(Element)xmlNode;
+      DroolsAction action=ActionNodeHandler.extractAction(actionXml);
+      ((ActionExceptionHandler)exceptionHandler).setAction(action);
+    }
+  }
+ else {
+    throw new SAXParseException("Unknown exception handler type " + type,parser.getLocator());
+  }
+  if (faultVariable != null && faultVariable.length() > 0) {
+    exceptionHandler.setFaultVariable(faultVariable);
+  }
+  ExceptionScope exceptionScope=(ExceptionScope)contextContainer.getDefaultContext(ExceptionScope.EXCEPTION_SCOPE);
+  if (exceptionScope == null) {
+    exceptionScope=new ExceptionScope();
+    contextContainer.addContext(exceptionScope);
+    contextContainer.setDefaultContext(exceptionScope);
+  }
+  exceptionScope.setExceptionHandler(faultName,exceptionHandler);
+  return null;
+}
