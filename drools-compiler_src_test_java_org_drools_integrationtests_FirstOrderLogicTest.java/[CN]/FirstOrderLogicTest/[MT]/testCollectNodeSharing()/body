@@ -5,12 +5,18 @@
   RuleBase ruleBase=getRuleBase();
   ruleBase.addPackage(pkg);
   ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
-  final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  StatefulSession workingMemory=ruleBase.newStatefulSession();
+  List results=new ArrayList();
+  workingMemory.setGlobal("results",results);
+  workingMemory=SerializationHelper.getSerialisedStatefulSession(workingMemory);
+  results=(List)workingMemory.getGlobal("results");
   workingMemory.insert(new Cheese("stilton",10));
+  workingMemory=SerializationHelper.getSerialisedStatefulSession(workingMemory);
+  results=(List)workingMemory.getGlobal("results");
   workingMemory.insert(new Cheese("brie",15));
   workingMemory.fireAllRules();
-  assertEquals(1,list.size());
-  assertEquals(2,((List)list.get(0)).size());
+  workingMemory=SerializationHelper.getSerialisedStatefulSession(workingMemory);
+  results=(List)workingMemory.getGlobal("results");
+  assertEquals(1,results.size());
+  assertEquals(2,((List)results.get(0)).size());
 }
