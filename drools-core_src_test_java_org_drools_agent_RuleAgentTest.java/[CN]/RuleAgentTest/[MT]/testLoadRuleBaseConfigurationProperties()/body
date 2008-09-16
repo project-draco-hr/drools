@@ -1,0 +1,26 @@
+{
+  AnotherRuleAgentMock ag=new AnotherRuleAgentMock();
+  Map oldMap=ag.PACKAGE_PROVIDERS;
+  RuleAgent.PACKAGE_PROVIDERS=new HashMap();
+  RuleAgent.PACKAGE_PROVIDERS.put(RuleAgent.URLS,MockProvider.class);
+  RuleAgent.PACKAGE_PROVIDERS.put(RuleAgent.FILES,MockProvider.class);
+  RuleAgent.PACKAGE_PROVIDERS.put(RuleAgent.DIRECTORY,MockProvider.class);
+  Properties props=new Properties();
+  MockEventListener evl=new MockEventListener();
+  ag.listener=evl;
+  props.load(this.getClass().getResourceAsStream("/rule-agent-config.properties"));
+  ag.init(props,true);
+  assertTrue(ag.getRuleBaseConfiguration().isMaintainTms());
+  assertFalse(ag.getRuleBaseConfiguration().isSequential());
+  assertTrue(ag.getRuleBaseConfiguration().getSequentialAgenda().equals(SequentialAgenda.SEQUENTIAL));
+  assertTrue(ag.getRuleBaseConfiguration().isShareAlphaNodes());
+  assertTrue(ag.getRuleBaseConfiguration().isShareBetaNodes());
+  props.load(this.getClass().getResourceAsStream("/rule-base-rule-agent-config.properties"));
+  ag.init(props,true);
+  assertTrue(ag.getRuleBaseConfiguration().isMaintainTms());
+  assertFalse(ag.getRuleBaseConfiguration().isSequential());
+  assertTrue(ag.getRuleBaseConfiguration().getSequentialAgenda().equals(SequentialAgenda.DYNAMIC));
+  assertFalse(ag.getRuleBaseConfiguration().isShareAlphaNodes());
+  assertTrue(ag.getRuleBaseConfiguration().isShareBetaNodes());
+  ag.PACKAGE_PROVIDERS=oldMap;
+}

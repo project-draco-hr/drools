@@ -1,0 +1,26 @@
+{
+  boolean newInstance=Boolean.valueOf(config.getProperty(NEW_INSTANCE,"false")).booleanValue();
+  int secondsToRefresh=Integer.parseInt(config.getProperty(POLL_INTERVAL,"-1"));
+  final String name=config.getProperty(CONFIG_NAME,"default");
+  listener.setAgentName(name);
+  listener.info("Configuring with newInstance=" + newInstance + ", secondsToRefresh="+ secondsToRefresh);
+  List provs=new ArrayList();
+  Properties droolsProperties=new Properties();
+  for (Iterator iter=config.keySet().iterator(); iter.hasNext(); ) {
+    String key=(String)iter.next();
+    if (ruleBaseConf != null && key.startsWith("drools.")) {
+      droolsProperties.setProperty(key,config.getProperty(key));
+    }
+ else {
+      PackageProvider prov=getProvider(key,config);
+      if (prov != null) {
+        listener.info("Configuring package provider : " + prov.toString());
+        provs.add(prov);
+      }
+    }
+  }
+  if (lookForRuleBaseConfigurations && !droolsProperties.isEmpty()) {
+    ruleBaseConf=new RuleBaseConfiguration(droolsProperties);
+  }
+  configure(newInstance,provs,secondsToRefresh);
+}
