@@ -1,0 +1,17 @@
+{
+  Action action=(Action)droolsAction.getMetaData("Action");
+  ProcessContext context=new ProcessContext();
+  context.setNodeInstance(this);
+  try {
+    action.execute(knowledgeHelper,getProcessInstance().getWorkingMemory(),context);
+  }
+ catch (  Exception exception) {
+    String exceptionName=exception.getClass().getName();
+    ExceptionScopeInstance exceptionScopeInstance=(ExceptionScopeInstance)resolveContextInstance(ExceptionScope.EXCEPTION_SCOPE,exceptionName);
+    if (exceptionScopeInstance == null) {
+      exception.printStackTrace();
+      throw new IllegalArgumentException("Could not find exception handler for " + exceptionName + " while executing node "+ getNodeId());
+    }
+    exceptionScopeInstance.handleException(exceptionName,exception);
+  }
+}

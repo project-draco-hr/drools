@@ -1,0 +1,25 @@
+{
+  ProcessJobContext ctx=new ProcessJobContext(timer,timer.getProcessInstanceId(),this.workingMemory);
+  long delay;
+  Date lastTriggered=timer.getLastTriggered();
+  if (lastTriggered == null) {
+    Date activated=timer.getActivated();
+    Date now=new Date();
+    long timespan=now.getTime() - activated.getTime();
+    delay=timer.getDelay() - timespan;
+    if (delay < 0) {
+      delay=0;
+    }
+  }
+ else {
+    Date now=new Date();
+    long timespan=now.getTime() - lastTriggered.getTime();
+    delay=timespan - timer.getPeriod();
+    if (delay < 0) {
+      delay=0;
+    }
+  }
+  JobHandle jobHandle=this.timerService.scheduleJob(processJob,ctx,new TimerTrigger(delay,timer.getPeriod()));
+  timer.setJobHandle(jobHandle);
+  timers.put(timer.getId(),timer);
+}

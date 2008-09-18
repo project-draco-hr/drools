@@ -1,31 +1,48 @@
 {
   final Element element=parser.endElementBuilder();
-  Split splitNode=(Split)parser.getParent();
-  final String toNodeIdString=element.getAttribute("toNodeId");
-  emptyAttributeCheck(localName,"toNodeId",toNodeIdString,parser);
-  int toNodeId=new Integer(toNodeIdString);
-  final String toType=element.getAttribute("toType");
-  emptyAttributeCheck(localName,"toType",toType,parser);
-  Split.ConnectionRef connectionRef=new Split.ConnectionRef(toNodeId,toType);
-  Constraint constraint=new ConstraintImpl();
-  final String name=element.getAttribute("name");
-  constraint.setName(name);
-  final String priority=element.getAttribute("priority");
-  if (priority != null && priority.length() != 0) {
-    constraint.setPriority(new Integer(priority));
-  }
-  final String type=element.getAttribute("type");
-  constraint.setType(type);
-  final String dialect=element.getAttribute("dialect");
-  constraint.setDialect(dialect);
-  String text=((Text)element.getChildNodes().item(0)).getWholeText();
-  if (text != null) {
-    text=text.trim();
-    if ("".equals(text)) {
-      text=null;
+  Object parent=parser.getParent();
+  if (parent instanceof Split) {
+    Split splitNode=(Split)parser.getParent();
+    final String toNodeIdString=element.getAttribute("toNodeId");
+    emptyAttributeCheck(localName,"toNodeId",toNodeIdString,parser);
+    int toNodeId=new Integer(toNodeIdString);
+    final String toType=element.getAttribute("toType");
+    emptyAttributeCheck(localName,"toType",toType,parser);
+    Split.ConnectionRef connectionRef=new Split.ConnectionRef(toNodeId,toType);
+    Constraint constraint=new ConstraintImpl();
+    final String name=element.getAttribute("name");
+    constraint.setName(name);
+    final String priority=element.getAttribute("priority");
+    if (priority != null && priority.length() != 0) {
+      constraint.setPriority(new Integer(priority));
     }
+    final String type=element.getAttribute("type");
+    constraint.setType(type);
+    final String dialect=element.getAttribute("dialect");
+    constraint.setDialect(dialect);
+    String text=((Text)element.getChildNodes().item(0)).getWholeText();
+    if (text != null) {
+      text=text.trim();
+      if ("".equals(text)) {
+        text=null;
+      }
+    }
+    constraint.setConstraint(text);
+    splitNode.internalSetConstraint(connectionRef,constraint);
   }
-  constraint.setConstraint(text);
-  splitNode.internalSetConstraint(connectionRef,constraint);
+ else   if (parent instanceof MilestoneNode) {
+    MilestoneNode milestoneNode=(MilestoneNode)parent;
+    String text=((Text)element.getChildNodes().item(0)).getWholeText();
+    if (text != null) {
+      text=text.trim();
+      if ("".equals(text)) {
+        text=null;
+      }
+    }
+    milestoneNode.setConstraint(text);
+  }
+ else {
+    throw new SAXException("Invalid parent node " + parent);
+  }
   return null;
 }

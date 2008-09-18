@@ -1,30 +1,9 @@
 {
   List<DroolsAction> actions=getExtendedNode().getActions(type);
   if (actions != null) {
-    WorkingMemory workingMemory=getProcessInstance().getWorkingMemory();
-    KnowledgeHelper knowledgeHelper=null;
-    if (((InternalRuleBase)workingMemory.getRuleBase()).getConfiguration().isSequential()) {
-      knowledgeHelper=new SequentialKnowledgeHelper(workingMemory);
-    }
- else {
-      knowledgeHelper=new DefaultKnowledgeHelper(workingMemory);
-    }
+    KnowledgeHelper knowledgeHelper=createKnowledgeHelper();
     for (    DroolsAction droolsAction : actions) {
-      Action action=(Action)droolsAction.getMetaData("Action");
-      ProcessContext context=new ProcessContext();
-      context.setNodeInstance(this);
-      try {
-        action.execute(knowledgeHelper,workingMemory,context);
-      }
- catch (      Exception exception) {
-        String exceptionName=exception.getClass().getName();
-        ExceptionScopeInstance exceptionScopeInstance=(ExceptionScopeInstance)resolveContextInstance(ExceptionScope.EXCEPTION_SCOPE,exceptionName);
-        if (exceptionScopeInstance == null) {
-          exception.printStackTrace();
-          throw new IllegalArgumentException("Could not find exception handler for " + exceptionName + " while executing node "+ getNodeId());
-        }
-        exceptionScopeInstance.handleException(exceptionName,exception);
-      }
+      executeAction(droolsAction,knowledgeHelper);
     }
   }
 }

@@ -1,15 +1,16 @@
 {
   ObjectOutputStream stream=context.stream;
   TimerManager timerManager=context.wm.getTimerManager();
-  stream.writeLong(timerManager.internalGetTimerId());
-  List<Timer> timers=new ArrayList<Timer>(timerManager.getTimers());
-  Collections.sort(timers,new Comparator<Timer>(){
-    public int compare(    Timer o1,    Timer o2){
+  long timerId=timerManager.internalGetTimerId();
+  stream.writeLong(timerId);
+  List<TimerInstance> timers=new ArrayList<TimerInstance>(timerManager.getTimers());
+  Collections.sort(timers,new Comparator<TimerInstance>(){
+    public int compare(    TimerInstance o1,    TimerInstance o2){
       return (int)(o2.getId() - o1.getId());
     }
   }
 );
-  for (  Timer timer : timers) {
+  for (  TimerInstance timer : timers) {
     stream.writeShort(PersisterEnums.TIMER);
     writeTimer(context,timer);
   }
