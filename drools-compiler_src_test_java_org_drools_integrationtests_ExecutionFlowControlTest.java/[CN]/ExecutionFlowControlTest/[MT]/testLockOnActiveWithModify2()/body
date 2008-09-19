@@ -1,0 +1,78 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LockOnActiveWithModify.drl")));
+  final Package pkg=builder.getPackage();
+  RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  final StatefulSession session=ruleBase.newStatefulSession();
+  final int size=3;
+  Cell[][] cells=new Cell[size][];
+  FactHandle[][] handles=new FactHandle[size][];
+  for (int row=0; row < size; row++) {
+    cells[row]=new Cell[size];
+    handles[row]=new FactHandle[size];
+    for (int col=0; col < size; col++) {
+      cells[row][col]=new Cell(Cell.DEAD,row,col);
+      handles[row][col]=session.insert(cells[row][col]);
+      if (row >= 1 && col >= 1) {
+        session.insert(new Neighbor(cells[row - 1][col - 1],cells[row][col]));
+        session.insert(new Neighbor(cells[row][col],cells[row - 1][col - 1]));
+      }
+      if (row >= 1) {
+        session.insert(new Neighbor(cells[row - 1][col],cells[row][col]));
+        session.insert(new Neighbor(cells[row][col],cells[row - 1][col]));
+      }
+      if (row >= 1 && col < (size - 1)) {
+        session.insert(new Neighbor(cells[row - 1][col + 1],cells[row][col]));
+        session.insert(new Neighbor(cells[row][col],cells[row - 1][col + 1]));
+      }
+      if (col >= 1) {
+        session.insert(new Neighbor(cells[row][col - 1],cells[row][col]));
+        session.insert(new Neighbor(cells[row][col],cells[row][col - 1]));
+      }
+    }
+  }
+  session.clearAgendaGroup("calculate");
+  int fired=session.fireAllRules(100);
+  assertEquals(0,fired);
+  session.setFocus("calculate");
+  fired=session.fireAllRules(100);
+  assertEquals(0,fired);
+  assertEquals("MAIN",session.getAgenda().getFocusName());
+  session.modifyRetract(handles[0][0]);
+  cells[0][0].setState(Cell.LIVE);
+  session.modifyInsert(handles[0][0],cells[0][0]);
+  session.setFocus("birth");
+  session.setFocus("calculate");
+  fired=session.fireAllRules(100);
+  int[][] expected=new int[][]{{0,1,0},{1,1,0},{0,0,0}};
+  assertEqualsMatrix(size,cells,expected);
+  assertEquals("MAIN",session.getAgenda().getFocusName());
+  session.modifyRetract(handles[1][1]);
+  cells[1][1].setState(Cell.LIVE);
+  session.modifyInsert(handles[1][1],cells[1][1]);
+  session.setFocus("calculate");
+  session.fireAllRules(100);
+  expected=new int[][]{{1,2,1},{2,1,1},{1,1,1}};
+  assertEqualsMatrix(size,cells,expected);
+  assertEquals("MAIN",session.getAgenda().getFocusName());
+  session.setFocus("birth");
+  session.fireAllRules(100);
+  expected=new int[][]{{1,2,1},{2,1,1},{1,1,1}};
+  assertEqualsMatrix(size,cells,expected);
+  assertEquals("MAIN",session.getAgenda().getFocusName());
+  session.setFocus("calculate");
+  session.fireAllRules(100);
+  expected=new int[][]{{3,3,2},{3,3,2},{2,2,1}};
+  assertEqualsMatrix(size,cells,expected);
+  assertEquals("MAIN",session.getAgenda().getFocusName());
+  session.modifyRetract(handles[0][0]);
+  cells[0][0].setState(Cell.DEAD);
+  session.modifyInsert(handles[0][0],cells[0][0]);
+  session.setFocus("calculate");
+  session.fireAllRules(100);
+  expected=new int[][]{{3,2,2},{2,2,2},{2,2,1}};
+  assertEqualsMatrix(size,cells,expected);
+  assertEquals("MAIN",session.getAgenda().getFocusName());
+}
