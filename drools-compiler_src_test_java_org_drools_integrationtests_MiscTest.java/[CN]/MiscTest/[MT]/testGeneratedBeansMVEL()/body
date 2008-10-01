@@ -1,0 +1,20 @@
+{
+  final PackageBuilderConfiguration pbconf=new PackageBuilderConfiguration();
+  final PackageBuilder builder=new PackageBuilder(pbconf);
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_GeneratedBeansMVEL.drl")));
+  assertFalse(builder.getErrors().toString(),builder.hasErrors());
+  Package p=builder.getPackage();
+  RuleBaseConfiguration conf=new RuleBaseConfiguration();
+  RuleBase ruleBase=RuleBaseFactory.newRuleBase(conf);
+  ruleBase.addPackage(p);
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  FactType pf=ruleBase.getFactType("mortgages.Applicant");
+  FactType af=ruleBase.getFactType("mortgages.LoanApplication");
+  Object person=pf.newInstance();
+  pf.set(person,"creditRating","OK");
+  Object application=af.newInstance();
+  StatefulSession sess=ruleBase.newStatefulSession();
+  sess.insert(person);
+  sess.insert(application);
+  sess.fireAllRules();
+}
