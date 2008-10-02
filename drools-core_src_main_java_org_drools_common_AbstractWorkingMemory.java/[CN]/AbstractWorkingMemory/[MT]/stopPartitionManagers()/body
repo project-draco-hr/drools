@@ -1,7 +1,11 @@
 {
   if (this.ruleBase.getConfiguration().isMultithreadEvaluation()) {
-    for (    PartitionTaskManager task : this.partitionManagers.values()) {
-      task.stopServiceAndWait();
+    java.util.concurrent.ExecutorService service=this.threadPool.get();
+    if (this.threadPool.compareAndSet(service,null)) {
+      service.shutdown();
+      for (      PartitionTaskManager task : this.partitionManagers.values()) {
+        task.setPool(null);
+      }
     }
   }
 }

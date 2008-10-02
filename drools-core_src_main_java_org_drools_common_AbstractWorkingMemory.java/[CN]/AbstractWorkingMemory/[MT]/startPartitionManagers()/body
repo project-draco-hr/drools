@@ -1,7 +1,10 @@
 {
   if (this.ruleBase.getConfiguration().isMultithreadEvaluation()) {
-    for (    PartitionTaskManager task : this.partitionManagers.values()) {
-      task.startService();
+    int maxThreads=(this.ruleBase.getConfiguration().getMaxThreads() > 0) ? this.ruleBase.getConfiguration().getMaxThreads() : this.ruleBase.getPartitionIds().size();
+    if (this.threadPool.compareAndSet(null,Executors.newFixedThreadPool(maxThreads))) {
+      for (      PartitionTaskManager task : this.partitionManagers.values()) {
+        task.setPool(this.threadPool.get());
+      }
     }
   }
 }

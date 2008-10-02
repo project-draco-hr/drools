@@ -1,5 +1,13 @@
 {
   ReteooWorkingMemory wm=(ReteooWorkingMemory)context.wm;
+  final boolean multithread=wm.isPartitionManagersActive();
+  if (multithread) {
+    context.writeBoolean(true);
+    wm.stopPartitionManagers();
+  }
+ else {
+    context.writeBoolean(false);
+  }
   context.writeInt(wm.getFactHandleFactory().getId());
   context.writeLong(wm.getFactHandleFactory().getRecency());
   context.out.println("FactHandleFactory int:" + wm.getFactHandleFactory().getId() + " long:"+ wm.getFactHandleFactory().getRecency());
@@ -22,4 +30,7 @@
   writeProcessInstances(context);
   writeWorkItems(context);
   writeTimers(context);
+  if (multithread) {
+    wm.startPartitionManagers();
+  }
 }
