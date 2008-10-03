@@ -12,11 +12,11 @@
   final InstrumentedBuildContent context=new InstrumentedBuildContent(pkgBuilder,ruleDescr,dialectRegistry,pkg,mvelDialect);
   final InstrumentedDeclarationScopeResolver declarationResolver=new InstrumentedDeclarationScopeResolver();
   final ObjectType cheeseObjeectType=new ClassObjectType(Cheese.class);
-  final Pattern pattern=new Pattern(0,cheeseObjeectType);
-  final PatternExtractor extractor=new PatternExtractor(cheeseObjeectType);
-  final Declaration declaration=new Declaration("cheese",extractor,pattern);
+  final Pattern pattern=new Pattern(0,cheeseObjeectType,"cheese");
+  final GroupElement subrule=new GroupElement(GroupElement.AND);
+  subrule.addChild(pattern);
   final Map map=new HashMap();
-  map.put("cheese",declaration);
+  map.put("cheese",pattern.getDeclaration());
   declarationResolver.setDeclarations(map);
   context.setDeclarationResolver(declarationResolver);
   final MVELConsequenceBuilder builder=new MVELConsequenceBuilder();
@@ -28,7 +28,7 @@
   final Cheese cheddar=new Cheese("cheddar",10);
   final InternalFactHandle f0=(InternalFactHandle)wm.insert(cheddar);
   final LeftTuple tuple=new LeftTuple(f0,sink,true);
-  final AgendaItem item=new AgendaItem(0,tuple,10,new PropagationContextImpl(1,1,null,null,null),context.getRule(),null);
+  final AgendaItem item=new AgendaItem(0,tuple,10,new PropagationContextImpl(1,1,null,null,null),context.getRule(),subrule);
   final DefaultKnowledgeHelper kbHelper=new DefaultKnowledgeHelper(wm);
   kbHelper.setActivation(item);
   ((MVELConsequence)context.getRule().getConsequence()).compile(Thread.currentThread().getContextClassLoader());
