@@ -1,0 +1,15 @@
+{
+  String result="rule \"RuleFlow-Start-" + process.getId() + "\" \n"+ "    when\n"+ "        "+ trigger.getConstraint()+ "\n"+ "    then\n";
+  Map<String,String> inMappings=trigger.getInMappings();
+  if (inMappings != null && !inMappings.isEmpty()) {
+    result+="        java.util.Map params = new java.util.HashMap();\n";
+    for (    Map.Entry<String,String> entry : inMappings.entrySet()) {
+      result+="        params.put(\"" + entry.getKey() + "\", "+ entry.getValue()+ ");\n";
+    }
+    result+="        drools.getWorkingMemory().startProcess(\"" + process.getId() + "\", params);\n"+ "end\n\n";
+  }
+ else {
+    result+="        drools.getWorkingMemory().startProcess(\"" + process.getId() + "\");\n"+ "end\n\n";
+  }
+  return result;
+}

@@ -1,0 +1,27 @@
+{
+  String className=this.chainedProperties.getProperty("processSignalManagerFactory","org.drools.process.instance.event.DefaultSignalManagerFactory");
+  Class<SignalManagerFactory> clazz=null;
+  try {
+    clazz=(Class<SignalManagerFactory>)Thread.currentThread().getContextClassLoader().loadClass(className);
+  }
+ catch (  ClassNotFoundException e) {
+  }
+  if (clazz == null) {
+    try {
+      clazz=(Class<SignalManagerFactory>)RuleBaseConfiguration.class.getClassLoader().loadClass(className);
+    }
+ catch (    ClassNotFoundException e) {
+    }
+  }
+  if (clazz != null) {
+    try {
+      this.processSignalManagerFactory=clazz.newInstance();
+    }
+ catch (    Exception e) {
+      throw new IllegalArgumentException("Unable to instantiate signal manager factory '" + className + "'");
+    }
+  }
+ else {
+    throw new IllegalArgumentException("Signal manager factory '" + className + "' not found");
+  }
+}

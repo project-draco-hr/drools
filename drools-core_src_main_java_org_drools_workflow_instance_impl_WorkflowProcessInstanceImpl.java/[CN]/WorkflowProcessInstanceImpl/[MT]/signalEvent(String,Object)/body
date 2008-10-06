@@ -5,19 +5,25 @@
       listener.signalEvent(type,event);
     }
   }
+  listeners=externalEventListeners.get(type);
+  if (listeners != null) {
+    for (    EventListener listener : listeners) {
+      listener.signalEvent(type,event);
+    }
+  }
+  for (  Node node : getWorkflowProcess().getNodes()) {
+    if (node instanceof EventNodeInterface) {
+      if (((EventNodeInterface)node).acceptsEvent(type,event)) {
+        if (node instanceof EventNode) {
+          EventNodeInstance eventNodeInstance=(EventNodeInstance)getNodeInstance(node);
+          eventNodeInstance.signalEvent(type,event);
+        }
  else {
-    for (    Node node : getWorkflowProcess().getNodes()) {
-      if (node instanceof EventNodeInterface) {
-        if (((EventNodeInterface)node).acceptsEvent(type,event)) {
           List<NodeInstance> nodeInstances=getNodeInstances(node.getId());
           if (nodeInstances != null && !nodeInstances.isEmpty()) {
             for (            NodeInstance nodeInstance : nodeInstances) {
               ((EventNodeInstanceInterface)nodeInstance).signalEvent(type,event);
             }
-          }
- else {
-            EventNodeInstanceInterface eventNodeInstance=(EventNodeInstanceInterface)getNodeInstance(node);
-            eventNodeInstance.signalEvent(type,event);
           }
         }
       }

@@ -20,8 +20,7 @@
       if (nodes[i] instanceof Split) {
         Split split=(Split)nodes[i];
         if (split.getType() == Split.TYPE_XOR || split.getType() == Split.TYPE_OR) {
-          for (Iterator iterator=split.getDefaultOutgoingConnections().iterator(); iterator.hasNext(); ) {
-            Connection connection=(Connection)iterator.next();
+          for (          Connection connection : split.getDefaultOutgoingConnections()) {
             Constraint constraint=split.getConstraint(connection);
             if ("rule".equals(constraint.getType())) {
               builder.append(createSplitRule(process,connection,split.getConstraint(connection).getConstraint()));
@@ -32,6 +31,17 @@
  else       if (nodes[i] instanceof MilestoneNode) {
         MilestoneNode milestone=(MilestoneNode)nodes[i];
         builder.append(createMilestoneRule(process,milestone));
+      }
+ else       if (nodes[i] instanceof StartNode) {
+        StartNode startNode=(StartNode)nodes[i];
+        List<Trigger> triggers=startNode.getTriggers();
+        if (triggers != null) {
+          for (          Trigger trigger : triggers) {
+            if (trigger instanceof ConstraintTrigger) {
+              builder.append(createStartConstraintRule(process,(ConstraintTrigger)trigger));
+            }
+          }
+        }
       }
     }
   }
