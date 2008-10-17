@@ -1,0 +1,18 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_MetaConsequence.drl")));
+  final Package pkg=builder.getPackage();
+  RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  StatefulSession session=ruleBase.newStatefulSession();
+  List results=new ArrayList();
+  session.setGlobal("results",results);
+  session.insert(new Person("Michael"));
+  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  results=(List)session.getGlobal("results");
+  session.fireAllRules();
+  assertEquals(2,results.size());
+  assertEquals("bar",(results.get(0)));
+  assertEquals("bar2",(results.get(1)));
+}
