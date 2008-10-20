@@ -5,7 +5,7 @@
       return null;
     }
     final RuleConditionBuilder builder=context.getDialect().getBuilder(accumDescr.getInput().getClass());
-    Declaration[] previousDeclarations=(Declaration[])context.getDeclarationResolver().getDeclarations().values().toArray(new Declaration[context.getDeclarationResolver().getDeclarations().size()]);
+    Declaration[] previousDeclarations=(Declaration[])context.getDeclarationResolver().getDeclarations(context.getRule()).values().toArray(new Declaration[context.getDeclarationResolver().getDeclarations(context.getRule()).size()]);
     final RuleConditionElement source=builder.build(context,accumDescr.getInput());
     if (source == null) {
       return null;
@@ -15,18 +15,18 @@
     Accumulator accumulator=null;
     Declaration[] declarations=null;
     if (accumDescr.isExternalFunction()) {
-      final Dialect.AnalysisResult analysis=dialect.analyzeExpression(context,accumDescr,accumDescr.getExpression(),new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()});
+      final Dialect.AnalysisResult analysis=dialect.analyzeExpression(context,accumDescr,accumDescr.getExpression(),new Set[]{context.getDeclarationResolver().getDeclarations(context.getRule()).keySet(),context.getPkg().getGlobals().keySet()});
       MVELCompilationUnit unit=dialect.getMVELCompilationUnit((String)accumDescr.getExpression(),analysis,previousDeclarations,(Declaration[])source.getOuterDeclarations().values().toArray(new Declaration[source.getOuterDeclarations().size()]),null,context);
       AccumulateFunction function=context.getConfiguration().getAccumulateFunction(accumDescr.getFunctionIdentifier());
       accumulator=new MVELAccumulatorFunctionExecutor(unit,function);
     }
  else {
-      final MVELAnalysisResult initCodeAnalysis=(MVELAnalysisResult)dialect.analyzeBlock(context,accumDescr,accumDescr.getInitCode(),new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()});
-      final MVELAnalysisResult actionCodeAnalysis=(MVELAnalysisResult)dialect.analyzeBlock(context,accumDescr,null,accumDescr.getActionCode(),new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()},initCodeAnalysis.getMvelVariables());
-      final MVELAnalysisResult resultCodeAnalysis=(MVELAnalysisResult)dialect.analyzeExpression(context,accumDescr,accumDescr.getResultCode(),new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()},initCodeAnalysis.getMvelVariables());
+      final MVELAnalysisResult initCodeAnalysis=(MVELAnalysisResult)dialect.analyzeBlock(context,accumDescr,accumDescr.getInitCode(),new Set[]{context.getDeclarationResolver().getDeclarations(context.getRule()).keySet(),context.getPkg().getGlobals().keySet()});
+      final MVELAnalysisResult actionCodeAnalysis=(MVELAnalysisResult)dialect.analyzeBlock(context,accumDescr,null,accumDescr.getActionCode(),new Set[]{context.getDeclarationResolver().getDeclarations(context.getRule()).keySet(),context.getPkg().getGlobals().keySet()},initCodeAnalysis.getMvelVariables());
+      final MVELAnalysisResult resultCodeAnalysis=(MVELAnalysisResult)dialect.analyzeExpression(context,accumDescr,accumDescr.getResultCode(),new Set[]{context.getDeclarationResolver().getDeclarations(context.getRule()).keySet(),context.getPkg().getGlobals().keySet()},initCodeAnalysis.getMvelVariables());
       Dialect.AnalysisResult reverseCodeAnalysis=null;
       if (accumDescr.getReverseCode() != null) {
-        reverseCodeAnalysis=context.getDialect().analyzeBlock(context,accumDescr,accumDescr.getActionCode(),new Set[]{context.getDeclarationResolver().getDeclarations().keySet(),context.getPkg().getGlobals().keySet()});
+        reverseCodeAnalysis=context.getDialect().analyzeBlock(context,accumDescr,accumDescr.getActionCode(),new Set[]{context.getDeclarationResolver().getDeclarations(context.getRule()).keySet(),context.getPkg().getGlobals().keySet()});
       }
       MVELCompilationUnit initUnit=dialect.getMVELCompilationUnit((String)accumDescr.getInitCode(),initCodeAnalysis,previousDeclarations,(Declaration[])source.getOuterDeclarations().values().toArray(new Declaration[source.getOuterDeclarations().size()]),null,context);
       MVELCompilationUnit actionUnit=dialect.getMVELCompilationUnit((String)accumDescr.getActionCode(),actionCodeAnalysis,previousDeclarations,(Declaration[])source.getOuterDeclarations().values().toArray(new Declaration[source.getOuterDeclarations().size()]),initCodeAnalysis.getMvelVariables(),context);

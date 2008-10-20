@@ -1,0 +1,38 @@
+{
+  RuleDescr ruleDescr=new RuleDescr(getCleanId(id),null);
+  if (null != parentId) {
+    ruleDescr.setParentName(getCleanId(parentId));
+  }
+  if (null != attributeList && attributeList.size() > 0) {
+    for (    AttributeDescr attributeDescr : attributeList) {
+      ruleDescr.addAttribute(attributeDescr);
+    }
+  }
+  if (null != metadata && metadata.size() > 0) {
+    for (    Map<DroolsTree,DroolsTree> map : metadata) {
+      for (      Map.Entry<DroolsTree,DroolsTree> entry : map.entrySet()) {
+        String chunkData=entry.getValue().getText();
+        ruleDescr.addMetaAttribute(entry.getKey().getText(),chunkData.substring(1,chunkData.length() - 1).trim());
+      }
+    }
+  }
+  if (null == andDescr) {
+    ruleDescr.setLhs(new AndDescr());
+  }
+ else {
+    ruleDescr.setLhs(andDescr);
+  }
+  String buf=content.getText();
+  int idx=4;
+  while (idx < buf.length() - 3 && (buf.charAt(idx) == ' ' || buf.charAt(idx) == '\t')) {
+    idx++;
+  }
+  if (idx < buf.length() - 3 && buf.charAt(idx) == '\r')   idx++;
+  if (idx < buf.length() - 3 && buf.charAt(idx) == '\n')   idx++;
+  buf=buf.substring(idx,buf.length() - 3);
+  ruleDescr.setConsequence(buf);
+  ruleDescr.setConsequenceLocation(getLineLocation(content),getColumnLocation(content));
+  ruleDescr.setLocation(getLineLocation(start),getColumnLocation(start));
+  ruleDescr.setEndCharacter(getEndOffsetLocation(content));
+  return ruleDescr;
+}

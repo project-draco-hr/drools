@@ -1,0 +1,33 @@
+{
+  for (int i=this.buildStack.size() - 1; i >= 0; i--) {
+    final Declaration declaration=(Declaration)((RuleConditionElement)this.buildStack.get(i)).getInnerDeclarations().get(identifier);
+    if (declaration != null) {
+      return declaration;
+    }
+  }
+  if (rule != null && rule.getParent() != null) {
+    Declaration parentDeclaration=getExtendedDeclaration(rule.getParent(),identifier);
+    if (null != parentDeclaration) {
+      return parentDeclaration;
+    }
+  }
+  for (int i=0, length=this.maps.length; i < length; i++) {
+    if (this.maps[i].containsKey((identifier))) {
+      if (pkg != null) {
+        Class cls=(Class)this.maps[i].get(identifier);
+        ClassObjectType classObjectType=new ClassObjectType(cls);
+        Declaration declaration=null;
+        final Pattern dummy=new Pattern(0,classObjectType);
+        GlobalExtractor globalExtractor=new GlobalExtractor(identifier,classObjectType);
+        declaration=new Declaration(identifier,globalExtractor,dummy);
+        pkg.getClassFieldAccessorStore().getClassObjectType(classObjectType,dummy);
+        pkg.getClassFieldAccessorStore().getClassObjectType(classObjectType,globalExtractor);
+        return declaration;
+      }
+ else {
+        throw new UnsupportedOperationException("This shoudln't happen outside of PackageBuilder");
+      }
+    }
+  }
+  return null;
+}
