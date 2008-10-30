@@ -1,5 +1,5 @@
 {
-  StatefulSession session=getExceptionSession();
+  StatefulKnowledgeSession session=getExceptionSession();
   final Cheese brie=new Cheese("brie",12);
   Future futureAssert=session.asyncInsert(brie);
   Future futureFireAllRules=session.asyncFireAllRules();
@@ -10,7 +10,11 @@
       fail("Future should have finished by now");
     }
   }
-  assertTrue(futureAssert.getObject() instanceof FactHandle);
-  assertTrue(futureFireAllRules.exceptionThrown());
-  assertTrue(futureFireAllRules.getException() instanceof Exception);
+  assertTrue(futureAssert.get() instanceof FactHandle);
+  try {
+    futureFireAllRules.get();
+    fail("Exception Should have been thrown");
+  }
+ catch (  ExecutionException e) {
+  }
 }

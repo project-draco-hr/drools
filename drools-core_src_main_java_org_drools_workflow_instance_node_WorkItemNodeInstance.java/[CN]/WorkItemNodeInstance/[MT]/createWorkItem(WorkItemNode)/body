@@ -1,14 +1,14 @@
 {
   Work work=workItemNode.getWork();
   workItem=new WorkItemImpl();
-  workItem.setName(work.getName());
-  workItem.setProcessInstanceId(getProcessInstance().getId());
-  workItem.setParameters(new HashMap<String,Object>(work.getParameters()));
+  ((InternalWorkItem)workItem).setName(work.getName());
+  ((InternalWorkItem)workItem).setProcessInstanceId(getProcessInstance().getId());
+  ((InternalWorkItem)workItem).setParameters(new HashMap<String,Object>(work.getParameters()));
   for (Iterator<Map.Entry<String,String>> iterator=workItemNode.getInMappings().entrySet().iterator(); iterator.hasNext(); ) {
     Map.Entry<String,String> mapping=iterator.next();
     VariableScopeInstance variableScopeInstance=(VariableScopeInstance)resolveContextInstance(VariableScope.VARIABLE_SCOPE,mapping.getValue());
     if (variableScopeInstance != null) {
-      workItem.setParameter(mapping.getKey(),variableScopeInstance.getVariable(mapping.getValue()));
+      ((InternalWorkItem)workItem).setParameter(mapping.getKey(),variableScopeInstance.getVariable(mapping.getValue()));
     }
  else {
       System.err.println("Could not find variable scope for variable " + mapping.getValue());
@@ -40,7 +40,7 @@
       for (      Map.Entry<String,String> replacement : replacements.entrySet()) {
         s=s.replace("#{" + replacement.getKey() + "}",replacement.getValue());
       }
-      workItem.setParameter(entry.getKey(),s);
+      ((InternalWorkItem)workItem).setParameter(entry.getKey(),s);
     }
   }
   return workItem;

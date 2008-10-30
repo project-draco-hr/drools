@@ -1,0 +1,30 @@
+{
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  final List wmList=new ArrayList();
+  final WorkingMemoryEventListener eventListener=new WorkingMemoryEventListener(){
+    public void objectInserted(    ObjectInsertedEvent event){
+      wmList.add(event);
+    }
+    public void objectUpdated(    ObjectUpdatedEvent event){
+      wmList.add(event);
+    }
+    public void objectRetracted(    ObjectRetractedEvent event){
+      wmList.add(event);
+    }
+  }
+;
+  ksession.addEventListener(eventListener);
+  final Cheese stilton=new Cheese("stilton",15);
+  final Cheese cheddar=new Cheese("cheddar",17);
+  final FactHandle stiltonHandle=ksession.insert(stilton);
+  final ObjectInsertedEvent oae=(ObjectInsertedEvent)wmList.get(0);
+  assertSame(stiltonHandle,oae.getFactHandle());
+  ksession.update(stiltonHandle,stilton);
+  final ObjectUpdatedEvent ome=(ObjectUpdatedEvent)wmList.get(1);
+  assertSame(stiltonHandle,ome.getFactHandle());
+  ksession.retract(stiltonHandle);
+  final ObjectRetractedEvent ore=(ObjectRetractedEvent)wmList.get(2);
+  assertSame(stiltonHandle,ore.getFactHandle());
+  ksession.insert(cheddar);
+}

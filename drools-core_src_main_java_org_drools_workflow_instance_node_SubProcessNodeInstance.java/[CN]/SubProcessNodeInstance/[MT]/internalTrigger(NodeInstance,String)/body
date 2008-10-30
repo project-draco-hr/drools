@@ -1,6 +1,6 @@
 {
   super.internalTrigger(from,type);
-  if (!Node.CONNECTION_DEFAULT_TYPE.equals(type)) {
+  if (!org.drools.workflow.core.Node.CONNECTION_DEFAULT_TYPE.equals(type)) {
     throw new IllegalArgumentException("A SubProcess node only accepts default incoming connections!");
   }
   Map<String,Object> parameters=new HashMap<String,Object>();
@@ -16,15 +16,15 @@
     }
   }
   String processId=getSubProcessNode().getProcessId();
-  Process process=((InternalRuleBase)getProcessInstance().getWorkingMemory().getRuleBase()).getProcess(processId);
+  Process process=((InternalRuleBase)((InternalProcessInstance)getProcessInstance()).getWorkingMemory().getRuleBase()).getProcess(processId);
   if (process == null) {
     System.err.println("Could not find process " + processId);
     System.err.println("Aborting process");
-    getProcessInstance().setState(ProcessInstance.STATE_ABORTED);
+    ((InternalProcessInstance)getProcessInstance()).setState(InternalProcessInstance.STATE_ABORTED);
   }
  else {
-    ProcessInstance processInstance=getProcessInstance().getWorkingMemory().startProcess(processId,parameters);
-    if (!getSubProcessNode().isWaitForCompletion() || processInstance.getState() == ProcessInstance.STATE_COMPLETED) {
+    InternalProcessInstance processInstance=(InternalProcessInstance)((InternalProcessInstance)getProcessInstance()).getWorkingMemory().startProcess(processId,parameters);
+    if (!getSubProcessNode().isWaitForCompletion() || processInstance.getState() == InternalProcessInstance.STATE_COMPLETED) {
       triggerCompleted();
     }
  else {

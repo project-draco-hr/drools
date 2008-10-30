@@ -23,7 +23,7 @@
   session.setGlobal("list",list);
   Person p=new Person("bobba fet",32);
   session.insert(p);
-  ProcessInstance processInstance=session.startProcess("org.test.ruleflow");
+  InternalProcessInstance processInstance=(InternalProcessInstance)session.startProcess("org.test.ruleflow");
   assertEquals(1,session.getProcessInstances().size());
   String process2="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + "<process xmlns=\"http://drools.org/drools-4.0/process\"\n" + "    xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n"+ "    xs:schemaLocation=\"http://drools.org/drools-4.0/process drools-processes-4.0.xsd\"\n"+ "    type=\"RuleFlow\" name=\"ruleflow\" id=\"org.test.ruleflow2\" package-name=\"org.test\" >\n"+ "  <header>\n"+ "    <globals>\n"+ "      <global identifier=\"list\" type=\"java.util.List\" />\n"+ "    </globals>\n"+ "  </header>\n"+ "  <nodes>\n"+ "    <start id=\"1\" name=\"Start\" />\n"+ "    <ruleSet id=\"2\" name=\"Hello\" ruleFlowGroup=\"hello\" />\n"+ "    <actionNode id=\"4\" name=\"Action\" >"+ "      <action type=\"expression\" dialect=\"java\">System.out.println();\n"+ "list.add(\"Executed\");</action>/n"+ "    </actionNode>\n"+ "    <end id=\"3\" name=\"End\" />\n"+ "  </nodes>\n"+ "  <connections>\n"+ "    <connection from=\"1\" to=\"2\"/>\n"+ "    <connection from=\"2\" to=\"4\"/>\n"+ "    <connection from=\"4\" to=\"3\"/>\n"+ "  </connections>\n"+ "</process>";
   builder=new PackageBuilder();
@@ -34,5 +34,5 @@
   assertEquals("org.test.ruleflow2",processInstance.getProcessId());
   session.fireAllRules();
   assertEquals(2,list.size());
-  assertEquals(ProcessInstance.STATE_COMPLETED,processInstance.getState());
+  assertEquals(InternalProcessInstance.STATE_COMPLETED,processInstance.getState());
 }

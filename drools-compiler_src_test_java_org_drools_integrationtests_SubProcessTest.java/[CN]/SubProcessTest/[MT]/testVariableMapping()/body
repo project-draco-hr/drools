@@ -4,11 +4,11 @@
     WorkingMemory workingMemory=ruleBase.newStatefulSession();
     Map<String,Object> map=new HashMap<String,Object>();
     map.put("x","x-value");
-    ProcessInstance processInstance=workingMemory.startProcess("com.sample.ruleflow",map);
-    assertEquals(ProcessInstance.STATE_ACTIVE,processInstance.getState());
+    InternalProcessInstance processInstance=(InternalProcessInstance)workingMemory.startProcess("com.sample.ruleflow",map);
+    assertEquals(InternalProcessInstance.STATE_ACTIVE,processInstance.getState());
     assertEquals(2,workingMemory.getProcessInstances().size());
     for (    ProcessInstance p : workingMemory.getProcessInstances()) {
-      VariableScopeInstance variableScopeInstance=(VariableScopeInstance)p.getContextInstance(VariableScope.VARIABLE_SCOPE);
+      VariableScopeInstance variableScopeInstance=(VariableScopeInstance)((InternalProcessInstance)p).getContextInstance(VariableScope.VARIABLE_SCOPE);
       if ("com.sample.ruleflow".equals(p.getProcessId())) {
         assertEquals("x-value",variableScopeInstance.getVariable("x"));
       }
@@ -18,7 +18,7 @@
       }
     }
     workingMemory.insert(new Person());
-    assertEquals(ProcessInstance.STATE_COMPLETED,processInstance.getState());
+    assertEquals(InternalProcessInstance.STATE_COMPLETED,processInstance.getState());
     VariableScopeInstance variableScopeInstance=(VariableScopeInstance)processInstance.getContextInstance(VariableScope.VARIABLE_SCOPE);
     assertEquals("z-value",variableScopeInstance.getVariable("x"));
     assertEquals(0,workingMemory.getProcessInstances().size());

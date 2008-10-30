@@ -1,22 +1,22 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LogicalInsertions.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.addPackageFromDrl(getClass().getResource("test_LogicalInsertions.drl"));
+  Collection<KnowledgePackage> kpkgs=kbuilder.getKnowledgePackages();
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kpkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  final StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  session.setGlobal("list",list);
   final Cheese brie=new Cheese("brie",12);
-  final FactHandle brieHandle=workingMemory.insert(brie);
+  final FactHandle brieHandle=session.insert(brie);
   final Cheese provolone=new Cheese("provolone",12);
-  final FactHandle provoloneHandle=workingMemory.insert(provolone);
-  workingMemory.fireAllRules();
+  final FactHandle provoloneHandle=session.insert(provolone);
+  session.fireAllRules();
   assertEquals(3,list.size());
-  assertEquals(3,IteratorToList.convert(workingMemory.iterateObjects()).size());
-  workingMemory.retract(brieHandle);
-  assertEquals(2,IteratorToList.convert(workingMemory.iterateObjects()).size());
-  workingMemory.retract(provoloneHandle);
-  assertEquals(0,IteratorToList.convert(workingMemory.iterateObjects()).size());
+  assertEquals(3,session.getObjects().size());
+  session.retract(brieHandle);
+  assertEquals(2,session.getObjects().size());
+  session.retract(provoloneHandle);
+  assertEquals(0,session.getObjects().size());
 }

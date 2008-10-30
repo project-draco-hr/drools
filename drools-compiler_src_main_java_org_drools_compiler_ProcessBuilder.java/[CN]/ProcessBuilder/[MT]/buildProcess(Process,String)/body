@@ -1,0 +1,45 @@
+{
+  ((org.drools.process.core.Process)process).setURL(url);
+  boolean hasErrors=false;
+  ProcessValidator validator=processValidators.get(((Process)process).getType());
+  if (validator == null) {
+    System.out.println("Could not find validator for process " + ((Process)process).getType() + ".");
+    System.out.println("Continuing without validation of the process " + process.getName() + "["+ process.getId()+ "]");
+  }
+ else {
+    ProcessValidationError[] errors=validator.validateProcess((WorkflowProcess)process);
+    if (errors.length != 0) {
+      hasErrors=true;
+      for (int i=0; i < errors.length; i++) {
+        this.errors.add(new ParserError(errors[i].toString(),-1,-1));
+      }
+    }
+  }
+  if (!hasErrors) {
+    String rules=generateRules(process);
+    try {
+      packageBuilder.addPackageFromDrl(new StringReader(rules));
+    }
+ catch (    IOException e) {
+      e.printStackTrace(System.err);
+    }
+catch (    DroolsParserException e) {
+      e.printStackTrace(System.err);
+    }
+    ProcessDescr processDescr=new ProcessDescr();
+    processDescr.setName(process.getPackageName());
+    processDescr.setUrl(url);
+    PackageRegistry pkgRegistry=this.packageBuilder.getPackageRegistry(this.packageBuilder.getPackage().getName());
+    DialectCompiletimeRegistry dialectRegistry=pkgRegistry.getDialectCompiletimeRegistry();
+    Dialect dialect=dialectRegistry.getDialect("java");
+    dialect.init(processDescr);
+    ProcessBuildContext buildContext=new ProcessBuildContext(this.packageBuilder,this.packageBuilder.getPackage(),process,processDescr,dialectRegistry,dialect);
+    buildContexts((ContextContainer)process,buildContext);
+    if (process instanceof WorkflowProcess) {
+      buildNodes((WorkflowProcess)process,buildContext);
+    }
+    this.packageBuilder.getPackage().addProcess(process);
+    pkgRegistry.compileAll();
+    pkgRegistry.getDialectRuntimeRegistry().onBeforeExecute();
+  }
+}

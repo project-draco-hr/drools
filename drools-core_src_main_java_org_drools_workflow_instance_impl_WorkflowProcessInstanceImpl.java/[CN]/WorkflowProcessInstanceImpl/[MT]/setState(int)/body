@@ -1,18 +1,16 @@
 {
-synchronized (this) {
-    super.setState(state);
-    if (state == ProcessInstance.STATE_COMPLETED || state == ProcessInstance.STATE_ABORTED) {
-      InternalWorkingMemory workingMemory=(InternalWorkingMemory)getWorkingMemory();
-      ((EventSupport)getWorkingMemory()).getRuleFlowEventSupport().fireBeforeRuleFlowProcessCompleted(this,workingMemory);
-      while (!nodeInstances.isEmpty()) {
-        NodeInstance nodeInstance=(NodeInstance)nodeInstances.get(0);
-        nodeInstance.cancel();
-      }
-      removeEventListeners();
-      workingMemory.removeProcessInstance(this);
-      ((EventSupport)workingMemory).getRuleFlowEventSupport().fireAfterRuleFlowProcessCompleted(this,workingMemory);
-      String type="processInstanceCompleted:" + getId();
-      workingMemory.getSignalManager().signalEvent(type,this);
+  super.setState(state);
+  if (state == InternalProcessInstance.STATE_COMPLETED || state == InternalProcessInstance.STATE_ABORTED) {
+    InternalWorkingMemory workingMemory=(InternalWorkingMemory)getWorkingMemory();
+    ((EventSupport)getWorkingMemory()).getRuleFlowEventSupport().fireBeforeRuleFlowProcessCompleted(this,workingMemory);
+    while (!nodeInstances.isEmpty()) {
+      NodeInstance nodeInstance=nodeInstances.get(0);
+      ((org.drools.workflow.instance.NodeInstance)nodeInstance).cancel();
     }
+    removeEventListeners();
+    workingMemory.removeProcessInstance(this);
+    ((EventSupport)workingMemory).getRuleFlowEventSupport().fireAfterRuleFlowProcessCompleted(this,workingMemory);
+    String type="processInstanceCompleted:" + getId();
+    workingMemory.getSignalManager().signalEvent(type,this);
   }
 }

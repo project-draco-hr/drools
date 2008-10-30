@@ -1,18 +1,17 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LogicalInsertionsLoop.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
-  List list;
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.addPackageFromDrl(getClass().getResource("test_LogicalInsertionsLoop.drl"));
+  Collection<KnowledgePackage> kpkgs=kbuilder.getKnowledgePackages();
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kpkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  final StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
   final List l=new ArrayList();
   final Person a=new Person("a");
-  workingMemory.setGlobal("a",a);
-  workingMemory.setGlobal("l",l);
-  workingMemory.fireAllRules();
-  list=IteratorToList.convert(workingMemory.iterateObjects(new ClassObjectFilter(a.getClass())));
+  session.setGlobal("a",a);
+  session.setGlobal("l",l);
+  session.fireAllRules();
+  Collection<?> list=session.getObjects(new ClassObjectFilter(a.getClass()));
   assertEquals("a still asserted.",0,list.size());
   assertEquals("Rule has not fired (looped) expected number of times",10,l.size());
 }

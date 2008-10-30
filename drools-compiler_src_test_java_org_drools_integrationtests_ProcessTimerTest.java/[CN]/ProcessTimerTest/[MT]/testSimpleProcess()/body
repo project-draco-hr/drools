@@ -14,13 +14,13 @@
   StatefulSession session=ruleBase.newStatefulSession();
   List<Message> myList=new ArrayList<Message>();
   session.setGlobal("myList",myList);
-  ProcessInstance processInstance=session.startProcess("org.drools.timer");
+  InternalProcessInstance processInstance=(InternalProcessInstance)session.startProcess("org.drools.timer");
   assertEquals(0,myList.size());
-  assertEquals(ProcessInstance.STATE_ACTIVE,processInstance.getState());
+  assertEquals(InternalProcessInstance.STATE_ACTIVE,processInstance.getState());
   assertEquals(1,session.getTimerManager().getTimers().size());
   session=getSerialisedStatefulSession(session);
   myList=(List<Message>)session.getGlobal("myList");
-  processInstance=session.getProcessInstance(processInstance.getId());
+  processInstance=(InternalProcessInstance)session.getProcessInstance(processInstance.getId());
   assertEquals(1,session.getTimerManager().getTimers().size());
   try {
     Thread.sleep(600);
@@ -35,5 +35,5 @@
   }
   session.fireAllRules();
   assertEquals(5,myList.size());
-  assertEquals(ProcessInstance.STATE_COMPLETED,processInstance.getState());
+  assertEquals(InternalProcessInstance.STATE_COMPLETED,processInstance.getState());
 }
