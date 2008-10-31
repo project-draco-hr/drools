@@ -1,10 +1,15 @@
 {
+  VariableResolver vr;
   try {
-    VariableResolver vr=getVariableResolver(name);
-    vr.setValue(value);
-    return vr;
+    vr=getVariableResolver(name);
   }
- catch (  CompileException e) {
+ catch (  UnresolveablePropertyException e) {
+    vr=null;
+  }
+  if (vr != null && vr.getType() != null) {
+    throw new CompileException("variable already defined within scope: " + vr.getType() + " "+ name);
+  }
+ else {
     return addResolver(name,new LocalVariableResolver(this,name,type),value);
   }
 }
