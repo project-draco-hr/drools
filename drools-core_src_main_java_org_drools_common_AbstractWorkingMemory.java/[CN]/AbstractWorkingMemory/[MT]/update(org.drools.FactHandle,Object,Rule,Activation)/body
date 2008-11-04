@@ -1,0 +1,50 @@
+{
+  try {
+    this.lock.lock();
+    this.ruleBase.executeQueuedActions();
+    int status=-1;
+    if (this.maintainTms) {
+      status=((InternalFactHandle)factHandle).getEqualityKey().getStatus();
+    }
+    final InternalFactHandle handle=(InternalFactHandle)factHandle;
+    final Object originalObject=handle.getObject();
+    if (handle.getId() == -1 || object == null) {
+      return;
+    }
+    if (activation != null) {
+      activation.getPropagationContext().releaseResources();
+    }
+    final PropagationContext propagationContext=new PropagationContextImpl(getNextPropagationIdCounter(),PropagationContext.MODIFICATION,rule,(activation == null) ? null : (LeftTuple)activation.getTuple(),handle,this.agenda.getActiveActivations(),this.agenda.getDormantActivations(),entryPoint);
+    ObjectTypeConf typeConf=this.typeConfReg.getObjectTypeConf(this.entryPoint,object);
+    this.entryPointNode.retractObject(handle,propagationContext,typeConf,this);
+    if (originalObject != object || !AssertBehaviour.IDENTITY.equals(this.ruleBase.getConfiguration().getAssertBehaviour())) {
+      this.objectStore.removeHandle(handle);
+      handle.setObject(object);
+      this.objectStore.addHandle(handle,object);
+    }
+    if (this.maintainTms) {
+      EqualityKey key=handle.getEqualityKey();
+      key.removeFactHandle(handle);
+      if (key.isEmpty()) {
+        this.tms.remove(key);
+      }
+      key=this.tms.get(object);
+      if (key == null) {
+        key=new EqualityKey(handle,status);
+        this.tms.put(key);
+      }
+ else {
+        key.addFactHandle(handle);
+      }
+      handle.setEqualityKey(key);
+    }
+    this.handleFactory.increaseFactHandleRecency(handle);
+    this.entryPointNode.assertObject(handle,propagationContext,typeConf,this);
+    this.workingMemoryEventSupport.fireObjectUpdated(propagationContext,(org.drools.FactHandle)factHandle,originalObject,object,this);
+    propagationContext.clearRetractedTuples();
+    executeQueuedActions();
+  }
+  finally {
+    this.lock.unlock();
+  }
+}
