@@ -14,7 +14,15 @@
     this.knowledgeHelper.reset();
   }
  catch (  final Exception e) {
-    this.consequenceExceptionHandler.handleException(activation,this.workingMemory,e);
+    if (this.legacyConsequenceExceptionHandler != null) {
+      this.legacyConsequenceExceptionHandler.handleException(activation,this.workingMemory,e);
+    }
+ else     if (this.consequenceExceptionHandler != null) {
+      this.consequenceExceptionHandler.handleException(activation,new StatefulKnowledgeSessionImpl((ReteooStatefulSession)this.workingMemory),e);
+    }
+ else {
+      throw new RuntimeException(e);
+    }
   }
   if (activation.getRuleFlowGroupNode() != null) {
     final InternalRuleFlowGroup ruleFlowGroup=activation.getRuleFlowGroupNode().getRuleFlowGroup();
