@@ -1,22 +1,19 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   final Reader source=new InputStreamReader(getClass().getResourceAsStream("rule_with_expander_dsl.dslr"));
   final Reader dsl=new InputStreamReader(getClass().getResourceAsStream("test_expander.dsl"));
-  builder.addPackageFromDrl(source,dsl);
-  final Package pkg=builder.getPackage();
-  assertTrue(pkg.isValid());
-  assertEquals(null,pkg.getErrorSummary());
-  final String err=builder.getErrors().toString();
-  assertEquals("",err);
-  assertEquals(0,builder.getErrors().getErrors().length);
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  WorkingMemory wm=ruleBase.newStatefulSession();
-  wm.insert(new Person("Bob","http://foo.bar"));
-  wm.insert(new Cheese("stilton",42));
+  kbuilder.addResource(dsl,KnowledgeType.DSL);
+  kbuilder.addResource(source,KnowledgeType.DSLR);
+  final Collection<KnowledgePackage> pkgs=kbuilder.getKnowledgePackages();
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(pkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  session.insert(new Person("Bob","http://foo.bar"));
+  session.insert(new Cheese("stilton",42));
   final List messages=new ArrayList();
-  wm.setGlobal("messages",messages);
-  wm.fireAllRules();
+  session.setGlobal("messages",messages);
+  session.fireAllRules();
   assertEquals(1,messages.size());
 }
