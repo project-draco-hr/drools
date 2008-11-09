@@ -1,0 +1,20 @@
+{
+  final String DSL="# This is an empty dsl file.\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  final Reader drlReader=new InputStreamReader(getClass().getResourceAsStream("literal_rule.drl"));
+  final Reader dslReader=new StringReader(DSL);
+  kbuilder.addResource(dslReader,KnowledgeType.DSL);
+  kbuilder.addResource(drlReader,KnowledgeType.DSLR);
+  assertFalse(kbuilder.hasErrors());
+  final String err=kbuilder.getErrors().toString();
+  assertEquals("",err);
+  assertEquals(0,kbuilder.getErrors().size());
+  Collection<KnowledgePackage> pkgs=kbuilder.getKnowledgePackages();
+  assertEquals(0,pkgs.size());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(pkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  pkgs=SerializationHelper.serializeObject(pkgs);
+  assertNull(pkgs);
+}

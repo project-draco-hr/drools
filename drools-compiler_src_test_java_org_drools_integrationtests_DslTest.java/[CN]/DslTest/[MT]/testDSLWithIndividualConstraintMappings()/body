@@ -1,21 +1,24 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   final Reader source=new InputStreamReader(getClass().getResourceAsStream("test_dslWithIndividualConstraints.dslr"));
   final Reader dsl=new InputStreamReader(getClass().getResourceAsStream("test_dslWithIndividualConstraints.dsl"));
-  builder.addPackageFromDrl(source,dsl);
-  final Package pkg=builder.getPackage();
-  assertTrue(pkg.getErrorSummary(),pkg.isValid());
-  assertEquals(pkg.getErrorSummary(),null,pkg.getErrorSummary());
-  assertEquals(0,builder.getErrors().getErrors().length);
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  WorkingMemory wm=ruleBase.newStatefulSession();
+  kbuilder.addResource(dsl,KnowledgeType.DSL);
+  kbuilder.addResource(source,KnowledgeType.DSLR);
+  assertFalse(kbuilder.hasErrors());
+  final String err=kbuilder.getErrors().toString();
+  assertEquals("",err);
+  assertEquals(0,kbuilder.getErrors().size());
+  final Collection<KnowledgePackage> pkgs=kbuilder.getKnowledgePackages();
+  assertEquals(1,pkgs.size());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(pkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
   List results=new ArrayList();
-  wm.setGlobal("results",results);
+  session.setGlobal("results",results);
   Cheese cheese=new Cheese("stilton",42);
-  wm.insert(cheese);
-  wm.fireAllRules();
+  session.insert(cheese);
+  session.fireAllRules();
   assertEquals(1,results.size());
   assertEquals(cheese,results.get(0));
 }
