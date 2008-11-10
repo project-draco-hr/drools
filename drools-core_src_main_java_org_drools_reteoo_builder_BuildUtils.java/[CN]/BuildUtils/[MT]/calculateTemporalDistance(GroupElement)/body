@@ -1,0 +1,43 @@
+{
+  List<Pattern> events=new ArrayList<Pattern>();
+  selectAllEventPatterns(events,groupElement);
+  final int size=events.size();
+  if (size >= 1) {
+    Interval[][] source=new Interval[size][];
+    for (int row=0; row < size; row++) {
+      source[row]=new Interval[size];
+      for (int col=0; col < size; col++) {
+        if (row == col) {
+          source[row][col]=new Interval(0,0);
+        }
+ else {
+          source[row][col]=new Interval(Interval.MIN,Interval.MAX);
+        }
+      }
+    }
+    Interval[][] result;
+    if (size > 1) {
+      List<Declaration> declarations=new ArrayList<Declaration>();
+      int eventIndex=0;
+      for (      Pattern event : events) {
+        declarations.add(event.getDeclaration());
+        Map<Declaration,Interval> temporal=new HashMap<Declaration,Interval>();
+        gatherTemporalRelationships(event.getConstraints(),temporal);
+        for (        Map.Entry<Declaration,Interval> entry : temporal.entrySet()) {
+          int targetIndex=declarations.indexOf(entry.getKey());
+          Interval interval=entry.getValue();
+          source[targetIndex][eventIndex].intersect(interval);
+          source[eventIndex][targetIndex].intersect(new Interval(-interval.getUpperBound(),-interval.getLowerBound()));
+        }
+        eventIndex++;
+      }
+      result=TimeUtils.calculateTemporalDistance(source);
+    }
+ else {
+      result=source;
+    }
+    TemporalDependencyMatrix matrix=new TemporalDependencyMatrix(result,events);
+    return matrix;
+  }
+  return null;
+}

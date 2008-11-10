@@ -1,0 +1,29 @@
+{
+  Interval[][] input=new Interval[][]{{new Interval(0,0),new Interval(-2,2),new Interval(-3,4),new Interval(MIN,MAX),new Interval(MIN,MAX)},{new Interval(-2,2),new Interval(0,0),new Interval(MIN,MAX),new Interval(1,2),new Interval(MIN,MAX)},{new Interval(-4,3),new Interval(MIN,MAX),new Interval(0,0),new Interval(2,3),new Interval(MIN,MAX)},{new Interval(MIN,MAX),new Interval(-2,-1),new Interval(-3,-2),new Interval(0,0),new Interval(1,10)},{new Interval(MIN,MAX),new Interval(MIN,MAX),new Interval(MIN,MAX),new Interval(-10,-1),new Interval(0,0)}};
+  Interval[][] expected=new Interval[][]{{new Interval(0,0),new Interval(-2,2),new Interval(-3,2),new Interval(-1,4),new Interval(0,14)},{new Interval(-2,2),new Interval(0,0),new Interval(-2,0),new Interval(1,2),new Interval(2,12)},{new Interval(-2,3),new Interval(0,2),new Interval(0,0),new Interval(2,3),new Interval(3,13)},{new Interval(-4,1),new Interval(-2,-1),new Interval(-3,-2),new Interval(0,0),new Interval(1,10)},{new Interval(-14,0),new Interval(-12,-2),new Interval(-13,-3),new Interval(-10,-1),new Interval(0,0)}};
+  AfterEvaluatorDefinition evals=new AfterEvaluatorDefinition();
+  ClassObjectType ot=new ClassObjectType(StockTick.class,true);
+  Pattern a=new Pattern(0,ot,"$a");
+  Pattern b=new Pattern(1,ot,"$b");
+  b.addConstraint(new VariableConstraint(new SelfReferenceClassFieldReader(StockTick.class,"this"),new VariableRestriction(null,a.getDeclaration(),evals.getEvaluator(ValueType.OBJECT_TYPE,AfterEvaluatorDefinition.AFTER,"-2,2"))));
+  Pattern c=new Pattern(2,ot,"$c");
+  c.addConstraint(new VariableConstraint(new SelfReferenceClassFieldReader(StockTick.class,"this"),new VariableRestriction(null,a.getDeclaration(),evals.getEvaluator(ValueType.OBJECT_TYPE,AfterEvaluatorDefinition.AFTER,"-3,4"))));
+  Pattern d=new Pattern(3,ot,"$d");
+  d.addConstraint(new VariableConstraint(new SelfReferenceClassFieldReader(StockTick.class,"this"),new VariableRestriction(null,b.getDeclaration(),evals.getEvaluator(ValueType.OBJECT_TYPE,AfterEvaluatorDefinition.AFTER,"1,2"))));
+  d.addConstraint(new VariableConstraint(new SelfReferenceClassFieldReader(StockTick.class,"this"),new VariableRestriction(null,c.getDeclaration(),evals.getEvaluator(ValueType.OBJECT_TYPE,AfterEvaluatorDefinition.AFTER,"2,3"))));
+  Pattern e=new Pattern(4,ot,"$e");
+  e.addConstraint(new VariableConstraint(new SelfReferenceClassFieldReader(StockTick.class,"this"),new VariableRestriction(null,d.getDeclaration(),evals.getEvaluator(ValueType.OBJECT_TYPE,AfterEvaluatorDefinition.AFTER,"1,10"))));
+  GroupElement not=new GroupElement(Type.NOT);
+  not.addChild(e);
+  GroupElement and=new GroupElement(Type.AND);
+  and.addChild(a);
+  and.addChild(b);
+  and.addChild(c);
+  and.addChild(d);
+  and.addChild(not);
+  TemporalDependencyMatrix matrix=utils.calculateTemporalDistance(and);
+  assertEqualsMatrix(expected,matrix.getMatrix());
+  assertEquals(14,matrix.getExpirationOffset(a));
+  assertEquals(10,matrix.getExpirationOffset(d));
+  assertEquals(0,matrix.getExpirationOffset(e));
+}

@@ -1,0 +1,21 @@
+{
+  for (  Object obj : constraints) {
+    if (obj instanceof VariableConstraint) {
+      VariableConstraint constr=(VariableConstraint)obj;
+      if (constr.isTemporal()) {
+        Declaration target=constr.getRequiredDeclarations()[0];
+        Interval interval=temporal.get(target);
+        if (interval == null) {
+          interval=constr.getInterval();
+          temporal.put(target,interval);
+        }
+ else {
+          interval.intersect(constr.getInterval());
+        }
+      }
+    }
+ else     if (obj instanceof AbstractCompositeConstraint) {
+      gatherTemporalRelationships(Arrays.asList(((AbstractCompositeConstraint)obj).getBetaConstraints()),temporal);
+    }
+  }
+}

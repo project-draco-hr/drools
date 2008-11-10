@@ -11,7 +11,11 @@
     }
   }
   context.setObjectSource((ObjectSource)utils.attachNode(context,new EntryPointNode(context.getNextId(),context.getRuleBase().getRete(),context)));
-  context.setObjectSource((ObjectSource)utils.attachNode(context,new ObjectTypeNode(context.getNextId(),(EntryPointNode)context.getObjectSource(),objectType,context)));
+  ObjectTypeNode otn=new ObjectTypeNode(context.getNextId(),(EntryPointNode)context.getObjectSource(),objectType,context);
+  if (objectType.isEvent() && EventProcessingMode.STREAM.equals(context.getRuleBase().getConfiguration().getEventProcessingMode())) {
+    otn.setExpirationOffset(context.getTemporalDistance().getExpirationOffset(pattern));
+  }
+  context.setObjectSource((ObjectSource)utils.attachNode(context,otn));
   for (final Iterator it=alphaConstraints.iterator(); it.hasNext(); ) {
     final AlphaNodeFieldConstraint constraint=(AlphaNodeFieldConstraint)it.next();
     context.setObjectSource((ObjectSource)utils.attachNode(context,new AlphaNode(context.getNextId(),(AlphaNodeFieldConstraint)constraint,context.getObjectSource(),context)));

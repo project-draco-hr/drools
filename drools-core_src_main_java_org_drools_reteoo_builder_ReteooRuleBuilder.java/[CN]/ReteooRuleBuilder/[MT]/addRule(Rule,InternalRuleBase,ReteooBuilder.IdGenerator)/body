@@ -1,8 +1,12 @@
 {
-  final List nodes=new ArrayList();
+  final List<TerminalNode> nodes=new ArrayList<TerminalNode>();
   final GroupElement[] subrules=rule.getTransformedLhs();
   for (int i=0; i < subrules.length; i++) {
     final BuildContext context=new BuildContext(rulebase,idGenerator);
+    if (EventProcessingMode.STREAM.equals(rulebase.getConfiguration().getEventProcessingMode())) {
+      TemporalDependencyMatrix temporal=this.utils.calculateTemporalDistance(subrules[i]);
+      context.setTemporalDistance(temporal);
+    }
     if (rulebase.getConfiguration().isSequential()) {
       context.setTupleMemoryEnabled(false);
       context.setObjectTypeNodeMemoryEnabled(false);
