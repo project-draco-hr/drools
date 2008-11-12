@@ -1,0 +1,26 @@
+{
+  StatelessKnowledgeSession session=getSession2("testStatelessKnowledgeSessionInOutParams.drl");
+  final Cheese stilton=new Cheese("stilton",5);
+  final Cheese cheddar=new Cheese("cheddar",25);
+  Parameters parameters=session.newParameters();
+  Map<String,Object> globalsInOut=new HashMap<String,Object>();
+  globalsInOut.put("inString","string");
+  parameters.getGlobalParams().setInOut(globalsInOut);
+  parameters.getGlobalParams().setOut(Arrays.asList(new String[]{"list"}));
+  Map<String,Object> factInOut=new HashMap<String,Object>();
+  factInOut.put("inCheese",cheddar);
+  parameters.getFactParams().setInOut(factInOut);
+  parameters.getFactParams().setOut(Arrays.asList(new String[]{"outCheese"}));
+  StatelessKnowledgeSessionResults results=session.executeObjectWithParameters(stilton,parameters);
+  assertEquals(4,results.getIdentifiers().size());
+  assertTrue(results.getIdentifiers().contains("list"));
+  assertTrue(results.getIdentifiers().contains("inString"));
+  assertTrue(results.getIdentifiers().contains("inCheese"));
+  assertTrue(results.getIdentifiers().contains("outCheese"));
+  assertEquals(new Cheese("brie",50),results.getValue("outCheese"));
+  assertEquals("rule1 cheddar",((List)results.getValue("list")).get(0));
+  assertEquals("rule2 stilton",((List)results.getValue("list")).get(1));
+  assertEquals("rule3 brie",((List)results.getValue("list")).get(2));
+  assertEquals("rule4 string",((List)results.getValue("list")).get(3));
+  assertNull(results.getValue("cheesery"));
+}

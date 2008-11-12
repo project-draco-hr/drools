@@ -1,0 +1,17 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.addResource(new InputStreamReader(getClass().getResourceAsStream(fileName)),KnowledgeType.DRL);
+  if (kbuilder.hasErrors()) {
+    System.out.println(kbuilder.getErrors());
+  }
+  assertFalse(kbuilder.hasErrors());
+  Collection<KnowledgePackage> pkgs=kbuilder.getKnowledgePackages();
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(pkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatelessKnowledgeSession session=kbase.newStatelessKnowledgeSession();
+  session.setGlobalResolver(this.globalResolver);
+  session.setGlobal("list",this.list);
+  session.setGlobal("cheesery",this.cheesery);
+  return session;
+}

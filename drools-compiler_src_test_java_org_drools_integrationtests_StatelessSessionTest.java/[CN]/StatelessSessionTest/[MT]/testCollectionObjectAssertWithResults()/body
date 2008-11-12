@@ -1,11 +1,13 @@
 {
-  StatelessSession session=getSession();
-  session.setGlobalExporter(new CopyIdentifiersGlobalExporter(new String[]{"list"}));
+  StatelessKnowledgeSession session=getSession2("literal_rule_test.drl");
+  Parameters parameters=session.newParameters();
+  parameters.getGlobalParams().setOut(Arrays.asList(new String[]{"list"}));
   final Cheese stilton=new Cheese("stilton",5);
   List collection=new ArrayList();
   collection.add(stilton);
-  StatelessSessionResult result=session.executeWithResults(collection);
-  assertSame(stilton,result.iterateObjects().next());
-  assertEquals("stilton",((List)result.getGlobal("list")).get(0));
-  assertNull(result.getGlobal("cheesery"));
+  StatelessKnowledgeSessionResults results=session.executeIterableWithParameters(collection,parameters);
+  assertEquals(1,results.getIdentifiers().size());
+  assertTrue(results.getIdentifiers().contains("list"));
+  assertEquals("stilton",((List)results.getValue("list")).get(0));
+  assertNull(results.getValue("cheesery"));
 }
