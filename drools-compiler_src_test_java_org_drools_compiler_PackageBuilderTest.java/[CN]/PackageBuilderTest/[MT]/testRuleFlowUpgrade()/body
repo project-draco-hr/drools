@@ -1,0 +1,25 @@
+{
+  PackageBuilder builder=new PackageBuilder();
+  System.setProperty("drools.ruleflow.port","true");
+  InputStream in=this.getClass().getResourceAsStream("/org/drools/integrationtests/ruleflow40.rfm");
+  assertNotNull(in);
+  builder.addPackage(new PackageDescr("com.sample"));
+  builder.addRuleFlow(new InputStreamReader(in));
+  Package pkg=builder.getPackage();
+  assertNotNull(pkg);
+  Map flows=pkg.getRuleFlows();
+  assertNotNull(flows);
+  assertEquals(1,flows.size());
+  assertTrue(flows.containsKey("0"));
+  Process p=(Process)flows.get("0");
+  assertTrue(p instanceof WorkflowProcessImpl);
+  Package pkg2=(Package)DroolsStreamUtils.streamIn(DroolsStreamUtils.streamOut(pkg));
+  assertNotNull(pkg2);
+  flows=pkg2.getRuleFlows();
+  assertNotNull(flows);
+  assertEquals(1,flows.size());
+  assertTrue(flows.containsKey("0"));
+  p=(Process)flows.get("0");
+  assertTrue(p instanceof WorkflowProcessImpl);
+  System.setProperty("drools.ruleflow.port","false");
+}

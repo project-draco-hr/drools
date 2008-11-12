@@ -5,7 +5,15 @@
   final ClassLoader newLoader=this.getClass().getClassLoader();
   try {
     Thread.currentThread().setContextClassLoader(newLoader);
-    Process process=xmlReader.read(reader);
+    String portRuleFlow=System.getProperty("drools.ruleflow.port","false");
+    Reader portedReader=null;
+    if (portRuleFlow.equalsIgnoreCase("true")) {
+      portedReader=portToCurrentVersion(reader);
+    }
+ else {
+      portedReader=reader;
+    }
+    Process process=xmlReader.read(portedReader);
     buildProcess(process,url);
   }
   finally {

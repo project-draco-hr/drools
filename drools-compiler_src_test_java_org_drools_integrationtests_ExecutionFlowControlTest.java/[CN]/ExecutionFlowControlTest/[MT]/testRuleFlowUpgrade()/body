@@ -1,0 +1,25 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  System.setProperty("drools.ruleflow.port","true");
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("ruleflow.drl")));
+  builder.addRuleFlow(new InputStreamReader(getClass().getResourceAsStream("ruleflow40.rfm")));
+  final Package pkg=builder.getPackage();
+  RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final List list=new ArrayList();
+  workingMemory.setGlobal("list",list);
+  workingMemory.fireAllRules();
+  assertEquals(0,list.size());
+  final ProcessInstance processInstance=workingMemory.startProcess("0");
+  assertEquals(ProcessInstance.STATE_ACTIVE,processInstance.getState());
+  workingMemory.fireAllRules();
+  assertEquals(4,list.size());
+  assertEquals("Rule1",list.get(0));
+  assertEquals("Rule3",list.get(1));
+  assertEquals("Rule2",list.get(2));
+  assertEquals("Rule4",list.get(3));
+  assertEquals(ProcessInstance.STATE_COMPLETED,processInstance.getState());
+  System.setProperty("drools.ruleflow.port","false");
+}
