@@ -14,16 +14,22 @@
         context.addRetractedTuple(this.rule,activation);
       }
     }
-    activation.remove();
-    if (activation.getActivationGroupNode() != null) {
-      activation.getActivationGroupNode().getActivationGroup().removeActivation(activation);
+    if (context.getType() == PropagationContext.EXPIRATION) {
+      EventFactHandle efh=(EventFactHandle)context.getFactHandleOrigin();
+      efh.increaseActivationsCount();
     }
-    if (activation.getRuleFlowGroupNode() != null) {
-      final InternalRuleFlowGroup ruleFlowGroup=activation.getRuleFlowGroupNode().getRuleFlowGroup();
-      ruleFlowGroup.removeActivation(activation);
+ else {
+      activation.remove();
+      if (activation.getActivationGroupNode() != null) {
+        activation.getActivationGroupNode().getActivationGroup().removeActivation(activation);
+      }
+      if (activation.getRuleFlowGroupNode() != null) {
+        final InternalRuleFlowGroup ruleFlowGroup=activation.getRuleFlowGroupNode().getRuleFlowGroup();
+        ruleFlowGroup.removeActivation(activation);
+      }
+      ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCancelled(activation,workingMemory);
+      ((InternalAgenda)workingMemory.getAgenda()).decreaseActiveActivations();
     }
-    ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCancelled(activation,workingMemory);
-    ((InternalAgenda)workingMemory.getAgenda()).decreaseActiveActivations();
   }
  else {
     ((InternalAgenda)workingMemory.getAgenda()).decreaseDormantActivations();

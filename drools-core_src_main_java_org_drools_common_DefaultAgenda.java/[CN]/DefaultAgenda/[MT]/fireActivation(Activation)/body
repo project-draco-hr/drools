@@ -28,5 +28,16 @@
     final InternalRuleFlowGroup ruleFlowGroup=activation.getRuleFlowGroupNode().getRuleFlowGroup();
     ruleFlowGroup.removeActivation(activation);
   }
+  for (LeftTuple tuple=(LeftTuple)activation.getTuple(); tuple != null; tuple=tuple.getParent()) {
+    if (tuple.getLastHandle().isEvent()) {
+      EventFactHandle handle=(EventFactHandle)tuple.getLastHandle();
+      if (handle.isExpired()) {
+        handle.decreaseActivationsCount();
+        if (handle.getActivationsCount() == 0) {
+          workingMemory.retract(handle);
+        }
+      }
+    }
+  }
   eventsupport.getAgendaEventSupport().fireAfterActivationFired(activation,this.workingMemory);
 }
