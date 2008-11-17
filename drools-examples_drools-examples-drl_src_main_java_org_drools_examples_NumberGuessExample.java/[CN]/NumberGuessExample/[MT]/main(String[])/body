@@ -1,17 +1,14 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(ShoppingExample.class.getResourceAsStream("NumberGuess.drl")));
-  builder.addRuleFlow(new InputStreamReader(ShoppingExample.class.getResourceAsStream("NumberGuess.rf")));
-  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
-  ruleBase.addPackage(builder.getPackage());
-  final StatefulSession session=ruleBase.newStatefulSession();
-  final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(session);
-  logger.setFileName("log/numberguess");
+  final KnowledgeBuilder builder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  builder.addResource(new InputStreamReader(ShoppingExample.class.getResourceAsStream("NumberGuess.drl")),KnowledgeType.DRL);
+  builder.addResource(new InputStreamReader(ShoppingExample.class.getResourceAsStream("NumberGuess.rf")),KnowledgeType.DRF);
+  final KnowledgeBase knowledgeBase=KnowledgeBaseFactory.newKnowledgeBase();
+  knowledgeBase.addKnowledgePackages(builder.getKnowledgePackages());
+  final StatefulKnowledgeSession session=knowledgeBase.newStatefulKnowledgeSession();
   session.insert(new GameRules(100,5));
   session.insert(new RandomNumber());
   session.insert(new Game());
   session.startProcess("Number Guess");
   session.fireAllRules();
-  logger.writeToDisk();
   session.dispose();
 }
