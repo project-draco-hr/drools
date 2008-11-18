@@ -1,8 +1,11 @@
 {
-  SpreadsheetCompiler compiler=new SpreadsheetCompiler();
-  String drl=compiler.compile(getSpreadsheetStream(),InputType.XLS);
-  RuleBase ruleBase=buildRuleBase(drl);
-  StatefulSession session=ruleBase.newStatefulSession();
+  final DecisionTableConfiguration conf=KnowledgeBuilderFactory.newDecisionTableConfiguration();
+  conf.setInputType(DecisionTableInputType.XLS);
+  final KnowledgeBuilder builder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  builder.addResource(new InputStreamReader(getSpreadsheetStream(),"windows-1252"),KnowledgeType.DTABLE,conf);
+  final KnowledgeBase knowledgeBase=KnowledgeBaseFactory.newKnowledgeBase();
+  knowledgeBase.addKnowledgePackages(builder.getKnowledgePackages());
+  StatefulKnowledgeSession session=knowledgeBase.newStatefulKnowledgeSession();
   final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(session);
   logger.setFileName("log/trouble_ticket");
   final Customer a=new Customer("A","Drools","Gold");
