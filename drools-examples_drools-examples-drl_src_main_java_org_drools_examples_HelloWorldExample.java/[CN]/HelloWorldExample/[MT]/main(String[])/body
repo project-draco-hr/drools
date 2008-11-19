@@ -1,23 +1,23 @@
 {
   final Reader source=new InputStreamReader(HelloWorldExample.class.getResourceAsStream("HelloWorld.drl"));
-  final KnowledgeBuilder builder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  builder.addResource(source,KnowledgeType.DRL);
-  if (builder.hasErrors()) {
-    System.out.println(builder.getErrors().toString());
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.addResource(source,KnowledgeType.DRL);
+  if (kbuilder.hasErrors()) {
+    System.out.println(kbuilder.getErrors().toString());
     throw new RuntimeException("Unable to compile \"HelloWorld.drl\".");
   }
-  final Collection<KnowledgePackage> pkgs=builder.getKnowledgePackages();
-  final KnowledgeBase knowledgeBase=KnowledgeBaseFactory.newKnowledgeBase();
-  knowledgeBase.addKnowledgePackages(pkgs);
-  final StatefulKnowledgeSession session=knowledgeBase.newStatefulKnowledgeSession();
-  session.setGlobal("list",new ArrayList());
-  final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(session);
+  final Collection<KnowledgePackage> pkgs=kbuilder.getKnowledgePackages();
+  final KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(pkgs);
+  final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.setGlobal("list",new ArrayList());
+  final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(ksession);
   logger.setFileName("log/helloworld");
   final Message message=new Message();
   message.setMessage("Hello World");
   message.setStatus(Message.HELLO);
-  session.insert(message);
-  session.fireAllRules();
+  ksession.insert(message);
+  ksession.fireAllRules();
   logger.writeToDisk();
-  session.dispose();
+  ksession.dispose();
 }

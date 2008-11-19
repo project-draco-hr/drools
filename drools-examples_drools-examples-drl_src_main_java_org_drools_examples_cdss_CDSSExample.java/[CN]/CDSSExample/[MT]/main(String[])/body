@@ -1,33 +1,33 @@
 {
   try {
-    KnowledgeBase knowledgeBase=readRule();
-    StatefulKnowledgeSession workingMemory=knowledgeBase.newStatefulKnowledgeSession();
-    WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(workingMemory);
+    KnowledgeBase kbase=readRule();
+    StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+    WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(ksession);
     RecommendationService recommendationService=new RecommendationService();
-    workingMemory.setGlobal("recommendationService",recommendationService);
+    ksession.setGlobal("recommendationService",recommendationService);
     Patient patient=new Patient();
     patient.setName("John Doe");
     patient.setAge(20);
-    workingMemory.insert(patient);
+    ksession.insert(patient);
     Diagnose diagnose=new Diagnose(Terminology.DIAGNOSE_X);
-    workingMemory.insert(diagnose);
-    workingMemory.fireAllRules();
+    ksession.insert(diagnose);
+    ksession.fireAllRules();
     List recommendations=recommendationService.getRecommendations();
     for (Iterator iterator=recommendations.iterator(); iterator.hasNext(); ) {
       System.out.println(iterator.next());
     }
     recommendations.clear();
     diagnose=new Diagnose(Terminology.DIAGNOSE_X_TYPE_UNKNOWN);
-    workingMemory.insert(diagnose);
-    workingMemory.fireAllRules();
+    ksession.insert(diagnose);
+    ksession.fireAllRules();
     recommendations=recommendationService.getRecommendations();
     for (Iterator iterator=recommendations.iterator(); iterator.hasNext(); ) {
       System.out.println(iterator.next());
     }
     recommendations.clear();
     diagnose=new Diagnose(Terminology.DIAGNOSE_X_TYPE2);
-    workingMemory.insert(diagnose);
-    workingMemory.fireAllRules();
+    ksession.insert(diagnose);
+    ksession.fireAllRules();
     logger.writeToDisk();
   }
  catch (  Throwable t) {

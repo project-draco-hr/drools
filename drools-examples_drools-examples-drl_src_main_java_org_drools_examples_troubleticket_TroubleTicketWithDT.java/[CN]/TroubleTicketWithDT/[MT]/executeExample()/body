@@ -1,12 +1,12 @@
 {
-  final DecisionTableConfiguration conf=KnowledgeBuilderFactory.newDecisionTableConfiguration();
-  conf.setInputType(DecisionTableInputType.XLS);
-  final KnowledgeBuilder builder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  builder.addResource(new InputStreamReader(getSpreadsheetStream(),"windows-1252"),KnowledgeType.DTABLE,conf);
-  final KnowledgeBase knowledgeBase=KnowledgeBaseFactory.newKnowledgeBase();
-  knowledgeBase.addKnowledgePackages(builder.getKnowledgePackages());
-  StatefulKnowledgeSession session=knowledgeBase.newStatefulKnowledgeSession();
-  final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(session);
+  final DecisionTableConfiguration dtableconfiguration=KnowledgeBuilderFactory.newDecisionTableConfiguration();
+  dtableconfiguration.setInputType(DecisionTableInputType.XLS);
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.addResource(new InputStreamReader(getSpreadsheetStream(),"windows-1252"),KnowledgeType.DTABLE,dtableconfiguration);
+  final KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(ksession);
   logger.setFileName("log/trouble_ticket");
   final Customer a=new Customer("A","Drools","Gold");
   final Customer b=new Customer("B","Drools","Platinum");
@@ -16,17 +16,17 @@
   final Ticket t2=new Ticket(b);
   final Ticket t3=new Ticket(c);
   final Ticket t4=new Ticket(d);
-  session.insert(a);
-  session.insert(b);
-  session.insert(c);
-  session.insert(d);
-  session.insert(t1);
-  session.insert(t2);
-  final FactHandle ft3=session.insert(t3);
-  session.insert(t4);
-  session.fireAllRules();
+  ksession.insert(a);
+  ksession.insert(b);
+  ksession.insert(c);
+  ksession.insert(d);
+  ksession.insert(t1);
+  ksession.insert(t2);
+  final FactHandle ft3=ksession.insert(t3);
+  ksession.insert(t4);
+  ksession.fireAllRules();
   t3.setStatus("Done");
-  session.update(ft3,t3);
+  ksession.update(ft3,t3);
   try {
     System.err.println("[[ Sleeping 5 seconds ]]");
     Thread.sleep(5000);
@@ -35,6 +35,6 @@
     e.printStackTrace();
   }
   System.err.println("[[ awake ]]");
-  session.dispose();
+  ksession.dispose();
   logger.writeToDisk();
 }
