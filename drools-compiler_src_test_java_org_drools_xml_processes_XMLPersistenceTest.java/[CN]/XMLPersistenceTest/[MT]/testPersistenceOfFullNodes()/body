@@ -68,6 +68,22 @@
   startNode.setMetaData("y",2);
   startNode.setMetaData("width",3);
   startNode.setMetaData("height",4);
+  ConstraintTrigger constraintTrigger=new ConstraintTrigger();
+  constraintTrigger.setConstraint("constraint");
+  Map<String,String> inMapping=new HashMap<String,String>();
+  inMapping.put("key","value");
+  inMapping.put("key2","value2");
+  constraintTrigger.setInMappings(inMapping);
+  startNode.addTrigger(constraintTrigger);
+  EventTrigger eventTrigger=new EventTrigger();
+  EventTypeFilter eventTypeFilter=new EventTypeFilter();
+  eventTypeFilter.setType("eventType");
+  eventTrigger.addEventFilter(eventTypeFilter);
+  inMapping=new HashMap<String,String>();
+  inMapping.put("key","value");
+  inMapping.put("key2","value2");
+  eventTrigger.setInMappings(inMapping);
+  startNode.addTrigger(eventTrigger);
   process.addNode(startNode);
   ActionNode actionNode=new ActionNode();
   actionNode.setName("action");
@@ -169,6 +185,13 @@
   timer.setPeriod(200);
   action=new DroolsConsequenceAction("dialect","consequence");
   milestone.addTimer(timer,action);
+  List<DroolsAction> actions=new ArrayList<DroolsAction>();
+  DroolsAction action1=new DroolsConsequenceAction("java","System.out.println(\"action1\");");
+  actions.add(action1);
+  DroolsAction action2=new DroolsConsequenceAction("java","System.out.println(\"action2\");");
+  actions.add(action2);
+  milestone.setActions(ExtendedNodeImpl.EVENT_NODE_ENTER,actions);
+  milestone.setActions(ExtendedNodeImpl.EVENT_NODE_EXIT,actions);
   process.addNode(milestone);
   connection=new ConnectionImpl(join,Node.CONNECTION_DEFAULT_TYPE,milestone,Node.CONNECTION_DEFAULT_TYPE);
   connection.setMetaData("bendpoints","[10,10;20,20]");
@@ -193,6 +216,8 @@
   timer.setPeriod(200);
   action=new DroolsConsequenceAction("dialect","consequence");
   subProcess.addTimer(timer,action);
+  subProcess.setActions(ExtendedNodeImpl.EVENT_NODE_ENTER,actions);
+  subProcess.setActions(ExtendedNodeImpl.EVENT_NODE_EXIT,actions);
   process.addNode(subProcess);
   connection=new ConnectionImpl(milestone,Node.CONNECTION_DEFAULT_TYPE,subProcess,Node.CONNECTION_DEFAULT_TYPE);
   connection.setMetaData("bendpoints","[10,10]");
@@ -222,6 +247,8 @@
   timer.setPeriod(200);
   action=new DroolsConsequenceAction("dialect","consequence");
   workItemNode.addTimer(timer,action);
+  workItemNode.setActions(ExtendedNodeImpl.EVENT_NODE_ENTER,actions);
+  workItemNode.setActions(ExtendedNodeImpl.EVENT_NODE_EXIT,actions);
   process.addNode(workItemNode);
   connection=new ConnectionImpl(subProcess,Node.CONNECTION_DEFAULT_TYPE,workItemNode,Node.CONNECTION_DEFAULT_TYPE);
   connection.setMetaData("bendpoints","[]");
@@ -240,7 +267,9 @@
   work.setParameterDefinitions(parameterDefinitions);
   work.setParameter("TaskName","Do something");
   work.setParameter("ActorId","John Doe");
-  workItemNode.setWaitForCompletion(false);
+  humanTaskNode.setWaitForCompletion(false);
+  humanTaskNode.setActions(ExtendedNodeImpl.EVENT_NODE_ENTER,actions);
+  humanTaskNode.setActions(ExtendedNodeImpl.EVENT_NODE_EXIT,actions);
   process.addNode(humanTaskNode);
   connection=new ConnectionImpl(workItemNode,Node.CONNECTION_DEFAULT_TYPE,humanTaskNode,Node.CONNECTION_DEFAULT_TYPE);
   TimerNode timerNode=new TimerNode();
@@ -310,6 +339,7 @@
   if (xml == null) {
     throw new IllegalArgumentException("Failed to persist full nodes!");
   }
+  System.out.println(xml);
   XmlProcessReader reader=new XmlProcessReader(new PackageBuilderConfiguration().getSemanticModules());
   process=(RuleFlowProcess)reader.read(new StringReader(xml));
   if (process == null) {
@@ -321,6 +351,7 @@
   assertEquals(4,process.getVariableScope().getVariables().size());
   assertEquals(2,process.getSwimlaneContext().getSwimlanes().size());
   assertEquals(2,process.getExceptionScope().getExceptionHandlers().size());
+  System.out.println("************************************");
   String xml2=XmlRuleFlowProcessDumper.INSTANCE.dump(process,true);
   if (xml2 == null) {
     throw new IllegalArgumentException("Failed to persist empty nodes!");
