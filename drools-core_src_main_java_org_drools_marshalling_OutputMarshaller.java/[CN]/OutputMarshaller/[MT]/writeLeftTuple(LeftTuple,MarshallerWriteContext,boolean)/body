@@ -15,6 +15,7 @@ case NodeTypeEnums.JoinNode:
         writeLeftTuple(childLeftTuple,context,recurse);
       }
       stream.writeShort(PersisterEnums.END);
+      context.out.println("JoinNode   ---   END");
       break;
     }
 case NodeTypeEnums.EvalConditionNode:
@@ -109,6 +110,19 @@ writeLeftTuple(childLeftTuple,context,recurse);
 }
 stream.writeShort(PersisterEnums.END);
 context.out.println("CollectNode   ---   END");
+break;
+}
+case NodeTypeEnums.RightInputAdaterNode:
+{
+context.out.println("RightInputAdapterNode");
+ObjectHashMap memory=(ObjectHashMap)context.wm.getNodeMemory((NodeMemory)sink);
+InternalFactHandle ifh=(InternalFactHandle)memory.get(leftTuple);
+context.out.println("FactHandle id:" + ifh.getId());
+stream.writeInt(ifh.getId());
+stream.writeLong(ifh.getRecency());
+writeRightTuples(ifh,context);
+stream.writeShort(PersisterEnums.END);
+context.out.println("RightInputAdapterNode   ---   END");
 break;
 }
 case NodeTypeEnums.RuleTerminalNode:

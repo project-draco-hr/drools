@@ -1,31 +1,34 @@
 {
   final Reader reader=new InputStreamReader(getClass().getResourceAsStream(fileName));
   final RuleBase ruleBase=loadRuleBase(reader);
-  final WorkingMemory wm=ruleBase.newStatefulSession();
-  final List results=new ArrayList();
-  wm.setGlobal("results",results);
-  final Cheese[] cheese=new Cheese[]{new Cheese("stilton",8),new Cheese("stilton",10),new Cheese("stilton",9),new Cheese("brie",11),new Cheese("brie",4),new Cheese("provolone",8)};
-  final Person bob=new Person("Bob","stilton");
-  final FactHandle[] cheeseHandles=new FactHandle[cheese.length];
-  for (int i=0; i < cheese.length; i++) {
-    cheeseHandles[i]=wm.insert(cheese[i]);
+  StatefulSession session=ruleBase.newStatefulSession();
+  DataSet data=new DataSet();
+  data.results=new ArrayList<Object>();
+  session.setGlobal("results",data.results);
+  data.cheese=new Cheese[]{new Cheese("stilton",8,0),new Cheese("stilton",10,1),new Cheese("stilton",9,2),new Cheese("brie",11,3),new Cheese("brie",4,4),new Cheese("provolone",8,5)};
+  data.bob=new Person("Bob","stilton");
+  data.cheeseHandles=new FactHandle[data.cheese.length];
+  for (int i=0; i < data.cheese.length; i++) {
+    data.cheeseHandles[i]=session.insert(data.cheese[i]);
   }
-  final FactHandle bobHandle=wm.insert(bob);
-  wm.fireAllRules();
-  Assert.assertEquals(1,results.size());
-  Assert.assertEquals(27,((Number)results.get(results.size() - 1)).intValue());
+  data.bobHandle=session.insert(data.bob);
+  session.fireAllRules();
+  Assert.assertEquals(1,data.results.size());
+  Assert.assertEquals(27,((Number)data.results.get(data.results.size() - 1)).intValue());
+  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  updateReferences(session,data);
   final int index=1;
-  cheese[index].setPrice(3);
-  wm.update(cheeseHandles[index],cheese[index]);
-  wm.fireAllRules();
-  Assert.assertEquals(2,results.size());
-  Assert.assertEquals(20,((Number)results.get(results.size() - 1)).intValue());
-  bob.setLikes("brie");
-  wm.update(bobHandle,bob);
-  wm.fireAllRules();
-  Assert.assertEquals(3,results.size());
-  Assert.assertEquals(15,((Number)results.get(results.size() - 1)).intValue());
-  wm.retract(cheeseHandles[3]);
-  wm.fireAllRules();
-  Assert.assertEquals(3,results.size());
+  data.cheese[index].setPrice(3);
+  session.update(data.cheeseHandles[index],data.cheese[index]);
+  session.fireAllRules();
+  Assert.assertEquals(2,data.results.size());
+  Assert.assertEquals(20,((Number)data.results.get(data.results.size() - 1)).intValue());
+  data.bob.setLikes("brie");
+  session.update(data.bobHandle,data.bob);
+  session.fireAllRules();
+  Assert.assertEquals(3,data.results.size());
+  Assert.assertEquals(15,((Number)data.results.get(data.results.size() - 1)).intValue());
+  session.retract(data.cheeseHandles[3]);
+  session.fireAllRules();
+  Assert.assertEquals(3,data.results.size());
 }
