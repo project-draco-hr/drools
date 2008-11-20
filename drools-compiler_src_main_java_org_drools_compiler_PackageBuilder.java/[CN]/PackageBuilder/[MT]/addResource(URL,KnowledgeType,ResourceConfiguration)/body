@@ -1,8 +1,18 @@
 {
   try {
-    addResource(new InputStreamReader(url.openStream()),type,configuration);
+    if (type == KnowledgeType.DTABLE) {
+      DecisionTableConfiguration dtableConfiguration=(DecisionTableConfiguration)configuration;
+      String string=DecisionTableFactory.loadFromInputStream(url.openStream(),dtableConfiguration);
+      addPackageFromDrl(new StringReader(string));
+    }
+ else {
+      addResource(new InputStreamReader(url.openStream()),type,configuration);
+    }
   }
- catch (  IOException e) {
+ catch (  DroolsParserException e) {
+    throw new RuntimeException(e);
+  }
+catch (  IOException e) {
     throw new RuntimeException(e);
   }
 }
