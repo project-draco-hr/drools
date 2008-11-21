@@ -1,7 +1,11 @@
 {
   FieldValue field=null;
   try {
-    field=FieldFactory.getFieldValue(literalRestrictionDescr.getValue(),extractor.getValueType());
+    Object value=literalRestrictionDescr.getValue();
+    if (literalRestrictionDescr.getType() == LiteralRestrictionDescr.TYPE_STRING && context.getConfiguration().isProcessStringEscapes()) {
+      value=StringUtils.unescapeJava((String)value);
+    }
+    field=FieldFactory.getFieldValue(value,extractor.getValueType());
   }
  catch (  final Exception e) {
     context.getErrors().add(new DescrBuildError(context.getParentDescr(),literalRestrictionDescr,e,"Unable to create a Field value of type  '" + extractor.getValueType() + "' and value '"+ literalRestrictionDescr.getText()+ "'"));
