@@ -1,6 +1,6 @@
 {
-  Object retval=execParser("compilation_unit","package org.drools;\n\nrule \"test rule\"\n\tsalience 10\n\twhen\n\t\t$c: WorkerPerformanceContext(eval)$c.getBalanceMonth() != null))\n\tthen\n\t\tretract($p);\nend\n\t",false);
-  Object actual=examineParserExecResult(28,retval);
-  Object expecting="FAIL";
+  Object retval=execParser("compilation_unit","package org.drools;\n\nrule \"test pluggable operators\"\nwhen\n    $a : EventA()\n    $b : EventB( this after[1,10] $a )\n    $c : EventC( this finishes $b )\n    $d : EventD( this not starts $a )\n    $e : EventE( this not before [1, 10] $b )\nthen\nend",false);
+  Object actual=examineParserExecResult(10,retval);
+  Object expecting="(VT_COMPILATION_UNIT (package (VT_PACKAGE_ID org drools)) (rule \"test pluggable operators\" when (VT_AND_IMPLICIT (VT_PATTERN (VT_FACT_BINDING $a (VT_FACT (VT_PATTERN_TYPE EventA)))) (VT_PATTERN (VT_FACT_BINDING $b (VT_FACT (VT_PATTERN_TYPE EventB) (VT_FIELD (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT this)) (after [1,10] (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT $a))))))) (VT_PATTERN (VT_FACT_BINDING $c (VT_FACT (VT_PATTERN_TYPE EventC) (VT_FIELD (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT this)) (finishes (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT $b))))))) (VT_PATTERN (VT_FACT_BINDING $d (VT_FACT (VT_PATTERN_TYPE EventD) (VT_FIELD (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT this)) (starts not (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT $a))))))) (VT_PATTERN (VT_FACT_BINDING $e (VT_FACT (VT_PATTERN_TYPE EventE) (VT_FIELD (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT this)) (before not [1, 10] (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT $b)))))))) then\nend))";
   assertEquals("testing rule " + "compilation_unit",expecting,actual);
 }

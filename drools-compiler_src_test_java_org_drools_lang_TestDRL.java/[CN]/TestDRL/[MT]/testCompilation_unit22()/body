@@ -1,6 +1,6 @@
 {
-  Object retval=execParser("compilation_unit","rule blah\n when \n\tCol1() from doIt1( foo,bar,42,\"hello\",{ a => \"b\"}, [a, \"b\", 42] )\n\t            .doIt2(bar, [a, \"b\", 42]).field[\"key\"]\n\tCol2()\n then\n\tpartay();\nend\t",false);
+  Object retval=execParser("compilation_unit","#this is for showing off all the new multi restriction stuff\n\n\n\n\nrule simple_rule \n  when\n  \tPerson(age > 30 && < 40)\n  \tVehicle(type == \"sedan\" || == \"wagon\", age < 3)\n  then\n\tconsequence();\nend",false);
   Object actual=examineParserExecResult(10,retval);
-  Object expecting="(VT_COMPILATION_UNIT (rule blah when (VT_AND_IMPLICIT (from (VT_PATTERN (VT_FACT (VT_PATTERN_TYPE Col1))) (VT_FROM_SOURCE doIt1 ( foo,bar,42,\"hello\",{ a => \"b\"}, [a, \"b\", 42] ) (. doIt2 (bar, [a, \"b\", 42]) (. field [\"key\"])))) (VT_PATTERN (VT_FACT (VT_PATTERN_TYPE Col2)))) then\n\tpartay();\nend))";
+  Object expecting="(VT_COMPILATION_UNIT (rule simple_rule when (VT_AND_IMPLICIT (VT_PATTERN (VT_FACT (VT_PATTERN_TYPE Person) (VT_FIELD (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT age)) (&& (> 30) (< 40))))) (VT_PATTERN (VT_FACT (VT_PATTERN_TYPE Vehicle) (VT_FIELD (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT type)) (|| (== \"sedan\") (== \"wagon\"))) (VT_FIELD (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT age)) (< 3))))) then\n\tconsequence();\nend))";
   assertEquals("testing rule " + "compilation_unit",expecting,actual);
 }

@@ -1,6 +1,6 @@
 {
-  Object retval=execParser("compilation_unit","rule \"another test\" salience 10 when eval( true ) then System.out.println(1); end",false);
+  Object retval=execParser("compilation_unit","rule \"AccumulateMultiPatternParserTest\"\nwhen\n     $counter:Integer() from accumulate( $person : Person( age > 21 ) and Cheese( type == $person.likes ),\n                                         init( int x = 0; ),\n                                         action( x++; ),\n                                         result( new Integer(x) ) );\nthen\nend",false);
   Object actual=examineParserExecResult(10,retval);
-  Object expecting="(VT_COMPILATION_UNIT (rule \"another test\" (VT_RULE_ATTRIBUTES (salience 10)) when (VT_AND_IMPLICIT (eval ( true ))) then System.out.println(1); end))";
+  Object expecting="(VT_COMPILATION_UNIT (rule \"AccumulateMultiPatternParserTest\" when (VT_AND_IMPLICIT (from (VT_PATTERN (VT_FACT_BINDING $counter (VT_FACT (VT_PATTERN_TYPE Integer)))) (accumulate (and (VT_PATTERN (VT_FACT_BINDING $person (VT_FACT (VT_PATTERN_TYPE Person) (VT_FIELD (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT age)) (> 21))))) (VT_PATTERN (VT_FACT (VT_PATTERN_TYPE Cheese) (VT_FIELD (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT type)) (== (VT_ACCESSOR_PATH (VT_ACCESSOR_ELEMENT $person) (VT_ACCESSOR_ELEMENT likes))))))) (VT_ACCUMULATE_INIT_CLAUSE (init ( int x = 0; )) (action ( x++; )) (result ( new Integer(x) )))))) then\nend))";
   assertEquals("testing rule " + "compilation_unit",expecting,actual);
 }
