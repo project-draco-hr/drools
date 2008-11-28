@@ -1,0 +1,60 @@
+{
+  try {
+switch (type) {
+case DRL:
+{
+        addPackageFromDrl(resource);
+        break;
+      }
+case DSLR:
+{
+      addPackageFromDslr(resource);
+      break;
+    }
+case DSL:
+{
+    addDsl(resource);
+    break;
+  }
+case XDRL:
+{
+  addPackageFromXml(resource);
+  break;
+}
+case DRF:
+{
+addProcessFromXml(resource);
+break;
+}
+case DTABLE:
+{
+DecisionTableConfiguration dtableConfiguration=(DecisionTableConfiguration)configuration;
+String string=DecisionTableFactory.loadFromInputStream(resource.getInputStream(),dtableConfiguration);
+addPackageFromDrl(new StringReader(string));
+break;
+}
+case COMPOSITION:
+{
+XmlCompositionReader reader=new XmlCompositionReader(this.configuration.getSemanticModules());
+KnowledgeComposition composition=reader.read(resource.getReader());
+for (KnowledgeResource kresource : composition.getResources()) {
+Resource ioresource=null;
+String src=kresource.getSource();
+if (src.trim().startsWith("classpath:")) {
+ioresource=new ClassPathResource(src.substring(src.indexOf(':') + 1),this.configuration.getClassLoader());
+}
+ else {
+ioresource=new UrlResource(src);
+}
+addKnowledgeResource(ioresource,kresource.getType(),kresource.getConfiguration());
+}
+}
+}
+}
+ catch (RuntimeException e) {
+throw e;
+}
+catch (Exception e) {
+throw new RuntimeException(e);
+}
+}

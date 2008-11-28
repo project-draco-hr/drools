@@ -1,0 +1,18 @@
+{
+  final String DSL="# This is an empty dsl file.";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("test_expander.dsl",getClass()),KnowledgeType.DSL);
+  kbuilder.add(ResourceFactory.newReaderResource(new StringReader(DSL)),KnowledgeType.DSLR);
+  assertFalse(kbuilder.hasErrors());
+  final String err=kbuilder.getErrors().toString();
+  assertEquals("",err);
+  assertEquals(0,kbuilder.getErrors().size());
+  Collection<KnowledgePackage> pkgs=kbuilder.getKnowledgePackages();
+  assertEquals(0,pkgs.size());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(pkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  pkgs=SerializationHelper.serializeObject(pkgs);
+  assertNull(pkgs);
+}
