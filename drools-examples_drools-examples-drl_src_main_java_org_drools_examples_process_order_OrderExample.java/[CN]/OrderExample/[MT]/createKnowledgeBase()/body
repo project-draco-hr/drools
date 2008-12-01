@@ -1,24 +1,12 @@
 {
-  PackageBuilder builder=new PackageBuilder();
-  Reader source=new InputStreamReader(OrderExample.class.getResourceAsStream("RuleSetExample.rf"));
-  builder.addProcessFromXml(source);
-  source=new InputStreamReader(OrderExample.class.getResourceAsStream("workflow_rules.drl"));
-  builder.addPackageFromDrl(source);
-  source=new InputStreamReader(OrderExample.class.getResourceAsStream("validation.drl"));
-  builder.addPackageFromDrl(source);
-  source=new InputStreamReader(OrderExample.class.getResourceAsStream("assignment.dslr"));
-  Reader dsl=new InputStreamReader(OrderExample.class.getResourceAsStream("assignment.dsl"));
-  builder.addPackageFromDrl(source,dsl);
-  source=new InputStreamReader(OrderExample.class.getResourceAsStream("discount.drl"));
-  builder.addPackageFromDrl(source);
-  RuleBaseConfiguration configuration=new RuleBaseConfiguration();
-  configuration.setAdvancedProcessRuleIntegration(true);
-  RuleBase ruleBase=RuleBaseFactory.newRuleBase(configuration);
-  for (  Package p : builder.getPackages()) {
-    if (!p.isValid()) {
-      System.err.println("Invalid package " + p.getName() + ": "+ p.getErrorSummary());
-    }
-    ruleBase.addPackage(p);
-  }
-  return ruleBase;
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("RuleSetExample.rf",OrderExample.class),KnowledgeType.DRF);
+  kbuilder.add(ResourceFactory.newClassPathResource("workflow_rules.drl",OrderExample.class),KnowledgeType.DRL);
+  kbuilder.add(ResourceFactory.newClassPathResource("validation.drl",OrderExample.class),KnowledgeType.DRL);
+  kbuilder.add(ResourceFactory.newClassPathResource("assignment.dsl",OrderExample.class),KnowledgeType.DSL);
+  kbuilder.add(ResourceFactory.newClassPathResource("assignment.dslr",OrderExample.class),KnowledgeType.DSLR);
+  kbuilder.add(ResourceFactory.newClassPathResource("discount.drl",OrderExample.class),KnowledgeType.DRL);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  return kbase;
 }

@@ -2,7 +2,7 @@
   try {
     KnowledgeBase kbase=readRule();
     StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
-    WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(ksession);
+    KnowledgeRuntimeLogger logger=KnowledgeRuntimeLoggerFactory.newFileLogger(ksession,"log/cdss");
     RecommendationService recommendationService=new RecommendationService();
     ksession.setGlobal("recommendationService",recommendationService);
     Patient patient=new Patient();
@@ -12,23 +12,23 @@
     Diagnose diagnose=new Diagnose(Terminology.DIAGNOSE_X);
     ksession.insert(diagnose);
     ksession.fireAllRules();
-    List recommendations=recommendationService.getRecommendations();
-    for (Iterator iterator=recommendations.iterator(); iterator.hasNext(); ) {
-      System.out.println(iterator.next());
+    List<Recommendation> recommendations=recommendationService.getRecommendations();
+    for (    Recommendation recommendation : recommendations) {
+      System.out.println(recommendation);
     }
     recommendations.clear();
     diagnose=new Diagnose(Terminology.DIAGNOSE_X_TYPE_UNKNOWN);
     ksession.insert(diagnose);
     ksession.fireAllRules();
     recommendations=recommendationService.getRecommendations();
-    for (Iterator iterator=recommendations.iterator(); iterator.hasNext(); ) {
-      System.out.println(iterator.next());
+    for (    Recommendation recommendation : recommendations) {
+      System.out.println(recommendation);
     }
     recommendations.clear();
     diagnose=new Diagnose(Terminology.DIAGNOSE_X_TYPE2);
     ksession.insert(diagnose);
     ksession.fireAllRules();
-    logger.writeToDisk();
+    logger.close();
   }
  catch (  Throwable t) {
     t.printStackTrace();

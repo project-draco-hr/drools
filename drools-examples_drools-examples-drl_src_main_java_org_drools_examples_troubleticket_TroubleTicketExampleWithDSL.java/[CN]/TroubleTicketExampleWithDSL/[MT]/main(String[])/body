@@ -5,8 +5,7 @@
   final KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
   kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
   final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
-  final WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(ksession);
-  logger.setFileName("log/state");
+  KnowledgeRuntimeLogger logger=KnowledgeRuntimeLoggerFactory.newFileLogger(ksession,"log/trouble_ticket");
   final Customer a=new Customer("A","Drools","Gold");
   final Customer b=new Customer("B","Drools","Platinum");
   final Customer c=new Customer("C","Drools","Silver");
@@ -15,14 +14,14 @@
   final Ticket t2=new Ticket(b);
   final Ticket t3=new Ticket(c);
   final Ticket t4=new Ticket(d);
-  final FactHandle fa=ksession.insert(a);
-  final FactHandle fb=ksession.insert(b);
-  final FactHandle fc=ksession.insert(c);
-  final FactHandle fd=ksession.insert(d);
-  final FactHandle ft1=ksession.insert(t1);
-  final FactHandle ft2=ksession.insert(t2);
+  ksession.insert(a);
+  ksession.insert(b);
+  ksession.insert(c);
+  ksession.insert(d);
+  ksession.insert(t1);
+  ksession.insert(t2);
   final FactHandle ft3=ksession.insert(t3);
-  final FactHandle ft4=ksession.insert(t4);
+  ksession.insert(t4);
   ksession.fireAllRules();
   t3.setStatus("Done");
   ksession.update(ft3,t3);
@@ -36,5 +35,5 @@
   System.err.println("[[ awake ]]");
   ksession.fireAllRules();
   ksession.dispose();
-  logger.writeToDisk();
+  logger.close();
 }

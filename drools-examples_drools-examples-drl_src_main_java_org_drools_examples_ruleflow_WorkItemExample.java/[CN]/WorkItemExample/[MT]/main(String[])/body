@@ -2,10 +2,17 @@
   try {
     KnowledgeBase knowledgeBase=readRule();
     StatefulKnowledgeSession ksession=knowledgeBase.newStatefulKnowledgeSession();
-    SystemOutWorkItemHandler handler=new SystemOutWorkItemHandler();
+    WorkItemHandler handler=new WorkItemHandler(){
+      public void executeWorkItem(      WorkItem workItem,      WorkItemManager manager){
+        System.out.println("Executing work item " + workItem);
+        manager.completeWorkItem(workItem.getId(),null);
+      }
+      public void abortWorkItem(      WorkItem workItem,      WorkItemManager manager){
+      }
+    }
+;
     ksession.getWorkItemManager().registerWorkItemHandler("Email",handler);
     ksession.getWorkItemManager().registerWorkItemHandler("Log",handler);
-    UIWorkItemHandler handler2=new UIWorkItemHandler();
     ksession.startProcess("com.sample.ruleflow");
     ksession.fireAllRules();
   }
