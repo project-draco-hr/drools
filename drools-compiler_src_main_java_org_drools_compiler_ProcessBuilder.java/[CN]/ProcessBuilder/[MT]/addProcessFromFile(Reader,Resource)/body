@@ -1,0 +1,23 @@
+{
+  PackageBuilderConfiguration configuration=packageBuilder.getPackageBuilderConfiguration();
+  XmlProcessReader xmlReader=new XmlProcessReader(configuration.getSemanticModules());
+  final ClassLoader oldLoader=Thread.currentThread().getContextClassLoader();
+  final ClassLoader newLoader=this.getClass().getClassLoader();
+  try {
+    Thread.currentThread().setContextClassLoader(newLoader);
+    String portRuleFlow=System.getProperty("drools.ruleflow.port","false");
+    Reader portedReader=null;
+    if (portRuleFlow.equalsIgnoreCase("true")) {
+      portedReader=portToCurrentVersion(reader);
+    }
+ else {
+      portedReader=reader;
+    }
+    Process process=xmlReader.read(portedReader);
+    buildProcess(process,resource);
+  }
+  finally {
+    Thread.currentThread().setContextClassLoader(oldLoader);
+  }
+  reader.close();
+}
