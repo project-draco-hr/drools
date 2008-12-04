@@ -3,31 +3,37 @@
 switch (type) {
 case DRL:
 {
+        ((InternalResource)resource).setKnowledgeType(type);
         addPackageFromDrl(resource);
         break;
       }
 case DSLR:
 {
+      ((InternalResource)resource).setKnowledgeType(type);
       addPackageFromDslr(resource);
       break;
     }
 case DSL:
 {
+    ((InternalResource)resource).setKnowledgeType(type);
     addDsl(resource);
     break;
   }
 case XDRL:
 {
+  ((InternalResource)resource).setKnowledgeType(type);
   addPackageFromXml(resource);
   break;
 }
 case DRF:
 {
+((InternalResource)resource).setKnowledgeType(type);
 addProcessFromXml(resource);
 break;
 }
 case DTABLE:
 {
+((InternalResource)resource).setKnowledgeType(type);
 DecisionTableConfiguration dtableConfiguration=(DecisionTableConfiguration)configuration;
 String string=DecisionTableFactory.loadFromInputStream(resource.getInputStream(),dtableConfiguration);
 addPackageFromDrl(new StringReader(string));
@@ -35,6 +41,7 @@ break;
 }
 case COMPOSITION:
 {
+((InternalResource)resource).setKnowledgeType(type);
 XmlCompositionReader reader=new XmlCompositionReader(this.configuration.getSemanticModules());
 KnowledgeComposition composition=reader.read(resource.getReader());
 for (KnowledgeResource kresource : composition.getResources()) {
@@ -46,7 +53,18 @@ ioresource=new ClassPathResource(src.substring(src.indexOf(':') + 1),this.config
  else {
 ioresource=new UrlResource(src);
 }
+((InternalResource)ioresource).setKnowledgeType(kresource.getType());
+if (ioresource.isDirectory()) {
+this.resourceDirectories.add(ioresource);
+for (Resource childResource : ioresource.listResources()) {
+  ((InternalResource)childResource).setKnowledgeType(kresource.getType());
+  ((InternalResource)childResource).setFromDirectory(true);
+  addKnowledgeResource(childResource,kresource.getType(),kresource.getConfiguration());
+}
+}
+ else {
 addKnowledgeResource(ioresource,kresource.getType(),kresource.getConfiguration());
+}
 }
 }
 }

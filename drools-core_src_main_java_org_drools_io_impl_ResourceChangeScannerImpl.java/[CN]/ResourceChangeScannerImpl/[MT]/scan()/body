@@ -1,12 +1,72 @@
 {
   System.out.println("attempt scan : " + this.resources.size());
-  for (  Entry<Resource,Set<ResourceChangeNotifier>> entry : this.resources.entrySet()) {
-    Resource resource=entry.getKey();
-    for (    ResourceChangeNotifier notifier : entry.getValue()) {
-      System.out.println("scan " + resource + ": "+ resource.getLastModified()+ " : "+ resource.getLastRead());
-      if (resource.getLastRead() < resource.getLastModified()) {
-        notifier.resourceModified(resource);
+  if (this.resources.size() > 0) {
+    System.out.println("x");
+  }
+  Map<ResourceChangeNotifier,KnowledgeBaseChangeSet> notifications=new HashMap<ResourceChangeNotifier,KnowledgeBaseChangeSet>();
+  List<Resource> removed=new ArrayList<Resource>();
+  for (  Resource resource : this.directories) {
+    for (    Resource child : resource.listResources()) {
+      if (!this.resources.containsKey(child)) {
+        System.out.println("found new file : " + child);
+        ((InternalResource)child).setKnowledgeType(((InternalResource)resource).getKnowledgeType());
+        Set<ResourceChangeNotifier> notifiers=this.resources.get(resource);
+        for (        ResourceChangeNotifier notifier : notifiers) {
+          KnowledgeBaseChangeSetImpl changeSet=(KnowledgeBaseChangeSetImpl)notifications.get(notifier);
+          if (changeSet == null) {
+            changeSet=new KnowledgeBaseChangeSetImpl();
+            notifications.put(notifier,changeSet);
+          }
+          if (changeSet.getResourcesAdded().isEmpty()) {
+            changeSet.setResourcesAdded(new ArrayList<Resource>());
+          }
+          changeSet.getResourcesAdded().add(child);
+          notifier.subscribeChildResource(resource,child);
+        }
       }
     }
+  }
+  for (  Entry<Resource,Set<ResourceChangeNotifier>> entry : this.resources.entrySet()) {
+    Resource resource=entry.getKey();
+    Set<ResourceChangeNotifier> notifiers=entry.getValue();
+    if (!resource.isDirectory()) {
+      System.out.println("scan " + resource + ": "+ resource.getLastModified()+ " : "+ resource.getLastRead());
+      long lastModified=resource.getLastModified();
+      if (lastModified == 0) {
+        removed.add(resource);
+        for (        ResourceChangeNotifier notifier : notifiers) {
+          KnowledgeBaseChangeSetImpl changeSet=(KnowledgeBaseChangeSetImpl)notifications.get(notifier);
+          if (changeSet == null) {
+            changeSet=new KnowledgeBaseChangeSetImpl();
+            notifications.put(notifier,changeSet);
+          }
+          if (changeSet.getResourcesRemoved().isEmpty()) {
+            changeSet.setResourcesRemoved(new ArrayList<Resource>());
+          }
+          changeSet.getResourcesRemoved().add(resource);
+        }
+      }
+ else       if (resource.getLastRead() < lastModified) {
+        for (        ResourceChangeNotifier notifier : notifiers) {
+          KnowledgeBaseChangeSetImpl changeSet=(KnowledgeBaseChangeSetImpl)notifications.get(notifier);
+          if (changeSet == null) {
+            changeSet=new KnowledgeBaseChangeSetImpl();
+            notifications.put(notifier,changeSet);
+          }
+          if (changeSet.getResourcesModified().isEmpty()) {
+            changeSet.setResourcesModified(new ArrayList<Resource>());
+          }
+          changeSet.getResourcesModified().add(resource);
+        }
+      }
+    }
+  }
+  for (  Resource resource : removed) {
+    this.resources.remove(resource);
+  }
+  for (  Entry<ResourceChangeNotifier,KnowledgeBaseChangeSet> entry : notifications.entrySet()) {
+    ResourceChangeNotifier notifier=entry.getKey();
+    KnowledgeBaseChangeSet changeSet=entry.getValue();
+    notifier.publishKnowledgeBaseChangeSet(changeSet);
   }
 }
