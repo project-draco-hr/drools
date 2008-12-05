@@ -1,72 +1,74 @@
 {
   System.out.println("attempt scan : " + this.resources.size());
-  if (this.resources.size() > 0) {
-    System.out.println("x");
-  }
-  Map<ResourceChangeNotifier,ChangeSet> notifications=new HashMap<ResourceChangeNotifier,ChangeSet>();
-  List<Resource> removed=new ArrayList<Resource>();
-  for (  Resource resource : this.directories) {
-    for (    Resource child : ((InternalResource)resource).listResources()) {
-      if (!this.resources.containsKey(child)) {
-        System.out.println("found new file : " + child);
-        ((InternalResource)child).setResourceType(((InternalResource)resource).getResourceType());
-        Set<ResourceChangeNotifier> notifiers=this.resources.get(resource);
-        for (        ResourceChangeNotifier notifier : notifiers) {
-          ChangeSetImpl changeSet=(ChangeSetImpl)notifications.get(notifier);
-          if (changeSet == null) {
-            changeSet=new ChangeSetImpl();
-            notifications.put(notifier,changeSet);
+synchronized (this.resources) {
+    if (this.resources.size() > 0) {
+      System.out.println("x");
+    }
+    Map<ResourceChangeNotifier,ChangeSet> notifications=new HashMap<ResourceChangeNotifier,ChangeSet>();
+    List<Resource> removed=new ArrayList<Resource>();
+    for (    Resource resource : this.directories) {
+      for (      Resource child : ((InternalResource)resource).listResources()) {
+        if (!this.resources.containsKey(child)) {
+          System.out.println("found new file : " + child);
+          ((InternalResource)child).setResourceType(((InternalResource)resource).getResourceType());
+          Set<ResourceChangeNotifier> notifiers=this.resources.get(resource);
+          for (          ResourceChangeNotifier notifier : notifiers) {
+            ChangeSetImpl changeSet=(ChangeSetImpl)notifications.get(notifier);
+            if (changeSet == null) {
+              changeSet=new ChangeSetImpl();
+              notifications.put(notifier,changeSet);
+            }
+            if (changeSet.getResourcesAdded().isEmpty()) {
+              changeSet.setResourcesAdded(new ArrayList<Resource>());
+            }
+            changeSet.getResourcesAdded().add(child);
+            notifier.subscribeChildResource(resource,child);
           }
-          if (changeSet.getResourcesAdded().isEmpty()) {
-            changeSet.setResourcesAdded(new ArrayList<Resource>());
-          }
-          changeSet.getResourcesAdded().add(child);
-          notifier.subscribeChildResource(resource,child);
         }
       }
     }
-  }
-  for (  Entry<Resource,Set<ResourceChangeNotifier>> entry : this.resources.entrySet()) {
-    Resource resource=entry.getKey();
-    Set<ResourceChangeNotifier> notifiers=entry.getValue();
-    if (!((InternalResource)resource).isDirectory()) {
-      System.out.println("scan " + resource + ": "+ ((InternalResource)resource).getLastModified()+ " : "+ ((InternalResource)resource).getLastRead());
-      long lastModified=((InternalResource)resource).getLastModified();
-      if (lastModified == 0) {
-        removed.add(resource);
-        for (        ResourceChangeNotifier notifier : notifiers) {
-          ChangeSetImpl changeSet=(ChangeSetImpl)notifications.get(notifier);
-          if (changeSet == null) {
-            changeSet=new ChangeSetImpl();
-            notifications.put(notifier,changeSet);
+    for (    Entry<Resource,Set<ResourceChangeNotifier>> entry : this.resources.entrySet()) {
+      Resource resource=entry.getKey();
+      Set<ResourceChangeNotifier> notifiers=entry.getValue();
+      if (!((InternalResource)resource).isDirectory()) {
+        System.out.println("scan " + resource + ": "+ ((InternalResource)resource).getLastModified()+ " : "+ ((InternalResource)resource).getLastRead());
+        long lastModified=((InternalResource)resource).getLastModified();
+        if (lastModified == 0) {
+          removed.add(resource);
+          for (          ResourceChangeNotifier notifier : notifiers) {
+            ChangeSetImpl changeSet=(ChangeSetImpl)notifications.get(notifier);
+            if (changeSet == null) {
+              changeSet=new ChangeSetImpl();
+              notifications.put(notifier,changeSet);
+            }
+            if (changeSet.getResourcesRemoved().isEmpty()) {
+              changeSet.setResourcesRemoved(new ArrayList<Resource>());
+            }
+            changeSet.getResourcesRemoved().add(resource);
           }
-          if (changeSet.getResourcesRemoved().isEmpty()) {
-            changeSet.setResourcesRemoved(new ArrayList<Resource>());
-          }
-          changeSet.getResourcesRemoved().add(resource);
         }
-      }
- else       if (((InternalResource)resource).getLastRead() < lastModified) {
-        for (        ResourceChangeNotifier notifier : notifiers) {
-          ChangeSetImpl changeSet=(ChangeSetImpl)notifications.get(notifier);
-          if (changeSet == null) {
-            changeSet=new ChangeSetImpl();
-            notifications.put(notifier,changeSet);
+ else         if (((InternalResource)resource).getLastRead() < lastModified) {
+          for (          ResourceChangeNotifier notifier : notifiers) {
+            ChangeSetImpl changeSet=(ChangeSetImpl)notifications.get(notifier);
+            if (changeSet == null) {
+              changeSet=new ChangeSetImpl();
+              notifications.put(notifier,changeSet);
+            }
+            if (changeSet.getResourcesModified().isEmpty()) {
+              changeSet.setResourcesModified(new ArrayList<Resource>());
+            }
+            changeSet.getResourcesModified().add(resource);
           }
-          if (changeSet.getResourcesModified().isEmpty()) {
-            changeSet.setResourcesModified(new ArrayList<Resource>());
-          }
-          changeSet.getResourcesModified().add(resource);
         }
       }
     }
-  }
-  for (  Resource resource : removed) {
-    this.resources.remove(resource);
-  }
-  for (  Entry<ResourceChangeNotifier,ChangeSet> entry : notifications.entrySet()) {
-    ResourceChangeNotifier notifier=entry.getKey();
-    ChangeSet changeSet=entry.getValue();
-    notifier.publishKnowledgeBaseChangeSet(changeSet);
+    for (    Resource resource : removed) {
+      this.resources.remove(resource);
+    }
+    for (    Entry<ResourceChangeNotifier,ChangeSet> entry : notifications.entrySet()) {
+      ResourceChangeNotifier notifier=entry.getKey();
+      ChangeSet changeSet=entry.getValue();
+      notifier.publishKnowledgeBaseChangeSet(changeSet);
+    }
   }
 }
