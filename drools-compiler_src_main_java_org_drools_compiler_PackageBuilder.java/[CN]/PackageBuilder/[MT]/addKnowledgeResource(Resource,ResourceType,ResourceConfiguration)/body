@@ -1,0 +1,85 @@
+{
+  try {
+switch (type) {
+case DRL:
+{
+        ((InternalResource)resource).setResourceType(type);
+        addPackageFromDrl(resource);
+        break;
+      }
+case DSLR:
+{
+      ((InternalResource)resource).setResourceType(type);
+      addPackageFromDslr(resource);
+      break;
+    }
+case DSL:
+{
+    ((InternalResource)resource).setResourceType(type);
+    addDsl(resource);
+    break;
+  }
+case XDRL:
+{
+  ((InternalResource)resource).setResourceType(type);
+  addPackageFromXml(resource);
+  break;
+}
+case DRF:
+{
+((InternalResource)resource).setResourceType(type);
+addProcessFromXml(resource);
+break;
+}
+case DTABLE:
+{
+((InternalResource)resource).setResourceType(type);
+DecisionTableConfiguration dtableConfiguration=(DecisionTableConfiguration)configuration;
+String string=DecisionTableFactory.loadFromInputStream(resource.getInputStream(),dtableConfiguration);
+addPackageFromDrl(new StringReader(string));
+break;
+}
+case PKG:
+{
+InputStream is=resource.getInputStream();
+Package pkg=(Package)DroolsStreamUtils.streamIn(is);
+is.close();
+addPackage(pkg);
+break;
+}
+case ChangeSet:
+{
+((InternalResource)resource).setResourceType(type);
+XmlChangeSetReader reader=new XmlChangeSetReader(this.configuration.getSemanticModules());
+if (resource instanceof ClassPathResource) {
+reader.setClassLoader(((ClassPathResource)resource).getClassLoader());
+}
+ else {
+reader.setClassLoader(this.configuration.getClassLoader());
+}
+ChangeSet chageSet=reader.read(resource.getReader());
+if (chageSet == null) {
+}
+for (Resource nestedResource : chageSet.getResourcesAdded()) {
+InternalResource iNestedResourceResource=(InternalResource)nestedResource;
+if (iNestedResourceResource.isDirectory()) {
+this.resourceDirectories.add(iNestedResourceResource);
+for (Resource childResource : iNestedResourceResource.listResources()) {
+((InternalResource)childResource).setResourceType(iNestedResourceResource.getResourceType());
+addKnowledgeResource(childResource,iNestedResourceResource.getResourceType(),iNestedResourceResource.getConfiguration());
+}
+}
+ else {
+addKnowledgeResource(iNestedResourceResource,iNestedResourceResource.getResourceType(),iNestedResourceResource.getConfiguration());
+}
+}
+}
+}
+}
+ catch (RuntimeException e) {
+throw e;
+}
+catch (Exception e) {
+throw new RuntimeException(e);
+}
+}

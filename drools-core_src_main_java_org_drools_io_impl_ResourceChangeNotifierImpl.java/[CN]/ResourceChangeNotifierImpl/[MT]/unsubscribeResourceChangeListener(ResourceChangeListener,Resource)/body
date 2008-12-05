@@ -1,12 +1,14 @@
 {
-  Set<ResourceChangeListener> listeners=this.subscriptions.get(resource);
-  if (listeners == null) {
-    return;
-  }
-  if (listeners.isEmpty()) {
-    this.subscriptions.remove(resource);
-    for (    ResourceChangeMonitor monitor : this.monitors) {
-      monitor.unsubscribeNotifier(this,resource);
+synchronized (this.subscriptions) {
+    Set<ResourceChangeListener> listeners=this.subscriptions.get(resource);
+    if (listeners == null) {
+      return;
+    }
+    if (listeners.isEmpty()) {
+      this.subscriptions.remove(resource);
+      for (      ResourceChangeMonitor monitor : this.monitors) {
+        monitor.unsubscribeNotifier(this,resource);
+      }
     }
   }
 }
