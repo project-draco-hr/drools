@@ -1,0 +1,27 @@
+{
+  Package pkg=this.pkgRegistryMap.get(newPkg.getName()).getPackage();
+  if (pkg == null) {
+    pkg=newPackage(new PackageDescr(newPkg.getName())).getPackage();
+  }
+  pkg.getDialectRuntimeRegistry().merge(newPkg.getDialectRuntimeRegistry(),this.rootClassLoader);
+  if (newPkg.getFunctions() != null) {
+    for (    Map.Entry<String,Function> entry : newPkg.getFunctions().entrySet()) {
+      pkg.addFunction(entry.getValue());
+    }
+  }
+  pkg.getClassFieldAccessorStore().merge(newPkg.getClassFieldAccessorStore());
+  pkg.getDialectRuntimeRegistry().onBeforeExecute();
+  TypeDeclaration lastType=null;
+  try {
+    if (newPkg.getTypeDeclarations() != null) {
+      for (      TypeDeclaration type : newPkg.getTypeDeclarations().values()) {
+        lastType=type;
+        type.setTypeClass(this.rootClassLoader.loadClass(pkg.getName() + "." + type.getTypeName()));
+      }
+    }
+  }
+ catch (  ClassNotFoundException e) {
+    throw new RuntimeDroolsException("unable to resolve Type Declaration class '" + lastType.getTypeName() + "'");
+  }
+  mergePackage(pkg,newPkg);
+}

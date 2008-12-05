@@ -39,31 +39,38 @@ String string=DecisionTableFactory.loadFromInputStream(resource.getInputStream()
 addPackageFromDrl(new StringReader(string));
 break;
 }
-case COMPOSITION:
+case PKG:
+{
+InputStream is=resource.getInputStream();
+Package pkg=(Package)DroolsStreamUtils.streamIn(is);
+is.close();
+addPackage(pkg);
+break;
+}
+case ChangeSet:
 {
 ((InternalResource)resource).setKnowledgeType(type);
-XmlCompositionReader reader=new XmlCompositionReader(this.configuration.getSemanticModules());
-KnowledgeComposition composition=reader.read(resource.getReader());
-for (KnowledgeResource kresource : composition.getResources()) {
-Resource ioresource=null;
-String src=kresource.getSource();
-if (src.trim().startsWith("classpath:")) {
-ioresource=new ClassPathResource(src.substring(src.indexOf(':') + 1),this.configuration.getClassLoader());
+XmlChangeSetReader reader=new XmlChangeSetReader(this.configuration.getSemanticModules());
+if (resource instanceof ClassPathResource) {
+reader.setClassLoader(((ClassPathResource)resource).getClassLoader());
 }
  else {
-ioresource=new UrlResource(src);
+reader.setClassLoader(this.configuration.getClassLoader());
 }
-((InternalResource)ioresource).setKnowledgeType(kresource.getType());
-if (ioresource.isDirectory()) {
-this.resourceDirectories.add(ioresource);
-for (Resource childResource : ioresource.listResources()) {
-  ((InternalResource)childResource).setKnowledgeType(kresource.getType());
-  ((InternalResource)childResource).setFromDirectory(true);
-  addKnowledgeResource(childResource,kresource.getType(),kresource.getConfiguration());
+ChangeSet chageSet=reader.read(resource.getReader());
+if (chageSet == null) {
+}
+for (Resource nestedResource : chageSet.getResourcesAdded()) {
+InternalResource iNestedResourceResource=(InternalResource)nestedResource;
+if (iNestedResourceResource.isDirectory()) {
+this.resourceDirectories.add(iNestedResourceResource);
+for (Resource childResource : iNestedResourceResource.listResources()) {
+((InternalResource)childResource).setKnowledgeType(iNestedResourceResource.getKnowledgeType());
+addKnowledgeResource(childResource,iNestedResourceResource.getKnowledgeType(),iNestedResourceResource.getConfiguration());
 }
 }
  else {
-addKnowledgeResource(ioresource,kresource.getType(),kresource.getConfiguration());
+addKnowledgeResource(iNestedResourceResource,iNestedResourceResource.getKnowledgeType(),iNestedResourceResource.getConfiguration());
 }
 }
 }

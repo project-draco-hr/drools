@@ -1,0 +1,28 @@
+{
+  PackageBuilderConfiguration conf=new PackageBuilderConfiguration();
+  XmlChangeSetReader xmlReader=new XmlChangeSetReader(conf.getSemanticModules());
+  String str="";
+  str+="<change-set ";
+  str+="xmlns='http://drools.org/drools-5.0/change-set' ";
+  str+="xmlns:xs='http://www.w3.org/2001/XMLSchema-instance' ";
+  str+="xs:schemaLocation='http://drools.org/drools-5.0/change-set drools-change-set-4.0.xsd' >";
+  str+="    <add> ";
+  str+="        <resource source='http://www.domain.com/test.drl' type='DRL' />";
+  str+="        <resource source='http://www.domain.com/test.xls' type='DTABLE' >";
+  str+="            <decisiontable-conf worksheet-name='sheet10' input-type='XLS' />";
+  str+="        </resource>";
+  str+="    </add> ";
+  str+="</change-set>";
+  StringReader reader=new StringReader(str);
+  ChangeSet changeSet=xmlReader.read(reader);
+  assertEquals(2,changeSet.getResourcesAdded().size());
+  UrlResource resource=(UrlResource)((List)changeSet.getResourcesAdded()).get(0);
+  assertNull(resource.getConfiguration());
+  assertEquals("http://www.domain.com/test.drl",resource.getURL().toString());
+  assertEquals(KnowledgeType.DRL,resource.getKnowledgeType());
+  resource=(UrlResource)((List)changeSet.getResourcesAdded()).get(1);
+  assertEquals("http://www.domain.com/test.xls",resource.getURL().toString());
+  assertEquals(KnowledgeType.DTABLE,resource.getKnowledgeType());
+  DecisionTableConfiguration dtConf=(DecisionTableConfiguration)resource.getConfiguration();
+  assertEquals(DecisionTableInputType.XLS,dtConf.getInputType());
+}

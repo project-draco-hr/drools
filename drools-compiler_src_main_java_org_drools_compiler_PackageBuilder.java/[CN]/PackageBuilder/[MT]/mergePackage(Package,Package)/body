@@ -1,0 +1,45 @@
+{
+  final Map<String,ImportDeclaration> imports=pkg.getImports();
+  imports.putAll(newPkg.getImports());
+  pkg.setResourceDirectories(newPkg.getResourceDirectories());
+  String lastType=null;
+  try {
+    if (newPkg.getGlobals() != null && newPkg.getGlobals() != Collections.EMPTY_MAP) {
+      Map<String,String> globals=pkg.getGlobals();
+      for (      final Map.Entry<String,String> entry : newPkg.getGlobals().entrySet()) {
+        final String identifier=entry.getKey();
+        final String type=entry.getValue();
+        lastType=type;
+        if (globals.containsKey(identifier) && !globals.get(identifier).equals(type)) {
+          throw new PackageIntegrationException(pkg);
+        }
+ else {
+          pkg.addGlobal(identifier,this.rootClassLoader.loadClass(type));
+          this.globals.put(identifier,this.rootClassLoader.loadClass(type));
+        }
+      }
+    }
+  }
+ catch (  ClassNotFoundException e) {
+    throw new RuntimeDroolsException("Unable to resolve class '" + lastType + "'");
+  }
+  if (newPkg.getTypeDeclarations() != null) {
+    for (    TypeDeclaration type : newPkg.getTypeDeclarations().values()) {
+      if (!pkg.getTypeDeclarations().containsKey(type.getTypeName())) {
+        pkg.addTypeDeclaration(type);
+      }
+    }
+  }
+  final Rule[] newRules=newPkg.getRules();
+  for (int i=0; i < newRules.length; i++) {
+    final Rule newRule=newRules[i];
+    pkg.addRule(newRule);
+  }
+  if (newPkg.getRuleFlows() != null) {
+    final Map flows=newPkg.getRuleFlows();
+    for (final Iterator iter=flows.values().iterator(); iter.hasNext(); ) {
+      final Process flow=(Process)iter.next();
+      pkg.addProcess(flow);
+    }
+  }
+}
