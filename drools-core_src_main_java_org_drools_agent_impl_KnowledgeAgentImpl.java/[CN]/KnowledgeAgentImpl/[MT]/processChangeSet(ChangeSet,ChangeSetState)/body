@@ -1,0 +1,32 @@
+{
+  for (  Resource child : changeSet.getResourcesAdded()) {
+    if (((InternalResource)child).getResourceType() == ResourceType.PKG) {
+      changeSetState.pkgs.add(child);
+    }
+    ResourceMapping mapping=this.resources.get(child);
+    if (mapping == null) {
+      this.notifier.subscribeResourceChangeListener(this,child);
+      mapping=new ResourceMapping(child);
+      this.resources.put(child,mapping);
+    }
+  }
+  for (  Resource child : changeSet.getResourcesRemoved()) {
+    if (((InternalResource)child).getResourceType() == ResourceType.ChangeSet) {
+      processChangeSet(child,changeSetState);
+    }
+ else     if (changeSetState.scanDirectories && ((InternalResource)child).isDirectory()) {
+      this.resourceDirectories.remove(child);
+      this.notifier.unsubscribeResourceChangeListener(this,child);
+    }
+ else {
+      this.resources.remove(child);
+      this.notifier.unsubscribeResourceChangeListener(this,child);
+    }
+  }
+  for (  Resource resource : this.resources.keySet()) {
+    if (((InternalResource)resource).getResourceType() != ResourceType.ChangeSet && ((InternalResource)resource).getResourceType() != ResourceType.PKG || changeSetState.scanDirectories && !((InternalResource)resource).isDirectory()) {
+      changeSetState.needsKnowledgeBuilder=true;
+      break;
+    }
+  }
+}

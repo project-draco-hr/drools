@@ -1,0 +1,28 @@
+{
+synchronized (this.resources) {
+    for (    Resource child : changeSetState.pkgs) {
+      try {
+        InputStream is=child.getInputStream();
+        Package pkg=(Package)DroolsStreamUtils.streamIn(is);
+        ((KnowledgeBaseImpl)this.kbase).ruleBase.addPackage(pkg);
+        is.close();
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+      }
+    }
+    if (changeSetState.needsKnowledgeBuilder) {
+      Resource[] resourcesClone=this.resources.keySet().toArray(new Resource[this.resources.size()]);
+      this.resources.clear();
+      KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+      for (      Resource resource : resourcesClone) {
+        System.out.println("building : " + resource);
+        if (((InternalResource)resource).getResourceType() != ResourceType.PKG) {
+          kbuilder.add(resource,((InternalResource)resource).getResourceType());
+        }
+      }
+      this.kbase=KnowledgeBaseFactory.newKnowledgeBase();
+      this.kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+    }
+  }
+}
