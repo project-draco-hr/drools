@@ -1,0 +1,27 @@
+{
+  this.kbase=kbase;
+  this.resources=new HashMap<Resource,ResourceMapping>();
+  this.resourceDirectories=new HashSet<Resource>();
+  this.listener=SystemEventListenerFactory.getSystemEventListener();
+  this.newInstance=true;
+  this.queue=new LinkedBlockingQueue<ChangeSet>();
+  boolean scanResources=false;
+  boolean monitor=false;
+  if (configuration != null) {
+    this.notifier=(ResourceChangeNotifierImpl)ResourceFactory.getResourceChangeNotifierService();
+    if (((KnowledgeAgentConfigurationImpl)configuration).isMonitorChangeSetEvents()) {
+      monitor=true;
+    }
+    if (((KnowledgeAgentConfigurationImpl)configuration).isScanDirectories()) {
+      this.scanDirectories=true;
+    }
+    scanResources=((KnowledgeAgentConfigurationImpl)configuration).isScanResources();
+    if (scanResources) {
+      this.notifier.addResourceChangeMonitor(ResourceFactory.getResourceChangeScannerService());
+      monitor=true;
+    }
+  }
+  monitorResourceChangeEvents(monitor);
+  buildResourceMapping(kbase);
+  this.listener.info("KnowledgAgent created, with configuration:\nmonitorChangeSetEvents=" + monitor + " scanResources="+ scanResources+ " scanDirectories="+ this.scanDirectories);
+}
