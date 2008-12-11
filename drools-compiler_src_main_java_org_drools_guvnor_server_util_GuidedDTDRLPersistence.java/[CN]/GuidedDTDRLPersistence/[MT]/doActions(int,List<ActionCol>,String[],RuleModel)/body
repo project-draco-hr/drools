@@ -34,8 +34,19 @@
         if (a == null) {
           a=new LabelledAction();
           a.boundName=sf.boundName;
-          a.action=new ActionSetField(sf.boundName);
+          if (!sf.update) {
+            a.action=new ActionSetField(sf.boundName);
+          }
+ else {
+            a.action=new ActionUpdateField(sf.boundName);
+          }
           actions.add(a);
+        }
+ else         if (sf.update && !(a.action instanceof ActionUpdateField)) {
+          ActionSetField old=(ActionSetField)a.action;
+          ActionUpdateField update=new ActionUpdateField(sf.boundName);
+          update.fieldValues=old.fieldValues;
+          a.action=update;
         }
         ActionSetField asf=(ActionSetField)a.action;
         ActionFieldValue val=new ActionFieldValue(sf.factField,cell,sf.type);
