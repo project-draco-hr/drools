@@ -50,6 +50,8 @@ catch (  NoSuchFieldException e) {
   parserContext.setInterceptors(interceptors);
   parserContext.setStrictTypeEnforcement(strictMode);
   resolvedInputs=new HashMap<String,Class>(inputIdentifiers.length);
+  parserContext.addInput("drools",KnowledgeHelper.class);
+  resolvedInputs.put("drools",KnowledgeHelper.class);
   String lastIdentifier=null;
   String lastType=null;
   try {
@@ -65,7 +67,9 @@ catch (  NoSuchFieldException e) {
     e.printStackTrace();
     throw new RuntimeDroolsException("Unable to resolve class '" + lastType + "' for identifier '"+ lastIdentifier);
   }
-  parserContext.addInput("drools",KnowledgeHelper.class);
-  resolvedInputs.put("drools",KnowledgeHelper.class);
+  if (parserContext.getInputs().get("kcontext") == null) {
+    parserContext.addInput("kcontext",RuleContext.class);
+    resolvedInputs.put("kcontext",RuleContext.class);
+  }
   return compile(expression,classLoader,parserContext,languageLevel);
 }
