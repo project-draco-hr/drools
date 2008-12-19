@@ -2,7 +2,13 @@
   if (extractor1.isNullValue(workingMemory,object1)) {
     return false;
   }
-  long distStart=Math.abs(((EventFactHandle)object1).getStartTimestamp() - ((EventFactHandle)object2).getStartTimestamp());
-  long distEnd=Math.abs(((EventFactHandle)object1).getEndTimestamp() - ((EventFactHandle)object2).getEndTimestamp());
+  long rightStartTS, rightEndTS;
+  long leftStartTS, leftEndTS;
+  rightStartTS=this.unwrapRight ? extractor1.getLongValue(workingMemory,object1) : ((EventFactHandle)object1).getStartTimestamp();
+  rightEndTS=this.unwrapRight ? rightStartTS : ((EventFactHandle)object1).getEndTimestamp();
+  leftStartTS=this.unwrapLeft ? extractor2.getLongValue(workingMemory,object2) : ((EventFactHandle)object2).getStartTimestamp();
+  leftEndTS=this.unwrapLeft ? leftStartTS : ((EventFactHandle)object2).getEndTimestamp();
+  long distStart=Math.abs(rightStartTS - leftStartTS);
+  long distEnd=Math.abs(rightEndTS - leftEndTS);
   return this.getOperator().isNegated() ^ (distStart <= this.startDev && distEnd <= this.endDev);
 }

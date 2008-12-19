@@ -2,7 +2,29 @@
   if (context.rightNull) {
     return false;
   }
-  long distStart=Math.abs(((EventFactHandle)((ObjectVariableContextEntry)context).right).getStartTimestamp() - ((EventFactHandle)left).getStartTimestamp());
-  long distEnd=Math.abs(((EventFactHandle)((ObjectVariableContextEntry)context).right).getEndTimestamp() - ((EventFactHandle)left).getEndTimestamp());
+  long rightStartTS, rightEndTS;
+  long leftStartTS, leftEndTS;
+  if (this.unwrapRight) {
+    if (context instanceof ObjectVariableContextEntry) {
+      if (((ObjectVariableContextEntry)context).right instanceof Date) {
+        rightStartTS=((Date)((ObjectVariableContextEntry)context).right).getTime();
+      }
+ else {
+        rightStartTS=((Number)((ObjectVariableContextEntry)context).right).longValue();
+      }
+    }
+ else {
+      rightStartTS=((LongVariableContextEntry)context).right;
+    }
+    rightEndTS=rightStartTS;
+  }
+ else {
+    rightStartTS=((EventFactHandle)((ObjectVariableContextEntry)context).right).getStartTimestamp();
+    rightEndTS=((EventFactHandle)((ObjectVariableContextEntry)context).right).getEndTimestamp();
+  }
+  leftStartTS=this.unwrapLeft ? context.declaration.getExtractor().getLongValue(workingMemory,left) : ((EventFactHandle)left).getStartTimestamp();
+  leftEndTS=this.unwrapLeft ? rightStartTS : ((EventFactHandle)left).getEndTimestamp();
+  long distStart=Math.abs(rightStartTS - leftStartTS);
+  long distEnd=Math.abs(rightEndTS - leftEndTS);
   return this.getOperator().isNegated() ^ (distStart <= this.startDev && distEnd <= this.endDev);
 }
