@@ -4,7 +4,15 @@
   for (  Map.Entry<String,String> mapping : getSubProcessNode().getOutMappings().entrySet()) {
     VariableScopeInstance variableScopeInstance=(VariableScopeInstance)resolveContextInstance(VariableScope.VARIABLE_SCOPE,mapping.getValue());
     if (variableScopeInstance != null) {
-      variableScopeInstance.setVariable(mapping.getValue(),subProcessVariableScopeInstance.getVariable(mapping.getKey()));
+      Object value=subProcessVariableScopeInstance.getVariable(mapping.getKey());
+      if (value == null) {
+        try {
+          value=MVEL.eval(mapping.getKey(),new VariableScopeResolverFactory(subProcessVariableScopeInstance));
+        }
+ catch (        Throwable t) {
+        }
+      }
+      variableScopeInstance.setVariable(mapping.getValue(),value);
     }
  else {
       System.err.println("Could not find variable scope for variable " + mapping.getValue());

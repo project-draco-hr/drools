@@ -3,7 +3,15 @@
     Map.Entry<String,String> mapping=iterator.next();
     VariableScopeInstance variableScopeInstance=(VariableScopeInstance)resolveContextInstance(VariableScope.VARIABLE_SCOPE,mapping.getValue());
     if (variableScopeInstance != null) {
-      variableScopeInstance.setVariable(mapping.getValue(),workItem.getResult(mapping.getKey()));
+      Object value=workItem.getResult(mapping.getKey());
+      if (value == null) {
+        try {
+          value=MVEL.eval(mapping.getKey(),new WorkItemResolverFactory(workItem));
+        }
+ catch (        Throwable t) {
+        }
+      }
+      variableScopeInstance.setVariable(mapping.getValue(),value);
     }
  else {
       System.err.println("Could not find variable scope for variable " + mapping.getValue());

@@ -5,14 +5,23 @@
   }
   Map<String,Object> parameters=new HashMap<String,Object>();
   for (  Map.Entry<String,String> mapping : getSubProcessNode().getInMappings().entrySet()) {
+    Object parameterValue=null;
     VariableScopeInstance variableScopeInstance=(VariableScopeInstance)resolveContextInstance(VariableScope.VARIABLE_SCOPE,mapping.getValue());
     if (variableScopeInstance != null) {
-      parameters.put(mapping.getKey(),variableScopeInstance.getVariable(mapping.getValue()));
+      parameterValue=variableScopeInstance.getVariable(mapping.getValue());
     }
  else {
-      System.err.println("Could not find variable scope for variable " + mapping.getValue());
-      System.err.println("when trying to execute SubProcess node " + getSubProcessNode().getName());
-      System.err.println("Continuing without setting parameter.");
+      try {
+        parameterValue=MVEL.eval(mapping.getValue(),new NodeInstanceResolverFactory(this));
+      }
+ catch (      Throwable t) {
+        System.err.println("Could not find variable scope for variable " + mapping.getValue());
+        System.err.println("when trying to execute SubProcess node " + getSubProcessNode().getName());
+        System.err.println("Continuing without setting parameter.");
+      }
+    }
+    if (parameterValue != null) {
+      parameters.put(mapping.getKey(),parameterValue);
     }
   }
   String processId=getSubProcessNode().getProcessId();
