@@ -3,22 +3,26 @@
     return;
   }
   final ClassFieldInspector inspector=new ClassFieldInspector(clazz);
-  String[] fields=(String[])inspector.getFieldNames().keySet().toArray(new String[inspector.getFieldNames().size()]);
+  Set<String> fieldSet=new HashSet<String>();
+  fieldSet.addAll(inspector.getFieldNames().keySet());
+  fieldSet.add("this");
+  String[] fields=fieldSet.toArray(new String[]{});
   Arrays.sort(fields);
   fields=removeIrrelevantFields(fields);
   this.builder.addFieldsForType(shortTypeName,fields);
   Method[] methods=clazz.getMethods();
-  List modifierStrings=new ArrayList();
-  for (int i=0; i < methods.length; i++) {
-    Method method=methods[i];
-    modifierStrings.add((String)method.getName());
+  List<String> modifierStrings=new ArrayList<String>();
+  for (  Method method : methods) {
+    modifierStrings.add(method.getName());
   }
   String[] modifiers=new String[modifierStrings.size()];
   modifierStrings.toArray(modifiers);
   this.builder.addModifiersForType(shortTypeName,modifiers);
-  for (int i=0; i < fields.length; i++) {
-    final Class type=(Class)inspector.getFieldTypes().get(fields[i]);
+  fieldSet.remove("this");
+  this.builder.addFieldType(shortTypeName + ".this",SuggestionCompletionEngine.TYPE_OBJECT);
+  for (  String field : fieldSet) {
+    final Class type=inspector.getFieldTypes().get(field);
     final String fieldType=getFieldType(type);
-    this.builder.addFieldType(shortTypeName + "." + fields[i],fieldType);
+    this.builder.addFieldType(shortTypeName + "." + field,fieldType);
   }
 }
