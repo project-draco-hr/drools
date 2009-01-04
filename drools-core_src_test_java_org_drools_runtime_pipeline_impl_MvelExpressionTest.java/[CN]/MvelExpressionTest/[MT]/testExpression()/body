@@ -1,0 +1,15 @@
+{
+  MockClass mock=new MockClass();
+  Callable callable=PipelineFactory.newCallable();
+  Action action=PipelineFactory.newMvelAction("this.setValues( [0, 1, 2, 3, 4] ) ");
+  callable.addReceiver(action);
+  Expression expr=PipelineFactory.newMvelExpression("this.values");
+  action.addReceiver(expr);
+  expr.addReceiver(callable);
+  assertNull(mock.getValues());
+  List<Integer> list=(List<Integer>)callable.call(mock,new BasePipelineContext(Thread.currentThread().getContextClassLoader()));
+  System.out.println(list.get(0));
+  assertEquals(5,list.size());
+  assertEquals(0,list.get(0).intValue());
+  assertEquals(4,list.get(4).intValue());
+}
