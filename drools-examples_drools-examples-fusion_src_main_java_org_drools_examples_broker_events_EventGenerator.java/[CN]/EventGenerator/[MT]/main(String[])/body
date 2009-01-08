@@ -1,0 +1,22 @@
+{
+  long timespam=20 * 60 * 1000;
+  long[] interval=new long[]{200,2000};
+  double[] priceChanges=new double[]{-0.1,0.1};
+  double[] startingPrices=new double[]{50,120};
+  Company[] companies=(new CompanyRegistry()).getCompanies().toArray(new Company[0]);
+  StockTickPersister persister=new StockTickPersister();
+  persister.openForSave(new FileWriter(DATA_FILE));
+  for (  Company company : companies) {
+    company.setCurrentPrice(nextStartingPrice(startingPrices));
+    StockTick tick=new StockTick(company.getSymbol(),company.getCurrentPrice(),0);
+    persister.save(tick);
+  }
+  for (long offset=0; offset < timespam; offset+=nextStep(interval)) {
+    int company=symbols.nextInt(companies.length);
+    double price=companies[company].getCurrentPrice() * (1 + nextPriceChange(priceChanges));
+    StockTick tick=new StockTick(companies[company].getSymbol(),price,offset);
+    persister.save(tick);
+    companies[company].setCurrentPrice(price);
+  }
+  persister.close();
+}

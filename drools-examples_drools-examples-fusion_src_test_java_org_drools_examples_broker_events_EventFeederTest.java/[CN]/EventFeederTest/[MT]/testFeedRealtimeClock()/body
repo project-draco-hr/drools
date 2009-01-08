@@ -1,0 +1,78 @@
+{
+  long startTime=System.currentTimeMillis() + 10000;
+  final Event<String> event1=new EventImpl<String>(startTime + 1000,"one");
+  final Event<String> event2=new EventImpl<String>(startTime + 1100,"two");
+  final Event<String> event3=new EventImpl<String>(startTime + 1120,"three");
+  final Event<String> event4=new EventImpl<String>(startTime + 1300,"four");
+  final Event<String> event5=new EventImpl<String>(startTime + 1550,"five");
+  final Event<String> event6=new EventImpl<String>(startTime + 1700,"six");
+  final Sequence seq=context.sequence("call sequence");
+  final EventSource source=context.mock(EventSource.class);
+  final EventReceiver receiver=context.mock(EventReceiver.class);
+  JDKTimerService clock=new JDKTimerService(1);
+  EventFeeder feeder=new EventFeeder(clock,source,receiver);
+  context.checking(new Expectations(){
+{
+      oneOf(source).hasNext();
+      inSequence(seq);
+      will(returnValue(true));
+      oneOf(source).getNext();
+      inSequence(seq);
+      will(returnValue(event1));
+      oneOf(receiver).receive(event1);
+      inSequence(seq);
+      oneOf(source).hasNext();
+      inSequence(seq);
+      will(returnValue(true));
+      oneOf(source).getNext();
+      inSequence(seq);
+      will(returnValue(event2));
+      oneOf(receiver).receive(event2);
+      inSequence(seq);
+      oneOf(source).hasNext();
+      inSequence(seq);
+      will(returnValue(true));
+      oneOf(source).getNext();
+      inSequence(seq);
+      will(returnValue(event3));
+      oneOf(receiver).receive(event3);
+      inSequence(seq);
+      oneOf(source).hasNext();
+      inSequence(seq);
+      will(returnValue(true));
+      oneOf(source).getNext();
+      inSequence(seq);
+      will(returnValue(event4));
+      oneOf(receiver).receive(event4);
+      inSequence(seq);
+      oneOf(source).hasNext();
+      inSequence(seq);
+      will(returnValue(true));
+      oneOf(source).getNext();
+      inSequence(seq);
+      will(returnValue(event5));
+      oneOf(receiver).receive(event5);
+      inSequence(seq);
+      oneOf(source).hasNext();
+      inSequence(seq);
+      will(returnValue(true));
+      oneOf(source).getNext();
+      inSequence(seq);
+      will(returnValue(event6));
+      oneOf(receiver).receive(event6);
+      inSequence(seq);
+      oneOf(source).hasNext();
+      inSequence(seq);
+      will(returnValue(false));
+    }
+  }
+);
+  feeder.feed();
+  try {
+    Thread.currentThread().sleep(20000);
+  }
+ catch (  InterruptedException e) {
+    e.printStackTrace();
+  }
+  context.assertIsSatisfied();
+}
