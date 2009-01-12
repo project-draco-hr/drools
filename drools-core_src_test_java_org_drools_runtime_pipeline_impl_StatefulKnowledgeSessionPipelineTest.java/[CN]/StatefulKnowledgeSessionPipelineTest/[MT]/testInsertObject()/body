@@ -1,11 +1,11 @@
 {
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
-  StatefulKnowledgeSessionInsertStage stage1=new StatefulKnowledgeSessionInsertStage();
-  MvelAction mvelAction=new MvelAction("context.resultHandler.handleResult( context.handles )");
-  stage1.setReceiver(mvelAction);
-  StatefulKnowledgeSessionPipelineImpl pipeline=new StatefulKnowledgeSessionPipelineImpl(ksession);
-  pipeline.setReceiver(stage1);
+  Action executeResultHandler=PipelineFactory.newExecuteResultHandler();
+  StatefulKnowledgeSessionInsertStage insertStage=new StatefulKnowledgeSessionInsertStage();
+  insertStage.setReceiver(executeResultHandler);
+  Pipeline pipeline=PipelineFactory.newStatefulKnowledgeSessionPipeline(ksession);
+  pipeline.setReceiver(insertStage);
   assertEquals(0,ksession.getObjects().size());
   ResultHandlerImpl resultHanadle=new ResultHandlerImpl();
   pipeline.insert("Hello",resultHanadle);
