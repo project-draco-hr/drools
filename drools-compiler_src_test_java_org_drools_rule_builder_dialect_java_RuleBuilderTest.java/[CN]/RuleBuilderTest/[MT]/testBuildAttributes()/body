@@ -1,27 +1,41 @@
 {
-  Rule rule=new Rule("my rule");
-  List attributes=new ArrayList();
-  attributes.add(new AttributeDescr("dialect","java"));
-  attributes.add(new AttributeDescr("no-loop","true"));
-  attributes.add(new AttributeDescr("enabled","false"));
-  attributes.add(new AttributeDescr("ruleflow-group","mygroup"));
-  RuleBuildContext.setAttributes(rule,null,attributes);
-  assertTrue(rule.isNoLoop());
-  assertFalse(rule.isEffective(new TimeMachine(),null,null));
-  assertEquals("mygroup",rule.getRuleFlowGroup());
-  attributes=new ArrayList();
-  attributes.add(new AttributeDescr("date-effective","10-Jul-1974"));
-  attributes.add(new AttributeDescr("date-expires","10-Jul-2040"));
-  rule=new Rule("myrule");
-  RuleBuildContext.setAttributes(rule,null,attributes);
-  final Field eff=rule.getClass().getDeclaredField("dateEffective");
-  eff.setAccessible(true);
-  final Calendar effectiveDate=(Calendar)eff.get(rule);
-  assertNotNull(effectiveDate);
-  assertEquals(1974,effectiveDate.get(Calendar.YEAR));
-  final Field exp=rule.getClass().getDeclaredField("dateExpires");
-  exp.setAccessible(true);
-  final Calendar expiryDate=(Calendar)exp.get(rule);
-  assertEquals(2040,expiryDate.get(Calendar.YEAR));
-  assertNotNull(expiryDate);
+  final RuleBuildContext context=mockery.mock(RuleBuildContext.class);
+  final Rule rule=mockery.mock(Rule.class);
+  final RuleDescr ruleDescr=new RuleDescr("my rule");
+  ruleDescr.addAttribute(new AttributeDescr("no-loop","true"));
+  ruleDescr.addAttribute(new AttributeDescr("auto-focus","false"));
+  ruleDescr.addAttribute(new AttributeDescr("agenda-group","my agenda"));
+  ruleDescr.addAttribute(new AttributeDescr("activation-group","my activation"));
+  ruleDescr.addAttribute(new AttributeDescr("ruleflow-group","mygroup"));
+  ruleDescr.addAttribute(new AttributeDescr("lock-on-active",""));
+  ruleDescr.addAttribute(new AttributeDescr("enabled","false"));
+  ruleDescr.addAttribute(new AttributeDescr("duration","60"));
+  ruleDescr.addAttribute(new AttributeDescr("date-effective","10-Jul-1974"));
+  ruleDescr.addAttribute(new AttributeDescr("date-expires","10-Jul-2040"));
+  final Calendar effective=Calendar.getInstance();
+  effective.setTime(DateUtils.parseDate("10-Jul-1974"));
+  final Calendar expires=Calendar.getInstance();
+  expires.setTime(DateUtils.parseDate("10-Jul-2040"));
+  mockery.checking(new Expectations(){
+{
+      allowing(context).getRule();
+      will(returnValue(rule));
+      allowing(context).getRuleDescr();
+      will(returnValue(ruleDescr));
+      oneOf(rule).setNoLoop(true);
+      oneOf(rule).setAutoFocus(false);
+      oneOf(rule).setAgendaGroup("my agenda");
+      oneOf(rule).setActivationGroup("my activation");
+      oneOf(rule).setRuleFlowGroup("mygroup");
+      oneOf(rule).setLockOnActive(true);
+      oneOf(rule).setEnabled(EnabledBoolean.ENABLED_FALSE);
+      oneOf(rule).setDuration(60);
+      oneOf(rule).setDateEffective(effective);
+      oneOf(rule).setDateExpires(expires);
+    }
+  }
+);
+  RuleBuilder builder=new RuleBuilder();
+  builder.buildAttributes(context);
+  mockery.assertIsSatisfied();
 }
