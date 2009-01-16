@@ -1,0 +1,21 @@
+{
+  final MockEvalCondition eval=new MockEvalCondition(true);
+  final EvalConditionNode parent=new EvalConditionNode(1,new MockTupleSource(15),eval,buildContext);
+  final EvalConditionNode node=new EvalConditionNode(2,parent,eval,buildContext);
+  parent.addTupleSink(node);
+  final MockLeftTupleSink sink=new MockLeftTupleSink();
+  node.addTupleSink(sink);
+  final DefaultFactHandle f0=new DefaultFactHandle(0,"stilton");
+  final LeftTuple tuple0=new LeftTuple(f0,sink,true);
+  node.assertLeftTuple(tuple0,this.context,this.workingMemory);
+  EvalMemory memory=(EvalMemory)this.workingMemory.getNodeMemory(node);
+  assertEquals(1,memory.tupleMemory.size());
+  assertTrue(memory.tupleMemory.contains(tuple0));
+  assertEquals(1,sink.getAsserted().size());
+  RuleRemovalContext removalContext=new RuleRemovalContext();
+  InternalWorkingMemory[] workingMemories=new InternalWorkingMemory[]{this.workingMemory};
+  node.remove(removalContext,this.ruleBase.getReteooBuilder(),sink,workingMemories);
+  memory=(EvalMemory)this.workingMemory.getNodeMemory(node);
+  assertEquals(0,memory.tupleMemory.size());
+  assertFalse(memory.tupleMemory.contains(tuple0));
+}
