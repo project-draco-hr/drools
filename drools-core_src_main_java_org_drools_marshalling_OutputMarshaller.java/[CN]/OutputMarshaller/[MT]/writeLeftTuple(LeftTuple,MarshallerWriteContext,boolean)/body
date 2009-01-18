@@ -6,21 +6,17 @@
 switch (sink.getType()) {
 case NodeTypeEnums.JoinNode:
 {
-      context.out.println("JoinNode");
       for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentPrevious()) {
         stream.writeShort(PersisterEnums.RIGHT_TUPLE);
         stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
         stream.writeInt(childLeftTuple.getRightParent().getFactHandle().getId());
-        context.out.println("RightTuple int:" + childLeftTuple.getLeftTupleSink().getId() + " int:"+ childLeftTuple.getRightParent().getFactHandle().getId());
         writeLeftTuple(childLeftTuple,context,recurse);
       }
       stream.writeShort(PersisterEnums.END);
-      context.out.println("JoinNode   ---   END");
       break;
     }
 case NodeTypeEnums.EvalConditionNode:
 {
-    context.out.println("EvalConditionNode");
     for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentPrevious()) {
       stream.writeShort(PersisterEnums.LEFT_TUPLE);
       stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
@@ -65,7 +61,6 @@ break;
 }
 case NodeTypeEnums.AccumulateNode:
 {
-context.out.println("AccumulateNode");
 AccumulateMemory memory=(AccumulateMemory)context.wm.getNodeMemory((BetaNode)sink);
 AccumulateContext accctx=(AccumulateContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
 writeFactHandle(context,stream,context.resolverStrategyFactory,accctx.result.getFactHandle());
@@ -73,61 +68,50 @@ stream.writeObject(accctx.context);
 stream.writeBoolean(accctx.propagated);
 for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentPrevious()) {
 if (leftTuple.getLeftTupleSink().getId() == childLeftTuple.getLeftTupleSink().getId()) {
-  context.out.println("RightTuple(match) int:" + childLeftTuple.getLeftTupleSink().getId() + " int:"+ childLeftTuple.getRightParent().getFactHandle().getId());
   stream.writeShort(PersisterEnums.RIGHT_TUPLE);
   stream.writeInt(childLeftTuple.getRightParent().getFactHandle().getId());
 }
  else {
-  context.out.println("RightTuple(propagation) int:" + childLeftTuple.getLeftTupleSink().getId() + " int:"+ childLeftTuple.getRightParent().getFactHandle().getId());
   stream.writeShort(PersisterEnums.LEFT_TUPLE);
   stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
   writeLeftTuple(childLeftTuple,context,recurse);
 }
 }
 stream.writeShort(PersisterEnums.END);
-context.out.println("AccumulateNode   ---   END");
 break;
 }
 case NodeTypeEnums.CollectNode:
 {
-context.out.println("CollectNode");
 CollectMemory memory=(CollectMemory)context.wm.getNodeMemory((BetaNode)sink);
 CollectContext colctx=(CollectContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
 writeFactHandle(context,stream,context.resolverStrategyFactory,colctx.resultTuple.getFactHandle());
 stream.writeBoolean(colctx.propagated);
 for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentPrevious()) {
 if (leftTuple.getLeftTupleSink().getId() == childLeftTuple.getLeftTupleSink().getId()) {
-context.out.println("RightTuple(match) int:" + childLeftTuple.getLeftTupleSink().getId() + " int:"+ childLeftTuple.getRightParent().getFactHandle().getId());
 stream.writeShort(PersisterEnums.RIGHT_TUPLE);
 stream.writeInt(childLeftTuple.getRightParent().getFactHandle().getId());
 }
  else {
-context.out.println("RightTuple(propagation) int:" + childLeftTuple.getLeftTupleSink().getId() + " int:"+ childLeftTuple.getRightParent().getFactHandle().getId());
 stream.writeShort(PersisterEnums.LEFT_TUPLE);
 stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
 writeLeftTuple(childLeftTuple,context,recurse);
 }
 }
 stream.writeShort(PersisterEnums.END);
-context.out.println("CollectNode   ---   END");
 break;
 }
 case NodeTypeEnums.RightInputAdaterNode:
 {
-context.out.println("RightInputAdapterNode");
 ObjectHashMap memory=(ObjectHashMap)context.wm.getNodeMemory((NodeMemory)sink);
 InternalFactHandle ifh=(InternalFactHandle)memory.get(leftTuple);
-context.out.println("FactHandle id:" + ifh.getId());
 stream.writeInt(ifh.getId());
 stream.writeLong(ifh.getRecency());
 writeRightTuples(ifh,context);
 stream.writeShort(PersisterEnums.END);
-context.out.println("RightInputAdapterNode   ---   END");
 break;
 }
 case NodeTypeEnums.RuleTerminalNode:
 {
-context.out.println("RuleTerminalNode");
 int pos=context.terminalTupleMap.size();
 context.terminalTupleMap.put(leftTuple,pos);
 break;
