@@ -1,0 +1,30 @@
+{
+  String str="";
+  str+="package org.drools \n";
+  str+="global java.util.List list \n";
+  str+="rule rule1 \n";
+  str+="    lock-on-active true \n";
+  str+="when \n";
+  str+="    $str : String() \n";
+  str+="then \n";
+  str+="    list.add( $str ); \n";
+  str+="end \n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.insert("hello1");
+  ksession.insert("hello2");
+  ksession.insert("hello3");
+  ksession.fireAllRules();
+  assertEquals(3,list.size());
+  ksession.insert("hello4");
+  ksession.insert("hello5");
+  ksession.insert("hello6");
+  ksession.fireAllRules();
+  assertEquals(6,list.size());
+}
