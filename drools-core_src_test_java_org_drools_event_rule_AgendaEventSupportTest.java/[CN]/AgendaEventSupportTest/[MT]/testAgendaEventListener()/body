@@ -26,7 +26,7 @@
   List<KnowledgePackage> pkgs=new ArrayList<KnowledgePackage>();
   pkgs.add(new KnowledgePackageImp(pkg));
   kbase.addKnowledgePackages(pkgs);
-  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   final List agendaList=new ArrayList();
   final AgendaEventListener agendaEventListener=new AgendaEventListener(){
     public void activationCancelled(    ActivationCancelledEvent event){
@@ -49,33 +49,43 @@
     }
   }
 ;
-  session.addEventListener(agendaEventListener);
+  ksession.addEventListener(agendaEventListener);
   final Cheese cheddar=new Cheese("cheddar",15);
-  FactHandle cheddarHandle=session.insert(cheddar);
+  FactHandle cheddarHandle=ksession.insert(cheddar);
   assertEquals(1,agendaList.size());
   ActivationCreatedEvent createdEvent=(ActivationCreatedEvent)agendaList.get(0);
   assertSame(cheddarHandle,createdEvent.getActivation().getFactHandles().toArray()[0]);
+  ksession.getAgenda().clear();
+  ActivationCancelledEvent cancelledEvent=(ActivationCancelledEvent)agendaList.get(1);
+  assertEquals(ActivationCancelledCause.CLEAR,cancelledEvent.getCause());
   agendaList.clear();
   cheddar.setPrice(14);
-  session.update(cheddarHandle,cheddar);
+  ksession.update(cheddarHandle,cheddar);
+  assertEquals(1,agendaList.size());
+  createdEvent=(ActivationCreatedEvent)agendaList.get(0);
+  assertSame(cheddarHandle,createdEvent.getActivation().getFactHandles().toArray()[0]);
+  agendaList.clear();
+  cheddar.setPrice(14);
+  ksession.update(cheddarHandle,cheddar);
   assertEquals(2,agendaList.size());
-  ActivationCancelledEvent cancelledEvent=(ActivationCancelledEvent)agendaList.get(0);
+  cancelledEvent=(ActivationCancelledEvent)agendaList.get(0);
+  assertEquals(ActivationCancelledCause.WME_CHANGE,cancelledEvent.getCause());
   assertSame(cheddarHandle,cancelledEvent.getActivation().getFactHandles().toArray()[0]);
   createdEvent=(ActivationCreatedEvent)agendaList.get(1);
   assertSame(cheddarHandle,createdEvent.getActivation().getFactHandles().toArray()[0]);
   agendaList.clear();
-  session.retract(cheddarHandle);
+  ksession.retract(cheddarHandle);
   assertEquals(1,agendaList.size());
   cancelledEvent=(ActivationCancelledEvent)agendaList.get(0);
   assertNull(((InternalFactHandle)cancelledEvent.getActivation().getFactHandles().toArray()[0]).getObject());
-  cheddarHandle=session.insert(cheddar);
+  cheddarHandle=ksession.insert(cheddar);
   agendaList.clear();
-  session.getAgenda().getAgendaGroup("test group").setFocus();
+  ksession.getAgenda().getAgendaGroup("test group").setFocus();
   assertEquals(1,agendaList.size());
   final AgendaGroupPushedEvent pushedEvent=(AgendaGroupPushedEvent)agendaList.get(0);
   assertEquals("test group",pushedEvent.getAgendaGroup().getName());
   agendaList.clear();
-  session.fireAllRules();
+  ksession.fireAllRules();
   assertEquals(3,agendaList.size());
   final BeforeActivationFiredEvent beforeEvent=(BeforeActivationFiredEvent)agendaList.get(0);
   assertSame(cheddarHandle,beforeEvent.getActivation().getFactHandles().toArray()[0]);

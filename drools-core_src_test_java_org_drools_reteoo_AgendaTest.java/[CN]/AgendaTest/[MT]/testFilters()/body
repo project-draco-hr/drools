@@ -1,6 +1,15 @@
 {
   final ReteooWorkingMemory workingMemory=(ReteooWorkingMemory)ruleBase.newStatefulSession();
   final DefaultAgenda agenda=(DefaultAgenda)workingMemory.getAgenda();
+  final Boolean[] filtered=new Boolean[]{false};
+  workingMemory.addEventListener(new DefaultAgendaEventListener(){
+    public void activationCancelled(    ActivationCancelledEvent event,    WorkingMemory workingMemory){
+      if (event.getCause() == ActivationCancelledCause.FILTER) {
+        filtered[0]=true;
+      }
+    }
+  }
+);
   final Rule rule=new Rule("test-rule");
   final RuleTerminalNode node=new RuleTerminalNode(3,new MockTupleSource(2),rule,rule.getLhs(),buildContext);
   final Map results=new HashMap();
@@ -32,6 +41,7 @@
   agenda.fireNextItem(filterTrue);
   assertEquals(0,agenda.getFocus().size());
   assertEquals(new Boolean(true),results.get("fired"));
+  assertEquals(false,filtered[0].booleanValue());
   agenda.clearAndCancel();
   results.clear();
   final AgendaFilter filterFalse=new AgendaFilter(){
@@ -46,4 +56,5 @@
   agenda.fireNextItem(filterFalse);
   assertEquals(0,agenda.getFocus().size());
   assertNull(results.get("fired"));
+  assertEquals(true,filtered[0].booleanValue());
 }
