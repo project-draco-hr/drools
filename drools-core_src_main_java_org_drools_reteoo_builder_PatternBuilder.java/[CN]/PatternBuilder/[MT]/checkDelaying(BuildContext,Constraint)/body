@@ -1,0 +1,23 @@
+{
+  if (constraint instanceof VariableConstraint) {
+    Declaration target=constraint.getRequiredDeclarations()[0];
+    if (target.isPatternDeclaration() && target.getPattern().getObjectType().isEvent()) {
+      long uplimit=((VariableConstraint)constraint).getInterval().getUpperBound();
+      Duration dur=context.getRule().getDuration();
+      Duration newDur=new FixedDuration(uplimit);
+      if (dur instanceof CompositeMaxDuration) {
+        ((CompositeMaxDuration)dur).addDuration(newDur);
+      }
+ else {
+        if (dur == null) {
+          dur=newDur;
+        }
+ else {
+          dur=new CompositeMaxDuration(dur);
+          ((CompositeMaxDuration)dur).addDuration(newDur);
+        }
+        context.getRule().setDuration(dur);
+      }
+    }
+  }
+}

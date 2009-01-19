@@ -1,6 +1,7 @@
 {
   final List<?> constraints=pattern.getConstraints();
   checkRemoveIdentities(context,pattern,betaConstraints);
+  final boolean isNegative=isNegative(context);
   for (final Iterator<?> it=constraints.iterator(); it.hasNext(); ) {
     final Object object=it.next();
     if (object instanceof Declaration) {
@@ -11,10 +12,9 @@
       alphaConstraints.add(constraint);
     }
  else     if (constraint.getType().equals(Constraint.ConstraintType.BETA)) {
-      utils.checkUnboundDeclarations(context,constraint.getRequiredDeclarations());
       betaConstraints.add(constraint);
-      if (pattern.getObjectType().isEvent() && constraint.isTemporal()) {
-        checkDelaying(context);
+      if (isNegative && pattern.getObjectType().isEvent() && constraint.isTemporal()) {
+        checkDelaying(context,constraint);
       }
     }
  else {
