@@ -1,0 +1,19 @@
+{
+  final String source="rule \"Test\" when ( not $r :LiteralRestriction( operator == Operator.EQUAL ) ) then end";
+  parse("compilation_unit","compilation_unit",source);
+  RuleDescr rule=(RuleDescr)this.walker.getPackageDescr().getRules().get(0);
+  assertFalse(parser.hasErrors());
+  assertEquals("Test",rule.getName());
+  assertEquals(1,rule.getLhs().getDescrs().size());
+  assertEquals(1,((NotDescr)rule.getLhs().getDescrs().get(0)).getDescrs().size());
+  NotDescr notDescr=(NotDescr)rule.getLhs().getDescrs().get(0);
+  PatternDescr patternDescr=(PatternDescr)notDescr.getDescrs().get(0);
+  assertEquals("$r",patternDescr.getIdentifier());
+  assertEquals(1,patternDescr.getDescrs().size());
+  FieldConstraintDescr fieldConstraintDescr=(FieldConstraintDescr)patternDescr.getDescrs().get(0);
+  assertEquals("operator",fieldConstraintDescr.getFieldName());
+  assertEquals(1,fieldConstraintDescr.getRestriction().getRestrictions().size());
+  QualifiedIdentifierRestrictionDescr qualifiedIdentifierRestrictionDescr=(QualifiedIdentifierRestrictionDescr)fieldConstraintDescr.getRestriction().getRestrictions().get(0);
+  assertEquals("==",qualifiedIdentifierRestrictionDescr.getEvaluator());
+  assertEquals("Operator.EQUAL",qualifiedIdentifierRestrictionDescr.getText());
+}
