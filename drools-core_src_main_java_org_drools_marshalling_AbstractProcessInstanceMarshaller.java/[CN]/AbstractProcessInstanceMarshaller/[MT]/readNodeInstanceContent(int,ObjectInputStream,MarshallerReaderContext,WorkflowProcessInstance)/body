@@ -1,0 +1,57 @@
+{
+  NodeInstanceImpl nodeInstance=null;
+switch (nodeType) {
+case PersisterEnums.RULE_SET_NODE_INSTANCE:
+    nodeInstance=new RuleSetNodeInstance();
+  break;
+case PersisterEnums.HUMAN_TASK_NODE_INSTANCE:
+nodeInstance=new HumanTaskNodeInstance();
+((HumanTaskNodeInstance)nodeInstance).internalSetWorkItemId(stream.readLong());
+break;
+case PersisterEnums.WORK_ITEM_NODE_INSTANCE:
+nodeInstance=new WorkItemNodeInstance();
+((WorkItemNodeInstance)nodeInstance).internalSetWorkItemId(stream.readLong());
+break;
+case PersisterEnums.SUB_PROCESS_NODE_INSTANCE:
+nodeInstance=new SubProcessNodeInstance();
+((SubProcessNodeInstance)nodeInstance).internalSetProcessInstanceId(stream.readLong());
+break;
+case PersisterEnums.MILESTONE_NODE_INSTANCE:
+nodeInstance=new MilestoneNodeInstance();
+int nbTimerInstances=stream.readInt();
+if (nbTimerInstances > 0) {
+List<Long> timerInstances=new ArrayList<Long>();
+for (int i=0; i < nbTimerInstances; i++) {
+timerInstances.add(stream.readLong());
+}
+((MilestoneNodeInstance)nodeInstance).internalSetTimerInstances(timerInstances);
+}
+break;
+case PersisterEnums.TIMER_NODE_INSTANCE:
+nodeInstance=new TimerNodeInstance();
+((TimerNodeInstance)nodeInstance).internalSetTimerId(stream.readLong());
+break;
+case PersisterEnums.JOIN_NODE_INSTANCE:
+nodeInstance=new JoinInstance();
+int number=stream.readInt();
+if (number > 0) {
+Map<Long,Integer> triggers=new HashMap<Long,Integer>();
+for (int i=0; i < number; i++) {
+long l=stream.readLong();
+int count=stream.readInt();
+triggers.put(l,count);
+}
+((JoinInstance)nodeInstance).internalSetTriggers(triggers);
+}
+break;
+case PersisterEnums.COMPOSITE_NODE_INSTANCE:
+nodeInstance=new CompositeContextNodeInstance();
+break;
+case PersisterEnums.FOR_EACH_NODE_INSTANCE:
+nodeInstance=new ForEachNodeInstance();
+break;
+default :
+throw new IllegalArgumentException("Unknown node type: " + nodeType);
+}
+return nodeInstance;
+}
