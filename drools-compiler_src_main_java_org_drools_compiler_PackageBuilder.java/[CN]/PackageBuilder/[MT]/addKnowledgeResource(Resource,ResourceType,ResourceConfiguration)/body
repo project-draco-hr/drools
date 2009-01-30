@@ -1,88 +1,81 @@
 {
   try {
-switch (type) {
-case DRL:
-{
-        ((InternalResource)resource).setResourceType(type);
-        addPackageFromDrl(resource);
-        break;
-      }
-case DSLR:
-{
+    if (ResourceType.DRL.equals(type)) {
+      ((InternalResource)resource).setResourceType(type);
+      addPackageFromDrl(resource);
+    }
+ else     if (ResourceType.DSLR.equals(type)) {
       ((InternalResource)resource).setResourceType(type);
       addPackageFromDslr(resource);
-      break;
     }
-case DSL:
-{
-    ((InternalResource)resource).setResourceType(type);
-    addDsl(resource);
-    break;
+ else     if (ResourceType.DSL.equals(type)) {
+      ((InternalResource)resource).setResourceType(type);
+      addDsl(resource);
+    }
+ else     if (ResourceType.XDRL.equals(type)) {
+      ((InternalResource)resource).setResourceType(type);
+      addPackageFromXml(resource);
+    }
+ else     if (ResourceType.DRF.equals(type)) {
+      ((InternalResource)resource).setResourceType(type);
+      addProcessFromXml(resource);
+    }
+ else     if (ResourceType.DTABLE.equals(type)) {
+      ((InternalResource)resource).setResourceType(type);
+      DecisionTableConfiguration dtableConfiguration=(DecisionTableConfiguration)configuration;
+      String string=DecisionTableFactory.loadFromInputStream(resource.getInputStream(),dtableConfiguration);
+      addPackageFromDrl(new StringReader(string));
+    }
+ else     if (ResourceType.PKG.equals(type)) {
+      InputStream is=resource.getInputStream();
+      Package pkg=(Package)DroolsStreamUtils.streamIn(is);
+      is.close();
+      addPackage(pkg);
+    }
+ else     if (ResourceType.ChangeSet.equals(type)) {
+      ((InternalResource)resource).setResourceType(type);
+      XmlChangeSetReader reader=new XmlChangeSetReader(this.configuration.getSemanticModules());
+      if (resource instanceof ClassPathResource) {
+        reader.setClassLoader(((ClassPathResource)resource).getClassLoader());
+      }
+ else {
+        reader.setClassLoader(this.configuration.getClassLoader());
+      }
+      ChangeSet chageSet=reader.read(resource.getReader());
+      if (chageSet == null) {
+      }
+      for (      Resource nestedResource : chageSet.getResourcesAdded()) {
+        InternalResource iNestedResourceResource=(InternalResource)nestedResource;
+        if (iNestedResourceResource.isDirectory()) {
+          this.resourceDirectories.add(iNestedResourceResource);
+          for (          Resource childResource : iNestedResourceResource.listResources()) {
+            if (((InternalResource)childResource).isDirectory()) {
+              continue;
+            }
+            ((InternalResource)childResource).setResourceType(iNestedResourceResource.getResourceType());
+            addKnowledgeResource(childResource,iNestedResourceResource.getResourceType(),iNestedResourceResource.getConfiguration());
+          }
+        }
+ else {
+          addKnowledgeResource(iNestedResourceResource,iNestedResourceResource.getResourceType(),iNestedResourceResource.getConfiguration());
+        }
+      }
+    }
+ else {
+      ResourceTypeBuilder builder=ResourceTypeBuilderRegistry.getInstance().getResourceTypeBuilder(type);
+      if (builder != null) {
+        builder.setPackageBuilder(this);
+        builder.addKnowledgeResource(resource,type,configuration);
+      }
+ else {
+        throw new RuntimeException("Unknown resource type: " + type);
+      }
+    }
   }
-case XDRL:
-{
-  ((InternalResource)resource).setResourceType(type);
-  addPackageFromXml(resource);
-  break;
-}
-case DRF:
-{
-((InternalResource)resource).setResourceType(type);
-addProcessFromXml(resource);
-break;
-}
-case DTABLE:
-{
-((InternalResource)resource).setResourceType(type);
-DecisionTableConfiguration dtableConfiguration=(DecisionTableConfiguration)configuration;
-String string=DecisionTableFactory.loadFromInputStream(resource.getInputStream(),dtableConfiguration);
-addPackageFromDrl(new StringReader(string));
-break;
-}
-case PKG:
-{
-InputStream is=resource.getInputStream();
-Package pkg=(Package)DroolsStreamUtils.streamIn(is);
-is.close();
-addPackage(pkg);
-break;
-}
-case ChangeSet:
-{
-((InternalResource)resource).setResourceType(type);
-XmlChangeSetReader reader=new XmlChangeSetReader(this.configuration.getSemanticModules());
-if (resource instanceof ClassPathResource) {
-reader.setClassLoader(((ClassPathResource)resource).getClassLoader());
-}
- else {
-reader.setClassLoader(this.configuration.getClassLoader());
-}
-ChangeSet chageSet=reader.read(resource.getReader());
-if (chageSet == null) {
-}
-for (Resource nestedResource : chageSet.getResourcesAdded()) {
-InternalResource iNestedResourceResource=(InternalResource)nestedResource;
-if (iNestedResourceResource.isDirectory()) {
-this.resourceDirectories.add(iNestedResourceResource);
-for (Resource childResource : iNestedResourceResource.listResources()) {
-if (((InternalResource)childResource).isDirectory()) {
-  continue;
-}
-((InternalResource)childResource).setResourceType(iNestedResourceResource.getResourceType());
-addKnowledgeResource(childResource,iNestedResourceResource.getResourceType(),iNestedResourceResource.getConfiguration());
-}
-}
- else {
-addKnowledgeResource(iNestedResourceResource,iNestedResourceResource.getResourceType(),iNestedResourceResource.getConfiguration());
-}
-}
-}
-}
-}
- catch (RuntimeException e) {
-throw e;
-}
-catch (Exception e) {
-throw new RuntimeException(e);
-}
+ catch (  RuntimeException e) {
+    throw e;
+  }
+catch (  Exception e) {
+    throw new RuntimeException(e);
+  }
 }
