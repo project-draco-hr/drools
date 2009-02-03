@@ -1,20 +1,19 @@
 {
-  final PackageBuilderConfiguration pbconf=new PackageBuilderConfiguration();
-  final PackageBuilder builder=new PackageBuilder(pbconf);
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_GeneratedBeansMVEL.drl")));
-  assertFalse(builder.getErrors().toString(),builder.hasErrors());
-  Package p=builder.getPackage();
-  RuleBaseConfiguration conf=new RuleBaseConfiguration();
-  RuleBase ruleBase=RuleBaseFactory.newRuleBase(conf);
-  ruleBase.addPackage(p);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  FactType pf=ruleBase.getFactType("mortgages.Applicant");
-  FactType af=ruleBase.getFactType("mortgages.LoanApplication");
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("test_GeneratedBeansMVEL.drl")),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  KnowledgePackage kpkg=kbuilder.getKnowledgePackages().toArray(new KnowledgePackage[1])[0];
+  assertEquals(1,kpkg.getRules().size());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  FactType pf=kbase.getFactType("mortgages","Applicant");
+  FactType af=kbase.getFactType("mortgages","LoanApplication");
   Object person=pf.newInstance();
   pf.set(person,"creditRating","OK");
   Object application=af.newInstance();
-  StatefulSession sess=ruleBase.newStatefulSession();
-  sess.insert(person);
-  sess.insert(application);
-  sess.fireAllRules();
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.insert(person);
+  ksession.insert(application);
+  ksession.fireAllRules();
 }
