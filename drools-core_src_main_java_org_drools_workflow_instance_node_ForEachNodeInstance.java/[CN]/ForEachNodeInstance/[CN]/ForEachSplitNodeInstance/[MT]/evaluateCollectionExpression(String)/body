@@ -1,9 +1,17 @@
 {
+  Object collection=null;
   VariableScopeInstance variableScopeInstance=(VariableScopeInstance)resolveContextInstance(VariableScope.VARIABLE_SCOPE,collectionExpression);
-  if (variableScopeInstance == null) {
-    throw new IllegalArgumentException("Could not find collection " + collectionExpression);
+  if (variableScopeInstance != null) {
+    collection=variableScopeInstance.getVariable(collectionExpression);
   }
-  Object collection=variableScopeInstance.getVariable(collectionExpression);
+ else {
+    try {
+      collection=MVEL.eval(collectionExpression,new NodeInstanceResolverFactory(this));
+    }
+ catch (    Throwable t) {
+      throw new IllegalArgumentException("Could not find collection " + collectionExpression);
+    }
+  }
   if (collection == null) {
     return Collections.EMPTY_LIST;
   }
