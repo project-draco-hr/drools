@@ -1,0 +1,23 @@
+{
+  this.resource=resource;
+  String brl=loadBrlFile(resource.getReader());
+  RuleModel model=BRXMLPersistence.getInstance().unmarshal(brl);
+  String drl=BRDRLPersistence.getInstance().marshal(model);
+  final DrlParser parser=new DrlParser();
+  DefaultExpander expander=getDslExpander();
+  try {
+    String str=expander.expand(new StringReader(drl));
+    if (expander.hasErrors()) {
+      this.results.addAll(expander.getErrors());
+    }
+    final PackageDescr pkg=parser.parse(str);
+    this.results.addAll(parser.getErrors());
+    if (!parser.hasErrors()) {
+      addPackage(pkg);
+    }
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+  this.resource=null;
+}
