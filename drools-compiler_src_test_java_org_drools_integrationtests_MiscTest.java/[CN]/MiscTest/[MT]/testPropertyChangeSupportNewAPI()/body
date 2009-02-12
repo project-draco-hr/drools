@@ -1,0 +1,21 @@
+{
+  final KnowledgeBuilder builder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  builder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("test_PropertyChangeTypeDecl.drl")),ResourceType.DRL);
+  final Collection<KnowledgePackage> pkgs=builder.getKnowledgePackages();
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(pkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  final List list=new ArrayList();
+  session.setGlobal("list",list);
+  final State state=new State("initial");
+  session.insert(state);
+  session.fireAllRules();
+  assertEquals(1,((List)session.getGlobal("list")).size());
+  state.setFlag(true);
+  assertEquals(1,((List)session.getGlobal("list")).size());
+  session.fireAllRules();
+  assertEquals(2,((List)session.getGlobal("list")).size());
+  state.setState("finished");
+  session.dispose();
+}
