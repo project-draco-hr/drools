@@ -1,0 +1,55 @@
+{
+  this.id=id;
+  this.config=config;
+  this.ruleBase=ruleBase;
+  this.handleFactory=handleFactory;
+  this.globalResolver=new MapGlobalResolver();
+  this.environment=environment;
+  final RuleBaseConfiguration conf=this.ruleBase.getConfiguration();
+  this.maintainTms=conf.isMaintainTms();
+  this.sequential=conf.isSequential();
+  if (initialFactHandle == null) {
+    this.initialFactHandle=new InitialFactHandle(handleFactory.newFactHandle(new InitialFactHandleDummyObject(),null,this));
+  }
+ else {
+    this.initialFactHandle=initialFactHandle;
+  }
+  this.actionQueue=new LinkedList<WorkingMemoryAction>();
+  this.addRemovePropertyChangeListenerArgs=new Object[]{this};
+  this.queryResults=Collections.EMPTY_MAP;
+  this.workingMemoryEventSupport=new WorkingMemoryEventSupport();
+  this.agendaEventSupport=new AgendaEventSupport();
+  this.workflowEventSupport=new RuleFlowEventSupport();
+  this.__ruleBaseEventListeners=new LinkedList();
+  this.lock=new ReentrantLock();
+  this.liaPropagations=Collections.EMPTY_LIST;
+  this.processInstanceManager=config.getProcessInstanceManagerFactory().createProcessInstanceManager(this);
+  this.timeMachine=new TimeMachine();
+  TimerService timerService=TimerServiceFactory.getTimerService(this.config.getClockType());
+  this.timerManager=new TimerManager(this,timerService);
+  this.signalManager=config.getSignalManagerFactory().createSignalManager(this);
+  this.nodeMemories=new ConcurrentNodeMemories(this.ruleBase);
+  if (this.maintainTms) {
+    this.tms=new TruthMaintenanceSystem(this);
+  }
+ else {
+    this.tms=null;
+  }
+  this.propagationIdCounter=new AtomicLong(propagationContext);
+  this.objectStore=new SingleThreadedObjectStore(conf,this.lock);
+  if (LogicalOverride.DISCARD.equals(conf.getLogicalOverride())) {
+    this.discardOnLogicalOverride=true;
+  }
+ else {
+    this.discardOnLogicalOverride=false;
+  }
+  this.entryPoints=new ConcurrentHashMap();
+  this.entryPoints.put("DEFAULT",this);
+  this.entryPoint=EntryPoint.DEFAULT;
+  this.firing=new AtomicBoolean(false);
+  this.modifyContexts=new HashMap<InternalFactHandle,PropagationContext>();
+  this.exitPoints=new ConcurrentHashMap<String,ExitPoint>();
+  initProcessEventListeners();
+  initPartitionManagers();
+  initTransient();
+}
