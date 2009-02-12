@@ -1,0 +1,30 @@
+{
+  if (keyPat != null) {
+    String trimmed=keyPat.trim();
+    String keyPattern=trimmed.replaceAll("\\$","\\\\\\$");
+    if (!keyPattern.startsWith("^")) {
+      keyPattern="(\\W|^)" + keyPattern;
+      getVariables().put(HEAD_TAG,Integer.valueOf(0));
+      headMatchGroupAdded=true;
+    }
+    if (keyPattern.endsWith("(.*?)")) {
+      keyPattern+="$";
+    }
+ else {
+      keyPattern+="(\\W|$)";
+      getVariables().put(TAIL_TAG,Integer.valueOf(1));
+      tailMatchGroupAdded=true;
+    }
+    fixVariableOffsets();
+    if (trimmed.startsWith("-") && (!trimmed.startsWith("-\\s*"))) {
+      int index=keyPattern.indexOf('-') + 1;
+      keyPattern=keyPattern.substring(0,index) + "\\s*" + keyPattern.substring(index).trim();
+    }
+    keyPattern=keyPattern.replaceAll("\\s+","\\\\s+");
+    keyPattern=keyPattern.replaceAll("(\\\\s\\+)+","\\\\s+");
+    setKeyPattern(Pattern.compile(keyPattern,Pattern.DOTALL | Pattern.MULTILINE));
+  }
+ else {
+    setKeyPattern((Pattern)null);
+  }
+}
