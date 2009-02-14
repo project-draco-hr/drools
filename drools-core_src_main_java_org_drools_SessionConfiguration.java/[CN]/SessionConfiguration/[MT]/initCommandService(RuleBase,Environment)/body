@@ -1,0 +1,30 @@
+{
+  String className=this.chainedProperties.getProperty("drools.commandService",null);
+  if (className == null) {
+    return;
+  }
+  Class<CommandService> clazz=null;
+  try {
+    clazz=(Class<CommandService>)Thread.currentThread().getContextClassLoader().loadClass(className);
+  }
+ catch (  ClassNotFoundException e) {
+  }
+  if (clazz == null) {
+    try {
+      clazz=(Class<CommandService>)SessionConfiguration.class.getClassLoader().loadClass(className);
+    }
+ catch (    ClassNotFoundException e) {
+    }
+  }
+  if (clazz != null) {
+    try {
+      this.commandService=clazz.getConstructor(RuleBase.class,SessionConfiguration.class,Environment.class).newInstance(ruleBase,this,environment);
+    }
+ catch (    Exception e) {
+      throw new IllegalArgumentException("Unable to instantiate command service '" + className + "'",e);
+    }
+  }
+ else {
+    throw new IllegalArgumentException("Command service '" + className + "' not found");
+  }
+}
