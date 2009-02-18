@@ -3,19 +3,23 @@
   if (StringUtils.isEmpty(name)) {
     return null;
   }
-  if (name.equals("drools.dialect.default")) {
+  if (name.equals(DefaultDialectOption.PROPERTY_NAME)) {
     return getDefaultDialect();
   }
- else   if (name.startsWith("drools.accumulate.function")) {
-    return this.accumulateFunctions.get(name);
+ else   if (name.startsWith(AccumulateFunctionOption.PROPERTY_NAME)) {
+    int index=AccumulateFunctionOption.PROPERTY_NAME.length();
+    AccumulateFunction function=this.accumulateFunctions.get(name.substring(index));
+    return function != null ? function.getClass().getName() : null;
   }
- else   if (name.startsWith("drools.evaluator.")) {
-    return this.evaluatorRegistry.getEvaluatorDefinition(name.substring(name.lastIndexOf('.'))).getClass().getName();
+ else   if (name.startsWith(EvaluatorOption.PROPERTY_NAME)) {
+    String key=name.substring(name.lastIndexOf('.') + 1);
+    EvaluatorDefinition evalDef=this.evaluatorRegistry.getEvaluatorDefinition(key);
+    return evalDef != null ? evalDef.getClass().getName() : null;
   }
- else   if (name.equals("drools.dump.dir")) {
-    return Boolean.toString(this.dumpDirectory != null);
+ else   if (name.equals(DumpDirOption.PROPERTY_NAME)) {
+    return this.dumpDirectory != null ? this.dumpDirectory.toString() : null;
   }
- else   if (name.equals(DROOLS_PARSER_PROCESS_STRING_ESCAPES)) {
+ else   if (name.equals(ProcessStringEscapesOption.PROPERTY_NAME)) {
     return String.valueOf(isProcessStringEscapes());
   }
   return null;
