@@ -1,23 +1,10 @@
 {
   this.listener.debug("KnowledgeAgent rebuilding KnowledgeBase using ChangeSet");
 synchronized (this.resources) {
-    for (    Resource child : changeSetState.pkgs) {
-      try {
-        InputStream is=child.getInputStream();
-        Package pkg=(Package)DroolsStreamUtils.streamIn(is);
-        this.listener.debug("KnowledgeAgent adding KnowledgeDefinitionsPackage " + pkg.getName());
-        ((KnowledgeBaseImpl)this.kbase).ruleBase.addPackage(pkg);
-        is.close();
-      }
- catch (      Exception e) {
-        this.listener.exception(new RuntimeException("KnowledgeAgent exception while trying to serialize and KnowledgeDefinitionsPackage  "));
-      }
-    }
+    this.kbase=KnowledgeBaseFactory.newKnowledgeBase();
     if (changeSetState.needsKnowledgeBuilder) {
-      Resource[] resourcesClone=this.resources.keySet().toArray(new Resource[this.resources.size()]);
-      this.resources.clear();
       KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-      for (      Resource resource : resourcesClone) {
+      for (      Resource resource : this.resources.keySet()) {
         this.listener.debug("KnowledgeAgent building resource=" + resource);
         if (((InternalResource)resource).getResourceType() != ResourceType.PKG) {
           kbuilder.add(resource,((InternalResource)resource).getResourceType());
@@ -26,9 +13,38 @@ synchronized (this.resources) {
       if (kbuilder.hasErrors()) {
         this.listener.warning("KnowledgeAgent has KnowledgeBuilder errors ",kbuilder.getErrors());
       }
-      this.kbase=KnowledgeBaseFactory.newKnowledgeBase();
       this.kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-      this.listener.info("KnowledgeAgent new KnowledgeBase now built and in use");
     }
+    for (    Resource resource : this.resources.keySet()) {
+      if (((InternalResource)resource).getResourceType() == ResourceType.PKG) {
+        this.listener.debug("KnowledgeAgent building resource=" + resource);
+        InputStream is=null;
+        try {
+          is=resource.getInputStream();
+          Object object=DroolsStreamUtils.streamIn(is);
+          Package pkg=null;
+          if (object instanceof KnowledgePackage) {
+            pkg=((KnowledgePackageImp)object).pkg;
+          }
+ else {
+            pkg=(Package)pkg;
+          }
+          this.listener.debug("KnowledgeAgent adding KnowledgeDefinitionsPackage " + pkg.getName());
+          ((KnowledgeBaseImpl)this.kbase).ruleBase.addPackage(pkg);
+        }
+ catch (        Exception e) {
+          this.listener.exception(new RuntimeException("KnowledgeAgent exception while trying to serialize KnowledgeDefinitionsPackage  "));
+        }
+ finally {
+          try {
+            is.close();
+          }
+ catch (          IOException e) {
+            this.listener.exception(new RuntimeException("KnowledgeAgent exception while trying to close KnowledgeDefinitionsPackage  "));
+          }
+        }
+      }
+    }
+    this.listener.info("KnowledgeAgent new KnowledgeBase now built and in use");
   }
 }

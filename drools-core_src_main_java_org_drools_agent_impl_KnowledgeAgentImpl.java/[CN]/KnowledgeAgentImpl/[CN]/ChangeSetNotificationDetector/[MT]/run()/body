@@ -3,13 +3,17 @@
     this.listener.info("KnowledegAgent has started listening for ChangeSet notifications");
   }
   while (this.monitor) {
+    Exception exception=null;
     try {
       kagent.applyChangeSet(this.queue.take());
     }
  catch (    InterruptedException e) {
-      this.listener.exception(new RuntimeException("KnowledgeAgent ChangeSet notification thread has been interrupted",e));
+      exception=e;
     }
     Thread.yield();
+    if (this.monitor && exception != null) {
+      this.listener.exception(new RuntimeException("KnowledgeAgent ChangeSet notification thread has been interrupted, but shutdown was not scheduled",exception));
+    }
   }
   this.listener.info("KnowledegAgent has stopped listening for ChangeSet notifications");
 }
