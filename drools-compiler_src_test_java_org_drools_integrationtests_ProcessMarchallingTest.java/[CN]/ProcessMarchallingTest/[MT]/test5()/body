@@ -5,10 +5,24 @@
   final Package pkg=builder.getPackage();
   final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   ruleBase.addPackage(pkg);
-  StatefulSession session=ruleBase.newStatefulSession();
+  final StatefulSession session=ruleBase.newStatefulSession();
+  new Thread(new Runnable(){
+    public void run(){
+      session.fireUntilHalt();
+    }
+  }
+).start();
   session.startProcess("com.sample.ruleflow",null);
   assertEquals(1,session.getProcessInstances().size());
-  session=getSerialisedStatefulSession(session);
+  session.halt();
+  final StatefulSession session2=getSerialisedStatefulSession(session);
+  new Thread(new Runnable(){
+    public void run(){
+      session2.fireUntilHalt();
+    }
+  }
+).start();
   Thread.sleep(400);
-  assertEquals(0,session.getProcessInstances().size());
+  assertEquals(0,session2.getProcessInstances().size());
+  session2.halt();
 }
