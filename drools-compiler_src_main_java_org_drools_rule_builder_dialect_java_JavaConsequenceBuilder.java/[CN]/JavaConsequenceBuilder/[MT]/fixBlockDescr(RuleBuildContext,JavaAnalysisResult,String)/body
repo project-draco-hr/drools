@@ -1,0 +1,27 @@
+{
+  MVELDialect mvel=(MVELDialect)context.getDialect("mvel");
+  List<JavaBlockDescr> blocks=analysis.getBlockDescrs();
+  Collections.sort(blocks,new Comparator<JavaBlockDescr>(){
+    public int compare(    JavaBlockDescr o1,    JavaBlockDescr o2){
+      return o1.getStart() - o2.getStart();
+    }
+  }
+);
+  StringBuilder consequence=new StringBuilder();
+  int lastAdded=0;
+  for (  JavaBlockDescr block : blocks) {
+    consequence.append(originalCode.substring(lastAdded,block.getStart() - 1));
+    lastAdded=block.getEnd();
+switch (block.getType()) {
+case MODIFY:
+      rewriteModify(context,originalCode,mvel,consequence,(JavaModifyBlockDescr)block);
+    break;
+case ENTRY:
+case EXIT:
+  rewriteInterfacePoint(originalCode,consequence,(JavaInterfacePointsDescr)block);
+break;
+}
+}
+consequence.append(originalCode.substring(lastAdded));
+return consequence.toString();
+}
