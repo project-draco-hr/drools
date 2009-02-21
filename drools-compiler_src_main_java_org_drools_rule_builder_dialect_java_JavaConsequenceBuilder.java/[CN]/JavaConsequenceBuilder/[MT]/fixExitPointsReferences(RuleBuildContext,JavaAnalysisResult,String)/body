@@ -1,0 +1,23 @@
+{
+  List<JavaExitPointsDescr> exitPoints=analysis.getExitPoints();
+  Collections.sort(exitPoints,new Comparator<JavaExitPointsDescr>(){
+    public int compare(    JavaExitPointsDescr o1,    JavaExitPointsDescr o2){
+      return o1.getStart() - o2.getStart();
+    }
+  }
+);
+  StringBuilder consequence=new StringBuilder();
+  int lastAdded=0;
+  for (  JavaExitPointsDescr ep : exitPoints) {
+    consequence.append(originalCode.substring(lastAdded,ep.getStart() - 1));
+    lastAdded=ep.getEnd();
+    consequence.append("exitPoints.get( ");
+    consequence.append(ep.getId());
+    consequence.append(" )");
+    String originalBlock=originalCode.substring(ep.getStart() - 1,ep.getEnd());
+    int end=originalBlock.indexOf("]");
+    addLineBreaks(consequence,originalBlock.substring(0,end));
+  }
+  consequence.append(originalCode.substring(lastAdded));
+  return consequence.toString();
+}
