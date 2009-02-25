@@ -5,13 +5,27 @@
     Set<String> variables=new HashSet<String>();
     variables.add("context");
     variables.add("kcontext");
+    variables.add("drools");
     Dialect.AnalysisResult analysis=dialect.analyzeBlock(context,actionDescr,dialect.getInterceptors(),text,new Set[]{variables,context.getPkg().getGlobals().keySet()},null);
     Map<String,Class> variableClasses=new HashMap<String,Class>();
     variableClasses.put("context",ProcessContext.class);
     variableClasses.put("kcontext",org.drools.runtime.process.ProcessContext.class);
+    variableClasses.put("drools",KnowledgeHelper.class);
+    List<String> variableNames=analysis.getNotBoundedIdentifiers();
+    if (contextResolver != null) {
+      for (      String variableName : variableNames) {
+        VariableScope variableScope=(VariableScope)contextResolver.resolveContext(VariableScope.VARIABLE_SCOPE,variableName);
+        if (variableScope == null) {
+          context.getErrors().add(new DescrBuildError(context.getParentDescr(),actionDescr,null,"Could not find variable '" + variableName + "' for action '"+ actionDescr.getText()+ "'"));
+        }
+ else {
+          variableClasses.put(variableName,Class.forName(variableScope.findVariable(variableName).getType().getStringType()));
+        }
+      }
+    }
     MVELCompilationUnit unit=dialect.getMVELCompilationUnit(text,analysis,null,null,variableClasses,context);
     MVELAction expr=new MVELAction(unit,context.getDialect().getId());
-    expr.setVariableNames(analysis.getNotBoundedIdentifiers());
+    expr.setVariableNames(variableNames);
     action.setMetaData("Action",expr);
     MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData(dialect.getId());
     data.addCompileable(action,expr);
