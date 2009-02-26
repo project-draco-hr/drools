@@ -1,36 +1,46 @@
 {
-  final PackageBuilder builderInit=new PackageBuilder();
-  builderInit.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_CollectDynamicRules1.drl")));
-  final Package pkgInit=builderInit.getPackage();
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkgInit);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("test_CollectDynamicRules1.drl",getClass()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  Collection<KnowledgePackage> kpkgs=SerializationHelper.serializeObject(kbuilder.getKnowledgePackages());
+  kbase.addKnowledgePackages(kpkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   List results=new ArrayList();
-  session.setGlobal("results",results);
+  ksession.setGlobal("results",results);
   final Cheese a=new Cheese("stilton",10);
   final Cheese b=new Cheese("stilton",15);
   final Cheese c=new Cheese("stilton",20);
-  session.insert(a);
-  session.insert(b);
-  session.insert(c);
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicNotNode.drl")));
-  final Package pkg=builder.getPackage();
-  ruleBase.addPackage(SerializationHelper.serializeObject(pkg));
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
-  results=(List)session.getGlobal("results");
-  session.fireAllRules();
+  ksession.insert(a);
+  ksession.insert(b);
+  ksession.insert(c);
+  kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("test_DynamicNotNode.drl",getClass()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  kpkgs=SerializationHelper.serializeObject(kbuilder.getKnowledgePackages());
+  kbase.addKnowledgePackages(kpkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,MarshallerFactory.newIdentityMarshallingStrategy(),false);
+  results=(List)ksession.getGlobal("results");
+  ksession.fireAllRules();
   assertEquals(0,results.size());
-  ruleBase.removePackage("org.drools");
-  session.retract(session.getFactHandle(b));
-  final PackageBuilder builder1=new PackageBuilder();
-  builder1.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicNotNode.drl")));
-  final Package pkg1=builder.getPackage();
-  ruleBase.addPackage(SerializationHelper.serializeObject(pkg1));
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
-  results=(List)session.getGlobal("results");
-  session.fireAllRules();
+  kbase.removeKnowledgePackage("org.drools");
+  ksession.retract(ksession.getFactHandle(b));
+  kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("test_DynamicNotNode.drl",getClass()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  kpkgs=SerializationHelper.serializeObject(kbuilder.getKnowledgePackages());
+  kbase.addKnowledgePackages(kpkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,MarshallerFactory.newIdentityMarshallingStrategy(),false);
+  results=(List)ksession.getGlobal("results");
+  ksession.fireAllRules();
   assertEquals(1,results.size());
 }

@@ -3,13 +3,17 @@
   final Cell cell=new Cell(0);
   final PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("evalmodify.drl")));
+  if (builder.hasErrors()) {
+    fail(builder.getErrors().toString());
+  }
   RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(builder.getPackage());
+  Package pkg=builder.getPackage();
+  ruleBase.addPackage(pkg);
   ruleBase=SerializationHelper.serializeObject(ruleBase);
   StatefulSession session=ruleBase.newStatefulSession();
   session.insert(cell1);
   FactHandle cellHandle=session.insert(cell);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
-  session.fireAllRules();
+  StatefulKnowledgeSession ksesion=SerializationHelper.getSerialisedStatefulKnowledgeSession(new StatefulKnowledgeSessionImpl((ReteooWorkingMemory)session),MarshallerFactory.newIdentityMarshallingStrategy(),false);
+  ksesion.fireAllRules();
   assertEquals(9,cell.getValue());
 }

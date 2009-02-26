@@ -1,14 +1,19 @@
 {
-  Marshaller marshaller=new DefaultMarshaller();
-  ByteArrayOutputStream baos=new ByteArrayOutputStream();
-  ruleBase.writeStatefulSession(session,baos,marshaller);
-  byte[] b1=baos.toByteArray();
+  ByteArrayOutputStream bos=new ByteArrayOutputStream();
+  ObjectOutput out=new ObjectOutputStream(bos);
+  out.writeObject(session);
+  out.close();
+  bos.close();
+  final byte[] b1=bos.toByteArray();
   ByteArrayInputStream bais=new ByteArrayInputStream(b1);
-  StatefulSession session2=ruleBase.readStatefulSession(bais,true,marshaller,((InternalWorkingMemory)session).getSessionConfiguration(),session.getEnvironment());
-  marshaller=new DefaultMarshaller();
-  baos=new ByteArrayOutputStream();
-  ruleBase.writeStatefulSession(session2,baos,marshaller);
-  byte[] b2=baos.toByteArray();
+  StatefulSession session2=ruleBase.newStatefulSession(bais);
+  bais.close();
+  bos=new ByteArrayOutputStream();
+  out=new ObjectOutputStream(bos);
+  out.writeObject(session2);
+  out.close();
+  bos.close();
+  final byte[] b2=bos.toByteArray();
   if (!areByteArraysEqual(b1,b2)) {
     throw new IllegalArgumentException("byte streams for serialisation test are not equal");
   }

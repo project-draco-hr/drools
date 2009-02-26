@@ -1,0 +1,19 @@
+{
+  if (config == null) {
+    config=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  }
+  if (environment == null) {
+    environment=KnowledgeBaseFactory.newEnvironment();
+  }
+  MarshallerReaderContext context=new MarshallerReaderContext(stream,(InternalRuleBase)((KnowledgeBaseImpl)kbase).ruleBase,RuleBaseNodes.getNodeMap((InternalRuleBase)((KnowledgeBaseImpl)kbase).ruleBase),this.strategyStore,this.marshallingConfig.isMarshallProcessInstances(),this.marshallingConfig.isMarshallWorkItems());
+  int id=((ReteooRuleBase)((KnowledgeBaseImpl)this.kbase).ruleBase).nextWorkingMemoryCounter();
+  RuleBaseConfiguration conf=((ReteooRuleBase)((KnowledgeBaseImpl)this.kbase).ruleBase).getConfiguration();
+  ExecutorService executor=ExecutorServiceFactory.createExecutorService(conf.getExecutorService());
+  ReteooStatefulSession session=InputMarshaller.readSession(context,id,executor,environment,(SessionConfiguration)config);
+  executor.setCommandExecutor(new CommandExecutor(session));
+  context.close();
+  if (((SessionConfiguration)config).isKeepReference()) {
+    ((ReteooRuleBase)((KnowledgeBaseImpl)this.kbase).ruleBase).addStatefulSession(session);
+  }
+  return new StatefulKnowledgeSessionImpl(session);
+}

@@ -1,0 +1,22 @@
+{
+  Marshaller marshaller=MarshallerFactory.newMarshaller(ksession.getKnowledgeBase(),new ObjectMarshallingStrategy[]{strategy});
+  ByteArrayOutputStream bos=new ByteArrayOutputStream();
+  marshaller.marshall(bos,ksession);
+  final byte[] b1=bos.toByteArray();
+  bos.close();
+  ByteArrayInputStream bais=new ByteArrayInputStream(b1);
+  StatefulKnowledgeSession ksession2=marshaller.unmarshall(bais,new SessionConfiguration(),EnvironmentFactory.newEnvironment());
+  bais.close();
+  bos=new ByteArrayOutputStream();
+  marshaller.marshall(bos,ksession2);
+  final byte[] b2=bos.toByteArray();
+  bos.close();
+  if (!areByteArraysEqual(b1,b2)) {
+    throw new IllegalArgumentException("byte streams for serialisation test are not equal");
+  }
+  ((StatefulKnowledgeSessionImpl)ksession2).session.setGlobalResolver(((StatefulKnowledgeSessionImpl)ksession).session.getGlobalResolver());
+  if (dispose) {
+    ksession.dispose();
+  }
+  return ksession2;
+}
