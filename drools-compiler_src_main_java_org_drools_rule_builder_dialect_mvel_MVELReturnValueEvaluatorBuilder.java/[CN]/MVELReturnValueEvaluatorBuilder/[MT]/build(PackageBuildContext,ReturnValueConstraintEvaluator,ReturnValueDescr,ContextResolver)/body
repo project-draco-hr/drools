@@ -1,0 +1,30 @@
+{
+  String text=descr.getText();
+  try {
+    MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
+    Dialect.AnalysisResult analysis=dialect.analyzeBlock(context,descr,dialect.getInterceptors(),text,new Set[]{Collections.EMPTY_SET,context.getPkg().getGlobals().keySet()},null);
+    Map<String,Class> variableClasses=new HashMap<String,Class>();
+    List<String> variableNames=analysis.getNotBoundedIdentifiers();
+    if (contextResolver != null) {
+      for (      String variableName : variableNames) {
+        VariableScope variableScope=(VariableScope)contextResolver.resolveContext(VariableScope.VARIABLE_SCOPE,variableName);
+        if (variableScope == null) {
+          context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Could not find variable '" + variableName + "' for constraint '"+ descr.getText()+ "'"));
+        }
+ else {
+          variableClasses.put(variableName,context.getDialect().getTypeResolver().resolveType(variableScope.findVariable(variableName).getType().getStringType()));
+        }
+      }
+    }
+    MVELCompilationUnit unit=dialect.getMVELCompilationUnit(text,analysis,null,null,variableClasses,context);
+    MVELReturnValueEvaluator expr=new MVELReturnValueEvaluator(unit,dialect.getId());
+    expr.setVariableNames(variableNames);
+    constraintNode.setEvaluator(expr);
+    MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData(dialect.getId());
+    data.addCompileable(constraintNode,expr);
+    expr.compile(context.getPackageBuilder().getRootClassLoader());
+  }
+ catch (  final Exception e) {
+    context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to build expression for 'constraint' " + descr.getText() + "': "+ e));
+  }
+}
