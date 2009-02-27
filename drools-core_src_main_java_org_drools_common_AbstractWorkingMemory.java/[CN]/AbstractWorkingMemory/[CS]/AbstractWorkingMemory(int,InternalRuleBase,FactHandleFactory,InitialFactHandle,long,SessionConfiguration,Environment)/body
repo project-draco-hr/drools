@@ -3,8 +3,19 @@
   this.config=config;
   this.ruleBase=ruleBase;
   this.handleFactory=handleFactory;
-  this.globalResolver=new MapGlobalResolver();
   this.environment=environment;
+  Globals globals=(Globals)this.environment.get(EnvironmentName.GLOBALS);
+  if (globals != null) {
+    if (!(globals instanceof GlobalResolver)) {
+      this.globalResolver=new GlobalsAdapter(globals);
+    }
+ else {
+      this.globalResolver=(GlobalResolver)globals;
+    }
+  }
+ else {
+    this.globalResolver=new MapGlobalResolver();
+  }
   final RuleBaseConfiguration conf=this.ruleBase.getConfiguration();
   this.maintainTms=conf.isMaintainTms();
   this.sequential=conf.isSequential();
