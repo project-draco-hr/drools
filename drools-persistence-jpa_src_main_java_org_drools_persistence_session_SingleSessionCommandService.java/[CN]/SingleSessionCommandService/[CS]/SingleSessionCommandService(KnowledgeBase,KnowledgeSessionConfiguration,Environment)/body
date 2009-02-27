@@ -1,0 +1,42 @@
+{
+  if (conf == null) {
+    conf=new SessionConfiguration();
+  }
+  this.env=env;
+  this.sessionInfo=new SessionInfo();
+  this.session=((KnowledgeBaseImpl)kbase).ruleBase.newStatefulSession((SessionConfiguration)conf,this.env);
+  this.ksession=new StatefulKnowledgeSessionImpl((ReteooWorkingMemory)session);
+  ((JPASignalManager)this.session.getSignalManager()).setCommandService(this);
+  this.marshallingHelper=new JPASessionMarshallingHelper(this.ksession,conf);
+  this.sessionInfo.setJPASessionMashallingHelper(this.marshallingHelper);
+  this.emf=(EntityManagerFactory)env.get(EnvironmentName.ENTITY_MANAGER_FACTORY);
+  this.em=emf.createEntityManager();
+  UserTransaction ut=null;
+  try {
+    InitialContext ctx=new InitialContext();
+    ut=(UserTransaction)ctx.lookup("java:comp/UserTransaction");
+    ut.begin();
+    registerRollbackSync();
+    this.em.joinTransaction();
+    this.em.persist(this.sessionInfo);
+    ut.commit();
+  }
+ catch (  Throwable t1) {
+    try {
+      if (ut != null) {
+        ut.rollback();
+      }
+      throw new RuntimeException("Could not insert session data",t1);
+    }
+ catch (    Throwable t2) {
+      throw new RuntimeException("Could not rollback transaction",t2);
+    }
+  }
+  ((ReteooStatefulSession)this.session).setId(this.sessionInfo.getId());
+  new Thread(new Runnable(){
+    public void run(){
+      session.fireUntilHalt();
+    }
+  }
+);
+}

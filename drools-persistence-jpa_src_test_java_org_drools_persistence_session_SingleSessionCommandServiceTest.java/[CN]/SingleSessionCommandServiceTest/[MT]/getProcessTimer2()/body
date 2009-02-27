@@ -1,0 +1,38 @@
+{
+  RuleFlowProcess process=new RuleFlowProcess();
+  process.setId("org.drools.test.TestProcess");
+  process.setName("TestProcess");
+  process.setPackageName("org.drools.test");
+  StartNode start=new StartNode();
+  start.setId(1);
+  start.setName("Start");
+  process.addNode(start);
+  TimerNode timerNode=new TimerNode();
+  timerNode.setId(2);
+  timerNode.setName("Timer");
+  Timer timer=new Timer();
+  timer.setDelay(0);
+  timerNode.setTimer(timer);
+  process.addNode(timerNode);
+  new ConnectionImpl(start,Node.CONNECTION_DEFAULT_TYPE,timerNode,Node.CONNECTION_DEFAULT_TYPE);
+  ActionNode actionNode=new ActionNode();
+  actionNode.setId(3);
+  actionNode.setName("Action");
+  DroolsConsequenceAction action=new DroolsConsequenceAction();
+  action.setDialect("java");
+  action.setConsequence("try { Thread.sleep(1000); } catch (Throwable t) {} System.out.println(\"Executed action\");");
+  actionNode.setAction(action);
+  process.addNode(actionNode);
+  new ConnectionImpl(timerNode,Node.CONNECTION_DEFAULT_TYPE,actionNode,Node.CONNECTION_DEFAULT_TYPE);
+  EndNode end=new EndNode();
+  end.setId(6);
+  end.setName("End");
+  process.addNode(end);
+  new ConnectionImpl(actionNode,Node.CONNECTION_DEFAULT_TYPE,end,Node.CONNECTION_DEFAULT_TYPE);
+  PackageBuilder packageBuilder=new PackageBuilder();
+  ProcessBuilder processBuilder=new ProcessBuilder(packageBuilder);
+  processBuilder.buildProcess(process,null);
+  List<KnowledgePackage> list=new ArrayList<KnowledgePackage>();
+  list.add(new KnowledgePackageImp(packageBuilder.getPackage()));
+  return list;
+}

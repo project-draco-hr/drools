@@ -1,0 +1,58 @@
+{
+  String str="";
+  str+="package org.drools.test\n";
+  str+="global java.util.List list\n";
+  str+="rule rule1\n";
+  str+="when\n";
+  str+="  Integer(intValue > 0)\n";
+  str+="then\n";
+  str+="  list.add( 1 );\n";
+  str+="end\n";
+  str+="\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  EntityManagerFactory emf=Persistence.createEntityManagerFactory("org.drools.persistence.jpa");
+  Environment env=KnowledgeBaseFactory.newEnvironment();
+  env.set(EnvironmentName.ENTITY_MANAGER_FACTORY,emf);
+  env.set(EnvironmentName.TRANSACTION_MANAGER,TransactionManagerServices.getTransactionManager());
+  env.set(EnvironmentName.GLOBALS,new MapGlobalResolver());
+  StatefulKnowledgeSession ksession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
+  List list=new ArrayList();
+  UserTransaction ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
+  ut.begin();
+  ksession.setGlobal("list",list);
+  ksession.insert(1);
+  ksession.insert(2);
+  ut.commit();
+  ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
+  ut.begin();
+  ksession.insert(3);
+  ut.rollback();
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+  ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
+  ut.begin();
+  ksession.insert(3);
+  ksession.insert(4);
+  ut.commit();
+  ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
+  ut.begin();
+  ksession.insert(5);
+  ksession.insert(6);
+  ut.rollback();
+  ksession.fireAllRules();
+  assertEquals(4,list.size());
+  ksession=JPAKnowledgeService.loadStatefulKnowledgeSession(ksession.getId(),kbase,null,env);
+  ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
+  ut.begin();
+  ksession.insert(7);
+  ksession.insert(8);
+  ut.commit();
+  ksession.fireAllRules();
+  assertEquals(6,list.size());
+}

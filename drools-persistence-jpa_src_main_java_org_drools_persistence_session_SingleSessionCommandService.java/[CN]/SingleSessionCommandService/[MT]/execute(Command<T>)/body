@@ -1,0 +1,54 @@
+{
+  session.halt();
+  boolean localTransaction=false;
+  UserTransaction ut=null;
+  try {
+    ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
+    if (ut.getStatus() == Status.STATUS_NO_TRANSACTION) {
+      ut.begin();
+      localTransaction=true;
+    }
+    EntityManager localEm=this.emf.createEntityManager();
+    this.env.set(EnvironmentName.ENTITY_MANAGER,localEm);
+    if (this.em == null) {
+      this.em=this.emf.createEntityManager();
+      this.sessionInfo=this.em.find(SessionInfo.class,this.sessionInfo.getId());
+      this.sessionInfo.setJPASessionMashallingHelper(this.marshallingHelper);
+      this.marshallingHelper.loadSnapshot(this.sessionInfo.getData(),this.ksession);
+      this.session=(StatefulSession)((StatefulKnowledgeSessionImpl)this.ksession).session;
+    }
+    this.em.joinTransaction();
+    this.sessionInfo.setDirty();
+    registerRollbackSync();
+    T result=command.execute(session);
+    if (localTransaction) {
+      ut.commit();
+    }
+    return result;
+  }
+ catch (  Throwable t1) {
+    t1.printStackTrace();
+    if (localTransaction) {
+      try {
+        if (ut != null) {
+          ut.rollback();
+        }
+        throw new RuntimeException("Could not execute command",t1);
+      }
+ catch (      Throwable t2) {
+        throw new RuntimeException("Could not rollback transaction",t2);
+      }
+    }
+ else {
+      throw new RuntimeException("Could not execute command",t1);
+    }
+  }
+ finally {
+    new Thread(new Runnable(){
+      public void run(){
+        session.fireUntilHalt();
+      }
+    }
+);
+  }
+}

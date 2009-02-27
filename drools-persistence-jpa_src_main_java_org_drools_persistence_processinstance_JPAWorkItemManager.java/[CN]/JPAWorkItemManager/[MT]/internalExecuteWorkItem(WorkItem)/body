@@ -1,0 +1,14 @@
+{
+  EntityManager em=(EntityManager)this.workingMemory.getEnvironment().get(EnvironmentName.ENTITY_MANAGER);
+  WorkItemInfo workItemInfo=new WorkItemInfo(workItem);
+  em.persist(workItemInfo);
+  ((WorkItemImpl)workItem).setId(workItemInfo.getId());
+  workItemInfo.update();
+  WorkItemHandler handler=(WorkItemHandler)this.workItemHandlers.get(workItem.getName());
+  if (handler != null) {
+    handler.executeWorkItem(workItem,this);
+  }
+ else {
+    System.err.println("Could not find work item handler for " + workItem.getName());
+  }
+}

@@ -1,0 +1,15 @@
+{
+  TransactionManager txm=(TransactionManager)env.get(EnvironmentName.TRANSACTION_MANAGER);
+  if (txm == null) {
+    return;
+  }
+  Map map=(Map)env.get("synchronizations");
+  if (map == null) {
+    map=new IdentityMap();
+    env.set("synchronizations",map);
+  }
+  if (map.get(this) == null) {
+    txm.getTransaction().registerSynchronization(new SynchronizationImpl(env,this));
+    map.put(this,this);
+  }
+}

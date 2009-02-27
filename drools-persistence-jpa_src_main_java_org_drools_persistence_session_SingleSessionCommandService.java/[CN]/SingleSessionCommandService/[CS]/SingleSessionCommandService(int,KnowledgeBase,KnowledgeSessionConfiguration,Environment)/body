@@ -1,0 +1,44 @@
+{
+  if (conf == null) {
+    conf=new SessionConfiguration();
+  }
+  this.env=env;
+  this.emf=(EntityManagerFactory)env.get(EnvironmentName.ENTITY_MANAGER_FACTORY);
+  this.em=emf.createEntityManager();
+  UserTransaction ut=null;
+  try {
+    InitialContext ctx=new InitialContext();
+    ut=(UserTransaction)ctx.lookup("java:comp/UserTransaction");
+    ut.begin();
+    registerRollbackSync();
+    this.em.joinTransaction();
+    sessionInfo=this.em.find(SessionInfo.class,sessionId);
+    ut.commit();
+  }
+ catch (  Throwable t1) {
+    try {
+      if (ut != null) {
+        ut.rollback();
+      }
+      throw new RuntimeException("Could insert session data",t1);
+    }
+ catch (    Throwable t2) {
+      throw new RuntimeException("Could not rollback transaction",t2);
+    }
+  }
+  this.session=((KnowledgeBaseImpl)kbase).ruleBase.newStatefulSession((SessionConfiguration)conf,this.env);
+  ((ReteooStatefulSession)this.session).setId(sessionId);
+  this.ksession=new StatefulKnowledgeSessionImpl((ReteooWorkingMemory)session);
+  ((JPASignalManager)this.session.getSignalManager()).setCommandService(this);
+  this.marshallingHelper=new JPASessionMarshallingHelper(this.sessionInfo,kbase,conf,env);
+  this.sessionInfo.setJPASessionMashallingHelper(this.marshallingHelper);
+  this.ksession=this.marshallingHelper.getObject();
+  this.session=(StatefulSession)((StatefulKnowledgeSessionImpl)ksession).session;
+  ((JPASignalManager)this.session.getSignalManager()).setCommandService(this);
+  new Thread(new Runnable(){
+    public void run(){
+      session.fireUntilHalt();
+    }
+  }
+);
+}

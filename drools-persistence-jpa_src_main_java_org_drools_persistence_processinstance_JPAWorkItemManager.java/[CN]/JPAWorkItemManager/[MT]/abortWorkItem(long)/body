@@ -1,0 +1,14 @@
+{
+  EntityManager em=(EntityManager)this.workingMemory.getEnvironment().get(EnvironmentName.ENTITY_MANAGER);
+  WorkItemInfo workItemInfo=em.find(WorkItemInfo.class,id);
+  if (workItemInfo != null) {
+    WorkItemImpl workItem=(WorkItemImpl)workItemInfo.getWorkItem();
+    ProcessInstance processInstance=workingMemory.getProcessInstance(workItem.getProcessInstanceId());
+    workItem.setState(WorkItem.ABORTED);
+    if (processInstance != null) {
+      processInstance.signalEvent("workItemAborted",workItem);
+    }
+    em.remove(workItemInfo);
+    workingMemory.fireAllRules();
+  }
+}

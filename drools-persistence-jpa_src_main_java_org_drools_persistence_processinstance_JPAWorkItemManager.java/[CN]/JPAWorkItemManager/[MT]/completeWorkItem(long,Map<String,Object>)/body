@@ -1,0 +1,15 @@
+{
+  EntityManager em=(EntityManager)this.workingMemory.getEnvironment().get(EnvironmentName.ENTITY_MANAGER);
+  WorkItemInfo workItemInfo=em.find(WorkItemInfo.class,id);
+  if (workItemInfo != null) {
+    WorkItemImpl workItem=(WorkItemImpl)workItemInfo.getWorkItem();
+    workItem.setResults(results);
+    ProcessInstance processInstance=workingMemory.getProcessInstance(workItem.getProcessInstanceId());
+    workItem.setState(WorkItem.COMPLETED);
+    if (processInstance != null) {
+      processInstance.signalEvent("workItemCompleted",workItem);
+    }
+    em.remove(workItemInfo);
+    workingMemory.fireAllRules();
+  }
+}
