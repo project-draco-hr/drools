@@ -1,10 +1,4 @@
 {
-  Properties properties=new Properties();
-  properties.setProperty("drools.commandService","org.drools.persistence.session.SingleSessionCommandService");
-  properties.setProperty("drools.processInstanceManagerFactory","org.drools.persistence.processinstance.JPAProcessInstanceManagerFactory");
-  properties.setProperty("drools.workItemManagerFactory","org.drools.persistence.processinstance.JPAWorkItemManagerFactory");
-  properties.setProperty("drools.processSignalManagerFactory","org.drools.persistence.processinstance.JPASignalManagerFactory");
-  KnowledgeSessionConfiguration config=KnowledgeBaseFactory.newKnowledgeSessionConfiguration(properties);
   String str="";
   str+="package org.drools.test\n";
   str+="global java.util.List list\n";
@@ -25,8 +19,9 @@
   EntityManagerFactory emf=Persistence.createEntityManagerFactory("org.drools.persistence.jpa");
   Environment env=KnowledgeBaseFactory.newEnvironment();
   env.set(EnvironmentName.ENTITY_MANAGER_FACTORY,emf);
-  env.set("drools.TransactionManager",TransactionManagerServices.getTransactionManager());
-  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(config,env);
+  env.set(EnvironmentName.TRANSACTION_MANAGER,TransactionManagerServices.getTransactionManager());
+  env.set(EnvironmentName.GLOBALS,new MapGlobalResolver());
+  StatefulKnowledgeSession ksession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
   List list=new ArrayList();
   ksession.setGlobal("list",list);
   ksession.insert(1);
