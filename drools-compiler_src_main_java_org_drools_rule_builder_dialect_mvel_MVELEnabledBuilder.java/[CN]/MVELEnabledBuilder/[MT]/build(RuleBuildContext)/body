@@ -2,10 +2,11 @@
   context.getBuildStack().push(context.getRule().getLhs());
   try {
     MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
-    Map<String,Class> otherVars=new HashMap<String,Class>();
+    Map<String,Class<?>> otherVars=new HashMap<String,Class<?>>();
     otherVars.put("rule",org.drools.rule.Rule.class);
     Map<String,Declaration> declarations=context.getDeclarationResolver().getDeclarations(context.getRule());
-    Dialect.AnalysisResult analysis=dialect.analyzeExpression(context,context.getRuleDescr(),(String)context.getRuleDescr().getEnabled(),new Set[]{declarations.keySet(),context.getPkg().getGlobals().keySet()},otherVars);
+    Map<String,Class<?>>[] available=new Map[]{context.getDeclarationResolver().getDeclarationClasses(context.getRule()),context.getPackageBuilder().getGlobals()};
+    Dialect.AnalysisResult analysis=dialect.analyzeExpression(context,context.getRuleDescr(),(String)context.getRuleDescr().getEnabled(),available,otherVars);
     Declaration[] previousDeclarations=(Declaration[])declarations.values().toArray(new Declaration[declarations.size()]);
     String exprStr=(String)context.getRuleDescr().getEnabled();
     exprStr=exprStr.substring(1,exprStr.length() - 1) + " ";

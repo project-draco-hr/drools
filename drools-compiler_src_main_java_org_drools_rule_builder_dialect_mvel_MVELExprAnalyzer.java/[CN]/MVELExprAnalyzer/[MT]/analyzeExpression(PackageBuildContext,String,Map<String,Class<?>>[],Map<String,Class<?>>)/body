@@ -1,0 +1,41 @@
+{
+  MVELAnalysisResult result=null;
+  if (expr.trim().length() > 0) {
+    MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
+    ParserConfiguration conf=new ParserConfiguration();
+    conf.addAllImports(dialect.getImports());
+    if (dialect.getPackgeImports() != null && !dialect.getPackgeImports().isEmpty()) {
+      for (      String packageImport : ((Collection<String>)dialect.getPackgeImports().values())) {
+        conf.addPackageImport(packageImport);
+      }
+    }
+    conf.setClassLoader(context.getPackageBuilder().getRootClassLoader());
+    final ParserContext parserContext1=new ParserContext(conf);
+    parserContext1.setStrictTypeEnforcement(false);
+    parserContext1.setInterceptors(dialect.getInterceptors());
+    ExpressionCompiler compiler1=new ExpressionCompiler(expr);
+    compiler1.setVerifyOnly(true);
+    compiler1.compile(parserContext1);
+    Set<String> requiredInputs=compiler1.getParserContextState().getInputs().keySet();
+    final ParserContext parserContext2=new ParserContext(conf);
+    parserContext2.setStrictTypeEnforcement(false);
+    parserContext2.setInterceptors(dialect.getInterceptors());
+    for (    Map<String,Class<?>> map : availableIdentifiers) {
+      for (      Map.Entry<String,Class<?>> entry : map.entrySet()) {
+        if (requiredInputs.contains(entry.getKey())) {
+          parserContext2.addInput(entry.getKey(),entry.getValue());
+        }
+      }
+    }
+    ExpressionCompiler compiler2=new ExpressionCompiler(expr);
+    compiler2.setVerifyOnly(true);
+    compiler2.compile(parserContext2);
+    result=analyze(compiler2.getParserContextState().getInputs().keySet(),availableIdentifiers);
+    result.setMvelVariables(compiler2.getParserContextState().getVariables());
+  }
+ else {
+    result=analyze((Set<String>)Collections.EMPTY_SET,availableIdentifiers);
+    result.setMvelVariables(new HashMap<String,Class<?>>());
+  }
+  return result;
+}
