@@ -1,0 +1,57 @@
+{
+  String str="";
+  str+="package org.drools.test  \n";
+  str+="import org.drools.Cheese \n";
+  str+="query cheeses \n";
+  str+="    stilton : Cheese(type == 'stilton') \n";
+  str+="    cheddar : Cheese(type == 'cheddar', price == stilton.price) \n";
+  str+="end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatelessKnowledgeSession ksession=kbase.newStatelessKnowledgeSession();
+  Cheese stilton1=new Cheese("stilton",1);
+  Cheese cheddar1=new Cheese("cheddar",1);
+  Cheese stilton2=new Cheese("stilton",2);
+  Cheese cheddar2=new Cheese("cheddar",2);
+  Cheese stilton3=new Cheese("stilton",3);
+  Cheese cheddar3=new Cheese("cheddar",3);
+  Set set=new HashSet();
+  List list=new ArrayList();
+  list.add(stilton1);
+  list.add(cheddar1);
+  set.add(list);
+  list=new ArrayList();
+  list.add(stilton2);
+  list.add(cheddar2);
+  set.add(list);
+  list=new ArrayList();
+  list.add(stilton3);
+  list.add(cheddar3);
+  set.add(list);
+  List<Command> cmds=new ArrayList<Command>();
+  cmds.add(CommandFactory.newInsertObject(stilton1));
+  cmds.add(CommandFactory.newInsertObject(stilton2));
+  cmds.add(CommandFactory.newInsertObject(stilton3));
+  cmds.add(CommandFactory.newInsertObject(cheddar1));
+  cmds.add(CommandFactory.newInsertObject(cheddar2));
+  cmds.add(CommandFactory.newInsertObject(cheddar3));
+  cmds.add(CommandFactory.newQuery("cheeses","cheeses"));
+  BatchExecutionResult batchResult=ksession.execute(CommandFactory.newBatchExecution(cmds));
+  org.drools.runtime.rule.QueryResults results=(org.drools.runtime.rule.QueryResults)batchResult.getValue("cheeses");
+  assertEquals(3,results.size());
+  assertEquals(2,results.getIdentifiers().length);
+  Set newSet=new HashSet();
+  for (  org.drools.runtime.rule.QueryResultsRow result : results) {
+    list=new ArrayList();
+    list.add(result.get("stilton"));
+    list.add(result.get("cheddar"));
+    newSet.add(list);
+  }
+  assertEquals(set,newSet);
+}

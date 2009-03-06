@@ -1,0 +1,22 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("test_QueryWithParams.drl",getClass()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.fireAllRules();
+  org.drools.runtime.rule.QueryResults results=ksession.getQueryResults("assertedobjquery",new String[]{"value1"});
+  assertEquals(1,results.size());
+  results=ksession.getQueryResults("assertedobjquery",new String[]{"value3"});
+  assertEquals(0,results.size());
+  results=ksession.getQueryResults("assertedobjquery2",new String[]{null,"value2"});
+  assertEquals(1,results.size());
+  assertEquals(new InsertedObject("value2"),((org.drools.runtime.rule.QueryResultsRow)results.iterator().next()).get("assertedobj"));
+  results=ksession.getQueryResults("assertedobjquery2",new String[]{"value3","value2"});
+  assertEquals(1,results.size());
+  assertEquals(new InsertedObject("value2"),((org.drools.runtime.rule.QueryResultsRow)results.iterator().next()).get("assertedobj"));
+}
