@@ -1,21 +1,25 @@
 {
-  PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("simpleSalience.drl")));
-  RuleBaseConfiguration conf=new RuleBaseConfiguration();
-  conf.setSequential(true);
-  RuleBase ruleBase=getRuleBase(conf);
-  ruleBase.addPackage(builder.getPackage());
-  StatelessSession session=ruleBase.newStatelessSession();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("simpleSalience.drl",getClass()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(SequentialOption.YES);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatelessKnowledgeSession ksession=kbase.newStatelessKnowledgeSession();
   final List list=new ArrayList();
-  session.setGlobal("list",list);
-  session.execute(new Person("pob"));
-  builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(DynamicRulesTest.class.getResourceAsStream("test_Dynamic3.drl")));
-  ruleBase.addPackage(builder.getPackage());
-  session=ruleBase.newStatelessSession();
-  session.setGlobal("list",list);
+  ksession.setGlobal("list",list);
+  ksession.execute(new Person("pob"));
+  kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("test_Dynamic3.drl",DynamicRulesTest.class),ResourceType.DRL);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  ksession=kbase.newStatelessKnowledgeSession();
+  ksession.setGlobal("list",list);
   Person person=new Person("bop");
-  session.execute(person);
+  ksession.execute(person);
   assertEquals(7,list.size());
   assertEquals("rule 3",list.get(0));
   assertEquals("rule 2",list.get(1));

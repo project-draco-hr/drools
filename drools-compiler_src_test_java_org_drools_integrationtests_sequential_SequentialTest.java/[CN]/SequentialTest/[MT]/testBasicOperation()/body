@@ -1,20 +1,22 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("simpleSequential.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBaseConfiguration conf=new RuleBaseConfiguration();
-  conf.setSequential(true);
-  RuleBase ruleBase=getRuleBase(conf);
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final StatelessSession session=ruleBase.newStatelessSession();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("simpleSequential.drl",getClass()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(SequentialOption.YES);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  final StatelessKnowledgeSession ksession=kbase.newStatelessKnowledgeSession();
   final List list=new ArrayList();
-  session.setGlobal("list",list);
+  ksession.setGlobal("list",list);
   final Person p1=new Person("p1","stilton");
   final Person p2=new Person("p2","cheddar");
   final Person p3=new Person("p3","stilton");
   final Cheese stilton=new Cheese("stilton",15);
   final Cheese cheddar=new Cheese("cheddar",15);
-  session.execute(new Object[]{p1,stilton,p2,cheddar,p3});
+  ksession.execute(Arrays.asList(new Object[]{p1,stilton,p2,cheddar,p3}));
   assertEquals(3,list.size());
 }

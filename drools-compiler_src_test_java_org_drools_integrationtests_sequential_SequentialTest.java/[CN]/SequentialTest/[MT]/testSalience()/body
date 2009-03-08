@@ -1,16 +1,18 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("simpleSalience.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBaseConfiguration conf=new RuleBaseConfiguration();
-  conf.setSequential(true);
-  RuleBase ruleBase=getRuleBase(conf);
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final StatelessSession session=ruleBase.newStatelessSession();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("simpleSalience.drl",getClass()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(SequentialOption.YES);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  final StatelessKnowledgeSession ksession=kbase.newStatelessKnowledgeSession();
   final List list=new ArrayList();
-  session.setGlobal("list",list);
-  session.execute(new Person("pob"));
+  ksession.setGlobal("list",list);
+  ksession.execute(new Person("pob"));
   assertEquals(3,list.size());
   assertEquals("rule 3",list.get(0));
   assertEquals("rule 2",list.get(1));
