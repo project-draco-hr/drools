@@ -1,0 +1,67 @@
+{
+  String str="";
+  str+="package org.test\n";
+  str+="import org.drools.Message\n";
+  str+="rule \"Hello World\"\n";
+  str+="when\n";
+  str+="    Message( )\n";
+  str+="then\n";
+  str+="    System.out.println( drools.getKnowledgeRuntime() );\n";
+  str+="end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(SequentialOption.YES);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatelessKnowledgeSession ksession=kbase.newStatelessKnowledgeSession();
+  final List list=new ArrayList();
+  ksession.addEventListener(new AgendaEventListener(){
+    public void activationCancelled(    ActivationCancelledEvent event){
+      assertNotNull(event.getKnowledgeRuntime());
+      list.add(event);
+    }
+    public void activationCreated(    ActivationCreatedEvent event){
+      assertNotNull(event.getKnowledgeRuntime());
+      list.add(event);
+    }
+    public void afterActivationFired(    AfterActivationFiredEvent event){
+      assertNotNull(event.getKnowledgeRuntime());
+      list.add(event);
+    }
+    public void agendaGroupPopped(    AgendaGroupPoppedEvent event){
+      assertNotNull(event.getKnowledgeRuntime());
+      list.add(event);
+    }
+    public void agendaGroupPushed(    AgendaGroupPushedEvent event){
+      assertNotNull(event.getKnowledgeRuntime());
+      list.add(event);
+    }
+    public void beforeActivationFired(    BeforeActivationFiredEvent event){
+      assertNotNull(event.getKnowledgeRuntime());
+      list.add(event);
+    }
+  }
+);
+  ksession.addEventListener(new WorkingMemoryEventListener(){
+    public void objectInserted(    ObjectInsertedEvent event){
+      assertNotNull(event.getKnowledgeRuntime());
+      list.add(event);
+    }
+    public void objectRetracted(    ObjectRetractedEvent event){
+      assertNotNull(event.getKnowledgeRuntime());
+      list.add(event);
+    }
+    public void objectUpdated(    ObjectUpdatedEvent event){
+      assertNotNull(event.getKnowledgeRuntime());
+      list.add(event);
+    }
+  }
+);
+  ksession.execute(new Message("help"));
+  assertEquals(4,list.size());
+}

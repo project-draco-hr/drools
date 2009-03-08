@@ -1,0 +1,23 @@
+{
+  String str="";
+  str+="package org.test\n";
+  str+="import org.drools.Message\n";
+  str+="rule \"Hello World\"\n";
+  str+="when\n";
+  str+="    Message( )\n";
+  str+="then\n";
+  str+="    System.out.println( drools.getKnowledgeRuntime() );\n";
+  str+="end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(SequentialOption.YES);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatelessKnowledgeSession ksession=kbase.newStatelessKnowledgeSession();
+  ksession.execute(new Message("help"));
+}
