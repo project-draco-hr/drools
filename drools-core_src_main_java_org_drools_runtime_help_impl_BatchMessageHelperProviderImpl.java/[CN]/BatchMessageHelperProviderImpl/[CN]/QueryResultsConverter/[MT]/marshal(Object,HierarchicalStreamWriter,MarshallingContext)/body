@@ -1,6 +1,20 @@
 {
   QueryResults results=(QueryResults)object;
-  String[] identifiers=results.getIdentifiers();
+  List<String> originalIds=Arrays.asList(results.getIdentifiers());
+  List<String> actualIds=new ArrayList();
+  if (results instanceof NativeQueryResults) {
+    for (    String identifier : originalIds) {
+      Declaration declr=((NativeQueryResults)results).getDeclarations().get(identifier);
+      ObjectType objectType=declr.getPattern().getObjectType();
+      if (objectType instanceof ClassObjectType) {
+        if (((ClassObjectType)objectType).getClassType() == DroolsQuery.class) {
+          continue;
+        }
+      }
+      actualIds.add(identifier);
+    }
+  }
+  String[] identifiers=actualIds.toArray(new String[actualIds.size()]);
   writer.startNode("identifiers");
   for (int i=0; i < identifiers.length; i++) {
     writer.startNode("identifier");
