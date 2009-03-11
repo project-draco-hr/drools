@@ -1,0 +1,24 @@
+{
+  super.setUp();
+  final Package pkg=new Package("pkg1");
+  final RuleDescr ruleDescr=new RuleDescr("rule 1");
+  ruleDescr.addAttribute(new AttributeDescr("salience","(p.age + 20)/2"));
+  ruleDescr.setConsequence("");
+  PackageBuilder pkgBuilder=new PackageBuilder(pkg);
+  DialectCompiletimeRegistry dialectRegistry=pkgBuilder.getPackageRegistry(pkg.getName()).getDialectCompiletimeRegistry();
+  MVELDialect mvelDialect=(MVELDialect)dialectRegistry.getDialect("mvel");
+  context=new InstrumentedBuildContent(pkgBuilder,ruleDescr,dialectRegistry,pkg,mvelDialect);
+  final InstrumentedDeclarationScopeResolver declarationResolver=new InstrumentedDeclarationScopeResolver();
+  final ObjectType personObjeectType=new ClassObjectType(Person.class);
+  final Pattern pattern=new Pattern(0,personObjeectType);
+  final PatternExtractor extractor=new PatternExtractor(personObjeectType);
+  final Declaration declaration=new Declaration("p",extractor,pattern);
+  final Map<String,Declaration> map=new HashMap<String,Declaration>();
+  map.put("p",declaration);
+  declarationResolver.setDeclarations(map);
+  context.setDeclarationResolver(declarationResolver);
+  ruleBase=RuleBaseFactory.newRuleBase();
+  SalienceBuilder salienceBuilder=new MVELSalienceBuilder();
+  salienceBuilder.build(context);
+  ((MVELSalienceExpression)context.getRule().getSalience()).compile(Thread.currentThread().getContextClassLoader());
+}

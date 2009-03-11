@@ -1,0 +1,27 @@
+{
+  final int tcount=10;
+  final SalienceEvaluator[] evals=new SalienceEvaluator[tcount];
+  final Thread[] threads=new Thread[tcount];
+  for (int i=0; i < evals.length; i++) {
+    evals[i]=new SalienceEvaluator(ruleBase,context.getRule().getSalience(),new Person("bob" + i,30 + (i * 3)));
+    threads[i]=new Thread(evals[i]);
+  }
+  for (int i=0; i < threads.length; i++) {
+    threads[i].start();
+  }
+  for (int i=0; i < threads.length; i++) {
+    try {
+      threads[i].join();
+    }
+ catch (    InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+  int errors=0;
+  for (int i=0; i < evals.length; i++) {
+    if (evals[i].isError()) {
+      errors++;
+    }
+  }
+  assertEquals("There shouldn't be any threads in error: ",0,errors);
+}
