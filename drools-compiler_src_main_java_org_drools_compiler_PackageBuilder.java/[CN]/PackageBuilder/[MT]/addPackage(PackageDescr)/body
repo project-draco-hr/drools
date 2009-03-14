@@ -8,17 +8,10 @@
       break;
     }
   }
-  if (!isEmpty(packageDescr.getNamespace())) {
-    if (checkNamespace(packageDescr.getNamespace())) {
-      this.defaultNamespace=packageDescr.getNamespace();
-    }
- else {
-      packageDescr.setNamespace(this.defaultNamespace);
-    }
+  if (isEmpty(packageDescr.getNamespace())) {
+    packageDescr.setNamespace(this.configuration.getDefaultPackageName());
   }
- else {
-    packageDescr.setNamespace(this.defaultNamespace);
-  }
+  checkNamespace(packageDescr.getNamespace());
   PackageRegistry pkgRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
   if (pkgRegistry == null) {
     pkgRegistry=newPackage(packageDescr);
@@ -28,14 +21,14 @@
   }
   pkgRegistry.setDialect(dialectName);
   if (!hasErrors()) {
-    for (final Iterator it=packageDescr.getFactTemplates().iterator(); it.hasNext(); ) {
-      addFactTemplate((FactTemplateDescr)it.next());
+    for (    final FactTemplateDescr factTempl : packageDescr.getFactTemplates()) {
+      addFactTemplate(packageDescr,factTempl);
     }
     if (!packageDescr.getFunctions().isEmpty()) {
       for (final Iterator it=packageDescr.getFunctions().iterator(); it.hasNext(); ) {
         FunctionDescr functionDescr=(FunctionDescr)it.next();
         if (isEmpty(functionDescr.getNamespace())) {
-          functionDescr.setNamespace(this.defaultNamespace);
+          functionDescr.setNamespace(packageDescr.getNamespace());
         }
         if (isEmpty(functionDescr.getDialect())) {
           functionDescr.setDialect(pkgRegistry.getDialect());
@@ -55,7 +48,7 @@
     for (final Iterator it=packageDescr.getRules().iterator(); it.hasNext(); ) {
       RuleDescr ruleDescr=(RuleDescr)it.next();
       if (isEmpty(ruleDescr.getNamespace())) {
-        ruleDescr.setNamespace(this.defaultNamespace);
+        ruleDescr.setNamespace(packageDescr.getNamespace());
       }
       if (isEmpty(ruleDescr.getDialect())) {
         ruleDescr.addAttribute(new AttributeDescr("dialect",pkgRegistry.getDialect()));

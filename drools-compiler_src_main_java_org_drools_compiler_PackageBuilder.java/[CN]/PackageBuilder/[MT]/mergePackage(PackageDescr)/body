@@ -1,28 +1,18 @@
 {
-  PackageRegistry pkgRegistry;
-  if (isEmpty(packageDescr.getName())) {
-    pkgRegistry=this.pkgRegistryMap.get(this.defaultNamespace);
-  }
- else {
-    pkgRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
-  }
-  final List imports=packageDescr.getImports();
-  for (final Iterator it=imports.iterator(); it.hasNext(); ) {
-    ImportDescr importEntry=(ImportDescr)it.next();
+  PackageRegistry pkgRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
+  for (  final ImportDescr importEntry : packageDescr.getImports()) {
     pkgRegistry.addImport(importEntry.getTarget());
   }
   processTypeDeclarations(packageDescr);
-  for (final Iterator it=packageDescr.getFunctionImports().iterator(); it.hasNext(); ) {
-    String importEntry=((FunctionImportDescr)it.next()).getTarget();
+  for (  final FunctionImportDescr functionImport : packageDescr.getFunctionImports()) {
+    String importEntry=functionImport.getTarget();
     pkgRegistry.addStaticImport(importEntry);
     pkgRegistry.getPackage().addStaticImport(importEntry);
   }
-  final List globals=packageDescr.getGlobals();
-  for (final Iterator it=globals.iterator(); it.hasNext(); ) {
-    final GlobalDescr global=(GlobalDescr)it.next();
+  for (  final GlobalDescr global : packageDescr.getGlobals()) {
     final String identifier=global.getIdentifier();
     final String className=global.getType();
-    Class clazz;
+    Class<?> clazz;
     try {
       clazz=pkgRegistry.getTypeResolver().resolveType(className);
       pkgRegistry.getPackage().addGlobal(identifier,clazz);
