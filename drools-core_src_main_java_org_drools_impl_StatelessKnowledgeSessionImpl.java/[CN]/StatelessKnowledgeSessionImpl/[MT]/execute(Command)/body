@@ -3,7 +3,21 @@
   try {
     session.startBatchExecution();
     ((org.drools.process.command.Command)command).execute(session);
-    session.fireAllRules(this.agendaFilter);
+    boolean autoFireAllRules=true;
+    if (command instanceof FireAllRulesCommand) {
+      autoFireAllRules=false;
+    }
+ else     if (command instanceof BatchExecution) {
+      for (      Command nestedCmd : ((BatchExecutionImpl)command).getCommands()) {
+        if (nestedCmd instanceof FireAllRulesCommand) {
+          autoFireAllRules=false;
+          break;
+        }
+      }
+    }
+    if (autoFireAllRules) {
+      session.fireAllRules(this.agendaFilter);
+    }
     BatchExecutionResults result=session.getBatchExecutionResult();
     return result;
   }
