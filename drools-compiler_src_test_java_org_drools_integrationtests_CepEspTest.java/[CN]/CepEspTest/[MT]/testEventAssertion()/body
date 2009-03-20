@@ -1,9 +1,12 @@
 {
-  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_CEP_SimpleEventAssertion.drl"));
-  RuleBase ruleBase=loadRuleBase(reader);
-  SessionConfiguration conf=new SessionConfiguration();
-  conf.setClockType(ClockType.PSEUDO_CLOCK);
-  StatefulSession session=ruleBase.newStatefulSession(conf,null);
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("test_CEP_SimpleEventAssertion.drl")),ResourceType.DRL);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  KnowledgeSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  conf.setOption(ClockTypeOption.get("pseudo"));
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession(conf,null);
+  SessionPseudoClock clock=session.getSessionClock();
   final List results=new ArrayList();
   session.setGlobal("results",results);
   StockTick tick1=new StockTick(1,"DROO",50,10000);
@@ -11,9 +14,13 @@
   StockTick tick3=new StockTick(3,"ACME",10,10100);
   StockTick tick4=new StockTick(4,"DROO",50,11000);
   InternalFactHandle handle1=(InternalFactHandle)session.insert(tick1);
+  clock.advanceTime(10,TimeUnit.SECONDS);
   InternalFactHandle handle2=(InternalFactHandle)session.insert(tick2);
+  clock.advanceTime(30,TimeUnit.SECONDS);
   InternalFactHandle handle3=(InternalFactHandle)session.insert(tick3);
+  clock.advanceTime(20,TimeUnit.SECONDS);
   InternalFactHandle handle4=(InternalFactHandle)session.insert(tick4);
+  clock.advanceTime(10,TimeUnit.SECONDS);
   assertNotNull(handle1);
   assertNotNull(handle2);
   assertNotNull(handle3);
@@ -22,7 +29,6 @@
   assertTrue(handle2.isEvent());
   assertTrue(handle3.isEvent());
   assertTrue(handle4.isEvent());
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
   session.fireAllRules();
   assertEquals(2,((List)session.getGlobal("results")).size());
 }
