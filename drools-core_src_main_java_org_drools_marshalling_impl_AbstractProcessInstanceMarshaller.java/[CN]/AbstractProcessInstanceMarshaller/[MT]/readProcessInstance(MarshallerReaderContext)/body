@@ -2,19 +2,21 @@
   ObjectInputStream stream=context.stream;
   InternalRuleBase ruleBase=context.ruleBase;
   InternalWorkingMemory wm=context.wm;
-  RuleFlowProcessInstance processInstance=new RuleFlowProcessInstance();
+  WorkflowProcessInstanceImpl processInstance=createProcessInstance();
   processInstance.setId(stream.readLong());
   String processId=stream.readUTF();
   processInstance.setProcessId(processId);
+  Process process=ruleBase.getProcess(processId);
   if (ruleBase != null) {
-    processInstance.setProcess(ruleBase.getProcess(processId));
+    processInstance.setProcess(process);
   }
   processInstance.setState(stream.readInt());
   long nodeInstanceCounter=stream.readLong();
   processInstance.setWorkingMemory(wm);
   int nbVariables=stream.readInt();
   if (nbVariables > 0) {
-    VariableScopeInstance variableScopeInstance=(VariableScopeInstance)processInstance.getContextInstance(VariableScope.VARIABLE_SCOPE);
+    Context variableScope=process.getDefaultContext(VariableScope.VARIABLE_SCOPE);
+    VariableScopeInstance variableScopeInstance=(VariableScopeInstance)processInstance.getContextInstance(variableScope);
     for (int i=0; i < nbVariables; i++) {
       String name=stream.readUTF();
       try {
@@ -28,7 +30,8 @@
   }
   int nbSwimlanes=stream.readInt();
   if (nbSwimlanes > 0) {
-    SwimlaneContextInstance swimlaneContextInstance=(SwimlaneContextInstance)processInstance.getContextInstance(SwimlaneContext.SWIMLANE_SCOPE);
+    Context swimlaneContext=process.getDefaultContext(SwimlaneContext.SWIMLANE_SCOPE);
+    SwimlaneContextInstance swimlaneContextInstance=(SwimlaneContextInstance)processInstance.getContextInstance(swimlaneContext);
     for (int i=0; i < nbSwimlanes; i++) {
       String name=stream.readUTF();
       String value=stream.readUTF();

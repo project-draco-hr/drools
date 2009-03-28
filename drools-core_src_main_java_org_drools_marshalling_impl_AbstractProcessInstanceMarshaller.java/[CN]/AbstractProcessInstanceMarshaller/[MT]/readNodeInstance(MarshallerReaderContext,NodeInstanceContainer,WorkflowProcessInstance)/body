@@ -8,5 +8,33 @@
   nodeInstance.setNodeInstanceContainer(nodeInstanceContainer);
   nodeInstance.setProcessInstance(processInstance);
   nodeInstance.setId(id);
-  return nodeInstance;
+switch (nodeType) {
+case PersisterEnums.COMPOSITE_NODE_INSTANCE:
+    int nbVariables=stream.readInt();
+  if (nbVariables > 0) {
+    Context variableScope=((org.drools.process.core.Process)processInstance.getProcess()).getDefaultContext(VariableScope.VARIABLE_SCOPE);
+    VariableScopeInstance variableScopeInstance=(VariableScopeInstance)((CompositeContextNodeInstance)nodeInstance).getContextInstance(variableScope);
+    for (int i=0; i < nbVariables; i++) {
+      String name=stream.readUTF();
+      try {
+        Object value=stream.readObject();
+        variableScopeInstance.setVariable(name,value);
+      }
+ catch (      ClassNotFoundException e) {
+        throw new IllegalArgumentException("Could not reload variable " + name);
+      }
+    }
+  }
+while (stream.readShort() == PersisterEnums.NODE_INSTANCE) {
+  readNodeInstance(context,(CompositeContextNodeInstance)nodeInstance,processInstance);
+}
+break;
+case PersisterEnums.FOR_EACH_NODE_INSTANCE:
+while (stream.readShort() == PersisterEnums.NODE_INSTANCE) {
+readNodeInstance(context,(ForEachNodeInstance)nodeInstance,processInstance);
+}
+break;
+default :
+}
+return nodeInstance;
 }
