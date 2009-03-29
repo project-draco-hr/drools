@@ -1,19 +1,12 @@
 {
-  if (this.changeSetNotificationDetector == null) {
-    if (monitor) {
-      this.changeSetNotificationDetector=new ChangeSetNotificationDetector(this,this.queue,this.listener);
-    }
- else     if (this.changeSetNotificationDetector == null) {
-      return;
-    }
-  }
-  if (!this.changeSetNotificationDetector.monitor && monitor) {
-    this.thread=new Thread(this.changeSetNotificationDetector);
-    this.changeSetNotificationDetector.monitor=true;
-    this.thread.start();
-  }
- else {
-    this.changeSetNotificationDetector.monitor=false;
+  if (!monitor && this.changeSetNotificationDetector != null) {
+    this.changeSetNotificationDetector.stop();
     this.thread.interrupt();
+    this.changeSetNotificationDetector=null;
+  }
+ else   if (monitor && this.changeSetNotificationDetector == null) {
+    this.changeSetNotificationDetector=new ChangeSetNotificationDetector(this,this.queue,this.listener);
+    this.thread=new Thread(this.changeSetNotificationDetector);
+    this.thread.start();
   }
 }
