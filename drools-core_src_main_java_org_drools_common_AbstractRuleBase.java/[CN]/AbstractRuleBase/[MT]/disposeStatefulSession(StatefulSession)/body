@@ -1,6 +1,12 @@
 {
-  this.statefulSessions.remove(statefulSession);
-  for (Iterator it=statefulSession.getRuleBaseUpdateListeners().iterator(); it.hasNext(); ) {
-    this.removeEventListener((RuleBaseEventListener)it.next());
+  try {
+    statefuleSessionLock.lock();
+    this.statefulSessions.remove(statefulSession);
+    for (    Object listener : statefulSession.getRuleBaseUpdateListeners()) {
+      this.removeEventListener((RuleBaseEventListener)listener);
+    }
+  }
+  finally {
+    statefuleSessionLock.unlock();
   }
 }
