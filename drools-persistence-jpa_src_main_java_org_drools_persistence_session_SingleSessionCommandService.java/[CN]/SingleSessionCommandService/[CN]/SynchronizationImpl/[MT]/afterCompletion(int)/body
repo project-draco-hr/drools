@@ -1,13 +1,14 @@
 {
   if (status != Status.STATUS_COMMITTED) {
-    cmdService.rollback();
-    System.out.println("after with local rollback: " + status);
+    rollback();
   }
-  System.out.println("cleanedup rollback sychronisation");
   Map map=(Map)env.get("synchronizations");
-  map.remove(cmdService);
-  EntityManager localEm=(EntityManager)this.env.get(EnvironmentName.ENTITY_MANAGER);
+  map.remove(SingleSessionCommandService.this);
+  EntityManager localEm=(EntityManager)env.get(EnvironmentName.ENTITY_MANAGER);
   if (localEm != null && localEm.isOpen()) {
     localEm.close();
   }
+  env.set(EnvironmentName.ENTITY_MANAGER,null);
+  ((JPAProcessInstanceManager)((ReteooWorkingMemory)session).getProcessInstanceManager()).clearProcessInstances();
+  ((JPAWorkItemManager)((ReteooWorkingMemory)session).getWorkItemManager()).clearWorkItems();
 }

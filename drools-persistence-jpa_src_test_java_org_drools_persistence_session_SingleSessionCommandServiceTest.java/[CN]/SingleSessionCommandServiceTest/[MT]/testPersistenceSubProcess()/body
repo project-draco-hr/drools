@@ -1,7 +1,7 @@
 {
   Environment env=KnowledgeBaseFactory.newEnvironment();
   env.set(EnvironmentName.ENTITY_MANAGER_FACTORY,emf);
-  env.set("drools.TransactionManager",TransactionManagerServices.getTransactionManager());
+  env.set(EnvironmentName.TRANSACTION_MANAGER,TransactionManagerServices.getTransactionManager());
   Properties properties=new Properties();
   properties.setProperty("drools.commandService","org.drools.persistence.session.SingleSessionCommandService");
   properties.setProperty("drools.processInstanceManagerFactory","org.drools.persistence.processinstance.JPAProcessInstanceManagerFactory");
@@ -12,6 +12,7 @@
   Package pkg=getProcessSubProcess();
   ruleBase.addPackage(pkg);
   SingleSessionCommandService service=new SingleSessionCommandService(ruleBase,config,env);
+  int sessionId=service.getSessionId();
   StartProcessCommand startProcessCommand=new StartProcessCommand();
   startProcessCommand.setProcessId("org.drools.test.TestProcess");
   RuleFlowProcessInstance processInstance=(RuleFlowProcessInstance)service.execute(startProcessCommand);
@@ -21,7 +22,7 @@
   WorkItem workItem=handler.getWorkItem();
   assertNotNull(workItem);
   service.dispose();
-  service=new SingleSessionCommandService(ruleBase,config,env);
+  service=new SingleSessionCommandService(sessionId,ruleBase,config,env);
   GetProcessInstanceCommand getProcessInstanceCommand=new GetProcessInstanceCommand();
   getProcessInstanceCommand.setProcessInstanceId(processInstanceId);
   processInstance=(RuleFlowProcessInstance)service.execute(getProcessInstanceCommand);
@@ -35,12 +36,12 @@
   RuleFlowProcessInstance subProcessInstance=(RuleFlowProcessInstance)service.execute(getProcessInstanceCommand);
   assertNotNull(subProcessInstance);
   service.dispose();
-  service=new SingleSessionCommandService(ruleBase,config,env);
+  service=new SingleSessionCommandService(sessionId,ruleBase,config,env);
   CompleteWorkItemCommand completeWorkItemCommand=new CompleteWorkItemCommand();
   completeWorkItemCommand.setWorkItemId(workItem.getId());
   service.execute(completeWorkItemCommand);
   service.dispose();
-  service=new SingleSessionCommandService(ruleBase,config,env);
+  service=new SingleSessionCommandService(sessionId,ruleBase,config,env);
   getProcessInstanceCommand=new GetProcessInstanceCommand();
   getProcessInstanceCommand.setProcessInstanceId(subProcessInstanceId);
   subProcessInstance=(RuleFlowProcessInstance)service.execute(getProcessInstanceCommand);

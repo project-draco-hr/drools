@@ -1,11 +1,18 @@
 {
+  ProcessInstance processInstance=null;
+  if (this.processInstances != null) {
+    processInstance=this.processInstances.get(id);
+    if (processInstance != null) {
+      return processInstance;
+    }
+  }
   EntityManager em=(EntityManager)this.workingMemory.getEnvironment().get(EnvironmentName.ENTITY_MANAGER);
   ProcessInstanceInfo processInstanceInfo=em.find(ProcessInstanceInfo.class,id);
   if (processInstanceInfo == null) {
     return null;
   }
   processInstanceInfo.updateLastReadDate();
-  ProcessInstance processInstance=(ProcessInstance)processInstanceInfo.getProcessInstance(workingMemory);
+  processInstance=(ProcessInstance)processInstanceInfo.getProcessInstance(workingMemory);
   Process process=((InternalRuleBase)workingMemory.getRuleBase()).getProcess(processInstance.getProcessId());
   if (process == null) {
     throw new IllegalArgumentException("Could not find process " + processInstance.getProcessId());

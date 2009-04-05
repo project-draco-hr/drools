@@ -8,8 +8,11 @@
       ut.begin();
       localTransaction=true;
     }
-    EntityManager localEm=this.emf.createEntityManager();
-    this.env.set(EnvironmentName.ENTITY_MANAGER,localEm);
+    EntityManager localEm=(EntityManager)env.get(EnvironmentName.ENTITY_MANAGER);
+    if (localEm == null || !localEm.isOpen()) {
+      localEm=this.emf.createEntityManager();
+      this.env.set(EnvironmentName.ENTITY_MANAGER,localEm);
+    }
     if (this.em == null) {
       this.em=this.emf.createEntityManager();
       this.sessionInfo=this.em.find(SessionInfo.class,this.sessionInfo.getId());
@@ -23,6 +26,12 @@
     T result=command.execute((ReteooWorkingMemory)session);
     if (localTransaction) {
       ut.commit();
+      if (localEm.isOpen()) {
+        localEm.close();
+      }
+      this.env.set(EnvironmentName.ENTITY_MANAGER,null);
+      ((JPAProcessInstanceManager)((ReteooWorkingMemory)session).getProcessInstanceManager()).clearProcessInstances();
+      ((JPAWorkItemManager)((ReteooWorkingMemory)session).getWorkItemManager()).clearWorkItems();
     }
     return result;
   }
