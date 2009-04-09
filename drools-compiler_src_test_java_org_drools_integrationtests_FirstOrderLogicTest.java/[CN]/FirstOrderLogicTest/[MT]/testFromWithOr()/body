@@ -1,0 +1,28 @@
+{
+  KnowledgeBuilder builder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  builder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("test_FromWithOr.drl")),ResourceType.DRL);
+  if (builder.hasErrors()) {
+    System.out.println(builder.getErrors());
+  }
+  assertFalse(builder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(builder.getKnowledgePackages());
+  final StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  final List<Address> results=new ArrayList<Address>();
+  session.setGlobal("results",results);
+  Address a1=new Address();
+  a1.setZipCode("12345");
+  Address a2=new Address();
+  a2.setZipCode("54321");
+  Address a3=new Address();
+  a3.setZipCode("99999");
+  Person p=new Person();
+  p.addAddress(a1);
+  p.addAddress(a2);
+  p.addAddress(a3);
+  session.insert(p);
+  session.fireAllRules();
+  assertEquals(2,results.size());
+  assertTrue(results.contains(a1));
+  assertTrue(results.contains(a2));
+}
