@@ -7,17 +7,18 @@
       final Evaluator evaluator=literalConstraint.getEvaluator();
       final FieldValue value=literalConstraint.getField();
       if (evaluator.getOperator() == Operator.EQUAL && literalConstraint.getFieldExtractor().getValueType() != ValueType.OBJECT_TYPE) {
-        final int index=literalConstraint.getFieldExtractor().getIndex();
+        final InternalReadAccessor fieldAccessor=literalConstraint.getFieldExtractor();
+        final int index=fieldAccessor.getIndex();
         final FieldIndex fieldIndex=unregisterFieldIndex(index);
         if (fieldIndex.isHashed()) {
-          HashKey hashKey=new HashKey(index,value,fieldIndex.getFieldExtractor());
+          HashKey hashKey=new HashKey(index,value,fieldAccessor);
           this.hashedSinkMap.remove(hashKey);
           if (fieldIndex.getCount() <= this.alphaNodeHashingThreshold - 1) {
             unHashSinks(fieldIndex);
           }
         }
  else {
-          this.hashableSinks.remove((ObjectSinkNode)sink);
+          this.hashableSinks.remove(alphaNode);
         }
         if (this.hashableSinks != null && this.hashableSinks.isEmpty()) {
           this.hashableSinks=null;

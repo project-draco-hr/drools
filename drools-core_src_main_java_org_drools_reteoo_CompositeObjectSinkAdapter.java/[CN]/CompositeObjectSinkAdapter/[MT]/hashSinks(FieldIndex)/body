@@ -1,23 +1,20 @@
 {
-  final int index=fieldIndex.getIndex();
-  final List list=new ArrayList();
   if (this.hashedSinkMap == null) {
     this.hashedSinkMap=new ObjectHashMap();
   }
-  for (ObjectSinkNode sink=this.hashableSinks.getFirst(); sink != null; sink=sink.getNextObjectSinkNode()) {
-    final AlphaNode alphaNode=(AlphaNode)sink;
+  final int index=fieldIndex.getIndex();
+  final InternalReadAccessor fieldReader=fieldIndex.getFieldExtractor();
+  ObjectSinkNode currentSink=this.hashableSinks.getFirst();
+  while (currentSink != null) {
+    final AlphaNode alphaNode=(AlphaNode)currentSink;
     final AlphaNodeFieldConstraint fieldConstraint=alphaNode.getConstraint();
     final LiteralConstraint literalConstraint=(LiteralConstraint)fieldConstraint;
-    final Evaluator evaluator=literalConstraint.getEvaluator();
-    if (evaluator.getOperator() == Operator.EQUAL && index == literalConstraint.getFieldExtractor().getIndex()) {
+    currentSink=currentSink.getNextObjectSinkNode();
+    if (index == literalConstraint.getFieldExtractor().getIndex()) {
       final FieldValue value=literalConstraint.getField();
-      list.add(sink);
-      this.hashedSinkMap.put(new HashKey(index,value,fieldIndex.getFieldExtractor()),sink);
+      this.hashedSinkMap.put(new HashKey(index,value,fieldReader),alphaNode);
+      hashableSinks.remove(alphaNode);
     }
-  }
-  for (final java.util.Iterator it=list.iterator(); it.hasNext(); ) {
-    final ObjectSinkNode sink=(ObjectSinkNode)it.next();
-    this.hashableSinks.remove(sink);
   }
   if (this.hashableSinks.isEmpty()) {
     this.hashableSinks=null;
