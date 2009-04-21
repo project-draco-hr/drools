@@ -11,15 +11,19 @@
   pkg=knowledgeHelper.getWorkingMemory().getRuleBase().getPackage(knowledgeHelper.getRule().getPackage());
   ClassLoader tempClassLoader=Thread.currentThread().getContextClassLoader();
   Thread.currentThread().setContextClassLoader(((InternalRuleBase)workingMemory.getRuleBase()).getRootClassLoader());
-  if (MVELDebugHandler.isDebugMode()) {
-    if (MVELDebugHandler.verbose) {
-      System.out.println("Executing expression " + compexpr.getSourceName());
-      System.out.println(DebugTools.decompile(compexpr));
+  try {
+    if (MVELDebugHandler.isDebugMode()) {
+      if (MVELDebugHandler.verbose) {
+        System.out.println("Executing expression " + compexpr.getSourceName());
+        System.out.println(DebugTools.decompile(compexpr));
+      }
+      MVEL.executeDebugger(compexpr,null,factory);
     }
-    MVEL.executeDebugger(compexpr,null,factory);
-  }
  else {
-    MVEL.executeExpression(compexpr,null,factory);
+      MVEL.executeExpression(compexpr,null,factory);
+    }
   }
-  Thread.currentThread().setContextClassLoader(tempClassLoader);
+  finally {
+    Thread.currentThread().setContextClassLoader(tempClassLoader);
+  }
 }
