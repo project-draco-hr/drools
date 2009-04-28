@@ -2,9 +2,12 @@
   try {
     this.lock.lock();
     this.ruleBase.executeQueuedActions();
-    final InternalFactHandle handle=(InternalFactHandle)factHandle;
+    InternalFactHandle handle=(InternalFactHandle)factHandle;
     if (handle.getId() == -1) {
       return;
+    }
+    if (factHandle instanceof DisconnectedFactHandle) {
+      handle=this.objectStore.reconnect(handle);
     }
     removePropertyChangeListener(handle);
     if (activation != null) {

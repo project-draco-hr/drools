@@ -1,15 +1,24 @@
 {
-  Map map=new HashMap();
+  BatchExecutionResultImpl result=new BatchExecutionResultImpl();
+  Map results=result.getResults();
+  Map facts=result.getFacts();
   while (reader.hasMoreChildren()) {
     reader.moveDown();
-    String identifier=reader.getAttribute("identifier");
-    reader.moveDown();
-    Object value=readItem(reader,context,null);
-    map.put(identifier,value);
-    reader.moveUp();
-    reader.moveUp();
+    if (reader.getNodeName().equals("result")) {
+      String identifier=reader.getAttribute("identifier");
+      reader.moveDown();
+      Object value=readItem(reader,context,null);
+      results.put(identifier,value);
+      reader.moveUp();
+      reader.moveUp();
+    }
+ else     if (reader.getNodeName().equals("fact-handle")) {
+      String identifier=reader.getAttribute("identifier");
+      facts.put(identifier,new DisconnectedFactHandle(reader.getAttribute("externalForm")));
+    }
+ else {
+      throw new IllegalArgumentException("Element '" + reader.getNodeName() + "' is not supported here");
+    }
   }
-  BatchExecutionResultImpl result=new BatchExecutionResultImpl();
-  result.setResults(map);
   return result;
 }

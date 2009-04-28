@@ -2,7 +2,10 @@
   try {
     this.lock.lock();
     this.ruleBase.executeQueuedActions();
-    final InternalFactHandle handle=(InternalFactHandle)factHandle;
+    InternalFactHandle handle=(InternalFactHandle)factHandle;
+    if (factHandle instanceof DisconnectedFactHandle) {
+      handle=this.objectStore.reconnect(handle);
+    }
     final Object originalObject=handle.getObject();
     if (this.maintainTms) {
       if (handle.getEqualityKey() != null) {

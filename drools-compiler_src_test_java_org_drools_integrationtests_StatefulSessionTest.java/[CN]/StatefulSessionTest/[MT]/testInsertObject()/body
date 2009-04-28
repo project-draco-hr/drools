@@ -1,0 +1,26 @@
+{
+  String str="";
+  str+="package org.drools \n";
+  str+="import org.drools.Cheese \n";
+  str+="rule rule1 \n";
+  str+="  when \n";
+  str+="    $c : Cheese() \n";
+  str+=" \n";
+  str+="  then \n";
+  str+="    $c.setPrice( 30 ); \n";
+  str+="end\n";
+  Cheese stilton=new Cheese("stilton",5);
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  Command insertCmd=CommandFactory.newInsertObject(stilton,"outStilton");
+  Command fireCmd=CommandFactory.newFireAllRules();
+  Command cmds=CommandFactory.newBatchExecution(Arrays.asList(new Command[]{insertCmd,fireCmd}));
+  ExecutionResults result=ksession.execute(cmds);
+  stilton=(Cheese)result.getValue("outStilton");
+  assertEquals(30,stilton.getPrice());
+  Object o=ksession.getObject((FactHandle)result.getFactHandle("outStilton"));
+  assertSame(o,stilton);
+}
