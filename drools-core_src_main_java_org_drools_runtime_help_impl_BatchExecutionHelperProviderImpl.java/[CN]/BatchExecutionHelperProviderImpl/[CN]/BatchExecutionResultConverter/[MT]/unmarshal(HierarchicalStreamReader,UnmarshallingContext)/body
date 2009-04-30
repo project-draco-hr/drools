@@ -1,7 +1,7 @@
 {
   BatchExecutionResultImpl result=new BatchExecutionResultImpl();
   Map results=result.getResults();
-  Map facts=result.getFacts();
+  Map facts=result.getFactHandles();
   while (reader.hasMoreChildren()) {
     reader.moveDown();
     if (reader.getNodeName().equals("result")) {
@@ -15,6 +15,16 @@
  else     if (reader.getNodeName().equals("fact-handle")) {
       String identifier=reader.getAttribute("identifier");
       facts.put(identifier,new DisconnectedFactHandle(reader.getAttribute("externalForm")));
+    }
+ else     if (reader.getNodeName().equals("fact-handles")) {
+      String identifier=reader.getAttribute("identifier");
+      List<FactHandle> list=new ArrayList();
+      while (reader.hasMoreChildren()) {
+        reader.moveDown();
+        list.add(new DisconnectedFactHandle(reader.getAttribute("externalForm")));
+        reader.moveUp();
+      }
+      facts.put(identifier,list);
     }
  else {
       throw new IllegalArgumentException("Element '" + reader.getNodeName() + "' is not supported here");
