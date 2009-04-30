@@ -12,17 +12,24 @@
     identifiers.put(list.get(i),i);
   }
   List results=new ArrayList();
+  List<List<FactHandle>> resultHandles=new ArrayList();
   while (reader.hasMoreChildren()) {
     reader.moveDown();
     List objects=new ArrayList();
+    List<FactHandle> handles=new ArrayList();
     while (reader.hasMoreChildren()) {
       reader.moveDown();
       Object object=readItem(reader,context,null);
-      objects.add(object);
       reader.moveUp();
+      reader.moveDown();
+      FactHandle handle=new DisconnectedFactHandle(reader.getAttribute("externalForm"));
+      reader.moveUp();
+      objects.add(object);
+      handles.add(handle);
     }
     results.add(objects);
+    resultHandles.add(handles);
     reader.moveUp();
   }
-  return new FlatQueryResults(identifiers,results);
+  return new FlatQueryResults(identifiers,results,resultHandles);
 }
