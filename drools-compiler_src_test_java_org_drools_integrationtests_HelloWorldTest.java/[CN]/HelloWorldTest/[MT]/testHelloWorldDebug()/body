@@ -1,5 +1,20 @@
 {
+  final List<String> knownVariables=new ArrayList<String>();
+  MVELRuntime.resetDebugger();
   MVELDebugHandler.setDebugMode(true);
+  MVELRuntime.setThreadDebugger(new Debugger(){
+    public int onBreak(    Frame frame){
+      System.out.println("onBreak");
+      for (      String var : frame.getFactory().getKnownVariables()) {
+        System.out.println("  " + var);
+        knownVariables.add(var);
+      }
+      return 0;
+    }
+  }
+);
+  String source="org.drools.integrationtests.Rule_Hello_World_0";
+  MVELRuntime.registerBreakpoint(source,1);
   KnowledgeBase kbase=readKnowledgeBase();
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   KnowledgeRuntimeLogger logger=KnowledgeRuntimeLoggerFactory.newFileLogger(ksession,"test");
@@ -9,4 +24,6 @@
   ksession.insert(message);
   ksession.fireAllRules();
   logger.close();
+  assertTrue(knownVariables.contains("m"));
+  assertTrue(knownVariables.contains("myMessage"));
 }
