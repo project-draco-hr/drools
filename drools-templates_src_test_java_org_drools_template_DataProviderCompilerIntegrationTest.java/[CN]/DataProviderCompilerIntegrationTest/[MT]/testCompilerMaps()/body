@@ -1,0 +1,21 @@
+{
+  Collection<Map<String,Object>> maps=new ArrayList<Map<String,Object>>();
+  final ObjectDataCompiler converter=new ObjectDataCompiler();
+  InputStream templateStream=this.getClass().getResourceAsStream("/templates/rule_template_1.drl");
+  TemplateContainer tc=new DefaultTemplateContainer(templateStream);
+  Column[] columns=tc.getColumns();
+  for (  String[] row : rows) {
+    Map<String,Object> map=new HashMap<String,Object>();
+    for (int icol=0; icol < columns.length; icol++) {
+      Object value=row[icol];
+      if (value != null) {
+        map.put(columns[icol].getName(),value);
+      }
+    }
+    maps.add(map);
+  }
+  templateStream=this.getClass().getResourceAsStream("/templates/rule_template_1.drl");
+  final String drl=converter.compile(maps,templateStream);
+  System.out.println(drl);
+  assertEquals(EXPECTED_RULES.toString(),drl);
+}
