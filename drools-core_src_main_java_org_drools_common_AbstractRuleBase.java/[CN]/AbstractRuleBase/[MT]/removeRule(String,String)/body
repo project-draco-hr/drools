@@ -1,5 +1,6 @@
 {
-synchronized (this.pkgs) {
+  try {
+    lock();
     final Package pkg=this.pkgs.get(packageName);
     if (pkg == null) {
       throw new IllegalArgumentException("Package name '" + packageName + "' does not exist for this Rule Base.");
@@ -8,11 +9,6 @@ synchronized (this.pkgs) {
     if (rule == null) {
       throw new IllegalArgumentException("Rule name '" + ruleName + "' does not exist in the Package '"+ packageName+ "'.");
     }
-    boolean doUnlock=false;
-    if (!this.lock.isHeldByCurrentThread() && (this.wms == null || this.wms.length == 0)) {
-      lock();
-      doUnlock=true;
-    }
     this.removalsSinceLock++;
     removeRule(pkg,rule);
     pkg.removeRule(rule);
@@ -20,8 +16,8 @@ synchronized (this.pkgs) {
       this.reloadPackageCompilationData=new ReloadPackageCompilationData();
     }
     this.reloadPackageCompilationData.addDialectDatas(pkg.getDialectRuntimeRegistry());
-    if (doUnlock) {
-      unlock();
-    }
+  }
+  finally {
+    unlock();
   }
 }
