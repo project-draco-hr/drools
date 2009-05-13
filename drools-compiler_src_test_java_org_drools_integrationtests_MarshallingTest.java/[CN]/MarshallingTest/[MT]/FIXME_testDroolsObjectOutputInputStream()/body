@@ -1,0 +1,25 @@
+{
+  Person bob=new Person();
+  KnowledgeBuilder knowledgeBuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  knowledgeBuilder.add(ResourceFactory.newClassPathResource("org/drools/integrationtests/test_Serializable.drl"),ResourceType.DRL);
+  KnowledgeBase knowledgeBase=KnowledgeBaseFactory.newKnowledgeBase();
+  knowledgeBase.addKnowledgePackages(knowledgeBuilder.getKnowledgePackages());
+  StatefulKnowledgeSession session=knowledgeBase.newStatefulKnowledgeSession();
+  session.insert(bob);
+  assertSame("these two object references should be same",bob,session.getObjects().iterator().next());
+  Marshaller marshaller=createSerializableMarshaller(knowledgeBase);
+  ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  ObjectOutputStream out=new DroolsObjectOutputStream(baos);
+  out.writeObject(bob);
+  out.writeObject(knowledgeBase);
+  marshaller.marshall(out,session);
+  out.flush();
+  out.close();
+  ObjectInputStream in=new DroolsObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
+  Person deserializedBob=(Person)in.readObject();
+  knowledgeBase=(KnowledgeBase)in.readObject();
+  marshaller=createSerializableMarshaller(knowledgeBase);
+  session=marshaller.unmarshall(in);
+  assertSame("these two object references should be same",deserializedBob,session.getObjects().iterator().next());
+  in.close();
+}
