@@ -1,0 +1,53 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("test_QueryMemoryLeak.drl",getClass()),ResourceType.DRL);
+  KnowledgeBuilderErrors errors=kbuilder.getErrors();
+  if (errors.size() > 0) {
+    for (    KnowledgeBuilderError error : errors) {
+      System.err.println(error);
+    }
+    throw new IllegalArgumentException("Could not parse knowledge.");
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  String workerId="B1234";
+  Worker worker=new Worker();
+  worker.setId(workerId);
+  org.drools.runtime.rule.FactHandle handle=ksession.insert(worker);
+  ksession.fireAllRules();
+  assertNotNull(handle);
+  Object retractedWorker=null;
+  for (int i=0; i < 100; i++) {
+    retractedWorker=(Object)ksession.getQueryResults("getWorker",new Object[]{workerId});
+  }
+  assertNotNull(retractedWorker);
+  StatefulKnowledgeSessionImpl sessionImpl=(StatefulKnowledgeSessionImpl)ksession;
+  ReteooWorkingMemory reteWorkingMemory=sessionImpl.session;
+  AbstractWorkingMemory abstractWorkingMemory=(AbstractWorkingMemory)reteWorkingMemory;
+  InternalRuleBase ruleBase=(InternalRuleBase)abstractWorkingMemory.getRuleBase();
+  Collection<EntryPointNode> entryPointNodes=ruleBase.getRete().getEntryPointNodes().values();
+  EntryPointNode defaultEntryPointNode=null;
+  for (  EntryPointNode epNode : entryPointNodes) {
+    if (epNode.getEntryPoint().getEntryPointId() == "DEFAULT") {
+      defaultEntryPointNode=epNode;
+      break;
+    }
+  }
+  assertNotNull(defaultEntryPointNode);
+  Map<ObjectType,ObjectTypeNode> obnodes=defaultEntryPointNode.getObjectTypeNodes();
+  ObjectType key=new ClassObjectType(DroolsQuery.class);
+  ObjectTypeNode droolsQueryNode=obnodes.get(key);
+  ObjectHashSet droolsQueryMemory=(ObjectHashSet)abstractWorkingMemory.getNodeMemory(droolsQueryNode);
+  assertEquals(0,droolsQueryMemory.size());
+  Entry[] entries=droolsQueryMemory.getTable();
+  int entryCounter=0;
+  for (  Entry entry : entries) {
+    if (entry != null) {
+      entryCounter++;
+      ObjectEntry oEntry=(ObjectEntry)entry;
+      DefaultFactHandle factHandle=(DefaultFactHandle)oEntry.getValue();
+      assertNull(factHandle.getObject());
+    }
+  }
+}
