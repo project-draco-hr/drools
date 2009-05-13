@@ -4,7 +4,7 @@
   PatternDescr cheeseDescr=new PatternDescr("org.drools.Cheese");
   cheeseDescr.addConstraint(price);
   accumDescr.setInputPattern(cheeseDescr);
-  accumDescr.setInitCode("int x = 0;");
+  accumDescr.setInitCode("int x = 0; int y = 0;");
   accumDescr.setActionCode("x += $price;");
   accumDescr.setResultCode("new Integer( x )");
   final PackageBuilder pkgBuilder=new PackageBuilder();
@@ -17,6 +17,8 @@
   RuleDescr ruleDescr=new RuleDescr("test rule");
   RuleBuildContext context=new RuleBuildContext(pkgBuilder,ruleDescr,dialectRegistry,pkg,dialect);
   Accumulate accumulate=(Accumulate)builder.build(context,accumDescr);
-  dialect.compileAll();
-  assertTrue(context.getErrors().toString(),context.getErrors().isEmpty());
+  String generatedCode=(String)context.getMethods().get(0);
+  assertTrue(generatedCode.contains("private int x;"));
+  assertTrue(generatedCode.contains("private int y;"));
+  assertTrue(generatedCode.contains("x = 0;y = 0;"));
 }
