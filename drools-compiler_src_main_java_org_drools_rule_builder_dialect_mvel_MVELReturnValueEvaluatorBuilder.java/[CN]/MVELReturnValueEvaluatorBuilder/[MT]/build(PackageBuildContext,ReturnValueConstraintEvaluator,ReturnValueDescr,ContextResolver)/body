@@ -2,8 +2,11 @@
   String text=descr.getText();
   try {
     MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
-    Dialect.AnalysisResult analysis=dialect.analyzeBlock(context,descr,dialect.getInterceptors(),text,new Map[]{Collections.EMPTY_MAP,context.getPackageBuilder().getGlobals()},null);
-    Map<String,Class<?>> variableClasses=new HashMap<String,Class<?>>();
+    Map<String,Class<?>> variables=new HashMap<String,Class<?>>();
+    variables.put("context",ProcessContext.class);
+    variables.put("kcontext",org.drools.runtime.process.ProcessContext.class);
+    variables.put("drools",KnowledgeHelper.class);
+    Dialect.AnalysisResult analysis=dialect.analyzeBlock(context,descr,dialect.getInterceptors(),text,new Map[]{variables,context.getPackageBuilder().getGlobals()},null);
     List<String> variableNames=analysis.getNotBoundedIdentifiers();
     if (contextResolver != null) {
       for (      String variableName : variableNames) {
@@ -12,11 +15,11 @@
           context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Could not find variable '" + variableName + "' for constraint '"+ descr.getText()+ "'"));
         }
  else {
-          variableClasses.put(variableName,context.getDialect().getTypeResolver().resolveType(variableScope.findVariable(variableName).getType().getStringType()));
+          variables.put(variableName,context.getDialect().getTypeResolver().resolveType(variableScope.findVariable(variableName).getType().getStringType()));
         }
       }
     }
-    MVELCompilationUnit unit=dialect.getMVELCompilationUnit(text,analysis,null,null,variableClasses,context);
+    MVELCompilationUnit unit=dialect.getMVELCompilationUnit(text,analysis,null,null,variables,context);
     MVELReturnValueEvaluator expr=new MVELReturnValueEvaluator(unit,dialect.getId());
     expr.setVariableNames(variableNames);
     constraintNode.setEvaluator(expr);
