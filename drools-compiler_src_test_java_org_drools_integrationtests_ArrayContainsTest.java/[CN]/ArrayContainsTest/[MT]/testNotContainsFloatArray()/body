@@ -1,0 +1,43 @@
+{
+  String str="";
+  str+="package org.drools;\n";
+  str+="global java.util.List list;\n";
+  str+="global Float fGlobal;\n";
+  str+="global Object fArrayGlobal;\n";
+  str+="rule \"contains in array\"\n";
+  str+="     salience 10\n";
+  str+="     when\n";
+  str+="         Primitives( $f : floatPrimitive == 10, $array1 :  primitiveFloatArray ) \n";
+  str+="         Primitives( floatPrimitive != 10, $array2 : primitiveFloatArray not contains fGlobal,  primitiveFloatArray not contains $f, ";
+  str+="                     floatPrimitive not memberOf $array2, floatPrimitive not memberOf $array1, floatPrimitive not memberOf fArrayGlobal )\n";
+  str+="     then\n";
+  str+="        list.add( \"ok1\" );\n";
+  str+="end\n";
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail("kbuilder has errors\n:" + kbuilder.getErrors());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  final List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.setGlobal("fGlobal",10.0f);
+  ksession.setGlobal("fArrayGlobal",new float[]{40,50,60});
+  final Primitives p1=new Primitives();
+  p1.setFloatPrimitive(5);
+  p1.setPrimitiveFloatArray(new float[]{40,50,60});
+  FactHandle p1h=ksession.insert(p1);
+  final Primitives p2=new Primitives();
+  p2.setFloatPrimitive(10);
+  p2.setPrimitiveFloatArray(new float[]{40,50,60});
+  ksession.insert(p2);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  ksession.retract(p1h);
+  ksession.insert(p1);
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+}

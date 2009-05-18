@@ -1,0 +1,44 @@
+{
+  String str="";
+  str+="package org.drools;\n";
+  str+="global java.util.List list;\n";
+  str+="global Boolean bGlobal;\n";
+  str+="global Object bArrayGlobal;\n";
+  str+="rule \"contains in array\"\n";
+  str+="     salience 10\n";
+  str+="     when\n";
+  str+="         Primitives( $b : booleanPrimitive, intPrimitive == 10, $array1 :  primitiveBooleanArray ) \n";
+  str+="         Primitives( booleanPrimitive == false, intPrimitive != 10, $array2 : primitiveBooleanArray not contains bGlobal,  primitiveBooleanArray not contains $b, ";
+  str+="                     booleanPrimitive not memberOf $array2, booleanPrimitive not memberOf $array1, booleanPrimitive not memberOf bArrayGlobal )\n";
+  str+="     then\n";
+  str+="        list.add( \"ok1\" );\n";
+  str+="end\n";
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail("kbuilder has errors\n:" + kbuilder.getErrors());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  final List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.setGlobal("bGlobal",false);
+  ksession.setGlobal("bArrayGlobal",new boolean[]{true,true});
+  final Primitives p1=new Primitives();
+  p1.setIntPrimitive(10);
+  p1.setPrimitiveBooleanArray(new boolean[]{true,true});
+  p1.setBooleanPrimitive(false);
+  FactHandle p1h=ksession.insert(p1);
+  final Primitives p2=new Primitives();
+  p2.setPrimitiveBooleanArray(new boolean[]{true,true});
+  p2.setBooleanPrimitive(false);
+  ksession.insert(p2);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  ksession.retract(p1h);
+  ksession.insert(p1);
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+}

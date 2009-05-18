@@ -1,0 +1,43 @@
+{
+  String str="";
+  str+="package org.drools;\n";
+  str+="global java.util.List list;\n";
+  str+="global Character cGlobal;\n";
+  str+="global Object cArrayGlobal;\n";
+  str+="rule \"contains in array\"\n";
+  str+="     salience 10\n";
+  str+="     when\n";
+  str+="         Primitives( $c : charPrimitive == 'c', $array1 :  primitiveCharArray ) \n";
+  str+="         Primitives( charPrimitive != 'c', $array2 : primitiveCharArray not contains cGlobal,  primitiveCharArray not contains $c, ";
+  str+="                     charPrimitive not memberOf $array2, charPrimitive not memberOf $array1, charPrimitive not memberOf cArrayGlobal )\n";
+  str+="     then\n";
+  str+="        list.add( \"ok1\" );\n";
+  str+="end\n";
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail("kbuilder has errors\n:" + kbuilder.getErrors());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  final List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.setGlobal("cGlobal",'c');
+  ksession.setGlobal("cArrayGlobal",new char[]{'d','e','f'});
+  final Primitives p1=new Primitives();
+  p1.setPrimitiveCharArray(new char[]{'d','e','f'});
+  p1.setCharPrimitive('a');
+  FactHandle p1h=ksession.insert(p1);
+  final Primitives p2=new Primitives();
+  p2.setPrimitiveCharArray(new char[]{'d','e','f'});
+  p2.setCharPrimitive('c');
+  ksession.insert(p2);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  ksession.retract(p1h);
+  ksession.insert(p1);
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+}
