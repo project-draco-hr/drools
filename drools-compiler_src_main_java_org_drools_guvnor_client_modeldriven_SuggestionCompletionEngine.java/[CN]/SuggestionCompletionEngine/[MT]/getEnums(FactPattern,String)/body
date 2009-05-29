@@ -1,23 +1,32 @@
 {
   Map dataEnumLookupFields=loadDataEnumLookupFields();
   if (pat.constraintList != null && pat.constraintList.constraints != null) {
-    Object _typeField=dataEnumLookupFields.get(pat.factType + "." + field);
-    if (_typeField instanceof String) {
-      String typeField=(String)_typeField;
+    Object _typeFields=dataEnumLookupFields.get(pat.factType + "." + field);
+    if (_typeFields instanceof String) {
+      String typeFields=(String)_typeFields;
       FieldConstraint[] cons=pat.constraintList.constraints;
-      for (int i=0; i < cons.length; i++) {
-        FieldConstraint con=cons[i];
-        if (con instanceof SingleFieldConstraint) {
-          SingleFieldConstraint sfc=(SingleFieldConstraint)con;
-          if (sfc.fieldName.equals(typeField)) {
-            String key=pat.factType + "." + field+ "["+ typeField+ "="+ sfc.value+ "]";
-            return DropDownData.create((String[])this.dataEnumLists.get(key));
+      String key=pat.factType + "." + field+ "[";
+      String[] splitTypeFields=typeFields.split(",");
+      for (int j=0; j < splitTypeFields.length; j++) {
+        String typeField=splitTypeFields[j];
+        for (int i=0; i < cons.length; i++) {
+          FieldConstraint con=cons[i];
+          if (con instanceof SingleFieldConstraint) {
+            SingleFieldConstraint sfc=(SingleFieldConstraint)con;
+            if (sfc.fieldName.trim().equals(typeField.trim())) {
+              key+=typeField + "=" + sfc.value;
+              if (j != (splitTypeFields.length - 1)) {
+                key+=",";
+              }
+            }
           }
         }
       }
+      key+="]";
+      return DropDownData.create((String[])this.dataEnumLists.get(key));
     }
- else     if (_typeField != null) {
-      String[] fieldsNeeded=(String[])_typeField;
+ else     if (_typeFields != null) {
+      String[] fieldsNeeded=(String[])_typeFields;
       String queryString=getQueryString(pat.factType,field,this.dataEnumLists);
       String[] valuePairs=new String[fieldsNeeded.length];
       for (int i=0; i < fieldsNeeded.length; i++) {
