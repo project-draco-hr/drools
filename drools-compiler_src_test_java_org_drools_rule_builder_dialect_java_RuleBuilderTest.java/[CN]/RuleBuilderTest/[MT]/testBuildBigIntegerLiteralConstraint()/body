@@ -1,0 +1,22 @@
+{
+  final PackageDescr pkgDescr=new PackageDescr("org.drools");
+  final RuleDescr ruleDescr=new RuleDescr("Test Rule");
+  AndDescr andDescr=new AndDescr();
+  PatternDescr patDescr=new PatternDescr("java.math.BigInteger","$bd");
+  FieldConstraintDescr fcd=new FieldConstraintDescr("this");
+  LiteralRestrictionDescr restr=new LiteralRestrictionDescr("==","10");
+  fcd.addRestriction(restr);
+  patDescr.addConstraint(fcd);
+  andDescr.addDescr(patDescr);
+  ruleDescr.setLhs(andDescr);
+  ruleDescr.setConsequence("");
+  pkgDescr.addRule(ruleDescr);
+  final PackageBuilder pkgBuilder=new PackageBuilder();
+  pkgBuilder.addPackage(pkgDescr);
+  Assert.assertTrue(pkgBuilder.getErrors().toString(),pkgBuilder.getErrors().isEmpty());
+  final Rule rule=pkgBuilder.getPackages()[0].getRule("Test Rule");
+  final GroupElement and=rule.getLhs();
+  final Pattern pat=(Pattern)and.getChildren().get(0);
+  final LiteralConstraint fc=(LiteralConstraint)pat.getConstraints().get(0);
+  assertTrue("Wrong class. Expected java.math.BigInteger. Found: " + fc.getField().getValue().getClass(),fc.getField().getValue() instanceof BigInteger);
+}
