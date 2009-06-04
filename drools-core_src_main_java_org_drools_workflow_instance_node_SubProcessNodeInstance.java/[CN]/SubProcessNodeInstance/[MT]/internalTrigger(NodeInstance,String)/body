@@ -25,6 +25,34 @@
     }
   }
   String processId=getSubProcessNode().getProcessId();
+  Map<String,String> replacements=new HashMap<String,String>();
+  Matcher matcher=PARAMETER_MATCHER.matcher(processId);
+  while (matcher.find()) {
+    String paramName=matcher.group(1);
+    if (replacements.get(paramName) == null) {
+      VariableScopeInstance variableScopeInstance=(VariableScopeInstance)resolveContextInstance(VariableScope.VARIABLE_SCOPE,paramName);
+      if (variableScopeInstance != null) {
+        Object variableValue=variableScopeInstance.getVariable(paramName);
+        String variableValueString=variableValue == null ? "" : variableValue.toString();
+        replacements.put(paramName,variableValueString);
+      }
+ else {
+        try {
+          Object variableValue=MVEL.eval(paramName,new NodeInstanceResolverFactory(this));
+          String variableValueString=variableValue == null ? "" : variableValue.toString();
+          replacements.put(paramName,variableValueString);
+        }
+ catch (        Throwable t) {
+          System.err.println("Could not find variable scope for variable " + paramName);
+          System.err.println("when trying to replace variable in processId for sub process " + getNodeName());
+          System.err.println("Continuing without setting process id.");
+        }
+      }
+    }
+  }
+  for (  Map.Entry<String,String> replacement : replacements.entrySet()) {
+    processId=processId.replace("#{" + replacement.getKey() + "}",replacement.getValue());
+  }
   Process process=((InternalRuleBase)((ProcessInstance)getProcessInstance()).getWorkingMemory().getRuleBase()).getProcess(processId);
   if (process == null) {
     System.err.println("Could not find process " + processId);
