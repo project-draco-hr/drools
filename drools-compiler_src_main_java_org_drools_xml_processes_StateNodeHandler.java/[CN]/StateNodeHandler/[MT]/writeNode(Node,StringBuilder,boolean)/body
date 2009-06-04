@@ -1,5 +1,22 @@
 {
-  StateNode milestoneNode=(StateNode)node;
-  writeNode("state",milestoneNode,xmlDump,includeMeta);
-  endNode(xmlDump);
+  StateNode stateNode=(StateNode)node;
+  writeNode("state",stateNode,xmlDump,includeMeta);
+  Map<String,Constraint> constraints=stateNode.getConstraints();
+  if (constraints != null || stateNode.getTimers() != null || stateNode.containsActions()) {
+    xmlDump.append(">\n");
+    Set<String> keys=constraints.keySet();
+    for (    String key : keys) {
+      if (constraints.get(key) != null) {
+        xmlDump.append("      <constraint type=\"rule\" dialect=\"mvel\" >" + XmlDumper.replaceIllegalChars(constraints.get(key).getConstraint().trim()) + "</constraint>"+ EOL);
+      }
+    }
+    for (    String eventType : stateNode.getActionTypes()) {
+      writeActions(eventType,stateNode.getActions(eventType),xmlDump);
+    }
+    writeTimers(stateNode.getTimers(),xmlDump);
+    endNode("state",xmlDump);
+  }
+ else {
+    endNode(xmlDump);
+  }
 }
