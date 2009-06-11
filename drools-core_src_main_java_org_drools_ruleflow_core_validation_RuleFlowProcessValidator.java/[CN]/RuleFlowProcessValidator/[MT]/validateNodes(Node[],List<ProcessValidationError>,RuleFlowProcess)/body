@@ -17,15 +17,20 @@
     }
  else     if (node instanceof RuleSetNode) {
       final RuleSetNode ruleSetNode=(RuleSetNode)node;
-      if (ruleSetNode.getFrom() == null) {
+      if (ruleSetNode.getFrom() == null && !acceptsNoIncomingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"RuleSet node '" + node.getName() + "' ["+ node.getId()+ "] has no incoming connection."));
       }
-      if (ruleSetNode.getTo() == null) {
+      if (ruleSetNode.getTo() == null && !acceptsNoOutgoingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"RuleSet node '" + node.getName() + "' ["+ node.getId()+ "] has no outgoing connection."));
       }
       final String ruleFlowGroup=ruleSetNode.getRuleFlowGroup();
       if (ruleFlowGroup == null || "".equals(ruleFlowGroup)) {
         errors.add(new ProcessValidationErrorImpl(process,"RuleSet node '" + node.getName() + "' ["+ node.getId()+ "] has no ruleflow-group."));
+      }
+      if (ruleSetNode.getTimers() != null) {
+        for (        Timer timer : ruleSetNode.getTimers().keySet()) {
+          validateTimer(timer,node,process,errors);
+        }
       }
     }
  else     if (node instanceof Split) {
@@ -33,7 +38,7 @@
       if (split.getType() == Split.TYPE_UNDEFINED) {
         errors.add(new ProcessValidationErrorImpl(process,"Split node '" + node.getName() + "' ["+ node.getId()+ "] has no type."));
       }
-      if (split.getFrom() == null) {
+      if (split.getFrom() == null && !acceptsNoIncomingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"Split node '" + node.getName() + "' ["+ node.getId()+ "] has no incoming connection."));
       }
       if (split.getDefaultOutgoingConnections().size() < 2) {
@@ -56,7 +61,7 @@
       if (join.getDefaultIncomingConnections().size() < 2) {
         errors.add(new ProcessValidationErrorImpl(process,"Join node '" + node.getName() + "' ["+ node.getId()+ "] does not have more than one incoming connection: "+ join.getIncomingConnections().size()+ "."));
       }
-      if (join.getTo() == null) {
+      if (join.getTo() == null && !acceptsNoOutgoingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"Join node '" + node.getName() + "' ["+ node.getId()+ "] has no outgoing connection."));
       }
       if (join.getType() == Join.TYPE_N_OF_M) {
@@ -73,40 +78,50 @@
     }
  else     if (node instanceof MilestoneNode) {
       final MilestoneNode milestone=(MilestoneNode)node;
-      if (milestone.getFrom() == null) {
+      if (milestone.getFrom() == null && !acceptsNoIncomingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"Milestone node '" + node.getName() + "' ["+ node.getId()+ "] has no incoming connection."));
       }
-      if (milestone.getTo() == null) {
+      if (milestone.getTo() == null && !acceptsNoOutgoingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"Milestone node '" + node.getName() + "' ["+ node.getId()+ "] has no outgoing connection."));
       }
       if (milestone.getConstraint() == null) {
         errors.add(new ProcessValidationErrorImpl(process,"Milestone node '" + node.getName() + "' ["+ node.getId()+ "] has no constraint."));
       }
+      if (milestone.getTimers() != null) {
+        for (        Timer timer : milestone.getTimers().keySet()) {
+          validateTimer(timer,node,process,errors);
+        }
+      }
     }
  else     if (node instanceof StateNode) {
       final StateNode stateNode=(StateNode)node;
-      if (stateNode.getFrom() == null) {
-        errors.add(new ProcessValidationErrorImpl(process,"State node '" + node.getName() + "' ["+ node.getId()+ "] has no incoming connection."));
+      if (stateNode.getIncomingConnections(org.drools.workflow.core.Node.CONNECTION_DEFAULT_TYPE).size() == 0 && !acceptsNoIncomingConnections(node)) {
+        errors.add(new ProcessValidationErrorImpl(process,"State node '" + node.getName() + "' ["+ node.getId()+ "] has no incoming connection"));
       }
     }
  else     if (node instanceof SubProcessNode) {
       final SubProcessNode subProcess=(SubProcessNode)node;
-      if (subProcess.getFrom() == null) {
+      if (subProcess.getFrom() == null && !acceptsNoIncomingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"SubProcess node '" + node.getName() + "' ["+ node.getId()+ "] has no incoming connection."));
       }
-      if (subProcess.getTo() == null) {
+      if (subProcess.getTo() == null && !acceptsNoOutgoingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"SubProcess node '" + node.getName() + "' ["+ node.getId()+ "] has no outgoing connection."));
       }
       if (subProcess.getProcessId() == null) {
         errors.add(new ProcessValidationErrorImpl(process,"SubProcess node '" + node.getName() + "' ["+ node.getId()+ "] has no process id."));
       }
+      if (subProcess.getTimers() != null) {
+        for (        Timer timer : subProcess.getTimers().keySet()) {
+          validateTimer(timer,node,process,errors);
+        }
+      }
     }
  else     if (node instanceof ActionNode) {
       final ActionNode actionNode=(ActionNode)node;
-      if (actionNode.getFrom() == null) {
+      if (actionNode.getFrom() == null && !acceptsNoIncomingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"Action node '" + node.getName() + "' ["+ node.getId()+ "] has no incoming connection."));
       }
-      if (actionNode.getTo() == null) {
+      if (actionNode.getTo() == null && !acceptsNoOutgoingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"Action node '" + node.getName() + "' ["+ node.getId()+ "] has no outgoing connection."));
       }
       if (actionNode.getAction() == null) {
@@ -142,10 +157,10 @@
     }
  else     if (node instanceof WorkItemNode) {
       final WorkItemNode workItemNode=(WorkItemNode)node;
-      if (workItemNode.getFrom() == null) {
+      if (workItemNode.getFrom() == null && !acceptsNoIncomingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"WorkItem node '" + node.getName() + "' ["+ node.getId()+ "] has no incoming connection."));
       }
-      if (workItemNode.getTo() == null) {
+      if (workItemNode.getTo() == null && !acceptsNoOutgoingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"WorkItem node '" + node.getName() + "' ["+ node.getId()+ "] has no outgoing connection."));
       }
       if (workItemNode.getWork() == null) {
@@ -155,6 +170,11 @@
         Work work=workItemNode.getWork();
         if (work.getName() == null) {
           errors.add(new ProcessValidationErrorImpl(process,"WorkItem node '" + node.getName() + "' ["+ node.getId()+ "] has no work name."));
+        }
+      }
+      if (workItemNode.getTimers() != null) {
+        for (        Timer timer : workItemNode.getTimers().keySet()) {
+          validateTimer(timer,node,process,errors);
         }
       }
     }
@@ -168,10 +188,10 @@
       if (collectionExpression == null || "".equals(collectionExpression)) {
         errors.add(new ProcessValidationErrorImpl(process,"ForEach node '" + node.getName() + "' ["+ node.getId()+ "] has no collection expression"));
       }
-      if (forEachNode.getIncomingConnections(org.drools.workflow.core.Node.CONNECTION_DEFAULT_TYPE).size() == 0) {
+      if (forEachNode.getIncomingConnections(org.drools.workflow.core.Node.CONNECTION_DEFAULT_TYPE).size() == 0 && !acceptsNoIncomingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"ForEach node '" + node.getName() + "' ["+ node.getId()+ "] has no incoming connection"));
       }
-      if (forEachNode.getOutgoingConnections(org.drools.workflow.core.Node.CONNECTION_DEFAULT_TYPE).size() == 0) {
+      if (forEachNode.getOutgoingConnections(org.drools.workflow.core.Node.CONNECTION_DEFAULT_TYPE).size() == 0 && !acceptsNoOutgoingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"ForEach node '" + node.getName() + "' ["+ node.getId()+ "] has no outgoing connection"));
       }
       if (forEachNode.getLinkedIncomingNode(org.drools.workflow.core.Node.CONNECTION_DEFAULT_TYPE) == null) {
@@ -182,13 +202,23 @@
       }
       validateNodes(forEachNode.getNodes(),errors,process);
     }
+ else     if (node instanceof DynamicNode) {
+      final DynamicNode dynamicNode=(DynamicNode)node;
+      if (dynamicNode.getIncomingConnections(org.drools.workflow.core.Node.CONNECTION_DEFAULT_TYPE).size() == 0) {
+        errors.add(new ProcessValidationErrorImpl(process,"Dynamic node '" + node.getName() + "' ["+ node.getId()+ "] has no incoming connection"));
+      }
+      if (dynamicNode.getOutgoingConnections(org.drools.workflow.core.Node.CONNECTION_DEFAULT_TYPE).size() == 0) {
+        errors.add(new ProcessValidationErrorImpl(process,"Dynamic node '" + node.getName() + "' ["+ node.getId()+ "] has no outgoing connection"));
+      }
+      validateNodes(dynamicNode.getNodes(),errors,process);
+    }
  else     if (node instanceof CompositeNode) {
       final CompositeNode compositeNode=(CompositeNode)node;
       for (      Map.Entry<String,NodeAndType> inType : compositeNode.getLinkedIncomingNodes().entrySet()) {
-        if (compositeNode.getIncomingConnections(inType.getKey()).size() == 0) {
+        if (compositeNode.getIncomingConnections(inType.getKey()).size() == 0 && !acceptsNoIncomingConnections(node)) {
           errors.add(new ProcessValidationErrorImpl(process,"Composite node '" + node.getName() + "' ["+ node.getId()+ "] has no incoming connection for type "+ inType.getKey()));
         }
-        if (inType.getValue().getNode() == null) {
+        if (inType.getValue().getNode() == null && !acceptsNoOutgoingConnections(node)) {
           errors.add(new ProcessValidationErrorImpl(process,"Composite node '" + node.getName() + "' ["+ node.getId()+ "] has invalid linked incoming node for type "+ inType.getKey()));
         }
       }
@@ -214,12 +244,30 @@
  else     if (node instanceof FaultNode) {
       endNodeFound=true;
       final FaultNode faultNode=(FaultNode)node;
-      if (faultNode.getFrom() == null) {
+      if (faultNode.getFrom() == null && !acceptsNoIncomingConnections(node)) {
         errors.add(new ProcessValidationErrorImpl(process,"Fault node '" + node.getName() + "' ["+ node.getId()+ "] has no incoming connection."));
       }
       if (faultNode.getFaultName() == null) {
         errors.add(new ProcessValidationErrorImpl(process,"Fault node '" + node.getName() + "' ["+ node.getId()+ "] has no fault name."));
       }
+    }
+ else     if (node instanceof TimerNode) {
+      TimerNode timerNode=(TimerNode)node;
+      if (timerNode.getFrom() == null && !acceptsNoIncomingConnections(node)) {
+        errors.add(new ProcessValidationErrorImpl(process,"Timer node '" + node.getName() + "' ["+ node.getId()+ "] has no incoming connection."));
+      }
+      if (timerNode.getTo() == null && !acceptsNoOutgoingConnections(node)) {
+        errors.add(new ProcessValidationErrorImpl(process,"Timer node '" + node.getName() + "' ["+ node.getId()+ "] has no outgoing connection."));
+      }
+      if (timerNode.getTimer() == null) {
+        errors.add(new ProcessValidationErrorImpl(process,"Timer node '" + node.getName() + "' ["+ node.getId()+ "] has no timer specified."));
+      }
+ else {
+        validateTimer(timerNode.getTimer(),node,process,errors);
+      }
+    }
+ else {
+      errors.add(new ProcessValidationErrorImpl(process,"Unknown node type '" + node.getClass().getName() + "'"));
     }
   }
 }

@@ -1,0 +1,15 @@
+{
+  PackageBuilder builder=new PackageBuilder();
+  Reader source=new StringReader("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + "<process xmlns=\"http://drools.org/drools-5.0/process\"\n" + "         xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n"+ "         xs:schemaLocation=\"http://drools.org/drools-5.0/process drools-processes-5.0.xsd\"\n"+ "         type=\"RuleFlow\" name=\"flow\" id=\"org.drools.state\" package-name=\"org.drools\" version=\"1\" >\n"+ "\n"+ "  <header>\n"+ "    <globals>\n"+ "      <global identifier=\"list\" type=\"java.util.List\" />\n"+ "    </globals>\n"+ "  </header>\n"+ "\n"+ "  <nodes>\n"+ "    <start id=\"1\" name=\"Start\" />\n"+ "    <state id=\"2\" dialect=\"mvel\" >\n"+ "      <constraints>\n"+ "        <constraint toNodeId=\"3\" toType=\"DROOLS_DEFAULT\" name=\"one\" type=\"rule\" dialect=\"mvel\" >\n"+ "            eval(true)"+ "        </constraint>"+ "       <constraint toNodeId=\"4\" toType=\"DROOLS_DEFAULT\" name=\"two\" type=\"rule\" dialect=\"mvel\" >\n"+ "           eval(false)"+ "        </constraint>"+ "      </constraints>\n"+ "    </state>\n"+ "    <actionNode id=\"3\" name=\"ActionNode1\" >\n"+ "      <action type=\"expression\" dialect=\"java\" >list.add(\"1\");</action>\n"+ "    </actionNode>\n"+ "    <end id=\"4\" name=\"End\" />\n"+ "    <actionNode id=\"5\" name=\"ActionNode2\" >\n"+ "      <action type=\"expression\" dialect=\"java\" >list.add(\"2\");</action>\n"+ "    </actionNode>\n"+ "    <end id=\"6\" name=\"End\" />\n"+ "  </nodes>\n"+ "\n"+ "  <connections>\n"+ "    <connection from=\"1\" to=\"2\" />\n"+ "    <connection from=\"2\" to=\"3\" />\n"+ "    <connection from=\"3\" to=\"4\" />\n"+ "    <connection from=\"2\" to=\"5\" />\n"+ "    <connection from=\"5\" to=\"6\" />\n"+ "  </connections>\n"+ "\n"+ "</process>");
+  builder.addRuleFlow(source);
+  Package pkg=builder.getPackage();
+  RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  ruleBase.addPackage(pkg);
+  WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  List<String> list=new ArrayList<String>();
+  workingMemory.setGlobal("list",list);
+  ProcessInstance processInstance=workingMemory.startProcess("org.drools.state");
+  assertEquals(ProcessInstance.STATE_COMPLETED,processInstance.getState());
+  assertEquals(1,list.size());
+  assertEquals("1",list.get(0));
+}

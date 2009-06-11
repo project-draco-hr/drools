@@ -1,17 +1,24 @@
 {
-  super.internalTrigger(from,type);
   StateNode stateNode=getStateNode();
-  Set<String> keys=stateNode.getConstraints().keySet();
-  int triggeredActivation=0;
-  for (  String key : keys) {
-    String rule="RuleFlowStateNode-" + getProcessInstance().getProcessId() + "-"+ getNode().getId()+ "-"+ key;
-    boolean isActive=((InternalAgenda)getProcessInstance().getAgenda()).isRuleActiveInRuleFlowGroup("DROOLS_SYSTEM",rule,getProcessInstance().getId());
-    if (isActive) {
-      triggerCompleted(key,true);
-      triggeredActivation++;
+  Connection selected=null;
+  int priority=Integer.MAX_VALUE;
+  for (  Connection connection : stateNode.getOutgoingConnections(NodeImpl.CONNECTION_DEFAULT_TYPE)) {
+    Constraint constraint=stateNode.getConstraint(connection);
+    if (constraint != null && constraint.getPriority() < priority) {
+      String rule="RuleFlowStateNode-" + getProcessInstance().getProcessId() + "-"+ getStateNode().getUniqueId()+ "-"+ connection.getTo().getId()+ "-"+ connection.getToType();
+      boolean isActive=((InternalAgenda)getProcessInstance().getAgenda()).isRuleActiveInRuleFlowGroup("DROOLS_SYSTEM",rule,getProcessInstance().getId());
+      if (isActive) {
+        selected=connection;
+        priority=constraint.getPriority();
+      }
     }
   }
-  if (triggeredActivation == 0) {
+  if (selected != null) {
+    ((NodeInstanceContainer)getNodeInstanceContainer()).removeNodeInstance(this);
+    triggerConnection(selected);
+  }
+ else {
     addTriggerListener();
+    addActivationListener();
   }
 }

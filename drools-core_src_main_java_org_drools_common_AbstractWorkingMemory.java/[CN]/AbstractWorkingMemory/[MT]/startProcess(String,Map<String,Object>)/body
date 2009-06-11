@@ -6,24 +6,11 @@
   if (process == null) {
     throw new IllegalArgumentException("Unknown process ID: " + processId);
   }
-  ProcessInstance processInstance=(ProcessInstance)getProcessInstance(process);
-  processInstance.setWorkingMemory(this);
-  processInstance.setProcess(process);
-  processInstanceManager.addProcessInstance(processInstance);
-  VariableScope variableScope=(VariableScope)((ContextContainer)process).getDefaultContext(VariableScope.VARIABLE_SCOPE);
-  VariableScopeInstance variableScopeInstance=(VariableScopeInstance)processInstance.getContextInstance(VariableScope.VARIABLE_SCOPE);
-  if (parameters != null) {
-    if (variableScope != null) {
-      for (      Map.Entry<String,Object> entry : parameters.entrySet()) {
-        variableScopeInstance.setVariable(entry.getKey(),entry.getValue());
-      }
-    }
- else {
-      throw new IllegalArgumentException("This process does not support parameters!");
-    }
+  ProcessInstance processInstance=startProcess(process,parameters);
+  if (processInstance != null) {
+    getRuleFlowEventSupport().fireBeforeRuleFlowProcessStarted(processInstance,this);
+    processInstance.start();
+    getRuleFlowEventSupport().fireAfterRuleFlowProcessStarted(processInstance,this);
   }
-  getRuleFlowEventSupport().fireBeforeRuleFlowProcessStarted(processInstance,this);
-  processInstance.start();
-  getRuleFlowEventSupport().fireAfterRuleFlowProcessStarted(processInstance,this);
   return processInstance;
 }
