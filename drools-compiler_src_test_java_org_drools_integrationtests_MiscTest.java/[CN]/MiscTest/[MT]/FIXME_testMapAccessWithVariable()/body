@@ -1,0 +1,20 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_MapAccessWithVariable.drl")));
+  final Package pkg=builder.getPackage();
+  RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final List list=new ArrayList();
+  workingMemory.setGlobal("results",list);
+  Map map=new HashMap();
+  map.put("name","Edson");
+  map.put("surname","Tirelli");
+  map.put("age","28");
+  workingMemory.insert(map);
+  workingMemory.insert("name");
+  workingMemory.fireAllRules();
+  assertEquals(1,list.size());
+  assertTrue(list.contains(map));
+}

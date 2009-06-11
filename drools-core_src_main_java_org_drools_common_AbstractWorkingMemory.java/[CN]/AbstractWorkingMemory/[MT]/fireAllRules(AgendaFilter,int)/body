@@ -1,18 +1,21 @@
 {
-  if (isSequential()) {
-    for (Iterator it=this.liaPropagations.iterator(); it.hasNext(); ) {
-      ((LIANodePropagation)it.next()).doPropagation(this);
-    }
-  }
-  executeQueuedActions();
-  int fireCount=0;
   if (this.firing.compareAndSet(false,true)) {
     try {
-      fireCount=this.agenda.fireAllRules(agendaFilter,fireLimit);
+synchronized (this) {
+        if (isSequential()) {
+          for (Iterator it=this.liaPropagations.iterator(); it.hasNext(); ) {
+            ((LIANodePropagation)it.next()).doPropagation(this);
+          }
+        }
+        executeQueuedActions();
+        int fireCount=0;
+        fireCount=this.agenda.fireAllRules(agendaFilter,fireLimit);
+        return fireCount;
+      }
     }
   finally {
       this.firing.set(false);
     }
   }
-  return fireCount;
+  return 0;
 }
