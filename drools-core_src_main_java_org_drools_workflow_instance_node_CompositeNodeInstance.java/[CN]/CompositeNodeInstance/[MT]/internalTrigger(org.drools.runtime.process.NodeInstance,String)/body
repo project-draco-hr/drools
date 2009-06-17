@@ -1,13 +1,18 @@
 {
+  super.internalTrigger(from,type);
   CompositeNode.NodeAndType nodeAndType=getCompositeNode().internalGetLinkedIncomingNode(type);
-  List<Connection> connections=nodeAndType.getNode().getIncomingConnections(nodeAndType.getType());
-  for (Iterator<Connection> iterator=connections.iterator(); iterator.hasNext(); ) {
-    Connection connection=iterator.next();
-    if ((connection.getFrom() instanceof CompositeNode.CompositeNodeStart) && (from == null || ((CompositeNode.CompositeNodeStart)connection.getFrom()).getInNode().getId() == from.getNodeId())) {
-      NodeInstance nodeInstance=getNodeInstance(connection.getFrom());
-      ((org.drools.workflow.instance.NodeInstance)nodeInstance).trigger(null,nodeAndType.getType());
-      return;
+  if (nodeAndType != null) {
+    List<Connection> connections=nodeAndType.getNode().getIncomingConnections(nodeAndType.getType());
+    for (Iterator<Connection> iterator=connections.iterator(); iterator.hasNext(); ) {
+      Connection connection=iterator.next();
+      if ((connection.getFrom() instanceof CompositeNode.CompositeNodeStart) && (from == null || ((CompositeNode.CompositeNodeStart)connection.getFrom()).getInNode().getId() == from.getNodeId())) {
+        NodeInstance nodeInstance=getNodeInstance(connection.getFrom());
+        ((org.drools.workflow.instance.NodeInstance)nodeInstance).trigger(null,nodeAndType.getType());
+        return;
+      }
     }
   }
-  throw new IllegalArgumentException("Could not find start for composite node: " + type);
+  if (isLinkedIncomingNodeRequired()) {
+    throw new IllegalArgumentException("Could not find start for composite node: " + type);
+  }
 }

@@ -1,11 +1,26 @@
 {
   if ("signal".equals(type)) {
-    String connectionType=NodeImpl.CONNECTION_DEFAULT_TYPE;
     if (event instanceof String) {
-      connectionType=(String)event;
+      for (      Connection connection : getStateNode().getOutgoingConnections(NodeImpl.CONNECTION_DEFAULT_TYPE)) {
+        boolean selected=false;
+        Constraint constraint=getStateNode().getConstraint(connection);
+        if (constraint == null) {
+          if (((String)event).equals(connection.getTo().getName())) {
+            selected=true;
+          }
+        }
+ else         if (((String)event).equals(constraint.getName())) {
+          selected=true;
+        }
+        if (selected) {
+          triggerEvent(ExtendedNodeImpl.EVENT_NODE_EXIT);
+          removeEventListeners();
+          ((org.drools.workflow.instance.NodeInstanceContainer)getNodeInstanceContainer()).removeNodeInstance(this);
+          triggerConnection(connection);
+          return;
+        }
+      }
     }
-    removeEventListeners();
-    triggerCompleted(connectionType,true);
   }
  else {
     super.signalEvent(type,event);

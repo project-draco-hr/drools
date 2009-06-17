@@ -2,12 +2,16 @@
   StateNode stateNode=(StateNode)node;
   writeNode("state",stateNode,xmlDump,includeMeta);
   xmlDump.append(">\n");
+  for (  String eventType : stateNode.getActionTypes()) {
+    writeActions(eventType,stateNode.getActions(eventType),xmlDump);
+  }
+  writeTimers(stateNode.getTimers(),xmlDump);
   if (!stateNode.getConstraints().isEmpty()) {
     xmlDump.append("      <constraints>" + EOL);
     for (    Map.Entry<ConnectionRef,Constraint> entry : stateNode.getConstraints().entrySet()) {
       ConnectionRef connection=entry.getKey();
       Constraint constraint=entry.getValue();
-      xmlDump.append("        <constraint " + "toNodeId=\"" + connection.getNodeId() + "\" "+ "toType=\""+ connection.getToType()+ "\" ");
+      xmlDump.append("        <constraint " + "toNodeId=\"" + connection.getNodeId() + "\" ");
       String name=constraint.getName();
       if (name != null && !"".equals(name)) {
         xmlDump.append("name=\"" + XmlDumper.replaceIllegalChars(constraint.getName()) + "\" ");
@@ -16,7 +20,6 @@
       if (priority != 0) {
         xmlDump.append("priority=\"" + constraint.getPriority() + "\" ");
       }
-      xmlDump.append("type=\"rule\" dialect=\"mvel\" ");
       String constraintString=constraint.getConstraint();
       if (constraintString != null) {
         xmlDump.append(">" + XmlDumper.replaceIllegalChars(constraintString) + "</constraint>"+ EOL);

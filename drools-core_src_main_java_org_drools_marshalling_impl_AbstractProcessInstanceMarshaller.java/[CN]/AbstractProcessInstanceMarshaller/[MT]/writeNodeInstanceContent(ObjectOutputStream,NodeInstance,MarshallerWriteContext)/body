@@ -50,6 +50,16 @@
  else   if (nodeInstance instanceof CompositeContextNodeInstance) {
     stream.writeShort(PersisterEnums.COMPOSITE_NODE_INSTANCE);
     CompositeContextNodeInstance compositeNodeInstance=(CompositeContextNodeInstance)nodeInstance;
+    List<Long> timerInstances=((CompositeContextNodeInstance)nodeInstance).getTimerInstances();
+    if (timerInstances != null) {
+      stream.writeInt(timerInstances.size());
+      for (      Long id : timerInstances) {
+        stream.writeLong(id);
+      }
+    }
+ else {
+      stream.writeInt(0);
+    }
     VariableScopeInstance variableScopeInstance=(VariableScopeInstance)compositeNodeInstance.getContextInstance(VariableScope.VARIABLE_SCOPE);
     Map<String,Object> variables=variableScopeInstance.getVariables();
     List<String> keys=new ArrayList<String>(variables.keySet());
@@ -94,6 +104,19 @@
       }
     }
     stream.writeShort(PersisterEnums.END);
+  }
+ else   if (nodeInstance instanceof StateNodeInstance) {
+    stream.writeShort(PersisterEnums.STATE_NODE_INSTANCE);
+    List<Long> timerInstances=((StateNodeInstance)nodeInstance).getTimerInstances();
+    if (timerInstances != null) {
+      stream.writeInt(timerInstances.size());
+      for (      Long id : timerInstances) {
+        stream.writeLong(id);
+      }
+    }
+ else {
+      stream.writeInt(0);
+    }
   }
  else {
     throw new IllegalArgumentException("Unknown node instance type: " + nodeInstance);
