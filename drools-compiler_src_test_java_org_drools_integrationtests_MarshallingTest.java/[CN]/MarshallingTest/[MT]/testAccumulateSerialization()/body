@@ -1,0 +1,44 @@
+{
+  try {
+    KnowledgeBuilder knowledgeBuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+    knowledgeBuilder.add(ResourceFactory.newClassPathResource("org/drools/integrationtests/test_SerializableAccumulate.drl"),ResourceType.DRL);
+    if (knowledgeBuilder.hasErrors()) {
+      fail(knowledgeBuilder.getErrors().toString());
+    }
+    KnowledgeBase knowledgeBase=KnowledgeBaseFactory.newKnowledgeBase();
+    knowledgeBase.addKnowledgePackages(knowledgeBuilder.getKnowledgePackages());
+    StatefulKnowledgeSession ksession=knowledgeBase.newStatefulKnowledgeSession();
+    ksession.setGlobal("results",new ArrayList());
+    Cheese t1=new Cheese("brie",10);
+    Cheese t2=new Cheese("brie",15);
+    Cheese t3=new Cheese("stilton",20);
+    Cheese t4=new Cheese("brie",30);
+    ksession.insert(t1);
+    ksession.insert(t2);
+    ksession.insert(t3);
+    ksession.insert(t4);
+    Marshaller marshaller=createSerializableMarshaller(knowledgeBase);
+    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    ObjectOutputStream out=new DroolsObjectOutputStream(baos);
+    out.writeObject(knowledgeBase);
+    marshaller.marshall(out,ksession);
+    out.flush();
+    out.close();
+    ObjectInputStream in=new DroolsObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
+    knowledgeBase=(KnowledgeBase)in.readObject();
+    marshaller=createSerializableMarshaller(knowledgeBase);
+    ksession=marshaller.unmarshall(in);
+    in.close();
+    List<List> results=(List<List>)new ArrayList<List>();
+    ksession.setGlobal("results",results);
+    assertNotNull(results);
+    ksession.fireAllRules();
+    ksession.dispose();
+    assertEquals(1,results.size());
+    assertEquals(3,results.get(0).size());
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}
