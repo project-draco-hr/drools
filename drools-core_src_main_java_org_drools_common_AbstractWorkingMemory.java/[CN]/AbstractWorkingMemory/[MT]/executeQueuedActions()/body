@@ -1,24 +1,30 @@
 {
+  try {
+    startOperation();
 synchronized (this.actionQueue) {
-    if (!this.actionQueue.isEmpty() && !evaluatingActionQueue) {
-      evaluatingActionQueue=true;
-      WorkingMemoryAction action=null;
-      while ((action=actionQueue.poll()) != null) {
-        try {
-          action.execute(this);
-        }
- catch (        Exception e) {
-          if (e instanceof RuntimeDroolsException) {
-            throw ((RuntimeDroolsException)e);
+      if (!this.actionQueue.isEmpty() && !evaluatingActionQueue) {
+        evaluatingActionQueue=true;
+        WorkingMemoryAction action=null;
+        while ((action=actionQueue.poll()) != null) {
+          try {
+            action.execute(this);
           }
+ catch (          Exception e) {
+            if (e instanceof RuntimeDroolsException) {
+              throw ((RuntimeDroolsException)e);
+            }
  else {
-            System.err.println("************************************************");
-            System.err.println("Exception caught while executing action: " + action.toString());
-            e.printStackTrace();
+              System.err.println("************************************************");
+              System.err.println("Exception caught while executing action: " + action.toString());
+              e.printStackTrace();
+            }
           }
         }
+        evaluatingActionQueue=false;
       }
-      evaluatingActionQueue=false;
     }
+  }
+  finally {
+    endOperation();
   }
 }

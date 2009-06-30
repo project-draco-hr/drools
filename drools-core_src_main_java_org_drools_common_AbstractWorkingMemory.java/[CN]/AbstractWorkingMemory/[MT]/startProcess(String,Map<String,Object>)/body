@@ -1,16 +1,22 @@
 {
-  if (!this.actionQueue.isEmpty()) {
-    executeQueuedActions();
+  try {
+    startOperation();
+    if (!this.actionQueue.isEmpty()) {
+      executeQueuedActions();
+    }
+    final Process process=((InternalRuleBase)getRuleBase()).getProcess(processId);
+    if (process == null) {
+      throw new IllegalArgumentException("Unknown process ID: " + processId);
+    }
+    ProcessInstance processInstance=startProcess(process,parameters);
+    if (processInstance != null) {
+      getRuleFlowEventSupport().fireBeforeRuleFlowProcessStarted(processInstance,this);
+      processInstance.start();
+      getRuleFlowEventSupport().fireAfterRuleFlowProcessStarted(processInstance,this);
+    }
+    return processInstance;
   }
-  final Process process=((InternalRuleBase)getRuleBase()).getProcess(processId);
-  if (process == null) {
-    throw new IllegalArgumentException("Unknown process ID: " + processId);
+  finally {
+    endOperation();
   }
-  ProcessInstance processInstance=startProcess(process,parameters);
-  if (processInstance != null) {
-    getRuleFlowEventSupport().fireBeforeRuleFlowProcessStarted(processInstance,this);
-    processInstance.start();
-    getRuleFlowEventSupport().fireAfterRuleFlowProcessStarted(processInstance,this);
-  }
-  return processInstance;
 }

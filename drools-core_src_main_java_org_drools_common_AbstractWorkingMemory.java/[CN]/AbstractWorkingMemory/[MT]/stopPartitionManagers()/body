@@ -1,11 +1,17 @@
 {
-  if (this.ruleBase.getConfiguration().isMultithreadEvaluation()) {
-    java.util.concurrent.ExecutorService service=this.threadPool.get();
-    if (this.threadPool.compareAndSet(service,null)) {
-      service.shutdown();
-      for (      PartitionTaskManager task : this.partitionManagers.values()) {
-        task.setPool(null);
+  startOperation();
+  try {
+    if (this.ruleBase.getConfiguration().isMultithreadEvaluation()) {
+      java.util.concurrent.ExecutorService service=this.threadPool.get();
+      if (this.threadPool.compareAndSet(service,null)) {
+        service.shutdown();
+        for (        PartitionTaskManager task : this.partitionManagers.values()) {
+          task.setPool(null);
+        }
       }
     }
+  }
+  finally {
+    endOperation();
   }
 }

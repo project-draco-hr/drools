@@ -2,19 +2,25 @@
   if (object == null) {
     return null;
   }
-  ObjectTypeConf typeConf=this.typeConfReg.getObjectTypeConf(this.entryPoint,object);
-  InternalFactHandle handle=this.handleFactory.newFactHandle(object,typeConf,wm);
-  handle.setEntryPoint(this);
-  this.objectStore.addHandle(handle,object);
-  if (dynamic) {
-    addPropertyChangeListener(object);
-  }
   try {
-    this.lock.lock();
-    insert(handle,object,rule,activation);
+    this.wm.startOperation();
+    ObjectTypeConf typeConf=this.typeConfReg.getObjectTypeConf(this.entryPoint,object);
+    InternalFactHandle handle=this.handleFactory.newFactHandle(object,typeConf,wm);
+    handle.setEntryPoint(this);
+    this.objectStore.addHandle(handle,object);
+    if (dynamic) {
+      addPropertyChangeListener(object);
+    }
+    try {
+      this.lock.lock();
+      insert(handle,object,rule,activation);
+    }
+  finally {
+      this.lock.unlock();
+    }
+    return handle;
   }
   finally {
-    this.lock.unlock();
+    this.wm.endOperation();
   }
-  return handle;
 }
