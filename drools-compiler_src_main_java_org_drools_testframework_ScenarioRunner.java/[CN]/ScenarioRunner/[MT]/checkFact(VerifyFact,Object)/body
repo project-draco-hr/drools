@@ -9,9 +9,14 @@
         expectedVal=eval(fld.expected.substring(1),this.populatedData);
       }
       st.put("__expected__",expectedVal);
-      fld.successResult=(Boolean)eval("__fact__." + fld.fieldName + " "+ fld.operator+ " __expected__",st);
+      ParserContext ctx=new ParserContext();
+      for (      Map.Entry<String,Object> entry : st.entrySet()) {
+        ctx.addInput(entry.getKey(),entry.getValue().getClass());
+      }
+      CompiledExpression expr=new ExpressionCompiler("__fact__." + fld.fieldName + " "+ fld.operator+ " __expected__").compile(ctx);
+      fld.successResult=(Boolean)MVEL.executeExpression(expr,st);
       if (!fld.successResult) {
-        Object actual=eval("__fact__." + fld.fieldName,st);
+        Object actual=MVEL.executeExpression(new ExpressionCompiler("__fact__." + fld.fieldName).compile(ctx),st);
         fld.actualResult=(actual != null) ? actual.toString() : "";
         if (fld.operator.equals("==")) {
           fld.explanation="[" + value.name + "] field ["+ fld.fieldName+ "] was ["+ fld.actualResult+ "] expected ["+ fld.expected+ "].";
