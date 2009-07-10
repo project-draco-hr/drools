@@ -1,0 +1,22 @@
+{
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("test_GeneratedBeansSerializable.drl")),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  FactType cheeseFact=kbase.getFactType("org.drools.generatedbeans","Cheese");
+  assertTrue("Generated beans must be serializable",Serializable.class.isAssignableFrom(cheeseFact.getFactClass()));
+  Object cheese=cheeseFact.newInstance();
+  cheeseFact.set(cheese,"type","stilton");
+  Object cheese2=cheeseFact.newInstance();
+  cheeseFact.set(cheese2,"type","brie");
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List<Number> results=new ArrayList<Number>();
+  ksession.setGlobal("results",results);
+  ksession.insert(cheese);
+  ksession.insert(cheese2);
+  ksession.fireAllRules();
+  assertEquals(1,results.size());
+  assertEquals(2,results.get(0).intValue());
+}
