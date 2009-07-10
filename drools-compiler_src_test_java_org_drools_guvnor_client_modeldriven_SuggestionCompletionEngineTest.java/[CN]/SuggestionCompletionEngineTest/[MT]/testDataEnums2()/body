@@ -1,0 +1,29 @@
+{
+  String pkg="package org.test\n import org.drools.guvnor.client.modeldriven.SuggestionCompletionEngineTest.Fact";
+  SuggestionCompletionLoader loader=new SuggestionCompletionLoader();
+  List enums=new ArrayList();
+  enums.add("'Fact.field1' : ['val1', 'val2'] 'Fact.field2' : ['val3', 'val4'] 'Fact.field2[field1=val1]' : ['f1val1a', 'f1val1b'] 'Fact.field2[field1=val2]' : ['f1val2a', 'f1val2b']");
+  SuggestionCompletionEngine engine=loader.getSuggestionEngine(pkg,new ArrayList(),new ArrayList(),enums);
+  assertEquals("String",engine.getFieldType("SuggestionCompletionEngineTest$Fact","field1"));
+  assertEquals("String",engine.getFieldType("SuggestionCompletionEngineTest$Fact","field2"));
+  assertEquals(4,engine.dataEnumLists.size());
+  String[] items=(String[])engine.dataEnumLists.get("Fact.field2");
+  assertEquals(2,items.length);
+  assertEquals("val3",items[0]);
+  assertEquals("val4",items[1]);
+  FactPattern pat=new FactPattern("Fact");
+  SingleFieldConstraint sfc=new SingleFieldConstraint("field2");
+  pat.addConstraint(sfc);
+  items=engine.getEnums(pat,"field2").fixedList;
+  assertEquals(2,items.length);
+  assertEquals("val3",items[0]);
+  assertEquals("val4",items[1]);
+  items=(String[])engine.dataEnumLists.get("Fact.field1");
+  assertEquals(2,items.length);
+  assertEquals("val1",items[0]);
+  assertEquals("val2",items[1]);
+  items=engine.getEnums(new FactPattern("Fact"),"field1").fixedList;
+  assertEquals(2,items.length);
+  assertEquals("val1",items[0]);
+  assertEquals("val2",items[1]);
+}
