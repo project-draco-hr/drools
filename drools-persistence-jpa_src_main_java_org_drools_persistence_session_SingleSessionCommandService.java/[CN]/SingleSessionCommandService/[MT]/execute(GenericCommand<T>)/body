@@ -1,5 +1,5 @@
 {
-  session.halt();
+  ksession.halt();
   boolean localTransaction=false;
   UserTransaction ut=null;
   try {
@@ -18,20 +18,19 @@
       this.sessionInfo=this.em.find(SessionInfo.class,this.sessionInfo.getId());
       this.sessionInfo.setJPASessionMashallingHelper(this.marshallingHelper);
       this.marshallingHelper.loadSnapshot(this.sessionInfo.getData(),this.ksession);
-      this.session=(StatefulSession)((StatefulKnowledgeSessionImpl)this.ksession).session;
     }
     this.em.joinTransaction();
     this.sessionInfo.setDirty();
     registerRollbackSync();
-    T result=command.execute((ReteooWorkingMemory)session);
+    T result=command.execute(this.kContext);
     if (localTransaction) {
       ut.commit();
       if (localEm.isOpen()) {
         localEm.close();
       }
       this.env.set(EnvironmentName.ENTITY_MANAGER,null);
-      ((JPAProcessInstanceManager)((ReteooWorkingMemory)session).getProcessInstanceManager()).clearProcessInstances();
-      ((JPAWorkItemManager)((ReteooWorkingMemory)session).getWorkItemManager()).clearWorkItems();
+      ((JPAProcessInstanceManager)((StatefulKnowledgeSessionImpl)ksession).session.getProcessInstanceManager()).clearProcessInstances();
+      ((JPAWorkItemManager)((StatefulKnowledgeSessionImpl)ksession).session.getWorkItemManager()).clearWorkItems();
     }
     return result;
   }
@@ -55,7 +54,7 @@
  finally {
     new Thread(new Runnable(){
       public void run(){
-        session.fireUntilHalt();
+        ksession.fireUntilHalt();
       }
     }
 );
