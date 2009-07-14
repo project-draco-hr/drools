@@ -1,0 +1,17 @@
+{
+  Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_DynamicWithEntryPoint.drl"));
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newReaderResource(reader),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  List<StockTick> results=new ArrayList<StockTick>();
+  ksession.setGlobal("results",results);
+  WorkingMemoryEntryPoint ep=ksession.getWorkingMemoryEntryPoint("in-channel");
+  ep.insert(new StockTick(1,"RHT",20,10000));
+  ep.insert(new StockTick(2,"RHT",21,15000));
+  ep.insert(new StockTick(3,"RHT",22,20000));
+  ksession.fireAllRules();
+  assertEquals(3,results.size());
+}
