@@ -1,0 +1,50 @@
+{
+  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_CEP_SimpleTimeWindow.drl"));
+  final RuleBaseConfiguration rbconf=new RuleBaseConfiguration();
+  rbconf.setEventProcessingMode(EventProcessingOption.STREAM);
+  final RuleBase ruleBase=loadRuleBase(reader,rbconf);
+  SessionConfiguration conf=new SessionConfiguration();
+  conf.setClockType(ClockType.PSEUDO_CLOCK);
+  StatefulSession wm=ruleBase.newStatefulSession(conf,null);
+  WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(wm);
+  logger.setFileName("audit");
+  try {
+    List results=new ArrayList();
+    wm.setGlobal("results",results);
+    InternalWorkingMemory iwm=(InternalWorkingMemory)wm;
+    SessionPseudoClock clock=(SessionPseudoClock)wm.getSessionClock();
+    clock.advanceTime(5,TimeUnit.SECONDS);
+    assertEquals(-1,iwm.getTimeToNextJob());
+    wm.insert(new OrderEvent("1","customer A",70));
+    assertEquals(0,iwm.getIdleTime());
+    assertEquals(30000,iwm.getTimeToNextJob());
+    wm.fireAllRules();
+    assertEquals(1,results.size());
+    assertEquals(70,((Number)results.get(0)).intValue());
+    clock.advanceTime(10,TimeUnit.SECONDS);
+    assertEquals(20000,iwm.getTimeToNextJob());
+    wm.insert(new OrderEvent("2","customer A",60));
+    wm.fireAllRules();
+    assertEquals(2,results.size());
+    assertEquals(65,((Number)results.get(1)).intValue());
+    clock.advanceTime(10,TimeUnit.SECONDS);
+    assertEquals(10000,iwm.getTimeToNextJob());
+    wm.insert(new OrderEvent("3","customer A",50));
+    wm.fireAllRules();
+    assertEquals(3,results.size());
+    assertEquals(60,((Number)results.get(2)).intValue());
+    clock.advanceTime(10,TimeUnit.SECONDS);
+    assertEquals(0,iwm.getIdleTime());
+    wm.insert(new OrderEvent("4","customer A",25));
+    wm.fireAllRules();
+    assertEquals(3,results.size());
+    clock.advanceTime(10,TimeUnit.SECONDS);
+    wm.insert(new OrderEvent("5","customer A",70));
+    assertEquals(0,iwm.getIdleTime());
+    wm.fireAllRules();
+    assertEquals(3,results.size());
+  }
+  finally {
+    logger.writeToDisk();
+  }
+}
