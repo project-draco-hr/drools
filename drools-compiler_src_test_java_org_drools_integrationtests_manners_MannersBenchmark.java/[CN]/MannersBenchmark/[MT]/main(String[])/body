@@ -4,8 +4,30 @@
   Package pkg=builder.getPackage();
   final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   ruleBase.addPackage(pkg);
-  AlphaNetworkCompiler compiler=new AlphaNetworkCompiler();
   for (  ObjectTypeNode node : ((InternalRuleBase)ruleBase).getRete().getObjectTypeNodes()) {
-    compiler.compile(node);
+    CompiledNetwork compiledNetwork=ObjectTypeNodeCompiler.compile(builder,node);
+    node.setCompiledNetwork(compiledNetwork);
+  }
+  String filename;
+  if (args.length != 0) {
+    String arg=args[0];
+    filename=arg;
+  }
+ else {
+    filename="manners128.dat";
+  }
+  for (int i=0; i < 10; ++i) {
+    InputStream is=MannersBenchmark.class.getResourceAsStream(filename);
+    List list=getInputObjects(is);
+    StatefulSession session=ruleBase.newStatefulSession();
+    for (Iterator it=list.iterator(); it.hasNext(); ) {
+      Object object=it.next();
+      session.insert(object);
+    }
+    session.insert(new Count(1));
+    long start=System.currentTimeMillis();
+    session.fireAllRules();
+    System.err.println(System.currentTimeMillis() - start);
+    session.dispose();
   }
 }
