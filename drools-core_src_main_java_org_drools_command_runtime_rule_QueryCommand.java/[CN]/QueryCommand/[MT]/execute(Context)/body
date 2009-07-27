@@ -1,14 +1,16 @@
 {
   StatefulKnowledgeSession ksession=((KnowledgeCommandContext)context).getStatefulKnowledgesession();
   QueryResults results=null;
-  if (arguments == null || arguments.length == 0) {
+  if (this.arguments == null || this.arguments.size() == 0) {
     results=ksession.getQueryResults(name);
   }
  else {
-    results=ksession.getQueryResults(name,this.arguments);
+    results=ksession.getQueryResults(name,this.arguments.toArray());
   }
   if (this.outIdentifier != null) {
-    ((StatefulKnowledgeSessionImpl)ksession).session.getExecutionResult().getResults().put(this.outIdentifier,results);
+    ExecutionResults execRes=(ExecutionResults)((StatefulKnowledgeSessionImpl)ksession).session.getExecutionResult();
+    QueryResult queryRes=new QueryResult(outIdentifier,results);
+    execRes.getResults().add(queryRes);
   }
   return results;
 }
