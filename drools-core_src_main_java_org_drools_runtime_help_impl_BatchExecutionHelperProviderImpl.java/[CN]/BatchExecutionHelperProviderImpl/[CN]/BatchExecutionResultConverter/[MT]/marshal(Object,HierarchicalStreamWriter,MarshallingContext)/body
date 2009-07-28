@@ -7,20 +7,20 @@
     writeItem(value,context,writer);
     writer.endNode();
   }
-  for (  GenericResult genRes : result.getResults()) {
-    String identifier=genRes.getIdentifier();
-    if (genRes instanceof InsertObjectResult) {
-      FactHandle handle=(FactHandle)((InsertObjectResult)genRes).getFactHandle();
+  for (  String identifier : ((ExecutionResultImpl)result).getFactHandles().keySet()) {
+    Object handle=result.getFactHandle(identifier);
+    if (handle instanceof FactHandle) {
       writer.startNode("fact-handle");
       writer.addAttribute("identifier",identifier);
-      writer.addAttribute("externalForm",handle.toExternalForm());
+      writer.addAttribute("externalForm",((FactHandle)handle).toExternalForm());
+      writer.endNode();
     }
- else     if (genRes instanceof InsertElementsResult) {
+ else     if (handle instanceof Collection) {
       writer.startNode("fact-handles");
       writer.addAttribute("identifier",identifier);
-      for (      FactHandle handle : ((InsertElementsResult)genRes).getHandles()) {
+      for (      FactHandle factHandle : (Collection<FactHandle>)handle) {
         writer.startNode("fact-handle");
-        writer.addAttribute("externalForm",handle.toExternalForm());
+        writer.addAttribute("externalForm",((FactHandle)factHandle).toExternalForm());
         writer.endNode();
       }
       writer.endNode();
