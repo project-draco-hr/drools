@@ -1,7 +1,7 @@
 {
   final RuleModel model=new RuleModel();
   model.lhs=new IPattern[3];
-  final FactPattern x=new FactPattern("Car");
+  final FactPattern x=new FactPattern("Boat");
   model.lhs[0]=x;
   x.boundName="x";
   final FactPattern y=new FactPattern("Car");
@@ -23,9 +23,17 @@
   cons[1].connectives[0].constraintValueType=ISingleFieldConstraint.TYPE_LITERAL;
   final FactPattern other=new FactPattern("House");
   model.lhs[2]=other;
-  final List b=model.getBoundFacts();
-  assertEquals(3,b.size());
-  assertEquals("x",b.get(0));
-  assertEquals("y",b.get(1));
-  assertEquals("qbc",b.get(2));
+  other.boundName="q";
+  final SingleFieldConstraint[] cons2=new SingleFieldConstraint[1];
+  cons2[0]=new SingleFieldConstraint();
+  other.constraintList=new CompositeFieldConstraint();
+  other.constraintList.constraints=cons2;
+  String varTypeString=model.getFieldConstraint("qbc");
+  assertEquals("String",varTypeString);
+  String varTypeLong=model.getFieldConstraint("make");
+  assertEquals(null,varTypeLong);
+  FactPattern varTypeBoat=model.getBoundFact("x");
+  assertEquals("Boat",varTypeBoat.factType);
+  FactPattern varTypeCar=model.getBoundFact("y");
+  assertEquals("Car",varTypeCar.factType);
 }
