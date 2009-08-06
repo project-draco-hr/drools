@@ -1,0 +1,21 @@
+{
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("test_AddRemoveListeners.drl")),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  final org.drools.event.rule.WorkingMemoryEventListener wmeListener=context.mock(org.drools.event.rule.WorkingMemoryEventListener.class);
+  context.checking(new Expectations(){
+{
+      exactly(2).of(wmeListener).objectInserted(with(any(org.drools.event.rule.ObjectInsertedEvent.class)));
+    }
+  }
+);
+  ksession.addEventListener(wmeListener);
+  ksession.insert(new Cheese("stilton"));
+  ksession.insert(wmeListener);
+  ksession.fireAllRules();
+  ksession.insert(new Cheese("brie"));
+  context.assertIsSatisfied();
+}
