@@ -1,0 +1,59 @@
+{
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("test_CEP_CollectWithWindows.drl")),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  final KnowledgeBaseConfiguration kbconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kbconf.setOption(EventProcessingOption.STREAM);
+  final KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  KnowledgeSessionConfiguration ksconf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  ksconf.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(ksconf,null);
+  WorkingMemoryFileLogger logger=new WorkingMemoryFileLogger(ksession);
+  logger.setFileName("audit");
+  List<Number> timeResults=new ArrayList<Number>();
+  List<Number> lengthResults=new ArrayList<Number>();
+  ksession.setGlobal("timeResults",timeResults);
+  ksession.setGlobal("lengthResults",lengthResults);
+  SessionPseudoClock clock=(SessionPseudoClock)ksession.getSessionClock();
+  try {
+    clock.advanceTime(5,TimeUnit.SECONDS);
+    ksession.insert(new OrderEvent("1","customer A",70));
+    ksession.fireAllRules();
+    assertEquals(1,timeResults.size());
+    assertEquals(1,timeResults.get(0).intValue());
+    assertEquals(1,lengthResults.size());
+    assertEquals(1,lengthResults.get(0).intValue());
+    clock.advanceTime(10,TimeUnit.SECONDS);
+    ksession.insert(new OrderEvent("2","customer A",60));
+    ksession.fireAllRules();
+    assertEquals(2,timeResults.size());
+    assertEquals(2,timeResults.get(1).intValue());
+    assertEquals(2,lengthResults.size());
+    assertEquals(2,lengthResults.get(1).intValue());
+    clock.advanceTime(10,TimeUnit.SECONDS);
+    ksession.insert(new OrderEvent("3","customer A",50));
+    ksession.fireAllRules();
+    assertEquals(3,timeResults.size());
+    assertEquals(3,timeResults.get(2).intValue());
+    assertEquals(3,lengthResults.size());
+    assertEquals(3,lengthResults.get(2).intValue());
+    clock.advanceTime(10,TimeUnit.SECONDS);
+    ksession.insert(new OrderEvent("4","customer A",25));
+    ksession.fireAllRules();
+    assertEquals(4,timeResults.size());
+    assertEquals(3,timeResults.get(3).intValue());
+    assertEquals(4,lengthResults.size());
+    assertEquals(3,lengthResults.get(3).intValue());
+    clock.advanceTime(5,TimeUnit.SECONDS);
+    ksession.insert(new OrderEvent("5","customer A",70));
+    ksession.fireAllRules();
+    assertEquals(5,timeResults.size());
+    assertEquals(4,timeResults.get(4).intValue());
+    assertEquals(5,lengthResults.size());
+    assertEquals(3,lengthResults.get(4).intValue());
+  }
+  finally {
+    logger.writeToDisk();
+  }
+}
