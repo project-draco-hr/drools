@@ -1,0 +1,25 @@
+{
+  String file="[consequence][$policy]Add surcharge {surcharge} to Policy=modify(policy) \\{price = {surcharge}\\}";
+  try {
+    final Reader reader=new StringReader(file);
+    this.file=new DSLTokenizedMappingFile();
+    final boolean parsingResult=this.file.parseAndLoad(reader);
+    reader.close();
+    assertTrue(this.file.getErrors().toString(),parsingResult);
+    assertTrue(this.file.getErrors().isEmpty());
+    assertEquals(1,this.file.getMapping().getEntries().size());
+    DSLMappingEntry entry=(DSLMappingEntry)this.file.getMapping().getEntries().get(0);
+    assertEquals(DSLMappingEntry.CONSEQUENCE,entry.getSection());
+    assertEquals("$policy",entry.getMetaData().toString());
+    assertEquals("Add surcharge {surcharge} to Policy",entry.getMappingKey());
+    assertEquals("modify(policy) \\{price = {surcharge}\\}",entry.getMappingValue());
+    String input="Add surcharge 300 to Policy";
+    String expected="modify(policy) {price = 300}";
+    String result=entry.getKeyPattern().matcher(input).replaceAll(entry.getValuePattern());
+    assertEquals(expected,result);
+  }
+ catch (  final IOException e) {
+    e.printStackTrace();
+    fail("Should not raise exception ");
+  }
+}
