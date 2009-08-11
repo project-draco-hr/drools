@@ -10,11 +10,10 @@
  else   if (this.rule.isNoLoop() && this.rule.equals(context.getRuleOrigin())) {
     return;
   }
-  final LeftTuple cloned=tuple;
   final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
   final Duration dur=this.rule.getDuration();
   if (dur != null && dur.getDuration(tuple) > 0) {
-    final ScheduledAgendaItem item=new ScheduledAgendaItem(context.getPropagationNumber(),cloned,agenda,context,this.rule,this.subrule);
+    final ScheduledAgendaItem item=agenda.createScheduledAgendaItem(tuple,context,this.rule,this.subrule);
     final TerminalNodeMemory memory=(TerminalNodeMemory)workingMemory.getNodeMemory(this);
     agenda.scheduleItem(item);
     tuple.setActivation(item);
@@ -26,7 +25,7 @@
   }
  else {
     final TerminalNodeMemory memory=(TerminalNodeMemory)workingMemory.getNodeMemory(this);
-    final AgendaItem item=new AgendaItem(context.getPropagationNumber(),cloned,rule.getSalience().getValue(tuple,workingMemory),context,this.rule,this.subrule);
+    final AgendaItem item=agenda.createAgendaItem(tuple,rule.getSalience().getValue(tuple,workingMemory),context,this.rule,this.subrule);
     item.setSequenence(this.sequence);
     tuple.setActivation(item);
     memory.getTupleMemory().add(tuple);
