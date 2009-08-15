@@ -1,10 +1,13 @@
 {
   KnowledgeBuilder builder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   try {
-    builder.add(ResourceFactory.newInputStreamResource(Broker.class.getResourceAsStream(RULES_FILE)),ResourceType.DRL);
+    for (int i=0; i < ASSET_FILES.length; i++) {
+      builder.add(ResourceFactory.newInputStreamResource(Broker.class.getResourceAsStream(ASSET_FILES[i])),ResourceType.determineResourceType(ASSET_FILES[i]));
+    }
   }
  catch (  Exception e) {
     e.printStackTrace();
+    System.exit(0);
   }
   if (builder.hasErrors()) {
     System.err.println(builder.getErrors());
@@ -12,6 +15,7 @@
   }
   KnowledgeBaseConfiguration conf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
   conf.setOption(EventProcessingOption.STREAM);
+  conf.setOption(MBeansOption.ENABLED);
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(conf);
   kbase.addKnowledgePackages(builder.getKnowledgePackages());
   return kbase;
