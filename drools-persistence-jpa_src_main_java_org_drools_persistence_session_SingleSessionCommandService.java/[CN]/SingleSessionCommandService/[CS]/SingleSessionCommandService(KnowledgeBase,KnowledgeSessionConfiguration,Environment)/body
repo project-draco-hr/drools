@@ -12,15 +12,21 @@
   this.sessionInfo.setJPASessionMashallingHelper(this.marshallingHelper);
   this.emf=(EntityManagerFactory)env.get(EnvironmentName.ENTITY_MANAGER_FACTORY);
   this.em=emf.createEntityManager();
+  boolean localTransaction=false;
   UserTransaction ut=null;
   try {
     InitialContext ctx=new InitialContext();
     ut=(UserTransaction)ctx.lookup("java:comp/UserTransaction");
-    ut.begin();
+    if (ut.getStatus() == Status.STATUS_NO_TRANSACTION) {
+      ut.begin();
+      localTransaction=true;
+    }
     registerRollbackSync();
     this.em.joinTransaction();
     this.em.persist(this.sessionInfo);
-    ut.commit();
+    if (localTransaction) {
+      ut.commit();
+    }
   }
  catch (  Throwable t1) {
     try {

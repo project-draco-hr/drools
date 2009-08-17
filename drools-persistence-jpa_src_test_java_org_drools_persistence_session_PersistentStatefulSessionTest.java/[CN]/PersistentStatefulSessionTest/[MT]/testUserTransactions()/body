@@ -21,9 +21,12 @@
   env.set(EnvironmentName.ENTITY_MANAGER_FACTORY,emf);
   env.set(EnvironmentName.TRANSACTION_MANAGER,TransactionManagerServices.getTransactionManager());
   env.set(EnvironmentName.GLOBALS,new MapGlobalResolver());
-  StatefulKnowledgeSession ksession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
-  List list=new ArrayList();
   UserTransaction ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
+  ut.begin();
+  StatefulKnowledgeSession ksession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
+  ut.commit();
+  List list=new ArrayList();
+  ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
   ut.begin();
   ksession.setGlobal("list",list);
   ksession.insert(1);
@@ -47,7 +50,10 @@
   ut.rollback();
   ksession.fireAllRules();
   assertEquals(4,list.size());
+  ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
+  ut.begin();
   ksession=JPAKnowledgeService.loadStatefulKnowledgeSession(ksession.getId(),kbase,null,env);
+  ut.commit();
   ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
   ut.begin();
   ksession.insert(7);

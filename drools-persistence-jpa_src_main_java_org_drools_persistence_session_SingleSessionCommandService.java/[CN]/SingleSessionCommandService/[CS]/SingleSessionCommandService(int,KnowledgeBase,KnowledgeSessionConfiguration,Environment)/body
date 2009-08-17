@@ -5,15 +5,21 @@
   this.env=env;
   this.emf=(EntityManagerFactory)env.get(EnvironmentName.ENTITY_MANAGER_FACTORY);
   this.em=emf.createEntityManager();
+  boolean localTransaction=false;
   UserTransaction ut=null;
   try {
     InitialContext ctx=new InitialContext();
     ut=(UserTransaction)ctx.lookup("java:comp/UserTransaction");
-    ut.begin();
-    registerRollbackSync();
+    if (ut.getStatus() == Status.STATUS_NO_TRANSACTION) {
+      ut.begin();
+      localTransaction=true;
+    }
     this.em.joinTransaction();
+    registerRollbackSync();
     sessionInfo=this.em.find(SessionInfo.class,sessionId);
-    ut.commit();
+    if (localTransaction) {
+      ut.commit();
+    }
   }
  catch (  Throwable t1) {
     try {
