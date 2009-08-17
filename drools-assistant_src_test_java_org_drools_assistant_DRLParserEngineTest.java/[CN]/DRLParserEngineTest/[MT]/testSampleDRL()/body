@@ -1,0 +1,15 @@
+{
+  rule="package com.sample\n\n" + "import com.sample.DroolsTest.Message;\n" + "import com.sample.Prueba;\n\n"+ "\trule \"Hello World\"\n"+ "\twhen\n"+ "\t\tm : Message( status == Message.HELLO, myMessage : message )\n"+ "\t\tPrueba()\n"+ "\tthen\n"+ "\t\tSystem.out.println( myMessage );\n"+ "\t\tm.setMessage( \"Goodbye cruel world\" );\n"+ "\t\tm.setStatus( Message.GOODBYE );\n"+ "\t\tupdate( m );\n"+ "end\n"+ "rule \"GoodBye World\"\n"+ "\twhen\n"+ "\t\tm : Message( status == Message.GOODBYE, myMessage : message )\n"+ "\t\tPrueba()\n"+ "\tthen\n"+ "\t\tSystem.out.println( myMessage );\n"+ "\t\tm.setMessage( \"Bon Giorno\" );\n"+ "end";
+  engine=new DRLParserEngine(rule);
+  info=(DRLRuleRefactorInfo)engine.parse();
+  RuleBasicContentInfo content=info.getContentAt(173);
+  Assert.assertEquals(true,content != null);
+  Assert.assertEquals(DRLContentTypeEnum.RULE_LHS_LINE,content.getType());
+  Assert.assertEquals("rule \"Hello World\"",((RuleLineContentInfo)content).getRule().getRuleName());
+  Assert.assertEquals("\t\tPrueba()",content.getContent());
+  content=info.getContentAt(343);
+  Assert.assertEquals(true,content != null);
+  Assert.assertEquals(DRLContentTypeEnum.RULE_LHS_LINE,content.getType());
+  Assert.assertEquals("rule \"GoodBye World\"",((RuleLineContentInfo)content).getRule().getRuleName());
+  Assert.assertEquals("\twhen",content.getContent());
+}

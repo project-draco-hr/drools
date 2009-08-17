@@ -1,0 +1,18 @@
+{
+  if (contents.containsKey(offset))   return contents.get(offset);
+  int previousKey=0;
+  for (  Integer key : contents.keySet()) {
+    if (key > offset) {
+      RuleBasicContentInfo info=contents.get(previousKey);
+      if ((previousKey + info.getContentLength()) >= offset) {
+        if (info.getType().equals(DRLContentTypeEnum.RULE))         return searchInsideTheRule(offset,(RuleDRLContentInfo)info);
+        return info;
+      }
+      return null;
+    }
+    previousKey=key;
+  }
+  RuleBasicContentInfo info=contents.get(previousKey);
+  if (info.getType().equals(DRLContentTypeEnum.RULE))   return searchInsideTheRule(offset,(RuleDRLContentInfo)info);
+  return (info.getContentLength() + previousKey > offset) ? info : null;
+}
