@@ -1,0 +1,34 @@
+{
+  RightTupleList[] oldTable=table;
+  int oldCapacity=oldTable.length;
+  if (oldCapacity >= MAXIMUM_CAPACITY)   return;
+  RightTupleList[] newTable=new RightTupleList[oldCapacity << 1];
+  threshold=(int)(newTable.length * loadFactor);
+  int sizeMask=newTable.length - 1;
+  for (int i=0; i < oldCapacity; i++) {
+    RightTupleList e=oldTable[i];
+    if (e != null) {
+      RightTupleList next=(RightTupleList)e.getNext();
+      int idx=e.hashCode() & sizeMask;
+      if (next == null)       newTable[idx]=e;
+ else {
+        RightTupleList lastRun=e;
+        int lastIdx=idx;
+        for (RightTupleList last=next; last != null; last=(RightTupleList)last.getNext()) {
+          int k=last.hashCode() & sizeMask;
+          if (k != lastIdx) {
+            lastIdx=k;
+            lastRun=last;
+          }
+        }
+        newTable[lastIdx]=lastRun;
+        for (RightTupleList p=e; p != lastRun; p=(RightTupleList)p.getNext()) {
+          int k=p.hashCode() & sizeMask;
+          RightTupleList n=newTable[k];
+          newTable[k]=new RightTupleList(p,n);
+        }
+      }
+    }
+  }
+  table=newTable;
+}

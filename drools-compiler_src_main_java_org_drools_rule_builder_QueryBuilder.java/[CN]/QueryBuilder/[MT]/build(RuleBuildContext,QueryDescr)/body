@@ -10,13 +10,16 @@
   String[] params=queryDescr.getParameters();
   String[] types=queryDescr.getParameterTypes();
   int i=0;
+  Declaration[] declarations=new Declaration[params.length];
   try {
     for (i=0; i < params.length; i++) {
       Declaration declr=pattern.addDeclaration(params[i]);
       ArrayElementReader reader=new ArrayElementReader(arrayExtractor,i,context.getDialect().getTypeResolver().resolveType(types[i]));
       PatternBuilder.registerReadAccessor(context,objectType,"arguments",reader);
       declr.setReadAccessor(reader);
+      declarations[i]=declr;
     }
+    ((Query)context.getRule()).setParameters(declarations);
   }
  catch (  ClassNotFoundException e) {
     context.getErrors().add(new DescrBuildError(context.getParentDescr(),queryDescr,e,"Unable to resolve type '" + types[i] + " for parameter"+ params[i]));

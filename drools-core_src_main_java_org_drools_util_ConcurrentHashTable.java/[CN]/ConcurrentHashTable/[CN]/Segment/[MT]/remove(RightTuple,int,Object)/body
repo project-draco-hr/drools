@@ -1,0 +1,28 @@
+{
+  lock();
+  try {
+    int c=keyCount - 1;
+    RightTupleList[] tab=table;
+    int index=hashCode & (tab.length - 1);
+    RightTupleList first=tab[index];
+    RightTupleList e=first;
+    while (e != null) {
+      if (e.matches(object,hashCode)) {
+        break;
+      }
+      e=(RightTupleList)e.next;
+    }
+    e.remove(rightTuple);
+    tupleCount--;
+    if (e.getFirst(null) == null) {
+      RightTupleList newFirst=(RightTupleList)e.getNext();
+      for (RightTupleList p=first; p != e; p=(RightTupleList)p.getNext()) {
+        newFirst=new RightTupleList(p.getIndex(),hashCode,newFirst);
+      }
+      keyCount=c;
+    }
+  }
+  finally {
+    unlock();
+  }
+}

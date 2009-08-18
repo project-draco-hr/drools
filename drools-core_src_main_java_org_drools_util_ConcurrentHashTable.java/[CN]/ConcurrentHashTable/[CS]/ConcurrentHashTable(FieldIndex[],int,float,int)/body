@@ -1,0 +1,38 @@
+{
+  this.startResult=RightTupleIndexHashTable.PRIME;
+  for (int i=0, length=index.length; i < length; i++) {
+    this.startResult=RightTupleIndexHashTable.PRIME * this.startResult + index[i].getExtractor().getIndex();
+  }
+switch (index.length) {
+case 0:
+    throw new IllegalArgumentException("FieldIndexHashTable cannot use an index[] of length  0");
+case 1:
+  this.index=new SingleIndex(index,this.startResult);
+break;
+case 2:
+this.index=new DoubleCompositeIndex(index,this.startResult);
+break;
+case 3:
+this.index=new TripleCompositeIndex(index,this.startResult);
+break;
+default :
+throw new IllegalArgumentException("FieldIndexHashTable cannot use an index[] of length  great than 3");
+}
+if (!(loadFactor > 0) || initialCapacity < 0 || concurrencyLevel <= 0) throw new IllegalArgumentException();
+if (concurrencyLevel > MAX_SEGMENTS) concurrencyLevel=MAX_SEGMENTS;
+int sshift=0;
+int ssize=1;
+while (ssize < concurrencyLevel) {
+++sshift;
+ssize<<=1;
+}
+segmentShift=32 - sshift;
+segmentMask=ssize - 1;
+this.segments=Segment.newArray(ssize);
+if (initialCapacity > MAXIMUM_CAPACITY) initialCapacity=MAXIMUM_CAPACITY;
+int c=initialCapacity / ssize;
+if (c * ssize < initialCapacity) ++c;
+int cap=1;
+while (cap < c) cap<<=1;
+for (int i=0; i < this.segments.length; ++i) this.segments[i]=new Segment(this.index,cap,loadFactor);
+}

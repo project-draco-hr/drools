@@ -1,0 +1,27 @@
+{
+  final InternalReadAccessor extractor=store.getReader(Cheese.class,"type",getClass().getClassLoader());
+  final Pattern pattern=new Pattern(0,new ClassObjectType(Cheese.class));
+  final Declaration declaration=new Declaration("typeOfCheese",extractor,pattern);
+  final FieldIndex fieldIndex=new FieldIndex(extractor,declaration,equals.getEvaluator(ValueType.STRING_TYPE,Operator.EQUAL));
+  final ConcurrentHashTable map=new ConcurrentHashTable(new FieldIndex[]{fieldIndex});
+  assertEquals(0,map.size());
+  final Cheese stilton1=new Cheese("stilton",35);
+  final InternalFactHandle stiltonHandle1=new DefaultFactHandle(1,stilton1);
+  RightTuple stiltonRightTuple1=new RightTuple(stiltonHandle1,null);
+  map.add(stiltonRightTuple1);
+  final Cheese cheddar1=new Cheese("cheddar",35);
+  final InternalFactHandle cheddarHandle1=new DefaultFactHandle(2,cheddar1);
+  RightTuple cheddarRightTuple1=new RightTuple(cheddarHandle1,null);
+  map.add(cheddarRightTuple1);
+  final Cheese stilton2=new Cheese("stilton",81);
+  final InternalFactHandle stiltonHandle2=new DefaultFactHandle(3,stilton2);
+  RightTuple stiltonRightTuple2=new RightTuple(stiltonHandle2,null);
+  map.add(stiltonRightTuple2);
+  assertEquals(3,map.size());
+  map.remove(cheddarRightTuple1);
+  assertEquals(2,map.size());
+  map.remove(stiltonRightTuple2);
+  assertEquals(1,map.size());
+  map.remove(stiltonRightTuple1);
+  assertEquals(0,map.size());
+}
