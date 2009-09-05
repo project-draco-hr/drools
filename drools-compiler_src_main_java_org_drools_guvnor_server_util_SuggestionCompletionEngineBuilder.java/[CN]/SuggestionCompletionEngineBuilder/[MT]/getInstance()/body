@@ -3,6 +3,22 @@
   this.instance.fieldsForType=this.fieldsForType;
   this.instance.modifiers=this.modifiersForType;
   this.instance.fieldTypes=this.fieldTypes;
+  for (  String fieldName : this.fieldTypesField.keySet()) {
+    Field field=(Field)this.fieldTypesField.get(fieldName);
+    if (field != null) {
+      Type type=field.getGenericType();
+      if (type instanceof ParameterizedType) {
+        ParameterizedType pt=(ParameterizedType)type;
+        Type goodType=null;
+        for (        Type t : pt.getActualTypeArguments()) {
+          goodType=t;
+        }
+        int index=goodType.toString().lastIndexOf(".");
+        String className=goodType.toString().substring(index + 1);
+        this.instance.fieldParametersType.put(fieldName,className);
+      }
+    }
+  }
   this.instance.globalTypes=this.globalTypes;
   this.instance.actionDSLSentences=makeArray(this.actionDSLSentences);
   this.instance.conditionDSLSentences=makeArray(this.conditionDSLSentences);
