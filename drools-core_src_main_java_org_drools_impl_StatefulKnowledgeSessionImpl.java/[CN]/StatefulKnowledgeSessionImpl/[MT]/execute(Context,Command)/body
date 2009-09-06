@@ -1,0 +1,18 @@
+{
+  ExecutionResultImpl results=null;
+  if (context != null) {
+    results=(ExecutionResultImpl)((KnowledgeCommandContext)context).getExecutionResults();
+  }
+  if (results == null) {
+    results=new ExecutionResultImpl();
+  }
+  try {
+    session.startBatchExecution(results);
+    ((GenericCommand)command).execute(new KnowledgeCommandContext(context,null,this.kbase,this,null));
+    ExecutionResults result=session.getExecutionResult();
+    return result;
+  }
+  finally {
+    session.endBatchExecution();
+  }
+}
