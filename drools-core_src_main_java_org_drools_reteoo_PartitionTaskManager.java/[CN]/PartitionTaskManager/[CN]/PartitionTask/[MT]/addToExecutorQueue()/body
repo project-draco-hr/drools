@@ -1,0 +1,24 @@
+{
+synchronized (isYieldAdded) {
+    if (this.manager.isOnHold() && (!queue.isEmpty()) && isYieldAdded.compareAndSet(false,true)) {
+      queue.add(YieldAction.INSTANCE);
+    }
+  }
+  if (!queue.isEmpty() && enqueued.compareAndSet(false,true)) {
+    Action head=queue.peek();
+    int priority=Action.PRIORITY_HIGH;
+    while (head != null && head instanceof YieldAction) {
+      isYieldAdded.compareAndSet(true,false);
+      priority=Action.PRIORITY_NORMAL;
+      queue.remove();
+      head=queue.peek();
+    }
+    if (head != null) {
+      this.setPriority(priority);
+      manager.execute(this);
+    }
+ else {
+      enqueued.compareAndSet(true,false);
+    }
+  }
+}

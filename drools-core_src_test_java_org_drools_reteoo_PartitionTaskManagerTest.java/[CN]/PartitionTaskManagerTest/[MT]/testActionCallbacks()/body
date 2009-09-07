@@ -3,16 +3,18 @@
   DeterministicScheduler pool=new DeterministicScheduler();
   context.checking(new Expectations(){
 {
+      allowing(action).compareTo(with(any(PartitionTaskManager.Action.class)));
       exactly(5).of(action).execute(workingMemory);
     }
   }
 );
-  manager.enqueue(action);
-  manager.enqueue(action);
-  manager.setPool(pool);
-  manager.enqueue(action);
-  manager.enqueue(action);
-  manager.enqueue(action);
+  taskManager.enqueue(action);
+  taskManager.enqueue(action);
+  ExternalExecutorService service=new ExternalExecutorService(pool);
+  manager.setPool(service);
+  taskManager.enqueue(action);
+  taskManager.enqueue(action);
+  taskManager.enqueue(action);
   pool.runUntilIdle();
   context.assertIsSatisfied();
 }

@@ -1,23 +1,29 @@
 {
   boolean tryagain, result;
-  do {
-    tryagain=result=false;
-    final InternalAgendaGroup group=(InternalAgendaGroup)getNextFocus();
-    if (group != null) {
-      final AgendaItem item=(AgendaItem)group.getNext();
-      if (item != null) {
-        if (filter == null || filter.accept(item)) {
-          fireActivation(item);
-          result=true;
-        }
+  try {
+    do {
+      this.workingMemory.prepareToFireActivation();
+      tryagain=result=false;
+      final InternalAgendaGroup group=(InternalAgendaGroup)getNextFocus();
+      if (group != null) {
+        final AgendaItem item=(AgendaItem)group.getNext();
+        if (item != null) {
+          if (filter == null || filter.accept(item)) {
+            fireActivation(item);
+            result=true;
+          }
  else {
-          final EventSupport eventsupport=(EventSupport)this.workingMemory;
-          eventsupport.getAgendaEventSupport().fireActivationCancelled(item,this.workingMemory,ActivationCancelledCause.FILTER);
-          tryagain=true;
+            final EventSupport eventsupport=(EventSupport)this.workingMemory;
+            eventsupport.getAgendaEventSupport().fireActivationCancelled(item,this.workingMemory,ActivationCancelledCause.FILTER);
+            tryagain=true;
+          }
         }
       }
     }
-  }
  while (tryagain);
+  }
+  finally {
+    this.workingMemory.activationFired();
+  }
   return result;
 }

@@ -1,14 +1,15 @@
 {
   final PartitionTaskManager.Action action=context.mock(PartitionTaskManager.Action.class);
   DeterministicScheduler pool=new DeterministicScheduler();
-  manager.setPool(pool);
+  ExternalExecutorService service=new ExternalExecutorService(pool);
+  manager.setPool(service);
   context.checking(new Expectations(){
 {
       oneOf(action).execute(workingMemory);
     }
   }
 );
-  manager.enqueue(action);
+  taskManager.enqueue(action);
   pool.runUntilIdle();
   context.assertIsSatisfied();
 }
