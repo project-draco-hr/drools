@@ -1,0 +1,51 @@
+{
+  ObjectInputStream stream=context.stream;
+  InternalRuleBase ruleBase=context.ruleBase;
+  InternalWorkingMemory wm=context.wm;
+  WorkflowProcessInstanceImpl processInstance=createProcessInstance();
+  processInstance.setId(stream.readLong());
+  String processId=stream.readUTF();
+  processInstance.setProcessId(processId);
+  Process process=ruleBase.getProcess(processId);
+  if (ruleBase != null) {
+    processInstance.setProcess(process);
+  }
+  processInstance.setState(stream.readInt());
+  long nodeInstanceCounter=stream.readLong();
+  processInstance.setWorkingMemory(wm);
+  if (includeVariables) {
+    int nbVariables=stream.readInt();
+    if (nbVariables > 0) {
+      Context variableScope=process.getDefaultContext(VariableScope.VARIABLE_SCOPE);
+      VariableScopeInstance variableScopeInstance=(VariableScopeInstance)processInstance.getContextInstance(variableScope);
+      for (int i=0; i < nbVariables; i++) {
+        String name=stream.readUTF();
+        try {
+          Object value=stream.readObject();
+          variableScopeInstance.setVariable(name,value);
+        }
+ catch (        ClassNotFoundException e) {
+          throw new IllegalArgumentException("Could not reload variable " + name);
+        }
+      }
+    }
+  }
+  int nbSwimlanes=stream.readInt();
+  if (nbSwimlanes > 0) {
+    Context swimlaneContext=process.getDefaultContext(SwimlaneContext.SWIMLANE_SCOPE);
+    SwimlaneContextInstance swimlaneContextInstance=(SwimlaneContextInstance)processInstance.getContextInstance(swimlaneContext);
+    for (int i=0; i < nbSwimlanes; i++) {
+      String name=stream.readUTF();
+      String value=stream.readUTF();
+      swimlaneContextInstance.setActorId(name,value);
+    }
+  }
+  while (stream.readShort() == PersisterEnums.NODE_INSTANCE) {
+    readNodeInstance(context,processInstance,processInstance);
+  }
+  processInstance.internalSetNodeInstanceCounter(nodeInstanceCounter);
+  if (wm != null) {
+    processInstance.reconnect();
+  }
+  return processInstance;
+}

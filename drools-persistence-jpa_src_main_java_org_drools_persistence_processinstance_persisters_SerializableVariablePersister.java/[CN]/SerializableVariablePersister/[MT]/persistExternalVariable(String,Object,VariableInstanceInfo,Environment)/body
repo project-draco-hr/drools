@@ -1,0 +1,25 @@
+{
+  boolean newVariable=false;
+  EntityManager em=(EntityManager)env.get(EnvironmentName.ENTITY_MANAGER);
+  SerializablePersistedVariable result=null;
+  if (o == null || (oldValue != null && oldValue.getPersister().equals(""))) {
+    return null;
+  }
+  if (oldValue instanceof SerializablePersistedVariable) {
+    result=(SerializablePersistedVariable)oldValue;
+  }
+  if (result == null) {
+    result=new SerializablePersistedVariable();
+    newVariable=true;
+  }
+  result.setPersister(this.getClass().getName());
+  result.setName(name);
+  result.setContent(getBytes(o));
+  if (newVariable) {
+    em.persist(result);
+  }
+ else {
+    em.merge(result);
+  }
+  return result;
+}

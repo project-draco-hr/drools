@@ -1,18 +1,23 @@
 {
   ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  boolean variablesChanged=false;
   try {
     MarshallerWriteContext context=new MarshallerWriteContext(baos,null,null,null,null);
     String processType=((ProcessInstanceImpl)processInstance).getProcess().getType();
     saveProcessInstanceType(context,processInstance,processType);
     ProcessInstanceMarshaller marshaller=ProcessMarshallerRegistry.INSTANCE.getMarshaller(processType);
-    marshaller.writeProcessInstance(context,processInstance);
+    externalVariables=VariablePersistenceStrategyFactory.getVariablePersistenceStrategy().isEnabled();
+    marshaller.writeProcessInstance(context,processInstance,!externalVariables);
+    if (externalVariables) {
+      variablesChanged=persistVariables();
+    }
     context.close();
   }
  catch (  IOException e) {
     throw new IllegalArgumentException("IOException while storing process instance " + processInstance.getId() + ": "+ e.getMessage());
   }
   byte[] newByteArray=baos.toByteArray();
-  if (!Arrays.equals(newByteArray,processInstanceByteArray)) {
+  if (variablesChanged || !Arrays.equals(newByteArray,processInstanceByteArray)) {
     this.state=processInstance.getState();
     this.lastModificationDate=new Date();
     this.processInstanceByteArray=newByteArray;

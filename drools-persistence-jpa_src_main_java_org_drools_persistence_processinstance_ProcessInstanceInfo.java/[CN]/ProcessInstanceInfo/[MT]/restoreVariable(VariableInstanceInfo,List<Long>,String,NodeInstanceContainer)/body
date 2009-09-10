@@ -1,0 +1,24 @@
+{
+  if (parentIds.size() == 0) {
+    if (!(nodeInstanceContainer instanceof ContextableInstance)) {
+      throw new IllegalArgumentException("Parent node instance is not a contextable instance: " + nodeInstanceContainer);
+    }
+    VariableScopeInstance variableScopeInstance=(VariableScopeInstance)((ContextableInstance)nodeInstanceContainer).getContextInstance(VariableScope.VARIABLE_SCOPE);
+    VariablePersistenceStrategy persistenceStrategy=VariablePersistenceStrategyFactory.getVariablePersistenceStrategy();
+    Object value=persistenceStrategy.getVariable(variableInfo,this.env);
+    System.out.println(">>>>> Restoring variable " + variableName + " = "+ value);
+    variableScopeInstance.setVariable(variableName,value);
+  }
+ else {
+    Long nodeInstanceId=parentIds.get(0);
+    Collection<NodeInstance> nodeInstances=nodeInstanceContainer.getNodeInstances();
+    for (    NodeInstance nodeInstance : nodeInstances) {
+      if (nodeInstance.getId() == nodeInstanceId) {
+        parentIds.remove(0);
+        restoreVariable(variableInfo,parentIds,variableName,(CompositeContextNodeInstance)nodeInstance);
+      }
+      return;
+    }
+    throw new IllegalArgumentException("Could not find node instance " + nodeInstanceId + " in "+ nodeInstanceContainer);
+  }
+}

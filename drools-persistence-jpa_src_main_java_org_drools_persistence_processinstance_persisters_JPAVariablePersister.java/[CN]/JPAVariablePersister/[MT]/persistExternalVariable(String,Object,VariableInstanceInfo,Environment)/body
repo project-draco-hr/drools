@@ -1,0 +1,44 @@
+{
+  if (o == null || (oldValue != null && oldValue.getPersister().equals(""))) {
+    return null;
+  }
+  try {
+    boolean newVariable=false;
+    EntityManager em=(EntityManager)env.get(EnvironmentName.ENTITY_MANAGER);
+    JPAPersistedVariable result=null;
+    if (oldValue instanceof JPAPersistedVariable) {
+      result=(JPAPersistedVariable)oldValue;
+    }
+    if (result == null) {
+      result=new JPAPersistedVariable();
+      newVariable=true;
+    }
+    Long idValue=getClassIdValue(o);
+    if (idValue != null) {
+      System.out.println("Variable " + name + " -> Updating external Entity = "+ o);
+      em.merge(o);
+    }
+ else {
+      System.out.println("Variable " + name + " -> Persisting external Entity for the first time ="+ o);
+      em.persist(o);
+      idValue=getClassIdValue(o);
+    }
+    result.setPersister(this.getClass().getName());
+    result.setName(name);
+    result.setEntityId(idValue);
+    result.setEntity(o);
+    result.setEntityClass(o.getClass().getCanonicalName());
+    if (newVariable) {
+      em.persist(result);
+    }
+ else {
+      em.merge(result);
+    }
+    System.out.println("Saving JPAPersistedVariable id=" + result.getId() + " entityId="+ result.getEntityId()+ " class="+ result.getEntityClass()+ " value="+ result.getEntity());
+    return result;
+  }
+ catch (  Throwable t) {
+    Logger.getLogger(JPAVariablePersister.class.getName()).log(Level.SEVERE,null,t);
+    throw new RuntimeException("Could not persist external variable",t);
+  }
+}

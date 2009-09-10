@@ -1,0 +1,18 @@
+{
+  VariableScopeInstance variableScopeInstance=(VariableScopeInstance)((WorkflowProcessInstanceImpl)this.processInstance).getContextInstance(VariableScope.VARIABLE_SCOPE);
+  Map<String,Object> processVariables=variableScopeInstance.getVariables();
+  Map<String,VariableInstanceInfo> newVariables=new HashMap<String,VariableInstanceInfo>();
+  persist(processVariables,"",newVariables);
+  Collection<NodeInstance> nodeInstances=((WorkflowProcessInstanceImpl)this.processInstance).getNodeInstances();
+  if (nodeInstances.size() > 0) {
+    persistNodeVariables(nodeInstances,"",newVariables);
+  }
+  if (newVariables.size() > 0 || this.variables.size() > 0) {
+    this.variables.clear();
+    this.variables.putAll(newVariables);
+    return true;
+  }
+ else {
+    return false;
+  }
+}

@@ -1,0 +1,44 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(new ClassPathResource("VariablePersistenceStrategySubProcess.rf"),ResourceType.DRF);
+  for (  KnowledgeBuilderError error : kbuilder.getErrors()) {
+    System.out.println(error);
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  EntityManagerFactory emf=Persistence.createEntityManagerFactory("org.drools.persistence.jpa");
+  Environment env=KnowledgeBaseFactory.newEnvironment();
+  env.set(EnvironmentName.ENTITY_MANAGER_FACTORY,emf);
+  env.set(EnvironmentName.GLOBALS,new MapGlobalResolver());
+  StatefulKnowledgeSession ksession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
+  int id=ksession.getId();
+  Map<String,Object> parameters=new HashMap<String,Object>();
+  parameters.put("x","SomeString");
+  parameters.put("y",new MyEntity("This is a test Entity"));
+  parameters.put("z",new MyVariableSerializable("This is a test SerializableObject"));
+  ProcessInstance processInstance=ksession.startProcess("com.sample.ruleflow",parameters);
+  TestWorkItemHandler handler=TestWorkItemHandler.getInstance();
+  WorkItem workItem=handler.getWorkItem();
+  assertNotNull(workItem);
+  ksession=JPAKnowledgeService.loadStatefulKnowledgeSession(id,kbase,null,env);
+  processInstance=ksession.getProcessInstance(processInstance.getId());
+  assertNotNull(processInstance);
+  ksession.getWorkItemManager().completeWorkItem(workItem.getId(),null);
+  workItem=handler.getWorkItem();
+  assertNotNull(workItem);
+  ksession=JPAKnowledgeService.loadStatefulKnowledgeSession(id,kbase,null,env);
+  processInstance=ksession.getProcessInstance(processInstance.getId());
+  assertNotNull(processInstance);
+  ksession.getWorkItemManager().completeWorkItem(workItem.getId(),null);
+  workItem=handler.getWorkItem();
+  assertNotNull(workItem);
+  ksession=JPAKnowledgeService.loadStatefulKnowledgeSession(id,kbase,null,env);
+  processInstance=ksession.getProcessInstance(processInstance.getId());
+  assertNotNull(processInstance);
+  ksession.getWorkItemManager().completeWorkItem(workItem.getId(),null);
+  workItem=handler.getWorkItem();
+  assertNull(workItem);
+  ksession=JPAKnowledgeService.loadStatefulKnowledgeSession(id,kbase,null,env);
+  processInstance=ksession.getProcessInstance(processInstance.getId());
+  assertNull(processInstance);
+}
