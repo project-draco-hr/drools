@@ -1,0 +1,28 @@
+{
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("Sample.drl")),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  try {
+    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    DroolsObjectOutputStream oos=new DroolsObjectOutputStream(baos);
+    oos.writeObject(kbase);
+    oos.flush();
+    oos.close();
+    baos.flush();
+    baos.close();
+    byte[] serializedKb=baos.toByteArray();
+    ByteArrayInputStream bais=new ByteArrayInputStream(serializedKb);
+    DroolsObjectInputStream ois=new DroolsObjectInputStream(bais);
+    KnowledgeBase kb2=(KnowledgeBase)ois.readObject();
+  }
+ catch (  OptionalDataException ode) {
+    ode.printStackTrace();
+    fail("EOF? " + ode.eof);
+  }
+catch (  Exception e) {
+    e.printStackTrace();
+    fail("Unexpected exception: " + e.getMessage());
+  }
+}

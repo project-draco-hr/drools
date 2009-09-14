@@ -1,5 +1,22 @@
 {
-  super.writeExternal(stream);
-  stream.writeObject(this.reteooBuilder);
-  stream.writeObject(this.rete);
+  DroolsObjectOutputStream droolsStream=null;
+  boolean isDrools=stream instanceof DroolsObjectOutputStream;
+  ByteArrayOutputStream bytes=null;
+  stream.writeBoolean(isDrools);
+  if (isDrools) {
+    droolsStream=(DroolsObjectOutputStream)stream;
+  }
+ else {
+    bytes=new ByteArrayOutputStream();
+    droolsStream=new DroolsObjectOutputStream(bytes);
+  }
+  super.writeExternal(droolsStream);
+  droolsStream.writeObject(this.reteooBuilder);
+  droolsStream.writeObject(this.rete);
+  if (!isDrools) {
+    droolsStream.flush();
+    droolsStream.close();
+    bytes.close();
+    stream.writeObject(bytes.toByteArray());
+  }
 }

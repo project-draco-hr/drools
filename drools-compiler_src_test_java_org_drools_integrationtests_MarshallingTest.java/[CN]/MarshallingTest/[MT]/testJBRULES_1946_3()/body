@@ -1,0 +1,27 @@
+{
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("Sample.drl")),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  try {
+    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    DroolsObjectOutputStream oos=new DroolsObjectOutputStream(baos);
+    oos.writeObject(kbase);
+    oos.flush();
+    oos.close();
+    baos.flush();
+    baos.close();
+    byte[] serializedKb=baos.toByteArray();
+    ByteArrayInputStream bais=new ByteArrayInputStream(serializedKb);
+    ObjectInputStream ois=new ObjectInputStream(bais);
+    KnowledgeBase kb2=(KnowledgeBase)ois.readObject();
+    fail("Should have raised an IllegalArgumentException since the kbase was serialized with a Drools Stream but deserialized with a regular stream");
+  }
+ catch (  IllegalArgumentException ode) {
+  }
+catch (  Exception e) {
+    e.printStackTrace();
+    fail("Unexpected exception: " + e.getMessage());
+  }
+}
