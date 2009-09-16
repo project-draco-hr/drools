@@ -1,0 +1,22 @@
+{
+  Document document=new Document();
+  try {
+    PdfWriter.getInstance(document,out);
+    HeaderFooter footer=DroolsDocsComponentFactory.createFooter(packageData.packageName);
+    document.setFooter(footer);
+    document.addTitle(packageData.packageName.toUpperCase());
+    document.open();
+    DroolsDocsComponentFactory.createFirstPage(document,currentDate,packageData);
+    document.newPage();
+    document.add(new Phrase("Contents"));
+    document.add(DroolsDocsComponentFactory.createContents(packageData.rules));
+    document.newPage();
+    for (    DrlRuleData ruleData : packageData.rules) {
+      DroolsDocsComponentFactory.createRulePage(document,packageData.packageName,ruleData);
+    }
+  }
+ catch (  DocumentException de) {
+    System.err.println(de.getMessage());
+  }
+  document.close();
+}
