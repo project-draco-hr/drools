@@ -1,0 +1,27 @@
+{
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  try {
+    kbuilder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("test_RuleExtend.drl")),ResourceType.DRL);
+    assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+    KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+    kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+    final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+    final List results=new ArrayList();
+    ksession.setGlobal("results",results);
+    final Cheese stilton=new Cheese("stilton",5);
+    final Cheese cheddar=new Cheese("cheddar",7);
+    final Cheese brie=new Cheese("brie",5);
+    ksession.insert(stilton);
+    ksession.insert(cheddar);
+    ksession.insert(brie);
+    ksession.fireAllRules();
+    assertEquals(2,results.size());
+    assertEquals("stilton",results.get(0));
+    assertEquals("brie",results.get(1));
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    if (kbuilder.hasErrors())     System.out.println(kbuilder.getErrors());
+    fail("Unexpected exception: " + e.getMessage());
+  }
+}
