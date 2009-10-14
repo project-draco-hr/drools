@@ -1,0 +1,24 @@
+{
+  String commandId="client.lookup" + getNextId();
+  String kresultsId="kresults_" + getSessionId();
+  int type;
+  if (executor instanceof StatefulKnowledgeSession) {
+    type=0;
+  }
+ else {
+    throw new IllegalArgumentException("Type is not supported for registration");
+  }
+  Message msg=new Message(getSessionId(),counter.incrementAndGet(),false,new KnowledgeContextResolveFromContextCommand(new RegisterCommand(identifier,((StatefulKnowledgeSessionRemoteClient)executor).getInstanceId(),type),null,null,null,null));
+  BlockingMessageResponseHandler handler=new BlockingMessageResponseHandler();
+  try {
+    client.addResponseHandler(msg.getResponseId(),handler);
+    client.write(msg);
+    Object object=handler.getMessage().getPayload();
+    if (!(object instanceof FinishedCommand)) {
+      throw new RuntimeException("Response was not correctly ended");
+    }
+  }
+ catch (  Exception e) {
+    throw new RuntimeException("Unable to execute message",e);
+  }
+}

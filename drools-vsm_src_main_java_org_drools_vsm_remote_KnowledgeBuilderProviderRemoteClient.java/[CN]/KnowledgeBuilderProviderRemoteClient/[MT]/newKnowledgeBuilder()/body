@@ -1,0 +1,17 @@
+{
+  String localId=UUID.randomUUID().toString();
+  Message msg=new Message(serviceManager.getSessionId(),serviceManager.counter.incrementAndGet(),false,new SetVariableCommand("__TEMP__",localId,new NewKnowledgeBuilderCommand(null)));
+  BlockingMessageResponseHandler handler=new BlockingMessageResponseHandler();
+  try {
+    serviceManager.client.addResponseHandler(msg.getResponseId(),handler);
+    serviceManager.client.write(msg);
+    Object object=handler.getMessage().getPayload();
+    if (!(object instanceof FinishedCommand)) {
+      throw new RuntimeException("Response was not correctly ended");
+    }
+  }
+ catch (  Exception e) {
+    throw new RuntimeException("Unable to execute message",e);
+  }
+  return new KnowledgeBuilderRemoteClient(localId,serviceManager);
+}

@@ -1,0 +1,13 @@
+{
+  SocketAddress address=new InetSocketAddress("127.0.0.1",9123);
+  ServiceManagerData serverData=new ServiceManagerData();
+  SocketAcceptor acceptor=new NioSocketAcceptor();
+  acceptor.setHandler(new MinaIoHandler(SystemEventListenerFactory.getSystemEventListener(),new GenericMessageHandlerImpl(serverData,SystemEventListenerFactory.getSystemEventListener())));
+  this.server=new MinaAcceptor(acceptor,address);
+  this.server.start();
+  NioSocketConnector clientConnector=new NioSocketConnector();
+  clientConnector.setHandler(new MinaIoHandler(SystemEventListenerFactory.getSystemEventListener()));
+  GenericConnector minaClient=new MinaConnector("client 1",clientConnector,address,SystemEventListenerFactory.getSystemEventListener());
+  this.client=new ServiceManagerRemoteClient("client 1",minaClient);
+  ((ServiceManagerRemoteClient)client).connect();
+}
