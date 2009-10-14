@@ -1,0 +1,21 @@
+{
+  if (session != null && session.isConnected()) {
+    throw new IllegalStateException("Already connected. Disconnect first.");
+  }
+  try {
+    this.connector.getFilterChain().addLast("codec",new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
+    ConnectFuture future1=this.connector.connect(this.address);
+    future1.await(2000);
+    if (!future1.isConnected()) {
+      eventListener.info("unable to connect : " + address + " : "+ future1.getException());
+      return false;
+    }
+    eventListener.info("connected : " + address);
+    this.session=future1.getSession();
+    return true;
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    return false;
+  }
+}
