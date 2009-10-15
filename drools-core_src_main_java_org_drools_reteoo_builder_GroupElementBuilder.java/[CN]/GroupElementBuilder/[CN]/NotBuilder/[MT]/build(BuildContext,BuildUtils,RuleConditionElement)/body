@@ -9,13 +9,20 @@
     context.setObjectSource((ObjectSource)utils.attachNode(context,new RightInputAdapterNode(context.getNextId(),context.getTupleSource(),context)));
     context.setTupleSource(tupleSource);
     final TupleStartEqualsConstraint constraint=TupleStartEqualsConstraint.getInstance();
-    final List predicates=new ArrayList();
+    final List<TupleStartEqualsConstraint> predicates=new ArrayList<TupleStartEqualsConstraint>();
     predicates.add(constraint);
     context.setBetaconstraints(predicates);
   }
   final BetaConstraints betaConstraints=utils.createBetaNodeConstraint(context,context.getBetaconstraints(),false);
   Behavior[] behaviors=createBehaviorArray(context);
-  context.setTupleSource((LeftTupleSource)utils.attachNode(context,new NotNode(context.getNextId(),context.getTupleSource(),context.getObjectSource(),betaConstraints,behaviors,context)));
+  NotNode node=null;
+  if (GroupElement.FORALL_NOT.equals(not.getType())) {
+    node=new ForallNotNode(context.getNextId(),context.getTupleSource(),context.getObjectSource(),betaConstraints,behaviors,context,not.getForallBaseObjectType());
+  }
+ else {
+    node=new NotNode(context.getNextId(),context.getTupleSource(),context.getObjectSource(),betaConstraints,behaviors,context);
+  }
+  context.setTupleSource((LeftTupleSource)utils.attachNode(context,node));
   context.setBetaconstraints(null);
   context.setObjectSource(null);
   context.setCurrentPatternOffset(currentPatternIndex);
