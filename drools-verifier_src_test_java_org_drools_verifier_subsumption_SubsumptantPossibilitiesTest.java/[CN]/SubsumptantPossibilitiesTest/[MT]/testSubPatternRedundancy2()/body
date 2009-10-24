@@ -1,0 +1,48 @@
+{
+  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Possibilities.drl"));
+  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Find subsumptant pattern possibilities"));
+  Collection<Object> data=new ArrayList<Object>();
+  VerifierReport result=VerifierReportFactory.newVerifierReport();
+  session.setGlobal("result",result);
+  String ruleName1="Rule 1";
+  String ruleName2="Rule 2";
+  Pattern p1=new Pattern();
+  p1.setRuleName(ruleName1);
+  Pattern p2=new Pattern();
+  p2.setRuleName(ruleName2);
+  LiteralRestriction lr1=new LiteralRestriction();
+  lr1.setRuleName(ruleName1);
+  lr1.setOrderNumber(0);
+  LiteralRestriction lr2=new LiteralRestriction();
+  lr2.setRuleName(ruleName2);
+  lr2.setOrderNumber(0);
+  LiteralRestriction lr3=new LiteralRestriction();
+  lr3.setRuleName(ruleName2);
+  lr3.setOrderNumber(1);
+  SubPattern pp1=new SubPattern();
+  pp1.setPatternGuid(p1.getGuid());
+  pp1.setRuleName(ruleName1);
+  pp1.add(lr1);
+  SubPattern pp2=new SubPattern();
+  pp2.setPatternGuid(p2.getGuid());
+  pp2.setRuleName(ruleName2);
+  pp2.add(lr2);
+  pp2.add(lr3);
+  Redundancy r1=new Redundancy(lr1,lr3);
+  Redundancy r2=new Redundancy(p1,p2);
+  data.add(p1);
+  data.add(p2);
+  data.add(lr1);
+  data.add(lr2);
+  data.add(lr3);
+  data.add(pp1);
+  data.add(pp2);
+  data.add(r1);
+  data.add(r2);
+  StatelessSessionResult sessionResult=session.executeWithResults(data);
+  Map<Cause,Set<Cause>> map=createSubsumptionMap(sessionResult.iterateObjects());
+  assertFalse(TestBase.causeMapContains(map,pp1,pp2));
+  if (!map.isEmpty()) {
+    fail("More redundancies than was expected.");
+  }
+}

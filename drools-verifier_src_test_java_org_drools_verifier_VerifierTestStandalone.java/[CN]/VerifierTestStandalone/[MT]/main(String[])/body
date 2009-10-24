@@ -2,15 +2,15 @@
   try {
     Collection<String> fileNames=new ArrayList<String>();
     fileNames.add("Enums.drl");
-    DrlParser parser=new DrlParser();
-    Verifier a=new Verifier();
+    Verifier verifier=VerifierBuilderFactory.newVerifierBuilder().newVerifier();
     for (    String s : fileNames) {
-      PackageDescr descr=parser.parse(new InputStreamReader(Verifier.class.getResourceAsStream(s)));
-      a.addPackageDescr(descr);
+      verifier.addResourcesToVerify(ResourceFactory.newClassPathResource(s,Verifier.class),ResourceType.DRL);
     }
-    a.fireAnalysis();
-    a.writeComponentsHTML("/home/trikkola/");
-    VerifierResult result=a.getResult();
+    verifier.fireAnalysis();
+    VerifierReport result=verifier.getResult();
+    VerifierReportWriter reportwriter=VerifierReportWriterFactory.newHTMLReportWriter();
+    FileOutputStream out=new FileOutputStream("/Users/rikkola/Desktop/testReport.zip");
+    reportwriter.writeReport(out,result);
     Collection<VerifierMessageBase> msgs=result.getBySeverity(Severity.ERROR);
     for (Iterator iterator=msgs.iterator(); iterator.hasNext(); ) {
       VerifierMessageBase msg=(VerifierMessageBase)iterator.next();
@@ -44,15 +44,15 @@
       System.out.println("NOTE: " + msg.getMessage());
       System.out.println("\t" + msg.getFaulty());
     }
-    Collection<ObjectType> classes=result.getVerifierData().getAllObjectTypes();
+    Collection<ObjectType> classes=result.getVerifierData().getAll(VerifierComponentType.OBJECT_TYPE);
     for (Iterator iterator=classes.iterator(); iterator.hasNext(); ) {
       ObjectType c=(ObjectType)iterator.next();
-      Collection<VerifierRule> cr=result.getVerifierData().getRulesByObjectTypeId(c.getId());
+      Collection<VerifierRule> cr=result.getVerifierData().getRulesByObjectTypeId(c.getGuid());
       System.err.println("Class rules:" + cr);
       Set<Field> flds=c.getFields();
       for (Iterator iterator2=flds.iterator(); iterator2.hasNext(); ) {
         Field f=(Field)iterator2.next();
-        cr=result.getVerifierData().getRulesByFieldId(f.getId());
+        cr=result.getVerifierData().getRulesByFieldId(f.getGuid());
         System.err.println("Field rules: " + cr);
       }
     }

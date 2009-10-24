@@ -1,0 +1,25 @@
+{
+  zout=new ZipOutputStream(out);
+  VerifierData data=result.getVerifierData();
+  writeToFile(UrlFactory.SOURCE_FOLDER + File.separator + UrlFactory.HTML_FILE_INDEX,formPage(UrlFactory.THIS_FOLDER,ComponentsReportVisitor.visitObjectTypeCollection(UrlFactory.THIS_FOLDER,data.<ObjectType>getAll(VerifierComponentType.OBJECT_TYPE))));
+  writeToFile(UrlFactory.SOURCE_FOLDER + File.separator + UrlFactory.HTML_FILE_PACKAGES,formPage(UrlFactory.THIS_FOLDER,ComponentsReportVisitor.visitRulePackageCollection(UrlFactory.THIS_FOLDER,data.<RulePackage>getAll(VerifierComponentType.RULE_PACKAGE))));
+  String ruleFolder=UrlFactory.SOURCE_FOLDER + File.separator + UrlFactory.RULE_FOLDER;
+  for (  VerifierRule rule : data.<VerifierRule>getAll(VerifierComponentType.RULE)) {
+    writeToFile(ruleFolder + File.separator + rule.getGuid()+ ".htm",formPage(UrlFactory.PREVIOUS_FOLDER,ComponentsReportVisitor.visitRule(UrlFactory.PREVIOUS_FOLDER,rule,data)));
+  }
+  String objectTypeFolder=UrlFactory.SOURCE_FOLDER + File.separator + UrlFactory.OBJECT_TYPE_FOLDER;
+  for (  ObjectType objectType : data.<ObjectType>getAll(VerifierComponentType.OBJECT_TYPE)) {
+    writeToFile(objectTypeFolder + File.separator + objectType.getGuid()+ ".htm",formPage(UrlFactory.PREVIOUS_FOLDER,ComponentsReportVisitor.visitObjectType(UrlFactory.PREVIOUS_FOLDER,objectType,data)));
+  }
+  String fieldFolder=UrlFactory.SOURCE_FOLDER + File.separator + UrlFactory.FIELD_FOLDER;
+  for (  Field field : data.<Field>getAll(VerifierComponentType.FIELD)) {
+    writeToFile(fieldFolder + File.separator + field.getGuid()+ ".htm",formPage(UrlFactory.PREVIOUS_FOLDER,ComponentsReportVisitor.visitField(UrlFactory.PREVIOUS_FOLDER,field,result)));
+  }
+  writeMessages(result);
+  String cssFolder=UrlFactory.SOURCE_FOLDER + File.separator + UrlFactory.CSS_FOLDER;
+  writeToFile(cssFolder + File.separator + UrlFactory.CSS_BASIC,ComponentsReportVisitor.getCss(UrlFactory.CSS_BASIC));
+  String imagesFolder=UrlFactory.SOURCE_FOLDER + File.separator + UrlFactory.IMAGES_FOLDER;
+  copyFile(imagesFolder,"hdrlogo_drools50px.gif");
+  copyFile(imagesFolder,"jbossrules_hdrbkg_blue.gif");
+  zout.close();
+}

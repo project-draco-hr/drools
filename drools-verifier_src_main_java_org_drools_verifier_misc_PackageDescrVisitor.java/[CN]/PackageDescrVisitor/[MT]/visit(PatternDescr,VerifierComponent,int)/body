@@ -1,0 +1,40 @@
+{
+  ObjectType objectType=findOrCreateNewObjectType(descr.getObjectType());
+  currentObjectType=objectType;
+  Pattern pattern=new Pattern();
+  pattern.setRuleGuid(currentRule.getGuid());
+  pattern.setRuleName(currentRule.getRuleName());
+  pattern.setObjectTypeGuid(objectType.getGuid());
+  pattern.setName(objectType.getName());
+  pattern.setPatternNot(solvers.getRuleSolver().isChildNot());
+  pattern.setPatternExists(solvers.getRuleSolver().isExists());
+  pattern.setPatternForall(solvers.getRuleSolver().isForall());
+  pattern.setOrderNumber(orderNumber);
+  pattern.setParentGuid(parent.getGuid());
+  pattern.setParentType(parent.getVerifierComponentType());
+  data.add(pattern);
+  currentPattern=pattern;
+  if (descr.getIdentifier() != null) {
+    Variable variable=new Variable();
+    variable.setRuleGuid(currentRule.getGuid());
+    variable.setRuleName(currentRule.getRuleName());
+    variable.setName(descr.getIdentifier());
+    variable.setObjectTypeType(VerifierComponentType.OBJECT_TYPE.getType());
+    variable.setObjectTypeGuid(objectType.getGuid());
+    variable.setObjectTypeType(descr.getObjectType());
+    data.add(variable);
+  }
+  if (descr.getSource() != null) {
+    VerifierComponent source=visit(descr.getSource(),pattern);
+    pattern.setSourceGuid(source.getGuid());
+    pattern.setSourceType(source.getVerifierComponentType());
+  }
+ else {
+    pattern.setSourceGuid(null);
+    pattern.setSourceType(VerifierComponentType.UNKNOWN);
+  }
+  solvers.startPatternSolver(pattern);
+  visit(descr.getConstraint(),pattern,0);
+  solvers.endPatternSolver();
+  return pattern.getGuid();
+}
