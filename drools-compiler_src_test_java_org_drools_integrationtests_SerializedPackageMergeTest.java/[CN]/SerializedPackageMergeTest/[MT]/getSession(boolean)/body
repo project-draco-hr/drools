@@ -1,0 +1,22 @@
+{
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  for (  String drl : DRLs) {
+    KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+    kbuilder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream(drl)),ResourceType.DRL);
+    assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+    Collection<KnowledgePackage> kpkgs=kbuilder.getKnowledgePackages();
+    Collection<KnowledgePackage> newCollection=null;
+    if (serialize) {
+      newCollection=new ArrayList<KnowledgePackage>();
+      for (      KnowledgePackage kpkg : kpkgs) {
+        kpkg=SerializationHelper.serializeObject(kpkg);
+        newCollection.add(kpkg);
+      }
+    }
+ else {
+      newCollection=kpkgs;
+    }
+    kbase.addKnowledgePackages(newCollection);
+  }
+  return kbase.newStatelessKnowledgeSession();
+}
