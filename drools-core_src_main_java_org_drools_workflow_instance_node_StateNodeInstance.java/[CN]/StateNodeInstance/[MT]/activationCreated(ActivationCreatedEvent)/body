@@ -1,0 +1,20 @@
+{
+  Connection selected=null;
+  for (  Connection connection : getNode().getOutgoingConnections(NodeImpl.CONNECTION_DEFAULT_TYPE)) {
+    Constraint constraint=getStateNode().getConstraint(connection);
+    if (constraint != null) {
+      String constraintName=getActivationEventType() + "-" + connection.getTo().getId()+ "-"+ connection.getToType();
+      if (constraintName.equals(event.getActivation().getRule().getName()) && checkProcessInstance(event.getActivation())) {
+        selected=connection;
+      }
+    }
+  }
+  if (selected != null) {
+    if (!((AbstractWorkingMemory)getProcessInstance().getWorkingMemory()).getActionQueue().isEmpty()) {
+      ((AbstractWorkingMemory)getProcessInstance().getWorkingMemory()).executeQueuedActions();
+    }
+    removeEventListeners();
+    ((NodeInstanceContainer)getNodeInstanceContainer()).removeNodeInstance(this);
+    triggerConnection(selected);
+  }
+}

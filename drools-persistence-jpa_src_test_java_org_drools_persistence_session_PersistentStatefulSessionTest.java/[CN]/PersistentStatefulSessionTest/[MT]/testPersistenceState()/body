@@ -1,0 +1,22 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(new ClassPathResource("StateProcess.rf"),ResourceType.DRF);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  EntityManagerFactory emf=Persistence.createEntityManagerFactory("org.drools.persistence.jpa");
+  Environment env=KnowledgeBaseFactory.newEnvironment();
+  env.set(EnvironmentName.ENTITY_MANAGER_FACTORY,emf);
+  env.set(EnvironmentName.GLOBALS,new MapGlobalResolver());
+  StatefulKnowledgeSession ksession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
+  int id=ksession.getId();
+  ProcessInstance processInstance=ksession.startProcess("org.drools.test.TestProcess");
+  System.out.println("Started process instance " + processInstance.getId());
+  ksession=JPAKnowledgeService.loadStatefulKnowledgeSession(id,kbase,null,env);
+  processInstance=ksession.getProcessInstance(processInstance.getId());
+  assertNotNull(processInstance);
+  ksession=JPAKnowledgeService.loadStatefulKnowledgeSession(id,kbase,null,env);
+  ksession.insert(new ArrayList());
+  ksession=JPAKnowledgeService.loadStatefulKnowledgeSession(id,kbase,null,env);
+  processInstance=ksession.getProcessInstance(processInstance.getId());
+  assertNull(processInstance);
+}
