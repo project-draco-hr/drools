@@ -1,0 +1,44 @@
+{
+  Map context=new HashMap();
+  RuleBaseConfiguration conf=new RuleBaseConfiguration();
+  conf.setCompositeKeyDepth(0);
+  ReteooRuleBase rbase=new ReteooRuleBase("ID",conf);
+  BuildContext buildContext=new BuildContext(rbase,rbase.getReteooBuilder().getIdGenerator());
+  context.put("BuildContext",buildContext);
+  context.put("ClassFieldAccessorStore",this.reteTesterHelper.getStore());
+  InternalWorkingMemory wm=(InternalWorkingMemory)rbase.newStatefulSession(true);
+  context.put("WorkingMemory",wm);
+  for (  DslStep step : steps) {
+    String name=step.getName();
+    Object object=this.steps.get(name);
+    if (object != null && object instanceof Step) {
+      Step stepImpl=(Step)object;
+      try {
+        stepImpl.execute(context,step.getCommands().toArray(new String[0]));
+      }
+ catch (      Exception e) {
+        throw new IllegalArgumentException("line " + step.getLine() + ": unable to execute step "+ step,e);
+      }
+    }
+ else     if ("assert".equals(name.trim())) {
+      assertObject(step,context,wm);
+    }
+ else     if ("retract".equals(name.trim())) {
+      retractObject(step,context,wm);
+    }
+ else {
+      Object node=context.get(name.trim());
+      if (name == null) {
+        throw new IllegalArgumentException("line " + step.getLine() + ": step "+ name+ " does not exist");
+      }
+      if (node instanceof BetaNode) {
+        BetaNode betaNode=(BetaNode)node;
+        betaNode(step,betaNode,context,wm);
+      }
+ else {
+        throw new IllegalArgumentException("line " + step.getLine() + ": unknown node "+ node);
+      }
+    }
+  }
+  return context;
+}

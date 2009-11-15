@@ -1,0 +1,48 @@
+{
+  List<String> lines=new ArrayList<String>();
+  BufferedReader bReader=null;
+  if (!(reader instanceof BufferedReader)) {
+    bReader=new BufferedReader(reader);
+  }
+  String line;
+  int pos;
+  boolean blockComment=false;
+  try {
+    while ((line=bReader.readLine()) != null) {
+      if (!blockComment) {
+        pos=line.indexOf("/*");
+        if (pos != -1) {
+          int endPos=line.indexOf("*/");
+          if (endPos != -1) {
+            blockComment=false;
+          }
+ else {
+            blockComment=true;
+          }
+          line=line.substring(0,pos).concat(StringUtils.repeat(" ",line.length() - pos));
+        }
+ else {
+          pos=line.indexOf("//");
+          if (pos != -1) {
+            line=line.substring(0,pos).concat(StringUtils.repeat(" ",line.length() - pos));
+          }
+        }
+      }
+ else {
+        pos=line.indexOf("*/");
+        if (pos != -1) {
+          line=StringUtils.repeat(" ",pos + 2).concat(line.substring(pos + 2,line.length()));
+          blockComment=false;
+        }
+ else {
+          line=StringUtils.repeat(" ",line.length());
+        }
+      }
+      lines.add(line);
+    }
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+  return lines;
+}

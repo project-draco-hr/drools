@@ -1,0 +1,37 @@
+{
+  try {
+    String[] cmds=step.getCommands().toArray(new String[0]);
+    List<InternalFactHandle> handles=(List<InternalFactHandle>)context.get("Handles");
+    for (    String cmd : cmds) {
+      try {
+        int pos=cmd.indexOf("[");
+        String nodeName=cmd.substring(0,pos).trim();
+        ObjectTypeNode sink=(ObjectTypeNode)context.get(nodeName);
+        if (sink == null) {
+          throw new IllegalArgumentException("line " + step.getLine() + ": node "+ nodeName+ " does not exist");
+        }
+        String args=cmd.substring(pos).trim();
+        String listString=args.replaceAll("h(\\d+)","h[$1]");
+        Map vars=new HashMap();
+        vars.put("h",handles);
+        List<InternalFactHandle> list=(List<InternalFactHandle>)MVEL.eval(listString,vars);
+        if (list == null) {
+          throw new IllegalArgumentException(cmd.trim() + " does not specify an existing fact handle");
+        }
+        for (        InternalFactHandle handle : list) {
+          if (handle == null) {
+            throw new IllegalArgumentException(cmd.trim() + " does not specify an existing fact handle");
+          }
+          PropagationContext pContext=new PropagationContextImpl(wm.getNextPropagationIdCounter(),PropagationContext.RETRACTION,null,null,handle);
+          sink.retractObject(handle,pContext,wm);
+        }
+      }
+ catch (      Exception e) {
+        throw new IllegalArgumentException("line " + step.getLine() + ": unable to execute command "+ cmd,e);
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new IllegalArgumentException("line " + step.getLine() + ": unable to execute step "+ step,e);
+  }
+}

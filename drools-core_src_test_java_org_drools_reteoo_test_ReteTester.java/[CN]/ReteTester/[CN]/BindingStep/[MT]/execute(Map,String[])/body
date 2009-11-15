@@ -1,0 +1,33 @@
+{
+  BuildContext buildContext=(BuildContext)context.get("BuildContext");
+  String name;
+  String index;
+  String type;
+  String field;
+  if (args.length != 0) {
+    String[] c=args[0].split(",");
+    if (c.length == 3) {
+      throw new IllegalArgumentException("Cannot create Binding " + Arrays.asList(args));
+    }
+ else {
+      name=c[0].trim();
+      index=c[1].trim();
+      type=c[2].trim();
+      field=c[3].trim();
+      try {
+        Pattern pattern=new Pattern(Integer.parseInt(index),new ClassObjectType(Class.forName(type)));
+        final Class clazz=((ClassObjectType)pattern.getObjectType()).getClassType();
+        ClassFieldAccessorStore store=(ClassFieldAccessorStore)context.get("ClassFieldAccessorStore");
+        final InternalReadAccessor extractor=store.getReader(clazz,field,getClass().getClassLoader());
+        Declaration declr=new Declaration(name,extractor,pattern);
+        context.put(name,declr);
+      }
+ catch (      Exception e) {
+        throw new IllegalArgumentException("Cannot create Binding " + Arrays.asList(args,e));
+      }
+    }
+  }
+ else {
+    throw new IllegalArgumentException("Cannot arguments " + Arrays.asList(args));
+  }
+}

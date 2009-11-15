@@ -1,0 +1,42 @@
+{
+  BuildContext buildContext=(BuildContext)context.get("BuildContext");
+  if (args.length != 0) {
+    String[] a=args[0].split(",");
+    String name=a[0].trim();
+    String leftInput=a[1].trim();
+    String rightInput=a[2].trim();
+    LeftTupleSource leftTupleSource;
+    if ("mock".equals(leftInput)) {
+      leftTupleSource=new MockTupleSource(buildContext.getNextId());
+    }
+ else {
+      leftTupleSource=(LeftTupleSource)context.get(leftInput);
+    }
+    ObjectSource rightObjectSource;
+    if ("mock".equals(rightInput)) {
+      rightObjectSource=new MockObjectSource(buildContext.getNextId());
+    }
+ else {
+      rightObjectSource=(ObjectSource)context.get(rightInput);
+    }
+    a=args[1].split(",");
+    String fieldName=a[0].trim();
+    String operator=a[1].trim();
+    String var=a[2].trim();
+    Declaration declr=(Declaration)context.get(var);
+    BetaNodeFieldConstraint betaConstraint;
+    try {
+      betaConstraint=this.reteTesterHelper.getBoundVariableConstraint(declr.getPattern(),fieldName,declr,operator);
+    }
+ catch (    IntrospectionException e) {
+      throw new IllegalArgumentException();
+    }
+    SingleBetaConstraints constraints=new SingleBetaConstraints(betaConstraint,buildContext.getRuleBase().getConfiguration());
+    JoinNode joinNode=new JoinNode(buildContext.getNextId(),leftTupleSource,rightObjectSource,constraints,BehaviorManager.NO_BEHAVIORS,buildContext);
+    joinNode.attach();
+    context.put(name,joinNode);
+  }
+ else {
+    throw new IllegalArgumentException("Cannot arguments " + args);
+  }
+}

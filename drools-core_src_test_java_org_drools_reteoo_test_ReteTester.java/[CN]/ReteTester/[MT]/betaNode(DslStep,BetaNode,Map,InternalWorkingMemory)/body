@@ -1,0 +1,53 @@
+{
+  try {
+    String[] cmds=step.getCommands().toArray(new String[0]);
+    List<InternalFactHandle> handles=(List<InternalFactHandle>)context.get("Handles");
+    BetaMemory memory=(BetaMemory)wm.getNodeMemory(node);
+    for (    String cmd : cmds) {
+      if (cmd.trim().startsWith("leftMemory")) {
+        int pos=cmd.indexOf("[");
+        String nodeName=cmd.substring(0,pos).trim();
+        String args=cmd.substring(pos).trim();
+        String listString=args.replaceAll("h(\\d+)","h[$1]");
+        Map vars=new HashMap();
+        vars.put("h",handles);
+        List expectedLeftTuples=(List)MVEL.eval(listString,vars);
+        LeftTupleMemory leftMemory=memory.getLeftTupleMemory();
+        LeftTuple[] leftTuples=(LeftTuple[])leftMemory.toArray();
+        List actualLeftTuples=new ArrayList(leftTuples.length);
+        for (        LeftTuple leftTuple : leftTuples) {
+          List<InternalFactHandle> tupleHandles=Arrays.asList(leftTuple.toFactHandles());
+          actualLeftTuples.add(tupleHandles);
+        }
+        if (!expectedLeftTuples.equals(actualLeftTuples)) {
+          throw new AssertionError("line " + step.getLine() + ": left Memory expected "+ expectedLeftTuples+ " actually "+ actualLeftTuples);
+        }
+      }
+ else       if (cmd.trim().startsWith("rightMemory")) {
+        int pos=cmd.indexOf("[");
+        String nodeName=cmd.substring(0,pos).trim();
+        String args=cmd.substring(pos).trim();
+        String listString=args.replaceAll("h(\\d+)","h[$1]");
+        Map vars=new HashMap();
+        vars.put("h",handles);
+        List expectedFactHandles=(List)MVEL.eval(listString,vars);
+        RightTupleMemory rightMemory=memory.getRightTupleMemory();
+        List<RightTuple> actualRightTuples=Arrays.asList((RightTuple[])rightMemory.toArray());
+        if (expectedFactHandles.size() != actualRightTuples.size()) {
+          throw new AssertionError("line " + step.getLine() + ": right Memory expected "+ actualRightTuples+ " actually "+ actualRightTuples);
+        }
+        for (int i=0, length=actualRightTuples.size(); i < length; i++) {
+          if (expectedFactHandles.get(i) != actualRightTuples.get(i).getFactHandle()) {
+            throw new AssertionError("line " + step.getLine() + ": right Memory expected "+ actualRightTuples+ " actually "+ actualRightTuples);
+          }
+        }
+      }
+ else {
+        throw new IllegalArgumentException("line " + step.getLine() + ": command does not exist "+ cmd.trim());
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new IllegalArgumentException("line " + step.getLine() + ": unable to execute step "+ step,e);
+  }
+}

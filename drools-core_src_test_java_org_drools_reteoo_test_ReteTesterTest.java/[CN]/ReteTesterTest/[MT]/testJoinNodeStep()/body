@@ -1,0 +1,33 @@
+{
+  String str="ObjectTypeNode\n";
+  str+="    otn1, java.lang.Integer\n";
+  str+="LeftInputAdapterNode\n";
+  str+="    lian0, otn1\n";
+  str+="ObjectTypeNode\n";
+  str+="    otn2, java.lang.Integer\n";
+  str+="Binding\n";
+  str+="     p1, 0, java.lang.Integer, intValue\n";
+  str+="JoinNode\n";
+  str+="    join1, lian0, otn2\n";
+  str+="    intValue, ==, p1\n";
+  List<DslStep> steps=ReteTester.buildDslCommands(new StringReader(str));
+  ReteTester tester=new ReteTester();
+  Map<String,Object> map=tester.run(steps);
+  JoinNode join1=(JoinNode)map.get("join1");
+  assertNotNull(join1);
+  PropagationContext context=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null,null);
+  ReteooWorkingMemory workingMemory=new ReteooWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase());
+  BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(join1);
+  final DefaultFactHandle f0=new DefaultFactHandle(0,0);
+  final LeftTuple tuple0=new LeftTuple(f0,join1,true);
+  join1.assertLeftTuple(tuple0,context,workingMemory);
+  assertEquals(1,memory.getLeftTupleMemory().size());
+  assertEquals(0,memory.getRightTupleMemory().size());
+  final DefaultFactHandle f1=new DefaultFactHandle(1,0);
+  final LeftTuple tuple1=new LeftTuple(f1,join1,true);
+  join1.assertLeftTuple(tuple1,context,workingMemory);
+  assertEquals(2,memory.getLeftTupleMemory().size());
+  LeftTuple leftTuple=memory.getLeftTupleMemory().getFirst(null);
+  assertEquals(tuple0,leftTuple);
+  assertEquals(tuple1,leftTuple.getNext());
+}

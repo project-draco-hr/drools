@@ -1,0 +1,51 @@
+{
+  try {
+    int commandIndentPos=0;
+    DslStep dslCommand=null;
+    List<DslStep> commands=new ArrayList<DslStep>();
+    StringBuilder cmdContent=null;
+    List<String> cmds=null;
+    List<String> lines=chunkReader(reader);
+    int lineCount=1;
+    for (    String line : lines) {
+      if (StringUtils.isEmpty(line)) {
+        continue;
+      }
+      if (line.charAt(0) != ' ') {
+        if (dslCommand != null) {
+          cmds.add(cmdContent.toString());
+        }
+        cmds=new ArrayList<String>();
+        dslCommand=new DslStep(lineCount,line.trim(),cmds);
+        commands.add(dslCommand);
+        commandIndentPos=0;
+      }
+ else {
+        if (commandIndentPos == 0) {
+          commandIndentPos=indentPos(line);
+          cmdContent=new StringBuilder();
+          cmdContent.append(line.trim());
+        }
+ else {
+          if (indentPos(line) > commandIndentPos) {
+            cmdContent.append(line.trim());
+          }
+ else {
+            cmds.add(cmdContent.toString());
+            cmdContent=new StringBuilder();
+            cmdContent.append(line.trim());
+            commandIndentPos=indentPos(line);
+          }
+        }
+      }
+      lineCount++;
+    }
+    if (dslCommand != null) {
+      cmds.add(cmdContent.toString());
+    }
+    return commands;
+  }
+ catch (  Exception e) {
+    throw new RuntimeException(e);
+  }
+}
