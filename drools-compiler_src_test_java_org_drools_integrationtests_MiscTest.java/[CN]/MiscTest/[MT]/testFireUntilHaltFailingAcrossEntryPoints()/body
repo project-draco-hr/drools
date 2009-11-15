@@ -1,0 +1,39 @@
+{
+  String rule1="package org.drools\n";
+  rule1+="global java.util.List list\n";
+  rule1+="rule testFireUntilHalt\n";
+  rule1+="when\n";
+  rule1+="       Cheese()\n";
+  rule1+="  $p : Person() from entry-point \"testep\"\n";
+  rule1+="then \n";
+  rule1+="  list.add( $p ) ;\n";
+  rule1+="end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(rule1.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    System.out.println(kbuilder.getErrors());
+    throw new RuntimeException(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  final WorkingMemoryEntryPoint ep=ksession.getWorkingMemoryEntryPoint("testep");
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ep.insert(new Cheese("cheddar"));
+  ksession.fireAllRules();
+  Runnable fireUntilHalt=new Runnable(){
+    public void run(){
+      ksession.fireUntilHalt();
+    }
+  }
+;
+  Thread t1=new Thread(fireUntilHalt);
+  t1.start();
+  Thread.currentThread().sleep(500);
+  ep.insert(new Person("darth"));
+  Thread.currentThread().sleep(500);
+  ksession.halt();
+  t1.stop();
+  assertEquals(1,list.size());
+}
