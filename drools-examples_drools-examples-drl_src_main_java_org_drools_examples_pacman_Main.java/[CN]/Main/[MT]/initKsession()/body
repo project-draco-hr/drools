@@ -1,0 +1,21 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("key-handlers.drl",getClass()),ResourceType.DRL);
+  kbuilder.add(ResourceFactory.newClassPathResource("pacman.drl",getClass()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    System.out.println(kbuilder.getErrors());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  this.ksession=kbase.newStatefulKnowledgeSession();
+  this.pacMan=new PacMan();
+  this.pacMan.setSpeed(1);
+  this.ksession.insert(this.pacMan);
+  this.ksession.insert(new Score());
+  KnowledgeRuntimeLoggerFactory.newThreadedFileLogger(this.ksession,"pacman.log",3000);
+  Location location=new Location(this.pacMan,1,1);
+  this.ksession.insert(location);
+  Tick tick=new Tick(0);
+  this.ksession.insert(tick);
+  this.ksession.fireAllRules();
+}
