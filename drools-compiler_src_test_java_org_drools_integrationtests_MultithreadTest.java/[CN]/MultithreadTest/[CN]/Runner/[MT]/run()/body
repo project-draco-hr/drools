@@ -1,0 +1,21 @@
+{
+  System.out.println(Thread.currentThread().getName() + " starting...");
+  try {
+    count.incrementAndGet();
+    long time=System.currentTimeMillis();
+    while ((System.currentTimeMillis() - time) < TIME_SPAN) {
+      for (int j=0; j < 100; j++) {
+        session.execute(getFacts());
+      }
+    }
+  }
+ catch (  Exception ex) {
+    ex.printStackTrace();
+  }
+  if (count.decrementAndGet() == 0) {
+synchronized (MultithreadTest.this) {
+      MultithreadTest.this.notifyAll();
+    }
+  }
+  System.out.println(Thread.currentThread().getName() + " exiting...");
+}
