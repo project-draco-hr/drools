@@ -1,28 +1,21 @@
 {
-  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Warnings.drl"));
-  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Find redundant rule possibilities from different rules"));
-  Collection<Object> objects=new ArrayList<Object>();
-  VerifierRule rule1=new VerifierRule();
-  VerifierRule rule2=new VerifierRule();
-  Redundancy ruleRedundancy=new Redundancy(RedundancyType.STRONG,rule1,rule2);
-  SubRule rp1=new SubRule();
-  rp1.setRuleGuid(rule1.getGuid());
-  SubRule rp2=new SubRule();
-  rp2.setRuleGuid(rule2.getGuid());
-  Redundancy rulePossibilityRedundancy1=new Redundancy(RedundancyType.STRONG,rp1,rp2);
-  Redundancy rulePossibilityRedundancy2=new Redundancy(RedundancyType.STRONG,rp2,rp1);
-  objects.add(rule1);
-  objects.add(rule2);
-  objects.add(ruleRedundancy);
-  objects.add(rp1);
-  objects.add(rp2);
-  objects.add(rulePossibilityRedundancy1);
-  objects.add(rulePossibilityRedundancy2);
-  VerifierReport result=VerifierReportFactory.newVerifierReport();
-  session.setGlobal("result",result);
-  session.executeWithResults(objects);
-  Collection<VerifierMessageBase> notes=result.getBySeverity(Severity.WARNING);
-  assertEquals(1,notes.size());
-  VerifierMessageBase warning=notes.iterator().next();
-  assertTrue(warning.getFaulty().equals(rulePossibilityRedundancy1));
+  VerifierBuilder vBuilder=VerifierBuilderFactory.newVerifierBuilder();
+  Verifier verifier=vBuilder.newVerifier();
+  verifier.addResourcesToVerify(ResourceFactory.newClassPathResource("RedundantRules1.drl",getClass()),ResourceType.DRL);
+  for (  VerifierError error : verifier.getErrors()) {
+    System.out.println(error.getMessage());
+  }
+  assertFalse(verifier.hasErrors());
+  boolean noProblems=verifier.fireAnalysis();
+  assertTrue(noProblems);
+  VerifierReport result=verifier.getResult();
+  Collection<VerifierMessageBase> warnings=result.getBySeverity(Severity.WARNING);
+  int counter=0;
+  for (  VerifierMessageBase message : warnings) {
+    if (message.getMessageType().equals(MessageType.REDUNDANCY)) {
+      counter++;
+    }
+  }
+  assertEquals(2,counter);
+  verifier.dispose();
 }

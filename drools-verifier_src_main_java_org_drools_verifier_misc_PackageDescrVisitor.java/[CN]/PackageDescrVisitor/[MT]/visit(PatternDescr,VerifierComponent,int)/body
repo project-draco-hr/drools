@@ -24,15 +24,19 @@
     variable.setObjectTypeType(descr.getObjectType());
     data.add(variable);
   }
+  Source source;
   if (descr.getSource() != null) {
-    VerifierComponent source=visit(descr.getSource(),pattern);
-    pattern.setSourceGuid(source.getGuid());
-    pattern.setSourceType(source.getVerifierComponentType());
+    source=visit(descr.getSource(),pattern);
   }
  else {
-    pattern.setSourceGuid(null);
-    pattern.setSourceType(VerifierComponentType.UNKNOWN);
+    if (workingMemory == null) {
+      workingMemory=new WorkingMemory();
+      data.add(workingMemory);
+    }
+    source=workingMemory;
   }
+  pattern.setSourceGuid(source.getGuid());
+  pattern.setSourceType(source.getVerifierComponentType());
   solvers.startPatternSolver(pattern);
   visit(descr.getConstraint(),pattern,0);
   solvers.endPatternSolver();
