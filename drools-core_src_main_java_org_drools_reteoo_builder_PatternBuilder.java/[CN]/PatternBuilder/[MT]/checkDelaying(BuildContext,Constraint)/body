@@ -3,20 +3,26 @@
     Declaration target=constraint.getRequiredDeclarations()[0];
     if (target.isPatternDeclaration() && target.getPattern().getObjectType().isEvent()) {
       long uplimit=((VariableConstraint)constraint).getInterval().getUpperBound();
-      Duration dur=context.getRule().getDuration();
-      Duration newDur=new FixedDuration(uplimit);
-      if (dur instanceof CompositeMaxDuration) {
-        ((CompositeMaxDuration)dur).addDuration(newDur);
+      Timer timer=context.getRule().getTimer();
+      DurationTimer durationTimer=new DurationTimer(uplimit);
+      if (timer instanceof CompositeMaxDurationTimer) {
+        ((CompositeMaxDurationTimer)timer).addDurationTimer(durationTimer);
       }
  else {
-        if (dur == null) {
-          dur=newDur;
+        if (timer == null) {
+          timer=durationTimer;
         }
  else {
-          dur=new CompositeMaxDuration(dur);
-          ((CompositeMaxDuration)dur).addDuration(newDur);
+          timer=new CompositeMaxDurationTimer();
+          if (timer instanceof DurationTimer) {
+            ((CompositeMaxDurationTimer)timer).addDurationTimer((DurationTimer)timer);
+          }
+ else {
+            ((CompositeMaxDurationTimer)timer).setTimer(context.getRule().getTimer());
+          }
+          ((CompositeMaxDurationTimer)timer).addDurationTimer(durationTimer);
         }
-        context.getRule().setDuration(dur);
+        context.getRule().setTimer(timer);
       }
     }
   }

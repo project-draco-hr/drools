@@ -1,0 +1,46 @@
+{
+  if (timerString.indexOf('(') >= 0) {
+    timerString=timerString.substring(timerString.indexOf('(') + 1,timerString.lastIndexOf(')'));
+  }
+  int colonPos=timerString.indexOf(":");
+  String protocol=null;
+  if (colonPos == -1) {
+    protocol="int";
+  }
+ else {
+    protocol=timerString.substring(0,colonPos);
+  }
+  String body=timerString.substring(colonPos + 1);
+  Timer timer=null;
+  if ("cron".equals(protocol)) {
+    try {
+      timer=new CronTimer(null,null,new CronExpression(body));
+    }
+ catch (    ParseException e) {
+      context.getErrors().add("Unable to build set timer '" + timerString + "'");
+      return;
+    }
+  }
+ else   if ("int".equals(protocol)) {
+    String[] times=body.trim().split("\\s");
+    long delay=0;
+    long period=0;
+    if (times.length == 1) {
+      delay=TimeUtils.parseTimeString(times[0]);
+    }
+ else     if (times.length == 2) {
+      delay=TimeUtils.parseTimeString(times[0]);
+      period=TimeUtils.parseTimeString(times[1]);
+    }
+ else {
+      context.getErrors().add("Incorrect number of arguments for interval timer '" + timerString + "'");
+      return;
+    }
+    timer=new IntervalTimer(null,null,delay,period);
+  }
+ else {
+    context.getErrors().add("Protocol for timer does not exist '" + timerString + "'");
+    return;
+  }
+  rule.setTimer(timer);
+}
