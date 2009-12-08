@@ -1,0 +1,28 @@
+{
+  String str="";
+  str+="package org.drools \n";
+  str+="dialect \"mvel\"\n";
+  str+="import org.acme.healthcare.* \n";
+  str+="import org.acme.insurance.* \n";
+  str+="import org.acme.sensors.SensorReading \n";
+  str+="rule rule1 \n";
+  str+="  when \n";
+  str+="    eval(true)\n";
+  str+="  then \n";
+  str+="    insert(new Claim());         // from org.acme.healthcare.* \n";
+  str+="    insert(new Policy());        // from org.acme.insurance.* \n";
+  str+="    insert(new SensorReading()); // from org.acme.sensor.SensorReading \n";
+  str+="end\n";
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    throw new RuntimeException(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  int result=ksession.fireAllRules();
+  assertEquals(1,result);
+  Collection<Object> insertedObjects=ksession.getObjects();
+  assertEquals(3,insertedObjects.size());
+}
