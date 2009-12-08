@@ -1,16 +1,22 @@
 {
   ScheduledJob item=queue.peek();
-  while (item != null && (item.getTrigger().hasNextFireTime().getTime() <= this.timer)) {
+  long fireTime;
+  while (item != null && ((fireTime=item.getTrigger().hasNextFireTime().getTime()) <= this.timer)) {
     queue.remove();
     item.getTrigger().nextFireTime();
     if (item.getTrigger().hasNextFireTime() != null) {
       queue.add(item);
     }
+    long savedTimer=this.timer;
     try {
+      this.timer=fireTime;
       item.call();
     }
  catch (    Exception e) {
-      e.printStackTrace();
+      SystemEventListenerFactory.getSystemEventListener().exception(e);
+    }
+ finally {
+      this.timer=savedTimer;
     }
     item=queue.peek();
   }
