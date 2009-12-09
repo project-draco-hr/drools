@@ -1,7 +1,11 @@
 {
-synchronized (this.resources) {
+synchronized (this.resourcesMap) {
     for (    Resource resource : changeSet.getResourcesAdded()) {
-      if (((InternalResource)resource).isDirectory()) {
+      if (((InternalResource)resource).getResourceType() == ResourceType.CHANGE_SET) {
+        this.listener.debug("KnowledgeAgent processing sub ChangeSet=" + resource);
+        processChangeSet(resource,changeSetState);
+      }
+ else       if (((InternalResource)resource).isDirectory()) {
         this.resourceDirectories.add(resource);
         this.listener.debug("KnowledgeAgent subscribing to directory=" + resource);
         this.notifier.subscribeResourceChangeListener(this,resource);
@@ -10,28 +14,14 @@ synchronized (this.resources) {
             continue;
           }
           ((InternalResource)child).setResourceType(((InternalResource)resource).getResourceType());
-          ResourceMapping mapping=this.resources.get(child);
-          if (mapping == null) {
-            this.listener.debug("KnowledgeAgent subscribing to directory content resource=" + child);
-            this.notifier.subscribeResourceChangeListener(this,child);
-            mapping=new ResourceMapping(child);
-            this.resources.put(child,mapping);
+          if (this.resourcesMap.addResourceMapping(child,true) && changeSetState.incrementalBuild) {
+            changeSetState.addedResources.add(child);
           }
         }
       }
  else {
-        if (((InternalResource)resource).getResourceType() == ResourceType.PKG) {
-          changeSetState.pkgs.add(resource);
-        }
- else         if (((InternalResource)resource).getResourceType() == ResourceType.CHANGE_SET) {
-          continue;
-        }
-        ResourceMapping mapping=this.resources.get(resource);
-        if (mapping == null) {
-          this.listener.debug("KnowledgeAgent subscribing to resource=" + resource);
-          this.notifier.subscribeResourceChangeListener(this,resource);
-          mapping=new ResourceMapping(resource);
-          this.resources.put(resource,mapping);
+        if (this.resourcesMap.addResourceMapping(resource,true) && changeSetState.incrementalBuild) {
+          changeSetState.addedResources.add(resource);
         }
       }
     }
@@ -45,16 +35,48 @@ synchronized (this.resources) {
         this.notifier.unsubscribeResourceChangeListener(this,resource);
       }
  else {
-        this.listener.debug("KnowledgeAgent unsubscribing from resource=" + resource);
-        this.resources.remove(resource);
-        this.notifier.unsubscribeResourceChangeListener(this,resource);
+        ResourceMapEntry removedEntry=this.resourcesMap.removeResourceMapping(resource,true);
+        if (removedEntry != null && changeSetState.incrementalBuild) {
+          changeSetState.removedResourceMappings.add(removedEntry);
+        }
       }
     }
-    for (    Resource resource : this.resources.keySet()) {
-      this.listener.debug("KnowledgeAgent ChangeSet requires KnowledgeBuilder");
-      if (((InternalResource)resource).getResourceType() != ResourceType.CHANGE_SET && ((InternalResource)resource).getResourceType() != ResourceType.PKG) {
-        changeSetState.needsKnowledgeBuilder=true;
-        break;
+    for (    Resource resource : changeSet.getResourcesModified()) {
+      if (((InternalResource)resource).getResourceType() == ResourceType.CHANGE_SET) {
+        continue;
+      }
+ else       if (((InternalResource)resource).isDirectory()) {
+        if (this.resourceDirectories.add(resource)) {
+          this.listener.warning("KnowledgeAgent is subscribing to a modified directory=" + resource + " when it should have already been subscribed");
+          this.notifier.subscribeResourceChangeListener(this,resource);
+        }
+        for (        Resource child : ((InternalResource)resource).listResources()) {
+          if (((InternalResource)child).isDirectory()) {
+            continue;
+          }
+          if (this.resourcesMap.addResourceMapping(child,true)) {
+            ((InternalResource)child).setResourceType(((InternalResource)resource).getResourceType());
+            if (changeSetState.incrementalBuild) {
+              changeSetState.addedResources.add(child);
+            }
+          }
+        }
+      }
+ else {
+        ResourceMapEntry modifiedMapping=this.resourcesMap.removeResourceMapping(resource,false);
+        if (modifiedMapping == null) {
+          this.listener.warning("KnowledgeAgent subscribing to new resource=" + resource + ", though it was marked as modified.");
+          this.resourcesMap.addResourceMapping(resource,true);
+          if (changeSetState.incrementalBuild) {
+            changeSetState.addedResources.add(resource);
+          }
+        }
+ else {
+          this.resourcesMap.addResourceMapping(resource,false);
+          if (changeSetState.incrementalBuild) {
+            changeSetState.modifiedResourceMappings.add(modifiedMapping);
+          }
+        }
       }
     }
   }

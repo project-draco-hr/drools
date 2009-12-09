@@ -1,14 +1,14 @@
 {
   this.name=name;
   this.kbase=kbase;
-  this.resources=new HashMap<Resource,ResourceMapping>();
+  this.resourcesMap=new ResourceMap(this);
   this.resourceDirectories=new HashSet<Resource>();
   this.listener=SystemEventListenerFactory.getSystemEventListener();
-  this.newInstance=true;
   this.queue=new LinkedBlockingQueue<ChangeSet>();
   boolean scanResources=false;
   boolean monitor=false;
   if (configuration != null) {
+    this.newInstance=((KnowledgeAgentConfigurationImpl)configuration).isNewInstance();
     this.notifier=(ResourceChangeNotifierImpl)ResourceFactory.getResourceChangeNotifierService();
     if (((KnowledgeAgentConfigurationImpl)configuration).isMonitorChangeSetEvents()) {
       monitor=true;
@@ -23,5 +23,6 @@
     }
   }
   monitorResourceChangeEvents(monitor);
-  this.listener.info("KnowledgAgent created, with configuration:\nmonitorChangeSetEvents=" + monitor + " scanResources="+ scanResources+ " scanDirectories="+ this.scanDirectories);
+  buildResourceMapping();
+  this.listener.info("KnowledgeAgent created, with configuration:\nmonitorChangeSetEvents=" + monitor + " scanResources="+ scanResources+ " scanDirectories="+ this.scanDirectories+ " newInstance="+ this.newInstance);
 }

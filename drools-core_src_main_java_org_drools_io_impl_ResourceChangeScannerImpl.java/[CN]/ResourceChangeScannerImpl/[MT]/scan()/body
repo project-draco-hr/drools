@@ -33,6 +33,7 @@ synchronized (this.resources) {
       Set<ResourceChangeNotifier> notifiers=entry.getValue();
       if (!((InternalResource)resource).isDirectory()) {
         long lastModified=((InternalResource)resource).getLastModified();
+        long lastRead=((InternalResource)resource).getLastRead();
         if (lastModified == 0) {
           this.listener.debug("ResourceChangeScanner removed resource=" + resource);
           removed.add(resource);
@@ -48,8 +49,8 @@ synchronized (this.resources) {
             changeSet.getResourcesRemoved().add(resource);
           }
         }
- else         if (((InternalResource)resource).getLastRead() < lastModified) {
-          this.listener.debug("ResourceChangeScanner modified resource=" + resource + " : "+ ((InternalResource)resource).getLastRead()+ " : "+ lastModified);
+ else         if (lastRead < lastModified && lastRead >= 0) {
+          this.listener.debug("ResourceChangeScanner modified resource=" + resource + " : "+ lastRead+ " : "+ lastModified);
           for (          ResourceChangeNotifier notifier : notifiers) {
             ChangeSetImpl changeSet=(ChangeSetImpl)notifications.get(notifier);
             if (changeSet == null) {

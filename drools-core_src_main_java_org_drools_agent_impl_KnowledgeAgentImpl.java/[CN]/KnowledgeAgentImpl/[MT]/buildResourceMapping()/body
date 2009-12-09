@@ -1,0 +1,40 @@
+{
+  this.listener.debug("KnowledgeAgent building resource map");
+synchronized (this.resourcesMap) {
+    RuleBase rbase=((KnowledgeBaseImpl)this.kbase).ruleBase;
+    for (    Package pkg : rbase.getPackages()) {
+      for (      Rule rule : pkg.getRules()) {
+        Resource resource=rule.getResource();
+        if (resource == null || !((InternalResource)resource).hasURL()) {
+          this.listener.debug("KnowledgeAgent no resource mapped for rule=" + rule);
+          continue;
+        }
+        this.resourcesMap.putResourceMappingEntry(resource,rule);
+      }
+      for (      Process process : pkg.getRuleFlows().values()) {
+        Resource resource=((org.drools.process.core.Process)process).getResource();
+        if (resource == null || !((InternalResource)resource).hasURL()) {
+          this.listener.debug("KnowledgeAgent no resource mapped for process=" + process);
+          continue;
+        }
+        this.resourcesMap.putResourceMappingEntry(resource,process);
+      }
+      for (      TypeDeclaration typeDeclaration : pkg.getTypeDeclarations().values()) {
+        Resource resource=typeDeclaration.getResource();
+        if (resource == null || !((InternalResource)resource).hasURL()) {
+          this.listener.debug("KnowledgeAgent no resource mapped for typeDeclaration=" + typeDeclaration);
+          continue;
+        }
+        this.resourcesMap.putResourceMappingEntry(resource,typeDeclaration);
+      }
+      for (      Function function : pkg.getFunctions().values()) {
+        Resource resource=function.getResource();
+        if (resource == null || !((InternalResource)resource).hasURL()) {
+          this.listener.debug("KnowledgeAgent no resource mapped for function=" + function);
+          continue;
+        }
+        this.resourcesMap.putResourceMappingEntry(resource,function);
+      }
+    }
+  }
+}
