@@ -25,6 +25,28 @@
       String duration=attributeDescr.getValue();
       buildTimer(rule,duration,context);
     }
+ else     if (name.equals("calendars")) {
+      Object val=null;
+      try {
+        val=MVEL.eval(attributeDescr.getValue());
+        String[] calNames=null;
+        if (val instanceof List) {
+          calNames=(String[])((List)val).toArray(new String[((List)val).size()]);
+        }
+ else         if (val instanceof String) {
+          calNames=new String[]{(String)val};
+        }
+ else {
+          context.getErrors().add("Calendars attribute did not return a String or String[] '" + val + "'");
+        }
+        if (calNames != null) {
+          rule.setCalendars(calNames);
+        }
+      }
+ catch (      Exception e) {
+        context.getErrors().add("Unable to build Calendars attribute '" + val + "'"+ e.getMessage());
+      }
+    }
  else     if (name.equals("date-effective")) {
       final Calendar cal=Calendar.getInstance();
       cal.setTime(DateUtils.parseDate(attributeDescr.getValue()));

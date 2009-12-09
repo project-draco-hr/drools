@@ -15,7 +15,7 @@
   if (timer != null) {
     final ScheduledAgendaItem item=agenda.createScheduledAgendaItem(tuple,context,this.rule,this.subrule);
     final TerminalNodeMemory memory=(TerminalNodeMemory)workingMemory.getNodeMemory(this);
-    agenda.scheduleItem(item);
+    agenda.scheduleItem(item,workingMemory);
     tuple.setActivation(item);
     if (this.tupleMemoryEnabled) {
       memory.getTupleMemory().add(tuple);
@@ -24,6 +24,14 @@
     ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCreated(item,workingMemory);
   }
  else {
+    if (this.rule.getCalendars() != null) {
+      long timestamp=workingMemory.getSessionClock().getCurrentTime();
+      for (      String cal : this.rule.getCalendars()) {
+        if (!workingMemory.getCalendars().get(cal).isTimeIncluded(timestamp)) {
+          return;
+        }
+      }
+    }
     final TerminalNodeMemory memory=(TerminalNodeMemory)workingMemory.getNodeMemory(this);
     final AgendaItem item=agenda.createAgendaItem(tuple,rule.getSalience().getValue(tuple,workingMemory),context,this.rule,this.subrule);
     item.setSequenence(this.sequence);

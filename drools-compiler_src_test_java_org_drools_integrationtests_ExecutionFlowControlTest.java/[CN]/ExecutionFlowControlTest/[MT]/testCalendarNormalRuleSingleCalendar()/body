@@ -1,0 +1,59 @@
+{
+  String str="";
+  str+="package org.simple \n";
+  str+="global java.util.List list \n";
+  str+="rule xxx \n";
+  str+="  calendars \"cal1\"\n";
+  str+="when \n";
+  str+="  String()\n";
+  str+="then \n";
+  str+="  list.add(\"fired\"); \n";
+  str+="end  \n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    System.out.println(kbuilder.getErrors());
+    assertTrue(kbuilder.hasErrors());
+  }
+  Calendar calFalse=new Calendar(){
+    public boolean isTimeIncluded(    long timestamp){
+      return false;
+    }
+  }
+;
+  Calendar calTrue=new Calendar(){
+    public boolean isTimeIncluded(    long timestamp){
+      return true;
+    }
+  }
+;
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  KnowledgeSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  conf.setOption(ClockTypeOption.get("pseudo"));
+  List list=new ArrayList();
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(conf,null);
+  PseudoClockScheduler timeService=(PseudoClockScheduler)ksession.getSessionClock();
+  DateFormat df=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+  Date date=df.parse("2009-01-01T00:00:00.000-0000");
+  ksession.getCalendars().set("cal1",calTrue);
+  timeService.advanceTime(date.getTime(),TimeUnit.MILLISECONDS);
+  ksession.setGlobal("list",list);
+  ksession.insert("o1");
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  timeService.advanceTime(10,TimeUnit.SECONDS);
+  ksession.insert("o2");
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+  ksession.getCalendars().set("cal1",calFalse);
+  timeService.advanceTime(10,TimeUnit.SECONDS);
+  ksession.insert("o3");
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+  ksession.getCalendars().set("cal1",calTrue);
+  timeService.advanceTime(30,TimeUnit.SECONDS);
+  ksession.insert("o4");
+  ksession.fireAllRules();
+  assertEquals(3,list.size());
+}

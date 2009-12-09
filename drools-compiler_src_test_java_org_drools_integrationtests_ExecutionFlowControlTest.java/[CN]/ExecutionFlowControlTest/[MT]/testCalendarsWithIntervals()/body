@@ -1,0 +1,76 @@
+{
+  String str="";
+  str+="package org.simple \n";
+  str+="global java.util.List list \n";
+  str+="rule xxx \n";
+  str+="  calendars \"cal1\", \"cal2\"\n";
+  str+="  timer (15s 60s) ";
+  str+="when \n";
+  str+="then \n";
+  str+="  list.add(\"fired\"); \n";
+  str+="end  \n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    System.out.println(kbuilder.getErrors());
+    assertTrue(kbuilder.hasErrors());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  KnowledgeSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  conf.setOption(ClockTypeOption.get("pseudo"));
+  List list=new ArrayList();
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(conf,null);
+  PseudoClockScheduler timeService=(PseudoClockScheduler)ksession.getSessionClock();
+  DateFormat df=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+  Date date=df.parse("2009-01-01T00:00:00.000-0000");
+  timeService.advanceTime(date.getTime(),TimeUnit.MILLISECONDS);
+  final Date date1=new Date(date.getTime() + (15 * 1000));
+  final Date date2=new Date(date1.getTime() + (60 * 1000));
+  final Date date3=new Date(date2.getTime() + (60 * 1000));
+  final Date date4=new Date(date3.getTime() + (60 * 1000));
+  Calendar cal1=new Calendar(){
+    public boolean isTimeIncluded(    long timestamp){
+      if (timestamp == date1.getTime()) {
+        return true;
+      }
+ else       if (timestamp == date4.getTime()) {
+        return false;
+      }
+ else {
+        return true;
+      }
+    }
+  }
+;
+  Calendar cal2=new Calendar(){
+    public boolean isTimeIncluded(    long timestamp){
+      if (timestamp == date2.getTime()) {
+        return false;
+      }
+ else       if (timestamp == date3.getTime()) {
+        return true;
+      }
+ else {
+        return true;
+      }
+    }
+  }
+;
+  ksession.getCalendars().set("cal1",cal1);
+  ksession.getCalendars().set("cal2",cal2);
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
+  timeService.advanceTime(20,TimeUnit.SECONDS);
+  assertEquals(1,list.size());
+  timeService.advanceTime(60,TimeUnit.SECONDS);
+  assertEquals(1,list.size());
+  timeService.advanceTime(60,TimeUnit.SECONDS);
+  assertEquals(2,list.size());
+  timeService.advanceTime(60,TimeUnit.SECONDS);
+  assertEquals(2,list.size());
+  timeService.advanceTime(60,TimeUnit.SECONDS);
+  assertEquals(3,list.size());
+  timeService.advanceTime(60,TimeUnit.SECONDS);
+  assertEquals(4,list.size());
+}
