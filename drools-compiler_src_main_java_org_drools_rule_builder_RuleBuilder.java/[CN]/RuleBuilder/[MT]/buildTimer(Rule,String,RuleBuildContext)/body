@@ -10,11 +10,38 @@
  else {
     protocol=timerString.substring(0,colonPos);
   }
-  String body=timerString.substring(colonPos + 1);
+  int startPos=timerString.indexOf("start");
+  int endPos=timerString.indexOf("end");
+  int optionsPos=timerString.length();
+  Date startDate=null;
+  Date endDate=null;
+  if (startPos != -1 && endPos != -1) {
+    if (startPos < endPos) {
+      optionsPos=startPos;
+      int equalsPos=timerString.indexOf('=',startPos);
+      startDate=DateUtils.parseDate(timerString.substring(equalsPos + 2,endPos).trim());
+    }
+ else {
+      optionsPos=endPos;
+      int equalsPos=timerString.indexOf('=',endPos);
+      startDate=DateUtils.parseDate(timerString.substring(equalsPos + 2,startPos).trim());
+    }
+  }
+ else   if (startPos != -1) {
+    optionsPos=startPos;
+    int equalsPos=timerString.indexOf('=',startPos);
+    startDate=DateUtils.parseDate(timerString.substring(equalsPos + 2).trim());
+  }
+ else   if (endPos != -1) {
+    optionsPos=endPos;
+    int equalsPos=timerString.indexOf('=',endPos);
+    endDate=DateUtils.parseDate(timerString.substring(equalsPos + 2).trim());
+  }
+  String body=timerString.substring(colonPos + 1,optionsPos).trim();
   Timer timer=null;
   if ("cron".equals(protocol)) {
     try {
-      timer=new CronTimer(null,null,new CronExpression(body));
+      timer=new CronTimer(startDate,endDate,new CronExpression(body));
     }
  catch (    ParseException e) {
       context.getErrors().add("Unable to build set timer '" + timerString + "'");
@@ -36,7 +63,7 @@
       context.getErrors().add("Incorrect number of arguments for interval timer '" + timerString + "'");
       return;
     }
-    timer=new IntervalTimer(null,null,delay,period);
+    timer=new IntervalTimer(startDate,endDate,delay,period);
   }
  else {
     context.getErrors().add("Protocol for timer does not exist '" + timerString + "'");
