@@ -1,14 +1,16 @@
 {
-  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_ExplicitAnd.drl"));
-  final RuleBase ruleBase=loadRuleBase(reader);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("test_ExplicitAnd.drl",getClass()),ResourceType.DRL);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   final List list=new ArrayList();
-  session.setGlobal("list",list);
-  session.insert(new Message("hola"));
-  session.fireAllRules();
+  ksession.setGlobal("list",list);
+  ksession.insert(new Message("hola"));
+  ksession.fireAllRules();
   assertEquals(0,list.size());
-  session.insert(new Cheese("brie",33));
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
-  session.fireAllRules();
-  assertEquals(1,((List)session.getGlobal("list")).size());
+  ksession.insert(new Cheese("brie",33));
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  assertEquals(1,((List)ksession.getGlobal("list")).size());
 }

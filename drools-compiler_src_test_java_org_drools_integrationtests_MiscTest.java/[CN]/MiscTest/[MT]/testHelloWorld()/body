@@ -1,15 +1,17 @@
 {
-  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("HelloWorld.drl"));
-  RuleBase ruleBase=loadRuleBase(reader);
-  WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("HelloWorld.drl",getClass()),ResourceType.DRL);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  ksession.setGlobal("list",list);
   final Message message=new Message("hola");
   message.addToList("hello");
   message.setNumber(42);
-  workingMemory.insert(message);
-  workingMemory.insert("boo");
-  workingMemory.fireAllRules();
+  ksession.insert(message);
+  ksession.insert("boo");
+  ksession.fireAllRules();
   assertTrue(message.isFired());
-  assertEquals(message,((List)workingMemory.getGlobal("list")).get(0));
+  assertEquals(message,((List)ksession.getGlobal("list")).get(0));
 }

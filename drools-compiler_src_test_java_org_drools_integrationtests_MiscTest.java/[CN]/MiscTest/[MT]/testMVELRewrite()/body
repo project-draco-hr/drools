@@ -1,18 +1,19 @@
 {
-  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_MVELrewrite.drl"));
-  RuleBase ruleBase=loadRuleBase(reader);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("test_MVELrewrite.drl",getClass()),ResourceType.DRL);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
   List results=new ArrayList();
-  session.setGlobal("results",results);
+  ksession.setGlobal("results",results);
   Cheese brie=new Cheese("brie",2);
   Cheese stilton=new Cheese("stilton",2);
   Cheesery cheesery=new Cheesery();
   cheesery.addCheese(brie);
   cheesery.addCheese(stilton);
-  session.insert(cheesery);
-  session.fireAllRules();
+  ksession.insert(cheesery);
+  ksession.fireAllRules();
   assertEquals(1,results.size());
   assertEquals(cheesery,results.get(0));
 }

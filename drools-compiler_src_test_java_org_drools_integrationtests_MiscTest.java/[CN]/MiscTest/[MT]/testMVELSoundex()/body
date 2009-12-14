@@ -1,11 +1,13 @@
 {
-  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("MVEL_soundex.drl"));
-  RuleBase ruleBase=loadRuleBase(reader);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("MVEL_soundex.drl",getClass()),ResourceType.DRL);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
   Cheese c=new Cheese("fubar",2);
-  session.insert(c);
-  session.fireAllRules();
+  ksession.insert(c);
+  ksession.fireAllRules();
   assertEquals(42,c.getPrice());
 }
