@@ -1,0 +1,22 @@
+{
+  if (!info.visited(parent)) {
+    nodeStack.push(parent);
+    NetworkNodeVisitor visitor=visitors.get(parent.getClass());
+    if (visitor != null) {
+      visitor.visit(parent,nodeStack,info);
+    }
+ else {
+      throw new RuntimeException("No visitor found for node: " + parent);
+    }
+    visitChildren(parent,nodeStack,info);
+    nodeStack.pop();
+  }
+ else {
+    Set<Rule> rules=info.getNodeInfo(parent).getRules();
+    for (    NetworkNode snode : nodeStack) {
+      for (      Rule rule : rules) {
+        info.assign(snode,rule);
+      }
+    }
+  }
+}
