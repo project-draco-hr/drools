@@ -1,0 +1,27 @@
+{
+  try {
+    ClassLoader loader1=new SubvertedClassLoader(new URL[]{getClass().getResource("/testEnum.jar")},this.getClass().getClassLoader());
+    KnowledgeBuilderConfiguration conf=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,loader1);
+    KnowledgeBuilder builder=KnowledgeBuilderFactory.newKnowledgeBuilder(conf);
+    builder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("test_EnumSerialization.drl")),ResourceType.DRL);
+    Collection<KnowledgePackage> pkgs=builder.getKnowledgePackages();
+    KnowledgePackage pkg=pkgs.iterator().next();
+    byte[] out=DroolsStreamUtils.streamOut(pkg);
+    KnowledgeBaseConfiguration kbaseConf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration(null,loader1);
+    KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kbaseConf);
+    kbase.addKnowledgePackages(pkgs);
+    ClassLoader loader2=new SubvertedClassLoader(new URL[]{getClass().getResource("/testEnum.jar")},this.getClass().getClassLoader());
+    ClassLoader ccl=Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(loader2);
+    KnowledgePackage pkg2=(KnowledgePackage)DroolsStreamUtils.streamIn(out);
+    Collection<KnowledgePackage> pkgs2=Collections.singleton(pkg2);
+    Thread.currentThread().setContextClassLoader(ccl);
+    KnowledgeBaseConfiguration kbaseConf2=KnowledgeBaseFactory.newKnowledgeBaseConfiguration(null,loader2);
+    KnowledgeBase kbase2=KnowledgeBaseFactory.newKnowledgeBase(kbaseConf2);
+    kbase2.addKnowledgePackages(pkgs2);
+  }
+ catch (  ClassCastException cce) {
+    cce.printStackTrace();
+    fail("No ClassCastException should be raised.");
+  }
+}
