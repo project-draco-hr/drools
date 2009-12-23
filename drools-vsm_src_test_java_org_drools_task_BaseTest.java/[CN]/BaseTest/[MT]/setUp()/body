@@ -1,0 +1,35 @@
+{
+  Properties conf=new Properties();
+  conf.setProperty("mail.smtp.host","localhost");
+  conf.setProperty("mail.smtp.port","2345");
+  conf.setProperty("from","from@domain.com");
+  conf.setProperty("replyTo","replyTo@domain.com");
+  conf.setProperty("defaultLanguage","en-UK");
+  SendIcal.initInstance(conf);
+  emf=Persistence.createEntityManagerFactory("org.drools.task");
+  taskService=new TaskService(emf,SystemEventListenerFactory.getSystemEventListener());
+  taskSession=taskService.createSession();
+  Map vars=new HashedMap();
+  Reader reader=null;
+  try {
+    reader=new InputStreamReader(BaseTest.class.getResourceAsStream("LoadUsers.mvel"));
+    users=(Map<String,User>)eval(reader,vars);
+    for (    User user : users.values()) {
+      taskSession.addUser(user);
+    }
+  }
+  finally {
+    if (reader != null)     reader.close();
+    reader=null;
+  }
+  try {
+    reader=new InputStreamReader(BaseTest.class.getResourceAsStream("LoadGroups.mvel"));
+    groups=(Map<String,Group>)eval(reader,vars);
+    for (    Group group : groups.values()) {
+      taskSession.addGroup(group);
+    }
+  }
+  finally {
+    if (reader != null)     reader.close();
+  }
+}

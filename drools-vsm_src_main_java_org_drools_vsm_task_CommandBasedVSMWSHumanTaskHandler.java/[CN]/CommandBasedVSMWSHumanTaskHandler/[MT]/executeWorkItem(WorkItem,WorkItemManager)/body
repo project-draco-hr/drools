@@ -1,0 +1,92 @@
+{
+  connect();
+  Task task=new Task();
+  String taskName=(String)workItem.getParameter("TaskName");
+  if (taskName != null) {
+    List<I18NText> names=new ArrayList<I18NText>();
+    names.add(new I18NText("en-UK",taskName));
+    task.setNames(names);
+  }
+  String comment=(String)workItem.getParameter("Comment");
+  if (comment != null) {
+    List<I18NText> descriptions=new ArrayList<I18NText>();
+    descriptions.add(new I18NText("en-UK",comment));
+    task.setDescriptions(descriptions);
+    List<I18NText> subjects=new ArrayList<I18NText>();
+    subjects.add(new I18NText("en-UK",comment));
+    task.setSubjects(subjects);
+  }
+  String priorityString=(String)workItem.getParameter("Priority");
+  int priority=0;
+  if (priorityString != null) {
+    try {
+      priority=new Integer(priorityString);
+    }
+ catch (    NumberFormatException e) {
+    }
+  }
+  task.setPriority(priority);
+  TaskData taskData=new TaskData();
+  taskData.setWorkItemId(workItem.getId());
+  taskData.setSkipable(!"false".equals(workItem.getParameter("Skippable")));
+  Long parentId=(Long)workItem.getParameter("ParentId");
+  if (parentId != null) {
+    taskData.setParentId(parentId);
+  }
+  String subTaskStrategiesCommaSeparated=(String)workItem.getParameter("SubTaskStrategies");
+  if (subTaskStrategiesCommaSeparated != null && !subTaskStrategiesCommaSeparated.equals("")) {
+    String[] subTaskStrategies=subTaskStrategiesCommaSeparated.split(",");
+    List<SubTasksStrategy> strategies=new ArrayList<SubTasksStrategy>();
+    for (    String subTaskStrategyString : subTaskStrategies) {
+      SubTasksStrategy subTaskStrategy=SubTasksStrategyFactory.newStrategy(subTaskStrategyString);
+      strategies.add(subTaskStrategy);
+    }
+    task.setSubTaskStrategies(strategies);
+  }
+  PeopleAssignments assignments=new PeopleAssignments();
+  List<OrganizationalEntity> potentialOwners=new ArrayList<OrganizationalEntity>();
+  String actorId=(String)workItem.getParameter("ActorId");
+  if (actorId != null) {
+    String[] actorIds=actorId.split(",");
+    for (    String id : actorIds) {
+      User user=new User();
+      user.setId(id.trim());
+      potentialOwners.add(user);
+    }
+    if (potentialOwners.size() > 0) {
+      taskData.setCreatedBy((User)potentialOwners.get(0));
+    }
+  }
+  String groupId=(String)workItem.getParameter("GroupId");
+  if (groupId != null) {
+    String[] groupIds=groupId.split(",");
+    for (    String id : groupIds) {
+      potentialOwners.add(new Group(id));
+    }
+  }
+  assignments.setPotentialOwners(potentialOwners);
+  List<OrganizationalEntity> businessAdministrators=new ArrayList<OrganizationalEntity>();
+  businessAdministrators.add(new User("Administrator"));
+  assignments.setBusinessAdministrators(businessAdministrators);
+  task.setPeopleAssignments(assignments);
+  task.setTaskData(taskData);
+  ContentData content=null;
+  Object contentObject=workItem.getParameter("Content");
+  if (contentObject != null) {
+    ByteArrayOutputStream bos=new ByteArrayOutputStream();
+    ObjectOutputStream out;
+    try {
+      out=new ObjectOutputStream(bos);
+      out.writeObject(contentObject);
+      out.close();
+      content=new ContentData();
+      content.setContent(bos.toByteArray());
+      content.setAccessType(AccessType.Inline);
+    }
+ catch (    IOException e) {
+      e.printStackTrace();
+    }
+  }
+  TaskWorkItemAddTaskMessageResponseHandler taskResponseHandler=new TaskWorkItemAddTaskMessageResponseHandler(workItem.getId(),this.managers,idMapping,manager);
+  client.addTask(task,content,taskResponseHandler);
+}

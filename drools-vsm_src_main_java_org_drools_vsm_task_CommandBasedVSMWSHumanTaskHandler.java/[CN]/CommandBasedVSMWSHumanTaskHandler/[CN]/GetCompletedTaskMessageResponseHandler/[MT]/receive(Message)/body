@@ -1,0 +1,16 @@
+{
+  Command cmd=(Command)message.getPayload();
+  Task task=(Task)cmd.getArguments().get(0);
+  long workItemId=task.getTaskData().getWorkItemId();
+  String userId=task.getTaskData().getActualOwner().getId();
+  Map<String,Object> results=new HashMap<String,Object>();
+  results.put("ActorId",userId);
+  long contentId=task.getTaskData().getOutputContentId();
+  if (contentId != -1) {
+    GetResultContentMessageResponseHandler getContentResponseHandler=new GetResultContentMessageResponseHandler(manager,task,results);
+    client.getContent(contentId,getContentResponseHandler);
+  }
+ else {
+    manager.completeWorkItem(workItemId,results);
+  }
+}

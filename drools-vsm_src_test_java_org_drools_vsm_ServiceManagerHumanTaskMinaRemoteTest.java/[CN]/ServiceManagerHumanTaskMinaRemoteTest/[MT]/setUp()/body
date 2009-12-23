@@ -1,0 +1,45 @@
+{
+  emf=Persistence.createEntityManagerFactory("org.drools.task");
+  taskService=new TaskService(emf,SystemEventListenerFactory.getSystemEventListener());
+  taskSession=taskService.createSession();
+  Map<String,Object> vars=new HashedMap();
+  Reader reader=null;
+  try {
+    reader=new InputStreamReader(ServiceManagerTestBase.class.getResourceAsStream("/rules/LoadUsers.mvel"));
+    users=(Map<String,User>)eval(reader,vars);
+    for (    User user : users.values())     taskSession.addUser(user);
+  }
+  finally {
+    if (reader != null)     reader.close();
+    reader=null;
+  }
+  try {
+    reader=new InputStreamReader(ServiceManagerTestBase.class.getResourceAsStream("/rules/LoadGroups.mvel"));
+    groups=(Map<String,Group>)eval(reader,vars);
+    for (    Group group : groups.values())     taskSession.addGroup(group);
+  }
+  finally {
+    if (reader != null)     reader.close();
+  }
+  SocketAddress address=new InetSocketAddress("127.0.0.1",9123);
+  ServiceManagerData serverData=new ServiceManagerData();
+  SocketAcceptor acceptor=new NioSocketAcceptor();
+  acceptor.setHandler(new MinaIoHandler(SystemEventListenerFactory.getSystemEventListener(),new GenericMessageHandlerImpl(serverData,SystemEventListenerFactory.getSystemEventListener())));
+  this.server=new MinaAcceptor(acceptor,address);
+  this.server.start();
+  SocketAddress htAddress=new InetSocketAddress("127.0.0.1",9124);
+  SocketAcceptor htAcceptor=new NioSocketAcceptor();
+  htAcceptor.setHandler(new MinaIoHandler(SystemEventListenerFactory.getSystemEventListener(),new TaskServerMessageHandlerImpl(taskService,SystemEventListenerFactory.getSystemEventListener())));
+  this.humanTaskServer=new MinaAcceptor(htAcceptor,htAddress);
+  this.humanTaskServer.start();
+  NioSocketConnector htclientConnector=new NioSocketConnector();
+  htclientConnector.setHandler(new MinaIoHandler(SystemEventListenerFactory.getSystemEventListener()));
+  GenericConnector htMinaClient=new MinaConnector("client ht",htclientConnector,htAddress,SystemEventListenerFactory.getSystemEventListener());
+  NioSocketConnector clientConnector=new NioSocketConnector();
+  clientConnector.setHandler(new MinaIoHandler(SystemEventListenerFactory.getSystemEventListener()));
+  GenericConnector minaClient=new MinaConnector("client SM",clientConnector,address,SystemEventListenerFactory.getSystemEventListener());
+  List<GenericConnector> services=new ArrayList<GenericConnector>();
+  services.add(htMinaClient);
+  this.client=new ServiceManagerRemoteClient("client SM",minaClient,services);
+  ((ServiceManagerRemoteClient)client).connect();
+}

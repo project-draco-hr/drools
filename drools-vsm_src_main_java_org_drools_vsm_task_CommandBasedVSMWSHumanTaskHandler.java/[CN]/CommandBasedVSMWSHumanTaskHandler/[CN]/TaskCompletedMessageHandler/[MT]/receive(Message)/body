@@ -1,0 +1,24 @@
+{
+  Command cmd=(Command)message.getPayload();
+  Payload payload=(Payload)cmd.getArguments().get(0);
+  TaskEvent event=(TaskEvent)payload.get();
+  if (event.getTaskId() != taskId) {
+    setError(new IllegalStateException("Expected task id and arrived task id do not march"));
+    return;
+  }
+  if (event instanceof TaskCompletedEvent) {
+synchronized (this.managers) {
+      WorkItemManager manager=this.managers.get(taskId);
+      if (manager != null) {
+        GetCompletedTaskMessageResponseHandler getTaskResponseHandler=new GetCompletedTaskMessageResponseHandler(manager);
+        client.getTask(taskId,getTaskResponseHandler);
+      }
+    }
+  }
+ else {
+synchronized (this.managers) {
+      WorkItemManager manager=this.managers.get(taskId);
+      if (manager != null)       manager.abortWorkItem(workItemId);
+    }
+  }
+}

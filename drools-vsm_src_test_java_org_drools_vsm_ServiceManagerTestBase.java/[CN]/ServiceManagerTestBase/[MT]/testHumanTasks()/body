@@ -1,0 +1,26 @@
+{
+  KnowledgeBuilderProvider kbuilderFactory=this.client.getKnowledgeBuilderFactory();
+  KnowledgeBuilder kbuilder=kbuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(new ClassPathResource("rules/humanTasks.rf"),ResourceType.DRF);
+  if (kbuilder.hasErrors()) {
+    System.out.println("Errors: " + kbuilder.getErrors());
+  }
+  KnowledgeBaseProvider kbaseFactory=this.client.getKnowledgeBaseFactory();
+  KnowledgeBase kbase=kbaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ((StatefulKnowledgeSessionRemoteClient)ksession).registerWorkItemHandler("Human Task","org.drools.vsm.task.CommandBasedVSMWSHumanTaskHandler");
+  ProcessInstance processInstance=ksession.startProcess("org.drools.test.humanTasks");
+  HumanTaskServiceProvider humanTaskServiceFactory=this.client.getHumanTaskService();
+  htClient=humanTaskServiceFactory.newHumanTaskServiceClient();
+  Thread.sleep(1000);
+  ksession.fireAllRules();
+  System.out.println("First Task Execution");
+  assertEquals(true,executeNextTask("lucaz"));
+  Thread.sleep(8000);
+  System.out.println("Second Task Execution");
+  assertEquals(true,executeNextTask("lucaz"));
+  System.out.println("Inexistent Task Execution");
+  Thread.sleep(8000);
+  assertEquals(false,executeNextTask("lucaz"));
+}
