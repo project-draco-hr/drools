@@ -1,0 +1,46 @@
+{
+  if (kbuilder == null) {
+    kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  }
+  if (((InternalResource)resource).getResourceType() != ResourceType.PKG) {
+    kbuilder.add(resource,((InternalResource)resource).getResourceType());
+    if (kbuilder.hasErrors()) {
+      this.listener.warning("KnowledgeAgent has KnowledgeBuilder errors ",kbuilder.getErrors());
+    }
+    if (kbuilder.getKnowledgePackages().iterator().hasNext()) {
+      return (KnowledgePackageImp)kbuilder.getKnowledgePackages().iterator().next();
+    }
+    return null;
+  }
+ else {
+    InputStream is=null;
+    KnowledgePackageImp kpkg=null;
+    try {
+      is=resource.getInputStream();
+      Object object=DroolsStreamUtils.streamIn(is);
+      if (object instanceof KnowledgePackageImp) {
+        kpkg=((KnowledgePackageImp)object);
+      }
+ else {
+        kpkg=new KnowledgePackageImp((Package)object);
+      }
+      for (      Rule rule : kpkg.pkg.getRules()) {
+        rule.setResource(resource);
+      }
+    }
+ catch (    Exception ex) {
+      this.listener.exception(new RuntimeException("KnowledgeAgent exception while trying to deserialize KnowledgeDefinitionsPackage  ",ex));
+    }
+ finally {
+      try {
+        if (is != null) {
+          is.close();
+        }
+      }
+ catch (      IOException e) {
+        this.listener.exception(new RuntimeException("KnowledgeAgent exception while trying to close KnowledgeDefinitionsPackage  ",e));
+      }
+    }
+    return kpkg;
+  }
+}

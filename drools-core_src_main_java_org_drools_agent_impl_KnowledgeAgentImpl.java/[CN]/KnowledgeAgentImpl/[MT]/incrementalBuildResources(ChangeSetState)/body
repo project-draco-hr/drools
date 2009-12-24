@@ -2,26 +2,37 @@
   if (this.newInstance) {
     this.listener.warning("KnowledgeAgent incremental build of KnowledgeBase when newInstance is true");
   }
-synchronized (this.resourcesMap) {
+synchronized (this.registeredResources) {
     this.listener.info("KnowledgeAgent performing an incremental build of the ChangeSet");
     if (this.kbase == null) {
       this.kbase=KnowledgeBaseFactory.newKnowledgeBase();
     }
-    for (    ResourceMapEntry resourceMapEntry : changeSetState.removedResourceMappings) {
-      for (      KnowledgeDefinition kd : resourceMapEntry.getKnowledgeDefinitions()) {
+    for (    Map.Entry<Resource,Set<KnowledgeDefinition>> entry : changeSetState.removedResourceMappings.entrySet()) {
+      for (      KnowledgeDefinition kd : entry.getValue()) {
         removeKnowledgeDefinitionFromBase(kd);
       }
     }
-    for (    ResourceMapEntry resourceMapEntry : changeSetState.modifiedResourceMappings) {
-      for (      KnowledgeDefinition kd : resourceMapEntry.getKnowledgeDefinitions()) {
+    for (    Map.Entry<Resource,Set<KnowledgeDefinition>> entry : changeSetState.modifiedResourceMappings.entrySet()) {
+      KnowledgePackageImp kpkg=createPackageFromResource(entry.getKey());
+      if (kpkg == null) {
+        continue;
+      }
+      ResourceDiffProducer rdp=new DefaultResourceDiffProducerImpl();
+      ResourceDiffResult diff=rdp.diff(entry.getValue(),kpkg);
+      for (      KnowledgeDefinition kd : diff.getRemovedDefinitions()) {
         removeKnowledgeDefinitionFromBase(kd);
       }
-      changeSetState.addedResources.add(resourceMapEntry.getResource());
+      changeSetState.createdPackages.put(entry.getKey(),diff.getPkg());
     }
-    addResourcesToKnowledgeBase(changeSetState.addedResources);
-    for (    Resource resource : changeSetState.removedKnowledgeDefinitions.keySet()) {
-      removeKnowledgeDefinitionFromBase(changeSetState.removedKnowledgeDefinitions.get(resource));
+    for (    Resource resource : changeSetState.addedResources) {
+      KnowledgePackageImp kpkg=createPackageFromResource(resource);
+      if (kpkg == null) {
+        continue;
+      }
+      changeSetState.createdPackages.put(resource,kpkg);
     }
+    changeSetState.addedResources.clear();
+    addResourcesToKnowledgeBase(changeSetState);
   }
   this.listener.info("KnowledgeAgent incremental build of KnowledgeBase finished and in use");
 }
