@@ -4,7 +4,19 @@
   }
   String faultName=getFaultName();
   ExceptionScopeInstance exceptionScopeInstance=getExceptionScopeInstance(faultName);
-  ((NodeInstanceContainer)getNodeInstanceContainer()).removeNodeInstance(this);
+  NodeInstanceContainer nodeInstanceContainer=(NodeInstanceContainer)getNodeInstanceContainer();
+  nodeInstanceContainer.removeNodeInstance(this);
+  if (getFaultNode().isTerminateParent()) {
+    if (nodeInstanceContainer instanceof CompositeNodeInstance) {
+      ((CompositeNodeInstance)nodeInstanceContainer).cancel();
+    }
+ else     if (nodeInstanceContainer instanceof WorkflowProcessInstance) {
+      Collection<NodeInstance> nodeInstances=((WorkflowProcessInstance)nodeInstanceContainer).getNodeInstances();
+      for (      NodeInstance nodeInstance : nodeInstances) {
+        ((org.drools.workflow.instance.NodeInstance)nodeInstance).cancel();
+      }
+    }
+  }
   if (exceptionScopeInstance != null) {
     handleException(faultName,exceptionScopeInstance);
   }
