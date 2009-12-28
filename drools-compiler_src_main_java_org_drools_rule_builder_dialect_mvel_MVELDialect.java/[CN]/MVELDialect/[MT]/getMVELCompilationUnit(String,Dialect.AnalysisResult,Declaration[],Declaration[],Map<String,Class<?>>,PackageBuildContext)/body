@@ -34,15 +34,26 @@
       globalIdentifiers[i++]=identifier;
       resolvedInputs.put(identifier,(Class)globalTypes.get(identifier));
     }
+    HashSet set=new HashSet(list[0]);
+    List<Declaration> usedDeclrs=new ArrayList<Declaration>();
     if (previousDeclarations != null) {
       for (      Declaration declr : previousDeclarations) {
-        resolvedInputs.put(declr.getIdentifier(),declr.getExtractor().getExtractToClass());
+        if (set.contains(declr.getIdentifier())) {
+          usedDeclrs.add(declr);
+          resolvedInputs.put(declr.getIdentifier(),declr.getExtractor().getExtractToClass());
+        }
       }
+      previousDeclarations=usedDeclrs.toArray(new Declaration[usedDeclrs.size()]);
     }
     if (localDeclarations != null) {
+      usedDeclrs.clear();
       for (      Declaration declr : localDeclarations) {
-        resolvedInputs.put(declr.getIdentifier(),declr.getExtractor().getExtractToClass());
+        if (set.contains(declr.getIdentifier())) {
+          usedDeclrs.add(declr);
+          resolvedInputs.put(declr.getIdentifier(),declr.getExtractor().getExtractToClass());
+        }
       }
+      localDeclarations=usedDeclrs.toArray(new Declaration[usedDeclrs.size()]);
     }
     if (otherInputVariables != null) {
       i=0;
