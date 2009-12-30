@@ -15,6 +15,7 @@ synchronized (this.registeredResources) {
     for (    Map.Entry<Resource,Set<KnowledgeDefinition>> entry : changeSetState.modifiedResourceMappings.entrySet()) {
       KnowledgePackageImp kpkg=createPackageFromResource(entry.getKey());
       if (kpkg == null) {
+        this.listener.warning("KnowledgeAgent: The resource didn't create any package: " + entry.getKey());
         continue;
       }
       ResourceDiffProducer rdp=new DefaultResourceDiffProducerImpl();
@@ -27,11 +28,13 @@ synchronized (this.registeredResources) {
     for (    Resource resource : changeSetState.addedResources) {
       KnowledgePackageImp kpkg=createPackageFromResource(resource);
       if (kpkg == null) {
+        this.listener.warning("KnowledgeAgent: The resource didn't create any package: " + resource);
         continue;
       }
       changeSetState.createdPackages.put(resource,kpkg);
     }
     changeSetState.addedResources.clear();
+    changeSetState.modifiedResourceMappings.clear();
     addResourcesToKnowledgeBase(changeSetState);
   }
   this.listener.info("KnowledgeAgent incremental build of KnowledgeBase finished and in use");
