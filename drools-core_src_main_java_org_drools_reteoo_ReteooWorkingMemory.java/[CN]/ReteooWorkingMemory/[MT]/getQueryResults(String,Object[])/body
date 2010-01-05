@@ -1,6 +1,8 @@
 {
   try {
     startOperation();
+    this.ruleBase.readLock();
+    this.lock.lock();
     Object object=new DroolsQuery(query,arguments);
     InternalFactHandle handle=this.handleFactory.newFactHandle(object,this.getObjectTypeConfigurationRegistry().getObjectTypeConf(EntryPoint.DEFAULT,object),this);
     insert(handle,object,null,null,this.typeConfReg.getObjectTypeConf(this.entryPoint,object));
@@ -36,6 +38,8 @@
     return new QueryResults(list,queryObj,this);
   }
   finally {
+    this.lock.unlock();
+    this.ruleBase.readUnlock();
     endOperation();
   }
 }
