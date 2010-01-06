@@ -1,0 +1,22 @@
+{
+  Function newFunction=newPkg.getFunction(oldFunction.getName());
+  if (newFunction == null) {
+    listener.debug("BinaryResourceDiffProducerImpl: " + oldFunction + " is not present anymore. Adding to removed list.");
+    this.removedDefinitions.add(oldFunction);
+    return;
+  }
+  if (currentPkg.getFunction(oldFunction.getName()) == null) {
+    listener.debug("BinaryResourceDiffProducerImpl: " + oldFunction + " is not present on current PKG. Removing from new package.");
+    newPkg.removeFunction(oldFunction.getName());
+    return;
+  }
+  if (newFunction.equals(oldFunction)) {
+    listener.debug("BinaryResourceDiffProducerImpl: " + oldFunction + " didn't change. Removing from diff package and adding it to unmodified list.");
+    newPkg.removeFunction(newFunction.getName());
+    this.unmodifiedDefinitions.add(oldFunction);
+  }
+ else {
+    listener.debug("BinaryResourceDiffProducerImpl: " + oldFunction + " did change. Marking as removed so it new version could be added later.");
+    this.removedDefinitions.add(oldFunction);
+  }
+}

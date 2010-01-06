@@ -18,10 +18,15 @@ synchronized (this.registeredResources) {
         this.listener.warning("KnowledgeAgent: The resource didn't create any package: " + entry.getKey());
         continue;
       }
-      ResourceDiffProducer rdp=new DefaultResourceDiffProducerImpl();
-      ResourceDiffResult diff=rdp.diff(entry.getValue(),kpkg);
+      this.listener.debug("KnowledgeAgent: Diffing: " + entry.getKey());
+      ResourceDiffProducer rdp=new BinaryResourceDiffProducerImpl();
+      ResourceDiffResult diff=rdp.diff(entry.getValue(),kpkg,(KnowledgePackageImp)this.kbase.getKnowledgePackage(kpkg.getName()));
       for (      KnowledgeDefinition kd : diff.getRemovedDefinitions()) {
+        this.listener.debug("KnowledgeAgent: Removing: " + kd);
         removeKnowledgeDefinitionFromBase(kd);
+      }
+      for (      KnowledgeDefinition knowledgeDefinition : diff.getUnmodifiedDefinitions()) {
+        this.addDefinitionMapping(entry.getKey(),knowledgeDefinition,false);
       }
       changeSetState.createdPackages.put(entry.getKey(),diff.getPkg());
     }
