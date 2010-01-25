@@ -4,9 +4,9 @@
   str+="global java.util.List list\n";
   str+="rule rule1\n";
   str+="when\n";
-  str+="  Integer(intValue > 0)\n";
+  str+="  $i : Integer(intValue > 0)\n";
   str+="then\n";
-  str+="  list.add( 1 );\n";
+  str+="  list.add( $i );\n";
   str+="end\n";
   str+="\n";
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
@@ -31,13 +31,11 @@
   ksession.setGlobal("list",list);
   ksession.insert(1);
   ksession.insert(2);
-  ut.commit();
-  ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
-  ut.begin();
   ksession.insert(3);
-  ut.rollback();
   ksession.fireAllRules();
-  assertEquals(2,list.size());
+  ut.commit();
+  System.out.println(list);
+  assertEquals(3,list.size());
   ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
   ut.begin();
   ksession.insert(3);

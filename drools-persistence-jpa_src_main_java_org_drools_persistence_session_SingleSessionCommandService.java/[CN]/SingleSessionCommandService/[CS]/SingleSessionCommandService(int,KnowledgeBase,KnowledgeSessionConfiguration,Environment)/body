@@ -16,7 +16,7 @@
     }
     this.em.joinTransaction();
     registerRollbackSync();
-    sessionInfo=this.em.find(SessionInfo.class,sessionId);
+    this.sessionInfo=this.em.find(SessionInfo.class,sessionId);
     if (localTransaction) {
       ut.commit();
     }
@@ -38,6 +38,7 @@
   this.marshallingHelper=new JPASessionMarshallingHelper(this.sessionInfo,kbase,conf,env);
   this.sessionInfo.setJPASessionMashallingHelper(this.marshallingHelper);
   this.ksession=this.marshallingHelper.getObject();
+  ((ReteooWorkingMemory)((StatefulKnowledgeSessionImpl)this.ksession).session).setEndOperationListener(new EndOperationListenerImpl(this.sessionInfo));
   this.kContext=new KnowledgeCommandContext(new ContextImpl("ksession",null),null,null,this.ksession,null);
   ((JPASignalManager)((StatefulKnowledgeSessionImpl)ksession).session.getSignalManager()).setCommandService(this);
   ((StatefulKnowledgeSessionImpl)ksession).session.setId(this.sessionInfo.getId());
