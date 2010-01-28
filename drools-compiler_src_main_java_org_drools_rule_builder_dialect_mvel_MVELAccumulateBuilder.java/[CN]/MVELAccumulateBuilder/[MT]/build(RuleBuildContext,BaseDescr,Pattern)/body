@@ -34,14 +34,16 @@
       MVELCompilationUnit actionUnit=dialect.getMVELCompilationUnit((String)accumDescr.getActionCode(),actionCodeAnalysis,previousDeclarations,(Declaration[])source.getOuterDeclarations().values().toArray(new Declaration[source.getOuterDeclarations().size()]),initCodeAnalysis.getMvelVariables(),context);
       MVELCompilationUnit reverseUnit=null;
       if (accumDescr.getReverseCode() != null) {
-        reverseUnit=dialect.getMVELCompilationUnit((String)accumDescr.getReverseCode(),resultCodeAnalysis,previousDeclarations,(Declaration[])source.getOuterDeclarations().values().toArray(new Declaration[source.getOuterDeclarations().size()]),initCodeAnalysis.getMvelVariables(),context);
+        reverseUnit=dialect.getMVELCompilationUnit((String)accumDescr.getReverseCode(),reverseCodeAnalysis,previousDeclarations,(Declaration[])source.getOuterDeclarations().values().toArray(new Declaration[source.getOuterDeclarations().size()]),initCodeAnalysis.getMvelVariables(),context);
       }
       MVELCompilationUnit resultUnit=dialect.getMVELCompilationUnit((String)accumDescr.getResultCode(),resultCodeAnalysis,previousDeclarations,(Declaration[])source.getOuterDeclarations().values().toArray(new Declaration[source.getOuterDeclarations().size()]),initCodeAnalysis.getMvelVariables(),context);
       if (reverseUnit != null) {
         Set<String> shadow=new HashSet<String>(source.getOuterDeclarations().keySet());
         shadow.retainAll(reverseCodeAnalysis.getNotBoundedIdentifiers());
         shadow.addAll(reverseCodeAnalysis.getBoundIdentifiers()[0]);
-        reverseUnit.setShadowIdentifiers((String[])shadow.toArray(new String[shadow.size()]));
+        String[] shadowVars=(String[])shadow.toArray(new String[shadow.size()]);
+        actionUnit.setShadowIdentifiers(shadowVars);
+        reverseUnit.setShadowIdentifiers(shadowVars);
       }
       accumulator=new MVELAccumulator(initUnit,actionUnit,reverseUnit,resultUnit);
     }
@@ -52,7 +54,6 @@
     return accumulate;
   }
  catch (  Exception e) {
-    e.printStackTrace();
     context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,e,"Unable to build expression for 'accumulate' : " + e.getMessage()));
     return null;
   }
