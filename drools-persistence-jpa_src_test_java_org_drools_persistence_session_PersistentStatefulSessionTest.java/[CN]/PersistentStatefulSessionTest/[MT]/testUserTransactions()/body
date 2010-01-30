@@ -31,11 +31,16 @@
   ksession.setGlobal("list",list);
   ksession.insert(1);
   ksession.insert(2);
+  ut.commit();
+  ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
+  ut.begin();
   ksession.insert(3);
+  ut.rollback();
+  ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
+  ut.begin();
   ksession.fireAllRules();
   ut.commit();
-  System.out.println(list);
-  assertEquals(3,list.size());
+  assertEquals(2,list.size());
   ut=(UserTransaction)new InitialContext().lookup("java:comp/UserTransaction");
   ut.begin();
   ksession.insert(3);
