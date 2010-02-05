@@ -26,9 +26,12 @@ catch (        NoClassDefFoundError e) {
   Set<String> declaredTypes=new HashSet<String>();
   for (final Iterator<TypeDeclarationDescr> it=pkgDescr.getTypeDeclarations().iterator(); it.hasNext(); ) {
     TypeDeclarationDescr td=it.next();
+    declaredTypes.add(td.getTypeName());
+  }
+  for (final Iterator<TypeDeclarationDescr> it=pkgDescr.getTypeDeclarations().iterator(); it.hasNext(); ) {
+    TypeDeclarationDescr td=it.next();
     if (td.getFields().size() > 0) {
       String declaredType=td.getTypeName();
-      declaredTypes.add(declaredType);
       this.builder.addFactType(declaredType);
       List<String> fieldNames=new ArrayList<String>();
       for (      Map.Entry<String,TypeFieldDescr> f : td.getFields().entrySet()) {
@@ -36,12 +39,12 @@ catch (        NoClassDefFoundError e) {
         fieldNames.add(fieldName);
         String fieldClass=f.getValue().getPattern().getObjectType();
         if (declaredTypes.contains(fieldClass)) {
-          this.builder.addFieldType(declaredType + "." + fieldName,fieldClass);
+          this.builder.addFieldType(declaredType + "." + fieldName,fieldClass,null);
         }
  else {
           try {
             Class clz=resolver.resolveType(fieldClass);
-            this.builder.addFieldType(declaredType + "." + fieldName,getFieldType(clz));
+            this.builder.addFieldType(declaredType + "." + fieldName,translateClassToGenericType(clz),clz);
           }
  catch (          ClassNotFoundException e) {
             this.errors.add("Class of field not found: " + fieldClass);

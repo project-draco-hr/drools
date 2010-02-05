@@ -1,21 +1,24 @@
 {
-  this.instance.factTypes=(String[])this.factTypes.toArray(new String[this.factTypes.size()]);
-  this.instance.fieldsForType=this.fieldsForType;
-  this.instance.modifiers=this.modifiersForType;
-  this.instance.fieldTypes=this.fieldTypes;
+  this.instance.setFactTypes(this.factTypes.toArray(new String[this.factTypes.size()]));
+  this.instance.setModifiers(this.modifiersForType);
+  Map<String,ModelField[]> modelMap=new HashMap<String,ModelField[]>();
+  for (  Map.Entry<String,String[]> typeEntry : this.fieldsForType.entrySet()) {
+    List<ModelField> fields=new ArrayList<ModelField>();
+    for (    String field : typeEntry.getValue()) {
+      String fieldName=field;
+      String fieldType=this.fieldTypes.get(typeEntry.getKey() + "." + field);
+      Class<?> fieldClazz=this.fieldClasses.get(typeEntry.getKey() + "." + field);
+      fields.add(new ModelField(fieldName,fieldClazz.getName(),fieldType));
+    }
+    modelMap.put(typeEntry.getKey(),fields.toArray(new ModelField[fields.size()]));
+  }
+  this.instance.setFieldsForTypes(modelMap);
   for (  String fieldName : this.fieldTypesField.keySet()) {
-    Field field=(Field)this.fieldTypesField.get(fieldName);
+    Field field=this.fieldTypesField.get(fieldName);
     if (field != null) {
-      Type type=field.getGenericType();
-      if (type instanceof ParameterizedType) {
-        ParameterizedType pt=(ParameterizedType)type;
-        Type goodType=null;
-        for (        Type t : pt.getActualTypeArguments()) {
-          goodType=t;
-        }
-        int index=goodType.toString().lastIndexOf(".");
-        String className=goodType.toString().substring(index + 1);
-        this.instance.fieldParametersType.put(fieldName,className);
+      String genericType=obtainGenericType(field.getGenericType());
+      if (genericType != null) {
+        this.instance.putParametricFieldType(fieldName,genericType);
       }
       Class<?> fieldClass=field.getType();
       if (fieldClass.isEnum()) {
@@ -34,15 +37,15 @@
           a[i]=value;
           i++;
         }
-        this.instance.dataEnumLists.put(fieldName,a);
+        this.instance.putDataEnumList(fieldName,a);
       }
     }
   }
-  this.instance.globalTypes=this.globalTypes;
+  this.instance.setGlobalVariables(this.globalTypes);
   this.instance.actionDSLSentences=makeArray(this.actionDSLSentences);
   this.instance.conditionDSLSentences=makeArray(this.conditionDSLSentences);
   this.instance.keywordDSLItems=makeArray(this.keywordDSLItems);
   this.instance.anyScopeDSLItems=makeArray(this.anyScopeDSLItems);
-  this.instance.globalCollections=this.globalCollections.toArray(new String[globalCollections.size()]);
+  this.instance.setGlobalCollections(this.globalCollections.toArray(new String[globalCollections.size()]));
   return this.instance;
 }
