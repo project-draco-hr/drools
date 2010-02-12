@@ -1,0 +1,27 @@
+{
+  ServiceReference serviceRef=bundleContext.getServiceReference(ServiceRegistry.class.getName());
+  ServiceRegistry registry=(ServiceRegistry)bundleContext.getService(serviceRef);
+  KnowledgeBuilderFactoryService knowledgeBuilderFactoryService=registry.get(KnowledgeBuilderFactoryService.class);
+  KnowledgeBaseFactoryService knowledgeBaseFactoryService=registry.get(KnowledgeBaseFactoryService.class);
+  ResourceFactoryService resourceFactoryService=registry.get(ResourceFactoryService.class);
+  KnowledgeBaseConfiguration kbaseConf=knowledgeBaseFactoryService.newKnowledgeBaseConfiguration(null,getClass().getClassLoader());
+  System.out.println("test dtables started");
+  KnowledgeBuilderConfiguration kbConf=knowledgeBuilderFactoryService.newKnowledgeBuilderConfiguration(null,getClass().getClassLoader());
+  KnowledgeBuilder kbuilder=knowledgeBuilderFactoryService.newKnowledgeBuilder(kbConf);
+  kbuilder.add(resourceFactoryService.newClassPathResource("changeset1Test.xml",Test.class),ResourceType.CHANGE_SET);
+  kbaseConf=knowledgeBaseFactoryService.newKnowledgeBaseConfiguration(null,getClass().getClassLoader());
+  KnowledgeBase kbase=knowledgeBaseFactoryService.newKnowledgeBase(kbaseConf);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.insert(new Cheese("cheddar",42));
+  ksession.insert(new Person("michael","stilton",25));
+  ksession.fireAllRules();
+  ksession.dispose();
+  assertEquals(3,list.size());
+  assertEquals("Young man cheddar",list.get(0));
+  assertEquals("rule1",list.get(1));
+  assertEquals("rule2",list.get(2));
+  System.out.println("test dtables ended");
+}

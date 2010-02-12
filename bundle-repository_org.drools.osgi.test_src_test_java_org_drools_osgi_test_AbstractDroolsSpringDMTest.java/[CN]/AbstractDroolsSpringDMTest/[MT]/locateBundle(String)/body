@@ -1,0 +1,17 @@
+{
+  Assert.hasText(bundleId,"bundleId should not be empty");
+  Resource result=null;
+  String[] artifactId=StringUtils.commaDelimitedListToStringArray(bundleId);
+  Assert.isTrue(artifactId.length >= 3,"the CSV string " + bundleId + " contains too few values");
+  for (int i=0; i < artifactId.length; i++) {
+    artifactId[i]=StringUtils.trimWhitespace(artifactId[i]);
+  }
+  if (m_EclipseArtifactLocator == null)   m_EclipseArtifactLocator=new EclipseWorkspaceArtifactLocator();
+  result=(artifactId.length == 3 ? m_EclipseArtifactLocator.locateArtifact(artifactId[0],artifactId[1],artifactId[2]) : m_EclipseArtifactLocator.locateArtifact(artifactId[0],artifactId[1],artifactId[2],artifactId[3]));
+  if (result == null) {
+    if (m_MavenArtifactLocator == null)     m_MavenArtifactLocator=getLocator();
+    result=(artifactId.length == 3 ? m_MavenArtifactLocator.locateArtifact(artifactId[0],artifactId[1],artifactId[2]) : m_MavenArtifactLocator.locateArtifact(artifactId[0],artifactId[1],artifactId[2],artifactId[3]));
+  }
+  if (result == null)   throw new IllegalStateException(bundleId + " not found");
+  return result;
+}

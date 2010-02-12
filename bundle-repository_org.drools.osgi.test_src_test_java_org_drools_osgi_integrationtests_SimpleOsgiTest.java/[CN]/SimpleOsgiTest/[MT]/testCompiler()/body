@@ -1,0 +1,36 @@
+{
+  ServiceReference serviceRef=bundleContext.getServiceReference(ServiceRegistry.class.getName());
+  ServiceRegistry registry=(ServiceRegistry)bundleContext.getService(serviceRef);
+  KnowledgeBuilderFactoryService knowledgeBuilderFactoryService=registry.get(KnowledgeBuilderFactoryService.class);
+  KnowledgeBaseFactoryService knowledgeBaseFactoryService=registry.get(KnowledgeBaseFactoryService.class);
+  ResourceFactoryService resourceFactoryService=registry.get(ResourceFactoryService.class);
+  String str="";
+  str+="package org.test\n";
+  str+="import org.test.Person\n";
+  str+="global java.util.List list\n";
+  str+="rule rule1\n";
+  str+="when\n";
+  str+="    $p : Person( age > 30 )\n";
+  str+="then\n";
+  str+="    list.add($p);\n";
+  str+="end\n";
+  KnowledgeBuilderConfiguration kbConf=knowledgeBuilderFactoryService.newKnowledgeBuilderConfiguration(null,getClass().getClassLoader());
+  KnowledgeBuilder kbuilder=knowledgeBuilderFactoryService.newKnowledgeBuilder(kbConf);
+  ResourceFactoryService resource=resourceFactoryService;
+  kbuilder.add(resource.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    System.out.println(kbuilder.getErrors());
+    throw new RuntimeException(kbuilder.getErrors().toString());
+  }
+  KnowledgeBaseConfiguration kbaseConf=knowledgeBaseFactoryService.newKnowledgeBaseConfiguration(null,getClass().getClassLoader());
+  KnowledgeBase kbase=knowledgeBaseFactoryService.newKnowledgeBase(kbaseConf);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.insert(new Person("name",34));
+  ksession.fireAllRules();
+  ksession.dispose();
+  assertEquals(1,list.size());
+  assertEquals(new Person("name",34),list.get(0));
+}
