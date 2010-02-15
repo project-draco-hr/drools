@@ -9,12 +9,43 @@
   this.builder.addFieldsForType(shortTypeName,removeIrrelevantFields(fieldSet));
   Method[] methods=clazz.getMethods();
   List<String> modifierStrings=new ArrayList<String>();
+  Map<String,FieldAccessorsAndMutators> accessorsAndMutators=new HashMap<String,FieldAccessorsAndMutators>();
   for (  Method method : methods) {
     modifierStrings.add(method.getName());
+    if (method.getParameterTypes().length > 0) {
+      String name=method.getName();
+      if (name.startsWith("set")) {
+        name=name.substring(3).toLowerCase();
+      }
+      String factField=shortTypeName + "." + name;
+      if (accessorsAndMutators.get(factField) == FieldAccessorsAndMutators.ACCESSOR) {
+        accessorsAndMutators.put(factField,FieldAccessorsAndMutators.BOTH);
+      }
+ else {
+        accessorsAndMutators.put(factField,FieldAccessorsAndMutators.MUTATOR);
+      }
+    }
+ else     if (!method.getReturnType().equals("void")) {
+      String name=method.getName();
+      if (name.startsWith("get")) {
+        name=name.substring(3).toLowerCase();
+      }
+ else       if (name.startsWith("is")) {
+        name=name.substring(2).toLowerCase();
+      }
+      String factField=shortTypeName + "." + name;
+      if (accessorsAndMutators.get(factField) == FieldAccessorsAndMutators.MUTATOR) {
+        accessorsAndMutators.put(factField,FieldAccessorsAndMutators.BOTH);
+      }
+ else {
+        accessorsAndMutators.put(shortTypeName + "." + name,FieldAccessorsAndMutators.ACCESSOR);
+      }
+    }
   }
   String[] modifiers=new String[modifierStrings.size()];
   modifierStrings.toArray(modifiers);
   this.builder.addModifiersForType(shortTypeName,modifiers);
+  this.builder.addFieldAccessorsAndMutatorsForField(accessorsAndMutators);
   fieldSet.remove("this");
   this.builder.addFieldType(shortTypeName + ".this",SuggestionCompletionEngine.TYPE_OBJECT,clazz);
   for (  String field : fieldSet) {
