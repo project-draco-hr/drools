@@ -1,16 +1,45 @@
 {
   if (this.docFragment == null) {
+    DocumentBuilderFactory f;
     try {
-      this.document=DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+      f=DocumentBuilderFactory.newInstance();
     }
- catch (    ParserConfigurationException e) {
-      throw new RuntimeException("Unable to create new DOM Document");
+ catch (    FactoryConfigurationError e) {
+      try {
+        f=(DocumentBuilderFactory)Class.forName("org.apache.xerces.jaxp.DocumentBuilderFactoryImpl").newInstance();
+      }
+ catch (      Exception e1) {
+        throw new RuntimeException("Unable to create new DOM Document",e1);
+      }
+    }
+catch (    Exception e) {
+      throw new RuntimeException("Unable to create new DOM Document",e);
+    }
+    try {
+      this.document=f.newDocumentBuilder().newDocument();
+    }
+ catch (    Exception e) {
+      throw new RuntimeException("Unable to create new DOM Document",e);
     }
     this.docFragment=this.document.createDocumentFragment();
   }
   SAXParser localParser=null;
   if (this.parser == null) {
-    final SAXParserFactory factory=SAXParserFactory.newInstance();
+    SAXParserFactory factory=null;
+    try {
+      factory=SAXParserFactory.newInstance();
+    }
+ catch (    FactoryConfigurationError e) {
+      try {
+        factory=(SAXParserFactory)Class.forName("org.apache.xerces.jaxp.SAXParserFactoryImpl").newInstance();
+      }
+ catch (      Exception e1) {
+        throw new RuntimeException("Unable to create new DOM Document",e1);
+      }
+    }
+catch (    Exception e) {
+      throw new RuntimeException("Unable to create new DOM Document",e);
+    }
     factory.setNamespaceAware(true);
     final String isValidatingString=System.getProperty("drools.schema.validating");
     if (System.getProperty("drools.schema.validating") != null) {
