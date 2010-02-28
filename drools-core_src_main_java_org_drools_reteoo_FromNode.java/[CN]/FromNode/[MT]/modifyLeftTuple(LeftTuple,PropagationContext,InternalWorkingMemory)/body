@@ -1,0 +1,31 @@
+{
+  final FromMemory memory=(FromMemory)workingMemory.getNodeMemory(this);
+  memory.betaMemory.getLeftTupleMemory().remove(leftTuple);
+  memory.betaMemory.getLeftTupleMemory().add(leftTuple);
+  final Map<Object,RightTuple> previousMatches=(Map<Object,RightTuple>)memory.betaMemory.getCreatedHandles().remove(leftTuple);
+  final Map<Object,RightTuple> newMatches=new HashMap<Object,RightTuple>();
+  memory.betaMemory.getCreatedHandles().put(leftTuple,newMatches);
+  this.betaConstraints.updateFromTuple(memory.betaMemory.getContext(),workingMemory,leftTuple);
+  for (final java.util.Iterator<?> it=this.dataProvider.getResults(leftTuple,workingMemory,context,memory.providerContext); it.hasNext(); ) {
+    final Object object=it.next();
+    RightTuple rightTuple=previousMatches.remove(object);
+    if (rightTuple == null) {
+      final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(object,null,workingMemory);
+      rightTuple=new RightTuple(handle,null);
+    }
+ else {
+      if (rightTuple.getNext() != null) {
+        previousMatches.put(object,(RightTuple)rightTuple.getNext());
+        rightTuple.setNext(null);
+      }
+    }
+    checkConstraintsAndPropagate(leftTuple,rightTuple,context,workingMemory,memory);
+    addToCreatedHandlesMap(newMatches,rightTuple);
+  }
+  this.betaConstraints.resetTuple(memory.betaMemory.getContext());
+  for (  RightTuple rightTuple : previousMatches.values()) {
+    for (RightTuple current=rightTuple; current != null; current=(RightTuple)current.getNext()) {
+      retractMatchAndDestroyHandle(leftTuple,current,context,workingMemory);
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  memory.getRightTupleMemory().remove(rightTuple);
+  memory.getRightTupleMemory().add(rightTuple);
+  LeftTuple childLeftTuple=rightTuple.firstChild;
+  LeftTupleMemory leftMemory=memory.getLeftTupleMemory();
+  LeftTuple leftTuple=leftMemory.getFirst(rightTuple);
+  this.constraints.updateFromFactHandle(memory.getContext(),workingMemory,rightTuple.getFactHandle());
+  if (childLeftTuple != null && leftMemory.isIndexed() && leftTuple != leftMemory.getFirst(childLeftTuple.getLeftParent())) {
+    this.sink.propagateRetractRightTuple(rightTuple,context,workingMemory);
+    childLeftTuple=null;
+  }
+  if (leftTuple != null) {
+    if (childLeftTuple == null) {
+      for (; leftTuple != null; leftTuple=(LeftTuple)leftTuple.getNext()) {
+        if (this.constraints.isAllowedCachedRight(memory.getContext(),leftTuple)) {
+          this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,context,workingMemory,this.tupleMemoryEnabled);
+        }
+      }
+    }
+ else {
+      for (; leftTuple != null; leftTuple=(LeftTuple)leftTuple.getNext()) {
+        if (this.constraints.isAllowedCachedRight(memory.getContext(),leftTuple)) {
+          if (childLeftTuple != null && childLeftTuple.getLeftParent() != leftTuple) {
+            this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,context,workingMemory,this.tupleMemoryEnabled);
+          }
+ else {
+            LeftTuple temp=childLeftTuple;
+            childLeftTuple=this.sink.propagateModifyChildLeftTuple(childLeftTuple,leftTuple,context,workingMemory,this.tupleMemoryEnabled);
+            temp.reAddRight();
+          }
+        }
+ else         if (childLeftTuple != null && childLeftTuple.getLeftParent() == leftTuple) {
+          childLeftTuple=this.sink.propagateRetractChildLeftTuple(childLeftTuple,leftTuple,context,workingMemory);
+        }
+      }
+    }
+  }
+  this.constraints.resetFactHandle(memory.getContext());
+}

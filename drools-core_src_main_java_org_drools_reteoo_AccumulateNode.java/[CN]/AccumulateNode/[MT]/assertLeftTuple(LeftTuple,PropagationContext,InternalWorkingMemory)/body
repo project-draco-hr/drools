@@ -11,23 +11,9 @@
   for (RightTuple rightTuple=memory.betaMemory.getRightTupleMemory().getFirst(leftTuple); rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
     InternalFactHandle handle=rightTuple.getFactHandle();
     if (this.constraints.isAllowedCachedLeft(memory.betaMemory.getContext(),handle)) {
-      LeftTuple tuple=leftTuple;
-      if (this.unwrapRightObject) {
-        tuple=(LeftTuple)handle.getObject();
-        handle=tuple.getLastHandle();
-      }
-      this.accumulate.accumulate(memory.workingMemoryContext,accresult.context,tuple,handle,workingMemory);
-      if (this.tupleMemoryEnabled) {
-        new LeftTuple(leftTuple,rightTuple,this,this.tupleMemoryEnabled);
-      }
+      addMatch(leftTuple,rightTuple,workingMemory,memory,accresult);
     }
   }
   this.constraints.resetTuple(memory.betaMemory.getContext());
-  final Object result=this.accumulate.getResult(memory.workingMemoryContext,accresult.context,leftTuple,workingMemory);
-  if (result == null) {
-    throw new RuntimeDroolsException("Accumulate must not return a null value.");
-  }
-  final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(result,workingMemory.getObjectTypeConfigurationRegistry().getObjectTypeConf(context.getEntryPoint(),result),workingMemory);
-  accresult.result=new RightTuple(handle,this);
-  evaluateResultConstraints(leftTuple,context,workingMemory,memory,accresult);
+  evaluateResultConstraints(ActivitySource.LEFT,leftTuple,context,workingMemory,memory,accresult);
 }

@@ -2,6 +2,11 @@
   final FromMemory memory=(FromMemory)workingMemory.getNodeMemory(this);
   final Iterator tupleIter=memory.betaMemory.getLeftTupleMemory().iterator();
   for (LeftTuple leftTuple=(LeftTuple)tupleIter.next(); leftTuple != null; leftTuple=(LeftTuple)tupleIter.next()) {
-    evaluateAndPropagate(leftTuple,context,workingMemory,memory);
+    Map<Object,RightTuple> matches=(Map<Object,RightTuple>)memory.betaMemory.getCreatedHandles().get(leftTuple);
+    for (    RightTuple rightTuples : matches.values()) {
+      for (RightTuple rightTuple=rightTuples; rightTuple != null; rightTuple=(RightTuple)rightTuples.getNext()) {
+        this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,context,workingMemory,this.tupleMemoryEnabled);
+      }
+    }
   }
 }

@@ -1,0 +1,91 @@
+{
+  BuildContext buildContext=(BuildContext)context.get("BuildContext");
+  if (args.size() >= 1) {
+    String[] a=args.get(0);
+    String name=a[0];
+    String leftInput=a[1];
+    String rightInput=a[2];
+    String sourceType=a[3];
+    String expr=a[4];
+    LeftTupleSource leftTupleSource;
+    if ("mock".equals(leftInput)) {
+      leftTupleSource=Mockito.mock(LeftTupleSource.class);
+    }
+ else {
+      leftTupleSource=(LeftTupleSource)context.get(leftInput);
+    }
+    ObjectSource rightObjectSource;
+    if ("mock".equals(rightInput)) {
+      rightObjectSource=Mockito.mock(ObjectSource.class);
+    }
+ else {
+      rightObjectSource=(ObjectSource)context.get(rightInput);
+    }
+    Pattern sourcePattern;
+    Pattern resultPattern;
+    try {
+      sourcePattern=reteTesterHelper.getPattern(0,sourceType);
+      resultPattern=reteTesterHelper.getPattern(buildContext.getNextId(),Number.class.getName());
+    }
+ catch (    Exception e) {
+      throw new IllegalArgumentException("Not possible to process arguments: " + Arrays.toString(a));
+    }
+    BetaConstraints betaSourceConstraints=new EmptyBetaConstraints();
+    AlphaNodeFieldConstraint[] alphaResultConstraint=new AlphaNodeFieldConstraint[0];
+    for (int i=1; i < args.size(); i++) {
+      a=args.get(i);
+      String type=a[0];
+      String fieldName=a[1];
+      String operator=a[2];
+      String val=a[3];
+      if ("source".equals(type)) {
+        Declaration declr=(Declaration)context.get(val);
+        try {
+          BetaNodeFieldConstraint sourceBetaConstraint=this.reteTesterHelper.getBoundVariableConstraint(sourcePattern,fieldName,declr,operator);
+          betaSourceConstraints=new SingleBetaConstraints(sourceBetaConstraint,buildContext.getRuleBase().getConfiguration());
+        }
+ catch (        IntrospectionException e) {
+          throw new IllegalArgumentException();
+        }
+      }
+ else       if ("result".equals(type)) {
+        alphaResultConstraint=new AlphaNodeFieldConstraint[1];
+        try {
+          alphaResultConstraint[0]=this.reteTesterHelper.getLiteralConstraint(resultPattern,fieldName,operator,val);
+        }
+ catch (        IntrospectionException e) {
+          throw new IllegalArgumentException("Unable to configure alpha constraint: " + Arrays.toString(a),e);
+        }
+      }
+    }
+    NodeTestCase testCase=(NodeTestCase)context.get("TestCase");
+    List<String> classImports=new ArrayList<String>();
+    List<String> pkgImports=new ArrayList<String>();
+    for (    String imp : testCase.getImports()) {
+      if (imp.endsWith(".*")) {
+        pkgImports.add(imp.substring(0,imp.lastIndexOf('.')));
+      }
+ else {
+        classImports.add(imp);
+      }
+    }
+    MVELCompilationUnit compilationUnit=new MVELCompilationUnit(name,expr,pkgImports.toArray(new String[0]),classImports.toArray(new String[0]),new String[]{},new String[]{},new String[]{},new Declaration[]{},new Declaration[]{(Declaration)context.get(expr)},new String[]{},new String[]{},new String[]{},4,false);
+    AccumulateFunction accFunction=new SumAccumulateFunction();
+    Accumulator accumulator=new MVELAccumulatorFunctionExecutor(compilationUnit,accFunction);
+    ((MVELCompileable)accumulator).compile(Thread.currentThread().getContextClassLoader());
+    Accumulate accumulate=new Accumulate(sourcePattern,new Declaration[]{},new Declaration[]{},accumulator);
+    AccumulateNode accNode=new AccumulateNode(buildContext.getNextId(),leftTupleSource,rightObjectSource,alphaResultConstraint,betaSourceConstraints,new EmptyBetaConstraints(),new Behavior[]{},accumulate,false,buildContext);
+    accNode.attach();
+    context.put(name,accNode);
+  }
+ else {
+    StringBuilder msgBuilder=new StringBuilder();
+    msgBuilder.append("Can not parse AccumulateNode step arguments: \n");
+    for (    String[] arg : args) {
+      msgBuilder.append("    ");
+      msgBuilder.append(Arrays.toString(arg));
+      msgBuilder.append("\n");
+    }
+    throw new IllegalArgumentException(msgBuilder.toString());
+  }
+}

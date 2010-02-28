@@ -1,0 +1,28 @@
+{
+  List<InternalFactHandle> handles=(List<InternalFactHandle>)context.get("Handles");
+  Map<String,Object> vars=new HashMap<String,Object>();
+  vars.put("h",handles);
+  if (args.size() >= 1) {
+    for (    String[] str : args) {
+      String handle=fixHandles(str[0]);
+      StringBuilder builder=new StringBuilder();
+      builder.append("with( " + handle + ".object ) { ");
+      for (int i=1; i < str.length; i++) {
+        if (i > 1) {
+          builder.append(", ");
+        }
+        builder.append(fixHandles(str[i]));
+      }
+      builder.append("}");
+      try {
+        MVEL.eval(builder.toString(),vars);
+      }
+ catch (      Exception e) {
+        throw new IllegalArgumentException("Cannot execute arguments: " + Arrays.toString(str));
+      }
+    }
+  }
+ else {
+    throw new IllegalArgumentException("Cannot execute arguments " + args);
+  }
+}

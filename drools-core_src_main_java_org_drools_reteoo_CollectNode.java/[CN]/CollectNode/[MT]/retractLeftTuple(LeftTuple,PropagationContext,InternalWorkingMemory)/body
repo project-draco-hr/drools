@@ -2,14 +2,11 @@
   final CollectMemory memory=(CollectMemory)workingMemory.getNodeMemory(this);
   memory.betaMemory.getLeftTupleMemory().remove(leftTuple);
   final CollectContext colctx=(CollectContext)memory.betaMemory.getCreatedHandles().remove(leftTuple);
-  LeftTuple child=getFirstMatch(leftTuple,colctx);
-  while (child != null) {
-    LeftTuple tmp=child.getLeftParentNext();
-    child.unlinkFromLeftParent();
-    child.unlinkFromRightParent();
-    child=tmp;
-  }
+  removePreviousMatchesForLeftTuple(leftTuple,colctx);
   if (colctx.propagated) {
     this.sink.propagateRetractLeftTupleDestroyRightTuple(leftTuple,context,workingMemory);
+  }
+ else {
+    workingMemory.getFactHandleFactory().destroyFactHandle(colctx.resultTuple.getFactHandle());
   }
 }

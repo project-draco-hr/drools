@@ -3,16 +3,14 @@
   if (!node.isInUse()) {
     removeTupleSink((LeftTupleSink)node);
   }
-  if (!this.isInUse()) {
+  if (!this.isInUse() || context.getCleanupAdapter() != null) {
     for (int i=0, length=workingMemories.length; i < length; i++) {
       BetaMemory memory=null;
       Object object=workingMemories[i].getNodeMemory(this);
       if (object instanceof CollectMemory) {
-        ((CollectNode)this).doRemove(workingMemories[i],(CollectMemory)object);
         memory=((CollectMemory)object).betaMemory;
       }
  else       if (object instanceof AccumulateMemory) {
-        ((AccumulateNode)this).doRemove(workingMemories[i],(AccumulateMemory)object);
         memory=((AccumulateMemory)object).betaMemory;
       }
  else {
@@ -20,28 +18,45 @@
       }
       Iterator it=memory.getLeftTupleMemory().iterator();
       for (LeftTuple leftTuple=(LeftTuple)it.next(); leftTuple != null; leftTuple=(LeftTuple)it.next()) {
+        if (context.getCleanupAdapter() != null) {
+          for (LeftTuple child=leftTuple.firstChild; child != null; child=child.getLeftParentNext()) {
+            if (child.getLeftTupleSink() == this) {
+              leftTuple.unlinkFromLeftParent();
+              leftTuple.unlinkFromRightParent();
+            }
+ else {
+              context.getCleanupAdapter().cleanUp(child,workingMemories[i]);
+            }
+          }
+        }
         leftTuple.unlinkFromLeftParent();
         leftTuple.unlinkFromRightParent();
       }
-      it=memory.getRightTupleMemory().iterator();
-      for (RightTuple rightTuple=(RightTuple)it.next(); rightTuple != null; rightTuple=(RightTuple)it.next()) {
-        if (rightTuple.getBlocked() != null) {
-          for (LeftTuple leftTuple=(LeftTuple)rightTuple.getBlocked(); leftTuple != null; ) {
-            LeftTuple temp=leftTuple.getBlockedNext();
-            leftTuple.setBlocker(null);
-            leftTuple.setBlockedPrevious(null);
-            leftTuple.setBlockedNext(null);
-            leftTuple.unlinkFromLeftParent();
-            leftTuple=temp;
-          }
-        }
-        if (rightTuple.getRightTupleSink() == null) {
-          workingMemories[i].getFactHandleFactory().destroyFactHandle(rightTuple.getFactHandle());
-        }
-        rightTuple.unlinkFromRightParent();
+      if (object instanceof CollectMemory) {
+        ((CollectNode)this).doRemove(workingMemories[i],(CollectMemory)object);
       }
-      workingMemories[i].clearNodeMemory(this);
+ else       if (object instanceof AccumulateMemory) {
+        ((AccumulateNode)this).doRemove(workingMemories[i],(AccumulateMemory)object);
+      }
+      if (!this.isInUse()) {
+        it=memory.getRightTupleMemory().iterator();
+        for (RightTuple rightTuple=(RightTuple)it.next(); rightTuple != null; rightTuple=(RightTuple)it.next()) {
+          if (rightTuple.getBlocked() != null) {
+            for (LeftTuple leftTuple=(LeftTuple)rightTuple.getBlocked(); leftTuple != null; ) {
+              LeftTuple temp=leftTuple.getBlockedNext();
+              leftTuple.setBlocker(null);
+              leftTuple.setBlockedPrevious(null);
+              leftTuple.setBlockedNext(null);
+              leftTuple.unlinkFromLeftParent();
+              leftTuple=temp;
+            }
+          }
+          rightTuple.unlinkFromRightParent();
+        }
+        workingMemories[i].clearNodeMemory(this);
+      }
     }
+    context.setCleanupAdapter(null);
   }
   this.rightInput.remove(context,builder,this,workingMemories);
   if (!context.alreadyVisited(this.leftInput)) {

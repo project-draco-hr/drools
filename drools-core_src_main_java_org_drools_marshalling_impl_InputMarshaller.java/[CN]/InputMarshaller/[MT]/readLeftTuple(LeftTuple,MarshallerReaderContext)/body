@@ -47,7 +47,7 @@ case NodeTypeEnums.ForallNotNode:
     RightTupleKey key=new RightTupleKey(factHandleId,sink);
     RightTuple rightTuple=context.rightTuples.get(key);
     parentLeftTuple.setBlocker(rightTuple);
-    rightTuple.setBlocked(parentLeftTuple);
+    rightTuple.addBlocked(parentLeftTuple);
   }
   break;
 }
@@ -63,7 +63,7 @@ if (type == PersisterEnums.LEFT_TUPLE_NOT_BLOCKED) {
   RightTupleKey key=new RightTupleKey(factHandleId,sink);
   RightTuple rightTuple=context.rightTuples.get(key);
   parentLeftTuple.setBlocker(rightTuple);
-  rightTuple.setBlocked(parentLeftTuple);
+  rightTuple.addBlocked(parentLeftTuple);
   while (stream.readShort() == PersisterEnums.LEFT_TUPLE) {
     LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
     LeftTuple childLeftTuple=new LeftTuple(parentLeftTuple,childSink,true);
@@ -156,9 +156,6 @@ break;
 }
 case NodeTypeEnums.RuleTerminalNode:
 {
-RuleTerminalNode ruleTerminalNode=(RuleTerminalNode)sink;
-TerminalNodeMemory memory=(TerminalNodeMemory)wm.getNodeMemory(ruleTerminalNode);
-memory.getTupleMemory().add(parentLeftTuple);
 int pos=context.terminalTupleMap.size();
 context.terminalTupleMap.put(pos,parentLeftTuple);
 break;

@@ -1,0 +1,38 @@
+{
+  if (args.size() == 1) {
+    String[] a=args.get(0);
+    String name=a[0];
+    String leftInput=a[1];
+    String rightInput=a[2];
+    BetaNode betaNode=Mockito.mock(BetaNode.class,Mockito.withSettings().extraInterfaces(DSLMock.class));
+    Mockito.doAnswer(new Answer<Object>(){
+      public Object answer(      InvocationOnMock invocation) throws Throwable {
+        Object[] args=invocation.getArguments();
+        InternalFactHandle handle=(InternalFactHandle)args[0];
+        BetaNode node=(BetaNode)invocation.getMock();
+        new RightTuple(handle,node);
+        return null;
+      }
+    }
+).when(betaNode).assertObject(any(InternalFactHandle.class),any(PropagationContext.class),any(InternalWorkingMemory.class));
+    context.put(name,betaNode);
+    if (!"mock".equals(leftInput)) {
+      LeftTupleSource leftTupleSource=(LeftTupleSource)context.get(leftInput);
+      leftTupleSource.addTupleSink(betaNode);
+    }
+    if (!"mock".equals(rightInput)) {
+      ObjectSource rightObjectSource=(ObjectSource)context.get(rightInput);
+      rightObjectSource.addObjectSink(betaNode);
+    }
+  }
+ else {
+    StringBuilder msgBuilder=new StringBuilder();
+    msgBuilder.append("Can not parse MockBetaNode step arguments: \n");
+    for (    String[] arg : args) {
+      msgBuilder.append("    ");
+      msgBuilder.append(Arrays.toString(arg));
+      msgBuilder.append("\n");
+    }
+    throw new IllegalArgumentException(msgBuilder.toString());
+  }
+}

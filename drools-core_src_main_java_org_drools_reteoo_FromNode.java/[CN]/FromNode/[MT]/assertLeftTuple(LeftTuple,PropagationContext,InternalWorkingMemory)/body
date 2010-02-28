@@ -1,10 +1,20 @@
 {
   final FromMemory memory=(FromMemory)workingMemory.getNodeMemory(this);
+  Map<Object,RightTuple> matches=null;
   if (this.tupleMemoryEnabled) {
     memory.betaMemory.getLeftTupleMemory().add(leftTuple);
+    matches=new HashMap<Object,RightTuple>();
+    memory.betaMemory.getCreatedHandles().put(leftTuple,matches);
   }
-  if (this.sink.size() == 0) {
-    return;
+  this.betaConstraints.updateFromTuple(memory.betaMemory.getContext(),workingMemory,leftTuple);
+  for (final java.util.Iterator<?> it=this.dataProvider.getResults(leftTuple,workingMemory,context,memory.providerContext); it.hasNext(); ) {
+    final Object object=it.next();
+    final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(object,null,workingMemory);
+    RightTuple rightTuple=new RightTuple(handle,null);
+    checkConstraintsAndPropagate(leftTuple,rightTuple,context,workingMemory,memory);
+    if (this.tupleMemoryEnabled) {
+      addToCreatedHandlesMap(matches,rightTuple);
+    }
   }
-  evaluateAndPropagate(leftTuple,context,workingMemory,memory);
+  this.betaConstraints.resetTuple(memory.betaMemory.getContext());
 }

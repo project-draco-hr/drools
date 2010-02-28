@@ -1,0 +1,31 @@
+{
+  String key=getCaptorKey(node,cmd);
+  ArgumentCaptor<?> captor=(ArgumentCaptor<?>)context.get(key);
+  if (captor == null) {
+    verifyCount(step,node,wm,new String[]{"verify",cmd[1],"count","-1"},context);
+    captor=(ArgumentCaptor<?>)context.get(key);
+  }
+  Map<String,Object> vars=new HashMap<String,Object>();
+  populateCapturedArguments(captor,vars);
+  vars.putAll(context);
+  ParserConfiguration pconf=new ParserConfiguration();
+  addStaticImports(pconf,CoreMatchers.class);
+  addStaticImports(pconf,JUnitMatchers.class);
+  pconf.addImport("Assert",Assert.class);
+  ParserContext mvelctx=new ParserContext(pconf);
+  String expression=cmd[3].replaceAll("h(\\d+)","Handles[$1]");
+  try {
+    Serializable compiled=MVEL.compileExpression(expression,mvelctx);
+    MVEL.executeExpression(compiled,vars);
+  }
+ catch (  PropertyAccessException e) {
+    String message;
+    if (e.getCause() instanceof InvocationTargetException) {
+      message=((InvocationTargetException)e.getCause()).getTargetException().toString();
+    }
+ else {
+      message=e.getMessage();
+    }
+    Assert.fail("[ERROR] line " + step.getLine() + " - Executing expression: '"+ expression+ "'\n"+ message);
+  }
+}

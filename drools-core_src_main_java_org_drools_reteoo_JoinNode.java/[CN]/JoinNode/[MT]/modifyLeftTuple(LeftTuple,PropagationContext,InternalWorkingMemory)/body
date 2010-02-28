@@ -1,0 +1,42 @@
+{
+  final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  memory.getLeftTupleMemory().remove(leftTuple);
+  memory.getLeftTupleMemory().add(leftTuple);
+  this.constraints.updateFromTuple(memory.getContext(),workingMemory,leftTuple);
+  LeftTuple childLeftTuple=leftTuple.firstChild;
+  RightTupleMemory rightMemory=memory.getRightTupleMemory();
+  RightTuple rightTuple=rightMemory.getFirst(leftTuple);
+  if (childLeftTuple != null && rightMemory.isIndexed() && rightTuple != rightMemory.getFirst(childLeftTuple.getRightParent())) {
+    this.sink.propagateRetractLeftTuple(leftTuple,context,workingMemory);
+    childLeftTuple=null;
+  }
+  if (rightTuple != null) {
+    if (childLeftTuple == null) {
+      for (; rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
+        final InternalFactHandle handle=rightTuple.getFactHandle();
+        if (this.constraints.isAllowedCachedLeft(memory.getContext(),handle)) {
+          this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,context,workingMemory,this.tupleMemoryEnabled);
+        }
+      }
+    }
+ else {
+      for (; rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
+        final InternalFactHandle handle=rightTuple.getFactHandle();
+        if (this.constraints.isAllowedCachedLeft(memory.getContext(),handle)) {
+          if (childLeftTuple != null && childLeftTuple.getRightParent() != rightTuple) {
+            this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,context,workingMemory,this.tupleMemoryEnabled);
+          }
+ else {
+            LeftTuple temp=childLeftTuple;
+            childLeftTuple=this.sink.propagateModifyChildLeftTuple(childLeftTuple,rightTuple,context,workingMemory,this.tupleMemoryEnabled);
+            temp.reAddLeft();
+          }
+        }
+ else         if (childLeftTuple != null && childLeftTuple.getRightParent() == rightTuple) {
+          childLeftTuple=this.sink.propagateRetractChildLeftTuple(childLeftTuple,rightTuple,context,workingMemory);
+        }
+      }
+    }
+  }
+  this.constraints.resetTuple(memory.getContext());
+}

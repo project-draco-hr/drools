@@ -1,0 +1,49 @@
+{
+  try {
+    List<String[]> cmds=step.getCommands();
+    List<InternalFactHandle> handles=(List<InternalFactHandle>)context.get("Handles");
+    final ObjectHashMap memory=(ObjectHashMap)wm.getNodeMemory(node);
+    for (    String[] cmd : cmds) {
+      if (cmd[0].equals("leftMemory")) {
+        String args=cmd[1];
+        String listString=args.replaceAll("h(\\d+)","h[$1]");
+        Map<String,Object> vars=new HashMap<String,Object>();
+        vars.put("h",handles);
+        List<?> expectedLeftTuples=(List<?>)MVEL.eval(listString,vars);
+        if (expectedLeftTuples.isEmpty() && memory.size() != 0) {
+          throw new AssertionError("line " + step.getLine() + ": left Memory expected [] actually "+ memory);
+        }
+ else         if (expectedLeftTuples.isEmpty() && memory.size() == 0) {
+          return;
+        }
+        List<LeftTuple> leftTuples=new ArrayList<LeftTuple>();
+        for (        List<InternalFactHandle> tlist : (List<List<InternalFactHandle>>)expectedLeftTuples) {
+          LeftTuple tuple=new LeftTuple(tlist.get(0),null,false);
+          for (int i=1; i < tlist.size(); i++) {
+            tuple=new LeftTuple(tuple,new RightTuple(tlist.get(i)),null,false);
+          }
+          leftTuples.add(tuple);
+        }
+        final List<LeftTuple> actualTuples=new ArrayList<LeftTuple>();
+        final Iterator it=memory.iterator();
+        for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
+          actualTuples.add((LeftTuple)entry.getKey());
+        }
+        for (        LeftTuple tuple : leftTuples) {
+          if (!actualTuples.remove(tuple)) {
+            throw new AssertionError("line " + step.getLine() + ": left Memory expected "+ tuple+ " not found in memory.");
+          }
+        }
+        if (!actualTuples.isEmpty()) {
+          throw new AssertionError("line " + step.getLine() + ": left Memory unexpected tuples in the node memory "+ actualTuples);
+        }
+      }
+ else {
+        throw new IllegalArgumentException("line " + step.getLine() + ": command does not exist "+ Arrays.toString(cmd));
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new IllegalArgumentException("line " + step.getLine() + ": unable to execute step "+ step,e);
+  }
+}

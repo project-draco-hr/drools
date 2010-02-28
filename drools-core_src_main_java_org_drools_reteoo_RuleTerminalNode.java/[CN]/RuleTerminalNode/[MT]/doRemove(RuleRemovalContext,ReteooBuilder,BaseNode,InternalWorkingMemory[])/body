@@ -1,23 +1,9 @@
 {
-  for (int i=0, length=workingMemories.length; i < length; i++) {
-    final InternalWorkingMemory workingMemory=workingMemories[i];
-    final TerminalNodeMemory memory=(TerminalNodeMemory)workingMemory.getNodeMemory(this);
-    final Iterator it=memory.getTupleMemory().iterator();
-    for (LeftTuple leftTuple=(LeftTuple)it.next(); leftTuple != null; leftTuple=(LeftTuple)it.next()) {
-      final Activation activation=leftTuple.getActivation();
-      if (activation.isActivated()) {
-        activation.remove();
-        ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCancelled(activation,workingMemory,ActivationCancelledCause.CLEAR);
-      }
-      final PropagationContext propagationContext=new PropagationContextImpl(workingMemory.getNextPropagationIdCounter(),PropagationContext.RULE_REMOVAL,null,null,null);
-      workingMemory.getTruthMaintenanceSystem().removeLogicalDependencies(activation,propagationContext,this.rule);
-      leftTuple.unlinkFromLeftParent();
-      leftTuple.unlinkFromRightParent();
-    }
+  CleanupAdapter adapter=context.getCleanupAdapter();
+  context.setCleanupAdapter(new RTNCleanupAdapter(this));
+  this.tupleSource.remove(context,builder,this,workingMemories);
+  for (  InternalWorkingMemory workingMemory : workingMemories) {
     workingMemory.executeQueuedActions();
-    workingMemory.clearNodeMemory(this);
   }
-  if (!context.alreadyVisited(this.tupleSource)) {
-    this.tupleSource.remove(context,builder,this,workingMemories);
-  }
+  context.setCleanupAdapter(adapter);
 }

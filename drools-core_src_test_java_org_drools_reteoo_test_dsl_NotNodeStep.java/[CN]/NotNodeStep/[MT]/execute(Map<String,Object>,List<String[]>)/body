@@ -1,0 +1,50 @@
+{
+  BuildContext buildContext=(BuildContext)context.get("BuildContext");
+  if (args.size() != 0) {
+    String[] a=args.get(0);
+    String name=a[0].trim();
+    String leftInput=a[1].trim();
+    String rightInput=a[2].trim();
+    LeftTupleSource leftTupleSource;
+    if ("mock".equals(leftInput)) {
+      leftTupleSource=Mockito.mock(LeftTupleSource.class);
+      ;
+    }
+ else {
+      leftTupleSource=(LeftTupleSource)context.get(leftInput);
+    }
+    ObjectSource rightObjectSource;
+    if ("mock".equals(rightInput)) {
+      rightObjectSource=Mockito.mock(ObjectSource.class);
+      ;
+    }
+ else {
+      rightObjectSource=(ObjectSource)context.get(rightInput);
+    }
+    BetaConstraints constraints;
+    if (args.size() > 1) {
+      a=args.get(1);
+      String fieldName=a[0].trim();
+      String operator=a[1].trim();
+      String var=a[2].trim();
+      Declaration declr=(Declaration)context.get(var);
+      BetaNodeFieldConstraint betaConstraint;
+      try {
+        betaConstraint=this.reteTesterHelper.getBoundVariableConstraint(declr.getPattern(),fieldName,declr,operator);
+      }
+ catch (      IntrospectionException e) {
+        throw new IllegalArgumentException();
+      }
+      constraints=new SingleBetaConstraints(betaConstraint,buildContext.getRuleBase().getConfiguration());
+    }
+ else {
+      constraints=new EmptyBetaConstraints();
+    }
+    NotNode notNode=new NotNode(buildContext.getNextId(),leftTupleSource,rightObjectSource,constraints,BehaviorManager.NO_BEHAVIORS,buildContext);
+    notNode.attach();
+    context.put(name,notNode);
+  }
+ else {
+    throw new IllegalArgumentException("Cannot arguments " + args);
+  }
+}

@@ -1,0 +1,37 @@
+{
+  String testName=System.getProperty("nodeTestName");
+  if (testName == null || testName.trim().length() == 0) {
+    throw new IllegalArgumentException("No test defined. Please set the system property 'nodeTestName' with the appropriate test name.");
+  }
+  NodeTestCase result=new NodeTestCase();
+  File base=new File(this.getClass().getResource(".").toURI());
+  for (  File file : base.listFiles(new FilenameFilter(){
+    public boolean accept(    File arg0,    String arg1){
+      return arg1.endsWith(".nodeTestCase");
+    }
+  }
+)) {
+    InputStream is=null;
+    try {
+      is=new FileInputStream(file);
+      NodeTestCase tcase=ReteDslTestEngine.compile(is);
+      if (tcase.hasErrors()) {
+        throw new IllegalArgumentException("Error parsing and loading testcase: " + file.getAbsolutePath() + "\n"+ tcase.getErrors().toString());
+      }
+      for (      NodeTestDef test : tcase.getTests()) {
+        if (test.getName().equals(testName)) {
+          result.setName(tcase.getName());
+          result.setImports(tcase.getImports());
+          result.setSetup(tcase.getSetup());
+          result.addTest(test);
+          result.setTearDown(tcase.getTearDown());
+          return Collections.singletonList(result);
+        }
+      }
+    }
+  finally {
+      is.close();
+    }
+  }
+  return Collections.singletonList(result);
+}

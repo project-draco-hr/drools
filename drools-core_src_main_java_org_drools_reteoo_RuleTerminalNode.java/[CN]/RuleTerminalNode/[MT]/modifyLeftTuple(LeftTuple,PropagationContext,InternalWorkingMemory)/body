@@ -1,0 +1,39 @@
+{
+  if (!this.rule.isEffective(workingMemory.getTimeMachine(),leftTuple,workingMemory)) {
+    return;
+  }
+  AgendaItem item=(AgendaItem)leftTuple.getActivation();
+  if (item.isActivated()) {
+    return;
+  }
+  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
+  if (this.rule.isNoLoop() && this.rule.equals(context.getRuleOrigin())) {
+    agenda.increaseDormantActivations();
+    return;
+  }
+  final Timer timer=this.rule.getTimer();
+  if (timer != null) {
+    agenda.scheduleItem((ScheduledAgendaItem)item,workingMemory);
+    item.setActivated(true);
+    ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCreated(item,workingMemory);
+  }
+ else {
+    if (this.rule.getCalendars() != null) {
+      long timestamp=workingMemory.getSessionClock().getCurrentTime();
+      for (      String cal : this.rule.getCalendars()) {
+        if (!workingMemory.getCalendars().get(cal).isTimeIncluded(timestamp)) {
+          return;
+        }
+      }
+    }
+    item.setSalience(rule.getSalience().getValue(leftTuple,workingMemory));
+    item.setPropagationContext(context);
+    boolean added=agenda.addActivation(item);
+    item.setActivated(added);
+    if (added) {
+      item.setActivated(true);
+      ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCreated(item,workingMemory);
+    }
+  }
+  agenda.increaseActiveActivations();
+}

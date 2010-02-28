@@ -1,6 +1,6 @@
 {
   final CollectMemory memory=(CollectMemory)workingMemory.getNodeMemory(this);
-  final Collection result=this.collect.instantiateResultObject(workingMemory);
+  final Collection<Object> result=(Collection<Object>)this.collect.instantiateResultObject(workingMemory);
   final InternalFactHandle resultHandle=workingMemory.getFactHandleFactory().newFactHandle(result,workingMemory.getObjectTypeConfigurationRegistry().getObjectTypeConf(context.getEntryPoint(),result),workingMemory);
   final CollectContext colctx=new CollectContext();
   colctx.resultTuple=new RightTuple(resultHandle,this);
@@ -12,15 +12,9 @@
   for (RightTuple rightTuple=memory.betaMemory.getRightTupleMemory().getFirst(leftTuple); rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
     InternalFactHandle handle=rightTuple.getFactHandle();
     if (this.constraints.isAllowedCachedLeft(memory.betaMemory.getContext(),handle)) {
-      if (this.unwrapRightObject) {
-        handle=((LeftTuple)handle.getObject()).getLastHandle();
-      }
-      result.add(handle.getObject());
-      if (this.tupleMemoryEnabled) {
-        new LeftTuple(leftTuple,rightTuple,this,this.tupleMemoryEnabled);
-      }
+      addMatch(leftTuple,rightTuple,colctx);
     }
   }
   this.constraints.resetTuple(memory.betaMemory.getContext());
-  evaluateResultConstraints(leftTuple,context,workingMemory,memory,colctx);
+  evaluateResultConstraints(ActivitySource.LEFT,leftTuple,context,workingMemory,memory,colctx);
 }

@@ -1,0 +1,55 @@
+{
+  try {
+    List<String[]> cmds=step.getCommands();
+    List<InternalFactHandle> handles=(List<InternalFactHandle>)context.get("Handles");
+    for (    String[] cmd : cmds) {
+      try {
+        String nodeName=cmd[0];
+        Sink sink=(Sink)context.get(nodeName);
+        if (sink == null) {
+          throw new IllegalArgumentException("line " + step.getLine() + ": node "+ nodeName+ " does not exist");
+        }
+        String args=cmd[1];
+        String listString=args.replaceAll("h(\\d+)","h[$1]");
+        Map<String,Object> vars=new HashMap<String,Object>();
+        vars.put("h",handles);
+        List<?> list=(List<?>)MVEL.eval(listString,vars);
+        if (list == null) {
+          throw new IllegalArgumentException(Arrays.toString(cmd) + " does not specify an existing fact handle");
+        }
+        for (        Object element : list) {
+          if (element == null) {
+            throw new IllegalArgumentException(Arrays.toString(cmd) + " does not specify an existing fact handle");
+          }
+          if (element instanceof InternalFactHandle) {
+            InternalFactHandle handle=(InternalFactHandle)element;
+            PropagationContext pContext=new PropagationContextImpl(wm.getNextPropagationIdCounter(),PropagationContext.MODIFICATION,null,null,handle);
+            ModifyPreviousTuples modifyPreviousTuples=new ModifyPreviousTuples(handle.getFirstLeftTuple(),handle.getFirstRightTuple());
+            handle.setFirstLeftTuple(null);
+            handle.setFirstRightTuple(null);
+            handle.setLastLeftTuple(null);
+            handle.setLastRightTuple(null);
+            ((ObjectSink)sink).modifyObject(handle,modifyPreviousTuples,pContext,wm);
+            modifyPreviousTuples.retractTuples(pContext,wm);
+          }
+ else {
+            List<InternalFactHandle> tlist=(List<InternalFactHandle>)element;
+            String id=getTupleId(tlist);
+            LeftTuple tuple=(LeftTuple)context.get(id);
+            if (tuple == null) {
+              throw new IllegalArgumentException("Tuple not found: " + id + " : "+ tlist.toString());
+            }
+            PropagationContext pContext=new PropagationContextImpl(wm.getNextPropagationIdCounter(),PropagationContext.MODIFICATION,null,tuple,null);
+            ((LeftTupleSink)sink).modifyLeftTuple(tuple,pContext,wm);
+          }
+        }
+      }
+ catch (      Exception e) {
+        throw new IllegalArgumentException("line " + step.getLine() + ": unable to execute command "+ cmd,e);
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new IllegalArgumentException("line " + step.getLine() + ": unable to execute step "+ step,e);
+  }
+}

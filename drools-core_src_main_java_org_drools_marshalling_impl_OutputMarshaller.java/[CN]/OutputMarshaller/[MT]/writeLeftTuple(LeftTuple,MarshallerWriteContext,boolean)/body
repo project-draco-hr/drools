@@ -6,7 +6,7 @@
 switch (sink.getType()) {
 case NodeTypeEnums.JoinNode:
 {
-      for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentPrevious()) {
+      for (LeftTuple childLeftTuple=leftTuple.firstChild; childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentNext()) {
         stream.writeShort(PersisterEnums.RIGHT_TUPLE);
         stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
         stream.writeInt(childLeftTuple.getRightParent().getFactHandle().getId());
@@ -17,7 +17,7 @@ case NodeTypeEnums.JoinNode:
     }
 case NodeTypeEnums.EvalConditionNode:
 {
-    for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentPrevious()) {
+    for (LeftTuple childLeftTuple=leftTuple.firstChild; childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentNext()) {
       stream.writeShort(PersisterEnums.LEFT_TUPLE);
       stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
       writeLeftTuple(childLeftTuple,context,recurse);
@@ -30,7 +30,7 @@ case NodeTypeEnums.ForallNotNode:
 {
   if (leftTuple.getBlocker() == null) {
     stream.writeShort(PersisterEnums.LEFT_TUPLE_NOT_BLOCKED);
-    for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)leftTuple.getLeftParentPrevious()) {
+    for (LeftTuple childLeftTuple=leftTuple.firstChild; childLeftTuple != null; childLeftTuple=(LeftTuple)leftTuple.getLeftParentNext()) {
       stream.writeShort(PersisterEnums.LEFT_TUPLE);
       stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
       writeLeftTuple(childLeftTuple,context,recurse);
@@ -51,7 +51,7 @@ if (leftTuple.getBlocker() == null) {
  else {
   stream.writeShort(PersisterEnums.LEFT_TUPLE_BLOCKED);
   stream.writeInt(leftTuple.getBlocker().getFactHandle().getId());
-  for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)leftTuple.getLeftParentPrevious()) {
+  for (LeftTuple childLeftTuple=leftTuple.firstChild; childLeftTuple != null; childLeftTuple=(LeftTuple)leftTuple.getLeftParentNext()) {
     stream.writeShort(PersisterEnums.LEFT_TUPLE);
     stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
     writeLeftTuple(childLeftTuple,context,recurse);
@@ -67,7 +67,7 @@ AccumulateContext accctx=(AccumulateContext)memory.betaMemory.getCreatedHandles(
 writeFactHandle(context,stream,context.objectMarshallingStrategyStore,accctx.result.getFactHandle());
 stream.writeObject(accctx.context);
 stream.writeBoolean(accctx.propagated);
-for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentPrevious()) {
+for (LeftTuple childLeftTuple=leftTuple.firstChild; childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentNext()) {
 if (leftTuple.getLeftTupleSink().getId() == childLeftTuple.getLeftTupleSink().getId()) {
   stream.writeShort(PersisterEnums.RIGHT_TUPLE);
   stream.writeInt(childLeftTuple.getRightParent().getFactHandle().getId());
@@ -87,7 +87,7 @@ CollectMemory memory=(CollectMemory)context.wm.getNodeMemory((BetaNode)sink);
 CollectContext colctx=(CollectContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
 writeFactHandle(context,stream,context.objectMarshallingStrategyStore,colctx.resultTuple.getFactHandle());
 stream.writeBoolean(colctx.propagated);
-for (LeftTuple childLeftTuple=getLeftTuple(leftTuple.getBetaChildren()); childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentPrevious()) {
+for (LeftTuple childLeftTuple=leftTuple.firstChild; childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentNext()) {
 if (leftTuple.getLeftTupleSink().getId() == childLeftTuple.getLeftTupleSink().getId()) {
 stream.writeShort(PersisterEnums.RIGHT_TUPLE);
 stream.writeInt(childLeftTuple.getRightParent().getFactHandle().getId());

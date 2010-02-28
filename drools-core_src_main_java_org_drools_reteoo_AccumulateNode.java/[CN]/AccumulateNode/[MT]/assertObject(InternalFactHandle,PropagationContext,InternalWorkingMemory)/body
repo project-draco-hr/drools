@@ -10,17 +10,11 @@
     return;
   }
   this.constraints.updateFromFactHandle(memory.betaMemory.getContext(),workingMemory,factHandle);
-  Entry[] tuples=memory.betaMemory.getLeftTupleMemory().toArray();
-  for (int i=0; i < tuples.length; i++) {
-    LeftTuple tuple=(LeftTuple)tuples[i];
-    if (this.constraints.isAllowedCachedRight(memory.betaMemory.getContext(),tuple)) {
-      if (this.accumulate.supportsReverse() || context.getType() == PropagationContext.ASSERTION) {
-        modifyTuple(true,tuple,rightTuple,context,workingMemory,memory);
-      }
- else {
-        this.retractLeftTuple(tuple,context,workingMemory);
-        this.assertLeftTuple(tuple,context,workingMemory);
-      }
+  for (LeftTuple leftTuple=memory.betaMemory.getLeftTupleMemory().getFirst(rightTuple); leftTuple != null; leftTuple=(LeftTuple)leftTuple.getNext()) {
+    if (this.constraints.isAllowedCachedRight(memory.betaMemory.getContext(),leftTuple)) {
+      final AccumulateContext accctx=(AccumulateContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
+      addMatch(leftTuple,rightTuple,workingMemory,memory,accctx);
+      evaluateResultConstraints(ActivitySource.RIGHT,leftTuple,context,workingMemory,memory,accctx);
     }
   }
   this.constraints.resetFactHandle(memory.betaMemory.getContext());

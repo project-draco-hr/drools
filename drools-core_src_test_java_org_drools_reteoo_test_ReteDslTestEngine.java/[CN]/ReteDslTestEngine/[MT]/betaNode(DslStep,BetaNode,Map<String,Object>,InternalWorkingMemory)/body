@@ -1,0 +1,84 @@
+{
+  try {
+    List<String[]> cmds=step.getCommands();
+    List<InternalFactHandle> handles=(List<InternalFactHandle>)context.get("Handles");
+    BetaMemory memory=null;
+    if (node instanceof CollectNode) {
+      CollectMemory colmem=(CollectMemory)wm.getNodeMemory(node);
+      memory=colmem.betaMemory;
+    }
+ else     if (node instanceof AccumulateNode) {
+      AccumulateMemory accmem=(AccumulateMemory)wm.getNodeMemory(node);
+      memory=accmem.betaMemory;
+    }
+ else {
+      memory=(BetaMemory)wm.getNodeMemory(node);
+    }
+    for (    String[] cmd : cmds) {
+      if (cmd[0].equals("leftMemory")) {
+        String args=cmd[1];
+        String listString=args.replaceAll("h(\\d+)","h[$1]");
+        Map<String,Object> vars=new HashMap<String,Object>();
+        vars.put("h",handles);
+        List<?> expectedLeftTuples=(List<?>)MVEL.eval(listString,vars);
+        LeftTupleMemory leftMemory=memory.getLeftTupleMemory();
+        if (expectedLeftTuples.isEmpty() && leftMemory.size() != 0) {
+          throw new AssertionError("line " + step.getLine() + ": left Memory expected [] actually "+ leftMemory);
+        }
+ else         if (expectedLeftTuples.isEmpty() && leftMemory.size() == 0) {
+          return;
+        }
+        List<InternalFactHandle> first=(List<InternalFactHandle>)expectedLeftTuples.get(0);
+        LeftTuple firstTuple=new LeftTuple(first.get(0),null,false);
+        for (int i=1; i < first.size(); i++) {
+          firstTuple=new LeftTuple(firstTuple,null,false);
+        }
+        List<LeftTuple> leftTuples=new ArrayList<LeftTuple>();
+        for (LeftTuple leftTuple=memory.getLeftTupleMemory().getFirst(firstTuple); leftTuple != null; leftTuple=(LeftTuple)leftTuple.getNext()) {
+          leftTuples.add(leftTuple);
+        }
+        List<List<InternalFactHandle>> actualLeftTuples=new ArrayList<List<InternalFactHandle>>(leftTuples.size());
+        for (        LeftTuple leftTuple : leftTuples) {
+          List<InternalFactHandle> tupleHandles=Arrays.asList(leftTuple.toFactHandles());
+          actualLeftTuples.add(tupleHandles);
+        }
+        if (!expectedLeftTuples.equals(actualLeftTuples)) {
+          throw new AssertionError("line " + step.getLine() + ": left Memory expected "+ expectedLeftTuples+ " actually "+ actualLeftTuples);
+        }
+      }
+ else       if (cmd[0].equals("rightMemory")) {
+        String args=cmd[1];
+        String listString=args.replaceAll("h(\\d+)","h[$1]");
+        Map<String,Object> vars=new HashMap<String,Object>();
+        vars.put("h",handles);
+        List<?> expectedFactHandles=(List<?>)MVEL.eval(listString,vars);
+        RightTupleMemory rightMemory=memory.getRightTupleMemory();
+        if (expectedFactHandles.isEmpty() && rightMemory.size() != 0) {
+          throw new AssertionError("line " + step.getLine() + ": right Memory expected [] actually "+ rightMemory);
+        }
+ else         if (expectedFactHandles.isEmpty() && rightMemory.size() == 0) {
+          return;
+        }
+        RightTuple first=new RightTuple((InternalFactHandle)expectedFactHandles.get(0));
+        List<RightTuple> actualRightTuples=new ArrayList<RightTuple>();
+        for (RightTuple rightTuple=memory.getRightTupleMemory().getFirst(first); rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
+          actualRightTuples.add(rightTuple);
+        }
+        if (expectedFactHandles.size() != actualRightTuples.size()) {
+          throw new AssertionError("line " + step.getLine() + ": right Memory expected "+ expectedFactHandles+ " actually "+ actualRightTuples);
+        }
+        for (int i=0, length=actualRightTuples.size(); i < length; i++) {
+          if (expectedFactHandles.get(i) != actualRightTuples.get(i).getFactHandle()) {
+            throw new AssertionError("line " + step.getLine() + ": right Memory expected "+ expectedFactHandles+ " actually "+ actualRightTuples);
+          }
+        }
+      }
+ else {
+        throw new IllegalArgumentException("line " + step.getLine() + ": command does not exist "+ Arrays.toString(cmd));
+      }
+    }
+  }
+ catch (  Exception e) {
+    throw new IllegalArgumentException("line " + step.getLine() + ": unable to execute step "+ step,e);
+  }
+}

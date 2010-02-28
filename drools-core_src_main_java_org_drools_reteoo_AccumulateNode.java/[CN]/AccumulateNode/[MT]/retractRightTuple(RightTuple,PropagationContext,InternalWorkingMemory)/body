@@ -6,20 +6,7 @@
   }
   behavior.retractRightTuple(memory.betaMemory.getBehaviorContext(),rightTuple,workingMemory);
   memory.betaMemory.getRightTupleMemory().remove(rightTuple);
-  for (LeftTuple childTuple=rightTuple.getBetaChildren(); childTuple != null; ) {
-    LeftTuple tmp=childTuple.getRightParentNext();
-    if (this.accumulate.supportsReverse()) {
-      this.modifyTuple(false,childTuple.getParent(),rightTuple,context,workingMemory,memory);
-    }
- else {
-      LeftTuple match=childTuple.getParent();
-      childTuple.unlinkFromLeftParent();
-      childTuple.unlinkFromRightParent();
-      this.retractLeftTuple(match,context,workingMemory);
-      this.assertLeftTuple(match,context,workingMemory);
-    }
-    childTuple=tmp;
-  }
+  removePreviousMatchesForRightTuple(rightTuple,context,workingMemory,memory,rightTuple.firstChild);
   if (context.getType() == PropagationContext.EXPIRATION) {
     ((PropagationContextImpl)context).setFactHandle(origin);
   }

@@ -1,0 +1,19 @@
+{
+  List<NodeTestCase> result=new ArrayList<NodeTestCase>();
+  File base=new File(this.getClass().getResource(".").toURI());
+  for (  File file : base.listFiles(new FilenameFilter(){
+    public boolean accept(    File arg0,    String arg1){
+      return arg1.endsWith(".nodeTestCase");
+    }
+  }
+)) {
+    InputStream is=new FileInputStream(file);
+    NodeTestCase tcase=ReteDslTestEngine.compile(is);
+    if (tcase.hasErrors()) {
+      throw new IllegalArgumentException("Error parsing and loading testcase: " + file.getAbsolutePath() + "\n"+ tcase.getErrors().toString());
+    }
+    result.add(tcase);
+    is.close();
+  }
+  return result;
+}

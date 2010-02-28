@@ -1,0 +1,38 @@
+{
+  boolean isAllowed=true;
+  for (int i=0, length=this.resultConstraints.length; i < length; i++) {
+    if (!this.resultConstraints[i].isAllowed(colctx.resultTuple.getFactHandle(),workingMemory,memory.alphaContexts[i])) {
+      isAllowed=false;
+      break;
+    }
+  }
+  if (isAllowed) {
+    this.resultsBinder.updateFromTuple(memory.resultsContext,workingMemory,leftTuple);
+    if (!this.resultsBinder.isAllowedCachedLeft(memory.resultsContext,colctx.resultTuple.getFactHandle())) {
+      isAllowed=false;
+    }
+    this.resultsBinder.resetTuple(memory.resultsContext);
+  }
+  LeftTuple[] matchings=splitList(leftTuple,colctx,false);
+  if (colctx.propagated == true) {
+    if (isAllowed) {
+      if (ActivitySource.LEFT.equals(source)) {
+        this.sink.propagateModifyChildLeftTuple(leftTuple.firstChild,leftTuple,context,workingMemory,this.tupleMemoryEnabled);
+      }
+ else {
+        this.sink.propagateModifyChildLeftTuple(leftTuple.firstChild,colctx.resultTuple,context,workingMemory,this.tupleMemoryEnabled);
+      }
+    }
+ else {
+      this.sink.propagateRetractLeftTuple(leftTuple,context,workingMemory);
+      colctx.propagated=false;
+    }
+  }
+ else {
+    if (isAllowed) {
+      this.sink.propagateAssertLeftTuple(leftTuple,colctx.resultTuple,context,workingMemory,this.tupleMemoryEnabled);
+      colctx.propagated=true;
+    }
+  }
+  restoreList(leftTuple,matchings);
+}
