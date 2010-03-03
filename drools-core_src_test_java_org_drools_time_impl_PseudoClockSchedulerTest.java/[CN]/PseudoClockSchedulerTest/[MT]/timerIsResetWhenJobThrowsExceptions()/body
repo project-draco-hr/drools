@@ -1,16 +1,7 @@
 {
   final Date triggerTime=new Date(1000);
-  context.checking(new Expectations(){
-{
-      exactly(2).of(mockTrigger_1).hasNextFireTime();
-      will(returnValue(triggerTime));
-      oneOf(mockTrigger_1).nextFireTime();
-      will(returnValue(triggerTime));
-      allowing(mockTrigger_1).hasNextFireTime();
-      will(returnValue(null));
-    }
-  }
-);
+  when(mockTrigger_1.hasNextFireTime()).thenReturn(triggerTime,triggerTime,null);
+  when(mockTrigger_1.nextFireTime()).thenReturn(triggerTime);
   Job job=new Job(){
     public void execute(    JobContext ctx){
       assertThat(scheduler.getCurrentTime(),is(1000L));
@@ -21,4 +12,6 @@
   scheduler.scheduleJob(job,this.mockContext_1,mockTrigger_1);
   scheduler.advanceTime(5000,TimeUnit.MILLISECONDS);
   assertThat(scheduler.getCurrentTime(),is(5000L));
+  verify(mockTrigger_1,atLeast(2)).hasNextFireTime();
+  verify(mockTrigger_1,times(1)).nextFireTime();
 }

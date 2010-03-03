@@ -1,21 +1,13 @@
 {
-  final RuleBuildContext context=mockery.mock(RuleBuildContext.class);
-  final Rule rule=mockery.mock(Rule.class);
+  final RuleBuildContext context=mock(RuleBuildContext.class);
+  final Rule rule=mock(Rule.class);
   final RuleDescr ruleDescr=new RuleDescr("my rule");
   ruleDescr.addAttribute(new AttributeDescr("duration","( 1h30m )"));
   ruleDescr.addAttribute(new AttributeDescr("calendars","[\"cal1\", \"cal2\"]"));
-  mockery.checking(new Expectations(){
-{
-      allowing(context).getRule();
-      will(returnValue(rule));
-      allowing(context).getRuleDescr();
-      will(returnValue(ruleDescr));
-      oneOf(rule).setTimer(new IntervalTimer(null,null,-1,TimeUtils.parseTimeString("1h30m"),0));
-      oneOf(rule).setCalendars(new String[]{"cal1","cal2"});
-    }
-  }
-);
+  when(context.getRule()).thenReturn(rule);
+  when(context.getRuleDescr()).thenReturn(ruleDescr);
   RuleBuilder builder=new RuleBuilder();
   builder.buildAttributes(context);
-  mockery.assertIsSatisfied();
+  verify(rule).setTimer(new IntervalTimer(null,null,-1,TimeUtils.parseTimeString("1h30m"),0));
+  verify(rule).setCalendars(new String[]{"cal1","cal2"});
 }

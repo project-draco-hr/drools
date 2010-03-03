@@ -1,6 +1,6 @@
 {
-  final RuleBuildContext context=mockery.mock(RuleBuildContext.class);
-  final Rule rule=mockery.mock(Rule.class);
+  final RuleBuildContext context=mock(RuleBuildContext.class);
+  final Rule rule=mock(Rule.class);
   final RuleDescr ruleDescr=new RuleDescr("my rule");
   ruleDescr.addAttribute(new AttributeDescr("no-loop","true"));
   ruleDescr.addAttribute(new AttributeDescr("auto-focus","false"));
@@ -17,29 +17,20 @@
   effective.setTime(DateUtils.parseDate("10-Jul-1974",new DateFormatsImpl()));
   final Calendar expires=Calendar.getInstance();
   expires.setTime(DateUtils.parseDate("10-Jul-2040",new DateFormatsImpl()));
-  mockery.checking(new Expectations(){
-{
-      allowing(context).getRule();
-      will(returnValue(rule));
-      allowing(context).getRuleDescr();
-      will(returnValue(ruleDescr));
-      allowing(context).getPackageBuilder();
-      will(returnValue(new PackageBuilder()));
-      oneOf(rule).setNoLoop(true);
-      oneOf(rule).setAutoFocus(false);
-      oneOf(rule).setAgendaGroup("my agenda");
-      oneOf(rule).setActivationGroup("my activation");
-      oneOf(rule).setRuleFlowGroup("mygroup");
-      oneOf(rule).setLockOnActive(true);
-      oneOf(rule).setEnabled(EnabledBoolean.ENABLED_FALSE);
-      oneOf(rule).setTimer(new IntervalTimer(null,null,-1,TimeUtils.parseTimeString("60"),0));
-      oneOf(rule).setCalendars(new String[]{"cal1"});
-      oneOf(rule).setDateEffective(effective);
-      oneOf(rule).setDateExpires(expires);
-    }
-  }
-);
+  when(context.getRule()).thenReturn(rule);
+  when(context.getRuleDescr()).thenReturn(ruleDescr);
+  when(context.getPackageBuilder()).thenReturn(new PackageBuilder());
   RuleBuilder builder=new RuleBuilder();
   builder.buildAttributes(context);
-  mockery.assertIsSatisfied();
+  verify(rule).setNoLoop(true);
+  verify(rule).setAutoFocus(false);
+  verify(rule).setAgendaGroup("my agenda");
+  verify(rule).setActivationGroup("my activation");
+  verify(rule).setRuleFlowGroup("mygroup");
+  verify(rule).setLockOnActive(true);
+  verify(rule).setEnabled(EnabledBoolean.ENABLED_FALSE);
+  verify(rule).setTimer(new IntervalTimer(null,null,-1,TimeUtils.parseTimeString("60"),0));
+  verify(rule).setCalendars(new String[]{"cal1"});
+  verify(rule).setDateEffective(effective);
+  verify(rule).setDateExpires(expires);
 }

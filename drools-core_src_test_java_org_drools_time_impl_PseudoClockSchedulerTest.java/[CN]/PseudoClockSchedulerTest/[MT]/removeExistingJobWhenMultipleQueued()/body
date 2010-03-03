@@ -1,15 +1,8 @@
 {
   final Date triggerTime_1=new Date(1000);
   final Date triggerTime_2=new Date(2000);
-  context.checking(new Expectations(){
-{
-      atLeast(1).of(mockTrigger_1).hasNextFireTime();
-      will(returnValue(triggerTime_1));
-      atLeast(1).of(mockTrigger_2).hasNextFireTime();
-      will(returnValue(triggerTime_2));
-    }
-  }
-);
+  when(mockTrigger_1.hasNextFireTime()).thenReturn(triggerTime_1);
+  when(mockTrigger_2.hasNextFireTime()).thenReturn(triggerTime_2);
   JobHandle jobHandle_1=scheduler.scheduleJob(mockJob_1,this.mockContext_1,mockTrigger_1);
   JobHandle jobHandle_2=scheduler.scheduleJob(mockJob_2,this.mockContext_2,mockTrigger_2);
   assertThat(scheduler.getTimeToNextJob(),is(triggerTime_1.getTime()));
@@ -17,4 +10,6 @@
   assertThat(scheduler.getTimeToNextJob(),is(triggerTime_2.getTime()));
   scheduler.removeJob(jobHandle_2);
   assertThat(scheduler.getTimeToNextJob(),is(-1L));
+  verify(mockTrigger_1,atLeastOnce()).hasNextFireTime();
+  verify(mockTrigger_2,atLeastOnce()).hasNextFireTime();
 }
