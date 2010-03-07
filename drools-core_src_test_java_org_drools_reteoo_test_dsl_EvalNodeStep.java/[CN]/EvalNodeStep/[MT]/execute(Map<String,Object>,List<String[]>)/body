@@ -1,0 +1,29 @@
+{
+  BuildContext buildContext=(BuildContext)context.get("BuildContext");
+  String name;
+  String source;
+  String expr;
+  if (args.size() == 1) {
+    String[] c=args.get(0);
+    if (c.length != 3) {
+      throw new IllegalArgumentException("Cannot execute arguments " + Arrays.toString(c));
+    }
+    name=c[0].trim();
+    source=c[1].trim();
+    expr=c[2].trim();
+  }
+ else {
+    throw new IllegalArgumentException("Cannot execute arguments " + args);
+  }
+  LeftTupleSource pnode=null;
+  if (source.equals("mock")) {
+    pnode=Mockito.mock(LeftTupleSource.class);
+  }
+ else {
+    pnode=(LeftTupleSource)context.get(source);
+  }
+  EvalCondition eval=new EvalCondition(new InstrumentedEvalExpression(expr,context),new Declaration[0]);
+  EvalConditionNode evalNode=new EvalConditionNode(buildContext.getNextId(),pnode,eval,buildContext);
+  evalNode.attach();
+  context.put(name,evalNode);
+}
