@@ -2,12 +2,19 @@
   context.getBuildStack().push(context.getRule().getLhs());
   try {
     MVELDialect dialect=(MVELDialect)context.getDialect(context.getDialect().getId());
-    String text=processMacros((String)context.getRuleDescr().getConsequence());
+    final RuleDescr ruleDescr=context.getRuleDescr();
+    String text=("default".equals(consequenceName)) ? (String)ruleDescr.getConsequence() : (String)ruleDescr.getNamedConsequences().get(consequenceName);
+    text=processMacros(text);
     Dialect.AnalysisResult analysis=dialect.analyzeBlock(context,context.getRuleDescr(),dialect.getInterceptors(),text,new Map[]{context.getDeclarationResolver().getDeclarationClasses(context.getRule()),context.getPackageBuilder().getGlobals()},null);
     Declaration[] previousDeclarations=(Declaration[])context.getDeclarationResolver().getDeclarations(context.getRule()).values().toArray(new Declaration[context.getDeclarationResolver().getDeclarations(context.getRule()).size()]);
     MVELCompilationUnit unit=dialect.getMVELCompilationUnit(text,analysis,previousDeclarations,null,null,context);
     MVELConsequence expr=new MVELConsequence(unit,dialect.getId());
-    context.getRule().setConsequence(expr);
+    if ("default".equals(consequenceName)) {
+      context.getRule().setConsequence(expr);
+    }
+ else {
+      context.getRule().getNamedConsequences().put(consequenceName,expr);
+    }
     MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData(context.getDialect().getId());
     data.addCompileable(context.getRule(),expr);
     expr.compile(context.getPackageBuilder().getRootClassLoader());

@@ -1,13 +1,13 @@
 {
   context.getBuildStack().push(context.getRule().getLhs());
-  final String className="consequence";
+  final String className=consequenceName + "Consequence";
   final RuleDescr ruleDescr=context.getRuleDescr();
   Map<String,Class<?>> variables=context.getDeclarationResolver().getDeclarationClasses(context.getRule());
   Dialect.AnalysisResult analysis=context.getDialect().analyzeBlock(context,ruleDescr,(String)ruleDescr.getConsequence(),new Map[]{variables,context.getPackageBuilder().getGlobals()});
   if (analysis == null) {
     return;
   }
-  String fixedConsequence=this.fixBlockDescr(context,(JavaAnalysisResult)analysis,(String)ruleDescr.getConsequence());
+  String fixedConsequence=this.fixBlockDescr(context,(JavaAnalysisResult)analysis,("default".equals(consequenceName)) ? (String)ruleDescr.getConsequence() : (String)ruleDescr.getNamedConsequences().get(consequenceName));
   if (fixedConsequence == null) {
     return;
   }
@@ -18,6 +18,7 @@
     declarations[i]=context.getDeclarationResolver().getDeclaration(context.getRule(),(String)usedIdentifiers[0].get(i));
   }
   final Map<String,Object> map=createVariableContext(className,fixedConsequence,context,declarations,null,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]));
+  map.put("consequenceName",consequenceName);
   final List list=Arrays.asList(context.getRule().getDeclarations());
   final Integer[] indexes=new Integer[declarations.length];
   final Boolean[] notPatterns=new Boolean[declarations.length];

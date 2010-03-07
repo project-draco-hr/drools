@@ -1,15 +1,27 @@
 {
-  builder=new JavaConsequenceBuilder();
+  builder=new MVELConsequenceBuilder();
   Package pkg=new Package("org.drools");
   pkg.addImport(new ImportDeclaration("org.drools.Cheese"));
   PackageBuilderConfiguration conf=new PackageBuilderConfiguration();
   PackageBuilder pkgBuilder=new PackageBuilder(pkg,conf);
   ruleDescr=new RuleDescr("test consequence builder");
   ruleDescr.setConsequence(consequence);
+  ruleDescr.addAttribute(new AttributeDescr("dialect","mvel"));
+  for (  Entry<String,Object> entry : namedConsequences.entrySet()) {
+    ruleDescr.getNamedConsequences().put(entry.getKey(),entry.getValue());
+  }
   Rule rule=new Rule(ruleDescr.getName());
   rule.addPattern(new Pattern(0,new ClassObjectType(Cheese.class),"$cheese"));
   PackageRegistry pkgRegistry=pkgBuilder.getPackageRegistry(pkg.getName());
   DialectCompiletimeRegistry reg=pkgBuilder.getPackageRegistry(pkg.getName()).getDialectCompiletimeRegistry();
   context=new RuleBuildContext(pkgBuilder,ruleDescr,reg,pkg,reg.getDialect(pkgRegistry.getDialect()));
   context.getBuildStack().push(rule.getLhs());
+  context.getDialect().getConsequenceBuilder().build(context,"default");
+  for (  String name : namedConsequences.keySet()) {
+    context.getDialect().getConsequenceBuilder().build(context,name);
+  }
+  context.getDialect().addRule(context);
+  pkgRegistry.getPackage().addRule(context.getRule());
+  pkgBuilder.compileAll();
+  pkgBuilder.reloadAll();
 }
