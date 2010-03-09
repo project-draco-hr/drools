@@ -1,5 +1,14 @@
 {
   URLConnection con=this.url.openConnection();
   con.setUseCaches(false);
+  if (con instanceof HttpURLConnection) {
+    boolean useBasicAuth=true;
+    if ("enabled".equalsIgnoreCase(basicAuthentication)) {
+      BASE64Encoder enc=new sun.misc.BASE64Encoder();
+      String userpassword=username + ":" + password;
+      String encodedAuthorization=enc.encode(userpassword.getBytes());
+      ((HttpURLConnection)con).setRequestProperty("Authorization","Basic " + encodedAuthorization);
+    }
+  }
   return con.getInputStream();
 }
