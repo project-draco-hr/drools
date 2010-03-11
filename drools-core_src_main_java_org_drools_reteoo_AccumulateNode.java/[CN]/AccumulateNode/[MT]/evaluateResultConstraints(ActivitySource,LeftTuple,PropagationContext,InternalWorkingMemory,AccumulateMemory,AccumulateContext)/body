@@ -24,8 +24,8 @@
     }
     this.resultBinder.resetTuple(memory.resultsContext);
   }
-  LeftTuple[] matchings=splitList(leftTuple,accctx,false);
   if (accctx.propagated == true) {
+    LeftTuple[] matchings=splitList(leftTuple,accctx,false);
     if (isAllowed) {
       if (ActivitySource.LEFT.equals(source)) {
         this.sink.propagateModifyChildLeftTuple(leftTuple.firstChild,leftTuple,context,workingMemory,this.tupleMemoryEnabled);
@@ -38,12 +38,12 @@
       this.sink.propagateRetractLeftTuple(leftTuple,context,workingMemory);
       accctx.propagated=false;
     }
+    restoreList(leftTuple,matchings);
   }
- else {
-    if (isAllowed) {
-      this.sink.propagateAssertLeftTuple(leftTuple,accctx.result,context,workingMemory,this.tupleMemoryEnabled);
-      accctx.propagated=true;
-    }
+ else   if (isAllowed) {
+    LeftTuple[] matchings=splitList(leftTuple,accctx,false);
+    this.sink.propagateAssertLeftTuple(leftTuple,accctx.result,context,workingMemory,this.tupleMemoryEnabled);
+    accctx.propagated=true;
+    restoreList(leftTuple,matchings);
   }
-  restoreList(leftTuple,matchings);
 }
