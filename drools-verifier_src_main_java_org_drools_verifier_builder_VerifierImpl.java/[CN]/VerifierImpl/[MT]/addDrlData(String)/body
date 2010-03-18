@@ -1,19 +1,11 @@
 {
-  DrlPackageParser pData=DrlPackageParser.findPackageDataFromDrl(drl);
-  RulePackage rPackage=this.result.getVerifierData().getPackageByName(pData.getName());
-  rPackage.getGlobals().addAll(pData.getGlobals());
-  rPackage.setDescription(pData.getDescription());
-  rPackage.getMetadata().addAll(pData.getMetadata());
-  rPackage.getOtherInfo().putAll(pData.getOtherInformation());
-  for (  DrlRuleParser rData : pData.getRules()) {
-    VerifierRule rule=this.result.getVerifierData().getRuleByName(rData.getName());
-    if (rule != null) {
-      rule.getHeader().addAll(rData.getHeader());
-      rule.getLhsRows().addAll(rData.getLhs());
-      rule.getRhsRows().addAll(rData.getRhs());
-      rule.setDescription(rData.getDescription());
-      rule.getCommentMetadata().addAll(rData.getMetadata());
-      rule.getOtherInfo().putAll(rData.getOtherInformation());
-    }
+  List<DrlRuleParser> rules;
+  try {
+    DrlPackageParser pData=addDrlPackageData(drl);
+    rules=pData.getRules();
   }
+ catch (  ParseException e) {
+    rules=DrlRuleParser.findRulesDataFromDrl(drl);
+  }
+  addDrlRulesData(rules);
 }
