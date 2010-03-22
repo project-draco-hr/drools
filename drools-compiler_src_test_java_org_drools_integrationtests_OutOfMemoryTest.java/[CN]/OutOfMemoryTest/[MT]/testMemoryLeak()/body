@@ -1,0 +1,25 @@
+{
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("test_memoryLeak.drl",OutOfMemoryTest.class),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  final KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  final int pcount=2;
+  Person[] persons=new Person[pcount];
+  FactHandle[] pHandles=new FactHandle[pcount];
+  for (int i=0; i < persons.length; i++) {
+    persons[i]=new Person("person" + i);
+    pHandles[i]=ksession.insert(persons[i]);
+  }
+  ksession.fireAllRules();
+  Collection<?> logicals=getLogicallyInserted(ksession);
+  assertEquals(pcount,logicals.size());
+  for (int i=0; i < pcount; i++) {
+    persons[i].setName("personA" + i);
+    ksession.update(pHandles[i],persons[i]);
+  }
+  ksession.fireAllRules();
+  logicals=getLogicallyInserted(ksession);
+  assertEquals(pcount,logicals.size());
+}
