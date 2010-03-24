@@ -1,13 +1,13 @@
 {
   if (VerifierComponentType.FIELD.equals(object.getVerifierComponentType())) {
     Field field=(Field)object;
-    ObjectType objectType=(ObjectType)getVerifierObject(VerifierComponentType.OBJECT_TYPE,field.getObjectTypeGuid());
+    ObjectType objectType=(ObjectType)getVerifierObject(VerifierComponentType.OBJECT_TYPE,field.getObjectTypePath());
     fieldsByObjectTypeAndFieldName.put(objectType.getFullName() + "." + field.getName(),field);
-    fieldsByObjectTypeId.put(field.getObjectTypeGuid(),field);
+    fieldsByObjectTypeId.put(field.getObjectTypePath(),field);
   }
  else   if (VerifierComponentType.RULE.equals(object.getVerifierComponentType())) {
     VerifierRule rule=(VerifierRule)object;
-    rulesByName.put(rule.getRuleName(),rule);
+    rulesByName.put(rule.getName(),rule);
     if (rule.getMetadata().containsKey("category")) {
       rulesByCategory.put(rule.getMetadata().get("category"),rule);
     }
@@ -18,33 +18,34 @@
   }
  else   if (VerifierComponentType.PATTERN.equals(object.getVerifierComponentType())) {
     Pattern pattern=(Pattern)object;
-    patternsByObjectTypeId.put(pattern.getObjectTypeGuid(),pattern);
+    patternsByObjectTypeId.put(pattern.getObjectTypePath(),pattern);
     patternsByRuleName.put(pattern.getRuleName(),pattern);
   }
  else   if (VerifierComponentType.RESTRICTION.equals(object.getVerifierComponentType())) {
     Restriction restriction=(Restriction)object;
-    restrictionsByFieldId.put(restriction.getFieldGuid(),restriction);
-  }
- else   if (VerifierComponentType.FIELD_OBJECT_TYPE_LINK.equals(object.getVerifierComponentType())) {
-    FieldObjectTypeLink link=(FieldObjectTypeLink)object;
-    fieldObjectTypeLinkByPath.put(link.getFieldId() + "." + link.getObjectTypeId(),link);
+    restrictionsByFieldId.put(restriction.getFieldPath(),restriction);
   }
  else   if (VerifierComponentType.RULE_PACKAGE.equals(object.getVerifierComponentType())) {
     RulePackage rulePackage=(RulePackage)object;
     packagesByName.put(rulePackage.getName(),rulePackage);
+  }
+ else   if (VerifierComponentType.IMPORT.equals(object.getVerifierComponentType())) {
+    Import objectImport=(Import)object;
+    importsByName.put(objectImport.getName(),objectImport);
   }
  else   if (VerifierComponentType.OBJECT_TYPE.equals(object.getVerifierComponentType())) {
     ObjectType objectType=(ObjectType)object;
     objectTypesByFullName.put(objectType.getFullName(),objectType);
   }
  else   if (VerifierComponentType.ENTRY_POINT_DESCR.equals(object.getVerifierComponentType())) {
-    VerifierEntryPointDescr entryPoint=(VerifierEntryPointDescr)object;
-    entryPointsByEntryId.put(entryPoint.getEntryId(),entryPoint);
+    EntryPoint entryPoint=(EntryPoint)object;
+    entryPointsByEntryId.put(entryPoint.getEntryPointName(),entryPoint);
   }
   Map<String,VerifierComponent> map=all.get(object.getVerifierComponentType());
   if (map == null) {
     map=new TreeMap<String,VerifierComponent>();
     all.put(object.getVerifierComponentType(),map);
   }
-  map.put(object.getGuid(),object);
+  String path=object.getPath();
+  map.put(path,object);
 }

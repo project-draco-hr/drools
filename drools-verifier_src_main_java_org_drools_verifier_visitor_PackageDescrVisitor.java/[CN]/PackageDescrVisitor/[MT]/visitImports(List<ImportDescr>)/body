@@ -1,0 +1,34 @@
+{
+  StringBuilder header=new StringBuilder();
+  for (  ImportDescr i : importDescrs) {
+    String fullPath=i.getTarget();
+    String name=fullPath.substring(fullPath.lastIndexOf(".") + 1);
+    header.append("import ");
+    header.append(fullPath);
+    header.append("\n");
+    Import objectImport=new Import(rulePackage);
+    objectImport.setName(fullPath);
+    objectImport.setShortName(name);
+    data.add(objectImport);
+    ObjectType objectType=this.data.getObjectTypeByFullName(fullPath);
+    if (objectType == null) {
+      objectType=new ObjectType();
+    }
+    objectType.setName(name);
+    objectType.setFullName(fullPath);
+    data.add(objectType);
+  }
+  SuggestionCompletionLoader loader=new SuggestionCompletionLoader();
+  SuggestionCompletionEngine engine=loader.getSuggestionEngine(header.toString(),jars,Collections.EMPTY_LIST);
+  for (  String factTypeName : engine.getFactTypes()) {
+    for (    String fieldName : engine.getFieldCompletions(factTypeName)) {
+      ObjectType objectType=this.data.getObjectTypeByObjectTypeNameAndPackageName(factTypeName,rulePackage.getName());
+      Field field=data.getFieldByObjectTypeAndFieldName(objectType.getFullName(),fieldName);
+      if (field == null) {
+        field=ObjectTypeFactory.createField(fieldName,objectType);
+        field.setFieldType(engine.getFieldType(objectType.getName(),fieldName));
+        data.add(field);
+      }
+    }
+  }
+}

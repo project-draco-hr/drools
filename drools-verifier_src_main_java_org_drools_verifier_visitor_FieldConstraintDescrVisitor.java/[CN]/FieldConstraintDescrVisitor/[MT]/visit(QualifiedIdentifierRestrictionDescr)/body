@@ -1,0 +1,59 @@
+{
+  String text=descr.getText();
+  String base=text.substring(0,text.indexOf("."));
+  String fieldName=text.substring(text.indexOf("."));
+  Variable variable=data.getVariableByRuleAndVariableName(pattern.getRuleName(),base);
+  if (variable != null) {
+    QualifiedIdentifierRestriction restriction=new QualifiedIdentifierRestriction(pattern);
+    restriction.setPatternIsNot(pattern.isPatternNot());
+    restriction.setConstraintPath(constraint.getPath());
+    restriction.setFieldPath(constraint.getFieldPath());
+    restriction.setOperator(Operator.determineOperator(descr.getEvaluator(),descr.isNegated()));
+    restriction.setVariablePath(variable.getPath());
+    restriction.setVariableName(base);
+    restriction.setVariablePath(fieldName);
+    restriction.setOrderNumber(orderNumber);
+    restriction.setParentPath(pattern.getPath());
+    restriction.setParentType(pattern.getVerifierComponentType());
+    field.setFieldType(Field.VARIABLE);
+    variable.setObjectTypeType(VerifierComponentType.FIELD.getType());
+    data.add(restriction);
+    solvers.addPatternComponent(restriction);
+  }
+ else {
+    EnumField enumField=(EnumField)data.getFieldByObjectTypeAndFieldName(base,fieldName);
+    if (enumField == null) {
+      ObjectType objectType=data.getObjectTypeByFullName(base);
+      if (objectType == null) {
+        Import objectImport=data.getImportByName(base);
+        if (objectImport != null) {
+          objectType=ObjectTypeFactory.createObjectType(objectImport);
+        }
+ else {
+          objectType=ObjectTypeFactory.createObjectType(base);
+        }
+        data.add(objectType);
+      }
+      enumField=new EnumField();
+      enumField.setObjectTypePath(objectType.getPath());
+      enumField.setObjectTypeName(objectType.getName());
+      enumField.setName(fieldName);
+      objectType.getFields().add(enumField);
+      data.add(enumField);
+    }
+    EnumRestriction restriction=new EnumRestriction(pattern);
+    restriction.setPatternIsNot(pattern.isPatternNot());
+    restriction.setConstraintPath(constraint.getPath());
+    restriction.setFieldPath(constraint.getFieldPath());
+    restriction.setOperator(Operator.determineOperator(descr.getEvaluator(),descr.isNegated()));
+    restriction.setEnumBasePath(enumField.getPath());
+    restriction.setEnumBase(base);
+    restriction.setEnumName(fieldName);
+    restriction.setOrderNumber(orderNumber);
+    restriction.setParentPath(pattern.getPath());
+    restriction.setParentType(pattern.getVerifierComponentType());
+    field.setFieldType(Field.ENUM);
+    data.add(restriction);
+    solvers.addPatternComponent(restriction);
+  }
+}
