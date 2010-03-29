@@ -9,17 +9,36 @@
   Person[] persons=new Person[pcount];
   FactHandle[] pHandles=new FactHandle[pcount];
   for (int i=0; i < persons.length; i++) {
-    persons[i]=new Person("person" + i);
+    persons[i]=new Person("person-0-" + i);
     pHandles[i]=ksession.insert(persons[i]);
   }
-  ksession.fireAllRules();
-  Collection<?> logicals=getLogicallyInserted(ksession);
-  assertEquals(pcount,logicals.size());
-  for (int i=0; i < pcount; i++) {
-    persons[i].setName("personA" + i);
-    ksession.update(pHandles[i],persons[i]);
+  Cheese[] cheeses=new Cheese[pcount];
+  FactHandle[] cHandles=new FactHandle[pcount];
+  for (int i=0; i < cheeses.length; i++) {
+    cheeses[i]=new Cheese("cheese-0-" + i);
+    cHandles[i]=ksession.insert(cheeses[i]);
   }
   ksession.fireAllRules();
-  logicals=getLogicallyInserted(ksession);
-  assertEquals(pcount,logicals.size());
+  for (int j=1; j <= 1; j++) {
+    for (int i=0; i < pcount; i++) {
+      cheeses[i].setType("cheese-" + j + "-"+ i);
+      ksession.update(cHandles[i],cheeses[i]);
+      persons[i].setName("person-" + j + "-"+ i);
+      ksession.update(pHandles[i],persons[i]);
+    }
+    ksession.fireAllRules();
+    System.out.println("DONE");
+  }
+  SessionInspector inspector=new SessionInspector(ksession);
+  SessionReporter.addNamedTemplate("dump_tuples",getClass().getResourceAsStream("/org/drools/core/util/debug/dump_tuples.mvel"));
+  String report=SessionReporter.generateReport("dump_tuples",inspector.getSessionInfo(),new HashMap<String,Object>());
+  try {
+    FileWriter out=new FileWriter("tupleDump.txt");
+    out.write(report);
+    out.close();
+    System.out.println(report);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+  }
 }
