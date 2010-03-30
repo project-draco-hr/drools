@@ -1,6 +1,6 @@
 {
   if (type.matchesExtension(".drl")) {
-    DrlParser p=new DrlParser();
+    DrlParser drlParser=new DrlParser();
     try {
       BufferedReader reader=new BufferedReader(resource.getReader());
       StringBuffer drl=new StringBuffer("");
@@ -13,9 +13,17 @@
         }
       }
  while (line != null);
-      PackageDescr pkg=p.parse(drl.toString());
-      addPackageDescr(pkg);
-      addDrlData(drl.toString());
+      PackageDescr pkg=drlParser.parse(drl.toString());
+      if (drlParser.hasErrors()) {
+        addVerifierErrors(drlParser);
+      }
+ else       if (pkg == null) {
+        errors.add(new VerifierError("Verifier could not form a PackageDescr from the resources that it was trying to verify."));
+      }
+ else {
+        addPackageDescr(pkg);
+        addDrlData(drl.toString());
+      }
       reader.close();
     }
  catch (    DroolsParserException e) {
