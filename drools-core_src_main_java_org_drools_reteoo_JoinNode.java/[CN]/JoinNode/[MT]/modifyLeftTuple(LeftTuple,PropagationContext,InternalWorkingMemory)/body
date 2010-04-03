@@ -15,7 +15,7 @@
       for (; rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
         final InternalFactHandle handle=rightTuple.getFactHandle();
         if (this.constraints.isAllowedCachedLeft(memory.getContext(),handle)) {
-          this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,context,workingMemory,this.tupleMemoryEnabled);
+          this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,null,null,context,workingMemory,this.tupleMemoryEnabled);
         }
       }
     }
@@ -23,14 +23,13 @@
       for (; rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
         final InternalFactHandle handle=rightTuple.getFactHandle();
         if (this.constraints.isAllowedCachedLeft(memory.getContext(),handle)) {
-          if (childLeftTuple != null && childLeftTuple.getRightParent() != rightTuple) {
-            this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,context,workingMemory,this.tupleMemoryEnabled);
+          if (childLeftTuple == null || childLeftTuple.getRightParent() != rightTuple) {
+            this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,childLeftTuple,null,context,workingMemory,this.tupleMemoryEnabled);
           }
  else {
             LeftTuple temp=childLeftTuple;
             childLeftTuple=this.sink.propagateModifyChildLeftTuple(childLeftTuple,rightTuple,context,workingMemory,this.tupleMemoryEnabled);
             temp.reAddRight();
-            temp.reAddLeft();
           }
         }
  else         if (childLeftTuple != null && childLeftTuple.getRightParent() == rightTuple) {
