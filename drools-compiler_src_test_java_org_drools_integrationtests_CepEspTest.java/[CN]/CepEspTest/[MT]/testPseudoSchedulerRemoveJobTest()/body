@@ -1,0 +1,27 @@
+{
+  String str="import org.drools.integrationtests.CepEspTest.A\n";
+  str+="declare A\n";
+  str+="    @role( event )\n";
+  str+="end\n";
+  str+="rule A\n";
+  str+="when\n";
+  str+="   $a : A()\n";
+  str+="   not A(this after [1s,10s] $a)\n";
+  str+="then\n";
+  str+="end";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newReaderResource(new StringReader(str)),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    throw new RuntimeException(kbuilder.getErrors().toString());
+  }
+  KnowledgeBaseConfiguration config=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  config.setOption(EventProcessingOption.STREAM);
+  KnowledgeSessionConfiguration sessionConfig=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  sessionConfig.setOption(ClockTypeOption.get("pseudo"));
+  KnowledgeBase knowledgeBase=KnowledgeBaseFactory.newKnowledgeBase(config);
+  knowledgeBase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=knowledgeBase.newStatefulKnowledgeSession(sessionConfig,KnowledgeBaseFactory.newEnvironment());
+  PseudoClockScheduler pseudoClock=ksession.getSessionClock();
+  FactHandle h=ksession.insert(new A());
+  ksession.retract(h);
+}
