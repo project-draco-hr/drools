@@ -1,0 +1,17 @@
+{
+  WorkflowProcessInstance processInstance=dynamicContext.getProcessInstance();
+  WorkItemImpl workItem=new WorkItemImpl();
+  workItem.setState(WorkItem.ACTIVE);
+  workItem.setProcessInstanceId(processInstance.getId());
+  workItem.setName(workItemName);
+  workItem.setParameters(parameters);
+  WorkItemNodeInstance workItemNodeInstance=new WorkItemNodeInstance();
+  workItemNodeInstance.setNodeInstanceContainer(dynamicContext);
+  workItemNodeInstance.setProcessInstance(processInstance);
+  workItemNodeInstance.internalSetWorkItem(workItem);
+  workItemNodeInstance.addEventListeners();
+  InternalWorkingMemory workingMemory=((StatefulKnowledgeSessionImpl)ksession).session;
+  ((EventSupport)workingMemory).getRuleFlowEventSupport().fireBeforeRuleFlowNodeTriggered(workItemNodeInstance,workingMemory);
+  ((WorkItemManager)ksession.getWorkItemManager()).internalExecuteWorkItem(workItem);
+  ((EventSupport)workingMemory).getRuleFlowEventSupport().fireAfterRuleFlowNodeTriggered(workItemNodeInstance,(InternalWorkingMemory)workingMemory);
+}

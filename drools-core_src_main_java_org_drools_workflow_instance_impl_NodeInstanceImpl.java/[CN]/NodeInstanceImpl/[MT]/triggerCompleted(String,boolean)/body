@@ -2,14 +2,20 @@
   if (remove) {
     ((org.drools.workflow.instance.NodeInstanceContainer)getNodeInstanceContainer()).removeNodeInstance(this);
   }
-  List<Connection> connections=getNode().getOutgoingConnections(type);
+  Node node=getNode();
+  List<Connection> connections=null;
+  if (node != null) {
+    connections=node.getOutgoingConnections(type);
+  }
   if (connections == null || connections.isEmpty()) {
     ((org.drools.workflow.instance.NodeInstanceContainer)getNodeInstanceContainer()).nodeInstanceCompleted(this,type);
   }
-  for (  Connection connection : connections) {
-    if (getProcessInstance().getState() != ProcessInstance.STATE_ACTIVE) {
-      return;
+ else {
+    for (    Connection connection : connections) {
+      if (getProcessInstance().getState() != ProcessInstance.STATE_ACTIVE) {
+        return;
+      }
+      triggerConnection(connection);
     }
-    triggerConnection(connection);
   }
 }
