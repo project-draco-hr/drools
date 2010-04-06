@@ -1,0 +1,38 @@
+{
+  if (value == null) {
+    return new StringRestriction(pattern);
+  }
+  if ("true".equals(value) || "false".equals(value)) {
+    BooleanRestriction booleanRestriction=new BooleanRestriction(pattern);
+    booleanRestriction.setValue(value.equals("true"));
+    return booleanRestriction;
+  }
+  try {
+    NumberRestriction numberRestriction=new NumberRestriction(pattern);
+    numberRestriction.setValue(Integer.parseInt(value));
+    return numberRestriction;
+  }
+ catch (  NumberFormatException e) {
+  }
+  try {
+    NumberRestriction numberRestriction=new NumberRestriction(pattern);
+    numberRestriction.setValue(Double.parseDouble(value));
+    return numberRestriction;
+  }
+ catch (  NumberFormatException e) {
+  }
+  try {
+    String fmt=System.getProperty("drools.dateformat");
+    if (fmt == null) {
+      fmt="dd-MMM-yyyy";
+    }
+    DateRestriction dateRestriction=new DateRestriction(pattern);
+    dateRestriction.setValue(new SimpleDateFormat(fmt,Locale.ENGLISH).parse(value));
+    return dateRestriction;
+  }
+ catch (  Exception e) {
+  }
+  StringRestriction stringRestriction=new StringRestriction(pattern);
+  stringRestriction.setValue(value);
+  return stringRestriction;
+}
