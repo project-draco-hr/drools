@@ -1,0 +1,33 @@
+{
+  String str="";
+  str+="package org.drools.test  \n";
+  str+="import org.drools.Person \n";
+  str+="query peeps( String $name, String $likes, int $age ) \n";
+  str+="    $p : Person(name == $name, likes == $likes, age == $age) \n";
+  str+="end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  Person p1=new Person("darth","stilton",100);
+  Person p2=new Person("yoda","stilton",300);
+  Person p3=new Person("luke","brie",300);
+  Person p4=new Person("bobba","cheddar",300);
+  ksession.insert(p1);
+  ksession.insert(p2);
+  ksession.insert(p3);
+  ksession.insert(p4);
+  org.drools.runtime.rule.QueryResults results=ksession.getQueryResults("peeps",new Object[]{new Variable(),new Variable(),300});
+  System.out.println(Arrays.asList(results.getIdentifiers()));
+  for (  org.drools.runtime.rule.QueryResultsRow row : results) {
+    for (    String id : results.getIdentifiers()) {
+      System.out.print(row.get(id) + ", ");
+    }
+    System.out.println();
+  }
+}

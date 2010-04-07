@@ -1,14 +1,9 @@
 {
-  final LinkedList list=(LinkedList)workingMemory.getNodeMemory(this);
-  if (list.isEmpty()) {
-    ((ReteooWorkingMemory)workingMemory).setQueryResults(this.rule.getName(),this);
-  }
-  InternalFactHandle[] handles=new InternalFactHandle[tuple.getIndex()];
   LeftTuple entry=tuple;
-  while (entry.getIndex() != 0) {
-    InternalFactHandle handle=entry.getLastHandle();
-    handles[entry.getIndex() - 1]=new DisconnectedFactHandle(handle.getId(),handle.getIdentityHashCode(),handle.getObjectHashCode(),handle.getRecency(),handle.getObject());
+  while (entry.getParent() != null) {
     entry=entry.getParent();
   }
-  list.add(handles);
+  DroolsQuery query=(DroolsQuery)entry.getLastHandle().getObject();
+  query.setQuery((Query)this.rule);
+  query.getQueryResultCollector().add(tuple,context,workingMemory);
 }

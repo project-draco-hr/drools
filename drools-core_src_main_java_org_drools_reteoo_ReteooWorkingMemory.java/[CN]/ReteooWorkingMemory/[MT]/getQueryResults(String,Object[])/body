@@ -3,39 +3,15 @@
     startOperation();
     this.ruleBase.readLock();
     this.lock.lock();
-    Object object=new DroolsQuery(query,arguments);
-    InternalFactHandle handle=this.handleFactory.newFactHandle(object,this.getObjectTypeConfigurationRegistry().getObjectTypeConf(EntryPoint.DEFAULT,object),this);
-    insert(handle,object,null,null,this.typeConfReg.getObjectTypeConf(this.entryPoint,object));
-    final QueryTerminalNode node=(QueryTerminalNode)this.queryResults.remove(query);
-    Query queryObj=null;
-    List list=null;
-    if (node == null) {
-      final org.drools.rule.Package[] pkgs=this.ruleBase.getPackages();
-      for (int i=0; i < pkgs.length; i++) {
-        final Rule rule=pkgs[i].getRule(query);
-        if ((rule != null) && (rule instanceof Query)) {
-          queryObj=(Query)rule;
-          break;
-        }
-      }
-      this.handleFactory.destroyFactHandle(handle);
-      if (queryObj == null) {
-        throw new IllegalArgumentException("Query '" + query + "' does not exist");
-      }
-      list=Collections.EMPTY_LIST;
+    DroolsQuery queryObject=new DroolsQuery(query,arguments,new DefaultQueryResultsCollector());
+    InternalFactHandle handle=this.handleFactory.newFactHandle(queryObject,this.getObjectTypeConfigurationRegistry().getObjectTypeConf(EntryPoint.DEFAULT,queryObject),this);
+    insert(handle,queryObject,null,null,this.typeConfReg.getObjectTypeConf(this.entryPoint,queryObject));
+    this.handleFactory.destroyFactHandle(handle);
+    Declaration[] declarations=new Declaration[0];
+    if (queryObject.getQuery() != null) {
+      declarations=queryObject.getQuery().getDeclarations();
     }
- else {
-      list=(List)this.getNodeMemory(node);
-      if (list == null) {
-        list=Collections.EMPTY_LIST;
-      }
- else {
-        this.clearNodeMemory(node);
-      }
-      queryObj=(Query)node.getRule();
-      this.handleFactory.destroyFactHandle(handle);
-    }
-    return new QueryResults(list,queryObj,this);
+    return new QueryResults(((DefaultQueryResultsCollector)queryObject.getQueryResultCollector()).getResults(),declarations,this);
   }
   finally {
     this.lock.unlock();

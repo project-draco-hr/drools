@@ -1,0 +1,23 @@
+{
+  InternalFactHandle[] handles=new InternalFactHandle[tuple.getIndex() + 1];
+  LeftTuple entry=tuple;
+  while (entry.getIndex() > 0) {
+    InternalFactHandle handle=entry.getLastHandle();
+    handles[entry.getIndex()]=new DisconnectedFactHandle(handle.getId(),handle.getIdentityHashCode(),handle.getObjectHashCode(),handle.getRecency(),handle.getObject());
+    entry=entry.getParent();
+  }
+  InternalFactHandle handle=entry.getLastHandle();
+  DroolsQuery query=(DroolsQuery)handle.getObject();
+  Object[] args=query.getArguments();
+  Object[] newArgs=new Object[args.length];
+  for (int i=0, length=args.length; i < length; i++) {
+    if (args[i] instanceof Variable) {
+      newArgs[i]=((Variable)args[i]).getValue();
+    }
+ else {
+      newArgs[i]=args[i];
+    }
+  }
+  handles[entry.getIndex()]=new DisconnectedFactHandle(handle.getId(),handle.getIdentityHashCode(),handle.getObjectHashCode(),handle.getRecency(),new Arguments(newArgs));
+  this.results.add(handles);
+}
