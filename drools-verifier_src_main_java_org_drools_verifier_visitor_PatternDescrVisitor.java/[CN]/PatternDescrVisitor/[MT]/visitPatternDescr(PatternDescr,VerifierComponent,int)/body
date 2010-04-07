@@ -1,5 +1,48 @@
 {
-  Pattern pattern=visitPatternDescr(descr,orderNumber);
-  pattern.setParentPath(parent.getPath());
-  pattern.setParentType(parent.getVerifierComponentType());
+  objectType=data.getObjectTypeByFullName(descr.getObjectType());
+  if (objectType == null) {
+    Import objectImport=data.getImportByName(descr.getObjectType());
+    if (objectImport != null) {
+      objectType=ObjectTypeFactory.createObjectType(objectImport);
+    }
+ else {
+      objectType=ObjectTypeFactory.createObjectType(descr.getObjectType());
+    }
+    data.add(objectType);
+  }
+  pattern=new Pattern(rule);
+  if (parent != null) {
+    pattern.setParentPath(parent.getPath());
+    pattern.setParentType(parent.getVerifierComponentType());
+  }
+  pattern.setObjectTypePath(objectType.getPath());
+  pattern.setName(objectType.getName());
+  pattern.setPatternNot(solvers.getRuleSolver().isChildNot());
+  pattern.setPatternExists(solvers.getRuleSolver().isExists());
+  pattern.setPatternForall(solvers.getRuleSolver().isForall());
+  pattern.setOrderNumber(orderNumber);
+  if (descr.getIdentifier() != null) {
+    Variable variable=new Variable(rule);
+    variable.setName(descr.getIdentifier());
+    variable.setObjectTypeType(VerifierComponentType.OBJECT_TYPE.getType());
+    variable.setObjectTypePath(objectType.getPath());
+    variable.setObjectTypeType(descr.getObjectType());
+    data.add(variable);
+  }
+  if (descr.getSource() != null) {
+    visit(descr.getSource());
+  }
+ else {
+    if (workingMemory == null) {
+      workingMemory=new WorkingMemory();
+      data.add(workingMemory);
+    }
+    pattern.setSourcePath(workingMemory.getPath());
+    pattern.setSourceType(workingMemory.getVerifierComponentType());
+  }
+  solvers.startPatternSolver(pattern);
+  visit(descr.getConstraint());
+  solvers.endPatternSolver();
+  data.add(pattern);
+  return pattern;
 }
