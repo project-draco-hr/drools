@@ -1,0 +1,38 @@
+{
+  String drl="";
+  drl+="package test\n";
+  drl+="import org.drools.Person\n";
+  drl+="import org.drools.Pet\n";
+  drl+="rule test dialect 'mvel'\n";
+  drl+="when\n";
+  drl+="$person:Person()\n";
+  drl+="$pet:Pet()\n";
+  drl+="then\n";
+  drl+="    retract($person) // some comment\n";
+  drl+="    retract($pet) // another comment\n";
+  drl+="end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newReaderResource(new StringReader(drl)),ResourceType.DRL);
+  KnowledgeBuilderErrors errors=kbuilder.getErrors();
+  if (errors.size() > 0) {
+    for (    KnowledgeBuilderError error : errors) {
+      System.err.println(error);
+    }
+    throw new IllegalArgumentException("Could not parse knowledge.");
+  }
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  org.drools.event.rule.WorkingMemoryEventListener wml=Mockito.mock(org.drools.event.rule.WorkingMemoryEventListener.class);
+  ksession.addEventListener(wml);
+  org.drools.runtime.rule.FactHandle personFH=ksession.insert(new Person("Toni"));
+  org.drools.runtime.rule.FactHandle petFH=ksession.insert(new Pet("Toni"));
+  int fired=ksession.fireAllRules();
+  assertEquals(1,fired);
+  ArgumentCaptor<org.drools.event.rule.ObjectRetractedEvent> retracts=ArgumentCaptor.forClass(org.drools.event.rule.ObjectRetractedEvent.class);
+  verify(wml,times(2)).objectRetracted(retracts.capture());
+  List<org.drools.event.rule.ObjectRetractedEvent> values=retracts.getAllValues();
+  assertThat(values.get(0).getFactHandle(),is(personFH));
+  assertThat(values.get(1).getFactHandle(),is(petFH));
+}

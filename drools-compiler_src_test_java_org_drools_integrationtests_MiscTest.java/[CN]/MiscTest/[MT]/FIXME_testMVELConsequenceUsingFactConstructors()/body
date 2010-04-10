@@ -1,0 +1,23 @@
+{
+  String drl="";
+  drl+="package test\n";
+  drl+="import org.drools.Person\n";
+  drl+="global org.drools.runtime.StatefulKnowledgeSession ksession\n";
+  drl+="rule test dialect 'mvel'\n";
+  drl+="when\n";
+  drl+="    $person:Person( name == 'mark' )\n";
+  drl+="then\n";
+  drl+="    // bellow constructor for Person does not exist\n";
+  drl+="    Person p = new Person( 'bob', 30, 555 )\n";
+  drl+="    ksession.update(ksession.getFactHandle($person), new Person('bob', 30, 999, 453, 534, 534, 32))\n";
+  drl+="end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newReaderResource(new StringReader(drl)),ResourceType.DRL);
+  KnowledgeBuilderErrors errors=kbuilder.getErrors();
+  if (errors.size() > 0) {
+    for (    KnowledgeBuilderError error : errors) {
+      System.err.println(error);
+    }
+  }
+  assertTrue(kbuilder.hasErrors());
+}
