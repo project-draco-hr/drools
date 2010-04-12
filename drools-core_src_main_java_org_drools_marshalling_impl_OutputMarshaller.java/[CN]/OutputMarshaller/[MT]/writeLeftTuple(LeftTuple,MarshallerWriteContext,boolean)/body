@@ -81,26 +81,6 @@ if (leftTuple.getLeftTupleSink().getId() == childLeftTuple.getLeftTupleSink().ge
 stream.writeShort(PersisterEnums.END);
 break;
 }
-case NodeTypeEnums.CollectNode:
-{
-CollectMemory memory=(CollectMemory)context.wm.getNodeMemory((BetaNode)sink);
-CollectContext colctx=(CollectContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
-writeFactHandle(context,stream,context.objectMarshallingStrategyStore,colctx.resultTuple.getFactHandle());
-stream.writeBoolean(colctx.propagated);
-for (LeftTuple childLeftTuple=leftTuple.firstChild; childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentNext()) {
-if (leftTuple.getLeftTupleSink().getId() == childLeftTuple.getLeftTupleSink().getId()) {
-stream.writeShort(PersisterEnums.RIGHT_TUPLE);
-stream.writeInt(childLeftTuple.getRightParent().getFactHandle().getId());
-}
- else {
-stream.writeShort(PersisterEnums.LEFT_TUPLE);
-stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
-writeLeftTuple(childLeftTuple,context,recurse);
-}
-}
-stream.writeShort(PersisterEnums.END);
-break;
-}
 case NodeTypeEnums.RightInputAdaterNode:
 {
 ObjectHashMap memory=(ObjectHashMap)context.wm.getNodeMemory((NodeMemory)sink);
