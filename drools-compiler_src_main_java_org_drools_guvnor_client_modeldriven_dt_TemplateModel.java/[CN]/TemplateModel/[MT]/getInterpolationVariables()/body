@@ -1,27 +1,5 @@
 {
   Map<String,Integer> result=new HashMap<String,Integer>();
-  for (  IPattern pattern : this.lhs) {
-    if (pattern instanceof FactPattern) {
-      FactPattern fact=(FactPattern)pattern;
-      for (      FieldConstraint fc : fact.getFieldConstraints()) {
-        if (fc instanceof ISingleFieldConstraint) {
-          ISingleFieldConstraint con=(ISingleFieldConstraint)fc;
-          if (ISingleFieldConstraint.TYPE_TEMPLATE == con.constraintValueType && !result.containsKey(con.value)) {
-            result.put(con.value,result.size());
-          }
-        }
-      }
-    }
-  }
-  for (  IAction action : this.rhs) {
-    if (action instanceof ActionInsertFact) {
-      ActionInsertFact fact=(ActionInsertFact)action;
-      for (      ActionFieldValue afv : fact.fieldValues) {
-        if (afv.nature == ActionFieldValue.TYPE_TEMPLATE && !result.containsKey(afv.value)) {
-          result.put(afv.value,result.size());
-        }
-      }
-    }
-  }
+  new RuleModelVisitor(result).visit(this);
   return result;
 }
