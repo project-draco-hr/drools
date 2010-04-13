@@ -3,14 +3,23 @@
   Object[] inputArgs=new Object[arguments.length];
   System.arraycopy(arguments,0,inputArgs,0,inputArgs.length);
   int[] declIndexes=this.queryElement.getDeclIndexes();
-  for (int i=0, length=declIndexes.length; i > length; i++) {
+  for (int i=0, length=declIndexes.length; i < length; i++) {
     Declaration declr=(Declaration)arguments[declIndexes[i]];
-    inputArgs[i]=declr.getValue(workingMemory,leftTuple.get(declr).getObject());
+    inputArgs[declIndexes[i]]=declr.getValue(workingMemory,leftTuple.get(declr).getObject());
   }
-  UnificationNodeQueryResultsCollector collector=new UnificationNodeQueryResultsCollector(leftTuple,this.queryElement.getVariables(),this.sink);
+  UnificationNodeQueryResultsCollector collector=new UnificationNodeQueryResultsCollector(leftTuple,this.queryElement.getVariables(),this.sink,this.tupleMemoryEnabled);
   DroolsQuery queryObject=new DroolsQuery(this.queryElement.getQueryName(),inputArgs,collector);
   collector.setDroolsQuery(queryObject);
   InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(queryObject,workingMemory.getObjectTypeConfigurationRegistry().getObjectTypeConf(EntryPoint.DEFAULT,queryObject),workingMemory);
   workingMemory.insert(handle,queryObject,null,null,workingMemory.getObjectTypeConfigurationRegistry().getObjectTypeConf(workingMemory.getEntryPoint(),queryObject));
   workingMemory.getFactHandleFactory().destroyFactHandle(handle);
+  LeftTuple childLeftTuple=leftTuple.firstChild;
+  LeftTuple temp=null;
+  while (childLeftTuple != null) {
+    temp=childLeftTuple;
+    this.sink.doPropagateAssertLeftTuple(context,workingMemory,childLeftTuple,childLeftTuple.getLeftTupleSink());
+    childLeftTuple=childLeftTuple.getLeftParentNext();
+    temp.setLeftParentNext(null);
+  }
+  leftTuple.firstChild=null;
 }

@@ -1,0 +1,45 @@
+{
+  PatternDescr patternDescr=(PatternDescr)descr;
+  Query query=(Query)context.getPkg().getRule(patternDescr.getObjectType());
+  Declaration[] params=query.getParameters();
+  List<BaseDescr> args=(List<BaseDescr>)patternDescr.getDescrs();
+  List<Integer> declrIndexes=new ArrayList<Integer>();
+  List<Integer> varIndexes=new ArrayList<Integer>();
+  List<Object> arguments=new ArrayList<Object>();
+  List<Declaration> requiredDeclarations=new ArrayList<Declaration>();
+  ObjectType argsObjectType=new ClassObjectType(Object[].class);
+  InternalReadAccessor arrayReader=new SelfReferenceClassFieldReader(Object[].class,"this");
+  Pattern pattern=new Pattern(context.getNextPatternId(),0,argsObjectType,null);
+  for (int i=0, length=args.size(); i < length; i++) {
+    BaseDescr arg=args.get(i);
+    if (arg instanceof LiteralDescr) {
+      arguments.add(((LiteralDescr)arg).getValue());
+    }
+ else     if (arg instanceof VariableDescr) {
+      String var=((VariableDescr)arg).getIdentifier();
+      Declaration declr=context.getDeclarationResolver().getDeclaration(query,var);
+      if (declr != null) {
+        declrIndexes.add(i);
+        arguments.add(declr);
+        requiredDeclarations.add(declr);
+      }
+ else {
+        declr=pattern.addDeclaration(var);
+        ArrayElementReader reader=new ArrayElementReader(arrayReader,varIndexes.size(),params[i].getExtractor().getExtractToClass());
+        declr.setReadAccessor(reader);
+        varIndexes.add(i);
+        arguments.add(new Variable());
+      }
+    }
+  }
+  Declaration[] declrsArray=requiredDeclarations.toArray(new Declaration[requiredDeclarations.size()]);
+  int[] declrIndexArray=new int[declrIndexes.size()];
+  for (int i=0; i < declrsArray.length; i++) {
+    declrIndexArray[i]=declrIndexes.get(i);
+  }
+  int[] varIndexesArray=new int[varIndexes.size()];
+  for (int i=0; i < varIndexesArray.length; i++) {
+    varIndexesArray[i]=varIndexes.get(i);
+  }
+  return new QueryElement(pattern,query.getName(),arguments.toArray(new Object[arguments.size()]),declrsArray,declrIndexArray,varIndexesArray);
+}
