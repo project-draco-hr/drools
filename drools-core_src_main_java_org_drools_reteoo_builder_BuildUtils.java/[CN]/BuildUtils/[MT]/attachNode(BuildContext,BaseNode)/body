@@ -2,10 +2,7 @@
   BaseNode node=null;
   RuleBasePartitionId partition=null;
   if (candidate instanceof EntryPointNode) {
-    EntryPointNode epn=context.getRuleBase().getRete().getEntryPointNode(((EntryPointNode)candidate).getEntryPoint());
-    if (epn != null) {
-      node=epn;
-    }
+    node=context.getRuleBase().getRete().getEntryPointNode(((EntryPointNode)candidate).getEntryPoint());
     partition=RuleBasePartitionId.MAIN_PARTITION;
   }
  else   if (candidate instanceof ObjectTypeNode) {
@@ -30,9 +27,6 @@
  else {
       throw new RuntimeDroolsException("This is a bug on node sharing verification. Please report to development team.");
     }
-    if (node != null) {
-      context.releaseId(candidate.getId());
-    }
   }
   if (node == null) {
     node=candidate;
@@ -50,6 +44,9 @@
       node.attach(context.getWorkingMemories());
     }
     context.getNodes().add(node);
+  }
+ else {
+    context.releaseId(candidate.getId());
   }
   return node;
 }
