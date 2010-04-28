@@ -10,6 +10,10 @@
       clearAndCancelActivationGroup(activationGroup);
     }
     activation.setActivated(false);
+    if (activation.getActivationNode() != null) {
+      final InternalRuleFlowGroup ruleFlowGroup=(InternalRuleFlowGroup)activation.getActivationNode().getParentContainer();
+      ruleFlowGroup.removeActivation(activation);
+    }
     try {
       this.knowledgeHelper.setActivation(activation);
       activation.getRule().getConsequence().evaluate(this.knowledgeHelper,this.workingMemory);
@@ -25,12 +29,6 @@
       }
  else {
         throw new RuntimeException(e);
-      }
-    }
-    if (activation.getActivationNode() != null) {
-      final InternalRuleFlowGroup ruleFlowGroup=(InternalRuleFlowGroup)activation.getActivationNode().getParentContainer();
-      if (ruleFlowGroup.isActive()) {
-        ruleFlowGroup.removeActivation(activation);
       }
     }
     for (LeftTuple tuple=(LeftTuple)activation.getTuple(); tuple != null; tuple=tuple.getParent()) {
