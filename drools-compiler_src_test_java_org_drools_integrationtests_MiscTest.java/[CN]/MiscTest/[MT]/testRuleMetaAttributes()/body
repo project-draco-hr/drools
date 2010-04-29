@@ -1,0 +1,27 @@
+{
+  String drl="";
+  drl+="package test\n";
+  drl+="rule \"test meta attributes\"\n";
+  drl+="    @id(1234 ) @author(  john doe  ) @text(\"It's an escaped\\\" string\"  )\n";
+  drl+="when\n";
+  drl+="then\n";
+  drl+="    // some comment\n";
+  drl+="end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newReaderResource(new StringReader(drl)),ResourceType.DRL);
+  KnowledgeBuilderErrors errors=kbuilder.getErrors();
+  if (errors.size() > 0) {
+    for (    KnowledgeBuilderError error : errors) {
+      System.err.println(error);
+    }
+    throw new IllegalArgumentException("Could not parse knowledge.");
+  }
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  Rule rule=kbase.getRule("test","test meta attributes");
+  assertNotNull(rule);
+  assertThat(rule.getMetaAttribute("id"),is("1234"));
+  assertThat(rule.getMetaAttribute("author"),is("john doe"));
+  assertThat(rule.getMetaAttribute("text"),is("It's an escaped\" string"));
+}
