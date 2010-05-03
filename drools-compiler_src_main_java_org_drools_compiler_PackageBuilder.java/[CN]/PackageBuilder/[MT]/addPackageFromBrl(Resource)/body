@@ -1,29 +1,26 @@
 {
   this.resource=resource;
-  String brl=loadBrlFile(resource.getReader());
-  RuleModel model=BRXMLPersistence.getInstance().unmarshal(brl);
-  String drl=BRDRLPersistence.getInstance().marshal(model);
-  final DrlParser parser=new DrlParser();
-  DefaultExpander expander=getDslExpander();
   try {
-    String str;
-    if (expander != null) {
-      str=expander.expand(new StringReader(drl));
-      if (expander.hasErrors()) {
-        this.results.addAll(expander.getErrors());
-      }
+    BusinessRuleProvider provider=BusinessRuleProviderFactory.getInstance().getProvider();
+    Reader knowledge=provider.getKnowledgeReader(resource);
+    DrlParser parser=new DrlParser();
+    DefaultExpander expander=getDslExpander();
+    if (null != expander) {
+      knowledge=new StringReader(expander.expand(knowledge));
+      if (expander.hasErrors())       this.results.addAll(expander.getErrors());
+    }
+    PackageDescr pkg=parser.parse(knowledge);
+    if (parser.hasErrors()) {
+      this.results.addAll(parser.getErrors());
     }
  else {
-      str=drl;
-    }
-    final PackageDescr pkg=parser.parse(str);
-    this.results.addAll(parser.getErrors());
-    if (!parser.hasErrors()) {
       addPackage(pkg);
     }
   }
- catch (  IOException e) {
-    throw new RuntimeException(e);
+ catch (  Exception e) {
+    throw new DroolsParserException(e);
   }
-  this.resource=null;
+ finally {
+    this.resource=null;
+  }
 }
