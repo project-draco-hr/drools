@@ -10,8 +10,9 @@
       clearAndCancelActivationGroup(activationGroup);
     }
     activation.setActivated(false);
+    InternalRuleFlowGroup ruleFlowGroup=null;
     if (activation.getActivationNode() != null) {
-      final InternalRuleFlowGroup ruleFlowGroup=(InternalRuleFlowGroup)activation.getActivationNode().getParentContainer();
+      ruleFlowGroup=(InternalRuleFlowGroup)activation.getActivationNode().getParentContainer();
       ruleFlowGroup.removeActivation(activation);
     }
     try {
@@ -30,6 +31,9 @@
  else {
         throw new RuntimeException(e);
       }
+    }
+    if (ruleFlowGroup != null) {
+      ruleFlowGroup.deactivateIfEmpty();
     }
     for (LeftTuple tuple=(LeftTuple)activation.getTuple(); tuple != null; tuple=tuple.getParent()) {
       if (tuple.getLastHandle().isEvent()) {

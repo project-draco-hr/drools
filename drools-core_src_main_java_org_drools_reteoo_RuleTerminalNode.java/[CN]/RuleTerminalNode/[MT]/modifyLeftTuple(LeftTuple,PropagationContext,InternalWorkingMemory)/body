@@ -3,7 +3,7 @@
     return;
   }
   AgendaItem item=(AgendaItem)leftTuple.getActivation();
-  if (item.isActivated()) {
+  if (item != null && item.isActivated()) {
     return;
   }
   final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
@@ -13,6 +13,9 @@
   }
   final Timer timer=this.rule.getTimer();
   if (timer != null) {
+    if (item == null) {
+      item=agenda.createScheduledAgendaItem(leftTuple,context,this.rule,this.subrule);
+    }
     agenda.scheduleItem((ScheduledAgendaItem)item,workingMemory);
     item.setActivated(true);
     ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCreated(item,workingMemory);
@@ -26,8 +29,14 @@
         }
       }
     }
-    item.setSalience(rule.getSalience().getValue(leftTuple,workingMemory));
-    item.setPropagationContext(context);
+    if (item == null) {
+      item=agenda.createAgendaItem(leftTuple,rule.getSalience().getValue(leftTuple,workingMemory),context,this.rule,this.subrule);
+      item.setSequenence(this.sequence);
+    }
+ else {
+      item.setSalience(rule.getSalience().getValue(leftTuple,workingMemory));
+      item.setPropagationContext(context);
+    }
     boolean added=agenda.addActivation(item);
     item.setActivated(added);
     if (added) {
