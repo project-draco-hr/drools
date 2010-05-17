@@ -31,6 +31,9 @@ case PersisterEnums.TIMER_NODE_INSTANCE:
 nodeInstance=new TimerNodeInstance();
 ((TimerNodeInstance)nodeInstance).internalSetTimerId(stream.readLong());
 break;
+case PersisterEnums.EVENT_NODE_INSTANCE:
+nodeInstance=new EventNodeInstance();
+break;
 case PersisterEnums.JOIN_NODE_INSTANCE:
 nodeInstance=new JoinInstance();
 int number=stream.readInt();
@@ -60,6 +63,14 @@ nodeInstance=new ForEachNodeInstance();
 break;
 case PersisterEnums.DYNAMIC_NODE_INSTANCE:
 nodeInstance=new DynamicNodeInstance();
+nbTimerInstances=stream.readInt();
+if (nbTimerInstances > 0) {
+List<Long> timerInstances=new ArrayList<Long>();
+for (int i=0; i < nbTimerInstances; i++) {
+timerInstances.add(stream.readLong());
+}
+((CompositeContextNodeInstance)nodeInstance).internalSetTimerInstances(timerInstances);
+}
 break;
 case PersisterEnums.STATE_NODE_INSTANCE:
 nodeInstance=new StateNodeInstance();

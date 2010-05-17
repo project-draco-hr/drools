@@ -29,6 +29,20 @@ case PersisterEnums.DYNAMIC_NODE_INSTANCE:
 while (stream.readShort() == PersisterEnums.NODE_INSTANCE) {
   readNodeInstance(context,(CompositeContextNodeInstance)nodeInstance,processInstance);
 }
+int exclusiveGroupInstances=stream.readInt();
+for (int i=0; i < exclusiveGroupInstances; i++) {
+ExclusiveGroupInstance exclusiveGroupInstance=new ExclusiveGroupInstance();
+processInstance.addContextInstance(ExclusiveGroup.EXCLUSIVE_GROUP,exclusiveGroupInstance);
+int nodeInstances=stream.readInt();
+for (int j=0; j < nodeInstances; j++) {
+long nodeInstanceId=stream.readLong();
+NodeInstance groupNodeInstance=processInstance.getNodeInstance(nodeInstanceId);
+if (groupNodeInstance == null) {
+  throw new IllegalArgumentException("Could not find node instance when deserializing exclusive group instance: " + nodeInstanceId);
+}
+exclusiveGroupInstance.addNodeInstance(groupNodeInstance);
+}
+}
 break;
 case PersisterEnums.FOR_EACH_NODE_INSTANCE:
 while (stream.readShort() == PersisterEnums.NODE_INSTANCE) {

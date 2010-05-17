@@ -7,6 +7,23 @@
   if (!hidden) {
     ((EventSupport)workingMemory).getRuleFlowEventSupport().fireBeforeRuleFlowNodeLeft(this,(InternalWorkingMemory)workingMemory);
   }
+  NodeInstanceContainer parent=getNodeInstanceContainer();
+  if (parent instanceof ContextInstanceContainer) {
+    List<ContextInstance> contextInstances=((ContextInstanceContainer)parent).getContextInstances(ExclusiveGroup.EXCLUSIVE_GROUP);
+    if (contextInstances != null) {
+      for (      ContextInstance contextInstance : new ArrayList<ContextInstance>(contextInstances)) {
+        ExclusiveGroupInstance groupInstance=(ExclusiveGroupInstance)contextInstance;
+        if (groupInstance.containsNodeInstance(this)) {
+          for (          NodeInstance nodeInstance : groupInstance.getNodeInstances()) {
+            if (nodeInstance != this) {
+              ((org.drools.workflow.instance.NodeInstance)nodeInstance).cancel();
+            }
+          }
+          ((ContextInstanceContainer)parent).removeContextInstance(ExclusiveGroup.EXCLUSIVE_GROUP,contextInstance);
+        }
+      }
+    }
+  }
   ((org.drools.workflow.instance.NodeInstance)((org.drools.workflow.instance.NodeInstanceContainer)getNodeInstanceContainer()).getNodeInstance(connection.getTo())).trigger(this,connection.getToType());
   if (!hidden) {
     ((EventSupport)workingMemory).getRuleFlowEventSupport().fireAfterRuleFlowNodeLeft(this,(InternalWorkingMemory)workingMemory);

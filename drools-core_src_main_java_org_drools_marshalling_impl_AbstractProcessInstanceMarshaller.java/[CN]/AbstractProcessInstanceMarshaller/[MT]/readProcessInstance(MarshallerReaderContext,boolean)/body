@@ -43,6 +43,20 @@
   while (stream.readShort() == PersisterEnums.NODE_INSTANCE) {
     readNodeInstance(context,processInstance,processInstance);
   }
+  int exclusiveGroupInstances=stream.readInt();
+  for (int i=0; i < exclusiveGroupInstances; i++) {
+    ExclusiveGroupInstance exclusiveGroupInstance=new ExclusiveGroupInstance();
+    processInstance.addContextInstance(ExclusiveGroup.EXCLUSIVE_GROUP,exclusiveGroupInstance);
+    int nodeInstances=stream.readInt();
+    for (int j=0; j < nodeInstances; j++) {
+      long nodeInstanceId=stream.readLong();
+      NodeInstance nodeInstance=processInstance.getNodeInstance(nodeInstanceId);
+      if (nodeInstance == null) {
+        throw new IllegalArgumentException("Could not find node instance when deserializing exclusive group instance: " + nodeInstanceId);
+      }
+      exclusiveGroupInstance.addNodeInstance(nodeInstance);
+    }
+  }
   processInstance.internalSetNodeInstanceCounter(nodeInstanceCounter);
   if (wm != null) {
     processInstance.reconnect();
