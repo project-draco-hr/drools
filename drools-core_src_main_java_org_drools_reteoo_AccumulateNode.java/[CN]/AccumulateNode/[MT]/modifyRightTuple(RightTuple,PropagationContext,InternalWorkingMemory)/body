@@ -2,7 +2,7 @@
   final AccumulateMemory memory=(AccumulateMemory)workingMemory.getNodeMemory(this);
   memory.betaMemory.getRightTupleMemory().remove(rightTuple);
   memory.betaMemory.getRightTupleMemory().add(rightTuple);
-  if (!this.tupleMemoryEnabled) {
+  if (memory.betaMemory.getLeftTupleMemory() == null || memory.betaMemory.getLeftTupleMemory().size() == 0) {
     return;
   }
   LeftTuple childLeftTuple=rightTuple.firstChild;
@@ -18,8 +18,8 @@
       for (; leftTuple != null; leftTuple=(LeftTuple)leftTuple.getNext()) {
         if (this.constraints.isAllowedCachedRight(memory.betaMemory.getContext(),leftTuple)) {
           final AccumulateContext accctx=(AccumulateContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
-          addMatch(leftTuple,rightTuple,null,null,workingMemory,memory,accctx);
-          evaluateResultConstraints(ActivitySource.RIGHT,leftTuple,context,workingMemory,memory,accctx);
+          addMatch(leftTuple,rightTuple,null,null,workingMemory,memory,accctx,true);
+          evaluateResultConstraints(ActivitySource.RIGHT,leftTuple,context,workingMemory,memory,accctx,true);
         }
       }
     }
@@ -34,17 +34,17 @@
             removeMatch(rightTuple,childLeftTuple,workingMemory,memory,accctx,true);
             childLeftTuple=childLeftTuple.getRightParentNext();
           }
-          addMatch(leftTuple,rightTuple,null,childLeftTuple,workingMemory,memory,accctx);
+          addMatch(leftTuple,rightTuple,null,childLeftTuple,workingMemory,memory,accctx,true);
           if (temp != null) {
             childLeftTuple=temp;
           }
-          evaluateResultConstraints(ActivitySource.RIGHT,leftTuple,context,workingMemory,memory,accctx);
+          evaluateResultConstraints(ActivitySource.RIGHT,leftTuple,context,workingMemory,memory,accctx,true);
         }
  else         if (childLeftTuple != null && childLeftTuple.getLeftParent() == leftTuple) {
           LeftTuple temp=childLeftTuple.getRightParentNext();
           final AccumulateContext accctx=(AccumulateContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
           removeMatch(rightTuple,childLeftTuple,workingMemory,memory,accctx,true);
-          evaluateResultConstraints(ActivitySource.RIGHT,leftTuple,context,workingMemory,memory,accctx);
+          evaluateResultConstraints(ActivitySource.RIGHT,leftTuple,context,workingMemory,memory,accctx,true);
           childLeftTuple=temp;
         }
       }

@@ -1,0 +1,16 @@
+{
+  try {
+    startOperation();
+    this.ruleBase.readLock();
+    this.lock.lock();
+    DroolsQuery queryObject=new DroolsQuery(query,arguments,new OpenQueryViewChangedEventListenerAdapter(listener),true);
+    InternalFactHandle handle=this.handleFactory.newFactHandle(queryObject,this.getObjectTypeConfigurationRegistry().getObjectTypeConf(EntryPoint.DEFAULT,queryObject),this);
+    insert(handle,queryObject,null,null,this.typeConfReg.getObjectTypeConf(this.entryPoint,queryObject));
+    return new LiveQueryImpl(this,handle);
+  }
+  finally {
+    this.lock.unlock();
+    this.ruleBase.readUnlock();
+    endOperation();
+  }
+}
