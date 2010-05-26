@@ -1,0 +1,15 @@
+{
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("test_OrCEFollowedByMultipleEval.drl",FirstOrderLogicTest.class),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  final KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  final AgendaEventListener al=mock(AgendaEventListener.class);
+  ksession.addEventListener(al);
+  ksession.insert(new FactA("a"));
+  ksession.insert(new FactB("b"));
+  ksession.insert(new FactC("c"));
+  ksession.fireAllRules();
+  verify(al,times(6)).afterActivationFired(any(AfterActivationFiredEvent.class));
+}
