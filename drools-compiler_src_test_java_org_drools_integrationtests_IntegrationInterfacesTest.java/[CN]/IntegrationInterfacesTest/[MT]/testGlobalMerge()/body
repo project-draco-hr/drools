@@ -1,0 +1,15 @@
+{
+  String rule1="package com.sample\n" + "rule \"rule 1\"\n" + "    salience 10\n"+ "    when\n"+ "        l : java.util.List()\n"+ "    then\n"+ "        l.add( \"rule 1 executed\" );\n"+ "end\n";
+  String rule2="package com.sample\n" + "global String str;\n" + "rule \"rule 2\"\n"+ "    when\n"+ "        l : java.util.List()\n"+ "    then\n"+ "        l.add( \"rule 2 executed \" + str);\n"+ "end\n";
+  StringReader[] readers=new StringReader[2];
+  readers[0]=new StringReader(rule1);
+  readers[1]=new StringReader(rule2);
+  final KnowledgeBase kbase=getKnowledgeBase(readers);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.setGlobal("str","boo");
+  List<String> list=new ArrayList<String>();
+  ksession.insert(list);
+  ksession.fireAllRules();
+  assertEquals("rule 1 executed",list.get(0));
+  assertEquals("rule 2 executed boo",list.get(1));
+}

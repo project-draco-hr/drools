@@ -1,0 +1,20 @@
+{
+  final KnowledgeBase kbase=getKnowledgeBase("test_globalsAsConstraints.drl");
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  final List<Object> results=mock(List.class);
+  ksession.setGlobal("results",results);
+  final List<String> cheeseTypes=mock(List.class);
+  ksession.setGlobal("cheeseTypes",cheeseTypes);
+  when(cheeseTypes.contains("stilton")).thenReturn(Boolean.TRUE);
+  when(cheeseTypes.contains("muzzarela")).thenReturn(Boolean.TRUE);
+  final Cheese stilton=new Cheese("stilton",5);
+  ksession.insert(stilton);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  verify(results,times(1)).add("memberOf");
+  final Cheese brie=new Cheese("brie",5);
+  ksession.insert(brie);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  verify(results,times(1)).add("not memberOf");
+}
