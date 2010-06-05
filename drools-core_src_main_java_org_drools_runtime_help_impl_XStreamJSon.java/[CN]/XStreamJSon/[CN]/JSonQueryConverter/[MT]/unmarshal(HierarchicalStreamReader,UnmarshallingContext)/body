@@ -1,0 +1,30 @@
+{
+  List<String> outs=new ArrayList<String>();
+  String outIdentifier=null;
+  String name=null;
+  List<Object> args=null;
+  while (reader.hasMoreChildren()) {
+    reader.moveDown();
+    String nodeName=reader.getNodeName();
+    if ("out-identifier".equals(nodeName)) {
+      outIdentifier=reader.getValue();
+    }
+ else     if ("name".equals(nodeName)) {
+      name=reader.getValue();
+    }
+ else     if ("args".equals(nodeName)) {
+      reader.moveDown();
+      args=new ArrayList<Object>();
+      while (reader.hasMoreChildren()) {
+        reader.moveDown();
+        Object arg=readItem(reader,context,null);
+        args.add(arg);
+        reader.moveUp();
+      }
+      reader.moveUp();
+    }
+    reader.moveUp();
+  }
+  QueryCommand cmd=new QueryCommand(outIdentifier,name,(args != null) ? args.toArray(new Object[args.size()]) : null);
+  return cmd;
+}

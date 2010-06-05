@@ -1,0 +1,35 @@
+{
+  List objects=new ArrayList();
+  String outIdentifier=null;
+  String returnObjects=null;
+  while (reader.hasMoreChildren()) {
+    reader.moveDown();
+    String nodeName=reader.getNodeName();
+    if ("objects".equals(nodeName)) {
+      while (reader.hasMoreChildren()) {
+        reader.moveDown();
+        Object o=readItem(reader,context,null);
+        objects.add(o);
+        reader.moveUp();
+      }
+    }
+ else     if ("out-identifier".equals(nodeName)) {
+      outIdentifier=reader.getValue();
+    }
+ else     if ("return-objects".equals(nodeName)) {
+      returnObjects=reader.getValue();
+    }
+ else {
+      throw new IllegalArgumentException("insert-elements does not support the child element name=''" + reader.getNodeName() + "' value="+ reader.getValue()+ "'");
+    }
+    reader.moveUp();
+  }
+  InsertElementsCommand cmd=new InsertElementsCommand(objects);
+  if (outIdentifier != null) {
+    cmd.setOutIdentifier(outIdentifier);
+    if (outIdentifier != null) {
+      cmd.setReturnObject(Boolean.parseBoolean(returnObjects));
+    }
+  }
+  return cmd;
+}

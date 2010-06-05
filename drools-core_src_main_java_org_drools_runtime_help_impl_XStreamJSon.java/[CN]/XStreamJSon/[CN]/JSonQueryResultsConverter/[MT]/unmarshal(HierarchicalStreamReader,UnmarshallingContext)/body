@@ -1,0 +1,32 @@
+{
+  reader.moveDown();
+  List<String> list=new ArrayList<String>();
+  while (reader.hasMoreChildren()) {
+    reader.moveDown();
+    list.add((String)readItem(reader,context,null));
+    reader.moveUp();
+  }
+  reader.moveUp();
+  HashMap<String,Integer> identifiers=new HashMap<String,Integer>();
+  for (int i=0; i < list.size(); i++) {
+    identifiers.put(list.get(i),i);
+  }
+  ArrayList<ArrayList<Object>> results=new ArrayList();
+  ArrayList<ArrayList<FactHandle>> resultHandles=new ArrayList();
+  while (reader.hasMoreChildren()) {
+    reader.moveDown();
+    ArrayList objects=new ArrayList();
+    ArrayList<FactHandle> handles=new ArrayList();
+    while (reader.hasMoreChildren()) {
+      reader.moveDown();
+      RowItemContainer container=(RowItemContainer)readItem(reader,context,null);
+      objects.add(container.getObject());
+      handles.add(container.getFactHandle());
+      reader.moveUp();
+    }
+    results.add(objects);
+    resultHandles.add(handles);
+    reader.moveUp();
+  }
+  return new FlatQueryResults(identifiers,results,resultHandles);
+}

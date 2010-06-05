@@ -1,0 +1,41 @@
+{
+  ExecutionResults result=(ExecutionResults)object;
+  writer.startNode("results");
+  if (!result.getIdentifiers().isEmpty()) {
+    for (    String identifier : result.getIdentifiers()) {
+      writer.startNode("result");
+      writer.startNode("identifier");
+      writer.setValue(identifier);
+      writer.endNode();
+      writer.startNode("value");
+      Object value=result.getValue(identifier);
+      writeItem(value,context,writer);
+      writer.endNode();
+      writer.endNode();
+    }
+  }
+  for (  String identifier : ((ExecutionResultImpl)result).getFactHandles().keySet()) {
+    Object handle=result.getFactHandle(identifier);
+    if (handle instanceof FactHandle) {
+      writer.startNode("fact-handle");
+      writer.startNode("identifier");
+      writer.setValue(identifier);
+      writer.endNode();
+      writer.startNode("external-form");
+      writer.setValue(((FactHandle)handle).toExternalForm());
+      writer.endNode();
+      writer.endNode();
+    }
+ else     if (handle instanceof Collection) {
+      writer.startNode("fact-handles");
+      writer.startNode("identifier");
+      writer.setValue(identifier);
+      writer.endNode();
+      for (      FactHandle factHandle : (Collection<FactHandle>)handle) {
+        writeItem(factHandle.toExternalForm(),context,writer);
+      }
+      writer.endNode();
+    }
+  }
+  writer.endNode();
+}

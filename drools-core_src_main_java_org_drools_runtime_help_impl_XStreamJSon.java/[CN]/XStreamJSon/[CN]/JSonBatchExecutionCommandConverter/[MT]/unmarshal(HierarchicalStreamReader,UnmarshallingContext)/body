@@ -1,0 +1,23 @@
+{
+  List<GenericCommand<?>> list=new ArrayList<GenericCommand<?>>();
+  String lookup=null;
+  while (reader.hasMoreChildren()) {
+    reader.moveDown();
+    if ("commands".equals(reader.getNodeName())) {
+      while (reader.hasMoreChildren()) {
+        reader.moveDown();
+        GenericCommand cmd=(GenericCommand)readItem(reader,context,null);
+        list.add(cmd);
+        reader.moveUp();
+      }
+    }
+ else     if ("lookup".equals(reader.getNodeName())) {
+      lookup=reader.getValue();
+    }
+ else {
+      throw new IllegalArgumentException("batch-execution does not support the child element name=''" + reader.getNodeName() + "' value="+ reader.getValue()+ "'");
+    }
+    reader.moveUp();
+  }
+  return new BatchExecutionCommand(list,lookup);
+}

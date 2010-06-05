@@ -1,0 +1,56 @@
+{
+  ExecutionResultImpl result=new ExecutionResultImpl();
+  Map results=result.getResults();
+  Map facts=result.getFactHandles();
+  reader.moveDown();
+  if ("results".equals(reader.getNodeName())) {
+    while (reader.hasMoreChildren()) {
+      reader.moveDown();
+      if (reader.getNodeName().equals("result")) {
+        reader.moveDown();
+        String identifier=reader.getValue();
+        reader.moveUp();
+        reader.moveDown();
+        reader.moveDown();
+        Object value=readItem(reader,context,null);
+        results.put(identifier,value);
+        reader.moveUp();
+        reader.moveUp();
+      }
+ else       if (reader.getNodeName().equals("fact-handle")) {
+        reader.moveDown();
+        String identifier=reader.getValue();
+        reader.moveUp();
+        reader.moveDown();
+        String externalForm=reader.getValue();
+        reader.moveUp();
+        facts.put(identifier,new DisconnectedFactHandle(externalForm));
+      }
+ else       if (reader.getNodeName().equals("fact-handles")) {
+        List list=new ArrayList();
+        String identifier=null;
+        while (reader.hasMoreChildren()) {
+          reader.moveDown();
+          identifier=reader.getValue();
+          reader.moveUp();
+          while (reader.hasMoreChildren()) {
+            reader.moveDown();
+            FactHandle factHandle=new DisconnectedFactHandle((String)readItem(reader,context,null));
+            list.add(factHandle);
+            reader.moveUp();
+          }
+        }
+        facts.put(identifier,list);
+      }
+ else {
+        throw new IllegalArgumentException("Element '" + reader.getNodeName() + "' is not supported here");
+      }
+      reader.moveUp();
+    }
+  }
+ else {
+    throw new IllegalArgumentException("Element '" + reader.getNodeName() + "' is not supported here");
+  }
+  reader.moveUp();
+  return result;
+}
