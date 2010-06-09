@@ -1,9 +1,14 @@
 {
   this.state=workItem.getState();
   ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  boolean variablesChanged=false;
   try {
     MarshallerWriteContext context=new MarshallerWriteContext(baos,null,null,null,null);
-    OutputMarshaller.writeWorkItem(context,workItem);
+    externalVariables=VariablePersistenceStrategyFactory.getVariablePersistenceStrategy().isEnabled();
+    OutputMarshaller.writeWorkItem(context,workItem,!externalVariables);
+    if (externalVariables) {
+      variablesChanged=persistVariables();
+    }
     context.close();
     this.workItemByteArray=baos.toByteArray();
   }
