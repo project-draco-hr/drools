@@ -1,0 +1,31 @@
+{
+  String rule="package org.drools\n" + "declare StockTick @role(event) @expires(0s) end\n" + "rule test no-loop true\n"+ "when\n"+ "   $f : StockTick() from entry-point EntryPoint\n"+ "then\n"+ "   //System.out.println($f);\n"+ "end";
+  final StatefulKnowledgeSession session;
+  final WorkingMemoryEntryPoint entryPoint;
+  KnowledgeBaseConfiguration kbaseConf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kbaseConf.setOption(EventProcessingOption.STREAM);
+  KnowledgeBuilder builder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  builder.add(ResourceFactory.newReaderResource(new StringReader(rule)),ResourceType.DRL);
+  if (builder.hasErrors()) {
+    throw new RuntimeException(builder.getErrors().toString());
+  }
+  final KnowledgeBase knowledgeBase=KnowledgeBaseFactory.newKnowledgeBase(kbaseConf);
+  knowledgeBase.addKnowledgePackages(builder.getKnowledgePackages());
+  session=knowledgeBase.newStatefulKnowledgeSession();
+  WorkingMemoryEventListener wmel=Mockito.mock(WorkingMemoryEventListener.class);
+  session.addEventListener(wmel);
+  entryPoint=session.getWorkingMemoryEntryPoint("EntryPoint");
+  new Thread(new Runnable(){
+    public void run(){
+      session.fireUntilHalt();
+    }
+  }
+).start();
+  for (int x=0; x < 10000; x++) {
+    entryPoint.insert(new StockTick(x,"RHT",10,10 + x));
+    Thread.yield();
+  }
+  session.halt();
+  session.fireAllRules();
+  verify(wmel,atLeastOnce()).objectRetracted(any(ObjectRetractedEvent.class));
+}
