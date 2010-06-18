@@ -1,11 +1,16 @@
 {
   StatefulKnowledgeSession ksession=((KnowledgeCommandContext)context).getStatefulKnowledgesession();
-  ReteooWorkingMemory session=((StatefulKnowledgeSessionImpl)ksession).session;
-  if (agendaFilter != null) {
-    session.fireUntilHalt(new StatefulKnowledgeSessionImpl.AgendaFilterWrapper(agendaFilter));
-  }
+  final ReteooWorkingMemory session=((StatefulKnowledgeSessionImpl)ksession).session;
+  new Thread(new Runnable(){
+    public void run(){
+      if (agendaFilter != null) {
+        session.fireUntilHalt(new StatefulKnowledgeSessionImpl.AgendaFilterWrapper(agendaFilter));
+      }
  else {
-    session.fireUntilHalt();
+        session.fireUntilHalt();
+      }
+    }
   }
+).start();
   return null;
 }
