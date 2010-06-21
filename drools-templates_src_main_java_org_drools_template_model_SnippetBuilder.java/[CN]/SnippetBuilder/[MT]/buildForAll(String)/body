@@ -1,0 +1,14 @@
+{
+  final String[] cellVals=split(cellValue);
+  Map<String,String> replacements=new HashMap<String,String>();
+  Matcher forallMatcher=PARAM_FORALL_PATTERN.matcher(_template);
+  while (forallMatcher.find()) {
+    replacements.put(forallMatcher.group(),"");
+    for (int paramNumber=0; paramNumber < cellVals.length; paramNumber++) {
+      replacements.put(forallMatcher.group(),replacements.get(forallMatcher.group()) + (paramNumber == 0 ? "" : " " + forallMatcher.group(1) + " ") + replace(forallMatcher.group(2),PARAM_PREFIX,cellVals[paramNumber].trim(),256));
+    }
+  }
+  String result=_template;
+  for (  String key : replacements.keySet())   result=replace(result,key,replacements.get(key),256);
+  return result.equals("") ? _template : result;
+}
