@@ -1,9 +1,18 @@
 {
+  KnowledgeBuilder kbuilder=null;
   if (this.builderConfiguration != null) {
-    return KnowledgeBuilderFactory.newKnowledgeBuilder(this.builderConfiguration);
+    kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(this.builderConfiguration);
   }
-  if (this.useKBaseClassLoaderForCompiling) {
-    return KnowledgeBuilderFactory.newKnowledgeBuilder(KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,((ReteooRuleBase)((KnowledgeBaseImpl)this.getKnowledgeBase()).getRuleBase()).getRootClassLoader()));
+ else   if (this.useKBaseClassLoaderForCompiling) {
+    kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,((ReteooRuleBase)((KnowledgeBaseImpl)this.getKnowledgeBase()).getRuleBase()).getRootClassLoader()));
   }
-  return KnowledgeBuilderFactory.newKnowledgeBuilder();
+ else {
+    kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  }
+  if (this.dslResources != null) {
+    for (    Map.Entry<Resource,String> entry : this.dslResources.entrySet()) {
+      kbuilder.add(ResourceFactory.newByteArrayResource(entry.getValue().getBytes()),ResourceType.DSL);
+    }
+  }
+  return kbuilder;
 }

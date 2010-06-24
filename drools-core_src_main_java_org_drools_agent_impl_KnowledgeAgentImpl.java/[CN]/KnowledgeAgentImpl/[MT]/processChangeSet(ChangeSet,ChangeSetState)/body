@@ -1,7 +1,18 @@
 {
 synchronized (this.registeredResources) {
+    this.eventSupport.fireBeforeChangeSetProcessed(changeSet);
     for (    Resource resource : changeSet.getResourcesAdded()) {
-      if (((InternalResource)resource).getResourceType() == ResourceType.CHANGE_SET) {
+      this.eventSupport.fireBeforeResourceProcessed(changeSet,resource,((InternalResource)resource).getResourceType(),ResourceStatus.RESOURCE_ADDED);
+      if (((InternalResource)resource).getResourceType() == ResourceType.DSL) {
+        this.notifier.subscribeResourceChangeListener(this,resource);
+        try {
+          this.retrieveDSLResource(resource);
+        }
+ catch (        IOException ex) {
+          this.listener.exception("KnowledgeAgent Fails trying to read DSL Resource: " + resource,ex);
+        }
+      }
+ else       if (((InternalResource)resource).getResourceType() == ResourceType.CHANGE_SET) {
         this.listener.debug("KnowledgeAgent processing sub ChangeSet=" + resource);
         processChangeSet(resource,changeSetState);
       }
@@ -25,9 +36,15 @@ synchronized (this.registeredResources) {
           changeSetState.addedResources.add(resource);
         }
       }
+      this.eventSupport.fireAfterResourceProcessed(changeSet,resource,((InternalResource)resource).getResourceType(),ResourceStatus.RESOURCE_ADDED);
     }
     for (    Resource resource : changeSet.getResourcesRemoved()) {
-      if (((InternalResource)resource).getResourceType() == ResourceType.CHANGE_SET) {
+      this.eventSupport.fireBeforeResourceProcessed(changeSet,resource,((InternalResource)resource).getResourceType(),ResourceStatus.RESOURCE_MODIFIED);
+      if (((InternalResource)resource).getResourceType() == ResourceType.DSL) {
+        this.notifier.unsubscribeResourceChangeListener(this,resource);
+        this.dslResources.remove(resource);
+      }
+ else       if (((InternalResource)resource).getResourceType() == ResourceType.CHANGE_SET) {
         processChangeSet(resource,changeSetState);
       }
  else       if (changeSetState.scanDirectories && ((InternalResource)resource).isDirectory()) {
@@ -41,9 +58,19 @@ synchronized (this.registeredResources) {
           changeSetState.removedResourceMappings.put(resource,definitions);
         }
       }
+      this.eventSupport.fireAfterResourceProcessed(changeSet,resource,((InternalResource)resource).getResourceType(),ResourceStatus.RESOURCE_MODIFIED);
     }
     for (    Resource resource : changeSet.getResourcesModified()) {
-      if (((InternalResource)resource).getResourceType() == ResourceType.CHANGE_SET) {
+      this.eventSupport.fireBeforeResourceProcessed(changeSet,resource,((InternalResource)resource).getResourceType(),ResourceStatus.RESOURCE_REMOVED);
+      if (((InternalResource)resource).getResourceType() == ResourceType.DSL) {
+        try {
+          this.retrieveDSLResource(resource);
+        }
+ catch (        IOException ex) {
+          this.listener.exception("KnowledgeAgent Fails trying to read DSL Resource: " + resource,ex);
+        }
+      }
+ else       if (((InternalResource)resource).getResourceType() == ResourceType.CHANGE_SET) {
         continue;
       }
  else       if (((InternalResource)resource).isDirectory()) {
@@ -80,6 +107,8 @@ synchronized (this.registeredResources) {
           }
         }
       }
+      this.eventSupport.fireAfterResourceProcessed(changeSet,resource,((InternalResource)resource).getResourceType(),ResourceStatus.RESOURCE_REMOVED);
     }
+    this.eventSupport.fireAfterChangeSetProcessed(changeSet,changeSetState.addedResources,changeSetState.modifiedResourceMappings,changeSetState.removedResourceMappings);
   }
 }
