@@ -1,19 +1,7 @@
 {
-  verifierKnowledgeBase=KnowledgeBaseFactory.newKnowledgeBase();
-  KnowledgeBuilderConfiguration kbuilderConfiguration=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration();
-  kbuilderConfiguration.setProperty("drools.dialect.java.compiler","JANINO");
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(kbuilderConfiguration);
-  if (conf.getVerifyingResources() != null) {
-    for (    Resource resource : conf.getVerifyingResources().keySet()) {
-      kbuilder.add(resource,conf.getVerifyingResources().get(resource));
-    }
+  VerifierKnowledgeBaseBuilder verifierKnowledgeBaseBuilder=new VerifierKnowledgeBaseBuilder();
+  verifierKnowledgeBase=verifierKnowledgeBaseBuilder.newVerifierKnowledgeBase(conf);
+  if (verifierKnowledgeBaseBuilder.hasErrors()) {
+    this.errors.addAll(verifierKnowledgeBaseBuilder.getErrors());
   }
-  if (kbuilder.hasErrors()) {
-    Iterator<KnowledgeBuilderError> errors=kbuilder.getErrors().iterator();
-    while (errors.hasNext()) {
-      this.errors.add(new VerifierError("Error compiling verifier rules: " + errors.next().getMessage()));
-    }
-    throw new IllegalStateException("Error compiling verifier rules");
-  }
-  verifierKnowledgeBase.addKnowledgePackages(kbuilder.getKnowledgePackages());
 }
