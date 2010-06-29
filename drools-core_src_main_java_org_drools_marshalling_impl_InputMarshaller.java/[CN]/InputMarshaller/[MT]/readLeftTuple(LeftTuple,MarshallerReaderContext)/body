@@ -117,6 +117,28 @@ readRightTuples(handle,context);
 stream.readShort();
 break;
 }
+case NodeTypeEnums.FromNode:
+{
+FromMemory memory=(FromMemory)context.wm.getNodeMemory((NodeMemory)sink);
+memory.betaMemory.getLeftTupleMemory().add(parentLeftTuple);
+Map<Object,RightTuple> matches=new LinkedHashMap<Object,RightTuple>();
+memory.betaMemory.getCreatedHandles().put(parentLeftTuple,matches);
+while (stream.readShort() == PersisterEnums.FACT_HANDLE) {
+InternalFactHandle handle=readFactHandle(context);
+context.handles.put(handle.getId(),handle);
+readRightTuples(handle,context);
+matches.put(handle.getObject(),handle.getFirstRightTuple());
+}
+while (stream.readShort() == PersisterEnums.RIGHT_TUPLE) {
+LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
+int factHandleId=stream.readInt();
+RightTupleKey key=new RightTupleKey(factHandleId,null);
+RightTuple rightTuple=context.rightTuples.get(key);
+LeftTuple childLeftTuple=new LeftTuple(parentLeftTuple,rightTuple,childSink,true);
+readLeftTuple(childLeftTuple,context);
+}
+break;
+}
 case NodeTypeEnums.RuleTerminalNode:
 {
 int pos=context.terminalTupleMap.size();

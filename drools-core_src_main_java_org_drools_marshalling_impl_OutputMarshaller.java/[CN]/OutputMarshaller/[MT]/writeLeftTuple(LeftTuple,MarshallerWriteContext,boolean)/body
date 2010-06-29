@@ -91,6 +91,25 @@ writeRightTuples(ifh,context);
 stream.writeShort(PersisterEnums.END);
 break;
 }
+case NodeTypeEnums.FromNode:
+{
+FromMemory memory=(FromMemory)context.wm.getNodeMemory((NodeMemory)sink);
+Map<Object,RightTuple> matches=(Map<Object,RightTuple>)memory.betaMemory.getCreatedHandles().get(leftTuple);
+for (RightTuple rightTuples : matches.values()) {
+stream.writeShort(PersisterEnums.FACT_HANDLE);
+writeFactHandle(context,stream,context.objectMarshallingStrategyStore,rightTuples.getFactHandle());
+writeRightTuples(rightTuples.getFactHandle(),context);
+}
+stream.writeShort(PersisterEnums.END);
+for (LeftTuple childLeftTuple=leftTuple.firstChild; childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentNext()) {
+stream.writeShort(PersisterEnums.RIGHT_TUPLE);
+stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
+stream.writeInt(childLeftTuple.getRightParent().getFactHandle().getId());
+writeLeftTuple(childLeftTuple,context,recurse);
+}
+stream.writeShort(PersisterEnums.END);
+break;
+}
 case NodeTypeEnums.RuleTerminalNode:
 {
 int pos=context.terminalTupleMap.size();

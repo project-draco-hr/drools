@@ -36,6 +36,24 @@
       }
     }
   }
+ else   if (element instanceof From) {
+    DataProvider provider=((From)element).getDataProvider();
+    Declaration[] decl=provider.getRequiredDeclarations();
+    for (int i=0; i < decl.length; i++) {
+      Declaration resolved=resolver.getDeclaration(null,decl[i].getIdentifier());
+      if (resolved != null && resolved != decl[i]) {
+        provider.replaceDeclaration(decl[i],resolved);
+      }
+ else       if (resolved == null) {
+        Pattern old=decl[i].getPattern();
+        Pattern current=resolver.findPatternByIndex(old.getIndex());
+        if (current != null && old != current) {
+          resolved=new Declaration(decl[i].getIdentifier(),decl[i].getExtractor(),current);
+          provider.replaceDeclaration(decl[i],resolved);
+        }
+      }
+    }
+  }
  else {
     contextStack.push(element);
     for (Iterator it=element.getNestedElements().iterator(); it.hasNext(); ) {
