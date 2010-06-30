@@ -1,8 +1,11 @@
 {
-  BaseClassFieldWriter reader=this.writeCache.get(key);
-  if (reader == null) {
-    reader=ClassFieldAccessorFactory.getInstance().getClassFieldWriter(cls,key.getFieldName(),this);
-    this.writeCache.put(key,reader);
+  BaseClassFieldWriter writer=this.writeCache.get(key);
+  if (writer == null) {
+    writer=ClassFieldAccessorFactory.getInstance().getClassFieldWriter(cls,key.getFieldName(),this);
+    BaseClassFieldWriter existingWriter=this.writeCache.putIfAbsent(key,writer);
+    if (existingWriter != null) {
+      writer=existingWriter;
+    }
   }
-  return reader;
+  return writer;
 }
