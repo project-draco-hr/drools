@@ -1,13 +1,7 @@
 {
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newClassPathResource("test_CEP_StreamMode.drl",CepEspTest.class),ResourceType.DRL);
-  if (kbuilder.getErrors().size() > 0) {
-    throw new IllegalArgumentException("Could not parse knowledge.");
-  }
-  KnowledgeBaseConfiguration kbaseConfig=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
-  kbaseConfig.setOption(EventProcessingOption.STREAM);
-  KnowledgeBase kbase1=KnowledgeBaseFactory.newKnowledgeBase(kbaseConfig);
-  kbase1.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  final KnowledgeBaseConfiguration kbconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kbconf.setOption(EventProcessingOption.STREAM);
+  final KnowledgeBase kbase1=loadKnowledgeBase("test_CEP_StreamMode.drl",kbconf,false);
   KnowledgeBase kbase2=(KnowledgeBase)DroolsStreamUtils.streamIn(DroolsStreamUtils.streamOut(kbase1),null);
   final StatefulKnowledgeSession ksession1=kbase1.newStatefulKnowledgeSession();
   AgendaEventListener ael1=mock(AgendaEventListener.class);
