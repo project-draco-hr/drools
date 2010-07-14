@@ -6,14 +6,18 @@
   try {
     fileWriter=new FileWriter(this.fileName + (this.nbOfFile == 0 ? ".log" : this.nbOfFile + ".log"),true);
     final XStream xstream=new XStream();
-    for (    LogEvent event : this.events) {
+    List<LogEvent> eventsToWrite=null;
+synchronized (this.events) {
+      eventsToWrite=new ArrayList<LogEvent>(this.events);
+      clear();
+    }
+    for (    LogEvent event : eventsToWrite) {
       fileWriter.write(xstream.toXML(event) + "\n");
     }
     if (split) {
       this.nbOfFile++;
       initialized=false;
     }
-    clear();
     fileWriter.write("</object-stream>");
   }
  catch (  final FileNotFoundException exc) {
