@@ -3,7 +3,9 @@
     conf=new SessionConfiguration();
   }
   this.env=env;
+  checkEnvironment(this.env);
   this.sessionInfo=new SessionInfo();
+  initTransactionManager(this.env);
   ReteooStatefulSession session=(ReteooStatefulSession)((KnowledgeBaseImpl)kbase).ruleBase.newStatefulSession((SessionConfiguration)conf,this.env);
   this.ksession=new StatefulKnowledgeSessionImpl(session,kbase);
   this.kContext=new KnowledgeCommandContext(new ContextImpl("ksession",null),null,null,this.ksession,null);
@@ -11,32 +13,18 @@
   this.marshallingHelper=new JPASessionMarshallingHelper(this.ksession,conf);
   this.sessionInfo.setJPASessionMashallingHelper(this.marshallingHelper);
   ((StatefulKnowledgeSessionImpl)this.ksession).session.setEndOperationListener(new EndOperationListenerImpl(this.sessionInfo));
-  this.emf=(EntityManagerFactory)env.get(EnvironmentName.ENTITY_MANAGER_FACTORY);
-  this.em=emf.createEntityManager();
-  boolean localTransaction=false;
-  UserTransaction ut=null;
   try {
-    InitialContext ctx=new InitialContext();
-    ut=(UserTransaction)ctx.lookup("java:comp/UserTransaction");
-    if (ut.getStatus() == Status.STATUS_NO_TRANSACTION) {
-      ut.begin();
-      localTransaction=true;
-    }
+    this.txm.begin();
     registerRollbackSync();
-    this.em.joinTransaction();
-    this.em.persist(this.sessionInfo);
-    if (localTransaction) {
-      ut.commit();
-    }
+    jpm.getApplicationScopedEntityManager().persist(this.sessionInfo);
+    this.txm.commit();
   }
- catch (  Throwable t1) {
+ catch (  Exception t1) {
     try {
-      if (ut != null) {
-        ut.rollback();
-      }
+      this.txm.rollback();
     }
  catch (    Throwable t2) {
-      throw new RuntimeException("Could not rollback transaction",t2);
+      throw new RuntimeException("Could not commit session or rollback",t2);
     }
     throw new RuntimeException("Could not commit session",t1);
   }

@@ -1,0 +1,23 @@
+{
+  if (transactionSynchronizationRegistryClass == null) {
+    logger.debug("JTA 1.1 [{}] API not available",TRANSACTION_SYNCHRONIZATION_REGISTRY_CLASS_NAME);
+    return null;
+  }
+  String jndiName=DEFAULT_TRANSACTION_SYNCHRONIZATION_REGISTRY_NAME;
+  try {
+    InitialContext context=new InitialContext();
+    context.lookup(jndiName);
+    logger.debug("JTA TransactionSynchronizationRegistry found at default JNDI location [{}]",jndiName);
+    return tsr;
+  }
+ catch (  NamingException ex) {
+    logger.debug("No JTA TransactionSynchronizationRegistry found at default JNDI location [{}]",jndiName,ex);
+  }
+  if (transactionSynchronizationRegistryClass.isInstance(ut)) {
+    return ut;
+  }
+  if (transactionSynchronizationRegistryClass.isInstance(tm)) {
+    return tm;
+  }
+  return null;
+}

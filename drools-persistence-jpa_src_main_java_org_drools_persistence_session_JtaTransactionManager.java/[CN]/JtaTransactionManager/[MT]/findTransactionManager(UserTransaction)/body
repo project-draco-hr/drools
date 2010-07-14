@@ -1,0 +1,25 @@
+{
+  if (ut instanceof TransactionManager) {
+    logger.debug("JTA UserTransaction object [{}] implements TransactionManager",ut);
+    return (javax.transaction.TransactionManager)ut;
+  }
+  InitialContext context=null;
+  try {
+    context=new InitialContext();
+  }
+ catch (  NamingException ex) {
+    logger.debug("Could not initialise JNDI InitialContext",ex);
+    return null;
+  }
+  for (  String jndiName : FALLBACK_TRANSACTION_MANAGER_NAMES) {
+    try {
+      javax.transaction.TransactionManager tm=(javax.transaction.TransactionManager)context.lookup(jndiName);
+      logger.debug("JTA TransactionManager found at fallback JNDI location [{}]",jndiName);
+      return tm;
+    }
+ catch (    NamingException ex) {
+      logger.debug("No JTA TransactionManager found at fallback JNDI location [{}]",jndiName,ex);
+    }
+  }
+  return null;
+}

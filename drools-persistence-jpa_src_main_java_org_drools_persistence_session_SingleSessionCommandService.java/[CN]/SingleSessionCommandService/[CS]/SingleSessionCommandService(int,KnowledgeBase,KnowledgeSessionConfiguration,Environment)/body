@@ -3,43 +3,7 @@
     conf=new SessionConfiguration();
   }
   this.env=env;
-  this.emf=(EntityManagerFactory)env.get(EnvironmentName.ENTITY_MANAGER_FACTORY);
-  this.em=emf.createEntityManager();
-  boolean localTransaction=false;
-  UserTransaction ut=null;
-  try {
-    InitialContext ctx=new InitialContext();
-    ut=(UserTransaction)ctx.lookup("java:comp/UserTransaction");
-    if (ut.getStatus() == Status.STATUS_NO_TRANSACTION) {
-      ut.begin();
-      localTransaction=true;
-    }
-    this.em.joinTransaction();
-    registerRollbackSync();
-    this.sessionInfo=this.em.find(SessionInfo.class,sessionId);
-    if (localTransaction) {
-      ut.commit();
-    }
-  }
- catch (  Throwable t1) {
-    try {
-      if (ut != null) {
-        ut.rollback();
-      }
-      throw new RuntimeException("Could not find session data for id " + sessionId,t1);
-    }
- catch (    Throwable t2) {
-      throw new RuntimeException("Could not rollback transaction",t2);
-    }
-  }
-  if (sessionInfo == null) {
-    throw new RuntimeException("Could not find session data for id " + sessionId);
-  }
-  this.marshallingHelper=new JPASessionMarshallingHelper(this.sessionInfo,kbase,conf,env);
-  this.sessionInfo.setJPASessionMashallingHelper(this.marshallingHelper);
-  this.ksession=this.marshallingHelper.getObject();
-  ((StatefulKnowledgeSessionImpl)this.ksession).session.setEndOperationListener(new EndOperationListenerImpl(this.sessionInfo));
-  this.kContext=new KnowledgeCommandContext(new ContextImpl("ksession",null),null,null,this.ksession,null);
-  ((JPASignalManager)((StatefulKnowledgeSessionImpl)ksession).session.getSignalManager()).setCommandService(this);
-  ((StatefulKnowledgeSessionImpl)ksession).session.setId(this.sessionInfo.getId());
+  checkEnvironment(this.env);
+  initTransactionManager(this.env);
+  initKsession(sessionId,kbase,conf);
 }

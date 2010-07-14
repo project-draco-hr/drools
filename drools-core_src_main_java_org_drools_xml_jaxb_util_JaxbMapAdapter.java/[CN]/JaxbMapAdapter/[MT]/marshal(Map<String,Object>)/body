@@ -4,7 +4,22 @@
   }
   List<JaxbPair> ret=new ArrayList<JaxbPair>(value.size());
   for (  Map.Entry<String,Object> entry : value.entrySet()) {
-    ret.add(new JaxbPair(entry.getKey(),entry.getValue()));
+    Object obj=entry.getValue();
+    Class<? extends Object> vClass=obj.getClass();
+    if (obj instanceof NativeQueryResults) {
+      obj=new FlatQueryResults(((NativeQueryResults)obj).getResults());
+    }
+ else     if (obj instanceof FactHandle && !(obj instanceof DisconnectedFactHandle)) {
+      obj=new DisconnectedFactHandle(((FactHandle)obj).toExternalForm());
+    }
+ else     if (List.class.isAssignableFrom(vClass) && !JaxbListWrapper.class.equals(vClass)) {
+      JaxbListWrapper<Object> wrapper=new JaxbListWrapper<Object>(((List<?>)obj).size());
+      for (      Object item : ((List<?>)obj)) {
+        wrapper.add(item);
+      }
+      obj=wrapper;
+    }
+    ret.add(new JaxbPair(entry.getKey(),obj));
   }
   return ret.toArray(new JaxbPair[value.size()]);
 }

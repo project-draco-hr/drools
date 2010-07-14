@@ -1,0 +1,21 @@
+{
+  if (!(command instanceof BatchExecutionCommand)) {
+    return (T)((GenericCommand)command).execute(new KnowledgeCommandContext(context,null,this.kbase,this,null));
+  }
+  ExecutionResultImpl results=null;
+  if (context != null) {
+    results=(ExecutionResultImpl)((KnowledgeCommandContext)context).getExecutionResults();
+  }
+  if (results == null) {
+    results=new ExecutionResultImpl();
+  }
+  try {
+    session.startBatchExecution(results);
+    ((GenericCommand)command).execute(new KnowledgeCommandContext(context,null,this.kbase,this,results));
+    ExecutionResults result=session.getExecutionResult();
+    return (T)result;
+  }
+  finally {
+    session.endBatchExecution();
+  }
+}

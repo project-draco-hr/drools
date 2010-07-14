@@ -1,14 +1,10 @@
 {
-  if (status != Status.STATUS_COMMITTED) {
-    rollback();
+  if (status != TransactionManager.STATUS_COMMITTED) {
+    this.service.rollback();
   }
-  Map<Object,Object> map=(Map<Object,Object>)env.get("synchronizations");
-  map.remove(SingleSessionCommandService.this);
-  EntityManager localEm=(EntityManager)env.get(EnvironmentName.ENTITY_MANAGER);
-  if (localEm != null && localEm.isOpen()) {
-    localEm.close();
-  }
-  env.set(EnvironmentName.ENTITY_MANAGER,null);
+  this.service.synchronizations.remove(this.service);
+  this.service.jpm.endCommandScopedEntityManager();
+  StatefulKnowledgeSessionImpl ksession=((StatefulKnowledgeSessionImpl)this.service.ksession);
   if (ksession != null) {
     ((JPAProcessInstanceManager)((StatefulKnowledgeSessionImpl)ksession).session.getProcessInstanceManager()).clearProcessInstances();
     ((JPAWorkItemManager)((StatefulKnowledgeSessionImpl)ksession).session.getWorkItemManager()).clearWorkItems();
