@@ -1,5 +1,8 @@
 {
-  Class newClazz=clazz;
+  if (methodCacheContains(clazz)) {
+    return getMethodFromCache(clazz);
+  }
+  Class<?> newClazz=clazz;
   Method method=null;
   while (method == null && newClazz != Object.class) {
     String methodName=newClazz.getName();
@@ -12,8 +15,8 @@
     }
   }
   if (newClazz == Object.class) {
-    final Class[] interfaces=clazz.getInterfaces();
-    for (int i=0; i < interfaces.length; i++) {
+    final Class<?>[] interfaces=clazz.getInterfaces();
+    for (int i=0; i < interfaces.length && method == null; i++) {
       String methodName=interfaces[i].getName();
       methodName="visit" + methodName.substring(methodName.lastIndexOf('.') + 1);
       try {
@@ -31,5 +34,6 @@
       throw new RuntimeDroolsException(e.toString() + " : " + clazz,e.getCause());
     }
   }
+  addMethodToCache(clazz,method);
   return method;
 }
