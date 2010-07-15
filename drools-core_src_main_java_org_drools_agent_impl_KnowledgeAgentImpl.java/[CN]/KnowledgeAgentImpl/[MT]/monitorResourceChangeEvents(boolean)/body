@@ -1,4 +1,18 @@
 {
+  Set<Resource> allResources=new HashSet<Resource>();
+  allResources.addAll(this.resourceDirectories);
+  allResources.addAll(this.registeredResources.getAllResources());
+  allResources.addAll(this.dslResources.keySet());
+  for (  Resource resource : allResources) {
+    if (monitor) {
+      this.listener.debug("KnowledgeAgent subscribing from resource=" + resource);
+      this.notifier.subscribeResourceChangeListener(this,resource);
+    }
+ else {
+      this.listener.debug("KnowledgeAgent unsubscribing from resource=" + resource);
+      this.notifier.unsubscribeResourceChangeListener(this,resource);
+    }
+  }
   if (!monitor && this.changeSetNotificationDetector != null) {
     this.changeSetNotificationDetector.stop();
     this.thread.interrupt();
