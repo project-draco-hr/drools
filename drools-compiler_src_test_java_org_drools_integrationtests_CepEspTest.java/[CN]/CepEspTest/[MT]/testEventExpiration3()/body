@@ -1,0 +1,12 @@
+{
+  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_CEP_EventExpiration3.drl"));
+  final RuleBaseConfiguration conf=new RuleBaseConfiguration();
+  conf.setEventProcessingMode(EventProcessingOption.STREAM);
+  final RuleBase ruleBase=loadRuleBase(reader,conf);
+  final InternalRuleBase internal=(InternalRuleBase)ruleBase;
+  final TimeIntervalParser parser=new TimeIntervalParser();
+  Map<ObjectType,ObjectTypeNode> objectTypeNodes=internal.getRete().getObjectTypeNodes(EntryPoint.DEFAULT);
+  ObjectTypeNode node=objectTypeNodes.get(new ClassObjectType(StockTick.class));
+  assertNotNull(node);
+  assertEquals(parser.parse("10m")[0].longValue() + 1,node.getExpirationOffset());
+}

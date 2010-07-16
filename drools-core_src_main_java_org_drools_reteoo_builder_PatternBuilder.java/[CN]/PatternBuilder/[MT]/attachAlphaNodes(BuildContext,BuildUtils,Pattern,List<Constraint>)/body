@@ -14,17 +14,22 @@
   ObjectTypeNode otn=new ObjectTypeNode(context.getNextId(),(EntryPointNode)context.getObjectSource(),objectType,context);
   if (objectType.isEvent() && EventProcessingOption.STREAM.equals(context.getRuleBase().getConfiguration().getEventProcessingMode())) {
     long expirationOffset=getExpiratioOffsetForType(context,objectType);
-    for (    Behavior behavior : pattern.getBehaviors()) {
-      if (behavior.getExpirationOffset() != -1) {
-        expirationOffset=Math.max(behavior.getExpirationOffset(),expirationOffset);
-      }
-    }
-    long distance=context.getTemporalDistance().getExpirationOffset(pattern);
-    if (distance == -1) {
+    if (expirationOffset != -1) {
       otn.setExpirationOffset(expirationOffset);
     }
  else {
-      otn.setExpirationOffset(Math.max(distance,expirationOffset));
+      for (      Behavior behavior : pattern.getBehaviors()) {
+        if (behavior.getExpirationOffset() != -1) {
+          expirationOffset=Math.max(behavior.getExpirationOffset(),expirationOffset);
+        }
+      }
+      long distance=context.getTemporalDistance().getExpirationOffset(pattern);
+      if (distance == -1) {
+        otn.setExpirationOffset(expirationOffset);
+      }
+ else {
+        otn.setExpirationOffset(Math.max(distance,expirationOffset));
+      }
     }
   }
   context.setObjectSource((ObjectSource)utils.attachNode(context,otn));
