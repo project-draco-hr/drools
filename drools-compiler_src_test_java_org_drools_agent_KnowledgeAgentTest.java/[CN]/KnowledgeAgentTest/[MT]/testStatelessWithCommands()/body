@@ -30,17 +30,7 @@
   StatelessKnowledgeSession ksession=kagent.newStatelessKnowledgeSession();
   List<String> list=new ArrayList<String>();
   ksession.setGlobal("list",list);
-  Action executeResultHandler=PipelineFactory.newExecuteResultHandler();
-  Action assignResult=PipelineFactory.newAssignObjectAsResult();
-  assignResult.setReceiver(executeResultHandler);
-  KnowledgeRuntimeCommand batchExecution=PipelineFactory.newCommandExecutor();
-  batchExecution.setReceiver(assignResult);
-  KnowledgeRuntimeCommand insertStage=PipelineFactory.newInsertObjectCommand();
-  insertStage.setReceiver(batchExecution);
-  Pipeline pipeline=PipelineFactory.newStatelessKnowledgeSessionPipeline(ksession);
-  pipeline.setReceiver(insertStage);
-  ResultHandlerImpl resultHandler=new ResultHandlerImpl();
-  pipeline.insert("hello",resultHandler);
+  ksession.execute(new InsertObjectCommand("hello"));
   assertEquals(2,list.size());
   assertTrue(list.contains("rule1"));
   assertTrue(list.contains("rule2"));
