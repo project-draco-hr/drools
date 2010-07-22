@@ -15,10 +15,14 @@
     Accumulator accumulator=null;
     Declaration[] declarations=null;
     if (accumDescr.isExternalFunction()) {
+      AccumulateFunction function=context.getConfiguration().getAccumulateFunction(accumDescr.getFunctionIdentifier());
+      if (function == null) {
+        context.getErrors().add(new DescrBuildError(accumDescr,context.getRuleDescr(),null,"Unknown accumulate function: '" + accumDescr.getFunctionIdentifier() + "' on rule '"+ context.getRuleDescr().getName()+ "'. All accumulate functions must be registered before building a resource."));
+        return null;
+      }
       Map<String,Class<?>> declarationsMap=context.getDeclarationResolver().getDeclarationClasses(context.getRule());
       final Dialect.AnalysisResult analysis=dialect.analyzeExpression(context,accumDescr,accumDescr.getExpression(),new Map[]{declarationsMap,context.getPackageBuilder().getGlobals()});
       MVELCompilationUnit unit=dialect.getMVELCompilationUnit((String)accumDescr.getExpression(),analysis,previousDeclarations,(Declaration[])source.getOuterDeclarations().values().toArray(new Declaration[source.getOuterDeclarations().size()]),null,context);
-      AccumulateFunction function=context.getConfiguration().getAccumulateFunction(accumDescr.getFunctionIdentifier());
       accumulator=new MVELAccumulatorFunctionExecutor(unit,function);
     }
  else {

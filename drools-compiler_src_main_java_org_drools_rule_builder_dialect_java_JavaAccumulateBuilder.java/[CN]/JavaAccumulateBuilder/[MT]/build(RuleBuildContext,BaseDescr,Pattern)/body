@@ -10,6 +10,11 @@
   }
   Accumulate accumulate=null;
   if (accumDescr.isExternalFunction()) {
+    AccumulateFunction function=context.getConfiguration().getAccumulateFunction(accumDescr.getFunctionIdentifier());
+    if (function == null) {
+      context.getErrors().add(new DescrBuildError(accumDescr,context.getRuleDescr(),null,"Unknown accumulate function: '" + accumDescr.getFunctionIdentifier() + "' on rule '"+ context.getRuleDescr().getName()+ "'. All accumulate functions must be registered before building a resource."));
+      return null;
+    }
     final JavaAnalysisResult analysis=(JavaAnalysisResult)context.getDialect().analyzeBlock(context,accumDescr,accumDescr.getExpression(),new Map[]{context.getDeclarationResolver().getDeclarationClasses(context.getRule()),context.getPackageBuilder().getGlobals()});
     final List[] usedIdentifiers=analysis.getBoundIdentifiers();
     final List<Declaration> tupleDeclarations=new ArrayList<Declaration>();
@@ -22,7 +27,6 @@
     final String className="accumulateExpression" + context.getNextId();
     final Map<String,Object> map=createVariableContext(className,(String)accumDescr.getExpression(),context,previousDeclarations,sourceDeclArr,requiredGlobals);
     map.put("readLocalsFromTuple",accumDescr.isMultiPattern() ? Boolean.TRUE : Boolean.FALSE);
-    AccumulateFunction function=context.getConfiguration().getAccumulateFunction(accumDescr.getFunctionIdentifier());
     JavaAccumulatorFunctionExecutor accumulator=new JavaAccumulatorFunctionExecutor(function);
     accumulate=new Accumulate(source,previousDeclarations,sourceDeclArr,accumulator);
     generatTemplates("returnValueMethod","returnValueInvoker",context,className,map,accumulator,accumDescr);
