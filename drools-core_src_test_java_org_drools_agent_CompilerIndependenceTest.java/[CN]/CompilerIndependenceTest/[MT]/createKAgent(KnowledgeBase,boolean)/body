@@ -1,0 +1,36 @@
+{
+  ResourceChangeScannerConfiguration sconf=ResourceFactory.getResourceChangeScannerService().newResourceChangeScannerConfiguration();
+  sconf.setProperty("drools.resource.scanner.interval","2");
+  ResourceFactory.getResourceChangeScannerService().configure(sconf);
+  KnowledgeAgentConfiguration aconf=KnowledgeAgentFactory.newKnowledgeAgentConfiguration();
+  aconf.setProperty("drools.agent.scanDirectories","true");
+  aconf.setProperty("drools.agent.scanResources","true");
+  aconf.setProperty("drools.agent.newInstance","" + newInstance);
+  KnowledgeAgent kagent=KnowledgeAgentFactory.newKnowledgeAgent("test agent",kbase,aconf);
+  kagent.addEventListener(new KnowledgeAgentEventListener(){
+    public void beforeChangeSetApplied(    BeforeChangeSetAppliedEvent event){
+    }
+    public void afterChangeSetApplied(    AfterChangeSetAppliedEvent event){
+    }
+    public void beforeChangeSetProcessed(    BeforeChangeSetProcessedEvent event){
+    }
+    public void afterChangeSetProcessed(    AfterChangeSetProcessedEvent event){
+    }
+    public void beforeResourceProcessed(    BeforeResourceProcessedEvent event){
+    }
+    public void afterResourceProcessed(    AfterResourceProcessedEvent event){
+    }
+    public void knowledgeBaseUpdated(    KnowledgeBaseUpdatedEvent event){
+      System.out.println("KBase was updated");
+synchronized (lock) {
+        kbaseUpdated=true;
+        lock.notifyAll();
+      }
+    }
+    public void resourceCompilationFailed(    ResourceCompilationFailedEvent event){
+    }
+  }
+);
+  assertEquals("test agent",kagent.getName());
+  return kagent;
+}
