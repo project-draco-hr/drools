@@ -4,12 +4,13 @@
   int strategyIndex=context.stream.readInt();
   ObjectMarshallingStrategy strategy=context.resolverStrategyFactory.getStrategy(strategyIndex);
   Object object=strategy.read(context.stream);
-  InternalFactHandle handle=new DefaultFactHandle(id,object,recency);
+  WorkingMemoryEntryPoint entryPoint=null;
   if (context.readBoolean()) {
-    String entryPoint=context.readUTF();
-    if (entryPoint != null && !entryPoint.equals("")) {
-      handle.setEntryPoint(context.wm.getEntryPoints().get(entryPoint));
+    String entryPointId=context.readUTF();
+    if (entryPointId != null && !entryPointId.equals("")) {
+      entryPoint=context.wm.getEntryPoints().get(entryPointId);
     }
   }
+  InternalFactHandle handle=new DefaultFactHandle(id,object,recency,entryPoint);
   return handle;
 }
