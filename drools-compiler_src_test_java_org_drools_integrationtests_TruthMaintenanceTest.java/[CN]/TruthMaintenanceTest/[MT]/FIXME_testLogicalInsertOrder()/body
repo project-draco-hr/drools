@@ -1,0 +1,28 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("test_LogicalInsertOrder.drl",getClass()),ResourceType.DRL);
+  KnowledgeBase kbase=getKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  final StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  WorkingMemoryEventListener wmel=mock(WorkingMemoryEventListener.class);
+  session.addEventListener(wmel);
+  Person bob=new Person("bob");
+  bob.setStatus("hungry");
+  Person mark=new Person("mark");
+  mark.setStatus("thirsty");
+  session.insert(bob);
+  session.insert(mark);
+  int count=session.fireAllRules();
+  assertEquals(2,count);
+  ArgumentCaptor<ObjectInsertedEvent> insertsCaptor=ArgumentCaptor.forClass(ObjectInsertedEvent.class);
+  verify(wmel,times(4)).objectInserted(insertsCaptor.capture());
+  List<ObjectInsertedEvent> inserts=insertsCaptor.getAllValues();
+  assertThat(inserts.get(2).getObject(),is((Object)"rule 1"));
+  assertThat(inserts.get(3).getObject(),is((Object)"rule 2"));
+  ArgumentCaptor<ObjectRetractedEvent> retractsCaptor=ArgumentCaptor.forClass(ObjectRetractedEvent.class);
+  verify(wmel,times(2)).objectRetracted(retractsCaptor.capture());
+  List<ObjectRetractedEvent> retracts=retractsCaptor.getAllValues();
+  assertThat(retracts.get(0).getOldObject(),is((Object)"rule 1"));
+  assertThat(retracts.get(1).getOldObject(),is((Object)"rule 2"));
+}
