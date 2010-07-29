@@ -1,26 +1,15 @@
 {
   Class clazz=null;
   try {
-    clazz=Thread.currentThread().getContextClassLoader().loadClass(className);
+    clazz=this.classLoader.loadClass(className);
   }
  catch (  ClassNotFoundException e) {
-  }
-  if (clazz == null) {
-    try {
-      clazz=RuleBaseConfiguration.class.getClassLoader().loadClass(className);
-    }
- catch (    ClassNotFoundException e) {
-    }
-  }
-  if (clazz != null) {
-    try {
-      return (ConflictResolver)clazz.getMethod("getInstance",null).invoke(null,null);
-    }
- catch (    Exception e) {
-      throw new IllegalArgumentException("Unable to set Conflict Resolver '" + className + "'");
-    }
-  }
- else {
     throw new IllegalArgumentException("conflict Resolver '" + className + "' not found");
+  }
+  try {
+    return (ConflictResolver)clazz.getMethod("getInstance",null).invoke(null,null);
+  }
+ catch (  Exception e) {
+    throw new IllegalArgumentException("Unable to set Conflict Resolver '" + className + "'");
   }
 }
