@@ -8,10 +8,14 @@ synchronized (this.registeredResources) {
       incrementalBuildResources(changeSetState);
     }
     InternalRuleBase ruleBase=(InternalRuleBase)((KnowledgeBaseImpl)this.kbase).ruleBase;
-synchronized (ruleBase.getPackagesMap()) {
+    ruleBase.lock();
+    try {
       if (ruleBase.getConfiguration().isSequential()) {
         ruleBase.getReteooBuilder().order();
       }
+    }
+  finally {
+      ruleBase.unlock();
     }
   }
   this.eventSupport.fireKnowledgeBaseUpdated(this.kbase);

@@ -1,18 +1,18 @@
 {
-synchronized (this.pkgs) {
+  lock();
+  try {
     final Package pkg=this.pkgs.get(packageName);
     if (pkg == null) {
       throw new IllegalArgumentException("Package name '" + packageName + "' does not exist for this Rule Base.");
     }
-    this.eventSupport.fireBeforeFunctionRemoved(pkg,functionName);
     if (!pkg.getFunctions().containsKey(functionName)) {
       throw new IllegalArgumentException("function name '" + packageName + "' does not exist in the Package '"+ packageName+ "'.");
     }
+    removeFunction(pkg,functionName);
     pkg.removeFunction(functionName);
-    if (this.reloadPackageCompilationData == null) {
-      this.reloadPackageCompilationData=new ReloadPackageCompilationData();
-    }
-    this.reloadPackageCompilationData.addDialectDatas(pkg.getDialectRuntimeRegistry());
-    this.eventSupport.fireAfterFunctionRemoved(pkg,functionName);
+    addReloadDialectDatas(pkg.getDialectRuntimeRegistry());
+  }
+  finally {
+    unlock();
   }
 }

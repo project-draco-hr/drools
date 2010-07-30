@@ -1,7 +1,8 @@
 {
   StatefulSession session=null;
   try {
-synchronized (this.pkgs) {
+    readLock();
+    try {
       ObjectInputStream ois=new ObjectInputStream(stream);
       ReteooStatefulSession rsession=(ReteooStatefulSession)ois.readObject();
       ByteArrayInputStream bais=new ByteArrayInputStream(rsession.bytes);
@@ -15,6 +16,9 @@ synchronized (this.pkgs) {
         }
       }
       bais.close();
+    }
+  finally {
+      readUnlock();
     }
   }
  catch (  Exception e) {

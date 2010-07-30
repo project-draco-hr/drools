@@ -1,5 +1,10 @@
 {
-  this.eventSupport.fireBeforeRuleBaseUnlocked();
+  boolean lastUnlock=this.lock.getWriteHoldCount() == 1;
+  if (lastUnlock) {
+    this.eventSupport.fireBeforeRuleBaseUnlocked();
+  }
   this.lock.writeLock().unlock();
-  this.eventSupport.fireAfterRuleBaseUnlocked();
+  if (lastUnlock) {
+    this.eventSupport.fireAfterRuleBaseUnlocked();
+  }
 }

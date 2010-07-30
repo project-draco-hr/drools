@@ -4,10 +4,14 @@
   this.conf=(conf != null) ? conf : new SessionConfiguration();
   this.environment=EnvironmentFactory.newEnvironment();
   if (this.ruleBase != null) {
-synchronized (this.ruleBase.getPackagesMap()) {
+    this.ruleBase.lock();
+    try {
       if (ruleBase.getConfiguration().isSequential()) {
         this.ruleBase.getReteooBuilder().order();
       }
+    }
+  finally {
+      this.ruleBase.unlock();
     }
   }
 }

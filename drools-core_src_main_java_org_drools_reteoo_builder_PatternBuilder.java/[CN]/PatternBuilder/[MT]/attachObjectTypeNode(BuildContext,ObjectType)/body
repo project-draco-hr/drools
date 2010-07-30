@@ -1,9 +1,11 @@
 {
-synchronized (context.getRuleBase().getPackagesMap()) {
+  final InternalRuleBase ruleBase=context.getRuleBase();
+  ruleBase.readLock();
+  try {
     InternalWorkingMemory[] wms=context.getWorkingMemories();
-    EntryPointNode epn=context.getRuleBase().getRete().getEntryPointNode(context.getCurrentEntryPoint());
+    EntryPointNode epn=ruleBase.getRete().getEntryPointNode(context.getCurrentEntryPoint());
     if (epn == null) {
-      epn=new EntryPointNode(context.getNextId(),context.getRuleBase().getRete(),context);
+      epn=new EntryPointNode(context.getNextId(),ruleBase.getRete(),context);
       if (wms.length > 0) {
         epn.attach(wms);
       }
@@ -21,5 +23,8 @@ synchronized (context.getRuleBase().getPackagesMap()) {
       otn.attach();
     }
     return otn;
+  }
+  finally {
+    ruleBase.readUnlock();
   }
 }

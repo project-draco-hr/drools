@@ -2,7 +2,8 @@
   if (this.kagent != null) {
     this.ruleBase=(InternalRuleBase)((KnowledgeBaseImpl)this.kagent.getKnowledgeBase()).ruleBase;
   }
-synchronized (this.ruleBase.getPackagesMap()) {
+  this.ruleBase.readLock();
+  try {
     ReteooWorkingMemory wm=new ReteooWorkingMemory(this.ruleBase.nextWorkingMemoryCounter(),this.ruleBase,(SessionConfiguration)this.conf,this.environment);
     StatefulKnowledgeSessionImpl ksession=new StatefulKnowledgeSessionImpl(wm,new KnowledgeBaseImpl(this.ruleBase));
     ((Globals)wm.getGlobalResolver()).setDelegate(this.sessionGlobals);
@@ -13,5 +14,8 @@ synchronized (this.ruleBase.getPackagesMap()) {
     final InternalFactHandle handle=wm.getFactHandleFactory().newFactHandle(InitialFactImpl.getInstance(),wm.getObjectTypeConfigurationRegistry().getObjectTypeConf(EntryPoint.DEFAULT,InitialFactImpl.getInstance()),wm,wm);
     wm.queueWorkingMemoryAction(new WorkingMemoryReteAssertAction(handle,false,true,null,null));
     return ksession;
+  }
+  finally {
+    this.ruleBase.readUnlock();
   }
 }

@@ -1,6 +1,6 @@
 {
+  lock();
   try {
-    lock();
     final Package pkg=this.pkgs.get(packageName);
     if (pkg == null) {
       throw new IllegalArgumentException("Package name '" + packageName + "' does not exist for this Rule Base.");
@@ -11,15 +11,13 @@
     for (int i=0; i < rules.length; ++i) {
       removeRule(pkg,rules[i]);
     }
-    final Set referencedGlobals=new HashSet();
-    for (final Iterator it=this.pkgs.values().iterator(); it.hasNext(); ) {
-      final org.drools.rule.Package pkgref=(org.drools.rule.Package)it.next();
+    final Set<String> referencedGlobals=new HashSet<String>();
+    for (    Package pkgref : this.pkgs.values()) {
       if (pkgref != pkg) {
         referencedGlobals.addAll(pkgref.getGlobals().keySet());
       }
     }
-    for (final Iterator it=pkg.getGlobals().keySet().iterator(); it.hasNext(); ) {
-      final String globalName=(String)it.next();
+    for (    String globalName : pkg.getGlobals().keySet()) {
       if (!referencedGlobals.contains(globalName)) {
         this.globals.remove(globalName);
       }
