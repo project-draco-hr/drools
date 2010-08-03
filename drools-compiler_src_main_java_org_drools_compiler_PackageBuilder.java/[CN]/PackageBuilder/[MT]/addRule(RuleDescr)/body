@@ -1,8 +1,9 @@
 {
   ruleDescr.setResource(resource);
   PackageRegistry pkgRegistry=this.pkgRegistryMap.get(ruleDescr.getNamespace());
+  Package pkg=pkgRegistry.getPackage();
   DialectCompiletimeRegistry ctr=pkgRegistry.getDialectCompiletimeRegistry();
-  RuleBuildContext context=new RuleBuildContext(this,ruleDescr,ctr,pkgRegistry.getPackage(),ctr.getDialect(pkgRegistry.getDialect()));
+  RuleBuildContext context=new RuleBuildContext(this,ruleDescr,ctr,pkg,ctr.getDialect(pkgRegistry.getDialect()));
   this.ruleBuilder.build(context);
   this.results.addAll(context.getErrors());
   if (resource != null && ((InternalResource)resource).hasURL()) {
@@ -10,9 +11,15 @@
   }
   context.getDialect().addRule(context);
   if (this.ruleBase != null) {
-    if (pkgRegistry.getPackage().getRule(ruleDescr.getName()) != null) {
-      this.ruleBase.removeRule(pkgRegistry.getPackage(),pkgRegistry.getPackage().getRule(ruleDescr.getName()));
+    if (pkg.getRule(ruleDescr.getName()) != null) {
+      this.ruleBase.lock();
+      try {
+        this.ruleBase.removeRule(pkg,pkg.getRule(ruleDescr.getName()));
+      }
+  finally {
+        this.ruleBase.unlock();
+      }
     }
   }
-  pkgRegistry.getPackage().addRule(context.getRule());
+  pkg.addRule(context.getRule());
 }

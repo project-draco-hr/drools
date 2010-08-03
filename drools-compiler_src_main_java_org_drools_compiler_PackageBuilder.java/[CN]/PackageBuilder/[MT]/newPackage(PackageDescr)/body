@@ -1,14 +1,17 @@
 {
   Package pkg;
-  if (this.ruleBase != null && this.ruleBase.getPackage(packageDescr.getName()) != null) {
-    pkg=this.ruleBase.getPackage(packageDescr.getName());
-  }
- else {
+  if (this.ruleBase == null || (pkg=this.ruleBase.getPackage(packageDescr.getName())) == null) {
     pkg=new Package(packageDescr.getName());
     pkg.setClassFieldAccessorCache(new ClassFieldAccessorCache(this.rootClassLoader));
     if (this.ruleBase != null) {
-      this.ruleBase.addPackage(pkg);
-      pkg=this.ruleBase.getPackage(packageDescr.getName());
+      this.ruleBase.lock();
+      try {
+        this.ruleBase.addPackage(pkg);
+        pkg=this.ruleBase.getPackage(packageDescr.getName());
+      }
+  finally {
+        this.ruleBase.unlock();
+      }
     }
  else {
       pkg.getDialectRuntimeRegistry().onAdd(this.rootClassLoader);
