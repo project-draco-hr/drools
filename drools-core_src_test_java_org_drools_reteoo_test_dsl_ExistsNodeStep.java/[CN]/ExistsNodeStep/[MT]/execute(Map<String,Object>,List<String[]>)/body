@@ -7,26 +7,34 @@
     String rightInput=a[2];
     LeftTupleSource leftTupleSource;
     if ("mock".equals(leftInput)) {
-      leftTupleSource=new MockTupleSource(buildContext.getNextId());
+      leftTupleSource=Mockito.mock(LeftTupleSource.class);
     }
  else {
       leftTupleSource=(LeftTupleSource)context.get(leftInput);
     }
     ObjectSource rightObjectSource;
     if ("mock".equals(rightInput)) {
-      rightObjectSource=new MockObjectSource(buildContext.getNextId());
+      rightObjectSource=Mockito.mock(ObjectSource.class);
     }
  else {
       rightObjectSource=(ObjectSource)context.get(rightInput);
     }
     a=args.get(1);
-    String fieldName=a[0].trim();
-    String operator=a[1].trim();
-    String var=a[2].trim();
+    String type=a[0].trim();
+    String fieldName=a[1].trim();
+    String operator=a[2].trim();
+    String var=a[3].trim();
+    Pattern rightSidePattern=null;
+    try {
+      rightSidePattern=reteTesterHelper.getPattern(1,type);
+    }
+ catch (    Exception e) {
+      throw new IllegalArgumentException("Not possible to process arguments: " + Arrays.toString(a));
+    }
     Declaration declr=(Declaration)context.get(var);
     BetaNodeFieldConstraint betaConstraint;
     try {
-      betaConstraint=this.reteTesterHelper.getBoundVariableConstraint(declr.getPattern(),fieldName,declr,operator);
+      betaConstraint=this.reteTesterHelper.getBoundVariableConstraint(rightSidePattern,fieldName,declr,operator);
     }
  catch (    IntrospectionException e) {
       throw new IllegalArgumentException();
