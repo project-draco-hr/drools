@@ -1,0 +1,63 @@
+{
+  try {
+    ClassBuilder builder=new ClassBuilder();
+    ClassDefinition classDef=new ClassDefinition("org.drools.TestClass5",null,new String[]{});
+    String[] types=new String[]{"byte","short","int","long","float","double","char","java.lang.String","boolean"};
+    FieldDefinition[] fields=new FieldDefinition[types.length];
+    for (int i=0; i < types.length; i++) {
+      String attrName=types[i].substring(types[i].lastIndexOf('.') + 1);
+      attrName=attrName.substring(0,1).toLowerCase() + attrName.substring(1) + "Attr";
+      fields[i]=new FieldDefinition(attrName,types[i],i % 2 == 0);
+      classDef.addField(fields[i]);
+    }
+    Class<?> clazz=builder.buildAndLoadClass(classDef);
+    for (    FieldDefinition field : fields) {
+      field.setReadWriteAccessor(store.getAccessor(clazz,field.getName(),classLoader));
+    }
+    Constructor<?>[] cons=clazz.getConstructors();
+    Assert.assertEquals(3,cons.length);
+    for (    Constructor<?> c : cons) {
+      Class<?>[] ptypes=c.getParameterTypes();
+      if (ptypes.length == 0) {
+      }
+ else       if (ptypes.length == fields.length) {
+        for (int i=0; i < ptypes.length; i++) {
+          if (!ptypes[i].equals(fields[i].getType())) {
+            Assert.fail("Wrong parameter in constructor. index=" + i + " expected="+ fields[i].getType()+ " found="+ ptypes[i]);
+          }
+        }
+        Object instance=c.newInstance((byte)1,(short)2,3,4l,5.0f,6.0d,'a',"xyz",true);
+        assertEquals((byte)1,fields[0].getValue(instance));
+        assertEquals((short)2,fields[1].getValue(instance));
+        assertEquals(3,fields[2].getValue(instance));
+        assertEquals(4l,fields[3].getValue(instance));
+        assertEquals(5.0f,fields[4].getValue(instance));
+        assertEquals(6.0d,fields[5].getValue(instance));
+        assertEquals('a',fields[6].getValue(instance));
+        assertEquals("xyz",fields[7].getValue(instance));
+        assertEquals(true,fields[8].getValue(instance));
+      }
+ else       if (ptypes.length == (fields.length / 2 + 1)) {
+        int i=0;
+        for (        FieldDefinition field : fields) {
+          if (field.isKey() && !ptypes[i++].equals(field.getType())) {
+            Assert.fail("Wrong parameter in constructor. index=" + i + " expected="+ field.getType()+ " found="+ ptypes[i]);
+          }
+        }
+        Object instance=c.newInstance((byte)1,3,5.0f,'a',true);
+        assertEquals((byte)1,fields[0].getValue(instance));
+        assertEquals(3,fields[2].getValue(instance));
+        assertEquals(5.0f,fields[4].getValue(instance));
+        assertEquals('a',fields[6].getValue(instance));
+        assertEquals(true,fields[8].getValue(instance));
+      }
+ else {
+        Assert.fail("Unexpected constructor: " + c.toString());
+      }
+    }
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    Assert.fail("Unexpected Exception: " + e.getMessage());
+  }
+}
