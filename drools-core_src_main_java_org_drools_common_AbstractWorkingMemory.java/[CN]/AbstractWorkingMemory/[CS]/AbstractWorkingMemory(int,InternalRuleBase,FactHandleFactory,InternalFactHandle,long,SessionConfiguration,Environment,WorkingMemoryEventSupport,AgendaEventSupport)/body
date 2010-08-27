@@ -1,0 +1,70 @@
+{
+  this.id=id;
+  this.config=config;
+  this.ruleBase=ruleBase;
+  this.handleFactory=handleFactory;
+  this.environment=environment;
+  Globals globals=(Globals)this.environment.get(EnvironmentName.GLOBALS);
+  if (globals != null) {
+    if (!(globals instanceof GlobalResolver)) {
+      this.globalResolver=new GlobalsAdapter(globals);
+    }
+ else {
+      this.globalResolver=(GlobalResolver)globals;
+    }
+  }
+ else {
+    this.globalResolver=new MapGlobalResolver();
+  }
+  this.calendars=new CalendarsImpl();
+  this.dateFormats=(DateFormats)this.environment.get(EnvironmentName.DATE_FORMATS);
+  if (this.dateFormats == null) {
+    this.dateFormats=new DateFormatsImpl();
+    this.environment.set(EnvironmentName.DATE_FORMATS,this.dateFormats);
+  }
+  final RuleBaseConfiguration conf=this.ruleBase.getConfiguration();
+  this.maintainTms=conf.isMaintainTms();
+  this.sequential=conf.isSequential();
+  if (initialFactHandle == null) {
+    this.initialFactHandle=handleFactory.newFactHandle(InitialFactImpl.getInstance(),null,this,this);
+  }
+ else {
+    this.initialFactHandle=initialFactHandle;
+  }
+  this.actionQueue=new ConcurrentLinkedQueue<WorkingMemoryAction>();
+  this.evaluatingActionQueue=new AtomicBoolean(false);
+  this.addRemovePropertyChangeListenerArgs=new Object[]{this};
+  this.workingMemoryEventSupport=workingMemoryEventSupport;
+  this.agendaEventSupport=agendaEventSupport;
+  this.__ruleBaseEventListeners=new LinkedList();
+  this.lock=new ReentrantLock();
+  this.liaPropagations=Collections.EMPTY_LIST;
+  this.timeMachine=new TimeMachine();
+  timerService=TimerServiceFactory.getTimerService(this.config);
+  this.nodeMemories=new ConcurrentNodeMemories(this.ruleBase);
+  if (this.maintainTms) {
+    this.tms=new TruthMaintenanceSystem(this);
+  }
+ else {
+    this.tms=null;
+  }
+  this.propagationIdCounter=new AtomicLong(propagationContext);
+  this.objectStore=new SingleThreadedObjectStore(conf,this.lock);
+  if (LogicalOverride.DISCARD.equals(conf.getLogicalOverride())) {
+    this.discardOnLogicalOverride=true;
+  }
+ else {
+    this.discardOnLogicalOverride=false;
+  }
+  initEntryPointsMap();
+  this.firing=new AtomicBoolean(false);
+  this.modifyContexts=new HashMap<InternalFactHandle,PropagationContext>();
+  this.exitPoints=new ConcurrentHashMap<String,ExitPoint>();
+  this.channels=new ConcurrentHashMap<String,Channel>();
+  initPartitionManagers();
+  initTransient();
+  this.opCounter=new AtomicLong(0);
+  this.lastIdleTimestamp=new AtomicLong(-1);
+  this.processRuntime=createProcessRuntime();
+  initManagementBeans();
+}
