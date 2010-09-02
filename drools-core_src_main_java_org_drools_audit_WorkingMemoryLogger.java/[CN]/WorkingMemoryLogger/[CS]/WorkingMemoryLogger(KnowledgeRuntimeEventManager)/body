@@ -2,9 +2,12 @@
   if (session instanceof StatefulKnowledgeSessionImpl) {
     WorkingMemoryEventManager eventManager=((StatefulKnowledgeSessionImpl)session).session;
     eventManager.addEventListener((WorkingMemoryEventListener)this);
-    eventManager.addEventListener((AgendaEventListener)this);
-    ((StatefulKnowledgeSessionImpl)session).session.addEventListener((ProcessEventListener)this);
     eventManager.addEventListener((RuleBaseEventListener)this);
+    eventManager.addEventListener((RuleBaseEventListener)this);
+    InternalProcessRuntime processRuntime=((StatefulKnowledgeSessionImpl)session).session.getProcessRuntime();
+    if (processRuntime != null) {
+      processRuntime.addEventListener((ProcessEventListener)this);
+    }
   }
  else   if (session instanceof StatelessKnowledgeSessionImpl) {
     ((StatelessKnowledgeSessionImpl)session).workingMemoryEventSupport.addEventListener(this);
@@ -16,8 +19,11 @@
     ReteooWorkingMemory eventManager=((StatefulKnowledgeSessionImpl)((KnowledgeCommandContext)((CommandBasedStatefulKnowledgeSession)session).getCommandService().getContext()).getStatefulKnowledgesession()).session;
     eventManager.addEventListener((WorkingMemoryEventListener)this);
     eventManager.addEventListener((AgendaEventListener)this);
-    eventManager.addEventListener((ProcessEventListener)this);
+    InternalProcessRuntime processRuntime=eventManager.getProcessRuntime();
     eventManager.addEventListener((RuleBaseEventListener)this);
+    if (processRuntime != null) {
+      processRuntime.addEventListener((ProcessEventListener)this);
+    }
   }
  else {
     throw new IllegalArgumentException("Not supported session in logger: " + session.getClass());
