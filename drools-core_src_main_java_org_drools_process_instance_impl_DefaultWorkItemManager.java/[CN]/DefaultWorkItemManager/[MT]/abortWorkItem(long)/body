@@ -1,0 +1,12 @@
+{
+  WorkItemImpl workItem=(WorkItemImpl)workItems.get(new Long(id));
+  if (workItem != null) {
+    ProcessInstance processInstance=(ProcessInstance)workingMemory.getProcessInstance(workItem.getProcessInstanceId());
+    workItem.setState(WorkItem.ABORTED);
+    if (processInstance != null) {
+      processInstance.signalEvent("workItemAborted",workItem);
+    }
+    workItems.remove(new Long(id));
+    workingMemory.fireAllRules();
+  }
+}

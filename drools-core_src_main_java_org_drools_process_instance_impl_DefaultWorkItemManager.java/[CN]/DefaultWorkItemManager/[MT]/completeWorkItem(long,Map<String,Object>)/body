@@ -1,0 +1,13 @@
+{
+  WorkItem workItem=(WorkItem)workItems.get(new Long(id));
+  if (workItem != null) {
+    ((org.drools.process.instance.WorkItem)workItem).setResults(results);
+    ProcessInstance processInstance=(ProcessInstance)workingMemory.getProcessInstance(workItem.getProcessInstanceId());
+    ((org.drools.process.instance.WorkItem)workItem).setState(WorkItem.COMPLETED);
+    if (processInstance != null) {
+      processInstance.signalEvent("workItemCompleted",workItem);
+    }
+    workItems.remove(new Long(id));
+    workingMemory.fireAllRules();
+  }
+}
