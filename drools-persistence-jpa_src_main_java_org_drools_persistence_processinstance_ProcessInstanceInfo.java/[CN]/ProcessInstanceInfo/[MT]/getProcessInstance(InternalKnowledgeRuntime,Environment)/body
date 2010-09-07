@@ -1,0 +1,21 @@
+{
+  this.env=env;
+  if (processInstance == null) {
+    try {
+      ByteArrayInputStream bais=new ByteArrayInputStream(processInstanceByteArray);
+      MarshallerReaderContext context=new MarshallerReaderContext(bais,(InternalRuleBase)((InternalKnowledgeBase)kruntime.getKnowledgeBase()).getRuleBase(),null,null);
+      ProcessInstanceMarshaller marshaller=getMarshallerFromContext(context);
+      context.wm=((StatefulKnowledgeSessionImpl)kruntime).getInternalWorkingMemory();
+      processInstance=marshaller.readProcessInstance(context,!externalVariables);
+      if (externalVariables) {
+        restoreVariables();
+      }
+      context.close();
+    }
+ catch (    IOException e) {
+      e.printStackTrace();
+      throw new IllegalArgumentException("IOException while loading process instance: " + e.getMessage(),e);
+    }
+  }
+  return processInstance;
+}
