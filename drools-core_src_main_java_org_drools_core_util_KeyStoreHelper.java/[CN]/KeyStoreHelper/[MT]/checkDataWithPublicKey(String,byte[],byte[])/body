@@ -1,0 +1,13 @@
+{
+  if (pvtKeyStore == null) {
+    throw new RuntimeDroolsException("Key store with public key not configured. Please configure it properly before using signed serialization.");
+  }
+  Certificate cert=pubKeyStore.getCertificate(publicKeyAlias);
+  if (cert == null) {
+    throw new RuntimeDroolsException("Public certificate for key '" + publicKeyAlias + "' not found in the configured key store. Impossible to deserialize the object.");
+  }
+  Signature sig=Signature.getInstance("MD5withRSA");
+  sig.initVerify(cert.getPublicKey());
+  sig.update(data);
+  return sig.verify(signature);
+}

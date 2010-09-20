@@ -1,9 +1,23 @@
 {
-  stream.writeInt(this.store.size());
+  KeyStoreHelper helper=new KeyStoreHelper();
+  stream.writeBoolean(helper.isSigned());
+  if (helper.isSigned()) {
+    stream.writeObject(helper.getPvtKeyAlias());
+  }
+  ByteArrayOutputStream bos=new ByteArrayOutputStream();
+  ObjectOutput out=new ObjectOutputStream(bos);
+  out.writeInt(this.store.size());
   for (Iterator it=this.store.entrySet().iterator(); it.hasNext(); ) {
     Entry entry=(Entry)it.next();
-    stream.writeObject(entry.getKey());
-    stream.writeObject(entry.getValue());
+    out.writeObject(entry.getKey());
+    out.writeObject(entry.getValue());
+  }
+  out.flush();
+  out.close();
+  byte[] buff=bos.toByteArray();
+  stream.writeObject(buff);
+  if (helper.isSigned()) {
+    sign(stream,helper,buff);
   }
   stream.writeInt(this.invokerLookups.size());
   for (Iterator it=this.invokerLookups.entrySet().iterator(); it.hasNext(); ) {

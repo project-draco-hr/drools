@@ -1,0 +1,18 @@
+{
+  URL serverKeyStoreURL=getClass().getResource("droolsServer.keystore");
+  System.setProperty(KeyStoreHelper.PROP_SIGN,"true");
+  System.setProperty(KeyStoreHelper.PROP_PVT_KS_URL,serverKeyStoreURL.toExternalForm());
+  System.setProperty(KeyStoreHelper.PROP_PVT_KS_PWD,"serverpwd");
+  System.setProperty(KeyStoreHelper.PROP_PVT_ALIAS,"droolsKey");
+  System.setProperty(KeyStoreHelper.PROP_PVT_PWD,"keypwd");
+  KeyStoreHelper serverHelper=new KeyStoreHelper();
+  byte[] data="Hello World".getBytes("UTF8");
+  byte[] signature=serverHelper.signDataWithPrivateKey(data);
+  URL clientKeyStoreURL=getClass().getResource("droolsClient.keystore");
+  System.setProperty(KeyStoreHelper.PROP_SIGN,"true");
+  System.setProperty(KeyStoreHelper.PROP_PUB_KS_URL,clientKeyStoreURL.toExternalForm());
+  System.setProperty(KeyStoreHelper.PROP_PUB_KS_PWD,"clientpwd");
+  KeyStoreHelper clientHelper=new KeyStoreHelper();
+  assertTrue(clientHelper.checkDataWithPublicKey("droolsKey",data,signature));
+  assertFalse(clientHelper.checkDataWithPublicKey("droolsKey","fake".getBytes("UTF8"),signature));
+}
