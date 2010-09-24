@@ -1,0 +1,18 @@
+{
+  final Rete source=this.ruleBase.getRete();
+  final ClassObjectType cot=new ClassObjectType(object.getClass());
+  final Map<ObjectType,ObjectTypeNode> map=source.getObjectTypeNodes(EntryPoint.DEFAULT);
+  final ObjectTypeNode node=map.get(cot);
+  final ObjectHashSet memory=(ObjectHashSet)this.getNodeMemory(node);
+  org.drools.core.util.Iterator it=memory.iterator();
+  for (Object obj=it.next(); obj != null; obj=it.next()) {
+    org.drools.core.util.ObjectHashSet.ObjectEntry holder=(org.drools.core.util.ObjectHashSet.ObjectEntry)obj;
+    InternalFactHandle handle=(InternalFactHandle)holder.getValue();
+    if (handle != null) {
+      EqualityKey key=createEqualityKey(handle);
+      key.setStatus(EqualityKey.STATED);
+      this.tms.put(key);
+    }
+  }
+  conf.enableTMS();
+}

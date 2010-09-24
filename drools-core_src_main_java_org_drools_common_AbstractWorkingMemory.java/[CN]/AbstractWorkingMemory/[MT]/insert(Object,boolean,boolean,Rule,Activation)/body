@@ -5,6 +5,9 @@
   try {
     startOperation();
     ObjectTypeConf typeConf=this.typeConfReg.getObjectTypeConf(this.entryPoint,object);
+    if (logical && !typeConf.isTMSEnabled()) {
+      enableTMS(object,typeConf);
+    }
     InternalFactHandle handle=null;
     if (isSequential()) {
       handle=createHandle(object,typeConf);
@@ -15,7 +18,7 @@
       this.ruleBase.readLock();
       this.lock.lock();
       handle=(InternalFactHandle)this.objectStore.getHandleForObject(object);
-      if (this.maintainTms) {
+      if (typeConf.isTMSEnabled()) {
         EqualityKey key=null;
         if (handle == null) {
           key=this.tms.get(object);
@@ -36,8 +39,7 @@
         }
         if (key == null) {
           handle=createHandle(object,typeConf);
-          key=new EqualityKey(handle);
-          handle.setEqualityKey(key);
+          key=createEqualityKey(handle);
           this.tms.put(key);
           if (!logical) {
             key.setStatus(EqualityKey.STATED);

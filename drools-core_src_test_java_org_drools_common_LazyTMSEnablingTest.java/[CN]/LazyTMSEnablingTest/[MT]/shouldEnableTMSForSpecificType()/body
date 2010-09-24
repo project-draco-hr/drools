@@ -1,0 +1,22 @@
+{
+  final String stringFact1="toto";
+  final String stringFact2="toto";
+  final String anotherString="tata";
+  final Integer intFact1=99;
+  final Integer intFact2=99;
+  final Double doubleFact=77.8;
+  ObjectTypeConf stringTypeConf=wm.getObjectTypeConfigurationRegistry().getObjectTypeConf(wm.getEntryPoint(),stringFact1);
+  ObjectTypeConf intTypeConf=wm.getObjectTypeConfigurationRegistry().getObjectTypeConf(wm.getEntryPoint(),intFact1);
+  wm.insert(stringFact1);
+  wm.insert(anotherString);
+  wm.insert(intFact1);
+  wm.insert(doubleFact);
+  for (  ObjectTypeConf conf : wm.getObjectTypeConfigurationRegistry().values()) {
+    assertFalse("TMS shouldn't be enabled for any type, since no logical insert was done.",conf.isTMSEnabled());
+  }
+  wm.insertLogical(stringFact2);
+  assertTrue("Should have enabled TMS for Strings.",stringTypeConf.isTMSEnabled());
+  assertFalse("Shouldn't have enabled TMS for Integers.",intTypeConf.isTMSEnabled());
+  wm.insertLogical(intFact2);
+  assertTrue("Now it should have enabled TMS for Integers!.",intTypeConf.isTMSEnabled());
+}
