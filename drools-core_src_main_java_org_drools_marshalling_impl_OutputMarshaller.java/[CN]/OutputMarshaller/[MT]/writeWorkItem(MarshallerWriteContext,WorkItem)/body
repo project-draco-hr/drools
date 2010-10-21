@@ -1,3 +1,27 @@
 {
-  writeWorkItem(context,workItem,true);
+  ObjectOutputStream stream=context.stream;
+  stream.writeLong(workItem.getId());
+  stream.writeLong(workItem.getProcessInstanceId());
+  stream.writeUTF(workItem.getName());
+  stream.writeInt(workItem.getState());
+  Map<String,Object> parameters=workItem.getParameters();
+  Collection<Object> notNullValues=new ArrayList<Object>();
+  for (  Object value : parameters.values()) {
+    if (value != null) {
+      notNullValues.add(value);
+    }
+  }
+  stream.writeInt(notNullValues.size());
+  for (  String key : parameters.keySet()) {
+    Object object=parameters.get(key);
+    if (object != null) {
+      stream.writeUTF(key);
+      int index=context.objectMarshallingStrategyStore.getStrategy(object);
+      stream.writeInt(index);
+      ObjectMarshallingStrategy strategy=context.objectMarshallingStrategyStore.getStrategy(index);
+      if (strategy.accept(object)) {
+        strategy.write(stream,object);
+      }
+    }
+  }
 }

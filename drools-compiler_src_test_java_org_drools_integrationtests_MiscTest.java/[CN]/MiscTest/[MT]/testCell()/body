@@ -10,10 +10,12 @@
   Package pkg=builder.getPackage();
   ruleBase.addPackage(pkg);
   ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
+  Environment env=EnvironmentFactory.newEnvironment();
+  env.set(EnvironmentName.OBJECT_MARSHALLING_STRATEGIES,new ObjectMarshallingStrategy[]{new IdentityPlaceholderResolverStrategy(ClassObjectMarshallingStrategyAcceptor.DEFAULT)});
+  StatefulSession session=ruleBase.newStatefulSession(null,env);
   session.insert(cell1);
   FactHandle cellHandle=session.insert(cell);
-  StatefulKnowledgeSession ksesion=SerializationHelper.getSerialisedStatefulKnowledgeSession(new StatefulKnowledgeSessionImpl((ReteooWorkingMemory)session),MarshallerFactory.newIdentityMarshallingStrategy(),false);
+  StatefulKnowledgeSession ksesion=SerializationHelper.getSerialisedStatefulKnowledgeSession(new StatefulKnowledgeSessionImpl((ReteooWorkingMemory)session),false);
   ksesion.fireAllRules();
   assertEquals(9,cell.getValue());
 }

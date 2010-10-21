@@ -8,7 +8,9 @@
   Collection<KnowledgePackage> kpkgs=SerializationHelper.serializeObject(kbuilder.getKnowledgePackages());
   kbase.addKnowledgePackages(kpkgs);
   kbase=SerializationHelper.serializeObject(kbase);
-  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  Environment env=EnvironmentFactory.newEnvironment();
+  env.set(EnvironmentName.OBJECT_MARSHALLING_STRATEGIES,new ObjectMarshallingStrategy[]{new IdentityPlaceholderResolverStrategy(ClassObjectMarshallingStrategyAcceptor.DEFAULT)});
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(null,env);
   List results=new ArrayList();
   ksession.setGlobal("results",results);
   final Cheese a=new Cheese("stilton",10);
@@ -25,7 +27,7 @@
   kpkgs=SerializationHelper.serializeObject(kbuilder.getKnowledgePackages());
   kbase.addKnowledgePackages(kpkgs);
   kbase=SerializationHelper.serializeObject(kbase);
-  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,MarshallerFactory.newIdentityMarshallingStrategy(),false);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,false);
   results=(List)ksession.getGlobal("results");
   ksession.fireAllRules();
   assertEquals(0,results.size());
@@ -39,7 +41,7 @@
   kpkgs=SerializationHelper.serializeObject(kbuilder.getKnowledgePackages());
   kbase.addKnowledgePackages(kpkgs);
   kbase=SerializationHelper.serializeObject(kbase);
-  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,MarshallerFactory.newIdentityMarshallingStrategy(),false);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,false);
   results=(List)ksession.getGlobal("results");
   ksession.fireAllRules();
   assertEquals(1,results.size());

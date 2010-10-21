@@ -1,3 +1,24 @@
 {
-  return readWorkItem(context,true);
+  ObjectInputStream stream=context.stream;
+  WorkItemImpl workItem=new WorkItemImpl();
+  workItem.setId(stream.readLong());
+  workItem.setProcessInstanceId(stream.readLong());
+  workItem.setName(stream.readUTF());
+  workItem.setState(stream.readInt());
+  int nbVariables=stream.readInt();
+  if (nbVariables > 0) {
+    for (int i=0; i < nbVariables; i++) {
+      String name=stream.readUTF();
+      try {
+        int index=stream.readInt();
+        ObjectMarshallingStrategy strategy=context.resolverStrategyFactory.getStrategy(index);
+        Object value=strategy.read(stream);
+        workItem.setParameter(name,value);
+      }
+ catch (      ClassNotFoundException e) {
+        throw new IllegalArgumentException("Could not reload variable " + name);
+      }
+    }
+  }
+  return workItem;
 }
