@@ -1,6 +1,12 @@
 {
   final DrlParser parser=new DrlParser();
   final PackageDescr pkg=parser.parse(new InputStreamReader(getClass().getResourceAsStream("test_Dumpers.drl")));
+  if (parser.hasErrors()) {
+    for (    DroolsError error : parser.getErrors()) {
+      System.err.println(error);
+    }
+    fail(parser.getErrors().toString());
+  }
   PackageBuilder builder=new PackageBuilder();
   builder.addPackage(pkg);
   RuleBase ruleBase=getRuleBase();
@@ -20,6 +26,12 @@
   final String drlResult=drlDumper.dump(pkg);
   builder=new PackageBuilder();
   builder.addPackageFromDrl(new StringReader(drlResult));
+  if (builder.hasErrors()) {
+    for (    DroolsError error : builder.getErrors().getErrors()) {
+      System.err.println(error);
+    }
+    fail(parser.getErrors().toString());
+  }
   ruleBase=getRuleBase();
   ruleBase.addPackage(builder.getPackage());
   workingMemory=ruleBase.newStatefulSession();
@@ -35,6 +47,12 @@
   final String xmlResult=xmlDumper.dump(pkg);
   builder=new PackageBuilder();
   builder.addPackageFromXml(new StringReader(xmlResult));
+  if (builder.hasErrors()) {
+    for (    DroolsError error : builder.getErrors().getErrors()) {
+      System.err.println(error);
+    }
+    fail(parser.getErrors().toString());
+  }
   ruleBase=getRuleBase();
   ruleBase.addPackage(builder.getPackage());
   workingMemory=ruleBase.newStatefulSession();

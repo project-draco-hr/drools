@@ -1,0 +1,9 @@
+{
+  String source="rule XYZ \n" + " when \n" + " o: Order( ) \n"+ " not( Number( ) from [1, 2, 3] ) \n"+ " then \n"+ " System.err.println(\"Invalid customer id found!\"); \n"+ " o.addError(\"Invalid customer id\"); \n"+ "end \n";
+  parse("compilation_unit","compilation_unit",source);
+  RuleDescr rule=(RuleDescr)this.walker.getPackageDescr().getRules().get(0);
+  assertEquals("XYZ",rule.getName());
+  assertFalse(parser.hasErrors());
+  PatternDescr number=(PatternDescr)((NotDescr)rule.getLhs().getDescrs().get(1)).getDescrs().get(0);
+  assertEquals("[1, 2, 3]",((FromDescr)number.getSource()).getDataSource().toString());
+}
