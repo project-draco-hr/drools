@@ -4,16 +4,15 @@
     boolean fired=fireNextItem(agendaFilter);
     fired=fired || !((AbstractWorkingMemory)this.workingMemory).getActionQueue().isEmpty();
     this.workingMemory.executeQueuedActions();
-    if (!fired && !missedNotifyAll.get()) {
+    if (!fired) {
       try {
 synchronized (this.halt) {
-          this.halt.wait();
+          if (!this.halt.get())           this.halt.wait();
         }
       }
  catch (      InterruptedException e) {
         this.halt.set(true);
       }
-      this.missedNotifyAll.set(false);
     }
  else {
       this.workingMemory.executeQueuedActions();
