@@ -8,7 +8,24 @@
     ext.setIndentationLeft(INTENTATION_LEFT);
     document.add(ext);
   }
-  document.add(newDescription(drlData.getDescription()));
+  if (drlData.getDescription() != null && drlData.getDescription().trim().equals("")) {
+    Iterator<String> iter=drlData.getMetadata().iterator();
+    while (iter.hasNext()) {
+      String nextDesc=iter.next();
+      if (nextDesc.startsWith("Description")) {
+        String[] parts=splitFirst(nextDesc,":");
+        if (parts.length == 1) {
+          document.add(newDescription(drlData.getDescription()));
+        }
+ else {
+          document.add(newDescription(parts[1]));
+        }
+      }
+    }
+  }
+ else {
+    document.add(newDescription(drlData.getDescription()));
+  }
   document.add(newRuleTable(drlData));
   document.add(newTable("Metadata",drlData.getMetadata()));
   createOtherItems(document,drlData.getOtherInformation());
