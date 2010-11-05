@@ -1,4 +1,5 @@
 {
+  StatefulKnowledgeSession ksession=null;
   try {
     KnowledgeBase kbase=readKnowledgeBase();
     FactType appType=kbase.getFactType("mortgages","LoanApplication");
@@ -10,10 +11,18 @@
     Object income=incomeType.newInstance();
     incomeType.set(income,"type","Job");
     incomeType.set(income,"amount",65000);
-    kbase.newStatelessKnowledgeSession().execute(new Object[]{application,income});
+    ksession=kbase.newStatefulKnowledgeSession();
+    ksession.insert(application);
+    ksession.insert(income);
+    ksession.fireAllRules();
     System.out.println(application);
   }
  catch (  Throwable t) {
     t.printStackTrace();
+  }
+ finally {
+    if (ksession != null) {
+      ksession.dispose();
+    }
   }
 }
