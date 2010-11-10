@@ -14,6 +14,20 @@
     if (role != null) {
       type.setRole(TypeDeclaration.Role.parseRole(role));
     }
+    String sup=typeDescr.getSuperTypeName();
+    if (sup != null && !sup.contains(".")) {
+      for (      ImportDescr id : packageDescr.getImports()) {
+        if (id.getTarget().endsWith("." + sup)) {
+          typeDescr.setSuperTypeName(id.getTarget());
+          break;
+        }
+      }
+    }
+    if ((sup=typeDescr.getSuperTypeName()) != null && !sup.contains(".")) {
+      for (      TypeDeclarationDescr td : packageDescr.getTypeDeclarations()) {
+        if (sup.equals(td.getTypeName()))         typeDescr.setSuperTypeName(packageDescr.getNamespace() + "." + sup);
+      }
+    }
     String templateName=typeDescr.getMetaAttribute(TypeDeclaration.ATTR_TEMPLATE);
     if (templateName != null) {
       type.setFormat(TypeDeclaration.Format.TEMPLATE);
