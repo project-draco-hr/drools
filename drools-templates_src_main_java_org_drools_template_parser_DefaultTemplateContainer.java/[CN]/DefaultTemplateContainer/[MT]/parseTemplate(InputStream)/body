@@ -1,86 +1,59 @@
 {
   try {
-    InputStreamReader isr=new InputStreamReader(givenStream);
-    LineNumberReader templateReader=new LineNumberReader(isr);
     final ColumnFactory cf=new ColumnFactory();
+    final BufferedReader templateReader=new BufferedReader(new InputStreamReader(templateStream));
     String line=null;
-    StringBuilder header=new StringBuilder();
+    StringBuffer header=new StringBuffer();
     boolean inTemplate=false;
     boolean inHeader=false;
     boolean inContents=false;
     RuleTemplate template=null;
-    StringBuilder contents=new StringBuilder();
-    String lastTemplateName="?";
-    int lastTemplateLine=0;
+    StringBuffer contents=new StringBuffer();
     while ((line=templateReader.readLine()) != null) {
-      String trimmed=line.trim();
-      if (trimmed.length() > 0) {
-        int lineNo=templateReader.getLineNumber();
-        if (trimmed.matches("template\\s+header")) {
+      if (line.trim().length() > 0) {
+        if (line.startsWith("template header")) {
           inHeader=true;
         }
- else         if (trimmed.startsWith("template")) {
-          if (inTemplate) {
-            throw new DecisionTableParseException("Nested template, within '" + lastTemplateName + "'. at line "+ lineNo);
-          }
+ else         if (line.startsWith("template")) {
           inTemplate=true;
           String quotedName=line.substring(8).trim();
-          if (quotedName.startsWith("\"") && quotedName.endsWith("\"") || quotedName.startsWith("'") && quotedName.endsWith("'")) {
-            quotedName=quotedName.substring(1,quotedName.length() - 1);
-          }
-          if (quotedName.length() == 0) {
-            throw new DecisionTableParseException("Template name missing at line " + lineNo);
-          }
-          if (templates.containsKey(quotedName)) {
-            throw new DecisionTableParseException("Duplicate template name '" + quotedName + "' at line "+ lineNo);
-          }
-          lastTemplateName=quotedName;
-          lastTemplateLine=lineNo;
+          quotedName=quotedName.substring(1,quotedName.length() - 1);
           template=new RuleTemplate(quotedName,this);
           addTemplate(template);
         }
- else         if (trimmed.startsWith("package")) {
-          if (!inHeader) {
-            throw new DecisionTableParseException("Missing header at line " + lineNo);
+ else         if (line.startsWith("package")) {
+          if (inHeader == false) {
+            throw new DecisionTableParseException("Missing header");
           }
           inHeader=false;
           header.append(line).append("\n");
         }
  else         if (inHeader) {
-          if (!addColumn(cf.getColumn(trimmed))) {
-            throw new DecisionTableParseException("Duplicate parameter '" + trimmed + "' at line "+ lineNo);
-          }
+          addColumn(cf.getColumn(line.trim()));
         }
  else         if (!inTemplate && !inHeader) {
           header.append(line).append("\n");
         }
- else         if (!inContents && trimmed.startsWith("rule")) {
-          if (!inTemplate) {
-            header.append(line).append("\n");
-          }
- else {
-            inContents=true;
-            checkLine(line,lineNo);
-            contents.append(line).append("\n");
-          }
+ else         if (!inContents && line.startsWith("rule")) {
+          inContents=true;
+          contents.append(line).append("\n");
         }
- else         if (trimmed.matches("end\\s+template")) {
+ else         if (line.equals("end template")) {
           template.setContents(contents.toString());
           contents.setLength(0);
           inTemplate=false;
           inContents=false;
         }
  else         if (inContents) {
-          checkLine(line,lineNo);
           contents.append(line).append("\n");
         }
  else         if (inTemplate) {
-          template.addColumn(trimmed);
+          template.addColumn(line.trim());
         }
       }
     }
     if (inTemplate) {
-      throw new DecisionTableParseException("Unterminated template '" + lastTemplateName + "', started in line "+ lastTemplateLine);
+      throw new DecisionTableParseException("Missing end template");
     }
     this.header=header.toString();
   }
@@ -88,6 +61,6 @@
     throw new RuntimeException(e);
   }
  finally {
-    if (givenStream != null)     closeStream(givenStream);
+    if (templateStream != null)     closeStream(templateStream);
   }
 }
