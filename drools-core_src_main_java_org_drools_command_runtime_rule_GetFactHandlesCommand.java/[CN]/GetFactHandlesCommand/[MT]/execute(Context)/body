@@ -1,9 +1,21 @@
 {
   StatefulKnowledgeSession ksession=((KnowledgeCommandContext)context).getStatefulKnowledgesession();
   if (filter != null) {
-    return ksession.getFactHandles(this.filter);
+    Collection<FactHandle> factHandles=ksession.getFactHandles(this.filter);
+    if (factHandles != null && disconnected) {
+      for (      FactHandle factHandle : factHandles) {
+        ((DefaultFactHandle)factHandle).disconnect();
+      }
+    }
+    return factHandles;
   }
  else {
-    return ksession.getFactHandles(this.filter);
+    Collection<FactHandle> factHandles=ksession.getFactHandles();
+    if (factHandles != null && disconnected) {
+      for (      FactHandle factHandle : factHandles) {
+        ((DefaultFactHandle)factHandle).disconnect();
+      }
+    }
+    return factHandles;
   }
 }
