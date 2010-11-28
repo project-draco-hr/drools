@@ -1,33 +1,3 @@
 {
-  try {
-    this.ruleBase.readLock();
-    this.lock.lock();
-    this.ruleBase.executeQueuedActions();
-    this.wm.startOperation();
-    final InternalFactHandle handle=(InternalFactHandle)factHandle;
-    final Object originalObject=handle.getObject();
-    if (handle.getId() == -1 || object == null || (handle.isEvent() && ((EventFactHandle)handle).isExpired())) {
-      return;
-    }
-    ObjectTypeConf typeConf=this.typeConfReg.getObjectTypeConf(this.entryPoint,object);
-    if (activation != null) {
-      activation.getPropagationContext().releaseResources();
-    }
-    final PropagationContext propagationContext=new PropagationContextImpl(this.wm.getNextPropagationIdCounter(),PropagationContext.MODIFICATION,rule,(activation == null) ? null : (LeftTuple)activation.getTuple(),handle,-1,-1,this.entryPoint);
-    this.entryPointNode.retractObject(handle,propagationContext,typeConf,this.wm);
-    if ((originalObject != object) || (this.ruleBase.getConfiguration().getAssertBehaviour() != AssertBehaviour.IDENTITY)) {
-      this.objectStore.removeHandle(handle);
-      handle.setObject(object);
-      this.objectStore.addHandle(handle,object);
-    }
-    this.handleFactory.increaseFactHandleRecency(handle);
-    this.entryPointNode.assertObject(handle,propagationContext,typeConf,this.wm);
-    this.wm.getWorkingMemoryEventSupport().fireObjectUpdated(propagationContext,(org.drools.FactHandle)factHandle,originalObject,object,this.wm);
-    this.wm.executeQueuedActions();
-  }
-  finally {
-    this.wm.endOperation();
-    this.ruleBase.readUnlock();
-    this.lock.unlock();
-  }
+  update((org.drools.FactHandle)factHandle,object,rule,activation);
 }
