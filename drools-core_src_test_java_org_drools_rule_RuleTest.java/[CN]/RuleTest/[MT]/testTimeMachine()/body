@@ -1,17 +1,15 @@
 {
+  SessionConfiguration conf=new SessionConfiguration();
+  conf.setClockType(ClockType.PSEUDO_CLOCK);
+  WorkingMemory wm=new ReteooRuleBase("x").newStatefulSession(conf,null);
+  final Calendar future=Calendar.getInstance();
+  ((PseudoClockScheduler)wm.getSessionClock()).setStartupTime(future.getTimeInMillis());
   final Rule rule=new Rule("myrule");
   rule.setEnabled(EnabledBoolean.ENABLED_TRUE);
-  assertTrue(rule.isEffective(new TimeMachine(),null,null));
-  final Calendar future=Calendar.getInstance();
+  assertTrue(rule.isEffective(null,wm));
   future.setTimeInMillis(future.getTimeInMillis() + 100000000);
   rule.setDateEffective(future);
-  assertFalse(rule.isEffective(new TimeMachine(),null,null));
-  assertTrue(rule.isEffective(new TimeMachine(){
-    public Calendar getNow(){
-      Calendar loveYouLongTime=Calendar.getInstance();
-      loveYouLongTime.setTimeInMillis(future.getTimeInMillis() + 1000000000000L);
-      return loveYouLongTime;
-    }
-  }
-,null,null));
+  assertFalse(rule.isEffective(null,wm));
+  ((PseudoClockScheduler)wm.getSessionClock()).advanceTime(1000000000000L,TimeUnit.MILLISECONDS);
+  assertTrue(rule.isEffective(null,wm));
 }
