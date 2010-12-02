@@ -16,7 +16,7 @@
   accDescr.setResultCode("new Integer(total)");
   final MVELAccumulateBuilder builder=new MVELAccumulateBuilder();
   final Accumulate acc=(Accumulate)builder.build(context,accDescr);
-  ((MVELCompileable)acc.getAccumulator()).compile(pkgBuilder.getRootClassLoader());
+  ((MVELCompileable)acc.getAccumulators()[0]).compile(pkgBuilder.getRootClassLoader());
   final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   final WorkingMemory wm=ruleBase.newStatefulSession();
   MockLeftTupleSink sink=new MockLeftTupleSink();
@@ -26,12 +26,12 @@
   final InternalFactHandle f1=(InternalFactHandle)wm.insert(cheddar1);
   final InternalFactHandle f2=(InternalFactHandle)wm.insert(cheddar2);
   final LeftTuple tuple=new LeftTuple(f0,sink,true);
-  Object wmContext=acc.createWorkingMemoryContext();
-  Object accContext=acc.createContext();
+  Object[] wmContext=acc.createWorkingMemoryContext();
+  Object[] accContext=acc.createContext();
   acc.init(wmContext,accContext,tuple,wm);
   acc.accumulate(wmContext,accContext,tuple,f1,wm);
   acc.accumulate(wmContext,accContext,tuple,f2,wm);
-  assertEquals(new Integer(18),acc.getResult(wmContext,accContext,tuple,wm));
+  assertEquals(new Integer(18),acc.getResult(wmContext,accContext,tuple,wm)[0]);
   acc.reverse(wmContext,accContext,tuple,f1,wm);
-  assertEquals(new Integer(8),acc.getResult(wmContext,accContext,tuple,wm));
+  assertEquals(new Integer(8),acc.getResult(wmContext,accContext,tuple,wm)[0]);
 }
