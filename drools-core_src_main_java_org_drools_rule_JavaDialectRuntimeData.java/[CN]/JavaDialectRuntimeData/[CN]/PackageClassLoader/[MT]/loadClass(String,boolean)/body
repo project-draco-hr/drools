@@ -1,37 +1,11 @@
 {
-  try {
-    if (cache.containsKey(name)) {
-      this.cacheHits++;
-      Object result=cache.get(name);
-      if (result instanceof ClassNotFoundException) {
-        throw (ClassNotFoundException)result;
-      }
- else {
-        return (Class<?>)result;
-      }
-    }
-    Class<?> cls=fastFindClass(name);
-    if (cls == null) {
-      final ClassLoader parent=getParent();
-      if (parent != null) {
-        cls=Class.forName(name,true,parent);
-      }
-    }
-    if (resolve && cls != null) {
-      resolveClass(cls);
-    }
-    if (cls != null) {
-      this.successfulCalls++;
-    }
- else {
-      this.failedCalls++;
-    }
-    cache.put(name,cls);
-    return cls;
+  Class<?> cls=fastFindClass(name);
+  if (cls == null) {
+    final CompositeClassLoader parent=(CompositeClassLoader)getParent();
+    cls=parent.loadClass(name,resolve,this);
   }
- catch (  ClassNotFoundException e) {
-    this.failedCalls++;
-    cache.put(name,e);
-    throw e;
+  if (cls == null) {
+    throw new ClassNotFoundException("Unable to load class: " + name);
   }
+  return cls;
 }
