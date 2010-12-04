@@ -1,0 +1,35 @@
+{
+  final CountDownLatch latch=new CountDownLatch(1);
+  KnowledgeAgentEventListener l=new KnowledgeAgentEventListener(){
+    public void resourceCompilationFailed(    ResourceCompilationFailedEvent event){
+    }
+    public void knowledgeBaseUpdated(    KnowledgeBaseUpdatedEvent event){
+    }
+    public void beforeResourceProcessed(    BeforeResourceProcessedEvent event){
+    }
+    public void beforeChangeSetProcessed(    BeforeChangeSetProcessedEvent event){
+    }
+    public void beforeChangeSetApplied(    BeforeChangeSetAppliedEvent event){
+    }
+    public void afterResourceProcessed(    AfterResourceProcessedEvent event){
+    }
+    public void afterChangeSetProcessed(    AfterChangeSetProcessedEvent event){
+    }
+    public void afterChangeSetApplied(    AfterChangeSetAppliedEvent event){
+      latch.countDown();
+    }
+  }
+;
+  kagent.addEventListener(l);
+  this.scanner.scan();
+  try {
+    latch.await(10,TimeUnit.SECONDS);
+  }
+ catch (  InterruptedException e) {
+    throw new RuntimeException("Unable to wait for latch countdown",e);
+  }
+  if (latch.getCount() > 0) {
+    throw new RuntimeException("Event for KnowlegeBase update, due to scan, was never received");
+  }
+  kagent.removeEventListener(l);
+}

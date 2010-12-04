@@ -17,14 +17,10 @@
   xml+="        <resource source='http://localhost:" + this.getPort() + "/pkg1.pkg' type='PKG' />";
   xml+="    </add> ";
   xml+="</change-set>";
-  File fxml=fileManager.newFile("changeset.xml");
-  Writer output=new BufferedWriter(new FileWriter(fxml));
-  output.write(xml);
-  output.close();
+  File fxml=fileManager.write("changeset.xml",xml);
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
   KnowledgeAgent kagent=this.createKAgent(kbase);
   kagent.applyChangeSet(ResourceFactory.newUrlResource(fxml.toURI().toURL()));
-  kbaseUpdated=false;
   StatefulKnowledgeSession ksession=kagent.getKnowledgeBase().newStatefulKnowledgeSession();
   List<String> list=new ArrayList<String>();
   ksession.setGlobal("list",list);
@@ -34,8 +30,6 @@
   assertTrue(list.contains("rule1"));
   assertTrue(list.contains("rule2"));
   list.clear();
-  System.gc();
-  Thread.sleep(2000);
   rule1=this.createDefaultRule("rule3");
   kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   kbuilder.add(ResourceFactory.newByteArrayResource(rule1.getBytes()),ResourceType.DRL);
@@ -45,7 +39,7 @@
   }
   pkg=(KnowledgePackage)kbuilder.getKnowledgePackages().iterator().next();
   writePackage(pkg,fileManager.newFile("pkg1.pkg"));
-  this.waitUntilKBaseUpdate();
+  scan(kagent);
   ksession=kagent.getKnowledgeBase().newStatefulKnowledgeSession();
   list=new ArrayList<String>();
   ksession.setGlobal("list",list);
@@ -54,5 +48,5 @@
   assertEquals(2,list.size());
   assertTrue(list.contains("rule3"));
   assertTrue(list.contains("rule2"));
-  kagent.monitorResourceChangeEvents(false);
+  kagent.dispose();
 }

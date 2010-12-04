@@ -1,16 +1,8 @@
 {
   File testDirectory=fileManager.newFile("test");
   testDirectory.mkdir();
-  String rule1=this.createDefaultRule("rule1");
-  File f1=fileManager.newFile(testDirectory,"rule1.drl");
-  Writer output=new BufferedWriter(new FileWriter(f1));
-  output.write(rule1);
-  output.close();
-  String rule2=this.createDefaultRule("rule2");
-  File f2=fileManager.newFile(testDirectory,"rule2.drl");
-  output=new BufferedWriter(new FileWriter(f2));
-  output.write(rule2);
-  output.close();
+  File f1=fileManager.write("test","rule1.drl",createDefaultRule("rule1"));
+  File f2=fileManager.write("test","rule2.drl",createDefaultRule("rule2"));
   String xml="";
   xml+="<change-set xmlns='http://drools.org/drools-5.0/change-set'";
   xml+="    xmlns:xs='http://www.w3.org/2001/XMLSchema-instance'";
@@ -19,14 +11,10 @@
   xml+="        <resource source='file:" + fileManager.getRootDirectory().getAbsolutePath() + "/test' type='DRL' />";
   xml+="    </add> ";
   xml+="</change-set>";
-  File fxml=fileManager.newFile("changeset.xml");
-  output=new BufferedWriter(new FileWriter(fxml));
-  output.write(xml);
-  output.close();
+  File fxml=fileManager.write("changeset","changeset.xml",xml);
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
   KnowledgeAgent kagent=this.createKAgent(kbase);
-  kagent.applyChangeSet(ResourceFactory.newUrlResource(fxml.toURI().toURL()));
-  kbaseUpdated=false;
+  applyChangeSet(kagent,ResourceFactory.newUrlResource(fxml.toURI().toURL()));
   StatefulKnowledgeSession ksession=kagent.getKnowledgeBase().newStatefulKnowledgeSession();
   List<String> list=new ArrayList<String>();
   ksession.setGlobal("list",list);
@@ -36,13 +24,8 @@
   assertTrue(list.contains("rule1"));
   assertTrue(list.contains("rule2"));
   list.clear();
-  System.gc();
-  Thread.sleep(2000);
-  rule1=this.createDefaultRule("rule3");
-  output=new BufferedWriter(new FileWriter(f1));
-  output.write(rule1);
-  output.close();
-  this.waitUntilKBaseUpdate();
+  fileManager.write("test","rule1.drl",createDefaultRule("rule3"));
+  scan(kagent);
   ksession=kagent.getKnowledgeBase().newStatefulKnowledgeSession();
   list=new ArrayList<String>();
   ksession.setGlobal("list",list);
@@ -51,5 +34,5 @@
   assertEquals(2,list.size());
   assertTrue(list.contains("rule3"));
   assertTrue(list.contains("rule2"));
-  kagent.monitorResourceChangeEvents(false);
+  kagent.dispose();
 }
