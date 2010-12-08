@@ -1,0 +1,30 @@
+{
+  AssetItem asset=getRepo().loadGlobalArea().addAsset("testGetSuccessorVersionsIteratorForShareableAsset","desc");
+  asset.checkin("version0");
+  AssetItem linkedAsset=getDefaultPackage().addAssetImportedFromGlobalArea(asset.getName());
+  Iterator iterator=linkedAsset.getSuccessorVersionsIterator();
+  assertNotNull(iterator);
+  assertFalse(iterator.hasNext());
+  linkedAsset.updateContent("new content").checkin("ya");
+  iterator=linkedAsset.getSuccessorVersionsIterator();
+  assertNotNull(iterator);
+  assertFalse(iterator.hasNext());
+  AssetItem predecessorRuleItem=(AssetItem)linkedAsset.getPrecedingVersion();
+  iterator=predecessorRuleItem.getSuccessorVersionsIterator();
+  assertNotNull(iterator);
+  assertTrue(iterator.hasNext());
+  AssetItem nextRuleItem=(AssetItem)iterator.next();
+  assertEquals("new content",nextRuleItem.getContent());
+  assertFalse(iterator.hasNext());
+  linkedAsset.updateContent("newer content");
+  linkedAsset.checkin("boo");
+  iterator=predecessorRuleItem.getSuccessorVersionsIterator();
+  assertNotNull(iterator);
+  assertTrue(iterator.hasNext());
+  nextRuleItem=(AssetItem)iterator.next();
+  assertEquals("new content",nextRuleItem.getContent());
+  assertTrue(iterator.hasNext());
+  nextRuleItem=(AssetItem)iterator.next();
+  assertEquals("newer content",nextRuleItem.getContent());
+  assertFalse(iterator.hasNext());
+}

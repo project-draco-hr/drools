@@ -1,0 +1,22 @@
+{
+  RulesRepository repo=RepositorySessionUtil.getRepository();
+  repo.loadCategory("/").addCategory("testFindAssetsByStateCat","X");
+  PackageItem pkg=repo.createPackage("testFindAssetsByStatePac","");
+  pkg.addAsset("testCat1","x","/testFindAssetsByStateCat","drl");
+  pkg.addAsset("testCat2","x","/testFindAssetsByStateCat","drl");
+  repo.save();
+  AssetItemPageResult apl=repo.findAssetsByState("Draft",false,0,-1,new RepositoryFilter(){
+    public boolean accept(    Object artifact,    String action){
+      if (!(artifact instanceof AssetItem))       return false;
+      if (((AssetItem)artifact).getName().equalsIgnoreCase("testCat1")) {
+        return true;
+      }
+ else {
+        return false;
+      }
+    }
+  }
+);
+  assertEquals(1,apl.assets.size());
+  assertEquals("testCat1",((AssetItem)apl.assets.get(0)).getName());
+}

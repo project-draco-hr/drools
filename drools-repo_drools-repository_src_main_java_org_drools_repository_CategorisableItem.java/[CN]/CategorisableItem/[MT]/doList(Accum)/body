@@ -1,0 +1,25 @@
+{
+  try {
+    Node ruleNode=getVersionContentNode();
+    try {
+      Property tagReferenceProperty=ruleNode.getProperty(CATEGORY_PROPERTY_NAME);
+      Value[] tagValues=tagReferenceProperty.getValues();
+      for (int i=0; i < tagValues.length; i++) {
+        try {
+          Node tagNode=this.node.getSession().getNodeByIdentifier(tagValues[i].getString());
+          CategoryItem tagItem=new CategoryItem(this.rulesRepository,tagNode);
+          ac.add(tagItem);
+        }
+ catch (        ItemNotFoundException e) {
+          log.debug("Was unable to load a category by UUID - must have been removed.");
+        }
+      }
+    }
+ catch (    PathNotFoundException e) {
+    }
+  }
+ catch (  RepositoryException e) {
+    log.error("Error loading cateories",e);
+    throw new RulesRepositoryException(e);
+  }
+}

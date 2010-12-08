@@ -1,0 +1,71 @@
+{
+  PackageItem pkg=repo.loadPackage(pkgName);
+  if (resourceFile.equals(".package")) {
+    Text r=new Response.Text();
+    r.lastModified=pkg.getLastModified();
+    r.data=pkg.getStringProperty(PackageItem.HEADER_PROPERTY_NAME);
+    return r;
+  }
+ else {
+    if (resourceFile.indexOf("?version=") > -1) {
+      String[] v=resourceFile.split("\\?version\\=");
+      String version=v[1];
+      String assetName=AssetItem.getAssetNameFromFileName(v[0])[0];
+      AssetItem asset=pkg.loadAsset(assetName);
+      if (asset.isArchived()) {
+        Text r=new Text();
+        r.data="";
+        return r;
+      }
+      if (version.equals("all")) {
+        AssetHistoryIterator it=asset.getHistory();
+        StringBuilder buf=new StringBuilder();
+        while (it.hasNext()) {
+          AssetItem h=it.next();
+          if (h.getVersionNumber() != 0) {
+            String checkinComment=h.getCheckinComment();
+            String lastMofiedBy=h.getLastContributor();
+            if (lastMofiedBy == null || lastMofiedBy.equals("")) {
+              lastMofiedBy=asset.getCreator();
+            }
+            SimpleDateFormat sdf=getISODateFormat();
+            Calendar lastModDate=h.getLastModified();
+            if (lastModDate == null) {
+              lastModDate=asset.getCreatedDate();
+            }
+            String lastModifiedOn=sdf.format(lastModDate.getTime());
+            buf.append(h.getVersionNumber());
+            buf.append("=");
+            buf.append(lastModifiedOn + "," + lastMofiedBy+ ","+ checkinComment);
+            if (it.hasNext()) {
+              buf.append('\n');
+            }
+          }
+        }
+        Text r=new Text();
+        r.lastModified=asset.getLastModified();
+        r.data=buf.toString();
+        return r;
+      }
+ else {
+        long versionNumber=Long.parseLong(version);
+        AssetHistoryIterator it=asset.getHistory();
+        while (it.hasNext()) {
+          AssetItem h=it.next();
+          if (h.getVersionNumber() == versionNumber) {
+            return buildAssetContentResponse(pkg,h);
+          }
+        }
+        Text r=new Text();
+        r.lastModified=asset.getLastModified();
+        r.data="Unknown version number : " + versionNumber;
+        return r;
+      }
+    }
+ else {
+      String assetName=AssetItem.getAssetNameFromFileName(resourceFile)[0];
+      AssetItem asset=pkg.loadAsset(assetName);
+      return buildAssetContentResponse(pkg,asset);
+    }
+  }
+}

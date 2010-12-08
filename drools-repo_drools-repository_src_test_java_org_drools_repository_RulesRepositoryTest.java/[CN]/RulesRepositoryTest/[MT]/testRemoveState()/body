@@ -1,0 +1,19 @@
+{
+  RulesRepository repo=RepositorySessionUtil.getRepository();
+  StateItem[] items=repo.listStates();
+  assertTrue(items.length > 0);
+  final String name="stateThatHasALongNameAndWillBeRenamed";
+  repo.createState(name);
+  StateItem[] items2=repo.listStates();
+  assertEquals(items.length + 1,items2.length);
+  repo.loadState(name).remove();
+  repo.save();
+  StateItem[] items3=repo.listStates();
+  assertEquals(items2.length - 1,items3.length);
+  try {
+    repo.loadState(name);
+    fail("Should never be here. Removed state still exists.");
+  }
+ catch (  RulesRepositoryException e) {
+  }
+}

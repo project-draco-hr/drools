@@ -1,0 +1,29 @@
+{
+  Node folderNode=null;
+  int tries=0;
+  while (folderNode == null && tries < 2) {
+    try {
+      tries++;
+      folderNode=this.session.getRootNode().getNode(RULES_REPOSITORY_NAME + "/" + areaName);
+    }
+ catch (    PathNotFoundException e) {
+      if (tries == 1) {
+        log.warn("The repository appears to have become corrupted.");
+        throw new RulesRepositoryException("Unable to get the main rule repo node. Repository is not setup correctly.",e);
+      }
+ else {
+        log.error("Unable to correct repository corruption");
+      }
+    }
+catch (    Exception e) {
+      log.error("Caught Exception",e);
+      throw new RulesRepositoryException("Caught exception " + e.getClass().getName(),e);
+    }
+  }
+  if (folderNode == null) {
+    String message="Could not get a reference to a node for " + RULES_REPOSITORY_NAME + "/"+ areaName;
+    log.error(message);
+    throw new RulesRepositoryException(message);
+  }
+  return folderNode;
+}

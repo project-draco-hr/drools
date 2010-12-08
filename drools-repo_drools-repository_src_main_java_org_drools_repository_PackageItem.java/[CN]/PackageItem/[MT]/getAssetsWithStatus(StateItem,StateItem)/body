@@ -1,0 +1,29 @@
+{
+  List<AssetItem> result=new LinkedList<AssetItem>();
+  for (Iterator<AssetItem> rules=getAssets(); rules.hasNext(); ) {
+    AssetItem head=(AssetItem)rules.next();
+    if (head.sameState(state)) {
+      result.add(head);
+    }
+ else     if (head.sameState(ignoreState)) {
+    }
+ else {
+      List<AssetItem> fullHistory=new LinkedList<AssetItem>();
+      for (Iterator<AssetItem> iter=head.getHistory(); iter.hasNext(); ) {
+        AssetItem element=iter.next();
+        if (!(element.getVersionNumber() == 0)) {
+          fullHistory.add(element);
+        }
+      }
+      sortHistoryByVersionNumber(fullHistory);
+      for (Iterator<AssetItem> prev=fullHistory.iterator(); prev.hasNext(); ) {
+        AssetItem prevRule=prev.next();
+        if (prevRule.sameState(state)) {
+          result.add(prevRule);
+          break;
+        }
+      }
+    }
+  }
+  return result.iterator();
+}

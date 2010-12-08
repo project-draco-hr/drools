@@ -1,0 +1,27 @@
+{
+  try {
+    Node rulesFolder=this.node.getNode(ASSET_FOLDER_NAME);
+    Session session=rulesRepository.getSession();
+    Workspace workspace=session.getWorkspace();
+    PackageItem globalArea=rulesRepository.loadGlobalArea();
+    AssetItem globalAssetItem=globalArea.loadAsset(sharedAssetName);
+    if (!hasMixin(globalAssetItem.getNode())) {
+      globalAssetItem.checkout();
+      globalAssetItem.getNode().addMixin("mix:shareable");
+      globalAssetItem.checkin("add mix:shareable");
+    }
+    String path=rulesFolder.getPath() + "/" + globalAssetItem.getName();
+    workspace.clone(workspace.getName(),globalAssetItem.getNode().getPath(),path,false);
+    Node ruleNode=rulesFolder.getNode(globalAssetItem.getName());
+    AssetItem rule=new AssetItem(this.rulesRepository,ruleNode);
+    return rule;
+  }
+ catch (  RepositoryException e) {
+    if (e instanceof ItemExistsException) {
+      throw new RulesRepositoryException("A rule of that name already exists in that package.",e);
+    }
+ else {
+      throw new RulesRepositoryException(e);
+    }
+  }
+}

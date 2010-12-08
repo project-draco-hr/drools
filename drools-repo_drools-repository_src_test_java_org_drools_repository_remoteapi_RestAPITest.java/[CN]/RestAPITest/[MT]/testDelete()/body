@@ -1,0 +1,30 @@
+{
+  RulesRepository repo=RepositorySessionUtil.getRepository();
+  PackageItem pkg=repo.createPackage("testRestDelete","");
+  pkg.updateStringProperty("This is some header",PackageItem.HEADER_PROPERTY_NAME);
+  repo.save();
+  AssetItem asset1=pkg.addAsset("asset1","");
+  asset1.updateContent("this is content");
+  asset1.updateFormat("drl");
+  asset1.checkin("");
+  RestAPI api=new RestAPI(repo);
+  api.delete("packages/testRestDelete/asset1.drl");
+  List l=RulesRepositoryTest.iteratorToList(pkg.listAssetsByFormat(new String[]{"drl"}));
+  assertEquals(0,l.size());
+  l=RulesRepositoryTest.iteratorToList(pkg.listArchivedAssets());
+  assertEquals(1,l.size());
+  api.post("packages/testRestDelete/asset1.drl",new ByteArrayInputStream("123".getBytes()),"new comment");
+  AssetItem ass=pkg.loadAsset("asset1");
+  assertEquals("123",ass.getContent());
+  assertEquals("new comment",ass.getCheckinComment());
+  assertFalse(ass.isArchived());
+  l=RulesRepositoryTest.iteratorToList(pkg.listAssetsByFormat(new String[]{"drl"}));
+  assertEquals(1,l.size());
+  try {
+    api.post("packages/testRestDelete/asset1.drl",new ByteArrayInputStream("123".getBytes()),"new comment");
+    fail("this should be rejected as its not archived.");
+  }
+ catch (  RulesRepositoryException e) {
+    assertNotNull(e.getMessage());
+  }
+}

@@ -1,0 +1,44 @@
+{
+  RulesRepository repo=RepositorySessionUtil.getRepository();
+  PackageItem rulePackageItem=repo.loadDefaultPackage();
+  AssetItem rule=rulePackageItem.addAsset("testLoadRuleByUUID","this is a description");
+  repo.save();
+  String uuid=rule.getNode().getIdentifier();
+  AssetItem loaded=repo.loadAssetByUUID(uuid);
+  assertNotNull(loaded);
+  assertEquals("testLoadRuleByUUID",loaded.getName());
+  assertEquals("this is a description",loaded.getDescription());
+  long oldVersionNumber=loaded.getVersionNumber();
+  loaded.updateContent("xxx");
+  loaded.checkin("woo");
+  AssetItem reload=repo.loadAssetByUUID(uuid);
+  assertEquals("testLoadRuleByUUID",reload.getName());
+  assertEquals("xxx",reload.getContent());
+  System.out.println(reload.getVersionNumber());
+  System.out.println(loaded.getVersionNumber());
+  assertFalse(reload.getVersionNumber() == oldVersionNumber);
+  try {
+    repo.loadAssetByUUID("01010101-0101-0101-0101-010101010101");
+    fail("Exception not thrown loading rule package that was not created.");
+  }
+ catch (  RulesRepositoryException e) {
+    assertNotNull(e.getMessage());
+  }
+  AssetItem asset1=repo.loadDefaultPackage().addAsset("testMultiSession","description");
+  asset1.updateContent("yeah");
+  asset1.checkin("boo");
+  uuid=asset1.getUUID();
+  asset1.updateState("Draft");
+  repo.save();
+  Session s2=repo.getSession().getRepository().login(new SimpleCredentials("fdd","password".toCharArray()));
+  RulesRepository repo2=new RulesRepository(s2);
+  AssetItem asset2=repo2.loadAssetByUUID(uuid);
+  asset2.updateContent("yeah 42");
+  asset2.checkin("yeah");
+  asset1=repo.loadAssetByUUID(uuid);
+  assertEquals("yeah 42",asset1.getContent());
+  asset1.updateContent("yeah 43");
+  asset1.checkin("la");
+  asset2=repo2.loadAssetByUUID(uuid);
+  assertEquals("yeah 43",asset2.getContent());
+}

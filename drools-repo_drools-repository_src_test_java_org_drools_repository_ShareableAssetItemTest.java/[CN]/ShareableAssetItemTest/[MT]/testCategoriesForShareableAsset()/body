@@ -1,0 +1,27 @@
+{
+  getRepo().loadCategory("/").addCategory("testCategoriesTag","description");
+  getRepo().loadCategory("/").addCategory("testCategoriesTag2","description");
+  AssetItem asset=getRepo().loadGlobalArea().addAsset("testCategoriesForShareableAsset","desc");
+  AssetItem linkedAsset=getDefaultPackage().addAssetImportedFromGlobalArea(asset.getName());
+  linkedAsset.addCategory("testCategoriesTag");
+  List tags=linkedAsset.getCategories();
+  assertEquals(1,tags.size());
+  assertEquals("testCategoriesTag",((CategoryItem)tags.get(0)).getName());
+  linkedAsset.addCategory("testCategoriesTag2");
+  tags=linkedAsset.getCategories();
+  assertEquals(2,tags.size());
+  linkedAsset.checkin("woot");
+  List result=getRepo().findAssetsByCategory("testCategoriesTag",0,-1).assets;
+  assertEquals(1,result.size());
+  AssetItem retItem=(AssetItem)result.get(0);
+  assertEquals("testCategoriesForShareableAsset",retItem.getName());
+  asset.updateContent("foo");
+  asset.checkin("latest");
+  assertTrue(asset.getCategories().size() > 0);
+  assertNotNull(asset.getCategorySummary());
+  assertEquals("testCategoriesTag testCategoriesTag2 ",asset.getCategorySummary());
+  result=getRepo().findAssetsByCategory("testCategoriesTag2",0,-1).assets;
+  assertEquals(1,result.size());
+  asset=(AssetItem)result.get(0);
+  assertEquals(2,asset.getCategories().size());
+}

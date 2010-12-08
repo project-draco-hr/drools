@@ -1,0 +1,26 @@
+{
+  RulesRepository repo=RepositorySessionUtil.getRepository();
+  PackageItem source=repo.createPackage("testCopyPackage","asset");
+  AssetItem item=source.addAsset("testCopyPackage","desc");
+  item.updateContent("la");
+  item.checkin("");
+  repo.save();
+  repo.copyPackage("testCopyPackage","testCopyPackage2");
+  PackageItem dest=repo.loadPackage("testCopyPackage2");
+  assertNotNull(dest);
+  assertFalse(source.getUUID().equals(dest.getUUID()));
+  assertEquals(1,iteratorToList(dest.getAssets()).size());
+  AssetItem item2=(AssetItem)dest.getAssets().next();
+  assertEquals("testCopyPackage",item.getPackageName());
+  assertEquals("testCopyPackage2",item2.getPackageName());
+  item2.updateContent("goober choo");
+  item2.checkin("yeah");
+  assertEquals("la",item.getContent());
+  try {
+    repo.copyPackage("testCopyPackage","testCopyPackage2");
+    fail("should not be able to copy when existing.");
+  }
+ catch (  RulesRepositoryException e) {
+    assertNotNull(e.getMessage());
+  }
+}

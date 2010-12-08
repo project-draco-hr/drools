@@ -1,0 +1,19 @@
+{
+  StorageEventManager.le=null;
+  StorageEventManager.se=null;
+  final AssetItem[] x=new AssetItem[1];
+  CheckinEvent e=new CheckinEvent(){
+    public void afterCheckin(    AssetItem item){
+      x[0]=item;
+    }
+  }
+;
+  StorageEventManager.registerCheckinEvent(e);
+  RulesRepository repo=getRepo();
+  PackageItem pkg=repo.loadDefaultPackage();
+  AssetItem asset=pkg.addAsset("testCheckinListener","");
+  assertEquals(0,asset.getContentLength());
+  asset.updateContent("boo");
+  asset.checkin("");
+  assertSame(asset,x[0]);
+}

@@ -1,0 +1,22 @@
+{
+  RulesRepository repo=getRepo();
+  PackageItem pkg=repo.createPackage("testPackageCopy","this is something");
+  AssetItem it1=pkg.addAsset("testPackageCopy1","la");
+  AssetItem it2=pkg.addAsset("testPackageCopy2","la");
+  it1.updateContent("new content");
+  it2.updateContent("more content");
+  it1.checkin("c");
+  it2.checkin("c");
+  it1=pkg.loadAsset("testPackageCopy1");
+  List hist1=iteratorToList(it1.getHistory());
+  System.out.println(hist1.size());
+  repo.getSession().getWorkspace().copy(pkg.getNode().getPath(),pkg.getNode().getPath() + "_");
+  PackageItem pkg2=repo.loadPackage("testPackageCopy_");
+  assertNotNull(pkg2);
+  assertEquals(2,iteratorToList(pkg2.getAssets()).size());
+  AssetItem it1_=pkg2.loadAsset("testPackageCopy1");
+  it1.updateContent("new content2");
+  it1.checkin("la");
+  it1_=pkg2.loadAsset("testPackageCopy1");
+  assertEquals("new content",it1_.getContent());
+}

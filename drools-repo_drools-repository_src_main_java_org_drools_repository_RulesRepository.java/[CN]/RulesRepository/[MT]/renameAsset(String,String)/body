@@ -1,0 +1,18 @@
+{
+  try {
+    AssetItem itemOriginal=loadAssetByUUID(uuid);
+    log.info("Renaming asset: " + itemOriginal.getNode().getPath() + " to "+ newAssetName);
+    Node node=itemOriginal.getNode();
+    String sourcePath=node.getPath();
+    String destPath=node.getParent().getPath() + "/" + newAssetName;
+    this.session.move(sourcePath,destPath);
+    this.session.save();
+    itemOriginal.updateTitle(newAssetName);
+    itemOriginal.checkin("Renamed asset " + itemOriginal.getName());
+    return itemOriginal.getUUID();
+  }
+ catch (  RepositoryException e) {
+    log.error(e.getMessage(),e);
+    throw new RulesRepositoryException(e);
+  }
+}

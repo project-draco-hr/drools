@@ -1,0 +1,27 @@
+{
+  AssetItem asset=loadGlobalArea().addAsset("testGetPackageItemHistoricalForShareableAsset","test content");
+  asset.checkin("initial");
+  AssetItem linkedAsset=getDefaultPackage().addAssetImportedFromGlobalArea(asset.getName());
+  getRepo().createPackageSnapshot(getDefaultPackage().getName(),"SNAP");
+  PackageItem pkgSnap=getRepo().loadPackageSnapshot(getDefaultPackage().getName(),"SNAP");
+  AssetItem assetSnap=pkgSnap.loadAsset("testGetPackageItemHistoricalForShareableAsset");
+  PackageItem pkgSnap1=assetSnap.getPackage();
+  assertTrue(pkgSnap1.isSnapshot());
+  assertTrue(pkgSnap.isSnapshot());
+  assertFalse(getDefaultPackage().isSnapshot());
+  assertEquals(getDefaultPackage().getName(),pkgSnap1.getName());
+  AssetItem linkedAsset1=getDefaultPackage().loadAsset("testGetPackageItemHistoricalForShareableAsset");
+  PackageItem linkedPkg=linkedAsset1.getPackage();
+  assertFalse(linkedPkg.isSnapshot());
+  assertFalse(getDefaultPackage().isSnapshot());
+  assertEquals(getDefaultPackage().getName(),linkedPkg.getName());
+  linkedAsset.updateDescription("yeah !");
+  linkedAsset.checkin("new");
+  linkedAsset=getDefaultPackage().loadAsset("testGetPackageItemHistoricalForShareableAsset");
+  assertNotNull(linkedAsset.getPackage());
+  AssetHistoryIterator linkedIt=linkedAsset.getHistory();
+  assertEquals(4,iteratorToList(linkedIt).size());
+  asset=getDefaultPackage().loadAsset("testGetPackageItemHistoricalForShareableAsset");
+  AssetHistoryIterator it=asset.getHistory();
+  assertEquals(4,iteratorToList(it).size());
+}

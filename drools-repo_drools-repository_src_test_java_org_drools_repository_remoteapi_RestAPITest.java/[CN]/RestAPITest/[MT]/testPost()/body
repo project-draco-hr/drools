@@ -1,0 +1,24 @@
+{
+  RulesRepository repo=RepositorySessionUtil.getRepository();
+  PackageItem pkg=repo.createPackage("testRestPost","");
+  pkg.updateStringProperty("This is some header",PackageItem.HEADER_PROPERTY_NAME);
+  repo.save();
+  RestAPI api=new RestAPI(repo);
+  ByteArrayInputStream in=new ByteArrayInputStream("abc".getBytes());
+  api.post("/packages/testRestPost/asset1.drl",in,"a comment");
+  AssetItem a=pkg.loadAsset("asset1");
+  assertFalse(a.isBinary());
+  assertEquals("drl",a.getFormat());
+  assertEquals("abc",a.getContent());
+  assertEquals("a comment",a.getCheckinComment());
+  in=new ByteArrayInputStream("qed".getBytes());
+  api.post("/packages/testRestPost/asset2.xls",in,"a comment");
+  a=pkg.loadAsset("asset2");
+  assertTrue(a.isBinary());
+  String s=new String(a.getBinaryContentAsBytes());
+  assertEquals("qed",s);
+  assertEquals("a comment",a.getCheckinComment());
+  assertEquals("xls",a.getFormat());
+  List<AssetItem> assets=RulesRepositoryTest.iteratorToList(repo.loadPackage("testRestPost").listAssetsByFormat(new String[]{"drl","xls"}));
+  assertEquals(2,assets.size());
+}

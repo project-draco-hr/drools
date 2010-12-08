@@ -1,0 +1,53 @@
+{
+  try {
+    if (targetNode.getPrimaryNodeType().getName().equals("nt:version")) {
+      String message="Error. Tags can only be removed from the head version of a rule node";
+      log.error(message);
+      throw new RulesRepositoryException(message);
+    }
+    Property tagReferenceProperty;
+    int i=0;
+    int j=0;
+    Value[] newTagValues=null;
+    try {
+      tagReferenceProperty=targetNode.getProperty(CATEGORY_PROPERTY_NAME);
+      Value[] oldTagValues=tagReferenceProperty.getValues();
+      boolean wasThere=false;
+      for (i=0; i < oldTagValues.length; i++) {
+        Node tagNode=targetNode.getSession().getNodeByIdentifier(oldTagValues[i].getString());
+        if (tagNode.getName().equals(tag)) {
+          wasThere=true;
+        }
+      }
+      if (wasThere) {
+        newTagValues=new Value[oldTagValues.length + 1];
+        for (i=0; i < oldTagValues.length; i++) {
+          Node tagNode=targetNode.getSession().getNodeByIdentifier(oldTagValues[i].getString());
+          if (!tagNode.getName().equals(tag)) {
+            newTagValues[j]=oldTagValues[i];
+            j++;
+          }
+        }
+      }
+ else {
+        return;
+      }
+    }
+ catch (    PathNotFoundException e) {
+      return;
+    }
+ finally {
+      if (newTagValues != null) {
+        checkout(targetNode);
+        targetNode.setProperty(CATEGORY_PROPERTY_NAME,newTagValues);
+      }
+ else {
+        log.error("reached expected path of execution when removing tag '" + tag + "' from ruleNode: "+ targetNode.getName());
+      }
+    }
+  }
+ catch (  Exception e) {
+    log.error("Caught exception",e);
+    throw new RulesRepositoryException(e);
+  }
+}

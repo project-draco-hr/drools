@@ -1,0 +1,45 @@
+{
+  RulesRepository repo=RepositorySessionUtil.getRepository();
+  PackageItem pkg=repo.createPackage("testRestPut","");
+  pkg.updateStringProperty("This is some header",PackageItem.HEADER_PROPERTY_NAME);
+  repo.save();
+  AssetItem asset1=pkg.addAsset("asset1","");
+  asset1.updateContent("this is content");
+  asset1.updateFormat("drl");
+  asset1.checkin("");
+  Calendar cd=asset1.getLastModified();
+  AssetItem asset2=pkg.addAsset("asset2","");
+  ByteArrayInputStream in=new ByteArrayInputStream("abc".getBytes());
+  asset2.updateBinaryContentAttachment(in);
+  asset2.updateFormat("xls");
+  asset2.checkin("");
+  RestAPI api=new RestAPI(repo);
+  Thread.sleep(42);
+  api.put("packages/testRestPut/asset1.drl",Calendar.getInstance(),new ByteArrayInputStream("qaz".getBytes()),"a new comment");
+  AssetItem asset1_=pkg.loadAsset("asset1");
+  assertEquals("qaz",asset1_.getContent());
+  assertEquals("a new comment",asset1_.getCheckinComment());
+  assertTrue(asset1_.getLastModified().after(cd));
+  api.put("packages/testRestPut/asset2.xls",Calendar.getInstance(),new ByteArrayInputStream("def".getBytes()),"a new comment");
+  AssetItem asset2_=pkg.loadAsset("asset2");
+  assertEquals("def",new String(asset2_.getBinaryContentAsBytes()));
+  assertEquals("a new comment",asset2_.getCheckinComment());
+  assertTrue(asset2_.getLastModified().after(cd));
+  api.put("packages/testRestPut/.package",Calendar.getInstance(),new ByteArrayInputStream("whee".getBytes()),"hey");
+  pkg=repo.loadPackage("testRestPut");
+  assertEquals("whee",pkg.getStringProperty(PackageItem.HEADER_PROPERTY_NAME));
+  try {
+    api.put("packages/testRestPut/asset1.drl",cd,new ByteArrayInputStream("qaz".getBytes()),"a new comment");
+    fail("should not be able to do this as it is stale timestamp.");
+  }
+ catch (  Exception e) {
+    assertNotNull(e.getMessage());
+  }
+  try {
+    api.put("packages/testRestPut/.package",cd,new ByteArrayInputStream("whee".getBytes()),"hey");
+    fail("should not be able to do this as it is stale timestamp.");
+  }
+ catch (  Exception e) {
+    assertNotNull(e.getMessage());
+  }
+}

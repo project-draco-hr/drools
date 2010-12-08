@@ -1,0 +1,27 @@
+{
+  try {
+    Node versionNode;
+    if (this.node.getPrimaryNodeType().getName().equals("nt:version")) {
+      versionNode=this.node;
+    }
+ else {
+      versionNode=getVersionManager(this.node).getBaseVersion(this.node.getPath());
+    }
+    Property predecessorsProperty=versionNode.getProperty("jcr:predecessors");
+    Value[] predecessorValues=predecessorsProperty.getValues();
+    if (predecessorValues.length > 0) {
+      Node predecessorNode=this.node.getSession().getNodeByIdentifier(predecessorValues[0].getString());
+      if (predecessorNode.getName().equals("jcr:rootVersion")) {
+        return null;
+      }
+      return predecessorNode;
+    }
+  }
+ catch (  PathNotFoundException e) {
+  }
+catch (  Exception e) {
+    log.error("Caught exception",e);
+    throw new RulesRepositoryException(e);
+  }
+  return null;
+}

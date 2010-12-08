@@ -1,0 +1,28 @@
+{
+  try {
+    Node ruleNode=getVersionContentNode();
+    if (ruleNode.hasProperty(COMPILED_PACKAGE_PROPERTY_NAME)) {
+      Property data=ruleNode.getProperty(COMPILED_PACKAGE_PROPERTY_NAME);
+      InputStream in=data.getBinary().getStream();
+      byte[] bytes=new byte[(int)data.getLength()];
+      int offset=0;
+      int numRead=0;
+      while (offset < bytes.length && (numRead=in.read(bytes,offset,bytes.length - offset)) >= 0) {
+        offset+=numRead;
+      }
+      if (offset < bytes.length) {
+        throw new RulesRepositoryException("Could not completely read binary package for " + getName());
+      }
+      in.close();
+      return bytes;
+    }
+ else {
+      return null;
+    }
+  }
+ catch (  Exception e) {
+    log.error(e.getMessage(),e);
+    if (e instanceof RuntimeException)     throw (RuntimeException)e;
+    throw new RulesRepositoryException(e);
+  }
+}

@@ -1,0 +1,26 @@
+{
+  try {
+    getVersionManager(targetNode).checkout(targetNode.getPath());
+  }
+ catch (  UnsupportedRepositoryOperationException e) {
+    String message="";
+    try {
+      message="Error: Caught UnsupportedRepositoryOperationException when attempting to checkout rule: " + targetNode.getName() + ". Are you sure your JCR repository supports versioning? ";
+      log.error(message,e);
+    }
+ catch (    RepositoryException e1) {
+      log.error("Caught Exception",e);
+      throw new RulesRepositoryException(e1);
+    }
+    throw new RulesRepositoryException(message,e);
+  }
+catch (  InvalidItemStateException e) {
+    String message="Your operation was failed because it conflicts with a change made through another user. Please try again.";
+    log.error("Caught Exception",e);
+    throw new RulesRepositoryException(message,e);
+  }
+catch (  Exception e) {
+    log.error("Caught Exception",e);
+    throw new RulesRepositoryException(e);
+  }
+}

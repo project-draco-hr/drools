@@ -1,0 +1,21 @@
+{
+  if (!isValideUserName(userName)) {
+    return;
+  }
+  try {
+    Node permsNode=getUserPermissionNode(userName);
+    permsNode.remove();
+    permsNode=getUserPermissionNode(userName).addNode("jcr:content","nt:unstructured");
+    for (Iterator<Map.Entry<String,List<String>>> iterator=perms.entrySet().iterator(); iterator.hasNext(); ) {
+      Map.Entry<String,List<String>> en=iterator.next();
+      String perm=en.getKey();
+      List<String> targets=en.getValue();
+      if (targets == null)       targets=new ArrayList<String>();
+      permsNode.setProperty(perm,targets.toArray(new String[targets.size()]));
+    }
+    this.repository.save();
+  }
+ catch (  RepositoryException e) {
+    throw new RulesRepositoryException(e);
+  }
+}

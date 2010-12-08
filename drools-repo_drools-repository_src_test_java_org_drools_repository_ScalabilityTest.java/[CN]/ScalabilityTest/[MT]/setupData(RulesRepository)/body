@@ -1,0 +1,33 @@
+{
+  int count=1;
+  List list=new ArrayList();
+  String prefix="HR/";
+  String cat=prefix + "CAT_1";
+  for (int i=1; i <= NUM; i++) {
+    if (i % 500 == 0) {
+      repo.getSession().save();
+      for (Iterator iter=list.iterator(); iter.hasNext(); ) {
+        AssetItem element=(AssetItem)iter.next();
+        element.getNode().checkin();
+      }
+      list.clear();
+    }
+    if (i > 2500) {
+      prefix="FINANCE/";
+    }
+    if (count == 100) {
+      count=1;
+      cat=prefix + "CAT_" + i;
+      System.err.println("changing CAT");
+      System.gc();
+    }
+ else {
+      count++;
+    }
+    String ruleName="rule_" + i + "_"+ System.currentTimeMillis();
+    System.out.println("ADDING rule: " + ruleName);
+    AssetItem item=repo.loadDefaultPackage().addAsset(ruleName,"Foo(bar == " + i + ")panic("+ i+ ");");
+    item.addCategory(cat);
+    list.add(item);
+  }
+}

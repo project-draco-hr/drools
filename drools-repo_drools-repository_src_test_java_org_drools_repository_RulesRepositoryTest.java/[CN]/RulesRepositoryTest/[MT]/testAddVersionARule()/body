@@ -1,0 +1,20 @@
+{
+  RulesRepository repo=RepositorySessionUtil.getRepository();
+  PackageItem pack=repo.createPackage("testAddVersionARule","description");
+  repo.save();
+  AssetItem rule=pack.addAsset("my rule","foobar");
+  assertEquals("my rule",rule.getName());
+  rule.updateContent("foo foo");
+  rule.checkin("version0");
+  pack.addAsset("other rule","description");
+  rule.updateContent("foo bar");
+  rule.checkin("version1");
+  PackageItem pack2=repo.loadPackage("testAddVersionARule");
+  Iterator it=pack2.getAssets();
+  it.next();
+  it.next();
+  assertFalse(it.hasNext());
+  AssetItem prev=(AssetItem)rule.getPrecedingVersion();
+  assertEquals("foo bar",rule.getContent());
+  assertEquals("foo foo",prev.getContent());
+}

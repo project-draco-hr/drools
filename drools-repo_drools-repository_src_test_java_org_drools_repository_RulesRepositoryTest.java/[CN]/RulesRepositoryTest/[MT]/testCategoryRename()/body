@@ -1,0 +1,27 @@
+{
+  RulesRepository repo=RepositorySessionUtil.getRepository();
+  CategoryItem root=repo.loadCategory("/");
+  root.addCategory("testCatRename","");
+  repo.loadCategory("testCatRename").addCategory("testRename","");
+  repo.renameCategory("testCatRename/testRename","testAnother");
+  CategoryItem cat=repo.loadCategory("testCatRename/testAnother");
+  assertNotNull(cat);
+  try {
+    repo.loadCategory("testCatRename/testRename");
+    fail("should not exist.");
+  }
+ catch (  RulesRepositoryException e) {
+    assertNotNull(e.getMessage());
+  }
+  PackageItem pkg=repo.createPackage("testCategoryRename","");
+  AssetItem asset=pkg.addAsset("fooBar","");
+  asset.addCategory("testCatRename");
+  asset.addCategory("testCatRename/testAnother");
+  asset.checkin("");
+  cat=repo.loadCategory("testCatRename/testAnother");
+  AssetItemPageResult as=repo.findAssetsByCategory("testCatRename/testAnother",0,-1);
+  assertEquals("fooBar",((AssetItem)as.assets.get(0)).getName());
+  repo.renameCategory("testCatRename/testAnother","testYetAnother");
+  as=repo.findAssetsByCategory("testCatRename/testYetAnother",0,-1);
+  assertEquals("fooBar",((AssetItem)as.assets.get(0)).getName());
+}
