@@ -1,0 +1,19 @@
+{
+  try {
+    String jcrImplementationClass=properties.getProperty(JCR_IMPL_CLASS);
+    if (jcrImplementationClass == null) {
+      for (      RepositoryFactory factory : ServiceLoader.load(RepositoryFactory.class)) {
+        Repository repo=factory.getRepository(properties);
+        if (repo != null) {
+          this.factory=factory;
+          return repo;
+        }
+      }
+    }
+  }
+ catch (  RepositoryException re) {
+    throw new RepositoryException(re);
+  }
+  String msg="Unable to find an appropriate JCR 2.0 RepositoryFactory; check the 'drools_repository.properties' configuration file.";
+  throw new RepositoryException(msg);
+}
