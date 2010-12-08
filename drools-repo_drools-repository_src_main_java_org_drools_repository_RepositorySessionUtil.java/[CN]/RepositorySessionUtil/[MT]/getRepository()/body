@@ -1,20 +1,19 @@
 {
   RulesRepository repoInstance=repo.get();
   if (repoInstance == null) {
+    System.out.println("----------repoInstance == null");
     File dir=new File("repository");
     System.out.println("DELETING test repo: " + dir.getAbsolutePath());
     deleteDir(dir);
     System.out.println("TEST repo was deleted.");
-    JCRRepositoryConfigurator config=new JackrabbitRepositoryConfigurator();
-    multiThreadedRepository=config.getJCRRepository(null);
-    Session session;
     try {
+      multiThreadedRepository=RulesRepositoryConfigurator.getInstance(null).getJCRRepository();
       session=multiThreadedRepository.login(new SimpleCredentials("alan_parsons","password".toCharArray()));
       RulesRepositoryAdministrator admin=new RulesRepositoryAdministrator(session);
       if (admin.isRepositoryInitialized()) {
         admin.clearRulesRepository();
       }
-      config.setupRulesRepository(session);
+      RulesRepositoryConfigurator.getInstance(null).setupRepository(session);
       repoInstance=new RulesRepository(session);
       multiThreadedRepository.login(new SimpleCredentials("ADMINISTRATOR","password".toCharArray()));
       repo.set(repoInstance);
