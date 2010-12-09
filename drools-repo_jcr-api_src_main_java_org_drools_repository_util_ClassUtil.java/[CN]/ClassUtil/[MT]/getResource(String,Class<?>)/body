@@ -1,0 +1,30 @@
+{
+  final String resource;
+  if (resourceName.startsWith("/")) {
+    resource=resourceName.substring(1);
+  }
+ else {
+    final Package callerPackage=caller.getPackage();
+    if (callerPackage != null) {
+      resource=callerPackage.getName().replace('.','/') + '/' + resourceName;
+    }
+ else {
+      resource=resourceName;
+    }
+  }
+  final ClassLoader threadClassLoader=Thread.currentThread().getContextClassLoader();
+  if (threadClassLoader != null) {
+    final URL url=threadClassLoader.getResource(resource);
+    if (url != null) {
+      return url;
+    }
+  }
+  final ClassLoader classLoader=caller.getClassLoader();
+  if (classLoader != null) {
+    final URL url=classLoader.getResource(resource);
+    if (url != null) {
+      return url;
+    }
+  }
+  return ClassLoader.getSystemResource(resource);
+}
