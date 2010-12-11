@@ -1,0 +1,19 @@
+{
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Halt_With_Timer.drl")));
+  final Package pkg=builder.getPackage();
+  RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  new Thread(new Runnable(){
+    public void run(){
+      workingMemory.fireUntilHalt();
+    }
+  }
+).start();
+  Thread.sleep(1000);
+  workingMemory.insert("halt");
+  Thread.sleep(2000);
+  assertEquals(2,workingMemory.getFactCount());
+}
