@@ -1,0 +1,48 @@
+{
+  String rule=this.createCustomRule(true,"org.drools.test",new String[]{"org.drools.agent.test.KnowledgeAgentInstance"},new String[]{"rule1"},null,"   KnowledgeAgentInstance($id: instanceId)\n","  list.add(\"Instance number \"+$id);\n");
+  this.fileManager.write("rule1.drl",rule);
+  String xml="";
+  xml+="<change-set xmlns='http://drools.org/drools-5.0/change-set'";
+  xml+="    xmlns:xs='http://www.w3.org/2001/XMLSchema-instance'";
+  xml+="    xs:schemaLocation='http://drools.org/drools-5.0/change-set http://anonsvn.jboss.org/repos/labs/labs/jbossrules/trunk/drools-api/src/main/resources/change-set-1.0.0.xsd' >";
+  xml+="    <add> ";
+  xml+="        <resource source='http://localhost:" + this.getPort() + "/rule1.drl' type='DRL' />";
+  xml+="    </add> ";
+  xml+="</change-set>";
+  File fxml=fileManager.write("changeset.xml",xml);
+  URL jarURL=this.getClass().getResource("/KAModelTest.jar");
+  URLClassLoader ucl=new URLClassLoader(new URL[]{jarURL},this.getClass().getClassLoader());
+  KnowledgeBaseConfiguration kbaseConfig=KnowledgeBaseFactory.newKnowledgeBaseConfiguration(null,ucl);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kbaseConfig);
+  KnowledgeAgent kagent=this.createKAgent(kbase,newInstance,false);
+  try {
+    applyChangeSet(kagent,ResourceFactory.newUrlResource(fxml.toURI().toURL()));
+    fail("Knowledge should fail to compile");
+  }
+ catch (  Exception e) {
+    assertTrue(e.getMessage().contains("Unable to compile Knowledge"));
+  }
+  assertTrue(kagent.getKnowledgeBase().getKnowledgePackages().isEmpty());
+  kagent.dispose();
+  if (useKBaseClassLoaderForCompiling) {
+    kagent=this.createKAgent(kbase,newInstance,true);
+  }
+ else {
+    KnowledgeBuilderConfiguration kbuilderConfig=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,ucl);
+    kagent=this.createKAgent(kbase,newInstance,false,kbuilderConfig);
+  }
+  this.applyChangeSet(kagent,ResourceFactory.newUrlResource(fxml.toURI().toURL()));
+  assertEquals(1,kagent.getKnowledgeBase().getKnowledgePackages().size());
+  StatefulKnowledgeSession ksession=kagent.getKnowledgeBase().newStatefulKnowledgeSession();
+  List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  Class<?> modelClass=ucl.loadClass("org.drools.agent.test.KnowledgeAgentInstance");
+  Object modelInstance=modelClass.newInstance();
+  modelClass.getMethod("setInstanceId",int.class).invoke(modelInstance,2);
+  ksession.insert(modelInstance);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  assertTrue(list.contains("Instance number 2"));
+  ksession.dispose();
+  kagent.dispose();
+}
