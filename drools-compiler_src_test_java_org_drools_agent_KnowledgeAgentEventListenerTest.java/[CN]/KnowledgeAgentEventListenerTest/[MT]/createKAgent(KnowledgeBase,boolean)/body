@@ -1,13 +1,5 @@
 {
-  ResourceChangeScannerConfiguration sconf=ResourceFactory.getResourceChangeScannerService().newResourceChangeScannerConfiguration();
-  sconf.setProperty("drools.resource.scanner.interval","2");
-  ResourceFactory.getResourceChangeScannerService().configure(sconf);
-  KnowledgeAgentConfiguration aconf=KnowledgeAgentFactory.newKnowledgeAgentConfiguration();
-  aconf.setProperty("drools.agent.scanDirectories","true");
-  aconf.setProperty("drools.agent.scanResources","true");
-  aconf.setProperty("drools.agent.newInstance","" + newInstance);
-  KnowledgeAgent kagent=KnowledgeAgentFactory.newKnowledgeAgent("test agent",kbase,aconf);
-  final KnowledgeAgentEventListenerTest test=this;
+  KnowledgeAgent kagent=super.createKAgent(kbase,newInstance);
   kagent.addEventListener(new KnowledgeAgentEventListener(){
     public void beforeChangeSetApplied(    BeforeChangeSetAppliedEvent event){
       beforeChangeSetApplied++;
@@ -36,6 +28,7 @@ synchronized (lock) {
     }
     public void resourceCompilationFailed(    ResourceCompilationFailedEvent event){
       compilationErrors=true;
+      System.out.println(event.getKnowledgeBuilder().getErrors().toString());
     }
   }
 );
