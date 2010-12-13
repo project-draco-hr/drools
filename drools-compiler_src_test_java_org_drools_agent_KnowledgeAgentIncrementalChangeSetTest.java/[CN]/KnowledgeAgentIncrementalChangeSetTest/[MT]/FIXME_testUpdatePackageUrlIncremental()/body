@@ -2,6 +2,7 @@
   File pkg1=fileManager.newFile("pkg1.pkg");
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   kbuilder.add(ResourceFactory.newByteArrayResource(createLhsRule("rule1","String()\n").getBytes()),ResourceType.DRL);
+  kbuilder.add(ResourceFactory.newByteArrayResource(createLhsRule("rule2","String()\n").getBytes()),ResourceType.DRL);
   if (kbuilder.hasErrors()) {
     fail(kbuilder.getErrors().toString());
   }
@@ -17,19 +18,20 @@
   xml+="</change-set>";
   File fxml=fileManager.write("changeset.xml",xml);
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  KnowledgeAgent kagent=createKAgent(kbase,false);
-  applyChangeSet(kagent,ResourceFactory.newUrlResource(fxml.toURI().toURL()));
+  KnowledgeAgent kagent=this.createKAgent(kbase,false);
+  kagent.applyChangeSet(ResourceFactory.newUrlResource(fxml.toURI().toURL()));
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   List<String> list=new ArrayList<String>();
   ksession.setGlobal("list",list);
   ksession.insert("String1");
   ksession.fireAllRules();
-  assertEquals(1,list.size());
+  assertEquals(2,list.size());
   assertTrue(list.contains("rule1"));
+  assertTrue(list.contains("rule2"));
   list.clear();
   kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(createLhsRule("rule3","String()\n").getBytes()),ResourceType.DRL);
-  kbuilder.add(ResourceFactory.newByteArrayResource(createLhsRule("rule2","String()\n").getBytes()),ResourceType.DRL);
+  kbuilder.add(ResourceFactory.newByteArrayResource(createDefaultRule("rule2").getBytes()),ResourceType.DRL);
+  kbuilder.add(ResourceFactory.newByteArrayResource(createDefaultRule("rule3").getBytes()),ResourceType.DRL);
   if (kbuilder.hasErrors()) {
     fail(kbuilder.getErrors().toString());
   }
@@ -37,15 +39,14 @@
   writePackage(pkg,pkg1);
   scan(kagent);
   ksession.fireAllRules();
-  assertEquals(2,list.size());
+  assertEquals(1,list.size());
   assertTrue(list.contains("rule3"));
-  assertTrue(list.contains("rule2"));
   list.clear();
   ksession.insert("String2");
   ksession.fireAllRules();
   assertEquals(2,list.size());
-  assertTrue(list.contains("rule3"));
   assertTrue(list.contains("rule2"));
+  assertTrue(list.contains("rule3"));
   ksession.dispose();
   kagent.dispose();
 }

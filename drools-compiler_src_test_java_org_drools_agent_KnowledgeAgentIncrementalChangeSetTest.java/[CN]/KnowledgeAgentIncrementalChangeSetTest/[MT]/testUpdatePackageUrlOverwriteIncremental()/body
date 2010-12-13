@@ -1,15 +1,8 @@
 {
-  String header="";
-  header+="package org.drools.test\n";
-  header+="global java.util.List list\n\n";
-  String rule1=header + this.createCommonRule("rule1");
-  String rule1v2=header + this.createCommonRule("rule1","2");
-  String rule2=header + this.createCommonRule("rule2");
-  String rule3=header + this.createCommonRule("rule3");
   File pkgF1=fileManager.newFile("pkg1.pkg");
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(rule1.getBytes()),ResourceType.DRL);
-  kbuilder.add(ResourceFactory.newByteArrayResource(rule2.getBytes()),ResourceType.DRL);
+  kbuilder.add(ResourceFactory.newByteArrayResource(createLhsRule("rule1","String()\n").getBytes()),ResourceType.DRL);
+  kbuilder.add(ResourceFactory.newByteArrayResource(createLhsRule("rule2","String()\n").getBytes()),ResourceType.DRL);
   if (kbuilder.hasErrors()) {
     fail(kbuilder.getErrors().toString());
   }
@@ -17,7 +10,7 @@
   writePackage(pkg1,pkgF1);
   File pkgF2=fileManager.newFile("pkg2.pkg");
   kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(rule3.getBytes()),ResourceType.DRL);
+  kbuilder.add(ResourceFactory.newByteArrayResource(createDefaultRule("rule3").getBytes()),ResourceType.DRL);
   if (kbuilder.hasErrors()) {
     fail(kbuilder.getErrors().toString());
   }
@@ -32,41 +25,38 @@
   xml+="        <resource source='http://localhost:" + this.getPort() + "/pkg2.pkg' type='PKG' />";
   xml+="    </add> ";
   xml+="</change-set>";
-  File fxml=fileManager.newFile("changeset.xml");
-  Writer output=new BufferedWriter(new FileWriter(fxml));
-  output.write(xml);
-  output.close();
+  File fxml=fileManager.write("changeset.xml",xml);
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  KnowledgeAgent kagent=this.createKAgent(kbase);
-  kagent.applyChangeSet(ResourceFactory.newUrlResource(fxml.toURI().toURL()));
+  KnowledgeAgent kagent=this.createKAgent(kbase,false);
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  applyChangeSet(kagent,ResourceFactory.newUrlResource(fxml.toURI().toURL()));
   List<String> list=new ArrayList<String>();
   ksession.setGlobal("list",list);
+  FactHandle h1=ksession.insert("String1");
   ksession.fireAllRules();
-  ksession.dispose();
   assertEquals(3,list.size());
   assertTrue(list.contains("rule1"));
   assertTrue(list.contains("rule2"));
   assertTrue(list.contains("rule3"));
   list.clear();
-  System.gc();
-  Thread.sleep(2000);
   kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(rule1v2.getBytes()),ResourceType.DRL);
+  kbuilder.add(ResourceFactory.newByteArrayResource(createVersionedRule(null,new String[]{"rule1"},null,"String()","2").getBytes()),ResourceType.DRL);
   if (kbuilder.hasErrors()) {
     fail(kbuilder.getErrors().toString());
   }
   pkg2=(KnowledgePackage)kbuilder.getKnowledgePackages().iterator().next();
   writePackage(pkg2,pkgF2);
-  System.gc();
-  Thread.sleep(3000);
-  ksession=kbase.newStatefulKnowledgeSession();
-  list=new ArrayList<String>();
-  ksession.setGlobal("list",list);
+  scan(kagent);
   ksession.fireAllRules();
-  ksession.dispose();
+  assertEquals(1,list.size());
+  assertTrue(list.contains("rule1-V2"));
+  list.clear();
+  ksession.retract(h1);
+  ksession.insert("String2");
+  ksession.fireAllRules();
   assertEquals(2,list.size());
   assertTrue(list.contains("rule1-V2"));
   assertTrue(list.contains("rule2"));
-  kagent.monitorResourceChangeEvents(false);
+  ksession.dispose();
+  kagent.dispose();
 }
