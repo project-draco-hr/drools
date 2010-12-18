@@ -1,0 +1,42 @@
+{
+  lineLengths=new ArrayList<Integer>();
+  lineLengths.add(null);
+  LineNumberReader lnr=new LineNumberReader(reader);
+  StringBuilder sb=new StringBuilder();
+  int nlCount=0;
+  boolean inEntry=false;
+  String line;
+  while ((line=lnr.readLine()) != null) {
+    lineLengths.add(line.length());
+    Matcher commentMat=commentPat.matcher(line);
+    if (commentMat.matches()) {
+      if (inEntry) {
+        nlCount++;
+      }
+ else {
+        sb.append('\n');
+      }
+      if ("#/".equals(commentMat.group(2))) {
+        String[] options=commentMat.group(1).substring(2).trim().split("\\s+");
+        for (        String option : options) {
+          optionSet.add(option);
+        }
+      }
+      continue;
+    }
+    if (entryPat.matcher(line).matches()) {
+      if (inEntry) {
+        for (int i=0; i < nlCount; i++)         sb.append('\n');
+      }
+      sb.append(line);
+      nlCount=1;
+      inEntry=true;
+      continue;
+    }
+    sb.append(' ').append(line);
+    nlCount++;
+  }
+  if (inEntry)   sb.append('\n');
+  lnr.close();
+  return sb.toString();
+}

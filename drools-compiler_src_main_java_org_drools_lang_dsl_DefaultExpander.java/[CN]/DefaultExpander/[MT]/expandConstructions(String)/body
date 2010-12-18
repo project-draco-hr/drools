@@ -1,31 +1,54 @@
 {
+  if (showKeyword) {
+    for (    DSLMappingEntry entry : this.keywords) {
+      System.out.println("keyword: " + entry.getMappingKey());
+      System.out.println("         " + entry.getKeyPattern());
+    }
+  }
+  if (showWhen) {
+    for (    DSLMappingEntry entry : this.condition) {
+      System.out.println("when: " + entry.getMappingKey());
+      System.out.println("      " + entry.getKeyPattern());
+    }
+  }
+  if (showThen) {
+    for (    DSLMappingEntry entry : this.consequence) {
+      System.out.println("then: " + entry.getMappingKey());
+      System.out.println("      " + entry.getKeyPattern());
+    }
+  }
   final Matcher m=finder.matcher(drl);
   final StringBuffer buf=new StringBuffer();
+  int drlPos=0;
+  int linecount=0;
   while (m.find()) {
     final StringBuilder expanded=new StringBuilder();
-    final String constr=m.group(1).trim();
+    int newPos=m.start();
+    linecount+=countNewlines(drl,drlPos,newPos);
+    drlPos=newPos;
+    String constr=m.group().trim();
     if (constr.startsWith("rule")) {
-      String headerFragment=m.group(2);
+      String headerFragment=m.group(1);
       expanded.append(headerFragment);
-      String lhsFragment=m.group(3);
-      expanded.append(this.expandLHS(lhsFragment,countNewlines(headerFragment) + 1));
-      String thenFragment=m.group(4);
+      String lhsFragment=m.group(2);
+      expanded.append(this.expandLHS(lhsFragment,linecount + countNewlines(drl,drlPos,m.start(2)) + 1));
+      String thenFragment=m.group(3);
       expanded.append(thenFragment);
-      expanded.append(this.expandRHS(m.group(5),countNewlines(headerFragment + lhsFragment + thenFragment) + 1));
-      expanded.append(m.group(6));
-      expanded.append("\n");
+      String rhsFragment=this.expandRHS(m.group(4),linecount + countNewlines(drl,drlPos,m.start(4)) + 1);
+      expanded.append(rhsFragment);
+      expanded.append(m.group(5));
     }
  else     if (constr.startsWith("query")) {
-      String fragment=m.group(7);
+      String fragment=m.group(6);
       expanded.append(fragment);
-      expanded.append(this.expandLHS(m.group(8),countNewlines(fragment) + 1));
-      expanded.append(m.group(9));
-      expanded.append("\n");
+      String lhsFragment=this.expandLHS(m.group(7),linecount + countNewlines(drl,drlPos,m.start(7)) + 1);
+      expanded.append(lhsFragment);
+      expanded.append(m.group(8));
     }
  else {
       this.addError(new ExpanderException("Unable to expand statement: " + constr,0));
     }
-    m.appendReplacement(buf,expanded.toString().replaceAll("\\$","\\\\\\$"));
+    m.appendReplacement(buf,Matcher.quoteReplacement(expanded.toString()));
   }
   m.appendTail(buf);
   return buf;

@@ -1,10 +1,11 @@
 {
+  substitutions=new ArrayList<Map<String,String>>();
   final StringBuilder buf=new StringBuilder();
-  final String[] lines=lhs.split("\n");
+  final String[] lines=lhs.split("\n",-1);
   final String[] expanded=new String[lines.length];
   int lastExpanded=-1;
   int lastPattern=-1;
-  for (int i=0; i < lines.length; i++) {
+  for (int i=0; i < lines.length - 1; i++) {
     final String trimmed=lines[i].trim();
     expanded[++lastExpanded]=lines[i];
     if (trimmed.length() == 0 || trimmed.startsWith("#") || trimmed.startsWith("//")) {
@@ -13,10 +14,7 @@
       expanded[lastExpanded]=lines[i].replaceFirst(">"," ");
     }
  else {
-      for (      final DSLMappingEntry entry : this.condition) {
-        String vp=entry.getValuePattern();
-        expanded[lastExpanded]=entry.getKeyPattern().matcher(expanded[lastExpanded]).replaceAll(vp);
-      }
+      expanded[lastExpanded]=substitute(expanded[lastExpanded],this.condition,i + lineOffset);
       if (lines[i].equals(expanded[lastExpanded])) {
         this.addError(new ExpanderException("Unable to expand: " + lines[i].replaceAll("[\n\r]","").trim(),i + lineOffset));
       }
