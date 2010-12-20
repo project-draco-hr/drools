@@ -9,13 +9,13 @@
   this.ksession=kbase.newStatefulKnowledgeSession(conf,this.env);
   this.kContext=new KnowledgeCommandContext(new ContextImpl("ksession",null),null,null,this.ksession,null);
   ((JpaJDKTimerService)((InternalKnowledgeRuntime)ksession).getTimerService()).setCommandService(this);
-  this.marshallingHelper=new JPASessionMarshallingHelper(this.ksession,conf);
+  this.marshallingHelper=new SessionMarshallingHelper(this.ksession,conf);
   this.sessionInfo.setJPASessionMashallingHelper(this.marshallingHelper);
   ((InternalKnowledgeRuntime)this.ksession).setEndOperationListener(new EndOperationListenerImpl(this.sessionInfo));
   try {
     this.txm.begin();
     registerRollbackSync();
-    jpm.getApplicationScopedEntityManager().persist(this.sessionInfo);
+    jpm.getApplicationScopedPersistenceContext().persist(this.sessionInfo);
     this.txm.commit();
   }
  catch (  Exception t1) {
