@@ -13,9 +13,11 @@
     assertEquals("$policy",entry.getMetaData().toString());
     assertEquals("Add surcharge {surcharge} to Policy",entry.getMappingKey());
     assertEquals("modify(policy) \\{price = {surcharge}\\}",entry.getMappingValue());
-    String input="Add surcharge 300 to Policy";
-    String expected="modify(policy) {price = 300}";
-    String result=entry.getKeyPattern().matcher(input).replaceAll(entry.getValuePattern());
+    String input="rule x\nwhen\nthen\nAdd surcharge 300 to Policy\nend\n";
+    String expected="rule x\nwhen\nthen\nmodify(policy) {price = 300}\nend\n";
+    DefaultExpander de=new DefaultExpander();
+    de.addDSLMapping(this.file.getMapping());
+    final String result=de.expand(input);
     assertEquals(expected,result);
   }
  catch (  final IOException e) {

@@ -1,0 +1,80 @@
+{
+  if (entries.size() == 0) {
+    if (line > 0) {
+      this.addError(new ExpanderException("No mapping entries for expanding: " + exp,line));
+    }
+    return exp;
+  }
+  if (showSingleSteps) {
+    System.out.println("to expand: |" + exp + "|");
+  }
+  Map<String,String> key2value=new HashMap<String,String>();
+  for (  final DSLMappingEntry entry : entries) {
+    Map<String,Integer> vars=entry.getVariables();
+    String mappingKey=entry.getMappingKey();
+    String vp=entry.getValuePattern();
+    Pattern kp=entry.getKeyPattern();
+    Matcher m=kp.matcher(exp);
+    int startPos=0;
+    boolean match=false;
+    Integer count=null;
+    if (showUsage) {
+      count=use.get(mappingKey);
+      if (count == null)       use.put(mappingKey,Integer.valueOf(0));
+    }
+    while (startPos < exp.length() && m.find(startPos)) {
+      match=true;
+      if (showSingleSteps) {
+        System.out.println("  matches: " + kp.toString());
+      }
+      if (showUsage) {
+        use.put(mappingKey,use.get(mappingKey) + 1);
+      }
+      String target=m.group(0);
+      if (!vars.keySet().isEmpty()) {
+        StringBuilder sb=new StringBuilder();
+        String del="\\{(";
+        for (        String key : vars.keySet()) {
+          sb.append(del).append(Pattern.quote(key));
+          del="|";
+        }
+        sb.append(")").append(funcPatStr).append("\\}");
+        Pattern allkeyPat=Pattern.compile(sb.toString());
+        Matcher allkeyMat=allkeyPat.matcher(vp);
+        while (allkeyMat.find()) {
+          String theKey=allkeyMat.group(1);
+          String theFunc=allkeyMat.group(2);
+          String foundValue=m.group(vars.get(theKey));
+          String theValue=applyFunc(theFunc,foundValue);
+          vp=vp.substring(0,allkeyMat.start()) + theValue + vp.substring(allkeyMat.end());
+          allkeyMat.reset(vp);
+          key2value.put(theKey,foundValue);
+        }
+      }
+      Matcher varRefMat=varRefPat.matcher(vp);
+      while (varRefMat.find()) {
+        String theKey=varRefMat.group(1);
+        String theFunc=varRefMat.group(2);
+        for (int ientry=substitutions.size() - 1; ientry >= 0; ientry--) {
+          String foundValue=substitutions.get(ientry).get(theKey);
+          if (foundValue != null) {
+            String theValue=applyFunc(theFunc,foundValue);
+            vp=vp.substring(0,varRefMat.start()) + theValue + vp.substring(varRefMat.end());
+            varRefMat.reset(vp);
+            break;
+          }
+        }
+      }
+      if (key2value.size() > 0) {
+        substitutions.add(key2value);
+      }
+      exp=exp.substring(0,m.start()) + vp + exp.substring(m.end());
+      if (match && showSingleSteps) {
+        System.out.println("   result: |" + exp + "|");
+      }
+      startPos=m.start() + vp.length();
+      m.reset(exp);
+    }
+  }
+  return exp;
+}

@@ -1,0 +1,53 @@
+{
+  if (theFunc != null) {
+    if ("uc".equals(theFunc)) {
+      theValue=theValue.toUpperCase();
+    }
+ else     if ("lc".equals(theFunc)) {
+      theValue=theValue.toLowerCase();
+    }
+ else     if ("ucfirst".equals(theFunc)) {
+      Matcher letterMat=letterPat.matcher(theValue);
+      if (letterMat.find()) {
+        int pos=letterMat.start();
+        theValue=theValue.substring(0,pos) + theValue.substring(pos,pos + 1).toUpperCase() + theValue.substring(pos + 1).toLowerCase();
+      }
+    }
+ else     if (theFunc.startsWith("num")) {
+      String numStr=theValue.replaceAll("[^-\\d]+","");
+      try {
+        long numLong=Long.parseLong(numStr);
+        if (theValue.matches("^.*[.,]\\d\\d(?:\\D.*|$)")) {
+          numStr=Long.toString(numLong);
+          theValue=numStr.substring(0,numStr.length() - 2) + '.' + numStr.substring(numStr.length() - 2);
+        }
+ else {
+          theValue=Long.toString(numLong);
+        }
+      }
+ catch (      NumberFormatException nfe) {
+      }
+    }
+ else {
+      StringTokenizer strTok=new StringTokenizer(theFunc,"?/",true);
+      boolean compare=true;
+      int toks=strTok.countTokens();
+      while (toks >= 4) {
+        String key=strTok.nextToken();
+        String qmk=strTok.nextToken();
+        String val=strTok.nextToken();
+        String sep=strTok.nextToken();
+        if (key.equals(theValue)) {
+          theValue=val;
+          break;
+        }
+        toks-=4;
+        if (toks < 4) {
+          theValue=strTok.nextToken();
+          break;
+        }
+      }
+    }
+  }
+  return theValue;
+}

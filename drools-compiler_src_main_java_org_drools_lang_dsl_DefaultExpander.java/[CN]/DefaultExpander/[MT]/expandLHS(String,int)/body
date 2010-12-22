@@ -12,9 +12,10 @@
     }
  else     if (trimmed.startsWith(">")) {
       expanded[lastExpanded]=lines[i].replaceFirst(">"," ");
+      lastPattern=lastExpanded;
     }
  else {
-      expanded[lastExpanded]=substitute(expanded[lastExpanded],this.condition,i + lineOffset);
+      expanded[lastExpanded]=substitute(expanded[lastExpanded],this.condition,i + lineOffset,useWhen,showSteps);
       if (lines[i].equals(expanded[lastExpanded])) {
         this.addError(new ExpanderException("Unable to expand: " + lines[i].replaceAll("[\n\r]","").trim(),i + lineOffset));
       }
@@ -23,7 +24,7 @@
         int lastMatchEnd=-1;
         String constraints="";
         if (lastPattern >= 0) {
-          final Matcher m2=patternFinder.matcher(expanded[lastPattern]);
+          final Matcher m2=constraintFinder.matcher(expanded[lastPattern]);
           while (m2.find()) {
             lastMatchStart=m2.start();
             lastMatchEnd=m2.end();

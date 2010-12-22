@@ -1,21 +1,11 @@
 {
   if (value != null) {
     StringBuilder valuePatternBuffer=new StringBuilder();
-    if (headMatchGroupAdded) {
-      valuePatternBuffer.append("$1");
-    }
     valuePatternBuffer.append(value);
     if (value.endsWith(" ")) {
       valuePatternBuffer.deleteCharAt(valuePatternBuffer.length() - 1);
     }
-    if (tailMatchGroupAdded) {
-      int tailIndex=getVariables().get(TAIL_TAG).intValue();
-      valuePatternBuffer.append("$" + tailIndex);
-    }
-    String pat=valuePatternBuffer.toString().replaceAll("\\\\#","#").replaceAll("\\\\n","\n");
-    for (    Map.Entry<String,Integer> entry : getVariables().entrySet()) {
-      pat=pat.replaceAll("\\{" + entry.getKey() + "(:(.*?))?\\}","\\$" + entry.getValue());
-    }
+    String pat=valuePatternBuffer.toString().replaceAll("\\\\(#|\\{|\\})","$1").replaceAll("\\\\n","\n").replaceAll("\\\\\\$","\\$");
     super.setValuePattern(pat);
   }
 }

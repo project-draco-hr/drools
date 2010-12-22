@@ -1,7 +1,19 @@
 {
-  final String inputKey="- {prop} is {val} ";
-  final String inputValue="{prop} == {val}";
-  DSLMappingEntry entry=createEntry(inputKey,inputValue);
-  String result=entry.getKeyPattern().matcher("- type is ClientServiceType.TypeGOLD").replaceAll(entry.getValuePattern());
-  assertEquals(result,"type == ClientServiceType.TypeGOLD",result);
+  DSLMappingEntry entry1=this.createEntry("- {prop} is not {val} ","{prop} != {val}");
+  DSLMappingEntry entry2=this.createEntry("- {prop} is {val} ","{prop} == {val}");
+  DSLMappingEntry entry3=this.createEntry("- {prop} is_not {val} ","{prop} != {val}");
+  DefaultExpander ex=makeExpander(entry1,entry2,entry3);
+  StringBuilder sb=new StringBuilder("rule x\n" + "when\n");
+  sb.append("> Foo()").append("\n");
+  sb.append("- type1 is ClientServiceType.TypeGOLD").append("\n");
+  sb.append("- type2 is_not ClientServiceType.TypeGOLD").append("\n");
+  sb.append("- type3 is not ClientServiceType.TypeGOLD").append("\n");
+  sb.append("then\n" + "end\n");
+  String dslr=sb.toString();
+  String drl=ex.expand(dslr);
+  System.out.println(dslr);
+  System.out.println(drl);
+  assertTrue("failure type1",drl.contains("type1 == ClientServiceType.TypeGOLD"));
+  assertTrue("failure type2",drl.contains("type2 != ClientServiceType.TypeGOLD"));
+  assertTrue("failure type3",drl.contains("type3 != ClientServiceType.TypeGOLD"));
 }
