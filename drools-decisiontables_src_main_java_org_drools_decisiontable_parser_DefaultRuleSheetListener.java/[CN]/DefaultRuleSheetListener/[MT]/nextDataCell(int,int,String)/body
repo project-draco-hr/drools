@@ -6,32 +6,63 @@
     return;
   }
   if (row > this._ruleRow) {
-    this._currentRule=createNewRuleForRow(row);
+    String headCell=RuleSheetParserUtil.rc2name(this._ruleStartRow,this._ruleStartColumn);
+    String ruleCell=RuleSheetParserUtil.rc2name(row,this._ruleStartColumn);
+    this._currentRule=createNewRuleForRow(row,headCell,ruleCell);
     this._ruleList.add(this._currentRule);
     this._ruleRow++;
   }
-  if (actionType.type == ActionType.PRIORITY && !this._currentSequentialFlag) {
-    this._currentRule.setSalience(new Integer(value));
+switch (actionType.getCode()) {
+case CONDITION:
+case ACTION:
+    actionType.addCellValue(row,column,value);
+  break;
+case SALIENCE:
+if (!this._currentSequentialFlag) {
+  if (value.startsWith("(") && value.endsWith(")")) {
+    this._currentRule.setSalience(value);
   }
- else   if (actionType.type == ActionType.NAME) {
-    this._currentRule.setName(value);
+ else {
+    try {
+      this._currentRule.setSalience(new Integer(value));
+    }
+ catch (    NumberFormatException nfe) {
+      throw new DecisionTableParseException("Priority is not an integer literal, in cell " + RuleSheetParserUtil.rc2name(row,column));
+    }
   }
- else   if (actionType.type == ActionType.DESCRIPTION) {
-    this._currentRule.setDescription(value);
-  }
- else   if (actionType.type == ActionType.ACTIVATIONGROUP) {
-    this._currentRule.setActivationGroup(value);
-  }
- else   if (actionType.type == ActionType.NOLOOP) {
-    this._currentRule.setNoLoop(value);
-  }
- else   if (actionType.type == ActionType.RULEFLOWGROUP) {
-    this._currentRule.setRuleFlowGroup(value);
-  }
- else   if (actionType.type == ActionType.DURATION) {
-    createDuration(column,value,actionType);
-  }
- else   if (actionType.type == ActionType.CONDITION || actionType.type == ActionType.ACTION) {
-    actionType.addCellValue(column,value);
-  }
+}
+break;
+case NAME:
+this._currentRule.setName(value);
+break;
+case DESCRIPTION:
+this._currentRule.setDescription(value);
+break;
+case ACTIVATIONGROUP:
+this._currentRule.setActivationGroup(value);
+break;
+case AGENDAGROUP:
+this._currentRule.setAgendaGroup(value);
+break;
+case RULEFLOWGROUP:
+this._currentRule.setRuleFlowGroup(value);
+break;
+case NOLOOP:
+this._currentRule.setNoLoop(RuleSheetParserUtil.isStringMeaningTrue(value));
+break;
+case LOCKONACTIVE:
+this._currentRule.setLockOnActive(RuleSheetParserUtil.isStringMeaningTrue(value));
+break;
+case AUTOFOCUS:
+this._currentRule.setLockOnActive(RuleSheetParserUtil.isStringMeaningTrue(value));
+break;
+case DURATION:
+try {
+this._currentRule.setDuration(new Long(value));
+}
+ catch (NumberFormatException nfe) {
+throw new DecisionTableParseException("Duration is not an integer literal, in cell " + RuleSheetParserUtil.rc2name(row,column));
+}
+break;
+}
 }

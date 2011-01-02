@@ -1,21 +1,21 @@
 {
   final ActionType actionType=getActionForColumn(row,column);
   if (actionType.getSourceBuilder() == null) {
-    if (actionType.type == ActionType.CONDITION) {
-      actionType.setSourceBuilder(new LhsBuilder(null));
+    if (actionType.getCode() == Code.CONDITION) {
+      actionType.setSourceBuilder(new LhsBuilder(row - 2,column,null));
       this.sourceBuilders.add(actionType.getSourceBuilder());
     }
- else     if (actionType.type == ActionType.ACTION) {
-      actionType.setSourceBuilder(new RhsBuilder(null));
+ else     if (actionType.getCode() == Code.ACTION) {
+      actionType.setSourceBuilder(new RhsBuilder(row - 2,column,null));
       this.sourceBuilders.add(actionType.getSourceBuilder());
     }
- else     if (actionType.type == ActionType.PRIORITY) {
-      actionType.setSourceBuilder(new LhsBuilder(null));
+ else     if (actionType.getCode() == Code.SALIENCE) {
+      actionType.setSourceBuilder(new LhsBuilder(row - 2,column,null));
       this.sourceBuilders.add(actionType.getSourceBuilder());
     }
   }
-  if (value.trim().equals("") && (actionType.type == ActionType.ACTION || actionType.type == ActionType.CONDITION)) {
-    throw new DecisionTableParseException("Code description - row:" + (row + 1) + " cell number:"+ (column + 1)+ " - does not contain any code specification. It should !");
+  if (value.trim().equals("") && (actionType.getCode() == Code.ACTION || actionType.getCode() == Code.CONDITION)) {
+    throw new DecisionTableParseException("Code description in cell " + RuleSheetParserUtil.rc2name(row,column) + " does not contain any code specification. It should !");
   }
-  actionType.addTemplate(column,value);
+  actionType.addTemplate(row,column,value);
 }
