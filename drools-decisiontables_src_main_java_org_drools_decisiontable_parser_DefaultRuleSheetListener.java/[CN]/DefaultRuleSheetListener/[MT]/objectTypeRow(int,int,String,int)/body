@@ -1,28 +1,28 @@
 {
   if (value.indexOf("$param") > -1 || value.indexOf("$1") > -1) {
-    throw new DecisionTableParseException("It looks like you have snippets in the row that is " + "meant for column declarations." + " Please insert an additional row before the snippets."+ " Row number: "+ (row + 1));
+    throw new DecisionTableParseException("It looks like you have snippets in the row that is " + "meant for object declarations." + " Please insert an additional row before the snippets, "+ "at cell "+ RuleSheetParserUtil.rc2name(row,column));
   }
   ActionType action=getActionForColumn(row,column);
   if (mergedColStart == RuleSheetListener.NON_MERGED) {
-    if (action.type == ActionType.CONDITION) {
-      SourceBuilder src=new LhsBuilder(value);
+    if (action.getCode() == Code.CONDITION) {
+      SourceBuilder src=new LhsBuilder(row - 1,column,value);
       action.setSourceBuilder(src);
       this.sourceBuilders.add(src);
     }
- else     if (action.type == ActionType.ACTION) {
-      SourceBuilder src=new RhsBuilder(value);
+ else     if (action.getCode() == Code.ACTION) {
+      SourceBuilder src=new RhsBuilder(row - 1,column,value);
       action.setSourceBuilder(src);
       this.sourceBuilders.add(src);
     }
   }
  else {
     if (column == mergedColStart) {
-      if (action.type == ActionType.CONDITION) {
-        action.setSourceBuilder(new LhsBuilder(value));
+      if (action.getCode() == Code.CONDITION) {
+        action.setSourceBuilder(new LhsBuilder(row - 1,column,value));
         this.sourceBuilders.add(action.getSourceBuilder());
       }
- else       if (action.type == ActionType.ACTION) {
-        action.setSourceBuilder(new RhsBuilder(value));
+ else       if (action.getCode() == Code.ACTION) {
+        action.setSourceBuilder(new RhsBuilder(row - 1,column,value));
         this.sourceBuilders.add(action.getSourceBuilder());
       }
     }

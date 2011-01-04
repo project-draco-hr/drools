@@ -1,6 +1,6 @@
 {
   final String defaultPackageName="rule_table";
-  final String rulesetName=getProperties().getProperty(RULESET_TAG,defaultPackageName);
+  final String rulesetName=getProperties().getSingleProperty(RULESET_TAG,defaultPackageName);
   final Package ruleset=new Package((showPackage) ? rulesetName : null);
   for (  Rule rule : this._ruleList) {
     ruleset.addRule(rule);
@@ -13,9 +13,63 @@
   for (  Global global : variableList) {
     ruleset.addVariable(global);
   }
-  final String functions=getProperties().getProperty(FUNCTIONS_TAG);
-  ruleset.addFunctions(functions);
-  final String queries=getProperties().getProperty(QUERIES_TAG);
-  ruleset.addQueries(queries);
-  return ruleset;
+  final List<String> functions=getProperties().getProperty(FUNCTIONS_TAG);
+  if (functions != null) {
+    for (    String function : functions) {
+      ruleset.addFunctions(function);
+    }
+  }
+  final List<String> queries=getProperties().getProperty(QUERIES_TAG);
+  if (queries != null) {
+    for (    String query : queries) {
+      ruleset.addQueries(query);
+    }
+  }
+  for (  Code code : ActionType.ATTRIBUTE_CODE_SET) {
+    List<String> values=getProperties().getProperty(code.getColHeader());
+    if (values != null) {
+      if (values.size() > 1) {
+        List<String> cells=getProperties().getPropertyCells(code.getColHeader());
+        throw new DecisionTableParseException("Multiple values for " + code.getColHeader() + " in cells "+ cells.toString());
+      }
+      String value=values.get(0);
+switch (code) {
+case SALIENCE:
+        try {
+          ruleset.setSalience(new Integer(value));
+        }
+ catch (        NumberFormatException nfe) {
+          throw new DecisionTableParseException("Priority is not an integer literal, in cell " + getProperties().getSinglePropertyCell(code.getColHeader()));
+        }
+      break;
+case DURATION:
+    try {
+      ruleset.setDuration(new Long(value));
+    }
+ catch (    NumberFormatException nfe) {
+      throw new DecisionTableParseException("Duration is not an integer literal, in cell " + getProperties().getSinglePropertyCell(code.getColHeader()));
+    }
+  break;
+case NOLOOP:
+ruleset.setNoLoop(RuleSheetParserUtil.isStringMeaningTrue(value));
+break;
+case LOCKONACTIVE:
+ruleset.setLockOnActive(RuleSheetParserUtil.isStringMeaningTrue(value));
+break;
+case AUTOFOCUS:
+ruleset.setAutoFocus(RuleSheetParserUtil.isStringMeaningTrue(value));
+break;
+case ACTIVATIONGROUP:
+ruleset.setActivationGroup(value);
+break;
+case AGENDAGROUP:
+ruleset.setAgendaGroup(value);
+break;
+case RULEFLOWGROUP:
+ruleset.setRuleFlowGroup(value);
+break;
+}
+}
+}
+return ruleset;
 }
