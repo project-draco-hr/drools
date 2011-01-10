@@ -1,8 +1,18 @@
 {
-  for (  SessionInfo sessionInfo : session.getStoredKnowledgeSessions()) {
-    storage.saveOrUpdate(sessionInfo);
+  try {
+    for (    SessionInfo sessionInfo : session.getStoredKnowledgeSessions()) {
+      storage.saveOrUpdate(sessionInfo);
+    }
+    for (    WorkItemInfo workItemInfo : session.getStoredWorkItems()) {
+      storage.saveOrUpdate(workItemInfo);
+    }
+    try {
+      transactionSynchronization.afterCompletion(TransactionManager.STATUS_COMMITTED);
+    }
+ catch (    RuntimeException re) {
+    }
   }
-  for (  WorkItemInfo workItemInfo : session.getStoredWorkItems()) {
-    storage.saveOrUpdate(workItemInfo);
+ catch (  RuntimeException re) {
+    transactionSynchronization.afterCompletion(TransactionManager.STATUS_ROLLEDBACK);
   }
 }
