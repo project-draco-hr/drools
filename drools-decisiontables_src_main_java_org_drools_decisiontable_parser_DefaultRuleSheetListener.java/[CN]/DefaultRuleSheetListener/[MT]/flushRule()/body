@@ -2,17 +2,22 @@
   for (Iterator<SourceBuilder> iter=sourceBuilders.iterator(); iter.hasNext(); ) {
     SourceBuilder src=iter.next();
     if (src.hasValues()) {
-      if (src instanceof LhsBuilder) {
-        Condition con=new Condition();
-        con.setSnippet(src.getResult());
-        _currentRule.addCondition(con);
-      }
- else       if (src instanceof RhsBuilder) {
-        Consequence con=new Consequence();
-        con.setSnippet(src.getResult());
-        _currentRule.addConsequence(con);
-      }
-      src.clearValues();
-    }
-  }
+switch (src.getActionTypeCode()) {
+case CONDITION:
+        Condition cond=new Condition();
+      cond.setSnippet(src.getResult());
+    _currentRule.addCondition(cond);
+  break;
+case ACTION:
+Consequence cons=new Consequence();
+cons.setSnippet(src.getResult());
+_currentRule.addConsequence(cons);
+break;
+case METADATA:
+_currentRule.addMetadata(src.getResult());
+break;
+}
+src.clearValues();
+}
+}
 }
