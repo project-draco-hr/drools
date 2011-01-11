@@ -1,0 +1,13 @@
+{
+  DSLMappingFile file=new DSLTokenizedMappingFile();
+  String dsl="[keyword]key {param}=Foo( attr=={param} )";
+  file.parseAndLoad(new StringReader(dsl));
+  assertEquals(0,file.getErrors().size());
+  DefaultExpander ex=new DefaultExpander();
+  ex.addDSLMapping(file.getMapping());
+  String source="rule x\nwhen\n key 1 \n key 2 \nthen\nend";
+  String drl=ex.expand(source);
+  System.out.println(drl);
+  assertTrue(drl.contains("attr==1"));
+  assertTrue(drl.contains("attr==2"));
+}
