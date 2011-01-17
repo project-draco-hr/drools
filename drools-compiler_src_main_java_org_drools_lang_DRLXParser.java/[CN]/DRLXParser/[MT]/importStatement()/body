@@ -1,0 +1,27 @@
+{
+  ImportDescrBuilder imp=null;
+  try {
+    imp=helper.start(ImportDescrBuilder.class);
+    match(input,DRLLexer.ID,DroolsSoftKeywords.IMPORT,null,DroolsEditorType.KEYWORD);
+    if (helper.validateIdentifierKey(DroolsSoftKeywords.FUNCTION)) {
+      match(input,DRLLexer.ID,DroolsSoftKeywords.FUNCTION,null,DroolsEditorType.KEYWORD);
+    }
+    String target=qualifiedIdentifier();
+    if (input.LA(1) == DRLLexer.DOT && input.LA(2) == DRLLexer.STAR) {
+      match(input,DRLLexer.DOT,null,null,DroolsEditorType.IDENTIFIER);
+      match(input,DRLLexer.STAR,null,null,DroolsEditorType.IDENTIFIER);
+      target+=".*";
+    }
+    imp.target(target);
+    if (input.LA(1) == DRLLexer.SEMICOLON) {
+      match(input,DRLLexer.SEMICOLON,null,null,DroolsEditorType.SYMBOL);
+    }
+  }
+ catch (  RecognitionException re) {
+    reportError(re);
+  }
+ finally {
+    helper.end(ImportDescrBuilder.class);
+  }
+  return (imp != null) ? imp.getDescr() : null;
+}

@@ -1,0 +1,29 @@
+{
+  StringBuilder type=new StringBuilder();
+  try {
+    Token token=match(input,DRLLexer.ID,null,new int[]{DRLLexer.DOT,DRLLexer.LESS},DroolsEditorType.IDENTIFIER);
+    type.append(token.getText());
+    if (input.LA(1) == DRLLexer.LESS) {
+      type.append(typeArguments());
+    }
+    while (input.LA(1) == DRLLexer.DOT && input.LA(2) == DRLLexer.ID) {
+      token=match(input,DRLLexer.DOT,null,new int[]{DRLLexer.ID},DroolsEditorType.IDENTIFIER);
+      type.append(token.getText());
+      token=match(input,DRLLexer.ID,null,new int[]{DRLLexer.DOT},DroolsEditorType.IDENTIFIER);
+      type.append(token.getText());
+      if (input.LA(1) == DRLLexer.LESS) {
+        type.append(typeArguments());
+      }
+    }
+    while (input.LA(1) == DRLLexer.LEFT_SQUARE && input.LA(2) == DRLLexer.RIGHT_SQUARE) {
+      token=match(input,DRLLexer.LEFT_SQUARE,null,new int[]{DRLLexer.RIGHT_SQUARE},DroolsEditorType.IDENTIFIER);
+      type.append(token.getText());
+      token=match(input,DRLLexer.RIGHT_SQUARE,null,null,DroolsEditorType.IDENTIFIER);
+      type.append(token.getText());
+    }
+  }
+ catch (  RecognitionException re) {
+    reportError(re);
+  }
+  return type.toString();
+}

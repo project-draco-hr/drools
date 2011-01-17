@@ -1,11 +1,23 @@
 {
-  parseResource("compilation_unit","compilation_unit","test_FunctionImport.drl");
-  final PackageDescr pkg=walker.getPackageDescr();
+  final String source="package foo\n" + "import function java.lang.Math.max\n" + "import function java.lang.Math.min;\n"+ "import foo.bar.*\n"+ "import baz.Baz";
+  PackageDescr pkg=(PackageDescr)parse("compilationUnit",source);
+  assertEquals("foo",pkg.getName());
+  assertEquals(2,pkg.getImports().size());
+  ImportDescr impdescr=pkg.getImports().get(0);
+  assertEquals("foo.bar.*",impdescr.getTarget());
+  assertEquals(source.indexOf("import " + impdescr.getTarget()),impdescr.getStartCharacter());
+  assertEquals(source.indexOf("import " + impdescr.getTarget()) + ("import " + impdescr.getTarget()).length(),impdescr.getEndCharacter());
+  impdescr=pkg.getImports().get(1);
+  assertEquals("baz.Baz",impdescr.getTarget());
+  assertEquals(source.indexOf("import " + impdescr.getTarget()),impdescr.getStartCharacter());
+  assertEquals(source.indexOf("import " + impdescr.getTarget()) + ("import " + impdescr.getTarget()).length(),impdescr.getEndCharacter());
   assertEquals(2,pkg.getFunctionImports().size());
-  assertEquals("abd.def.x",((FunctionImportDescr)pkg.getFunctionImports().get(0)).getTarget());
-  assertFalse(((FunctionImportDescr)pkg.getFunctionImports().get(0)).getStartCharacter() == -1);
-  assertFalse(((FunctionImportDescr)pkg.getFunctionImports().get(0)).getEndCharacter() == -1);
-  assertEquals("qed.wah.*",((FunctionImportDescr)pkg.getFunctionImports().get(1)).getTarget());
-  assertFalse(((FunctionImportDescr)pkg.getFunctionImports().get(1)).getStartCharacter() == -1);
-  assertFalse(((FunctionImportDescr)pkg.getFunctionImports().get(1)).getEndCharacter() == -1);
+  impdescr=pkg.getFunctionImports().get(0);
+  assertEquals("java.lang.Math.max",impdescr.getTarget());
+  assertEquals(source.indexOf("import function " + impdescr.getTarget()),impdescr.getStartCharacter());
+  assertEquals(source.indexOf("import function " + impdescr.getTarget()) + ("import function " + impdescr.getTarget()).length(),impdescr.getEndCharacter());
+  impdescr=pkg.getFunctionImports().get(1);
+  assertEquals("java.lang.Math.min",impdescr.getTarget());
+  assertEquals(source.indexOf("import function " + impdescr.getTarget()),impdescr.getStartCharacter());
+  assertEquals(source.indexOf("import function " + impdescr.getTarget()) + ("import function " + impdescr.getTarget()).length() + 1,impdescr.getEndCharacter());
 }
