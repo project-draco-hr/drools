@@ -1,0 +1,21 @@
+{
+  final String source="package foo.bar.baz\n" + "import com.foo.Bar\n" + "global java.util.List<java.util.Map<String,Integer>> aList;\n"+ "global Integer aNumber";
+  PackageDescr pkg=(PackageDescr)parse("compilationUnit",source);
+  assertEquals("foo.bar.baz",pkg.getName());
+  assertEquals(1,pkg.getImports().size());
+  ImportDescr impdescr=pkg.getImports().get(0);
+  assertEquals("com.foo.Bar",impdescr.getTarget());
+  assertEquals(source.indexOf("import " + impdescr.getTarget()),impdescr.getStartCharacter());
+  assertEquals(source.indexOf("import " + impdescr.getTarget()) + ("import " + impdescr.getTarget()).length(),impdescr.getEndCharacter());
+  assertEquals(2,pkg.getGlobals().size());
+  GlobalDescr global=pkg.getGlobals().get(0);
+  assertEquals("java.util.List<java.util.Map<String,Integer>>",global.getType());
+  assertEquals("aList",global.getIdentifier());
+  assertEquals(source.indexOf("global " + global.getType()),global.getStartCharacter());
+  assertEquals(source.indexOf("global " + global.getType() + " "+ global.getIdentifier()) + ("global " + global.getType() + " "+ global.getIdentifier()).length() + 1,global.getEndCharacter());
+  global=pkg.getGlobals().get(1);
+  assertEquals("Integer",global.getType());
+  assertEquals("aNumber",global.getIdentifier());
+  assertEquals(source.indexOf("global " + global.getType()),global.getStartCharacter());
+  assertEquals(source.indexOf("global " + global.getType() + " "+ global.getIdentifier()) + ("global " + global.getType() + " "+ global.getIdentifier()).length(),global.getEndCharacter());
+}

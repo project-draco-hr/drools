@@ -1,22 +1,18 @@
 {
   Token matchedSymbol=null;
-  try {
-    matchedSymbol=input.LT(1);
-    if (input.LA(1) == ttype && (text == null || text.equals(matchedSymbol.getText()))) {
-      input.consume();
-      state.errorRecovery=false;
-      state.failed=false;
-      return matchedSymbol;
-    }
-    matchedSymbol=recoverFromMismatchedToken(input,ttype,text,follow);
+  matchedSymbol=input.LT(1);
+  if (input.LA(1) == ttype && (text == null || text.equals(matchedSymbol.getText()))) {
+    input.consume();
+    state.errorRecovery=false;
+    state.failed=false;
+    helper.emit(matchedSymbol,etype);
     return matchedSymbol;
   }
- catch (  RecognitionException re) {
+  if (state.backtracking > 0) {
     state.failed=true;
-    state.errorRecovery=false;
-    throw re;
+    return matchedSymbol;
   }
- finally {
-    helper.emit(matchedSymbol,etype);
-  }
+  matchedSymbol=recoverFromMismatchedToken(input,ttype,text,follow);
+  helper.emit(matchedSymbol,etype);
+  return matchedSymbol;
 }

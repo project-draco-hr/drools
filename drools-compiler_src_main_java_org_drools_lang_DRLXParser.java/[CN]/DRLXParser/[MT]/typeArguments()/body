@@ -1,19 +1,23 @@
 {
-  StringBuilder typeArguments=new StringBuilder();
+  String typeArguments="";
   try {
+    int first=input.index();
     Token token=match(input,DRLLexer.LESS,null,new int[]{DRLLexer.QUESTION,DRLLexer.ID},DroolsEditorType.SYMBOL);
-    typeArguments.append(token.getText());
-    typeArguments.append(typeArgument());
+    if (state.failed)     return typeArguments;
+    typeArgument();
+    if (state.failed)     return typeArguments;
     while (input.LA(1) == DRLLexer.COMMA) {
       token=match(input,DRLLexer.COMMA,null,new int[]{DRLLexer.QUESTION,DRLLexer.ID},DroolsEditorType.IDENTIFIER);
-      typeArguments.append(token.getText());
-      typeArguments.append(typeArgument());
+      if (state.failed)       return typeArguments;
+      typeArgument();
+      if (state.failed)       return typeArguments;
     }
     token=match(input,DRLLexer.GREATER,null,null,DroolsEditorType.SYMBOL);
-    typeArguments.append(token.getText());
+    if (state.failed)     return typeArguments;
+    typeArguments=input.toString(first,token.getTokenIndex());
   }
  catch (  RecognitionException re) {
     reportError(re);
   }
-  return typeArguments.toString();
+  return typeArguments;
 }

@@ -3,11 +3,17 @@
   try {
     global=helper.start(GlobalDescrBuilder.class);
     match(input,DRLLexer.ID,DroolsSoftKeywords.GLOBAL,null,DroolsEditorType.KEYWORD);
+    if (state.failed)     return global.getDescr();
     String type=type();
     global.type(type);
-    match(input,DRLLexer.ID,null,null,DroolsEditorType.IDENTIFIER_TYPE);
+    if (state.failed)     return global.getDescr();
+    Token id=match(input,DRLLexer.ID,null,null,DroolsEditorType.IDENTIFIER_TYPE);
+    global.identifier(id.getText());
+    helper.setParaphrasesValue(DroolsParaphraseTypes.GLOBAL,id.getText());
+    if (state.failed)     return global.getDescr();
     if (input.LA(1) == DRLLexer.SEMICOLON) {
       match(input,DRLLexer.SEMICOLON,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return global.getDescr();
     }
   }
  catch (  RecognitionException re) {

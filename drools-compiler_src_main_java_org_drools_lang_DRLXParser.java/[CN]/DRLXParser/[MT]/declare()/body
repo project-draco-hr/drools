@@ -1,0 +1,32 @@
+{
+  DeclareDescrBuilder declare=null;
+  try {
+    declare=helper.start(DeclareDescrBuilder.class);
+    match(input,DRLLexer.ID,DroolsSoftKeywords.DECLARE,null,DroolsEditorType.KEYWORD);
+    if (state.failed)     return declare.getDescr();
+    String type=type();
+    declare.type(type);
+    if (state.failed)     return declare.getDescr();
+    while (input.LA(1) == DRLLexer.AT) {
+      metadata();
+      if (state.failed)       return declare.getDescr();
+    }
+    while (input.LA(1) == DRLLexer.ID && !helper.validateIdentifierKey(DroolsSoftKeywords.END)) {
+      field();
+      if (state.failed)       return declare.getDescr();
+    }
+    Token id=match(input,DRLLexer.ID,DroolsSoftKeywords.END,null,DroolsEditorType.KEYWORD);
+    if (state.failed)     return declare.getDescr();
+    if (input.LA(1) == DRLLexer.SEMICOLON) {
+      match(input,DRLLexer.SEMICOLON,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return declare.getDescr();
+    }
+  }
+ catch (  RecognitionException re) {
+    reportError(re);
+  }
+ finally {
+    helper.end(DeclareDescrBuilder.class);
+  }
+  return (declare != null) ? declare.getDescr() : null;
+}
