@@ -1,0 +1,37 @@
+{
+  final PackageDescr pkg=(PackageDescr)parseResource("compilationUnit","declare_type_with_fields.drl");
+  assertFalse(parser.getErrors().toString(),parser.hasErrors());
+  List<TypeDeclarationDescr> td=pkg.getTypeDeclarations();
+  assertEquals(3,td.size());
+  TypeDeclarationDescr d=td.get(0);
+  assertEquals("SomeFact",d.getTypeName());
+  assertEquals(2,d.getFields().size());
+  assertTrue(d.getFields().containsKey("name"));
+  assertTrue(d.getFields().containsKey("age"));
+  TypeFieldDescr f=d.getFields().get("name");
+  assertEquals("String",f.getPattern().getObjectType());
+  f=d.getFields().get("age");
+  assertEquals("Integer",f.getPattern().getObjectType());
+  d=td.get(1);
+  assertEquals("AnotherFact",d.getTypeName());
+  TypeDeclarationDescr type=td.get(2);
+  assertEquals("Person",type.getTypeName());
+  assertEquals("fact",type.getAnnotation("role").getValue());
+  assertEquals("Models a person",type.getAnnotation("doc").getValue("descr"));
+  assertEquals("Bob",type.getAnnotation("doc").getValue("author"));
+  assertEquals("Calendar.getInstance().getDate()",type.getAnnotation("doc").getValue("date"));
+  assertEquals(2,type.getFields().size());
+  TypeFieldDescr field=type.getFields().get("name");
+  assertEquals("name",field.getFieldName());
+  assertEquals("String",field.getPattern().getObjectType());
+  assertEquals("\"John Doe\"",field.getInitExpr());
+  assertEquals("50",field.getAnnotation("length").getValue("max"));
+  assertNotNull(field.getAnnotation("key"));
+  field=type.getFields().get("age");
+  assertEquals("age",field.getFieldName());
+  assertEquals("int",field.getPattern().getObjectType());
+  assertEquals("-1",field.getInitExpr());
+  assertEquals("0",field.getAnnotation("ranged").getValue("min"));
+  assertEquals("150",field.getAnnotation("ranged").getValue("max"));
+  assertEquals("-1",field.getAnnotation("ranged").getValue("unknown"));
+}
