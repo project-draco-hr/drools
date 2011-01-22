@@ -13,14 +13,12 @@
       match(input,DRLLexer.EQUALS_ASSIGN,null,null,DroolsEditorType.SYMBOL);
       if (state.failed)       return;
       int first=input.index();
-      try {
-        exprParser.conditionalExpression();
-      }
- catch (      RecognitionException re) {
-      }
+      exprParser.embeddedExpression();
       if (state.failed)       return;
-      String value=input.toString(first,input.LT(-1).getTokenIndex());
-      if (state.backtracking == 0)       field.initialValue(value);
+      if (state.backtracking == 0 && input.index() > first) {
+        String value=input.toString(first,input.LT(-1).getTokenIndex());
+        field.initialValue(value);
+      }
     }
     while (input.LA(1) == DRLLexer.AT) {
       annotation(field);

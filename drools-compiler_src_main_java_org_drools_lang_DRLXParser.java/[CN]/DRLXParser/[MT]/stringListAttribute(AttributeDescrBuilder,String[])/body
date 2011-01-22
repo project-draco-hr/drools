@@ -1,0 +1,26 @@
+{
+  StringBuilder builder=new StringBuilder();
+  for (  String k : key) {
+    match(input,DRLLexer.ID,k,null,DroolsEditorType.KEYWORD);
+    if (state.failed)     return;
+    builder.append(k);
+  }
+  if (state.backtracking == 0)   attribute.name(builder.toString());
+  builder=new StringBuilder();
+  builder.append("[ ");
+  Token value=match(input,DRLLexer.STRING,null,null,DroolsEditorType.STRING_CONST);
+  if (state.failed)   return;
+  builder.append(value.getText());
+  if (input.LA(1) == DRLLexer.COMMA) {
+    match(input,DRLLexer.COMMA,null,null,DroolsEditorType.SYMBOL);
+    if (state.failed)     return;
+    builder.append(", ");
+    value=match(input,DRLLexer.STRING,null,null,DroolsEditorType.STRING_CONST);
+    if (state.failed)     return;
+    builder.append(value.getText());
+  }
+  builder.append(" ]");
+  if (state.backtracking == 0) {
+    attribute.value(builder.toString());
+  }
+}
