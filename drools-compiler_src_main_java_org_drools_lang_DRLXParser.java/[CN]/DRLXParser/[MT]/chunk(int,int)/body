@@ -1,0 +1,31 @@
+{
+  String chunk="";
+  int first=-1, last=first;
+  try {
+    match(input,leftDelimiter,null,null,DroolsEditorType.SYMBOL);
+    if (state.failed)     return chunk;
+    int nests=0;
+    first=input.index();
+    while (input.LA(1) != rightDelimiter || nests > 0) {
+      if (input.LA(1) == rightDelimiter) {
+        nests--;
+      }
+ else       if (input.LA(1) == leftDelimiter) {
+        nests++;
+      }
+      input.consume();
+    }
+    last=input.LT(-1).getTokenIndex();
+    match(input,rightDelimiter,null,null,DroolsEditorType.SYMBOL);
+    if (state.failed)     return chunk;
+  }
+ catch (  RecognitionException re) {
+    reportError(re);
+  }
+ finally {
+    if (last >= first) {
+      chunk=input.toString(first,last);
+    }
+  }
+  return chunk;
+}

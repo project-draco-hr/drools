@@ -6,11 +6,26 @@
     builder.append(k);
   }
   if (state.backtracking == 0)   attribute.name(builder.toString());
-  if (input.LA(1) == DRLLexer.DECIMAL) {
+  if (input.LA(1) == DRLLexer.LEFT_PAREN) {
+    String value=chunk(DRLLexer.LEFT_PAREN,DRLLexer.RIGHT_PAREN);
+    if (state.failed)     return;
+    if (state.backtracking == 0)     attribute.value(safeStripDelimiters(value,new String[]{"(",")"}));
   }
-  Token value=match(input,DRLLexer.STRING,null,null,DroolsEditorType.STRING_CONST);
-  if (state.failed)   return;
-  if (state.backtracking == 0) {
-    attribute.value(value.getText());
+ else {
+    String value="";
+    if (input.LA(1) == DRLLexer.PLUS) {
+      Token sign=match(input,DRLLexer.PLUS,null,null,DroolsEditorType.NUMERIC_CONST);
+      if (state.failed)       return;
+      value+=sign.getText();
+    }
+ else     if (input.LA(1) == DRLLexer.MINUS) {
+      Token sign=match(input,DRLLexer.MINUS,null,null,DroolsEditorType.NUMERIC_CONST);
+      if (state.failed)       return;
+      value+=sign.getText();
+    }
+    Token nbr=match(input,DRLLexer.DECIMAL,null,null,DroolsEditorType.NUMERIC_CONST);
+    if (state.failed)     return;
+    value+=nbr.getText();
+    if (state.backtracking == 0)     attribute.value(value);
   }
 }
