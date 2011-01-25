@@ -1,7 +1,42 @@
 {
   this.headerRow=row;
   this.headerCol=column;
-  this.colDefinition=colDefinition == null ? "" : colDefinition;
   this.constraints=new HashMap<Integer,String>();
   this.values=new ArrayList<String>();
+  String colDef=colDefinition == null ? "" : colDefinition;
+  if ("".equals(colDef)) {
+    colDefPrefix=colDefSuffix="";
+    multiple=false;
+    andop="";
+    return;
+  }
+  multiple=true;
+  Matcher matEval=patEval.matcher(colDef);
+  if (matEval.find()) {
+    colDefPrefix=colDef.substring(0,matEval.start()) + "eval(";
+    colDefSuffix=")";
+    andop=" && ";
+    return;
+  }
+  andop=", ";
+  Matcher matParFrm=patParFrm.matcher(colDef);
+  if (matParFrm.find()) {
+    colDefPrefix=colDef.substring(0,matParFrm.start()) + '(';
+    colDefSuffix=") from" + colDef.substring(matParFrm.end());
+    return;
+  }
+  Matcher matFrm=patFrm.matcher(colDef);
+  if (matFrm.find()) {
+    colDefPrefix=colDef.substring(0,matFrm.start()) + "(";
+    colDefSuffix=") from " + colDef.substring(matFrm.end());
+    return;
+  }
+  Matcher matPar=patPar.matcher(colDef);
+  if (matPar.find()) {
+    colDefPrefix=colDef.substring(0,matPar.start()) + '(';
+    colDefSuffix=")" + colDef.substring(matPar.end());
+    return;
+  }
+  colDefPrefix=colDef + '(';
+  colDefSuffix=")";
 }
