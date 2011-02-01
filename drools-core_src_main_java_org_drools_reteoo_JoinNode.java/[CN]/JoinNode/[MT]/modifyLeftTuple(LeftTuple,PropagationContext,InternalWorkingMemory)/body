@@ -5,6 +5,7 @@
   this.constraints.updateFromTuple(memory.getContext(),workingMemory,leftTuple);
   LeftTuple childLeftTuple=leftTuple.firstChild;
   RightTupleMemory rightMemory=memory.getRightTupleMemory();
+  FastIterator it=rightMemory.fastIterator();
   RightTuple rightTuple=rightMemory.getFirst(leftTuple,(InternalFactHandle)context.getFactHandle());
   if (childLeftTuple != null && rightMemory.isIndexed() && (rightTuple == null || (rightTuple.getMemory() != childLeftTuple.getRightParent().getMemory()))) {
     this.sink.propagateRetractLeftTuple(leftTuple,context,workingMemory);
@@ -12,7 +13,7 @@
   }
   if (rightTuple != null) {
     if (childLeftTuple == null) {
-      for (; rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
+      for (; rightTuple != null; rightTuple=(RightTuple)it.next(rightTuple)) {
         final InternalFactHandle handle=rightTuple.getFactHandle();
         if (this.constraints.isAllowedCachedLeft(memory.getContext(),handle)) {
           this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,null,null,context,workingMemory,true);
@@ -20,7 +21,7 @@
       }
     }
  else {
-      for (; rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
+      for (; rightTuple != null; rightTuple=(RightTuple)it.next(rightTuple)) {
         final InternalFactHandle handle=rightTuple.getFactHandle();
         if (this.constraints.isAllowedCachedLeft(memory.getContext(),handle)) {
           if (childLeftTuple == null || childLeftTuple.getRightParent() != rightTuple) {

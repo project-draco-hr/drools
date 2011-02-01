@@ -1,5 +1,6 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  RightTupleMemory rightMemory=memory.getRightTupleMemory();
   this.constraints.updateFromTuple(memory.getContext(),workingMemory,leftTuple);
   boolean useLeftMemory=true;
   if (!this.tupleMemoryEnabled) {
@@ -8,7 +9,8 @@
       useLeftMemory=false;
     }
   }
-  for (RightTuple rightTuple=memory.getRightTupleMemory().getFirst(leftTuple,(InternalFactHandle)context.getFactHandle()); rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
+  FastIterator it=getRightIterator(rightMemory);
+  for (RightTuple rightTuple=getFirstRightTuple(leftTuple,rightMemory,context,it); rightTuple != null; rightTuple=(RightTuple)it.next(rightTuple)) {
     if (this.constraints.isAllowedCachedLeft(memory.getContext(),rightTuple.getFactHandle())) {
       leftTuple.setBlocker(rightTuple);
       if (useLeftMemory) {
