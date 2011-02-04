@@ -1,0 +1,26 @@
+{
+  CEDescrBuilder<?,AndDescr> exists=null;
+  match(input,DRLLexer.ID,DroolsSoftKeywords.EXISTS,null,DroolsEditorType.KEYWORD);
+  if (state.failed)   return null;
+  if (state.backtracking == 0) {
+    exists=ce.and();
+  }
+  if (input.LA(1) == DRLLexer.LEFT_PAREN) {
+    boolean prefixed=helper.validateLT(2,DroolsSoftKeywords.AND) || helper.validateLT(2,DroolsSoftKeywords.OR);
+    if (!prefixed) {
+      match(input,DRLLexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+    }
+    lhsOr(exists);
+    if (state.failed)     return null;
+    if (!prefixed) {
+      match(input,DRLLexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+    }
+  }
+ else {
+    lhsPattern(exists);
+    if (state.failed)     return null;
+  }
+  return exists != null ? exists.getDescr() : null;
+}

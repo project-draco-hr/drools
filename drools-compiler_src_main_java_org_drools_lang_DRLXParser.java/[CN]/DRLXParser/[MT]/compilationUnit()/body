@@ -2,37 +2,34 @@
   PackageDescrBuilder pkg=DescrFactory.newPackage();
   try {
     helper.builderContext.push(pkg);
-    int next=input.LA(1);
-switch (next) {
-case DRLLexer.EOF:
-      return pkg.getDescr();
-case DRLLexer.ID:
-    if (helper.validateIdentifierKey(DroolsSoftKeywords.PACKAGE)) {
+    if (input.LA(1) != DRLLexer.EOF && helper.validateIdentifierKey(DroolsSoftKeywords.PACKAGE)) {
       String pkgName=packageStatement();
       pkg.name(pkgName);
       if (state.failed)       return pkg.getDescr();
     }
-  int index;
-do {
-  index=input.index();
-  statement();
-  if (state.failed)   return pkg.getDescr();
-}
- while (input.LA(1) == DRLLexer.ID && index != input.index());
-break;
-default :
-break;
-}
-}
- catch (RecognitionException e) {
-helper.reportError(e);
-}
-catch (Exception e) {
-helper.reportError(e);
-}
+    while (input.LA(1) != DRLLexer.EOF) {
+      int next=input.index();
+      if (helper.validateStatement(1)) {
+        statement();
+        if (state.failed)         return pkg.getDescr();
+        if (next == input.index()) {
+          resyncToNextStatement();
+        }
+      }
+ else {
+        resyncToNextStatement();
+      }
+    }
+  }
+ catch (  RecognitionException e) {
+    helper.reportError(e);
+  }
+catch (  Exception e) {
+    helper.reportError(e);
+  }
  finally {
-helper.setEnd();
-helper.builderContext.pop();
-}
-return pkg.getDescr();
+    helper.setEnd();
+    helper.builderContext.pop();
+  }
+  return pkg.getDescr();
 }

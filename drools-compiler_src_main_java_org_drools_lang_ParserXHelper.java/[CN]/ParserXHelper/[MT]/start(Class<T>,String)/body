@@ -8,10 +8,10 @@
  else     if (ImportDescrBuilder.class.isAssignableFrom(clazz)) {
       ImportDescrBuilder imp;
       if (validateLT(2,DroolsSoftKeywords.FUNCTION)) {
-        imp=((PackageDescrBuilder)builderContext.peek()).newFunctionImport();
+        imp=(builderContext.empty()) ? DescrFactory.newPackage().newFunctionImport() : ((PackageDescrBuilder)builderContext.peek()).newFunctionImport();
       }
  else {
-        imp=((PackageDescrBuilder)builderContext.peek()).newImport();
+        imp=(builderContext.empty()) ? DescrFactory.newPackage().newImport() : ((PackageDescrBuilder)builderContext.peek()).newImport();
       }
       builderContext.push(imp);
       pushParaphrases(DroolsParaphraseTypes.IMPORT);
@@ -20,7 +20,7 @@
       return (T)imp;
     }
  else     if (GlobalDescrBuilder.class.isAssignableFrom(clazz)) {
-      GlobalDescrBuilder global=((PackageDescrBuilder)builderContext.peek()).newGlobal();
+      GlobalDescrBuilder global=(builderContext.empty()) ? DescrFactory.newPackage().newGlobal() : ((PackageDescrBuilder)builderContext.peek()).newGlobal();
       builderContext.push(global);
       pushParaphrases(DroolsParaphraseTypes.GLOBAL);
       beginSentence(DroolsSentenceType.GLOBAL);
@@ -28,7 +28,7 @@
       return (T)global;
     }
  else     if (DeclareDescrBuilder.class.isAssignableFrom(clazz)) {
-      DeclareDescrBuilder declare=((PackageDescrBuilder)builderContext.peek()).newDeclare();
+      DeclareDescrBuilder declare=(builderContext.empty()) ? DescrFactory.newPackage().newDeclare() : ((PackageDescrBuilder)builderContext.peek()).newDeclare();
       builderContext.push(declare);
       pushParaphrases(DroolsParaphraseTypes.TYPE_DECLARE);
       beginSentence(DroolsSentenceType.TYPE_DECLARATION);
@@ -41,8 +41,27 @@
       setStart(field);
       return (T)field;
     }
+ else     if (FunctionDescrBuilder.class.isAssignableFrom(clazz)) {
+      FunctionDescrBuilder function=null;
+      if (builderContext.empty()) {
+        function=DescrFactory.newPackage().newFunction();
+      }
+ else {
+        PackageDescrBuilder pkg=(PackageDescrBuilder)builderContext.peek();
+        function=pkg.newFunction().namespace(pkg.getDescr().getName());
+        AttributeDescr attribute=pkg.getDescr().getAttribute("dialect");
+        if (attribute != null) {
+          function.dialect(attribute.getValue());
+        }
+      }
+      builderContext.push(function);
+      pushParaphrases(DroolsParaphraseTypes.FUNCTION);
+      beginSentence(DroolsSentenceType.FUNCTION);
+      setStart(function);
+      return (T)function;
+    }
  else     if (RuleDescrBuilder.class.isAssignableFrom(clazz)) {
-      RuleDescrBuilder rule=((PackageDescrBuilder)builderContext.peek()).newRule();
+      RuleDescrBuilder rule=(builderContext.empty()) ? DescrFactory.newPackage().newRule() : ((PackageDescrBuilder)builderContext.peek()).newRule();
       builderContext.push(rule);
       pushParaphrases(DroolsParaphraseTypes.RULE);
       beginSentence(DroolsSentenceType.RULE);
