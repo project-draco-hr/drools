@@ -1,0 +1,31 @@
+{
+  final RuleDescr rule=(RuleDescr)parseResource("rule","simple_rule.drl");
+  assertFalse(parser.getErrors().toString(),parser.hasErrors());
+  assertNotNull(rule);
+  assertEquals("simple_rule",rule.getName());
+  assertEquals(7,rule.getConsequenceLine());
+  assertEquals(2,rule.getConsequencePattern());
+  final AndDescr lhs=rule.getLhs();
+  assertNotNull(lhs);
+  assertEquals(3,lhs.getDescrs().size());
+  final PatternDescr first=(PatternDescr)lhs.getDescrs().get(0);
+  assertEquals("foo3",first.getIdentifier());
+  assertEquals("Bar",first.getObjectType());
+  assertEquals(1,first.getConstraint().getDescrs().size());
+  AndDescr fieldAnd=(AndDescr)first.getConstraint();
+  ExprConstraintDescr constraint=(ExprConstraintDescr)fieldAnd.getDescrs().get(0);
+  assertNotNull(constraint);
+  assertEquals("a==3",constraint.getExpression());
+  final PatternDescr second=(PatternDescr)lhs.getDescrs().get(1);
+  assertEquals("foo4",second.getIdentifier());
+  assertEquals("Bar",second.getObjectType());
+  fieldAnd=(AndDescr)second.getConstraint();
+  assertEquals(0,fieldAnd.getDescrs().size());
+  final BindingDescr binding=second.getBindings().get(0);
+  assertEquals("a4",binding.getVariable());
+  assertEquals("a==4",binding.getExpression());
+  final PatternDescr third=(PatternDescr)lhs.getDescrs().get(2);
+  assertNull(third.getIdentifier());
+  assertEquals("Baz",third.getObjectType());
+  assertEqualsIgnoreWhitespace("if ( a == b ) { " + "  assert( foo3 );" + "} else {"+ "  retract( foo4 );"+ "}"+ "  System.out.println( a4 );",(String)rule.getConsequence());
+}
