@@ -1,10 +1,11 @@
 {
-  CEDescrBuilder<?,AndDescr> exists=null;
+  CEDescrBuilder<?,ExistsDescr> exists=null;
+  if (state.backtracking == 0) {
+    exists=ce.exists();
+    helper.start(CEDescrBuilder.class,null,exists);
+  }
   match(input,DRLLexer.ID,DroolsSoftKeywords.EXISTS,null,DroolsEditorType.KEYWORD);
   if (state.failed)   return null;
-  if (state.backtracking == 0) {
-    exists=ce.and();
-  }
   if (input.LA(1) == DRLLexer.LEFT_PAREN) {
     boolean prefixed=helper.validateLT(2,DroolsSoftKeywords.AND) || helper.validateLT(2,DroolsSoftKeywords.OR);
     if (!prefixed) {
@@ -21,6 +22,9 @@
  else {
     lhsPattern(exists);
     if (state.failed)     return null;
+  }
+  if (state.backtracking == 0) {
+    helper.end(CEDescrBuilder.class,exists);
   }
   return exists != null ? exists.getDescr() : null;
 }

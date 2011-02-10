@@ -1,0 +1,12 @@
+{
+  String source="rule \"Invalid customer id\" ruleflow-group \"validate\" lock-on-active true \n" + " when \n" + "     o: Order( ) \n"+ "     not( Customer( ) from customerService.getCustomer(o.getCustomerId()) ) \n"+ " then \n"+ "     System.err.println(\"Invalid customer id found!\"); \n"+ "     o.addError(\"Invalid customer id\"); \n"+ "end \n";
+  PackageDescr pkg=(PackageDescr)parse("compilationUnit",source);
+  assertFalse(parser.getErrorMessages().toString(),parser.hasErrors());
+  RuleDescr rule=(RuleDescr)pkg.getRules().get(0);
+  assertEquals("Invalid customer id",rule.getName());
+  assertEquals(2,rule.getLhs().getDescrs().size());
+  NotDescr not=(NotDescr)rule.getLhs().getDescrs().get(1);
+  PatternDescr customer=(PatternDescr)not.getDescrs().get(0);
+  assertEquals("Customer",customer.getObjectType());
+  assertEquals("customerService.getCustomer(o.getCustomerId())",((FromDescr)customer.getSource()).getDataSource().getText());
+}
