@@ -1,19 +1,34 @@
 {
   String chunk="";
-  int first=-1, last=first;
+  int first=-1;
+  Token last=null;
   try {
+    first=input.index();
     Token t=match(input,DRLLexer.ID,DroolsSoftKeywords.THEN,null,DroolsEditorType.KEYWORD);
     if (state.failed)     return;
-    first=input.index();
     if (state.backtracking == 0) {
       rule.getDescr().setConsequenceLocation(t.getLine(),t.getCharPositionInLine());
     }
-    while (!helper.validateIdentifierKey(DroolsSoftKeywords.END)) {
+    while (input.LA(1) != DRLLexer.EOF && !helper.validateIdentifierKey(DroolsSoftKeywords.END)) {
       input.consume();
     }
-    last=input.LT(-1).getTokenIndex();
-    if (last >= first) {
-      chunk=input.toString(first,last);
+    last=input.LT(1);
+    if (last.getTokenIndex() > first) {
+      chunk=input.toString(first,last.getTokenIndex());
+      if (chunk.endsWith(DroolsSoftKeywords.END)) {
+        chunk=chunk.substring(0,chunk.length() - DroolsSoftKeywords.END.length());
+      }
+      int index=4;
+      while (index < chunk.length() && Character.isWhitespace(chunk.charAt(index))) {
+        index++;
+        if (chunk.charAt(index - 1) == '\r' || chunk.charAt(index - 1) == '\n') {
+          if (index < chunk.length() && chunk.charAt(index - 1) == '\r' && chunk.charAt(index) == '\n') {
+            index++;
+          }
+          break;
+        }
+      }
+      chunk=chunk.substring(index);
     }
     rule.rhs(chunk);
   }

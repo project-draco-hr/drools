@@ -1,0 +1,15 @@
+{
+  String source="rule \"A and (B or C or D)\" \n" + "    when \n" + "        pdo1 : ParametricDataObject( paramID == 101, stringValue == \"1000\" ) and \n"+ "        pdo2 :(ParametricDataObject( paramID == 101, stringValue == \"1001\" ) or \n"+ "               ParametricDataObject( paramID == 101, stringValue == \"1002\" ) or \n"+ "               ParametricDataObject( paramID == 101, stringValue == \"1003\" )) \n"+ "    then \n"+ "        System.out.println( \"Rule: A and (B or C or D) Fired. pdo1: \" + pdo1 +  \" pdo2: \"+ pdo2); \n"+ "end\n";
+  PackageDescr pkg=(PackageDescr)parse("compilationUnit",source);
+  assertFalse(parser.getErrors().toString(),parser.hasErrors());
+  RuleDescr rule=pkg.getRules().get(0);
+  AndDescr lhs=rule.getLhs();
+  assertEquals(2,lhs.getDescrs().size());
+  PatternDescr pdo1=(PatternDescr)lhs.getDescrs().get(0);
+  assertEquals("pdo1",pdo1.getIdentifier());
+  OrDescr or=(OrDescr)rule.getLhs().getDescrs().get(1);
+  assertEquals(3,or.getDescrs().size());
+  for (  BaseDescr pdo2 : or.getDescrs()) {
+    assertEquals("pdo2",((PatternDescr)pdo2).getIdentifier());
+  }
+}
