@@ -1,32 +1,31 @@
 {
-  StringBuilder header=new StringBuilder();
+  HashSet<String> imports=new HashSet<String>();
   for (  ImportDescr i : importDescrs) {
-    String fullPath=i.getTarget();
-    String name=fullPath.substring(fullPath.lastIndexOf(".") + 1);
-    header.append("import ");
-    header.append(fullPath);
-    header.append("\n");
+    String fullName=i.getTarget();
+    String name=fullName.substring(fullName.lastIndexOf(".") + 1);
+    imports.add(fullName);
     Import objectImport=new Import(rulePackage);
-    objectImport.setName(fullPath);
+    objectImport.setName(fullName);
     objectImport.setShortName(name);
     data.add(objectImport);
-    ObjectType objectType=this.data.getObjectTypeByFullName(fullPath);
+    ObjectType objectType=this.data.getObjectTypeByFullName(fullName);
     if (objectType == null) {
       objectType=new ObjectType();
     }
     objectType.setName(name);
-    objectType.setFullName(fullPath);
+    objectType.setFullName(fullName);
     data.add(objectType);
   }
-  SuggestionCompletionLoader loader=new SuggestionCompletionLoader();
-  SuggestionCompletionEngine engine=loader.getSuggestionEngine(header.toString(),jars,Collections.EMPTY_LIST);
-  for (  String factTypeName : engine.getFactTypes()) {
-    for (    String fieldName : engine.getFieldCompletions(factTypeName)) {
-      ObjectType objectType=this.data.getObjectTypeByObjectTypeNameAndPackageName(factTypeName,rulePackage.getName());
+  PackageHeaderLoader packageHeaderLoader=new PackageHeaderLoader(imports,jars);
+  for (  String factTypeName : packageHeaderLoader.getClassNames()) {
+    String name=factTypeName.substring(factTypeName.lastIndexOf(".") + 1);
+    Collection<String> fieldNames=packageHeaderLoader.getFieldNames(factTypeName);
+    for (    String fieldName : fieldNames) {
+      ObjectType objectType=this.data.getObjectTypeByObjectTypeNameAndPackageName(name,rulePackage.getName());
       Field field=data.getFieldByObjectTypeAndFieldName(objectType.getFullName(),fieldName);
       if (field == null) {
         field=ObjectTypeFactory.createField(fieldName,objectType);
-        field.setFieldType(engine.getFieldType(objectType.getName(),fieldName));
+        field.setFieldType(packageHeaderLoader.getFieldType(objectType.getName(),fieldName));
         data.add(field);
       }
     }
