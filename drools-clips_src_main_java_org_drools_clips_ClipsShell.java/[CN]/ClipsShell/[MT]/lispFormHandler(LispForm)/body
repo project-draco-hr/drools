@@ -1,38 +1,41 @@
 {
   StringBuilderAppendable appendable=new StringBuilderAppendable();
   FunctionHandlers.dump(lispForm,appendable,true);
-  ParserContext context=new ParserContext();
-  String namespace=this.session.getAgenda().getFocusName();
-  Package pkg=this.ruleBase.getPackage(namespace);
-  if (pkg == null) {
-    this.packageBuilder.addPackage(createPackageDescr(namespace));
-    pkg=this.ruleBase.getPackage(namespace);
-  }
-  if (pkg != null) {
-    try {
-      for (Iterator it=pkg.getImports().entrySet().iterator(); it.hasNext(); ) {
-        Entry entry=(Entry)it.next();
-        String importName=((ImportDeclaration)entry.getValue()).getTarget();
-        if (importName.endsWith("*")) {
-          context.addPackageImport(importName.substring(0,importName.length() - 2));
-        }
+  ClassLoader tempClassLoader=Thread.currentThread().getContextClassLoader();
+  try {
+    Thread.currentThread().setContextClassLoader(((InternalRuleBase)ruleBase).getRootClassLoader());
+    ParserContext context=new ParserContext();
+    String namespace=this.session.getAgenda().getFocusName();
+    Package pkg=this.ruleBase.getPackage(namespace);
+    if (pkg == null) {
+      this.packageBuilder.addPackage(createPackageDescr(namespace));
+      pkg=this.ruleBase.getPackage(namespace);
+    }
+    if (pkg != null) {
+      try {
+        for (Iterator it=pkg.getImports().entrySet().iterator(); it.hasNext(); ) {
+          Entry entry=(Entry)it.next();
+          String importName=((ImportDeclaration)entry.getValue()).getTarget();
+          if (importName.endsWith("*")) {
+            context.addPackageImport(importName.substring(0,importName.length() - 2));
+          }
  else {
-          Class cls=((InternalRuleBase)ruleBase).getRootClassLoader().loadClass(importName);
-          context.addImport(cls.getSimpleName(),(Class)cls);
+            Class cls=((InternalRuleBase)ruleBase).getRootClassLoader().loadClass(importName);
+            context.addImport(cls.getSimpleName(),(Class)cls);
+          }
         }
       }
+ catch (      Exception e) {
+        e.printStackTrace();
+      }
+      MVELDialectRuntimeData data=(MVELDialectRuntimeData)pkg.getDialectRuntimeRegistry().getDialectData("clips");
+      this.factory.setNextFactory(data.getFunctionFactory());
     }
- catch (    Exception e) {
-      e.printStackTrace();
-    }
-    MVELDialectRuntimeData data=(MVELDialectRuntimeData)pkg.getDialectRuntimeRegistry().getDialectData("clips");
-    this.factory.setNextFactory(data.getFunctionFactory());
+    ExpressionCompiler expr=new ExpressionCompiler(appendable.toString());
+    Serializable executable=expr.compile(context);
+    MVEL.executeExpression(executable,this,this.factory);
   }
-  ClassLoader tempClassLoader=Thread.currentThread().getContextClassLoader();
-  Thread.currentThread().setContextClassLoader(((InternalRuleBase)ruleBase).getRootClassLoader());
-  System.out.println("mvel expr:" + appendable.toString());
-  ExpressionCompiler expr=new ExpressionCompiler(appendable.toString());
-  Serializable executable=expr.compile(context);
-  MVEL.executeExpression(executable,this,this.factory);
-  Thread.currentThread().setContextClassLoader(tempClassLoader);
+  finally {
+    Thread.currentThread().setContextClassLoader(tempClassLoader);
+  }
 }

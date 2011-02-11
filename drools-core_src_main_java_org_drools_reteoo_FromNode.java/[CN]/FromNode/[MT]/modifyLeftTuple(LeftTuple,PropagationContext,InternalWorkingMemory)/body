@@ -6,6 +6,7 @@
   final Map<Object,RightTuple> newMatches=new LinkedHashMap<Object,RightTuple>();
   memory.betaMemory.getCreatedHandles().put(leftTuple,newMatches);
   this.betaConstraints.updateFromTuple(memory.betaMemory.getContext(),workingMemory,leftTuple);
+  FastIterator rightIt=LinkedList.fastIterator;
   for (final java.util.Iterator<?> it=this.dataProvider.getResults(leftTuple,workingMemory,context,memory.providerContext); it.hasNext(); ) {
     final Object object=it.next();
     RightTuple rightTuple=previousMatches.remove(object);
@@ -14,8 +15,8 @@
       rightTuple=new RightTuple(handle,null);
     }
  else {
-      if (rightTuple.getNext() != null) {
-        previousMatches.put(object,(RightTuple)rightTuple.getNext());
+      if (rightIt.next(rightTuple) != null) {
+        previousMatches.put(object,(RightTuple)rightIt.next(rightTuple));
         rightTuple.setNext(null);
       }
     }
@@ -24,7 +25,7 @@
   }
   this.betaConstraints.resetTuple(memory.betaMemory.getContext());
   for (  RightTuple rightTuple : previousMatches.values()) {
-    for (RightTuple current=rightTuple; current != null; current=(RightTuple)current.getNext()) {
+    for (RightTuple current=rightTuple; current != null; current=(RightTuple)rightIt.next(current)) {
       retractMatchAndDestroyHandle(leftTuple,current,context,workingMemory);
     }
   }

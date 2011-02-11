@@ -7,6 +7,7 @@
   }
   LeftTuple childLeftTuple=rightTuple.firstChild;
   LeftTupleMemory leftMemory=memory.getLeftTupleMemory();
+  FastIterator it=leftMemory.fastIterator();
   LeftTuple leftTuple=leftMemory.getFirst(rightTuple);
   this.constraints.updateFromFactHandle(memory.getContext(),workingMemory,rightTuple.getFactHandle());
   if (childLeftTuple != null && leftMemory.isIndexed() && (leftTuple == null || (leftTuple.getMemory() != childLeftTuple.getLeftParent().getMemory()))) {
@@ -15,14 +16,14 @@
   }
   if (leftTuple != null) {
     if (childLeftTuple == null) {
-      for (; leftTuple != null; leftTuple=(LeftTuple)leftTuple.getNext()) {
+      for (; leftTuple != null; leftTuple=(LeftTuple)it.next(leftTuple)) {
         if (this.constraints.isAllowedCachedRight(memory.getContext(),leftTuple)) {
           this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,null,null,context,workingMemory,true);
         }
       }
     }
  else {
-      for (; leftTuple != null; leftTuple=(LeftTuple)leftTuple.getNext()) {
+      for (; leftTuple != null; leftTuple=(LeftTuple)it.next(leftTuple)) {
         if (this.constraints.isAllowedCachedRight(memory.getContext(),leftTuple)) {
           if (childLeftTuple == null || childLeftTuple.getLeftParent() != leftTuple) {
             this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,null,childLeftTuple,context,workingMemory,true);
