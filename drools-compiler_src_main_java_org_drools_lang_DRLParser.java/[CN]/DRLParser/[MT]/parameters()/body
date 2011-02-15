@@ -1,0 +1,20 @@
+{
+  match(input,DRLLexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
+  if (state.failed)   return null;
+  List<String> parameters=new ArrayList<String>();
+  if (input.LA(1) != DRLLexer.EOF && input.LA(1) != DRLLexer.RIGHT_PAREN) {
+    String param=conditionalExpression();
+    if (state.failed)     return null;
+    parameters.add(param);
+    while (input.LA(1) == DRLLexer.COMMA) {
+      match(input,DRLLexer.COMMA,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+      param=conditionalExpression();
+      if (state.failed)       return null;
+      parameters.add(param);
+    }
+  }
+  match(input,DRLLexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
+  if (state.failed)   return null;
+  return parameters;
+}
