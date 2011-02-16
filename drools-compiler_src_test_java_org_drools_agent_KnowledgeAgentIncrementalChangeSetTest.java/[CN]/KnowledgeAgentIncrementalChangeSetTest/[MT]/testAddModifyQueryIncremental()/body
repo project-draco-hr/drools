@@ -1,0 +1,52 @@
+{
+  String query1="";
+  query1+="query \"all the Strings\"\n";
+  query1+="     $strings : String()\n";
+  query1+="end\n";
+  fileManager.write("rule1.drl",this.createDefaultRule("rule1"));
+  String xml="";
+  xml+="<change-set xmlns='http://drools.org/drools-5.0/change-set'";
+  xml+="    xmlns:xs='http://www.w3.org/2001/XMLSchema-instance'";
+  xml+="    xs:schemaLocation='http://drools.org/drools-5.0/change-set http://anonsvn.jboss.org/repos/labs/labs/jbossrules/trunk/drools-api/src/main/resources/change-set-1.0.0.xsd' >";
+  xml+="    <add> ";
+  xml+="        <resource source='http://localhost:" + this.getPort() + "/rule1.drl' type='DRL' />";
+  xml+="    </add> ";
+  xml+="</change-set>";
+  File fxml=fileManager.write("changeset.xml",xml);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  KnowledgeAgent kagent=this.createKAgent(kbase,false);
+  try {
+    applyChangeSet(kagent,ResourceFactory.newUrlResource(fxml.toURI().toURL()));
+  }
+ catch (  Exception e) {
+    fail("Knowledge shouldn't fail to compile");
+  }
+  KnowledgePackage knowledgePackage=kbase.getKnowledgePackage("org.drools.test");
+  assertNotNull(knowledgePackage);
+  Rule allTheStringsQuery=((KnowledgePackageImp)knowledgePackage).getRule("all the Strings");
+  assertNull(allTheStringsQuery);
+  fileManager.write("rule1.drl",this.createDefaultRule("rule1") + " \n " + query1);
+  this.scan(kagent);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  ksession.insert("Some String");
+  ksession.insert("Some Other String");
+  QueryResults queryResults=ksession.getQueryResults("all the Strings");
+  assertEquals(2,queryResults.size());
+  Iterator<QueryResultsRow> iterator=queryResults.iterator();
+  while (iterator.hasNext()) {
+    System.out.println("Row= " + iterator.next().get("$strings"));
+  }
+  String query1V2="";
+  query1V2+="query \"all the Strings\"\n";
+  query1V2+="     $strings : String(this == \"Some String\")\n";
+  query1V2+="end\n";
+  fileManager.write("rule1.drl",this.createDefaultRule("rule1") + " \n " + query1V2);
+  this.scan(kagent);
+  queryResults=ksession.getQueryResults("all the Strings");
+  assertEquals(1,queryResults.size());
+  assertEquals("Some String",queryResults.iterator().next().get("$strings"));
+  ksession.dispose();
+  kagent.dispose();
+}

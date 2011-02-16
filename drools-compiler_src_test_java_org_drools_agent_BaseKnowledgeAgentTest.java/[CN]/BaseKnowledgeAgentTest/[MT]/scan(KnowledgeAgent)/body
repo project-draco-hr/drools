@@ -1,8 +1,9 @@
 {
   final CountDownLatch latch=new CountDownLatch(1);
+  final List<ResourceCompilationFailedEvent> resourceCompilationFailedEvents=new ArrayList<ResourceCompilationFailedEvent>();
   KnowledgeAgentEventListener l=new KnowledgeAgentEventListener(){
     public void resourceCompilationFailed(    ResourceCompilationFailedEvent event){
-      throw new RuntimeException("Unable to compile Knowledge" + event);
+      resourceCompilationFailedEvents.add(event);
     }
     public void knowledgeBaseUpdated(    KnowledgeBaseUpdatedEvent event){
     }
@@ -33,4 +34,7 @@
     throw new RuntimeException("Event for KnowlegeBase update, due to scan, was never received");
   }
   kagent.removeEventListener(l);
+  if (!resourceCompilationFailedEvents.isEmpty()) {
+    throw new RuntimeException("Unable to compile Knowledge" + resourceCompilationFailedEvents.get(0));
+  }
 }
