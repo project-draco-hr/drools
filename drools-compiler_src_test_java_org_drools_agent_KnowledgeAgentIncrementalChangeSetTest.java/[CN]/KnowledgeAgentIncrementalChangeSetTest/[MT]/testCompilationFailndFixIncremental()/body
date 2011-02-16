@@ -1,11 +1,11 @@
 {
-  File f1=fileManager.write("rules.drl",createLhsRule(new String[]{"rule1","rule2"},"String()\n"));
+  fileManager.write("rule1.drl",createDefaultRule("rule1"));
   String xml="";
   xml+="<change-set xmlns='http://drools.org/drools-5.0/change-set'";
   xml+="    xmlns:xs='http://www.w3.org/2001/XMLSchema-instance'";
   xml+="    xs:schemaLocation='http://drools.org/drools-5.0/change-set http://anonsvn.jboss.org/repos/labs/labs/jbossrules/trunk/drools-api/src/main/resources/change-set-1.0.0.xsd' >";
   xml+="    <add> ";
-  xml+="        <resource source='http://localhost:" + this.getPort() + "/rules.drl' type='DRL' />";
+  xml+="        <resource source='http://localhost:" + this.getPort() + "/rule1.drl' type='DRL' />";
   xml+="    </add> ";
   xml+="</change-set>";
   File fxml=fileManager.write("changeset.xml",xml);
@@ -15,20 +15,23 @@
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   List<String> list=new ArrayList<String>();
   ksession.setGlobal("list",list);
-  ksession.insert("String1");
   ksession.fireAllRules();
-  ksession.dispose();
-  assertEquals(2,list.size());
+  assertEquals(1,list.size());
   assertTrue(list.contains("rule1"));
-  assertTrue(list.contains("rule2"));
   list.clear();
-  fileManager.write("rules.drl",createLhsRule(new String[]{"rule1","rule3"},"String()\n"));
-  scan(kagent);
-  ksession.insert("String2");
+  fileManager.write("rule1.drl",createLhsRule("rule1","String())"));
+  try {
+    scan(kagent);
+    fail("The compilation should fail!");
+  }
+ catch (  RuntimeException ex) {
+  }
+  assertTrue(kbase.getKnowledgePackages().isEmpty());
+  fileManager.write("rule1.drl",createDefaultRule("rule1"));
+  list.clear();
   ksession.fireAllRules();
-  assertEquals(2,list.size());
+  assertEquals(1,list.size());
   assertTrue(list.contains("rule1"));
-  assertTrue(list.contains("rule3"));
   ksession.dispose();
   kagent.dispose();
 }
