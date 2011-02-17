@@ -16,7 +16,7 @@
     final Declaration[] sourceDeclArr=outerDeclr.values().toArray(new Declaration[outerDeclr.size()]);
     Accumulator accumulator=null;
     Declaration[] declarations=null;
-    Map<String,Class> declarationsMap=context.getDeclarationResolver().getDeclarationClasses(decls);
+    Map<String,Class<?>> declarationsMap=context.getDeclarationResolver().getDeclarationClasses(decls);
     BoundIdentifiers boundIds=new BoundIdentifiers(declarationsMap,context.getPackageBuilder().getGlobals());
     if (accumDescr.isExternalFunction()) {
       AccumulateFunctionCallDescr func=accumDescr.getFunctions().get(0);
@@ -25,7 +25,7 @@
         context.getErrors().add(new DescrBuildError(accumDescr,context.getRuleDescr(),null,"Unknown accumulate function: '" + func.getFunction() + "' on rule '"+ context.getRuleDescr().getName()+ "'. All accumulate functions must be registered before building a resource."));
         return null;
       }
-      final AnalysisResult analysis=dialect.analyzeExpression(context,accumDescr,accumDescr.getExpression(),boundIds);
+      final AnalysisResult analysis=dialect.analyzeExpression(context,accumDescr,func.getParams()[0],boundIds);
       MVELCompilationUnit unit=dialect.getMVELCompilationUnit(func.getParams()[0],analysis,previousDeclarations,sourceDeclArr,null,context);
       accumulator=new MVELAccumulatorFunctionExecutor(unit,function);
     }
