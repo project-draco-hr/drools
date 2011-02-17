@@ -5,9 +5,22 @@
     final RuleDescr ruleDescr=context.getRuleDescr();
     String text=("default".equals(consequenceName)) ? (String)ruleDescr.getConsequence() : (String)ruleDescr.getNamedConsequences().get(consequenceName);
     text=processMacros(text);
-    Dialect.AnalysisResult analysis=dialect.analyzeBlock(context,context.getRuleDescr(),dialect.getInterceptors(),text,new Map[]{context.getDeclarationResolver().getDeclarationClasses(context.getRule()),context.getPackageBuilder().getGlobals()},null);
-    Declaration[] previousDeclarations=(Declaration[])context.getDeclarationResolver().getDeclarations(context.getRule()).values().toArray(new Declaration[context.getDeclarationResolver().getDeclarations(context.getRule()).size()]);
-    MVELCompilationUnit unit=dialect.getMVELCompilationUnit(text,analysis,previousDeclarations,null,null,context);
+    Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
+    AnalysisResult analysis=dialect.analyzeBlock(context,context.getRuleDescr(),dialect.getInterceptors(),text,new BoundIdentifiers(context.getDeclarationResolver().getDeclarationClasses(decls),context.getPackageBuilder().getGlobals(),KnowledgeHelper.class),null);
+    if (analysis == null) {
+      return;
+    }
+    final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
+    final Declaration[] declarations=new Declaration[usedIdentifiers.getDeclarations().size()];
+    String[] declrStr=new String[declarations.length];
+    int j=0;
+    for (    String str : usedIdentifiers.getDeclarations().keySet()) {
+      declrStr[j]=str;
+      declarations[j++]=decls.get(str);
+    }
+    Arrays.sort(declarations,SortDeclarations.isntance);
+    context.getRule().setRequiredDeclarations(declrStr);
+    MVELCompilationUnit unit=dialect.getMVELCompilationUnit(text,analysis,declarations,null,null,context);
     MVELConsequence expr=new MVELConsequence(unit,dialect.getId());
     if ("default".equals(consequenceName)) {
       context.getRule().setConsequence(expr);

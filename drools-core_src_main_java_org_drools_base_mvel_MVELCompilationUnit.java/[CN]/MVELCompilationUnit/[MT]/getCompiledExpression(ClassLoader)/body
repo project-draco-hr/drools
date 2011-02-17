@@ -30,46 +30,37 @@
       resolvedImports.put(field.getName(),field);
     }
   }
- catch (  ClassNotFoundException e) {
-    e.printStackTrace();
+ catch (  Exception e) {
     throw new RuntimeDroolsException("Unable to resolve import '" + lastName + "'");
   }
-catch (  SecurityException e) {
-    e.printStackTrace();
-    throw new RuntimeDroolsException("Unable to resolve import '" + lastName + "'");
+  ParserConfiguration conf=new ParserConfiguration();
+  conf.setImports(resolvedImports);
+  conf.setPackageImports(new HashSet(Arrays.asList(this.pkgImports)));
+  conf.setClassLoader(classLoader);
+  final ParserContext parserContext=new ParserContext(conf);
+  if (MVELDebugHandler.isDebugMode()) {
+    parserContext.setDebugSymbols(true);
   }
-catch (  NoSuchFieldException e) {
-    e.printStackTrace();
-    throw new RuntimeDroolsException("Unable to resolve import '" + lastName + "'");
-  }
-  final ParserContext parserContext=new ParserContext(resolvedImports,null,name);
-  parserContext.getParserConfiguration().setClassLoader(classLoader);
-  for (  String pkgImport : this.pkgImports) {
-    parserContext.addPackageImport(pkgImport);
-  }
-  parserContext.setInterceptors(interceptors);
+  parserContext.setStrictTypeEnforcement(strictMode);
   parserContext.setStrongTyping(strictMode);
-  resolvedInputs=new HashMap<String,Class>(inputIdentifiers.length);
-  parserContext.addInput("drools",KnowledgeHelper.class);
-  resolvedInputs.put("drools",KnowledgeHelper.class);
-  String lastIdentifier=null;
-  String lastType=null;
+  parserContext.setIndexAllocation(true);
+  if (interceptors != null) {
+    parserContext.setInterceptors(interceptors);
+  }
+  parserContext.addIndexedVariables(inputIdentifiers);
+  String identifier=null;
+  String type=null;
   try {
     for (int i=0, length=inputIdentifiers.length; i < length; i++) {
-      lastIdentifier=inputIdentifiers[i];
-      lastType=inputTypes[i];
+      identifier=inputIdentifiers[i];
+      type=inputTypes[i];
       Class cls=loadClass(classLoader,inputTypes[i]);
-      resolvedInputs.put(inputIdentifiers[i],cls);
       parserContext.addInput(inputIdentifiers[i],cls);
     }
   }
  catch (  ClassNotFoundException e) {
-    e.printStackTrace();
-    throw new RuntimeDroolsException("Unable to resolve class '" + lastType + "' for identifier '"+ lastIdentifier);
+    throw new RuntimeDroolsException("Unable to resolve class '" + type + "' for identifier '"+ identifier);
   }
-  if (parserContext.getInputs().get("kcontext") == null) {
-    parserContext.addInput("kcontext",RuleContext.class);
-    resolvedInputs.put("kcontext",RuleContext.class);
-  }
+  parserContext.setSourceFile(name);
   return compile(expression,classLoader,parserContext,languageLevel);
 }

@@ -4,9 +4,14 @@
   From from=null;
   try {
     MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
+    Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
     String text=(String)accessor.toString();
-    Dialect.AnalysisResult analysis=dialect.analyzeExpression(context,descr,text,new Map[]{context.getDeclarationResolver().getDeclarationClasses(context.getRule()),context.getPackageBuilder().getGlobals()});
-    Declaration[] previousDeclarations=(Declaration[])context.getDeclarationResolver().getDeclarations(context.getRule()).values().toArray(new Declaration[context.getDeclarationResolver().getDeclarations(context.getRule()).size()]);
+    AnalysisResult analysis=dialect.analyzeExpression(context,descr,text,new BoundIdentifiers(context.getDeclarationResolver().getDeclarationClasses(decls),context.getPackageBuilder().getGlobals()));
+    if (analysis == null) {
+      return null;
+    }
+    Collection<Declaration> col=decls.values();
+    Declaration[] previousDeclarations=(Declaration[])col.toArray(new Declaration[col.size()]);
     MVELCompilationUnit unit=dialect.getMVELCompilationUnit(text,analysis,previousDeclarations,null,null,context);
     MVELDataProvider dataProvider=new MVELDataProvider(unit,context.getDialect().getId());
     from=new From(dataProvider);

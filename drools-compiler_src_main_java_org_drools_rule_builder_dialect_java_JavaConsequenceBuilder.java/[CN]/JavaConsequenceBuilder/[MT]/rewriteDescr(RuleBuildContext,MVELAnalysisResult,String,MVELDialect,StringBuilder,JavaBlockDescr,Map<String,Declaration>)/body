@@ -1,0 +1,53 @@
+{
+  if (d.getEnd() <= 0) {
+    context.getErrors().add(new DescrBuildError(context.getParentDescr(),context.getRuleDescr(),originalCode,"Incorrect syntax for expression: " + d.getTargetExpression() + "\n"));
+    return false;
+  }
+  Map<String,Class> variables=context.getDeclarationResolver().getDeclarationClasses(decls);
+  MVELAnalysisResult mvelAnalysis=(MVELAnalysisResult)mvel.analyzeBlock(context,context.getRuleDescr(),mvel.getInterceptors(),d.getTargetExpression(),new BoundIdentifiers(variables,context.getPackageBuilder().getGlobals()),analysis != null ? analysis.getMvelVariables() : null);
+  Class ret=mvelAnalysis.getReturnType();
+  if (ret == null) {
+    context.getErrors().add(new DescrBuildError(context.getParentDescr(),context.getRuleDescr(),originalCode,"Unable to determine the resulting type of the expression: " + d.getTargetExpression() + "\n"));
+    return false;
+  }
+  String retString=ClassUtils.canonicalName(ret);
+  String declrString;
+  if (d.getTargetExpression().charAt(0) == '(') {
+    declrString=d.getTargetExpression().substring(1,d.getTargetExpression().length() - 1).trim();
+  }
+ else {
+    declrString=d.getTargetExpression();
+  }
+  String obj=declrString;
+  Declaration declr=decls.get(declrString);
+  consequence.append("{ ");
+  if (declr == null) {
+    obj="__obj__";
+    consequence.append(retString);
+    consequence.append(" ");
+    consequence.append(obj);
+    consequence.append(" = (");
+    consequence.append(retString);
+    consequence.append(") ");
+    consequence.append(d.getTargetExpression());
+    consequence.append("; ");
+  }
+  if (declr == null || declr.isInternalFact()) {
+    consequence.append("org.drools.FactHandle ");
+    consequence.append(obj);
+    consequence.append("__Handle2__ = drools.getFactHandle(");
+    consequence.append(obj);
+    consequence.append(");");
+  }
+  String originalBlock=originalCode.substring(d.getStart() - 1,d.getEnd());
+  if (d instanceof JavaModifyBlockDescr) {
+    rewriteModifyDescr(context,d,originalBlock,consequence,declr,obj);
+  }
+ else   if (d instanceof JavaUpdateBlockDescr) {
+    rewriteUpdateDescr(d,originalBlock,consequence,declr,obj);
+  }
+ else   if (d instanceof JavaRetractBlockDescr) {
+    rewriteRetractDescr(d,originalBlock,consequence,declr,obj);
+  }
+  return declr != null;
+}

@@ -1,0 +1,49 @@
+{
+  MVELDialect mvel=(MVELDialect)context.getDialect("mvel");
+  List<JavaBlockDescr> blocks=analysis.getBlockDescrs();
+  Collections.sort(blocks,new Comparator<JavaBlockDescr>(){
+    public int compare(    JavaBlockDescr o1,    JavaBlockDescr o2){
+      return o1.getStart() - o2.getStart();
+    }
+  }
+);
+  StringBuilder consequence=new StringBuilder();
+  int lastAdded=0;
+  boolean modifyExpr=true;
+  MacroProcessor macroProcessor=new MacroProcessor();
+  Map macros=new HashMap(MVELConsequenceBuilder.macros);
+  macros.put("modify",new Macro(){
+    public String doMacro(){
+      return "with";
+    }
+  }
+);
+  macroProcessor.setMacros(macros);
+  expr=macroProcessor.parse(expr);
+  Map<String,Class> variables=context.getDeclarationResolver().getDeclarationClasses(decls);
+  MVELAnalysisResult mvelAnalysis=null;
+  try {
+    mvelAnalysis=(MVELAnalysisResult)mvel.analyzeBlock(context,context.getRuleDescr(),mvel.getInterceptors(),expr,new BoundIdentifiers(variables,context.getPackageBuilder().getGlobals(),KnowledgeHelper.class),null);
+  }
+ catch (  Exception e) {
+  }
+  for (  JavaBlockDescr block : blocks) {
+    consequence.append(originalCode.substring(lastAdded,block.getStart() - 1));
+    lastAdded=block.getEnd();
+switch (block.getType()) {
+case MODIFY:
+case UPDATE:
+case RETRACT:
+      modifyExpr=rewriteDescr(context,mvelAnalysis,originalCode,mvel,consequence,(JavaBlockDescr)block,decls);
+    break;
+case ENTRY:
+case EXIT:
+case CHANNEL:
+  rewriteInterfacePoint(context,originalCode,consequence,(JavaInterfacePointsDescr)block);
+break;
+}
+}
+analysis.setModifyExpr(modifyExpr);
+consequence.append(originalCode.substring(lastAdded));
+return consequence.toString();
+}

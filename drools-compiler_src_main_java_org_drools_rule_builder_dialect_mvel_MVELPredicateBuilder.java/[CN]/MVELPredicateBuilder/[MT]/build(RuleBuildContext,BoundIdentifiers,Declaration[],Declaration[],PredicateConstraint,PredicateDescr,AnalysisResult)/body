@@ -1,0 +1,19 @@
+{
+  MVELDialect dialect=(MVELDialect)context.getDialect(context.getDialect().getId());
+  try {
+    Map<String,Class> declIds=context.getDeclarationResolver().getDeclarationClasses(context.getRule());
+    Pattern p=(Pattern)context.getBuildStack().peek();
+    if (p.getObjectType() instanceof ClassObjectType) {
+      declIds.put("this",((ClassObjectType)p.getObjectType()).getClassType());
+    }
+    MVELCompilationUnit unit=dialect.getMVELCompilationUnit((String)predicateDescr.getContent(),analysis,previousDeclarations,localDeclarations,null,context);
+    MVELPredicateExpression expr=new MVELPredicateExpression(unit,context.getDialect().getId());
+    predicate.setPredicateExpression(expr);
+    MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData(context.getDialect().getId());
+    data.addCompileable(predicate,expr);
+    expr.compile(context.getPackageBuilder().getRootClassLoader());
+  }
+ catch (  final Exception e) {
+    context.getErrors().add(new DescrBuildError(context.getParentDescr(),predicateDescr,e,"Unable to build expression for 'inline-eval' : " + e.getMessage() + "'"+ predicateDescr.getContent()+ "'\n"+ e.getMessage()));
+  }
+}

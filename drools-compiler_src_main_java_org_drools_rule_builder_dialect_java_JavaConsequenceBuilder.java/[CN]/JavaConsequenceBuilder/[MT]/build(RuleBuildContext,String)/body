@@ -2,28 +2,32 @@
   context.getBuildStack().push(context.getRule().getLhs());
   final String className=consequenceName + "Consequence";
   final RuleDescr ruleDescr=context.getRuleDescr();
-  Map<String,Class<?>> variables=context.getDeclarationResolver().getDeclarationClasses(context.getRule());
-  Dialect.AnalysisResult analysis=context.getDialect().analyzeBlock(context,ruleDescr,(String)ruleDescr.getConsequence(),new Map[]{variables,context.getPackageBuilder().getGlobals()});
+  Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
+  AnalysisResult analysis=context.getDialect().analyzeBlock(context,ruleDescr,(String)ruleDescr.getConsequence(),new BoundIdentifiers(context.getDeclarationResolver().getDeclarationClasses(decls),context.getPackageBuilder().getGlobals()));
   if (analysis == null) {
     return;
   }
-  String fixedConsequence=this.fixBlockDescr(context,(JavaAnalysisResult)analysis,("default".equals(consequenceName)) ? (String)ruleDescr.getConsequence() : (String)ruleDescr.getNamedConsequences().get(consequenceName));
+  String fixedConsequence=this.fixBlockDescr((String)ruleDescr.getConsequence(),context,(JavaAnalysisResult)analysis,("default".equals(consequenceName)) ? (String)ruleDescr.getConsequence() : (String)ruleDescr.getNamedConsequences().get(consequenceName),decls);
   if (fixedConsequence == null) {
     return;
   }
   fixedConsequence=((JavaDialect)context.getDialect()).getKnowledgeHelperFixer().fix(fixedConsequence);
-  final List<String>[] usedIdentifiers=(List<String>[])analysis.getBoundIdentifiers();
-  final Declaration[] declarations=new Declaration[usedIdentifiers[0].size()];
-  for (int i=0, size=usedIdentifiers[0].size(); i < size; i++) {
-    declarations[i]=context.getDeclarationResolver().getDeclaration(context.getRule(),(String)usedIdentifiers[0].get(i));
+  final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
+  final Declaration[] declarations=new Declaration[usedIdentifiers.getDeclarations().size()];
+  String[] declrStr=new String[declarations.length];
+  int j=0;
+  for (  String str : usedIdentifiers.getDeclarations().keySet()) {
+    declrStr[j]=str;
+    declarations[j++]=decls.get(str);
   }
-  final Map<String,Object> map=createVariableContext(className,fixedConsequence,context,declarations,null,(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]));
+  Arrays.sort(declarations,SortDeclarations.isntance);
+  context.getRule().setRequiredDeclarations(declrStr);
+  final Map<String,Object> map=createVariableContext(className,fixedConsequence,context,declarations,null,usedIdentifiers.getGlobals(),(JavaAnalysisResult)analysis);
   map.put("consequenceName",consequenceName);
-  final List list=Arrays.asList(context.getRule().getDeclarations());
   final Integer[] indexes=new Integer[declarations.length];
   final Boolean[] notPatterns=new Boolean[declarations.length];
   for (int i=0, length=declarations.length; i < length; i++) {
-    indexes[i]=new Integer(list.indexOf(declarations[i]));
+    indexes[i]=i;
     notPatterns[i]=(declarations[i].getExtractor() instanceof PatternExtractor) ? Boolean.FALSE : Boolean.TRUE;
     if ((indexes[i]).intValue() == -1) {
       context.getErrors().add(new DescrBuildError(context.getParentDescr(),ruleDescr,null,"Internal Error : Unable to find declaration in list while generating the consequence invoker"));

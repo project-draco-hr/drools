@@ -1,15 +1,12 @@
 {
-  super(-1,Object.class,ValueType.determineValueType(Object.class));
+  super(-1,null,null);
   this.extractors=new HashMap();
-  ExpressionCompiler compiler=new ExpressionCompiler(fieldName);
-  this.mvelExpression=compiler.compile();
-  Set inputs=compiler.getParserContextState().getInputs().keySet();
-  for (Iterator it=inputs.iterator(); it.hasNext(); ) {
-    String basefield=(String)it.next();
-    if ("this".equals(basefield)) {
-      continue;
-    }
-    InternalReadAccessor extr=cache.getReadAccessor(new AccessorKey(cls.getName(),basefield,AccessorKey.AccessorType.FieldAccessor),cls);
-    this.extractors.put(basefield,extr);
-  }
+  ParserContext context=new ParserContext();
+  context.addInput("this",cls);
+  context.setStrongTyping(true);
+  MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL=true;
+  this.mvelExpression=(ExecutableStatement)MVEL.compileExpression(fieldName,context);
+  Class returnType=this.mvelExpression.getKnownEgressType();
+  setFieldType(returnType);
+  setValueType(ValueType.determineValueType(returnType));
 }

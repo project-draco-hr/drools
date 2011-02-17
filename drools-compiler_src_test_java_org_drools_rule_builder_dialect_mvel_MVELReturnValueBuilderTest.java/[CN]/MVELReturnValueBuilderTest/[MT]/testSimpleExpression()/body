@@ -20,14 +20,13 @@
   final ReturnValueRestrictionDescr returnValueDescr=new ReturnValueRestrictionDescr("=");
   returnValueDescr.setContent("a + b");
   final MVELReturnValueBuilder builder=new MVELReturnValueBuilder();
-  final List[] usedIdentifiers=new ArrayList[2];
-  final List list=new ArrayList();
-  usedIdentifiers[1]=list;
   final Declaration[] previousDeclarations=new Declaration[]{a,b};
   final Declaration[] localDeclarations=new Declaration[]{};
   final String[] requiredGlobals=new String[]{};
   final ReturnValueRestriction returnValue=new ReturnValueRestriction(extractor,previousDeclarations,localDeclarations,requiredGlobals,context.getConfiguration().getEvaluatorRegistry().getEvaluator(ValueType.PINTEGER_TYPE,Operator.EQUAL));
-  builder.build(context,usedIdentifiers,previousDeclarations,localDeclarations,returnValue,returnValueDescr);
+  AnalysisResult analysis=context.getDialect().analyzeExpression(context,returnValueDescr,returnValueDescr.getContent(),new BoundIdentifiers(declarationResolver.getDeclarationClasses((Rule)null),new HashMap(),Cheese.class));
+  context.getBuildStack().push(patternB);
+  builder.build(context,analysis.getBoundIdentifiers(),previousDeclarations,localDeclarations,returnValue,returnValueDescr,analysis);
   ((MVELReturnValueExpression)returnValue.getExpression()).compile(Thread.currentThread().getContextClassLoader());
   ContextEntry retValContext=returnValue.createContextEntry();
   final RuleBase ruleBase=RuleBaseFactory.newRuleBase();

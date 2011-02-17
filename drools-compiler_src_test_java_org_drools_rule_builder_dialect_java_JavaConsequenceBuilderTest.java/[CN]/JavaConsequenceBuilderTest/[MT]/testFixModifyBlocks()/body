@@ -3,8 +3,15 @@
   setupTest(consequence,new HashMap<String,Object>());
   try {
     JavaExprAnalyzer analyzer=new JavaExprAnalyzer();
-    JavaAnalysisResult analysis=(JavaAnalysisResult)analyzer.analyzeBlock((String)ruleDescr.getConsequence(),new Map[]{});
-    String fixed=builder.fixBlockDescr(context,analysis,(String)ruleDescr.getConsequence());
+    Map<String,Class> declrCls=new HashMap<String,Class>();
+    declrCls.put("$cheese",Cheese.class);
+    JavaAnalysisResult analysis=(JavaAnalysisResult)analyzer.analyzeBlock((String)ruleDescr.getConsequence(),new BoundIdentifiers(declrCls,new HashMap<String,Class>()));
+    Map<String,Declaration> declr=new HashMap<String,Declaration>();
+    Declaration d=new Declaration();
+    d.setPattern(new Pattern(0,0,new ClassObjectType(Cheese.class),"$cheese",false));
+    d.setReadAccessor(new PatternExtractor(new ClassObjectType(Cheese.class)));
+    declr.put("$cheese",d);
+    String fixed=builder.fixBlockDescr(consequence,context,analysis,(String)ruleDescr.getConsequence(),declr);
     String expected=" System.out.println(\"this is a test\");\n" + "{ org.drools.Cheese __obj__ = (org.drools.Cheese) ( $cheese );\n" + "__obj__.setPrice( 10 );\n"+ "__obj__.setAge( age );\n"+ "update( __obj__ );}\n"+ "System.out.println(\"we are done\");\n";
     assertNotNull(context.getErrors().toString(),fixed);
     assertEqualsIgnoreSpaces(expected,fixed);

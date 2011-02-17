@@ -1,0 +1,38 @@
+{
+  String str="";
+  str+="package org.drools.test  \n";
+  str+="import org.drools.Person \n";
+  str+="query peeps( String $name, String $likes, String $street) \n";
+  str+="    $p : Person( $name : name, $likes : likes, $street : address.street ) \n";
+  str+="end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  Person p1=new Person("darth","stilton",100);
+  p1.setAddress(new Address("s1"));
+  Person p2=new Person("yoda","stilton",300);
+  p2.setAddress(new Address("s2"));
+  ksession.insert(p1);
+  ksession.insert(p2);
+  org.drools.runtime.rule.QueryResults results=ksession.getQueryResults("peeps",new Object[]{new Variable(),new Variable(),new Variable()});
+  assertEquals(2,results.size());
+  List names=new ArrayList();
+  for (  org.drools.runtime.rule.QueryResultsRow row : results) {
+    names.add(((Person)row.get("$p")).getName());
+  }
+  assertTrue(names.contains("yoda"));
+  assertTrue(names.contains("darth"));
+  results=ksession.getQueryResults("peeps",new Object[]{new Variable(),new Variable(),"s1"});
+  assertEquals(1,results.size());
+  names=new ArrayList();
+  for (  org.drools.runtime.rule.QueryResultsRow row : results) {
+    names.add(((Person)row.get("$p")).getName());
+  }
+  assertTrue(names.contains("darth"));
+}

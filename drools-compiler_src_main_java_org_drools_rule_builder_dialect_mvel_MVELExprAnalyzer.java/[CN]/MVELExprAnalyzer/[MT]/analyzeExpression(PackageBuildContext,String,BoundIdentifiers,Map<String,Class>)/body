@@ -1,0 +1,68 @@
+{
+  MVELAnalysisResult result=null;
+  if (expr.trim().length() > 0) {
+    MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
+    ParserConfiguration conf=new ParserConfiguration();
+    conf.setImports(dialect.getImports());
+    conf.setPackageImports((HashSet)dialect.getPackgeImports());
+    conf.setClassLoader(context.getPackageBuilder().getRootClassLoader());
+    final ParserContext parserContext1=new ParserContext(conf);
+    parserContext1.setStrictTypeEnforcement(false);
+    parserContext1.setStrongTyping(false);
+    parserContext1.setInterceptors(dialect.getInterceptors());
+    MVEL.analysisCompile(expr,parserContext1);
+    Set<String> requiredInputs=parserContext1.getInputs().keySet();
+    final ParserContext parserContext2=new ParserContext(conf);
+    parserContext2.setStrictTypeEnforcement(true);
+    parserContext2.setStrongTyping(true);
+    parserContext2.setInterceptors(dialect.getInterceptors());
+    if (localTypes != null) {
+      for (      Entry<String,Class> entry : localTypes.entrySet()) {
+        parserContext2.addInput(entry.getKey(),entry.getValue());
+      }
+    }
+    for (    String str : requiredInputs) {
+      if (availableIdentifiers.getThisClass() != null) {
+        if (PropertyTools.getFieldOrAccessor(availableIdentifiers.getThisClass(),str) != null) {
+          continue;
+        }
+      }
+      Class cls=availableIdentifiers.getDeclarations().get(str);
+      if (cls != null) {
+        parserContext2.addInput(str,cls);
+        continue;
+      }
+      if (cls == null) {
+        cls=availableIdentifiers.getGlobals().get(str);
+        if (cls != null) {
+          parserContext2.addInput(str,cls);
+          continue;
+        }
+      }
+      if (cls == null) {
+        if (str.equals("drools")) {
+          parserContext2.addInput("drools",KnowledgeHelper.class);
+        }
+ else         if (str.equals("kcontext")) {
+          parserContext2.addInput("kcontext",RuleContext.class);
+        }
+        if (str.equals("rule")) {
+          parserContext2.addInput("rule",Rule.class);
+        }
+      }
+    }
+    if (availableIdentifiers.getThisClass() != null) {
+      parserContext2.addInput("this",availableIdentifiers.getThisClass());
+    }
+    MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL=true;
+    Class returnType=MVEL.analyze(expr,parserContext2);
+    result=analyze(parserContext2.getInputs().keySet(),availableIdentifiers);
+    result.setReturnType(returnType);
+    result.setMvelVariables(parserContext2.getVariables());
+  }
+ else {
+    result=analyze((Set<String>)Collections.EMPTY_SET,availableIdentifiers);
+    result.setMvelVariables(Collections.<String,Class>emptyMap());
+  }
+  return result;
+}

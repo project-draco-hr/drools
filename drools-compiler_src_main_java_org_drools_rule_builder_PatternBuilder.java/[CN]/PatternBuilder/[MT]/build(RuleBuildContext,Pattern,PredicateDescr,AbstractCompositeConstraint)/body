@@ -1,15 +1,19 @@
 {
-  Map<String,Class<?>> declarations=getDeclarationsMap(predicateDescr,context);
-  Map<String,Class<?>> globals=context.getPackageBuilder().getGlobals();
-  final Dialect.AnalysisResult analysis=context.getDialect().analyzeExpression(context,predicateDescr,predicateDescr.getContent(),new Map[]{declarations,globals});
+  Map<String,Class> declarations=getDeclarationsMap(predicateDescr,context);
+  Map<String,Class> globals=context.getPackageBuilder().getGlobals();
+  Class thisClass=null;
+  if (pattern.getObjectType() instanceof ClassObjectType) {
+    thisClass=((ClassObjectType)pattern.getObjectType()).getClassType();
+  }
+  final AnalysisResult analysis=context.getDialect().analyzeExpression(context,predicateDescr,predicateDescr.getContent(),new BoundIdentifiers(declarations,globals,thisClass));
   if (analysis == null) {
     return;
   }
-  final List[] usedIdentifiers=analysis.getBoundIdentifiers();
+  final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
   final List tupleDeclarations=new ArrayList();
   final List factDeclarations=new ArrayList();
-  for (int i=0, size=usedIdentifiers[0].size(); i < size; i++) {
-    final Declaration decl=context.getDeclarationResolver().getDeclaration(context.getRule(),(String)usedIdentifiers[0].get(i));
+  for (  String id : usedIdentifiers.getDeclarations().keySet()) {
+    final Declaration decl=context.getDeclarationResolver().getDeclaration(context.getRule(),id);
     if (decl.getPattern() == pattern) {
       factDeclarations.add(decl);
     }
@@ -20,7 +24,9 @@
   this.createImplicitBindings(context,pattern,analysis.getNotBoundedIdentifiers(),factDeclarations);
   final Declaration[] previousDeclarations=(Declaration[])tupleDeclarations.toArray(new Declaration[tupleDeclarations.size()]);
   final Declaration[] localDeclarations=(Declaration[])factDeclarations.toArray(new Declaration[factDeclarations.size()]);
-  final String[] requiredGlobals=(String[])usedIdentifiers[1].toArray(new String[usedIdentifiers[1].size()]);
+  final String[] requiredGlobals=usedIdentifiers.getGlobals().keySet().toArray(new String[usedIdentifiers.getGlobals().size()]);
+  Arrays.sort(previousDeclarations,SortDeclarations.isntance);
+  Arrays.sort(localDeclarations,SortDeclarations.isntance);
   final PredicateConstraint predicateConstraint=new PredicateConstraint(null,previousDeclarations,localDeclarations,requiredGlobals);
   if (container == null) {
     pattern.addConstraint(predicateConstraint);
@@ -32,5 +38,5 @@
     container.addConstraint(predicateConstraint);
   }
   final PredicateBuilder builder=context.getDialect().getPredicateBuilder();
-  builder.build(context,usedIdentifiers,previousDeclarations,localDeclarations,predicateConstraint,predicateDescr);
+  builder.build(context,usedIdentifiers,previousDeclarations,localDeclarations,predicateConstraint,predicateDescr,analysis);
 }

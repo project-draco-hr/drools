@@ -1,0 +1,49 @@
+{
+  int varLength=inputIdentifiers.length;
+  Object[] vals=new Object[inputIdentifiers.length];
+  int i=0;
+  if (thisObject != null) {
+    vals[i++]=thisObject;
+  }
+  vals[i++]=knowledgeHelper;
+  vals[i++]=knowledgeHelper;
+  vals[i++]=rule;
+  if (globalIdentifiers != null) {
+    for (int j=0, length=globalIdentifiers.length; j < length; j++) {
+      vals[i++]=workingMemory.getGlobal(this.globalIdentifiers[j]);
+    }
+  }
+  InternalFactHandle[] handles=((LeftTuple)tuples).toFactHandles();
+  IdentityHashMap<Object,FactHandle> identityMap=null;
+  if (knowledgeHelper != null) {
+    identityMap=new IdentityHashMap<Object,FactHandle>();
+  }
+  if (this.previousDeclarations != null) {
+    for (int j=0, length=this.previousDeclarations.length; j < length; j++) {
+      Declaration decl=this.previousDeclarations[j];
+      InternalFactHandle handle=getFactHandle(decl,handles);
+      Object o=decl.getValue((InternalWorkingMemory)workingMemory,handle.getObject());
+      if (knowledgeHelper != null) {
+        identityMap.put(decl.getIdentifier(),handle);
+      }
+      vals[i++]=o;
+    }
+  }
+  if (this.localDeclarations != null) {
+    for (int j=0, length=this.localDeclarations.length; j < length; j++) {
+      Declaration decl=this.localDeclarations[j];
+      Object o=decl.getValue((InternalWorkingMemory)workingMemory,thisObject);
+      vals[i++]=o;
+    }
+  }
+  for (  Object o : otherVars) {
+    vals[i++]=o;
+  }
+  if (knowledgeHelper != null) {
+    knowledgeHelper.setIdentityMap(identityMap);
+  }
+  VariableResolverFactory locals=new CachingMapVariableResolverFactory(new HashMap<String,Object>());
+  DroolsMVELResolverFactory factory=new DroolsMVELResolverFactory(inputIdentifiers,vals,locals);
+  factory.setKnowledgeHelper(knowledgeHelper);
+  return factory;
+}

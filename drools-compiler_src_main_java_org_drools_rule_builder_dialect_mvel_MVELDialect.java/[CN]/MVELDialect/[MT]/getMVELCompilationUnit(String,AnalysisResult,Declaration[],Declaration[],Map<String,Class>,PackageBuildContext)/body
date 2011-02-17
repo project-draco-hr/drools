@@ -1,0 +1,90 @@
+{
+  String[] pkgImports=this.packageImports.toArray(new String[this.packageImports.size()]);
+  List<String> importClasses=new ArrayList<String>();
+  List<String> importMethods=new ArrayList<String>();
+  List<String> importFields=new ArrayList<String>();
+  for (Iterator it=this.imports.values().iterator(); it.hasNext(); ) {
+    Object object=it.next();
+    if (object instanceof Class) {
+      importClasses.add(((Class)object).getName());
+    }
+ else     if (object instanceof Method) {
+      Method method=(Method)object;
+      importMethods.add(method.getDeclaringClass().getName() + "." + method.getName());
+    }
+ else {
+      Field field=(Field)object;
+      importFields.add(field.getDeclaringClass().getName() + "." + field.getName());
+    }
+  }
+  Map<String,Class> resolvedInputs=new LinkedHashMap<String,Class>();
+  List<String> ids=new ArrayList<String>();
+  if (analysis.getBoundIdentifiers().getThisClass() != null) {
+    ids.add("this");
+    resolvedInputs.put("this",analysis.getBoundIdentifiers().getThisClass());
+  }
+  ids.add("drools");
+  resolvedInputs.put("drools",KnowledgeHelper.class);
+  ids.add("kcontext");
+  resolvedInputs.put("kcontext",KnowledgeHelper.class);
+  ids.add("rule");
+  resolvedInputs.put("rule",Rule.class);
+  List<String> strList=new ArrayList();
+  int i=0;
+  for (  Entry<String,Class> e : analysis.getBoundIdentifiers().getGlobals().entrySet()) {
+    strList.add(e.getKey());
+    resolvedInputs.put(e.getKey(),e.getValue());
+  }
+  String[] globalIdentifiers=strList.toArray(new String[strList.size()]);
+  if (previousDeclarations != null) {
+    for (    Declaration decl : previousDeclarations) {
+      if (analysis.getBoundIdentifiers().getDeclarations().containsKey(decl.getIdentifier())) {
+        ids.add(decl.getIdentifier());
+        resolvedInputs.put(decl.getIdentifier(),decl.getExtractor().getExtractToClass());
+      }
+    }
+  }
+  if (localDeclarations != null) {
+    for (    Declaration decl : localDeclarations) {
+      if (analysis.getBoundIdentifiers().getDeclarations().containsKey(decl.getIdentifier())) {
+        ids.add(decl.getIdentifier());
+        resolvedInputs.put(decl.getIdentifier(),decl.getExtractor().getExtractToClass());
+      }
+    }
+  }
+  strList=new ArrayList<String>();
+  if (otherInputVariables != null) {
+    i=0;
+    for (Iterator it=otherInputVariables.entrySet().iterator(); it.hasNext(); ) {
+      Entry entry=(Entry)it.next();
+      if (!analysis.getNotBoundedIdentifiers().contains(entry.getKey())) {
+        continue;
+      }
+      ids.add((String)entry.getKey());
+      strList.add((String)entry.getKey());
+      resolvedInputs.put((String)entry.getKey(),(Class)entry.getValue());
+    }
+  }
+  String[] otherIdentifiers=strList.toArray(new String[strList.size()]);
+  String[] inputIdentifiers=new String[resolvedInputs.size()];
+  String[] inputTypes=new String[resolvedInputs.size()];
+  i=0;
+  for (  String id : ids) {
+    inputIdentifiers[i]=id;
+    inputTypes[i++]=resolvedInputs.get(id).getName();
+  }
+  String name;
+  if (context != null && context.getPkg() != null & context.getPkg().getName() != null) {
+    if (context instanceof RuleBuildContext) {
+      name=context.getPkg().getName() + "." + ((RuleBuildContext)context).getRuleDescr().getClassName();
+    }
+ else {
+      name=context.getPkg().getName() + ".Unknown";
+    }
+  }
+ else {
+    name="Unknown";
+  }
+  MVELCompilationUnit compilationUnit=new MVELCompilationUnit(name,expression,pkgImports,importClasses.toArray(new String[importClasses.size()]),importMethods.toArray(new String[importMethods.size()]),importFields.toArray(new String[importFields.size()]),globalIdentifiers,previousDeclarations,localDeclarations,otherIdentifiers,inputIdentifiers,inputTypes,languageLevel,strictMode);
+  return compilationUnit;
+}

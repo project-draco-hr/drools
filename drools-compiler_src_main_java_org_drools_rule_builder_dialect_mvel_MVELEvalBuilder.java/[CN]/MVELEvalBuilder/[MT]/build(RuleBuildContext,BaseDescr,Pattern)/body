@@ -2,8 +2,10 @@
   final EvalDescr evalDescr=(EvalDescr)descr;
   try {
     MVELDialect dialect=(MVELDialect)context.getDialect(context.getDialect().getId());
-    Dialect.AnalysisResult analysis=context.getDialect().analyzeExpression(context,evalDescr,evalDescr.getContent(),new Map[]{context.getDeclarationResolver().getDeclarationClasses(context.getRule()),context.getPackageBuilder().getGlobals()});
-    Declaration[] previousDeclarations=(Declaration[])context.getDeclarationResolver().getDeclarations(context.getRule()).values().toArray(new Declaration[context.getDeclarationResolver().getDeclarations(context.getRule()).size()]);
+    Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
+    AnalysisResult analysis=context.getDialect().analyzeExpression(context,evalDescr,evalDescr.getContent(),new BoundIdentifiers(context.getDeclarationResolver().getDeclarationClasses(decls),context.getPackageBuilder().getGlobals()));
+    Collection<Declaration> col=decls.values();
+    Declaration[] previousDeclarations=(Declaration[])col.toArray(new Declaration[col.size()]);
     MVELCompilationUnit unit=dialect.getMVELCompilationUnit((String)evalDescr.getContent(),analysis,previousDeclarations,null,null,context);
     final EvalCondition eval=new EvalCondition(previousDeclarations);
     MVELEvalExpression expr=new MVELEvalExpression(unit,dialect.getId());

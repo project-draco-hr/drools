@@ -12,6 +12,8 @@
   final Pattern patternB=new Pattern(1,new ClassObjectType(Cheese.class));
   final Declaration a=new Declaration("a",extractor,patternA);
   final Declaration b=new Declaration("b",extractor,patternB);
+  context.getBuildStack().add(patternA);
+  context.getBuildStack().add(patternB);
   final Map map=new HashMap();
   map.put("a",a);
   map.put("b",b);
@@ -20,13 +22,11 @@
   final PredicateDescr predicateDescr=new PredicateDescr();
   predicateDescr.setContent("a == b");
   final MVELPredicateBuilder builder=new MVELPredicateBuilder();
-  final List[] usedIdentifiers=new ArrayList[2];
-  final List list=new ArrayList();
-  usedIdentifiers[1]=list;
   final Declaration[] previousDeclarations=new Declaration[]{a};
   final Declaration[] localDeclarations=new Declaration[]{b};
   final PredicateConstraint predicate=new PredicateConstraint(null,localDeclarations);
-  builder.build(context,usedIdentifiers,previousDeclarations,localDeclarations,predicate,predicateDescr);
+  AnalysisResult analysis=context.getDialect().analyzeExpression(context,predicateDescr,predicateDescr.getContent(),new BoundIdentifiers(declarationResolver.getDeclarationClasses((Rule)null),new HashMap(),Cheese.class));
+  builder.build(context,new BoundIdentifiers(declarationResolver.getDeclarationClasses((Rule)null),new HashMap()),previousDeclarations,localDeclarations,predicate,predicateDescr,analysis);
   ((MVELPredicateExpression)predicate.getPredicateExpression()).compile(Thread.currentThread().getContextClassLoader());
   final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   final InternalWorkingMemory wm=(InternalWorkingMemory)ruleBase.newStatefulSession();
