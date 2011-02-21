@@ -1,5 +1,6 @@
 {
   final PackageDescr pkg=(PackageDescr)parseResource("compilationUnit","pluggable_operators.drl");
+  assertFalse(parser.getErrors().toString(),parser.hasErrors());
   assertEquals(1,pkg.getRules().size());
   final RuleDescr rule=(RuleDescr)pkg.getRules().get(0);
   assertEquals(5,rule.getLhs().getDescrs().size());
@@ -10,31 +11,25 @@
   assertEquals("$b",eventB.getIdentifier());
   assertEquals("EventB",eventB.getObjectType());
   assertEquals(1,eventB.getConstraint().getDescrs().size());
-  final OrDescr or=(OrDescr)eventB.getConstraint().getDescrs().get(0);
-  assertEquals(2,or.getDescrs().size());
-  final ExprConstraintDescr fcdB=(ExprConstraintDescr)or.getDescrs().get(0);
-  assertEquals("after",fcdB.getExpression());
-  final ExprConstraintDescr fcdB2=(ExprConstraintDescr)or.getDescrs().get(1);
-  assertEquals("after",fcdB2.getExpression());
+  assertEquals(1,eventB.getConstraint().getDescrs().size());
+  final ExprConstraintDescr fcdB=(ExprConstraintDescr)eventB.getConstraint().getDescrs().get(0);
+  assertEquals("this after[1,10] $a || this not after[15,20] $a",fcdB.getExpression());
   final PatternDescr eventC=(PatternDescr)rule.getLhs().getDescrs().get(2);
   assertEquals("$c",eventC.getIdentifier());
   assertEquals("EventC",eventC.getObjectType());
   assertEquals(1,eventC.getConstraint().getDescrs().size());
   final ExprConstraintDescr fcdC=(ExprConstraintDescr)eventC.getConstraint().getDescrs().get(0);
-  assertEquals("finishes",fcdC.getExpression());
+  assertEquals("this finishes $b",fcdC.getExpression());
   final PatternDescr eventD=(PatternDescr)rule.getLhs().getDescrs().get(3);
   assertEquals("$d",eventD.getIdentifier());
   assertEquals("EventD",eventD.getObjectType());
   assertEquals(1,eventD.getConstraint().getDescrs().size());
   final ExprConstraintDescr fcdD=(ExprConstraintDescr)eventD.getConstraint().getDescrs().get(0);
-  assertEquals("starts",fcdD.getExpression());
+  assertEquals("this not starts $a",fcdD.getExpression());
   final PatternDescr eventE=(PatternDescr)rule.getLhs().getDescrs().get(4);
   assertEquals("$e",eventE.getIdentifier());
   assertEquals("EventE",eventE.getObjectType());
-  assertEquals(2,eventE.getConstraint().getDescrs().size());
-  final AndDescr and=(AndDescr)eventE.getConstraint();
-  ExprConstraintDescr fcdE=(ExprConstraintDescr)and.getDescrs().get(0);
-  assertEquals("before",fcdE.getExpression());
-  fcdE=(ExprConstraintDescr)and.getDescrs().get(1);
-  assertEquals("after",fcdE.getExpression());
+  assertEquals(1,eventE.getConstraint().getDescrs().size());
+  ExprConstraintDescr fcdE=(ExprConstraintDescr)eventE.getConstraint().getDescrs().get(0);
+  assertEquals("this not before[1, 10] $b || after[1, 10] $c && this after[1, 5] $d",fcdE.getExpression());
 }
