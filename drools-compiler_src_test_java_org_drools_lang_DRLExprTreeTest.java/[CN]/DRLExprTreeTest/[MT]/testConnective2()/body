@@ -2,5 +2,27 @@
   String source="(a > b || 10 != 20) && someMethod(10) == 20";
   ConstraintConnectiveDescr result=parser.parse(source);
   assertFalse(parser.getErrors().toString(),parser.hasErrors());
-  System.out.println(result);
+  assertEquals(ConnectiveType.AND,result.getConnective());
+  assertEquals(2,result.getDescrs().size());
+  ConstraintConnectiveDescr or=(ConstraintConnectiveDescr)result.getDescrs().get(0);
+  assertEquals(ConnectiveType.OR,or.getConnective());
+  assertEquals(2,or.getDescrs().size());
+  RelationalExprDescr expr=(RelationalExprDescr)or.getDescrs().get(0);
+  assertEquals(">",expr.getOperator());
+  AtomicExprDescr left=(AtomicExprDescr)expr.getLeft();
+  AtomicExprDescr right=(AtomicExprDescr)expr.getRight();
+  assertEquals("a",left.getExpression());
+  assertEquals("b",right.getExpression());
+  expr=(RelationalExprDescr)or.getDescrs().get(1);
+  assertEquals("!=",expr.getOperator());
+  left=(AtomicExprDescr)expr.getLeft();
+  right=(AtomicExprDescr)expr.getRight();
+  assertEquals("10",left.getExpression());
+  assertEquals("20",right.getExpression());
+  expr=(RelationalExprDescr)result.getDescrs().get(1);
+  assertEquals("==",expr.getOperator());
+  left=(AtomicExprDescr)expr.getLeft();
+  right=(AtomicExprDescr)expr.getRight();
+  assertEquals("someMethod(10)",left.getExpression());
+  assertEquals("20",right.getExpression());
 }
