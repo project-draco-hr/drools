@@ -1,0 +1,53 @@
+{
+  DrlExprParser parser=new DrlExprParser();
+  ConstraintConnectiveDescr result=null;
+  try {
+    result=parser.parse(descr.getText());
+  }
+ catch (  DroolsParserException e) {
+    context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to parser pattern expression:\n" + e.getMessage()));
+    return;
+  }
+  for (Iterator<BaseDescr> it=result.getDescrs().iterator(); it.hasNext(); ) {
+    BaseDescr d=it.next();
+    boolean indexable=false;
+    boolean simple=false;
+    if (d instanceof RelationalExprDescr) {
+      RelationalExprDescr red=(RelationalExprDescr)d;
+      if (red.getLeft() instanceof AtomicExprDescr && red.getRight() instanceof AtomicExprDescr) {
+        simple=true;
+        String expr=((AtomicExprDescr)red.getRight()).getExpression();
+        if ("==".equals(red.getOperator()) && (expr != null && !expr.trim().startsWith("("))) {
+          indexable=true;
+        }
+      }
+    }
+    StringBuilder sbuilder=new StringBuilder();
+    renderConstraint(sbuilder,d);
+    String expr=sbuilder.toString().trim();
+    if (expr.startsWith("eval")) {
+      int startParen=expr.indexOf('(') + 1;
+      int endParen=expr.lastIndexOf(')');
+      expr=expr.substring(startParen,endParen);
+    }
+    DescrBranch descrBranch=new DescrBranch(expr,d,simple,indexable);
+    setInputs(context,descrBranch,((ClassObjectType)((Pattern)context.getBuildStack().peek()).getObjectType()).getClassType(),expr);
+    boolean literal=descrBranch.getRuleBindings().isEmpty();
+    if (indexable) {
+      if (literal) {
+        literalIndexes.add(descrBranch);
+      }
+ else {
+        variablesIndexes.add(descrBranch);
+      }
+    }
+ else {
+      if (literal) {
+        literalConstraints.add(descrBranch);
+      }
+ else {
+        variableConstraints.add(descrBranch);
+      }
+    }
+  }
+}

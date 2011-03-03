@@ -4,8 +4,14 @@
     MVELDialect dialect=(MVELDialect)context.getDialect(context.getDialect().getId());
     Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
     AnalysisResult analysis=context.getDialect().analyzeExpression(context,evalDescr,evalDescr.getContent(),new BoundIdentifiers(context.getDeclarationResolver().getDeclarationClasses(decls),context.getPackageBuilder().getGlobals()));
-    Collection<Declaration> col=decls.values();
-    Declaration[] previousDeclarations=(Declaration[])col.toArray(new Declaration[col.size()]);
+    final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
+    int i=usedIdentifiers.getDeclarations().keySet().size();
+    Declaration[] previousDeclarations=new Declaration[i];
+    i=0;
+    for (    String id : usedIdentifiers.getDeclarations().keySet()) {
+      previousDeclarations[i]=decls.get(id);
+    }
+    Arrays.sort(previousDeclarations,SortDeclarations.instance);
     MVELCompilationUnit unit=dialect.getMVELCompilationUnit((String)evalDescr.getContent(),analysis,previousDeclarations,null,null,context);
     final EvalCondition eval=new EvalCondition(previousDeclarations);
     MVELEvalExpression expr=new MVELEvalExpression(unit,dialect.getId());

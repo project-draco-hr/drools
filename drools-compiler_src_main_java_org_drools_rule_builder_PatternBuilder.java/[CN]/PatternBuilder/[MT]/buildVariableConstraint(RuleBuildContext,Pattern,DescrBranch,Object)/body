@@ -1,0 +1,34 @@
+{
+  if (branch.isIndexable()) {
+    RelationalExprDescr red=(RelationalExprDescr)branch.getDescr();
+    String fieldName=((AtomicExprDescr)red.getLeft()).getExpression();
+    String value=((AtomicExprDescr)red.getRight()).getExpression().trim();
+    String[] identifiers=fieldName.split("\\.");
+    if (identifiers.length == 2 && "this".equals(identifiers[0])) {
+      fieldName=identifiers[1];
+    }
+    final InternalReadAccessor extractor=getFieldReadAccessor(context,red,pattern.getObjectType(),fieldName,null,false);
+    String operator=red.getOperator();
+    int notPos=operator.indexOf("not");
+    if (notPos >= 0) {
+      red.getOperator().substring(notPos + 3);
+    }
+    FieldConstraintDescr fdescr=new FieldConstraintDescr(fieldName);
+    Restriction restriction;
+    if (value.startsWith("(")) {
+      value=value.substring(1,value.length() - 1);
+      restriction=buildRestriction(context,(Pattern)context.getBuildStack().peek(),extractor,fdescr,new ReturnValueRestrictionDescr(operator,(notPos >= 0),null,value));
+    }
+ else {
+      restriction=buildRestriction(context,extractor,fdescr,new VariableRestrictionDescr(operator,(notPos >= 0),null,value));
+      registerReadAccessor(context,pattern.getObjectType(),fieldName,(AcceptsReadAccessor)restriction);
+    }
+    VariableConstraint constraint=new VariableConstraint(extractor,restriction);
+    registerReadAccessor(context,pattern.getObjectType(),fieldName,constraint);
+    pattern.addConstraint(constraint);
+  }
+ else {
+    PredicateDescr pdescr=new PredicateDescr(branch.getExpression());
+    build(context,pattern,pdescr,null);
+  }
+}

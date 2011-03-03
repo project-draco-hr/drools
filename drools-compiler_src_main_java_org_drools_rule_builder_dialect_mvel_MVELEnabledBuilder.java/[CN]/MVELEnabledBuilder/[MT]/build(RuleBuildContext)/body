@@ -6,7 +6,14 @@
     otherVars.put("rule",org.drools.rule.Rule.class);
     Map<String,Declaration> declrs=context.getDeclarationResolver().getDeclarations(context.getRule());
     AnalysisResult analysis=dialect.analyzeExpression(context,context.getRuleDescr(),(String)context.getRuleDescr().getEnabled(),new BoundIdentifiers(context.getDeclarationResolver().getDeclarationClasses(declrs),context.getPackageBuilder().getGlobals()),otherVars);
-    Declaration[] previousDeclarations=declrs.values().toArray(new Declaration[declrs.size()]);
+    final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
+    int i=usedIdentifiers.getDeclarations().keySet().size();
+    Declaration[] previousDeclarations=new Declaration[i];
+    i=0;
+    for (    String id : usedIdentifiers.getDeclarations().keySet()) {
+      previousDeclarations[i]=declrs.get(id);
+    }
+    Arrays.sort(previousDeclarations,SortDeclarations.instance);
     String exprStr=(String)context.getRuleDescr().getEnabled();
     exprStr=exprStr.substring(1,exprStr.length() - 1) + " ";
     MVELCompilationUnit unit=dialect.getMVELCompilationUnit(exprStr,analysis,previousDeclarations,null,otherVars,context);

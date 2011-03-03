@@ -1,0 +1,26 @@
+{
+  MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
+  ParserConfiguration conf=new ParserConfiguration();
+  conf.setImports(dialect.getImports());
+  conf.setPackageImports((HashSet)dialect.getPackgeImports());
+  conf.setClassLoader(context.getPackageBuilder().getRootClassLoader());
+  final ParserContext pctx=new ParserContext(conf);
+  pctx.setStrictTypeEnforcement(false);
+  pctx.setStrongTyping(false);
+  pctx.addInput("this",thisClass);
+  MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL=true;
+  MVEL.analysisCompile(expr,pctx);
+  if (!pctx.getInputs().isEmpty()) {
+    for (    String v : pctx.getInputs().keySet()) {
+      if ("this".equals(v) || PropertyTools.getFieldOrAccessor(thisClass,v) != null) {
+        continue;
+      }
+ else       if (!context.getPkg().getGlobals().containsKey(v)) {
+        descrBranch.getRuleBindings().add(v);
+      }
+ else {
+        descrBranch.getGlobalBindings().add(v);
+      }
+    }
+  }
+}
