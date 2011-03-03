@@ -1,18 +1,25 @@
 {
   final FromDescr fromDescr=(FromDescr)descr;
-  final AccessorDescr accessor=(AccessorDescr)fromDescr.getDataSource();
+  final MVELExprDescr expr=(MVELExprDescr)fromDescr.getDataSource();
   From from=null;
   try {
     MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
     Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
-    String text=(String)accessor.toString();
+    String text=(String)expr.getText();
     AnalysisResult analysis=dialect.analyzeExpression(context,descr,text,new BoundIdentifiers(context.getDeclarationResolver().getDeclarationClasses(decls),context.getPackageBuilder().getGlobals()));
     if (analysis == null) {
       return null;
     }
-    Collection<Declaration> col=decls.values();
-    Declaration[] previousDeclarations=(Declaration[])col.toArray(new Declaration[col.size()]);
-    MVELCompilationUnit unit=dialect.getMVELCompilationUnit(text,analysis,previousDeclarations,null,null,context);
+    final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
+    final Declaration[] declarations=new Declaration[usedIdentifiers.getDeclarations().size()];
+    String[] declrStr=new String[declarations.length];
+    int j=0;
+    for (    String str : usedIdentifiers.getDeclarations().keySet()) {
+      declrStr[j]=str;
+      declarations[j++]=decls.get(str);
+    }
+    Arrays.sort(declarations,SortDeclarations.instance);
+    MVELCompilationUnit unit=dialect.getMVELCompilationUnit(text,analysis,declarations,null,null,context);
     MVELDataProvider dataProvider=new MVELDataProvider(unit,context.getDialect().getId());
     from=new From(dataProvider);
     MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData(dialect.getId());
@@ -20,7 +27,7 @@
     dataProvider.compile(context.getPackageBuilder().getRootClassLoader());
   }
  catch (  final Exception e) {
-    context.getErrors().add(new DescrBuildError(context.getParentDescr(),fromDescr,null,"Unable to build expression for 'from' : " + e.getMessage() + " '"+ accessor+ "'"));
+    context.getErrors().add(new DescrBuildError(context.getParentDescr(),fromDescr,null,"Unable to build expression for 'from' : " + e.getMessage() + " '"+ expr.getText()+ "'"));
     return null;
   }
   return from;
