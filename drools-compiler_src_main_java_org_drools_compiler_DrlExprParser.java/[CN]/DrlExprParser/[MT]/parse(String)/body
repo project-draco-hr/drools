@@ -6,14 +6,11 @@
     RecognizerSharedState state=new RecognizerSharedState();
     helper=new ParserHelper(input,state);
     DRLExpressions parser=new DRLExpressions(input,state,helper);
-    conditionalAndExpression_return expr=parser.conditionalAndExpression();
+    parser.setBuildDescr(true);
+    BaseDescr expr=parser.conditionalAndExpression();
     if (expr != null && !parser.hasErrors()) {
-      CommonTree tree=(CommonTree)expr.getTree();
-      CommonTreeNodeStream nodes=new CommonTreeNodeStream(tree);
-      nodes.setTokenStream(input);
-      DRLExprTree walker=new DRLExprTree(nodes);
-      walker.setHelper(helper);
-      constraint=walker.constraint();
+      constraint=ConstraintConnectiveDescr.newAnd();
+      constraint.addOrMerge(expr);
     }
   }
  catch (  RecognitionException e) {
