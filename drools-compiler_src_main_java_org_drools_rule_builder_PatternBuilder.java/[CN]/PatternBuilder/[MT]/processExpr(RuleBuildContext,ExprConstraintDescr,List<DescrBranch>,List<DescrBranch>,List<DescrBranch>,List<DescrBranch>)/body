@@ -1,11 +1,11 @@
 {
   DrlExprParser parser=new DrlExprParser();
   ConstraintConnectiveDescr result=null;
-  try {
-    result=parser.parse(descr.getText());
-  }
- catch (  DroolsParserException e) {
-    context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to parser pattern expression:\n" + e.getMessage()));
+  result=parser.parse(descr.getText());
+  if (parser.hasErrors()) {
+    for (    DroolsParserException error : parser.getErrors()) {
+      context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to parser pattern expression:\n" + error.getMessage()));
+    }
     return;
   }
   for (Iterator<BaseDescr> it=result.getDescrs().iterator(); it.hasNext(); ) {
