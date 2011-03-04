@@ -50,7 +50,29 @@
   }
   context.getBuildStack().push(pattern);
   for (  BindingDescr b : patternDescr.getBindings()) {
-    build(context,pattern,b,null);
+    if (true) {
+      String expression=b.getExpression();
+      DrlExprParser parser=new DrlExprParser();
+      ConstraintConnectiveDescr result=parser.parse(expression);
+      if (parser.hasErrors()) {
+        for (        DroolsParserException error : parser.getErrors()) {
+          context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to parser pattern expression:\n" + error.getMessage()));
+        }
+        return null;
+      }
+      String left=parser.getLeftMostExpr();
+      if (expression.equals(left)) {
+        build(context,pattern,b,null);
+      }
+ else {
+        b.setExpression(left);
+        build(context,pattern,b,null);
+        b.setExpression(expression);
+      }
+    }
+ else {
+      build(context,pattern,b,null);
+    }
   }
   List<DescrBranch> literalConstraints=new ArrayList<DescrBranch>();
   List<DescrBranch> literalIndexes=new ArrayList<DescrBranch>();
