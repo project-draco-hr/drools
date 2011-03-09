@@ -11,13 +11,17 @@
     BaseDescr d=it.next();
     boolean indexable=false;
     boolean simple=false;
+    boolean returnValue=false;
     if (d instanceof RelationalExprDescr) {
       RelationalExprDescr red=(RelationalExprDescr)d;
       if (red.getLeft() instanceof AtomicExprDescr && red.getRight() instanceof AtomicExprDescr) {
         simple=true;
-        String expr=((AtomicExprDescr)red.getRight()).getExpression();
-        if ("==".equals(red.getOperator()) && (expr != null && !expr.trim().startsWith("("))) {
+        String expr=((AtomicExprDescr)red.getRight()).getExpression().trim();
+        if ("==".equals(red.getOperator()) && (expr != null && !expr.startsWith("("))) {
           indexable=true;
+        }
+        if (expr.startsWith("(")) {
+          returnValue=true;
         }
       }
     }
@@ -41,7 +45,7 @@
       }
     }
  else {
-      if (literal) {
+      if (literal && !returnValue) {
         literalConstraints.add(descrBranch);
       }
  else {
