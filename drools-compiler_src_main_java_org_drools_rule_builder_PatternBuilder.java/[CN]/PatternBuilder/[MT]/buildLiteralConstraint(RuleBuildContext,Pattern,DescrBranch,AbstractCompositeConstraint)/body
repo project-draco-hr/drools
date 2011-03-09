@@ -2,7 +2,7 @@
   if (branch.isSimple()) {
     RelationalExprDescr red=(RelationalExprDescr)branch.getDescr();
     String fieldName=((AtomicExprDescr)red.getLeft()).getExpression();
-    String value=((AtomicExprDescr)red.getRight()).getExpression();
+    AtomicExprDescr right=(AtomicExprDescr)red.getRight();
     String[] identifiers=fieldName.split("\\.");
     if (identifiers.length == 2 && "this".equals(identifiers[0])) {
       fieldName=identifiers[1];
@@ -10,9 +10,10 @@
     final InternalReadAccessor extractor=getFieldReadAccessor(context,red,pattern.getObjectType(),fieldName,null,false);
     FieldValue field=null;
     try {
-      int dotPos=value.indexOf('.');
-      int parenPos=value.indexOf('(');
-      if (dotPos >= 0 && parenPos < 0) {
+      String value=right.getExpression();
+      int dotPos=right.getExpression().indexOf('.');
+      int parenPos=right.getExpression().indexOf('(');
+      if ((!right.isLiteral()) && dotPos >= 0 && parenPos < 0) {
         final String className=value.substring(0,dotPos);
         String classFieldName=value.substring(dotPos + 1);
         try {
@@ -31,26 +32,26 @@ catch (        final Exception e) {
         }
       }
  else {
-        if (context.getConfiguration().isProcessStringEscapes()) {
+        if (right.isLiteral() && value.startsWith("\"") && context.getConfiguration().isProcessStringEscapes()) {
           value=StringUtils.unescapeJava((String)value);
         }
         field=FieldFactory.getFieldValue(value,extractor.getValueType(),context.getPackageBuilder().getDateFormats());
       }
     }
  catch (    final Exception e) {
-      context.getErrors().add(new DescrBuildError(context.getParentDescr(),red,e,"Unable to create a Field value of type  '" + extractor.getValueType() + "' and value '"+ value+ "'"));
+      context.getErrors().add(new DescrBuildError(context.getParentDescr(),red,e,"Unable to create a Field value of type  '" + extractor.getValueType() + "' and value '"+ right.getExpression()+ "'"));
     }
     if (field == null) {
       return;
     }
-    Target right=getRightTarget(extractor);
-    Target left=Target.FACT;
+    Target rightTarget=getRightTarget(extractor);
+    Target leftTarget=Target.FACT;
     String operator=red.getOperator();
     int notPos=operator.indexOf("not");
     if (notPos >= 0) {
       operator=red.getOperator().substring(notPos + 3);
     }
-    final Evaluator evaluator=getEvaluator(context,red,extractor.getValueType(),operator,(notPos >= 0),null,left,right);
+    final Evaluator evaluator=getEvaluator(context,red,extractor.getValueType(),operator,(notPos >= 0),null,leftTarget,rightTarget);
     if (evaluator == null) {
       context.getErrors().add(new DescrBuildError(context.getParentDescr(),red,null,"Unable to create Evaluator for type '" + extractor.getValueType() + "' on expression '"+ branch.getExpression()+ "'"));
       return;
