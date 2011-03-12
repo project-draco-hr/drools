@@ -18,10 +18,14 @@
     identityMap=new IdentityHashMap<Object,FactHandle>();
   }
   if (tuples != null) {
-    InternalFactHandle[] handles=((LeftTuple)tuples).toFactHandles();
     if (this.previousDeclarations != null) {
-      for (int j=0, length=this.previousDeclarations.length; j < length; j++) {
-        Declaration decl=this.previousDeclarations[j];
+      Declaration[] prevDecl=this.previousDeclarations;
+      if (knowledgeHelper != null) {
+        prevDecl=((AgendaItem)knowledgeHelper.getActivation()).getRuleTerminalNode().getDeclarations();
+      }
+      InternalFactHandle[] handles=((LeftTuple)tuples).toFactHandles();
+      for (int j=0, length=prevDecl.length; j < length; j++) {
+        Declaration decl=prevDecl[j];
         InternalFactHandle handle=getFactHandle(decl,handles);
         Object o=decl.getValue((InternalWorkingMemory)workingMemory,handle.getObject());
         if (knowledgeHelper != null && decl.isPatternDeclaration()) {
@@ -47,7 +51,7 @@
     knowledgeHelper.setIdentityMap(identityMap);
   }
   VariableResolverFactory locals=new CachingMapVariableResolverFactory(new HashMap<String,Object>());
-  DroolsMVELResolverFactory factory=new DroolsMVELResolverFactory(inputIdentifiers,vals,locals);
+  DroolsMVELIndexedFactory factory=new DroolsMVELIndexedFactory(inputIdentifiers,vals,locals);
   factory.setKnowledgeHelper(knowledgeHelper);
   return factory;
 }
