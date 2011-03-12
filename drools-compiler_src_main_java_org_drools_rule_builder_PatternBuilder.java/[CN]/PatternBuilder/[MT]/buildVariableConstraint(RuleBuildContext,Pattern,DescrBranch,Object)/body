@@ -8,22 +8,22 @@
       fieldName=identifiers[1];
     }
     final InternalReadAccessor extractor=getFieldReadAccessor(context,red,pattern.getObjectType(),fieldName,null,false);
-    String operator=red.getOperator();
-    int notPos=operator.indexOf("not");
-    if (notPos >= 0) {
-      red.getOperator().substring(notPos + 3);
+    String operator=red.getOperator().trim();
+    boolean negated=operator.startsWith("not ");
+    if (negated) {
+      operator=red.getOperator().substring(4);
     }
     FieldConstraintDescr fdescr=new FieldConstraintDescr(fieldName);
     Restriction restriction;
     if (value.startsWith("(")) {
       value=value.substring(1,value.length() - 1);
-      restriction=buildRestriction(context,(Pattern)context.getBuildStack().peek(),extractor,fdescr,new ReturnValueRestrictionDescr(operator,(notPos >= 0),null,value));
+      restriction=buildRestriction(context,(Pattern)context.getBuildStack().peek(),extractor,fdescr,new ReturnValueRestrictionDescr(operator,negated,null,value));
     }
  else     if (value.indexOf('.') >= 0) {
-      restriction=buildRestriction(context,extractor,fdescr,new QualifiedIdentifierRestrictionDescr(operator,(notPos >= 0),null,value));
+      restriction=buildRestriction(context,extractor,fdescr,new QualifiedIdentifierRestrictionDescr(operator,negated,null,value));
     }
  else {
-      restriction=buildRestriction(context,extractor,fdescr,new VariableRestrictionDescr(operator,(notPos >= 0),null,value));
+      restriction=buildRestriction(context,extractor,fdescr,new VariableRestrictionDescr(operator,negated,null,value));
       registerReadAccessor(context,pattern.getObjectType(),fieldName,(AcceptsReadAccessor)restriction);
     }
     if (restriction == null) {
