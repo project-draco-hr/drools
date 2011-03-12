@@ -12,6 +12,7 @@
     boolean indexable=false;
     boolean simple=false;
     boolean returnValue=false;
+    boolean rightIsLiteral=false;
     if (d instanceof RelationalExprDescr) {
       RelationalExprDescr red=(RelationalExprDescr)d;
       if (red.getLeft() instanceof AtomicExprDescr && red.getRight() instanceof AtomicExprDescr) {
@@ -24,6 +25,7 @@
           returnValue=true;
         }
       }
+      rightIsLiteral=((AtomicExprDescr)red.getRight()).isLiteral();
     }
     StringBuilder sbuilder=new StringBuilder();
     renderConstraint(sbuilder,d);
@@ -35,7 +37,7 @@
     }
     DescrBranch descrBranch=new DescrBranch(expr,d,simple,indexable);
     setInputs(context,descrBranch,((ClassObjectType)((Pattern)context.getBuildStack().peek()).getObjectType()).getClassType(),expr);
-    boolean literal=descrBranch.getRuleBindings().isEmpty() && descrBranch.getGlobalBindings().isEmpty();
+    boolean literal=(descrBranch.getRuleBindings().isEmpty() && descrBranch.getGlobalBindings().isEmpty()) || rightIsLiteral;
     if (indexable) {
       if (literal) {
         literalIndexes.add(descrBranch);

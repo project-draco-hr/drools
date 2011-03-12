@@ -1,11 +1,13 @@
 {
   FieldValue field=null;
   try {
-    Object value=literalRestrictionDescr.getValue();
-    if (literalRestrictionDescr.getType() == LiteralRestrictionDescr.TYPE_STRING && context.getConfiguration().isProcessStringEscapes()) {
-      value=StringUtils.unescapeJava((String)value);
-    }
-    field=FieldFactory.getFieldValue(value,extractor.getValueType(),context.getPackageBuilder().getDateFormats());
+    String value=literalRestrictionDescr.getText().trim();
+    MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
+    ParserConfiguration pconf=new ParserConfiguration();
+    pconf.setImports(dialect.getImports());
+    pconf.setPackageImports((HashSet)dialect.getPackgeImports());
+    ParserContext pctx=new ParserContext(pconf);
+    field=FieldFactory.getFieldValue(MVEL.executeExpression(MVEL.compileExpression(value,pctx)),extractor.getValueType(),context.getPackageBuilder().getDateFormats());
   }
  catch (  final Exception e) {
     context.getErrors().add(new DescrBuildError(context.getParentDescr(),literalRestrictionDescr,e,"Unable to create a Field value of type  '" + extractor.getValueType() + "' and value '"+ literalRestrictionDescr.getText()+ "'"));
