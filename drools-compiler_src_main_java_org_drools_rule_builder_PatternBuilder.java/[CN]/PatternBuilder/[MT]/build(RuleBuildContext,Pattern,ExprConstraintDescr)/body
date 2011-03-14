@@ -54,8 +54,8 @@
     AtomicExprDescr rdescr=((AtomicExprDescr)exprDescr.getRight());
     String fieldName=((AtomicExprDescr)exprDescr.getLeft()).getExpression();
     String value=rdescr.getExpression().trim();
-    DescrBranch rightExpr=new DescrBranch();
-    setInputs(context,rightExpr,((ClassObjectType)((Pattern)context.getBuildStack().peek()).getObjectType()).getClassType(),value);
+    ExprBindings rightExpr=new ExprBindings();
+    setInputs(context,rightExpr,((ClassObjectType)pattern.getObjectType()).getClassType(),value);
     String[] parts=fieldName.split("\\.");
     if (parts.length == 2) {
       if ("this".equals(parts[0].trim())) {
@@ -77,7 +77,7 @@
       }
     }
     if (fieldName.indexOf('.') >= 0 || fieldName.indexOf('[') >= 0 || fieldName.indexOf('(') >= 0) {
-      DescrBranch leftExpr=new DescrBranch();
+      ExprBindings leftExpr=new ExprBindings();
       setInputs(context,leftExpr,((ClassObjectType)((Pattern)context.getBuildStack().peek()).getObjectType()).getClassType(),fieldName);
       if (!leftExpr.getRuleBindings().isEmpty()) {
         Dialect dialect=context.getDialect();
@@ -99,7 +99,7 @@
     }
     Restriction restriction=null;
     if (rdescr.isLiteral()) {
-      restriction=buildRestriction(context,extractor,new LiteralRestrictionDescr(operator,notPos >= 0,value));
+      restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,notPos >= 0,value));
     }
  else {
       int dotPos=value.indexOf('.');
@@ -109,7 +109,7 @@
         try {
           final Class cls=context.getDialect().getTypeResolver().resolveType(className);
           if (enumName.indexOf('(') < 0 && enumName.indexOf('.') < 0 && enumName.indexOf('[') < 0) {
-            restriction=buildRestriction(context,extractor,new LiteralRestrictionDescr(operator,negatedOperator,value));
+            restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,negatedOperator,value));
           }
         }
  catch (        ClassNotFoundException e) {
