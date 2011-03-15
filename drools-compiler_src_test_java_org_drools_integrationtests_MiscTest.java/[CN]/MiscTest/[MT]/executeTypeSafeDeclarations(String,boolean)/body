@@ -1,0 +1,23 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    if (mustSucceed) {
+      fail(kbuilder.getErrors().toString());
+    }
+ else {
+      return;
+    }
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  Address a=new Address("s1");
+  Person p=new Person("yoda");
+  p.setObject(a);
+  ksession.insert(p);
+  ksession.fireAllRules();
+  assertEquals(p,list.get(0));
+}

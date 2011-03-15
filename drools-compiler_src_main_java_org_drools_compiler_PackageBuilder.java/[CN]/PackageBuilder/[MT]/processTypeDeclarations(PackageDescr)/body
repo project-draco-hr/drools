@@ -2,11 +2,32 @@
   PackageRegistry defaultRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
   PackageRegistry pkgRegistry=null;
   for (  TypeDeclarationDescr typeDescr : packageDescr.getTypeDeclarations()) {
-    if (isEmpty(typeDescr.getNamespace())) {
-      typeDescr.setNamespace(packageDescr.getNamespace());
+    String namespace=null;
+    String typename=null;
+    int dotPos=typeDescr.getTypeName().lastIndexOf('.');
+    if (dotPos >= 0) {
+      namespace=typeDescr.getTypeName().substring(0,dotPos);
+      typename=typeDescr.getTypeName().substring(dotPos + 1);
     }
+ else {
+      try {
+        Class cls=defaultRegistry.getTypeResolver().resolveType(typeDescr.getTypeName());
+        namespace=cls.getPackage().getName();
+      }
+ catch (      ClassNotFoundException e) {
+        namespace=packageDescr.getNamespace();
+      }
+      typename=typeDescr.getTypeName();
+    }
+    if (!namespace.equals(packageDescr.getNamespace())) {
+      PackageDescr altDescr=new PackageDescr(namespace);
+      altDescr.addTypeDeclaration(typeDescr);
+      newPackage(altDescr);
+      continue;
+    }
+    typeDescr.setNamespace(namespace);
     pkgRegistry=this.pkgRegistryMap.get(typeDescr.getNamespace());
-    TypeDeclaration type=new TypeDeclaration(typeDescr.getTypeName());
+    TypeDeclaration type=new TypeDeclaration(typename);
     if (resource != null && ((InternalResource)resource).hasURL()) {
       type.setResource(this.resource);
     }
@@ -14,6 +35,11 @@
     String role=(annotationDescr != null) ? annotationDescr.getText() : null;
     if (role != null) {
       type.setRole(TypeDeclaration.Role.parseRole(role));
+    }
+    annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_TYPESAFE);
+    String typesafe=(annotationDescr != null) ? annotationDescr.getText() : null;
+    if (typesafe != null) {
+      type.setTypesafe(Boolean.parseBoolean(typesafe));
     }
     String sup=typeDescr.getSuperTypeName();
     if (sup != null && !sup.contains(".")) {
