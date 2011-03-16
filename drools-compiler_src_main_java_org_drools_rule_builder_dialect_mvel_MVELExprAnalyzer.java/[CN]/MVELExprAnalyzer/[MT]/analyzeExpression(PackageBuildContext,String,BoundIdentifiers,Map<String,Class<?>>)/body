@@ -13,12 +13,23 @@
         parserContext1.addInput((String)entry.getKey(),(Class)entry.getValue());
       }
     }
+    if (availableIdentifiers.getThisClass() != null) {
+      parserContext1.addInput("this",availableIdentifiers.getThisClass());
+    }
     parserContext1.setStrictTypeEnforcement(false);
     parserContext1.setStrongTyping(false);
     parserContext1.setInterceptors(dialect.getInterceptors());
     Class returnType=MVEL.analyze(expr,parserContext1);
-    Set<String> requiredInputs=parserContext1.getInputs().keySet();
+    Set<String> requiredInputs=new HashSet();
+    requiredInputs.addAll(parserContext1.getInputs().keySet());
     HashMap<String,Class<?>> variables=(HashMap<String,Class<?>>)((Map)parserContext1.getVariables());
+    if (availableIdentifiers.getThisClass() != null) {
+      for (Iterator<String> it=requiredInputs.iterator(); it.hasNext(); ) {
+        if (PropertyTools.getFieldOrAccessor(availableIdentifiers.getThisClass(),it.next()) != null) {
+          it.remove();
+        }
+      }
+    }
     final ParserContext parserContext2=new ParserContext(conf);
     parserContext2.setStrictTypeEnforcement(true);
     parserContext2.setStrongTyping(true);
@@ -30,11 +41,6 @@
         }
       }
       for (      String str : requiredInputs) {
-        if (availableIdentifiers.getThisClass() != null) {
-          if (PropertyTools.getFieldOrAccessor(availableIdentifiers.getThisClass(),str) != null) {
-            continue;
-          }
-        }
         Class cls=availableIdentifiers.getDeclarations().get(str);
         if (cls != null) {
           parserContext2.addInput(str,cls);
