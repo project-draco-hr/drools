@@ -5,19 +5,17 @@
       return null;
     }
     final RuleConditionBuilder builder=(RuleConditionBuilder)context.getDialect().getBuilder(accumDescr.getInput().getClass());
-    Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
-    Declaration[] previousDeclarations=(Declaration[])decls.values().toArray(new Declaration[decls.size()]);
     final RuleConditionElement source=builder.build(context,accumDescr.getInput());
     if (source == null) {
       return null;
     }
     MVELDialect dialect=(MVELDialect)context.getDialect();
-    Map<String,Declaration> outerDeclr=source.getOuterDeclarations();
-    final Declaration[] sourceDeclArr=outerDeclr.values().toArray(new Declaration[outerDeclr.size()]);
+    Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
+    Map<String,Declaration> sourceOuterDeclr=source.getOuterDeclarations();
+    Map<String,Class<?>> declarationClasses=context.getDeclarationResolver().getDeclarationClasses(decls);
+    declarationClasses.putAll(context.getDeclarationResolver().getDeclarationClasses(sourceOuterDeclr));
     Accumulator accumulator=null;
-    Declaration[] declarations=null;
-    Map<String,Class<?>> declarationsMap=context.getDeclarationResolver().getDeclarationClasses(decls);
-    BoundIdentifiers boundIds=new BoundIdentifiers(declarationsMap,context.getPackageBuilder().getGlobals());
+    BoundIdentifiers boundIds=new BoundIdentifiers(declarationClasses,context.getPackageBuilder().getGlobals());
     if (accumDescr.isExternalFunction()) {
       AccumulateFunctionCallDescr func=accumDescr.getFunctions().get(0);
       AccumulateFunction function=context.getConfiguration().getAccumulateFunction(func.getFunction());
@@ -26,7 +24,7 @@
         return null;
       }
       final AnalysisResult analysis=dialect.analyzeExpression(context,accumDescr,func.getParams()[0],boundIds);
-      MVELCompilationUnit unit=dialect.getMVELCompilationUnit(func.getParams()[0],analysis,previousDeclarations,sourceDeclArr,null,context);
+      MVELCompilationUnit unit=dialect.getMVELCompilationUnit(func.getParams()[0],analysis,getUsedDeclarations(decls,analysis),getUsedDeclarations(sourceOuterDeclr,analysis),null,context);
       accumulator=new MVELAccumulatorFunctionExecutor(unit,function);
     }
  else {
@@ -37,13 +35,13 @@
       if (accumDescr.getReverseCode() != null) {
         reverseCodeAnalysis=dialect.analyzeBlock(context,accumDescr,null,accumDescr.getActionCode(),boundIds,initCodeAnalysis.getMvelVariables());
       }
-      MVELCompilationUnit initUnit=dialect.getMVELCompilationUnit((String)accumDescr.getInitCode(),initCodeAnalysis,previousDeclarations,sourceDeclArr,null,context);
-      MVELCompilationUnit actionUnit=dialect.getMVELCompilationUnit((String)accumDescr.getActionCode(),actionCodeAnalysis,previousDeclarations,sourceDeclArr,initCodeAnalysis.getMvelVariables(),context);
+      MVELCompilationUnit initUnit=dialect.getMVELCompilationUnit((String)accumDescr.getInitCode(),initCodeAnalysis,getUsedDeclarations(decls,initCodeAnalysis),getUsedDeclarations(sourceOuterDeclr,initCodeAnalysis),initCodeAnalysis.getMvelVariables(),context);
+      MVELCompilationUnit actionUnit=dialect.getMVELCompilationUnit((String)accumDescr.getActionCode(),actionCodeAnalysis,getUsedDeclarations(decls,actionCodeAnalysis),getUsedDeclarations(sourceOuterDeclr,actionCodeAnalysis),initCodeAnalysis.getMvelVariables(),context);
       MVELCompilationUnit reverseUnit=null;
       if (accumDescr.getReverseCode() != null) {
-        reverseUnit=dialect.getMVELCompilationUnit((String)accumDescr.getReverseCode(),reverseCodeAnalysis,previousDeclarations,sourceDeclArr,initCodeAnalysis.getMvelVariables(),context);
+        reverseUnit=dialect.getMVELCompilationUnit((String)accumDescr.getReverseCode(),reverseCodeAnalysis,getUsedDeclarations(decls,reverseCodeAnalysis),getUsedDeclarations(sourceOuterDeclr,reverseCodeAnalysis),initCodeAnalysis.getMvelVariables(),context);
       }
-      MVELCompilationUnit resultUnit=dialect.getMVELCompilationUnit((String)accumDescr.getResultCode(),resultCodeAnalysis,previousDeclarations,sourceDeclArr,initCodeAnalysis.getMvelVariables(),context);
+      MVELCompilationUnit resultUnit=dialect.getMVELCompilationUnit((String)accumDescr.getResultCode(),resultCodeAnalysis,getUsedDeclarations(decls,resultCodeAnalysis),getUsedDeclarations(sourceOuterDeclr,resultCodeAnalysis),initCodeAnalysis.getMvelVariables(),context);
       if (reverseUnit != null) {
         Set<String> shadow=new HashSet<String>(source.getOuterDeclarations().keySet());
         shadow.retainAll(reverseCodeAnalysis.getNotBoundedIdentifiers());
@@ -54,7 +52,7 @@
       }
       accumulator=new MVELAccumulator(initUnit,actionUnit,reverseUnit,resultUnit);
     }
-    final Accumulate accumulate=new Accumulate(source,declarations,sourceDeclArr,new Accumulator[]{accumulator});
+    final Accumulate accumulate=new Accumulate(source,null,null,new Accumulator[]{accumulator});
     MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
     data.addCompileable(accumulate,(MVELCompileable)accumulator);
     ((MVELCompileable)accumulator).compile(context.getPackageBuilder().getRootClassLoader());

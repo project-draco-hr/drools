@@ -1,8 +1,14 @@
 {
   Object[] localVars=((MVELAccumulatorContext)context).getVariables();
-  VariableResolverFactory factory=actionUnit.getFactory(null,null,(LeftTuple)leftTuple,localVars,null,(InternalWorkingMemory)workingMemory);
+  DroolsMVELIndexedFactory factory=actionUnit.getFactory(null,null,handle.getObject(),(LeftTuple)leftTuple,localVars,(InternalWorkingMemory)workingMemory);
   if (reverse != null) {
-    takeSnapshot((MVELAccumulatorContext)context,handle);
+    ((MVELAccumulatorContext)context).getShadow().put(handle.getId(),factory);
   }
   MVEL.executeExpression(this.action,null,factory);
+  if (localVars.length > 0) {
+    for (int i=0; i < factory.getOtherVarsLength(); i++) {
+      localVars[i]=factory.getIndexedVariableResolver(factory.getOtherVarsPos() + i).getValue();
+    }
+  }
+  ((MVELAccumulatorContext)context).setVariables(localVars);
 }
