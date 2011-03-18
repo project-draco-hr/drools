@@ -91,13 +91,9 @@
       continue;
     }
     String operator=relDescr.getOperator().trim();
-    boolean negatedOperator=operator.startsWith("not ");
-    if (negatedOperator) {
-      operator=operator.substring(4);
-    }
     Restriction restriction=null;
     if (rdescr.isLiteral()) {
-      restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,negatedOperator,value));
+      restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),value,LiteralRestrictionDescr.TYPE_STRING));
     }
  else {
       int dotPos=value.indexOf('.');
@@ -105,9 +101,9 @@
         final String className=value.substring(0,dotPos);
         String enumName=value.substring(dotPos + 1);
         try {
-          final Class cls=context.getDialect().getTypeResolver().resolveType(className);
+          final Class<?> cls=context.getDialect().getTypeResolver().resolveType(className);
           if (enumName.indexOf('(') < 0 && enumName.indexOf('.') < 0 && enumName.indexOf('[') < 0) {
-            restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,negatedOperator,value));
+            restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),value,LiteralRestrictionDescr.TYPE_STRING));
           }
         }
  catch (        ClassNotFoundException e) {
@@ -155,7 +151,7 @@
     if (declr != null) {
       Target right=getRightTarget(extractor);
       Target left=(declr.isPatternDeclaration() && !(Date.class.isAssignableFrom(declr.getExtractor().getExtractToClass()) || Number.class.isAssignableFrom(declr.getExtractor().getExtractToClass()))) ? Target.HANDLE : Target.FACT;
-      final Evaluator evaluator=getEvaluator(context,d,extractor.getValueType(),operator,negatedOperator,null,left,right);
+      final Evaluator evaluator=getEvaluator(context,d,extractor.getValueType(),operator,relDescr.isNegated(),relDescr.getParametersText(),left,right);
       if (evaluator == null) {
         continue;
       }
@@ -170,7 +166,7 @@
         MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
         context.setDialect(mvelDialect);
       }
-      restriction=buildRestriction(context,(Pattern)context.getBuildStack().peek(),extractor,new ReturnValueRestrictionDescr(operator,negatedOperator,null,value));
+      restriction=buildRestriction(context,(Pattern)context.getBuildStack().peek(),extractor,new ReturnValueRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParametersText(),value));
       context.setDialect(dialect);
     }
     if (restriction == null || extractor == null) {
