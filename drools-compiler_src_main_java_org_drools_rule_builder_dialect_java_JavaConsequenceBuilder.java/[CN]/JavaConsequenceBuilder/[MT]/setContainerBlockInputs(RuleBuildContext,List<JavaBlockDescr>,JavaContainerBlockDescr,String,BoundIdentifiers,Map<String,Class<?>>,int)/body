@@ -1,0 +1,58 @@
+{
+  StringBuilder consequence=new StringBuilder();
+  int lastAdded=0;
+  for (  JavaBlockDescr block : parentBlock.getJavaBlockDescrs()) {
+    if (block.getEnd() == 0) {
+      continue;
+    }
+    if (block.getType() == BlockType.TRY) {
+      consequence.append(originalCode.substring(lastAdded,block.getStart() - 1 - offset));
+      JavaTryBlockDescr tryDescr=(JavaTryBlockDescr)block;
+      if (tryDescr.getFinal() != null) {
+        lastAdded=tryDescr.getFinal().getEnd() - offset;
+      }
+ else {
+        lastAdded=tryDescr.getCatches().get(tryDescr.getCatches().size() - 1).getEnd() - offset;
+      }
+      stripTryDescr(context,originalCode,consequence,(JavaTryBlockDescr)block,offset);
+    }
+ else     if (block.getType() == BlockType.THROW) {
+      consequence.append(originalCode.substring(lastAdded,block.getStart() - 1 - offset));
+      JavaThrowBlockDescr throwBlock=(JavaThrowBlockDescr)block;
+      addWhiteSpaces(originalCode,consequence,throwBlock.getStart() - offset,throwBlock.getTextStart() - offset);
+      consequence.append(originalCode.substring(throwBlock.getTextStart() - offset - 1,throwBlock.getEnd() - 1 - offset) + ";");
+      lastAdded=throwBlock.getEnd() - offset;
+    }
+  }
+  consequence.append(originalCode.substring(lastAdded));
+  MacroProcessor macroProcessor=new MacroProcessor();
+  Map macros=new HashMap(MVELConsequenceBuilder.macros);
+  macros.put("modify",new Macro(){
+    public String doMacro(){
+      return "with  ";
+    }
+  }
+);
+  macroProcessor.setMacros(macros);
+  String mvelCode=macroProcessor.parse(consequence.toString());
+  Map<String,Class<?>> inputs=(Map<String,Class<?>>)(Map)getInputs(context,mvelCode,bindings,parentVars);
+  inputs.putAll(parentVars);
+  parentBlock.setInputs(inputs);
+  for (  JavaBlockDescr block : parentBlock.getJavaBlockDescrs()) {
+    if (block.getType() == BlockType.TRY) {
+      JavaTryBlockDescr tryBlock=(JavaTryBlockDescr)block;
+      setContainerBlockInputs(context,descrs,tryBlock,originalCode.substring(tryBlock.getTextStart() - offset,tryBlock.getEnd() - 1 - offset),bindings,inputs,tryBlock.getTextStart());
+      for (      JavaCatchBlockDescr catchBlock : tryBlock.getCatches()) {
+        setContainerBlockInputs(context,descrs,catchBlock,catchBlock.getClause() + "=null;" + originalCode.substring(catchBlock.getTextStart() - offset,catchBlock.getEnd() - 1 - offset),bindings,inputs,tryBlock.getTextStart());
+      }
+      if (tryBlock.getFinal() != null) {
+        JavaFinalBlockDescr finalBlock=(JavaFinalBlockDescr)tryBlock.getFinal();
+        setContainerBlockInputs(context,descrs,finalBlock,originalCode.substring(finalBlock.getTextStart() - offset,finalBlock.getEnd() - 1 - offset),bindings,inputs,tryBlock.getTextStart());
+      }
+    }
+ else {
+      block.setInputs(inputs);
+      descrs.add(block);
+    }
+  }
+}

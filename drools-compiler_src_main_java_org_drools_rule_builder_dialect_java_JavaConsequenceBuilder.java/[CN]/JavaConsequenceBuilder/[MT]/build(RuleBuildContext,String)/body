@@ -3,11 +3,15 @@
   final String className=consequenceName + "Consequence";
   final RuleDescr ruleDescr=context.getRuleDescr();
   Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
-  AnalysisResult analysis=context.getDialect().analyzeBlock(context,ruleDescr,(String)ruleDescr.getConsequence(),new BoundIdentifiers(context.getDeclarationResolver().getDeclarationClasses(decls),context.getPackageBuilder().getGlobals()));
+  BoundIdentifiers bindings=new BoundIdentifiers(context.getDeclarationResolver().getDeclarationClasses(decls),context.getPackageBuilder().getGlobals());
+  String consequenceStr=("default".equals(consequenceName)) ? (String)ruleDescr.getConsequence() : (String)ruleDescr.getNamedConsequences().get(consequenceName);
+  JavaAnalysisResult analysis=(JavaAnalysisResult)context.getDialect().analyzeBlock(context,ruleDescr,consequenceStr,bindings);
   if (analysis == null) {
     return;
   }
-  String fixedConsequence=this.fixBlockDescr(context,(JavaAnalysisResult)analysis,("default".equals(consequenceName)) ? (String)ruleDescr.getConsequence() : (String)ruleDescr.getNamedConsequences().get(consequenceName),decls);
+  List<JavaBlockDescr> descrs=new ArrayList<JavaBlockDescr>();
+  setContainerBlockInputs(context,descrs,analysis.getBlockDescrs(),consequenceStr,bindings,new HashMap(),0);
+  String fixedConsequence=this.fixBlockDescr(context,consequenceStr,descrs,bindings,decls);
   if (fixedConsequence == null) {
     return;
   }
