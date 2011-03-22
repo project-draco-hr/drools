@@ -35,6 +35,12 @@
       lastAdded=elseDescr.getEnd() - offset;
       stripBlockDescr(context,originalCode,consequence,elseDescr,offset);
     }
+ else     if (block.getType() == BlockType.WHILE) {
+      consequence.append(originalCode.substring(lastAdded,block.getStart() - 1 - offset));
+      JavaWhileBlockDescr whileDescr=(JavaWhileBlockDescr)block;
+      lastAdded=whileDescr.getEnd() - offset;
+      stripBlockDescr(context,originalCode,consequence,whileDescr,offset);
+    }
   }
   consequence.append(originalCode.substring(lastAdded));
   MacroProcessor macroProcessor=new MacroProcessor();
@@ -71,6 +77,11 @@
       JavaElseBlockDescr elseBlock=(JavaElseBlockDescr)block;
       int adjustBlock=(originalCode.charAt(elseBlock.getTextStart() - offset - 1) == '{') ? 0 : 1;
       setContainerBlockInputs(context,descrs,elseBlock,originalCode.substring(elseBlock.getTextStart() - offset + adjustBlock,elseBlock.getEnd() - 1 - offset- adjustBlock),bindings,inputs,elseBlock.getTextStart());
+    }
+ else     if (block.getType() == BlockType.WHILE) {
+      JavaWhileBlockDescr whileBlock=(JavaWhileBlockDescr)block;
+      int adjustBlock=(originalCode.charAt(whileBlock.getTextStart() - offset - 1) == '{') ? 0 : 1;
+      setContainerBlockInputs(context,descrs,whileBlock,originalCode.substring(whileBlock.getTextStart() - offset + adjustBlock,whileBlock.getEnd() - 1 - offset- adjustBlock),bindings,inputs,whileBlock.getTextStart());
     }
  else {
       block.setInputs(inputs);
