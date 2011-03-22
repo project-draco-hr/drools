@@ -8,7 +8,7 @@
     result=pattern.getDescr();
   }
   String label=null;
-  if (input.LA(1) == DRLLexer.ID && input.LA(2) == DRLLexer.COLON) {
+  if (input.LA(1) == DRLLexer.ID && input.LA(2) == DRLLexer.COLON && !helper.validateCEKeyword(1)) {
     label=label();
     if (state.failed)     return null;
   }
@@ -16,6 +16,10 @@
     try {
       match(input,DRLLexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
       if (state.failed)       return null;
+      if (helper.validateCEKeyword(1)) {
+        failMismatchedTokenException();
+        return null;
+      }
       lhsPattern(pattern,label);
       if (state.failed)       return null;
       if (allowOr && helper.validateIdentifierKey(DroolsSoftKeywords.OR) && ce instanceof CEDescrBuilder) {
