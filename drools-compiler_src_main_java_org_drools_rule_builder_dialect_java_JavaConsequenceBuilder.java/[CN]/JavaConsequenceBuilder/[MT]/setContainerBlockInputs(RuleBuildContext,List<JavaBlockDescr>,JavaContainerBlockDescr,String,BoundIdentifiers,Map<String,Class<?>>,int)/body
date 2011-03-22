@@ -23,6 +23,18 @@
       consequence.append(originalCode.substring(throwBlock.getTextStart() - offset - 1,throwBlock.getEnd() - 1 - offset) + ";");
       lastAdded=throwBlock.getEnd() - offset;
     }
+ else     if (block.getType() == BlockType.IF) {
+      consequence.append(originalCode.substring(lastAdded,block.getStart() - 1 - offset));
+      JavaIfBlockDescr ifDescr=(JavaIfBlockDescr)block;
+      lastAdded=ifDescr.getEnd() - offset;
+      stripBlockDescr(context,originalCode,consequence,ifDescr,offset);
+    }
+ else     if (block.getType() == BlockType.ELSE) {
+      consequence.append(originalCode.substring(lastAdded,block.getStart() - 1 - offset));
+      JavaElseBlockDescr elseDescr=(JavaElseBlockDescr)block;
+      lastAdded=elseDescr.getEnd() - offset;
+      stripBlockDescr(context,originalCode,consequence,elseDescr,offset);
+    }
   }
   consequence.append(originalCode.substring(lastAdded));
   MacroProcessor macroProcessor=new MacroProcessor();
@@ -49,6 +61,16 @@
         JavaFinalBlockDescr finalBlock=(JavaFinalBlockDescr)tryBlock.getFinal();
         setContainerBlockInputs(context,descrs,finalBlock,originalCode.substring(finalBlock.getTextStart() - offset,finalBlock.getEnd() - 1 - offset),bindings,inputs,tryBlock.getTextStart());
       }
+    }
+ else     if (block.getType() == BlockType.IF) {
+      JavaIfBlockDescr ifBlock=(JavaIfBlockDescr)block;
+      int adjustBlock=(originalCode.charAt(ifBlock.getTextStart() - offset - 1) == '{') ? 0 : 1;
+      setContainerBlockInputs(context,descrs,ifBlock,originalCode.substring(ifBlock.getTextStart() - offset + adjustBlock,ifBlock.getEnd() - 1 - offset- adjustBlock),bindings,inputs,ifBlock.getTextStart());
+    }
+ else     if (block.getType() == BlockType.ELSE) {
+      JavaElseBlockDescr elseBlock=(JavaElseBlockDescr)block;
+      int adjustBlock=(originalCode.charAt(elseBlock.getTextStart() - offset - 1) == '{') ? 0 : 1;
+      setContainerBlockInputs(context,descrs,elseBlock,originalCode.substring(elseBlock.getTextStart() - offset + adjustBlock,elseBlock.getEnd() - 1 - offset- adjustBlock),bindings,inputs,elseBlock.getTextStart());
     }
  else {
       block.setInputs(inputs);
