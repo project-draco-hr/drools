@@ -1,0 +1,18 @@
+{
+  VariableResolver vr=variableResolvers.get(name);
+  if (vr != null) {
+    return vr;
+  }
+ else   if (variables.containsKey(name)) {
+    variableResolvers.put(name,vr=new MapVariableResolver(variables,name));
+    return vr;
+  }
+ else   if (this.ruleBase.getGlobals().containsKey(name)) {
+    variableResolvers.put(name,vr=new GlobalsVariableResolver(name,(Class)this.ruleBase.getGlobals().get(name),globals));
+    return vr;
+  }
+ else   if (nextFactory != null) {
+    return nextFactory.getVariableResolver(name);
+  }
+  throw new UnresolveablePropertyException("unable to resolve variable '" + name + "'");
+}
