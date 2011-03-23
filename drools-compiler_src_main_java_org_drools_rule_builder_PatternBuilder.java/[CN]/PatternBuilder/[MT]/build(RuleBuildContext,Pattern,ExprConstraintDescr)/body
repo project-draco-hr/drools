@@ -10,21 +10,13 @@
   for (Iterator<BaseDescr> it=result.getDescrs().iterator(); it.hasNext(); ) {
     BaseDescr d=it.next();
     boolean simple=false;
-    String expr=null;
+    String expr=new MVELDumper().dump(d);
     RelationalExprDescr relDescr=null;
-    if (d instanceof AtomicExprDescr) {
-      expr=((AtomicExprDescr)d).getExpression();
-    }
- else {
-      if (d instanceof RelationalExprDescr) {
-        relDescr=(RelationalExprDescr)d;
-        if (relDescr.getLeft() instanceof AtomicExprDescr && relDescr.getRight() instanceof AtomicExprDescr) {
-          simple=true;
-        }
+    if (d instanceof RelationalExprDescr) {
+      relDescr=(RelationalExprDescr)d;
+      if (relDescr.getLeft() instanceof AtomicExprDescr && relDescr.getRight() instanceof AtomicExprDescr) {
+        simple=true;
       }
-      StringBuilder sbuilder=new StringBuilder();
-      renderConstraint(sbuilder,d,0);
-      expr=sbuilder.toString().trim();
     }
     if (expr.startsWith("eval")) {
       int startParen=expr.indexOf('(') + 1;

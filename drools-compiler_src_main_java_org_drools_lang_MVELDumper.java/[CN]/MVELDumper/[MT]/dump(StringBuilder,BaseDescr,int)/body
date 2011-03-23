@@ -1,0 +1,37 @@
+{
+  if (base instanceof ConstraintConnectiveDescr) {
+    ConstraintConnectiveDescr ccd=(ConstraintConnectiveDescr)base;
+    boolean first=true;
+    boolean wrapParenthesis=parentPriority > ccd.getConnective().getPrecedence();
+    if (wrapParenthesis) {
+      sbuilder.append("( ");
+    }
+    for (    BaseDescr constr : ccd.getDescrs()) {
+      if (first) {
+        first=false;
+      }
+ else {
+        sbuilder.append(" ");
+        sbuilder.append(ccd.getConnective().toString());
+        sbuilder.append(" ");
+      }
+      dump(sbuilder,constr,ccd.getConnective().getPrecedence());
+    }
+    if (wrapParenthesis) {
+      sbuilder.append(" )");
+    }
+  }
+ else   if (base instanceof AtomicExprDescr) {
+    AtomicExprDescr atom=(AtomicExprDescr)base;
+    String expr=atom.getExpression().trim();
+    if (expr.matches("eval\\s*\\(.*\\)\\s*")) {
+      expr=expr.substring(expr.indexOf('(') + 1,expr.lastIndexOf(')'));
+    }
+    sbuilder.append(expr);
+  }
+ else   if (base instanceof RelationalExprDescr) {
+    RelationalExprDescr red=(RelationalExprDescr)base;
+    processRestriction(sbuilder,dump(red.getLeft(),Integer.MAX_VALUE),red.getOperator(),red.isNegated(),dump(red.getRight(),Integer.MAX_VALUE));
+  }
+  return sbuilder;
+}
