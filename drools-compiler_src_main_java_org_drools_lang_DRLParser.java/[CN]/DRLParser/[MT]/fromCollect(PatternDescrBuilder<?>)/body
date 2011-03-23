@@ -3,6 +3,9 @@
   try {
     match(input,DRLLexer.ID,DroolsSoftKeywords.COLLECT,null,DroolsEditorType.KEYWORD);
     if (state.failed)     return;
+    if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+      helper.emit(Location.LOCATION_LHS_FROM_COLLECT);
+    }
     match(input,DRLLexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
     if (state.failed)     return;
     lhsPatternBind(collect,false);
@@ -12,5 +15,8 @@
   }
   finally {
     helper.end(CollectDescrBuilder.class,null);
+    if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+      helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
+    }
   }
 }

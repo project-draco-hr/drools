@@ -9,11 +9,14 @@
       return null;
     }
     String name=stringId();
+    if (state.failed)     return null;
     if (state.backtracking == 0) {
       rule.name(name);
       helper.setParaphrasesValue(DroolsParaphraseTypes.RULE,"\"" + name + "\"");
+      if (input.LA(1) != DRLLexer.EOF) {
+        helper.emit(Location.LOCATION_RULE_HEADER);
+      }
     }
-    if (state.failed)     return null;
     if (helper.validateIdentifierKey(DroolsSoftKeywords.EXTENDS)) {
       match(input,DRLLexer.ID,DroolsSoftKeywords.EXTENDS,null,DroolsEditorType.KEYWORD);
       if (state.failed)       return null;
@@ -21,7 +24,7 @@
       if (state.backtracking == 0)       rule.extendsRule(parent);
       if (state.failed)       return null;
     }
-    if (state.backtracking == 0) {
+    if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
       helper.emit(Location.LOCATION_RULE_HEADER);
     }
     while (input.LA(1) == DRLLexer.AT) {

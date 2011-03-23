@@ -6,6 +6,9 @@
     if (state.failed)     return null;
     match(input,DRLLexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
     if (state.failed)     return null;
+    if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+      helper.emit(Location.LOCATION_LHS_INSIDE_EVAL);
+    }
     String expr=conditionalExpression();
     if (state.backtracking == 0)     eval.constraint(expr);
     match(input,DRLLexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
@@ -13,6 +16,9 @@
   }
   finally {
     helper.end(EvalDescrBuilder.class,null);
+    if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+      helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
+    }
   }
   return eval != null ? eval.getDescr() : null;
 }

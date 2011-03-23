@@ -6,11 +6,17 @@
   }
   match(input,DRLLexer.ID,DroolsSoftKeywords.NOT,null,DroolsEditorType.KEYWORD);
   if (state.failed)   return null;
+  if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+    helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION_NOT);
+  }
   if (input.LA(1) == DRLLexer.LEFT_PAREN) {
     boolean prefixed=helper.validateLT(2,DroolsSoftKeywords.AND) || helper.validateLT(2,DroolsSoftKeywords.OR);
     if (!prefixed) {
       match(input,DRLLexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
       if (state.failed)       return null;
+    }
+    if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+      helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
     }
     lhsOr(not,allowOr);
     if (state.failed)     return null;
