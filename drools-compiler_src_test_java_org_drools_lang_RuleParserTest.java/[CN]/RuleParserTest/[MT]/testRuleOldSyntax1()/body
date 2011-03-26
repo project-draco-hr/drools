@@ -1,0 +1,15 @@
+{
+  final String source="rule \"Test\" when ( not $r :LiteralRestriction( operator == Operator.EQUAL ) ) then end";
+  PackageDescr pkg=(PackageDescr)parse("compilationUnit",source);
+  assertFalse(parser.getErrors().toString(),parser.hasErrors());
+  RuleDescr rule=(RuleDescr)pkg.getRules().get(0);
+  assertEquals("Test",rule.getName());
+  assertEquals(1,rule.getLhs().getDescrs().size());
+  assertEquals(1,((NotDescr)rule.getLhs().getDescrs().get(0)).getDescrs().size());
+  NotDescr notDescr=(NotDescr)rule.getLhs().getDescrs().get(0);
+  PatternDescr patternDescr=(PatternDescr)notDescr.getDescrs().get(0);
+  assertEquals("$r",patternDescr.getIdentifier());
+  assertEquals(1,patternDescr.getDescrs().size());
+  ExprConstraintDescr fieldConstraintDescr=(ExprConstraintDescr)patternDescr.getDescrs().get(0);
+  assertEquals("operator == Operator.EQUAL",fieldConstraintDescr.getExpression());
+}
