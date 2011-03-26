@@ -25,19 +25,15 @@
     }
   }
  else {
-    Token first=input.LT(1);
-    result=lhsUnary(ce,allowOr);
+    CEDescrBuilder<?,AndDescr> and=null;
+    if (state.backtracking == 0) {
+      and=ce.and();
+      result=and.getDescr();
+      helper.start(CEDescrBuilder.class,null,and);
+    }
+    lhsUnary(and,allowOr);
     if (state.failed)     return null;
-    if (helper.validateIdentifierKey(DroolsSoftKeywords.AND)) {
-      CEDescrBuilder<?,AndDescr> and=null;
-      if (state.backtracking == 0) {
-        ((ConditionalElementDescr)ce.getDescr()).getDescrs().remove(result);
-        and=ce.and();
-        and.getDescr().addOrMerge(result);
-        result=and.getDescr();
-        helper.start(CEDescrBuilder.class,null,and);
-        helper.setStart(and,first);
-      }
+    if (helper.validateIdentifierKey(DroolsSoftKeywords.AND) || input.LA(1) == DRLLexer.DOUBLE_AMPER) {
       while (helper.validateIdentifierKey(DroolsSoftKeywords.AND) || input.LA(1) == DRLLexer.DOUBLE_AMPER) {
         if (input.LA(1) == DRLLexer.DOUBLE_AMPER) {
           match(input,DRLLexer.DOUBLE_AMPER,null,null,DroolsEditorType.SYMBOL);
@@ -52,9 +48,18 @@
         lhsUnary(and,allowOr);
         if (state.failed)         return null;
       }
+    }
+ else {
       if (state.backtracking == 0) {
-        helper.end(CEDescrBuilder.class,and);
+        ((ConditionalElementDescr)ce.getDescr()).getDescrs().remove(and.getDescr());
+        for (        BaseDescr base : and.getDescr().getDescrs()) {
+          ((ConditionalElementDescr)ce.getDescr()).addDescr(base);
+        }
+        result=ce.getDescr();
       }
+    }
+    if (state.backtracking == 0) {
+      helper.end(CEDescrBuilder.class,and);
     }
   }
   return result;
