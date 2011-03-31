@@ -1,0 +1,25 @@
+{
+  String rule="";
+  rule+="package org.drools;\n";
+  rule+="import org.drools.Person;\n";
+  rule+="import org.drools.Pet;\n";
+  rule+="import org.drools.Cat;\n";
+  rule+="rule \"Test Rule\"\n";
+  rule+="when\n";
+  rule+="    Person(\n";
+  rule+="      pet.breed == \"Siamise\"\n";
+  rule+="    )\n";
+  rule+="then\n";
+  rule+="System.out.println(\"hello person\");\n";
+  rule+="end";
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new StringReader(rule));
+  final org.drools.rule.Package pkg=builder.getPackage();
+  final RuleBase ruleBase=getRuleBase();
+  ruleBase.addPackage(pkg);
+  StatefulSession session=ruleBase.newStatefulSession();
+  Person person=new Person();
+  person.setPet(new Cat("Mittens"));
+  session.insert(person);
+  session.fireAllRules();
+}
