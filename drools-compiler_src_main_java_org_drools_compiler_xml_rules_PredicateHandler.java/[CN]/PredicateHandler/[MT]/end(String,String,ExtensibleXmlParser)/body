@@ -1,12 +1,11 @@
 {
   final Element element=parser.endElementBuilder();
-  final PredicateDescr predicateDescr=(PredicateDescr)parser.getCurrent();
   final String expression=((org.w3c.dom.Text)element.getChildNodes().item(0)).getWholeText();
   if (expression == null || expression.trim().equals("")) {
     throw new SAXParseException("<predicate> must have some content",parser.getLocator());
   }
-  predicateDescr.setContent(expression);
   final PatternDescr patternDescr=(PatternDescr)parser.getParent();
-  patternDescr.addConstraint(predicateDescr);
-  return predicateDescr;
+  ExprConstraintDescr expr=new ExprConstraintDescr("eval(" + expression + ")");
+  patternDescr.addConstraint(expr);
+  return expr;
 }

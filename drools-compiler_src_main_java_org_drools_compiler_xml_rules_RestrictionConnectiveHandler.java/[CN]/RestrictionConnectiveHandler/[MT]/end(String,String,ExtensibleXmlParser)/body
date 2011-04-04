@@ -1,14 +1,18 @@
 {
   final Element element=parser.endElementBuilder();
-  final RestrictionConnectiveDescr connectiveDescr=(RestrictionConnectiveDescr)parser.getCurrent();
-  final Object obj=parser.getParent();
-  if (obj instanceof FieldConstraintDescr) {
-    final FieldConstraintDescr fieldConstriantDescr=(FieldConstraintDescr)obj;
-    fieldConstriantDescr.addRestriction(connectiveDescr);
+  Object op=parser.getParent();
+  ConnectiveDescr c=(ConnectiveDescr)parser.getCurrent();
+  if (op instanceof PatternDescr) {
+    StringBuilder sb=new StringBuilder();
+    c.buildExpression(sb);
+    ExprConstraintDescr expr=new ExprConstraintDescr();
+    expr.setExpression(sb.toString());
+    final PatternDescr patternDescr=(PatternDescr)op;
+    patternDescr.addConstraint(expr);
   }
- else   if (obj instanceof RestrictionConnectiveDescr) {
-    final RestrictionConnectiveDescr restconective=(RestrictionConnectiveDescr)obj;
-    restconective.addRestriction(connectiveDescr);
+ else {
+    ConnectiveDescr p=(ConnectiveDescr)op;
+    p.add(c);
   }
-  return connectiveDescr;
+  return c;
 }

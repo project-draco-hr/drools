@@ -1,15 +1,17 @@
 {
   final Element element=parser.endElementBuilder();
-  final FieldConstraintDescr fieldConstraintDescr=(FieldConstraintDescr)parser.getCurrent();
-  final Object parent=parser.getParent();
-  if (parent instanceof PatternDescr) {
-    final PatternDescr patternDescr=(PatternDescr)parent;
-    patternDescr.addConstraint(fieldConstraintDescr);
+  final ConnectiveDescr c=(ConnectiveDescr)parser.getCurrent();
+  Object p=parser.getParent();
+  if (p instanceof PatternDescr) {
+    StringBuilder sb=new StringBuilder();
+    c.buildExpression(sb);
+    ExprConstraintDescr expr=new ExprConstraintDescr();
+    expr.setExpression(sb.toString());
+    final PatternDescr patternDescr=(PatternDescr)parser.getParent();
+    patternDescr.addConstraint(expr);
   }
- else   if (parent instanceof ConditionalElementDescr) {
-    final ConditionalElementDescr ceDescr=(ConditionalElementDescr)parent;
-    final FieldConstraintDescr field=(FieldConstraintDescr)parser.getCurrent();
-    ceDescr.addOrMerge(field);
+ else   if (p instanceof ConnectiveDescr) {
+    ((ConnectiveDescr)p).add(c);
   }
-  return fieldConstraintDescr;
+  return c;
 }
