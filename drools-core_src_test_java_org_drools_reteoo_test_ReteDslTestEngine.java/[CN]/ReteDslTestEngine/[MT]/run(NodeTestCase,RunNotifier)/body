@@ -9,15 +9,21 @@
   NodeTestCaseResult result=new NodeTestCaseResult(testCase);
   for (  NodeTestDef test : testCase.getTests()) {
     notifier.fireTestStarted(test.getDescription());
-    NodeTestResult testResult=run(testCase,test);
+    NodeTestResult testResult=createTestResult(test,null);
+    try {
+      testResult=run(testCase,test);
 switch (testResult.result) {
 case SUCCESS:
-      notifier.fireTestFinished(test.getDescription());
-    break;
+        notifier.fireTestFinished(test.getDescription());
+      break;
 case ERROR:
 case FAILURE:
-  notifier.fireTestFailure(new Failure(test.getDescription(),new AssertionError(testResult.errorMsgs)));
-break;
+    notifier.fireTestFailure(new Failure(test.getDescription(),new AssertionError(testResult.errorMsgs)));
+  break;
+}
+}
+ catch (Throwable e) {
+notifier.fireTestFailure(new Failure(test.getDescription(),e));
 }
 result.add(testResult);
 }
