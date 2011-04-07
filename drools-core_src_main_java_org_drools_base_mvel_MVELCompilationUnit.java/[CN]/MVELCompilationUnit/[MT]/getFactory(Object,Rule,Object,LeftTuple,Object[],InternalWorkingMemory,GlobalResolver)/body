@@ -10,7 +10,7 @@
   vals[i++]=rule;
   if (globalIdentifiers != null) {
     for (int j=0, length=globalIdentifiers.length; j < length; j++) {
-      vals[i++]=workingMemory.getGlobal(this.globalIdentifiers[j]);
+      vals[i++]=globals.resolveGlobal(this.globalIdentifiers[j]);
     }
   }
   IdentityHashMap<Object,FactHandle> identityMap=null;
@@ -21,7 +21,7 @@
     if (this.previousDeclarations != null && this.previousDeclarations.length > 0) {
       Declaration[] prevDecl=this.previousDeclarations;
       if (knowledgeHelper != null) {
-        prevDecl=((AgendaItem)knowledgeHelper.getActivation()).getRuleTerminalNode().getDeclarations();
+        prevDecl=((AgendaItem)((KnowledgeHelper)knowledgeHelper).getActivation()).getRuleTerminalNode().getDeclarations();
       }
       InternalFactHandle[] handles=((LeftTuple)tuples).toFactHandles();
       for (int j=0, length=prevDecl.length; j < length; j++) {
@@ -50,13 +50,14 @@
     }
   }
   int otherVarsLength=i - otherVarsPos;
-  if (knowledgeHelper != null) {
-    knowledgeHelper.setIdentityMap(identityMap);
-  }
   VariableResolverFactory locals=new CachingMapVariableResolverFactory(new HashMap<String,Object>());
   DroolsMVELIndexedFactory factory=new DroolsMVELIndexedFactory(inputIdentifiers,vals,locals);
   factory.setOtherVarsPos(otherVarsPos);
   factory.setOtherVarsLength(otherVarsLength);
-  factory.setKnowledgeHelper(knowledgeHelper);
+  if (knowledgeHelper != null && knowledgeHelper instanceof KnowledgeHelper) {
+    KnowledgeHelper kh=(KnowledgeHelper)knowledgeHelper;
+    kh.setIdentityMap(identityMap);
+    factory.setKnowledgeHelper(kh);
+  }
   return factory;
 }
