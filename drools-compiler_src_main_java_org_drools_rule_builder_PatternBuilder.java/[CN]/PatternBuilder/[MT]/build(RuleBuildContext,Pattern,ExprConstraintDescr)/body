@@ -10,7 +10,9 @@
   for (Iterator<BaseDescr> it=result.getDescrs().iterator(); it.hasNext(); ) {
     BaseDescr d=it.next();
     boolean simple=false;
-    String expr=new MVELDumper().dump(d);
+    MVELDumper.MVELDumperContext mvelCtx=new MVELDumper.MVELDumperContext();
+    String expr=new MVELDumper().dump(d,mvelCtx);
+    Map<String,OperatorDescr> aliases=mvelCtx.getAliases();
     RelationalExprDescr relDescr=null;
     if (d instanceof RelationalExprDescr) {
       relDescr=(RelationalExprDescr)d;
@@ -23,7 +25,7 @@
       int endParen=expr.lastIndexOf(')');
       expr=expr.substring(startParen,endParen);
       PredicateDescr pdescr=new PredicateDescr(expr);
-      buildEval(context,pattern,pdescr,null);
+      buildEval(context,pattern,pdescr,null,aliases);
       continue;
     }
     if (!simple || !context.isTypesafe()) {
@@ -31,7 +33,7 @@
       MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
       context.setDialect(mvelDialect);
       PredicateDescr pdescr=new PredicateDescr(expr);
-      buildEval(context,pattern,pdescr,null);
+      buildEval(context,pattern,pdescr,null,aliases);
       context.setDialect(dialect);
       continue;
     }
@@ -52,7 +54,7 @@
           MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
           context.setDialect(mvelDialect);
           PredicateDescr pdescr=new PredicateDescr(expr);
-          buildEval(context,pattern,pdescr,null);
+          buildEval(context,pattern,pdescr,null,aliases);
           context.setDialect(dialect);
           continue;
         }
@@ -72,7 +74,7 @@
         MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
         context.setDialect(mvelDialect);
         PredicateDescr pdescr=new PredicateDescr(expr);
-        buildEval(context,pattern,pdescr,null);
+        buildEval(context,pattern,pdescr,null,aliases);
         context.setDialect(dialect);
         continue;
       }
@@ -158,7 +160,7 @@
         MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
         context.setDialect(mvelDialect);
       }
-      restriction=buildRestriction(context,(Pattern)context.getBuildStack().peek(),extractor,new ReturnValueRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParametersText(),value));
+      restriction=buildRestriction(context,(Pattern)context.getBuildStack().peek(),extractor,new ReturnValueRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParametersText(),value),aliases);
       context.setDialect(dialect);
     }
     if (restriction == null || extractor == null) {
