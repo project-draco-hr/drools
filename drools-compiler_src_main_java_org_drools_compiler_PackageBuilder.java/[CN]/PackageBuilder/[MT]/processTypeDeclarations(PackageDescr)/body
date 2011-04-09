@@ -2,35 +2,47 @@
   PackageRegistry defaultRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
   PackageRegistry pkgRegistry=null;
   for (  TypeDeclarationDescr typeDescr : packageDescr.getTypeDeclarations()) {
-    String namespace=null;
-    String typename=null;
     int dotPos=typeDescr.getTypeName().lastIndexOf('.');
     if (dotPos >= 0) {
-      namespace=typeDescr.getTypeName().substring(0,dotPos);
-      typename=typeDescr.getTypeName().substring(dotPos + 1);
+      typeDescr.setNamespace(typeDescr.getTypeName().substring(0,dotPos));
+      typeDescr.setTypeName(typeDescr.getTypeName().substring(dotPos + 1));
     }
- else {
+    if (isEmpty(typeDescr.getNamespace())) {
       try {
         Class<?> cls=defaultRegistry.getTypeResolver().resolveType(typeDescr.getTypeName());
-        namespace=ClassUtils.getPackage(cls);
+        typeDescr.setNamespace(ClassUtils.getPackage(cls));
+        typeDescr.setTypeName(cls.getSimpleName());
       }
  catch (      ClassNotFoundException e) {
-        namespace=packageDescr.getNamespace();
+        typeDescr.setNamespace(packageDescr.getNamespace());
       }
-      typename=typeDescr.getTypeName();
     }
-    if (!namespace.equals(packageDescr.getNamespace())) {
-      PackageDescr altDescr=new PackageDescr(namespace);
+    if (isEmpty(typeDescr.getNamespace())) {
+      for (      ImportDescr id : packageDescr.getImports()) {
+        String imp=id.getTarget();
+        if (imp.endsWith(typeDescr.getTypeName())) {
+          typeDescr.setNamespace(imp.substring(0,imp.lastIndexOf('.')));
+        }
+      }
+    }
+    fillSuperType(typeDescr,packageDescr);
+    if (!typeDescr.getNamespace().equals(packageDescr.getNamespace())) {
+      PackageDescr altDescr=new PackageDescr(typeDescr.getNamespace());
       altDescr.addTypeDeclaration(typeDescr);
       for (      ImportDescr imp : packageDescr.getImports()) {
         altDescr.addImport(imp);
       }
       newPackage(altDescr);
+    }
+  }
+  Collection<TypeDeclarationDescr> sortedTypeDescriptors=sortByHierarchy(packageDescr.getTypeDeclarations());
+  for (  TypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
+    if (!typeDescr.getNamespace().equals(packageDescr.getNamespace())) {
       continue;
     }
-    typeDescr.setNamespace(namespace);
-    pkgRegistry=this.pkgRegistryMap.get(typeDescr.getNamespace());
-    TypeDeclaration type=new TypeDeclaration(typename);
+    pkgRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
+    mergeInheritedFields(typeDescr);
+    TypeDeclaration type=new TypeDeclaration(typeDescr.getTypeName());
     if (resource != null && ((InternalResource)resource).hasURL()) {
       type.setResource(this.resource);
     }
@@ -43,20 +55,6 @@
     String typesafe=(annotationDescr != null) ? annotationDescr.getValue() : null;
     if (typesafe != null) {
       type.setTypesafe(Boolean.parseBoolean(typesafe));
-    }
-    String sup=typeDescr.getSuperTypeName();
-    if (sup != null && !sup.contains(".")) {
-      for (      ImportDescr id : packageDescr.getImports()) {
-        if (id.getTarget().endsWith("." + sup)) {
-          typeDescr.setSuperTypeName(id.getTarget());
-          break;
-        }
-      }
-    }
-    if ((sup=typeDescr.getSuperTypeName()) != null && !sup.contains(".")) {
-      for (      TypeDeclarationDescr td : packageDescr.getTypeDeclarations()) {
-        if (sup.equals(td.getTypeName()))         typeDescr.setSuperTypeName(packageDescr.getNamespace() + "." + sup);
-      }
     }
     annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_TEMPLATE);
     String templateName=(annotationDescr != null) ? annotationDescr.getValue() : null;
@@ -80,9 +78,7 @@
       type.setFormat(TypeDeclaration.Format.POJO);
       Class clazz;
       try {
-        if (typeDescr.getFields().size() > 0) {
-          generateDeclaredBean(typeDescr,type,pkgRegistry);
-        }
+        generateDeclaredBean(typeDescr,type,pkgRegistry);
         clazz=pkgRegistry.getTypeResolver().resolveType(className);
         type.setTypeClass(clazz);
         if (type.getTypeClassDef() != null) {

@@ -1,0 +1,49 @@
+{
+  if (typeDescr.getSuperTypeName() == null)   return;
+  String simpleSuperTypeName=typeDescr.getSuperTypeName();
+  String superTypePackageName=typeDescr.getSuperTypeNamespace();
+  Map<String,TypeFieldDescr> fieldMap=new LinkedHashMap<String,TypeFieldDescr>();
+  boolean isSuperClassDeclared=true;
+  boolean isSuperClassTagged=false;
+  PackageRegistry registry=this.pkgRegistryMap.get(superTypePackageName);
+  Package pack=null;
+  if (registry != null)   pack=registry.getPackage();
+  if (pack != null) {
+    TypeDeclaration superTypeDeclaration=pack.getTypeDeclaration(simpleSuperTypeName);
+    if (superTypeDeclaration != null) {
+      ClassDefinition classDef=superTypeDeclaration.getTypeClassDef();
+      for (      FactField fld : classDef.getFields()) {
+        TypeFieldDescr inheritedFlDescr=TypeFieldDescr.buildInheritedFromDefinition(fld);
+        fieldMap.put(inheritedFlDescr.getFieldName(),inheritedFlDescr);
+      }
+      isSuperClassTagged=!superTypeDeclaration.isNovel();
+    }
+ else {
+      isSuperClassDeclared=false;
+    }
+  }
+ else {
+    isSuperClassDeclared=false;
+  }
+  if (!isSuperClassDeclared || isSuperClassTagged) {
+    String fullSuper=superTypePackageName + "." + simpleSuperTypeName;
+    try {
+      ClassFieldInspector inspector=new ClassFieldInspector(registry.getTypeResolver().resolveType(fullSuper));
+      for (      String name : inspector.getGetterMethods().keySet()) {
+        if (!inspector.isNonGetter(name) && !"class".equals(name)) {
+          TypeFieldDescr inheritedFlDescr=new TypeFieldDescr(name,new PatternDescr(inspector.getFieldTypes().get(name).getSimpleName()));
+          inheritedFlDescr.setInherited(true);
+          inheritedFlDescr.setIndex(inspector.getFieldNames().size() + inspector.getFieldNames().get(name));
+          if (!fieldMap.containsKey(inheritedFlDescr.getFieldName()))           fieldMap.put(inheritedFlDescr.getFieldName(),inheritedFlDescr);
+        }
+      }
+    }
+ catch (    ClassNotFoundException cnfe) {
+      throw new RuntimeDroolsException("unable to resolve Type Declaration superclass '" + fullSuper + "'");
+    }
+catch (    IOException e) {
+    }
+  }
+  fieldMap.putAll(typeDescr.getFields());
+  typeDescr.setFields(fieldMap);
+}

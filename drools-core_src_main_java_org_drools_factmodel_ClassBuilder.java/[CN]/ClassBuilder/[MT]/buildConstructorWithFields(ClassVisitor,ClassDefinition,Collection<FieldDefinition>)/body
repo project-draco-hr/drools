@@ -14,12 +14,14 @@
       mv.visitLabel(l0);
     }
     mv.visitVarInsn(Opcodes.ALOAD,0);
+    String sup="";
     try {
-      mv.visitMethodInsn(Opcodes.INVOKESPECIAL,Type.getInternalName(Class.forName(classDef.getSuperClass())),"<init>",Type.getMethodDescriptor(Type.VOID_TYPE,new Type[]{}));
+      sup=Type.getInternalName(Class.forName(classDef.getSuperClass()));
     }
  catch (    ClassNotFoundException e) {
-      e.printStackTrace();
+      sup=getInternalType(classDef.getSuperClass());
     }
+    mv.visitMethodInsn(Opcodes.INVOKESPECIAL,sup,"<init>",Type.getMethodDescriptor(Type.VOID_TYPE,new Type[]{}));
     index=1;
     for (    FieldDefinition field : fieldDefs) {
       if (this.debug) {
@@ -31,7 +33,12 @@
       if (field.getTypeName().equals("long") || field.getTypeName().equals("double")) {
         index++;
       }
-      mv.visitFieldInsn(Opcodes.PUTFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
+      if (!field.isInherited()) {
+        mv.visitFieldInsn(Opcodes.PUTFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
+      }
+ else {
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,getInternalType(classDef.getClassName()),field.getWriteMethod(),Type.getMethodDescriptor(Type.VOID_TYPE,new Type[]{Type.getType(getTypeDescriptor(field.getTypeName()))}));
+      }
     }
     mv.visitInsn(Opcodes.RETURN);
     Label l1=null;

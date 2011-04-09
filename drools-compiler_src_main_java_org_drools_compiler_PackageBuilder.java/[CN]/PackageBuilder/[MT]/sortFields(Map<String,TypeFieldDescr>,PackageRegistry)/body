@@ -1,0 +1,27 @@
+{
+  PriorityQueue<FieldDefinition> queue=new PriorityQueue<FieldDefinition>();
+  int last=0;
+  for (  TypeFieldDescr field : flds.values()) {
+    last=Math.max(last,field.getIndex());
+  }
+  for (  TypeFieldDescr field : flds.values()) {
+    if (field.getIndex() < 0) {
+      field.setIndex(++last);
+    }
+    String fullFieldType;
+    try {
+      fullFieldType=pkgRegistry.getTypeResolver().resolveType(field.getPattern().getObjectType()).getName();
+      FieldDefinition fieldDef=new FieldDefinition(field.getFieldName(),fullFieldType);
+      boolean isKey=field.getAnnotation(TypeDeclaration.ATTR_KEY) != null;
+      fieldDef.setKey(isKey);
+      fieldDef.setIndex(field.getIndex());
+      fieldDef.setInherited(field.isInherited());
+      fieldDef.setInitExpr(field.getInitExpr());
+      queue.add(fieldDef);
+    }
+ catch (    ClassNotFoundException cnfe) {
+      this.results.add(new TypeDeclarationError(cnfe.getMessage(),field.getLine()));
+    }
+  }
+  return queue;
+}
