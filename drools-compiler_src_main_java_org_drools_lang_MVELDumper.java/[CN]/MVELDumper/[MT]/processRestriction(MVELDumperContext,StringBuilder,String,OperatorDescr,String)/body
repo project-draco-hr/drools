@@ -1,0 +1,21 @@
+{
+  Operator op=Operator.determineOperator(operator.getOperator(),operator.isNegated());
+  if (op == Operator.determineOperator("memberOf",operator.isNegated())) {
+    sbuilder.append(evaluatorPrefix(operator.isNegated())).append(right).append(" contains ").append(left).append(evaluatorSufix(operator.isNegated()));
+  }
+ else   if (op == Operator.determineOperator("excludes",operator.isNegated())) {
+    sbuilder.append(evaluatorPrefix(!operator.isNegated())).append(left).append(" contains ").append(right).append(evaluatorSufix(operator.isNegated()));
+  }
+ else   if (op == Operator.determineOperator("matches",operator.isNegated())) {
+    sbuilder.append(evaluatorPrefix(operator.isNegated())).append(left).append(" ~= ").append(right).append(evaluatorSufix(operator.isNegated()));
+  }
+ else   if (Arrays.binarySearch(standard,op.getOperatorString()) >= 0) {
+    sbuilder.append(evaluatorPrefix(operator.isNegated())).append(left).append(" ").append(operator.getOperator()).append(" ").append(right).append(evaluatorSufix(operator.isNegated()));
+  }
+ else {
+    String alias=context.createAlias(operator);
+    operator.setLeftString(left);
+    operator.setRightString(right);
+    sbuilder.append(evaluatorPrefix(operator.isNegated())).append(alias).append(".evaluate( ").append(left).append(", ").append(right).append(" )").append(evaluatorSufix(operator.isNegated()));
+  }
+}

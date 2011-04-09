@@ -3,6 +3,7 @@
   final Set<String> notBound=new HashSet<String>(identifiers);
   Map<String,Class<?>> usedDecls=new HashMap<String,Class<?>>();
   Map<String,Class<?>> usedGlobals=new HashMap<String,Class<?>>();
+  Map<String,EvaluatorWrapper> usedOperators=new HashMap<String,EvaluatorWrapper>();
   for (  Entry<String,Class<?>> entry : availableIdentifiers.getDeclarations().entrySet()) {
     if (identifiers.contains(entry.getKey())) {
       usedDecls.put(entry.getKey(),entry.getValue());
@@ -15,7 +16,13 @@
       notBound.remove(entry.getKey());
     }
   }
-  result.setBoundIdentifiers(new BoundIdentifiers(usedDecls,usedGlobals));
+  for (  Map.Entry<String,EvaluatorWrapper> op : availableIdentifiers.getOperators().entrySet()) {
+    if (identifiers.contains(op.getKey())) {
+      usedOperators.put(op.getKey(),op.getValue());
+      notBound.remove(op);
+    }
+  }
+  result.setBoundIdentifiers(new BoundIdentifiers(usedDecls,usedGlobals,usedOperators));
   result.setNotBoundedIdentifiers(notBound);
   return result;
 }

@@ -13,6 +13,34 @@
       vals[i++]=globals.resolveGlobal(this.globalIdentifiers[j]);
     }
   }
+  InternalFactHandle[] handles;
+  if (tuples != null) {
+    handles=((LeftTuple)tuples).toFactHandles();
+  }
+ else {
+    handles=new InternalFactHandle[0];
+  }
+  if (operators != null) {
+    for (int j=0, length=operators.length; j < length; j++) {
+      vals[i++]=operators[j].setWorkingMemory(workingMemory);
+      if (operators[j].getLeftBinding() != null) {
+        if (operators[j].getLeftBinding().getIdentifier().equals("this")) {
+          operators[j].setLeftHandle((InternalFactHandle)workingMemory.getFactHandle(rightObject));
+        }
+ else {
+          operators[j].setLeftHandle(getFactHandle(operators[j].getLeftBinding(),handles));
+        }
+      }
+      if (operators[j].getRightBinding() != null) {
+        if (operators[j].getRightBinding().getIdentifier().equals("this")) {
+          operators[j].setRightHandle((InternalFactHandle)workingMemory.getFactHandle(rightObject));
+        }
+ else {
+          operators[j].setRightHandle(getFactHandle(operators[j].getRightBinding(),handles));
+        }
+      }
+    }
+  }
   IdentityHashMap<Object,FactHandle> identityMap=null;
   if (knowledgeHelper != null) {
     identityMap=new IdentityHashMap<Object,FactHandle>();
@@ -23,7 +51,6 @@
       if (knowledgeHelper != null) {
         prevDecl=((AgendaItem)((KnowledgeHelper)knowledgeHelper).getActivation()).getRuleTerminalNode().getDeclarations();
       }
-      InternalFactHandle[] handles=((LeftTuple)tuples).toFactHandles();
       for (int j=0, length=prevDecl.length; j < length; j++) {
         Declaration decl=prevDecl[j];
         InternalFactHandle handle=getFactHandle(decl,handles);

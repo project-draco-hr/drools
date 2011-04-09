@@ -19,7 +19,7 @@
     parserContext1.setStrictTypeEnforcement(false);
     parserContext1.setStrongTyping(false);
     parserContext1.setInterceptors(dialect.getInterceptors());
-    Class returnType=null;
+    Class<?> returnType=null;
     try {
       returnType=MVEL.analyze(expr,parserContext1);
     }
@@ -27,7 +27,7 @@
       context.getErrors().add(new DescrBuildError(context.getParentDescr(),null,null,"Unable to Analyse Expression " + expr + ":\n"+ e.getMessage()));
       return null;
     }
-    Set<String> requiredInputs=new HashSet();
+    Set<String> requiredInputs=new HashSet<String>();
     requiredInputs.addAll(parserContext1.getInputs().keySet());
     HashMap<String,Class<?>> variables=(HashMap<String,Class<?>>)((Map)parserContext1.getVariables());
     if (availableIdentifiers.getThisClass() != null) {
@@ -48,13 +48,20 @@
         }
       }
       for (      String str : requiredInputs) {
-        Class cls=availableIdentifiers.getDeclarations().get(str);
+        Class<?> cls=availableIdentifiers.getDeclarations().get(str);
         if (cls != null) {
           parserContext2.addInput(str,cls);
           continue;
         }
         if (cls == null) {
           cls=availableIdentifiers.getGlobals().get(str);
+          if (cls != null) {
+            parserContext2.addInput(str,cls);
+            continue;
+          }
+        }
+        if (cls == null) {
+          cls=availableIdentifiers.getOperators().keySet().contains(str) ? EvaluatorWrapper.class : null;
           if (cls != null) {
             parserContext2.addInput(str,cls);
             continue;
@@ -82,7 +89,7 @@
         context.getErrors().add(new DescrBuildError(context.getParentDescr(),null,null,"Unable to Analyse Expression " + expr + ":\n"+ e.getMessage()));
         return null;
       }
-      requiredInputs=new HashSet();
+      requiredInputs=new HashSet<String>();
       requiredInputs.addAll(parserContext2.getInputs().keySet());
       requiredInputs.addAll(variables.keySet());
       variables=(HashMap<String,Class<?>>)((Map)parserContext2.getVariables());
