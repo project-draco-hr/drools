@@ -1,0 +1,16 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  for (  InputStream is : theory)   kbuilder.add(ResourceFactory.newInputStreamResource(is),ResourceType.DRL);
+  KnowledgeBuilderErrors errors=kbuilder.getErrors();
+  if (errors.size() > 0) {
+    for (    KnowledgeBuilderError error : errors) {
+      System.err.println(error);
+    }
+    throw new IllegalArgumentException("Could not parse knowledge.");
+  }
+  RuleBaseConfiguration conf=new RuleBaseConfiguration();
+  conf.setEventProcessingMode(EventProcessingOption.STREAM);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(conf);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  return kbase;
+}
