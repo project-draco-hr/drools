@@ -1,0 +1,38 @@
+{
+  FactType gender=getKbase().getFactType(packageName,"Gender");
+  FactType noclaims=getKbase().getFactType(packageName,"NoOfClaims");
+  FactType scrambled=getKbase().getFactType(packageName,"Scrambled");
+  FactType domicile=getKbase().getFactType(packageName,"Domicile");
+  FactType agecar=getKbase().getFactType(packageName,"AgeOfCar");
+  FactType amklaims=getKbase().getFactType(packageName,"AmountOfClaims");
+  Assert.assertEquals(7,getKSession().getWorkingMemoryEntryPoints().size());
+  WorkingMemoryEntryPoint gender_ep=getKSession().getWorkingMemoryEntryPoint("in_Gender");
+  Assert.assertNotNull(gender_ep);
+  WorkingMemoryEntryPoint noclaims_ep=getKSession().getWorkingMemoryEntryPoint("in_NoOfClaims");
+  Assert.assertNotNull(noclaims_ep);
+  WorkingMemoryEntryPoint scrambled_ep=getKSession().getWorkingMemoryEntryPoint("in_Scrambled");
+  Assert.assertNotNull(scrambled_ep);
+  WorkingMemoryEntryPoint domicile_ep=getKSession().getWorkingMemoryEntryPoint("in_Domicile");
+  Assert.assertNotNull(domicile_ep);
+  WorkingMemoryEntryPoint agecar_ep=getKSession().getWorkingMemoryEntryPoint("in_AgeOfCar");
+  Assert.assertNotNull(agecar_ep);
+  WorkingMemoryEntryPoint amklaims_ep=getKSession().getWorkingMemoryEntryPoint("in_AmountOfClaims");
+  Assert.assertNotNull(amklaims_ep);
+  gender_ep.insert("M");
+  noclaims_ep.insert("> 4");
+  scrambled_ep.insert(4);
+  domicile_ep.insert("way out");
+  agecar_ep.insert(new Double("3.4"));
+  amklaims_ep.insert(9);
+  getKSession().fireAllRules();
+  System.err.println(reportWMObjects(getKSession()));
+  Assert.assertEquals(6,getKSession().getObjects().size());
+  Assert.assertEquals(1,getKSession().getObjects(new ClassObjectFilter(gender.getFactClass())).size());
+  Assert.assertEquals(1,getKSession().getObjects(new ClassObjectFilter(noclaims.getFactClass())).size());
+  Assert.assertEquals(1,getKSession().getObjects(new ClassObjectFilter(scrambled.getFactClass())).size());
+  Assert.assertEquals(1,getKSession().getObjects(new ClassObjectFilter(domicile.getFactClass())).size());
+  Assert.assertEquals(1,getKSession().getObjects(new ClassObjectFilter(agecar.getFactClass())).size());
+  Assert.assertEquals(1,getKSession().getObjects(new ClassObjectFilter(amklaims.getFactClass())).size());
+  checkFirstDataFieldOfTypeStatus(amklaims,true,false,null,9);
+  checkFirstDataFieldOfTypeStatus(domicile,false,false,null,"way out");
+}
