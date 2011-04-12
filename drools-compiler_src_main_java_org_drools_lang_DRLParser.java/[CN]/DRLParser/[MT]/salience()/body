@@ -6,11 +6,22 @@
     if (state.backtracking == 0) {
       attribute=helper.start(AttributeDescrBuilder.class,DroolsSoftKeywords.SALIENCE,null);
     }
+    boolean hasParen=input.LA(1) == DRLLexer.LEFT_PAREN;
     int first=input.index();
-    exprParser.conditionalExpression();
+    if (hasParen) {
+      match(input,DRLLexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+    }
+    String value=conditionalExpression();
     if (state.failed)     return null;
-    if (state.backtracking == 0 && input.index() > first) {
-      String value=input.toString(first,input.LT(-1).getTokenIndex());
+    if (hasParen) {
+      match(input,DRLLexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+    }
+    if (state.backtracking == 0) {
+      if (hasParen) {
+        value=input.toString(first,input.LT(-1).getTokenIndex());
+      }
       attribute.value(value);
       attribute.type(AttributeDescr.Type.EXPRESSION);
     }
