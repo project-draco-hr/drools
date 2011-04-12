@@ -1,0 +1,27 @@
+{
+  setKSession(getModelSession(source,VERBOSE));
+  setKbase(getKSession().getKnowledgeBase());
+  getKSession().fireAllRules();
+  Answer ans1=new Answer("IRIS_MLP_PetalLength","2.5");
+  Answer ans2=new Answer("IRIS_MLP_PetalNumber","5");
+  getKSession().insert(ans1);
+  getKSession().insert(ans2);
+  getKSession().fireAllRules();
+  FactType nump=getKbase().getFactType("org.drools.pmml_4_0.test","PetalNumber");
+  FactType lenp=getKbase().getFactType("org.drools.pmml_4_0.test","PetalLength");
+  Collection c=getKSession().getObjects(new ClassObjectFilter(nump.getFactClass()));
+  assertEquals(2,c.size());
+  Iterator i1=c.iterator();
+  while (i1.hasNext()) {
+    Object o=i1.next();
+    if (nump.get(o,"context") != null)     assertEquals(5,nump.get(o,"value"));
+  }
+  Collection d=getKSession().getObjects(new ClassObjectFilter(lenp.getFactClass()));
+  assertEquals(2,d.size());
+  Iterator i2=d.iterator();
+  while (i2.hasNext()) {
+    Object o=i2.next();
+    if (lenp.get(o,"context") != null)     assertEquals(2.5,lenp.get(o,"value"));
+  }
+  System.err.println(reportWMObjects(getKSession()));
+}
