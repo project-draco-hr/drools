@@ -1,22 +1,28 @@
 {
-  if (index < 1 || index > this.size) {
-    return null;
-  }
-  final Queueable result=this.elements[index];
-  setElement(index,this.elements[this.size]);
-  this.elements[this.size]=null;
-  this.size--;
-  if (this.size != 0 && index <= this.size) {
-    int compareToParent=0;
-    if (index > 1) {
-      compareToParent=compare(this.elements[index],this.elements[index / 2]);
+  try {
+    this.lock.lock();
+    if (index < 1 || index > this.size) {
+      return null;
     }
-    if (index > 1 && compareToParent > 0) {
-      percolateUpMaxHeap(index);
-    }
+    final Queueable result=this.elements[index];
+    setElement(index,this.elements[this.size]);
+    this.elements[this.size]=null;
+    this.size--;
+    if (this.size != 0 && index <= this.size) {
+      int compareToParent=0;
+      if (index > 1) {
+        compareToParent=compare(this.elements[index],this.elements[index / 2]);
+      }
+      if (index > 1 && compareToParent > 0) {
+        percolateUpMaxHeap(index);
+      }
  else {
-      percolateDownMaxHeap(index);
+        percolateDownMaxHeap(index);
+      }
     }
+    return result;
   }
-  return result;
+  finally {
+    this.lock.unlock();
+  }
 }
