@@ -4,14 +4,15 @@
     declare=helper.start(DeclareDescrBuilder.class,null,null);
     match(input,DRLLexer.ID,DroolsSoftKeywords.DECLARE,null,DroolsEditorType.KEYWORD);
     if (state.failed)     return null;
-    String type=type();
+    String type=qualifiedIdentifier();
     if (state.failed)     return null;
     if (state.backtracking == 0)     declare.type(type);
     while (input.LA(1) == DRLLexer.AT) {
       annotation(declare);
       if (state.failed)       return null;
     }
-    while (input.LA(1) == DRLLexer.ID && !helper.validateIdentifierKey(DroolsSoftKeywords.END)) {
+    boolean qualified=type.indexOf('.') >= 0;
+    while (!qualified && input.LA(1) == DRLLexer.ID && !helper.validateIdentifierKey(DroolsSoftKeywords.END)) {
       field(declare);
       if (state.failed)       return null;
     }
