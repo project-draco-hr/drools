@@ -18,12 +18,12 @@
       context.getErrors().add(new DescrBuildError(accumDescr,context.getRuleDescr(),null,"Unknown accumulate function: '" + func.getFunction() + "' on rule '"+ context.getRuleDescr().getName()+ "'. All accumulate functions must be registered before building a resource."));
       return null;
     }
-    final JavaAnalysisResult analysis=(JavaAnalysisResult)context.getDialect().analyzeBlock(context,accumDescr,func.getParams()[0],new BoundIdentifiers(declCls,context.getPackageBuilder().getGlobals()));
+    final JavaAnalysisResult analysis=(JavaAnalysisResult)context.getDialect().analyzeBlock(context,accumDescr,func.getParams().length > 0 ? func.getParams()[0] : "\"\"",new BoundIdentifiers(declCls,context.getPackageBuilder().getGlobals()));
     final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
     final Declaration[] previousDeclarations=usedIdentifiers.getDeclarations().values().toArray(new Declaration[usedIdentifiers.getDeclarations().size()]);
     final Declaration[] sourceDeclArr=(Declaration[])source.getOuterDeclarations().values().toArray(new Declaration[0]);
     final String className="accumulateExpression" + context.getNextId();
-    final Map<String,Object> map=createVariableContext(className,func.getParams()[0],context,previousDeclarations,sourceDeclArr,usedIdentifiers.getGlobals(),null);
+    final Map<String,Object> map=createVariableContext(className,func.getParams().length > 0 ? func.getParams()[0] : "\"\"",context,previousDeclarations,sourceDeclArr,usedIdentifiers.getGlobals(),null);
     map.put("readLocalsFromTuple",accumDescr.isMultiPattern() ? Boolean.TRUE : Boolean.FALSE);
     JavaAccumulatorFunctionExecutor accumulator=new JavaAccumulatorFunctionExecutor(function);
     accumulate=new Accumulate(source,previousDeclarations,sourceDeclArr,new Accumulator[]{accumulator});
