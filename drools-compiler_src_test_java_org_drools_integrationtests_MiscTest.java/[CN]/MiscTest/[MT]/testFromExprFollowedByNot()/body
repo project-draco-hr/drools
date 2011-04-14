@@ -1,0 +1,23 @@
+{
+  String rule="";
+  rule+="package org.drools\n";
+  rule+="rule \"Rule 1\"\n";
+  rule+="    when\n";
+  rule+="        Person ($var: pet )\n";
+  rule+="        Pet () from $var\n";
+  rule+="        not Pet ()\n";
+  rule+="    then\n";
+  rule+="       System.out.println(\"Fire in the hole\");\n";
+  rule+="end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newReaderResource(new StringReader(rule)),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    Iterator<KnowledgeBuilderError> errors=kbuilder.getErrors().iterator();
+    while (errors.hasNext()) {
+      System.out.println("kbuilder error: " + errors.next().getMessage());
+    }
+  }
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+}
