@@ -1,0 +1,16 @@
+{
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("/org/drools/examples/numberguess/NumberGuess.drl",NumberGuessExample.class),ResourceType.DRL);
+  kbuilder.add(ResourceFactory.newClassPathResource("/org/drools/examples/numberguess/NumberGuess.rf",NumberGuessExample.class),ResourceType.DRF);
+  final KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  KnowledgeRuntimeLogger logger=KnowledgeRuntimeLoggerFactory.newFileLogger(ksession,"log/numberguess");
+  ksession.insert(new GameRules(100,5));
+  ksession.insert(new RandomNumber());
+  ksession.insert(new Game());
+  ksession.startProcess("Number Guess");
+  ksession.fireAllRules();
+  logger.close();
+  ksession.dispose();
+}
