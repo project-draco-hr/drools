@@ -1,6 +1,14 @@
 {
   PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(StateExampleWithDynamicRules.class.getResourceAsStream("StateExampleUsingSalience.drl")));
+  try {
+    builder.addPackageFromDrl(new InputStreamReader(StateExampleWithDynamicRules.class.getResourceAsStream("StateExampleUsingSalience.drl")));
+  }
+ catch (  DroolsParserException e) {
+    throw new IllegalArgumentException("Invalid drl",e);
+  }
+catch (  IOException e) {
+    throw new IllegalArgumentException("Could not read drl",e);
+  }
   final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   ruleBase.addPackage(builder.getPackage());
   final StatefulSession session=ruleBase.newStatefulSession();
@@ -19,7 +27,15 @@
   session.insert(e,dynamic);
   session.fireAllRules();
   builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(StateExampleWithDynamicRules.class.getResourceAsStream("StateExampleDynamicRule.drl")));
+  try {
+    builder.addPackageFromDrl(new InputStreamReader(StateExampleWithDynamicRules.class.getResourceAsStream("StateExampleDynamicRule.drl")));
+  }
+ catch (  DroolsParserException ex) {
+    throw new IllegalArgumentException("Invalid drl",ex);
+  }
+catch (  IOException ex) {
+    throw new IllegalArgumentException("Could not read drl",ex);
+  }
   ruleBase.addPackage(builder.getPackage());
   session.fireAllRules();
   session.dispose();
