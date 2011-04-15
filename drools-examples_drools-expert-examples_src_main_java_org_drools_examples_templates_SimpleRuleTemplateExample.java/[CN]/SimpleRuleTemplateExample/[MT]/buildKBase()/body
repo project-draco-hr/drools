@@ -1,0 +1,23 @@
+{
+  final ExternalSpreadsheetCompiler converter=new ExternalSpreadsheetCompiler();
+  String drl=null;
+  try {
+    drl=converter.compile(getSpreadsheetStream(),getRulesStream(),2,2);
+  }
+ catch (  IOException e) {
+    throw new IllegalArgumentException("Could not read spreadsheet or rules stream.",e);
+  }
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(new ByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    System.out.println("Error compiling resources:");
+    Iterator<KnowledgeBuilderError> errors=kbuilder.getErrors().iterator();
+    while (errors.hasNext()) {
+      System.out.println("\t" + errors.next().getMessage());
+    }
+    throw new IllegalStateException("Error compiling resources");
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  return kbase;
+}
