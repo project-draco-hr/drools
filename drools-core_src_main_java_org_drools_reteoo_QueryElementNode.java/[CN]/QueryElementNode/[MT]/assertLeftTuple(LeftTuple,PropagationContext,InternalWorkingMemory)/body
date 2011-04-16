@@ -3,11 +3,37 @@
   Object[] inputArgs=new Object[arguments.length];
   System.arraycopy(arguments,0,inputArgs,0,inputArgs.length);
   int[] declIndexes=this.queryElement.getDeclIndexes();
+  List<Integer> srcVarIndexes=null;
+  List<Variable> trgVars=null;
   for (int i=0, length=declIndexes.length; i < length; i++) {
     Declaration declr=(Declaration)arguments[declIndexes[i]];
-    inputArgs[declIndexes[i]]=declr.getValue(workingMemory,leftTuple.get(declr).getObject());
+    Object o=declr.getValue(workingMemory,leftTuple.get(declr).getObject());
+    if (o instanceof Variable) {
+      Variable v=(Variable)o;
+      if (v.getValue() == null) {
+        if (srcVarIndexes == null) {
+          srcVarIndexes=new ArrayList<Integer>();
+          trgVars=new ArrayList<Variable>();
+        }
+        trgVars.add((Variable)o);
+        srcVarIndexes.add(declIndexes[i]);
+      }
+ else {
+        o=v.getValue();
+      }
+    }
+    inputArgs[declIndexes[i]]=o;
   }
-  UnificationNodeViewChangedEventListener collector=new UnificationNodeViewChangedEventListener(leftTuple,this.queryElement.getVariables(),this.sink,this.tupleMemoryEnabled);
+  int[] varIndexes=this.queryElement.getVariables();
+  if (srcVarIndexes != null) {
+    int length=varIndexes.length;
+    varIndexes=new int[varIndexes.length + srcVarIndexes.size()];
+    System.arraycopy(this.queryElement.getVariables(),0,varIndexes,0,length);
+    for (int i=0; i < srcVarIndexes.size(); i++) {
+      varIndexes[i + length]=srcVarIndexes.get(i);
+    }
+  }
+  UnificationNodeViewChangedEventListener collector=new UnificationNodeViewChangedEventListener(leftTuple,varIndexes,this.sink,this.tupleMemoryEnabled);
   DroolsQuery queryObject=new DroolsQuery(this.queryElement.getQueryName(),inputArgs,collector,false);
   collector.setDroolsQuery(queryObject);
   InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(queryObject,workingMemory.getObjectTypeConfigurationRegistry().getObjectTypeConf(EntryPoint.DEFAULT,queryObject),workingMemory,null);
@@ -16,10 +42,26 @@
   LeftTuple childLeftTuple=leftTuple.firstChild;
   LeftTuple temp=null;
   while (childLeftTuple != null) {
+    if (srcVarIndexes != null) {
+      int varsLength=this.queryElement.getVariables().length;
+      QueryElementFactHandle qeh=(QueryElementFactHandle)childLeftTuple.getLastHandle();
+      Object[] resultObjects=(Object[])qeh.getObject();
+      for (int i=varsLength; i < trgVars.size(); i++) {
+        Variable v=trgVars.get(i);
+        v.setValue(resultObjects[i]);
+      }
+    }
     temp=childLeftTuple;
     this.sink.doPropagateAssertLeftTuple(context,workingMemory,childLeftTuple,childLeftTuple.getLeftTupleSink());
     childLeftTuple=childLeftTuple.getLeftParentNext();
     temp.setLeftParentNext(null);
+    if (srcVarIndexes != null) {
+      int varsLength=this.queryElement.getVariables().length;
+      for (int i=varsLength; i < trgVars.size(); i++) {
+        Variable v=trgVars.get(i);
+        v.setValue(null);
+      }
+    }
   }
   leftTuple.firstChild=null;
 }
