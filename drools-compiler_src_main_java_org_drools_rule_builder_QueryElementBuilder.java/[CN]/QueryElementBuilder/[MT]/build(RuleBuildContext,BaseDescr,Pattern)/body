@@ -5,31 +5,94 @@
   List<BaseDescr> args=(List<BaseDescr>)patternDescr.getDescrs();
   List<Integer> declrIndexes=new ArrayList<Integer>();
   List<Integer> varIndexes=new ArrayList<Integer>();
-  List<Object> arguments=new ArrayList<Object>();
+  List<Object> arguments=new ArrayList<Object>(params.length);
+  for (int i=0; i < params.length; i++) {
+    arguments.add(null);
+  }
   List<Declaration> requiredDeclarations=new ArrayList<Declaration>();
   ObjectType argsObjectType=new ClassObjectType(Object[].class);
   InternalReadAccessor arrayReader=new SelfReferenceClassFieldReader(Object[].class,"this");
   Pattern pattern=new Pattern(context.getNextPatternId(),0,argsObjectType,null);
   for (int i=0, length=args.size(); i < length; i++) {
-    BaseDescr arg=args.get(i);
-    if (arg instanceof LiteralDescr) {
-      arguments.add(((LiteralDescr)arg).getValue());
+    ExprConstraintDescr arg=(ExprConstraintDescr)args.get(i);
+    if (arg.getPosition() == -1) {
     }
- else     if (arg instanceof VariableDescr) {
-      String var=((VariableDescr)arg).getIdentifier();
-      Declaration declr=context.getDeclarationResolver().getDeclaration(query,var);
+    String expr=arg.getExpression().trim();
+    if (isVariable(expr)) {
+      Declaration declr=context.getDeclarationResolver().getDeclaration(query,expr);
       if (declr != null) {
-        declrIndexes.add(i);
-        arguments.add(declr);
+        arguments.set(arg.getPosition(),declr);
+        declrIndexes.add(arg.getPosition());
         requiredDeclarations.add(declr);
       }
  else {
-        declr=pattern.addDeclaration(var);
-        ArrayElementReader reader=new ArrayElementReader(arrayReader,varIndexes.size(),params[i].getExtractor().getExtractToClass());
+        declr=pattern.addDeclaration(expr);
+        ArrayElementReader reader=new ArrayElementReader(arrayReader,varIndexes.size(),params[arg.getPosition()].getExtractor().getExtractToClass());
         declr.setReadAccessor(reader);
-        varIndexes.add(i);
-        arguments.add(new Variable());
+        varIndexes.add(arg.getPosition());
+        arguments.set(arg.getPosition(),new Variable());
       }
+    }
+ else {
+      DrlExprParser parser=new DrlExprParser();
+      ConstraintConnectiveDescr result=parser.parse(expr);
+      if (parser.hasErrors()) {
+        for (        DroolsParserException error : parser.getErrors()) {
+          context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to parser pattern expression:\n" + error.getMessage()));
+        }
+        return null;
+      }
+      MVELDumper.MVELDumperContext mvelCtx=new MVELDumper.MVELDumperContext();
+      expr=new MVELDumper().dump(result,mvelCtx);
+      arguments.set(arg.getPosition(),MVEL.eval(expr));
+    }
+  }
+  for (  BindingDescr binding : patternDescr.getBindings()) {
+    Declaration declr=context.getDeclarationResolver().getDeclaration(context.getRule(),binding.getVariable());
+    if (declr != null) {
+      int pos=getPos(binding.getExpression().trim(),params);
+      if (pos >= 0) {
+        String slot=binding.getExpression().trim();
+        String var=binding.getVariable().trim();
+        binding.setVariable(slot);
+        binding.setExpression(var);
+      }
+ else {
+      }
+    }
+    int pos=getPos(binding.getVariable(),params);
+    if (pos >= 0) {
+      declr=context.getDeclarationResolver().getDeclaration(context.getRule(),binding.getExpression());
+      if (declr != null) {
+        arguments.set(pos,declr);
+        declrIndexes.add(pos);
+        requiredDeclarations.add(declr);
+      }
+ else {
+        DrlExprParser parser=new DrlExprParser();
+        ConstraintConnectiveDescr result=parser.parse(binding.getExpression());
+        if (parser.hasErrors()) {
+          for (          DroolsParserException error : parser.getErrors()) {
+            context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to parser pattern expression:\n" + error.getMessage()));
+          }
+          return null;
+        }
+        MVELDumper.MVELDumperContext mvelCtx=new MVELDumper.MVELDumperContext();
+        String expr=new MVELDumper().dump(result,mvelCtx);
+        Object o=MVEL.eval(expr);
+        arguments.set(pos,o);
+      }
+    }
+ else {
+      declr=pattern.addDeclaration(binding.getVariable());
+      pos=getPos(binding.getExpression(),params);
+      if (pos < 0) {
+        throw new RuntimeException("named argument does not exist");
+      }
+      ArrayElementReader reader=new ArrayElementReader(arrayReader,varIndexes.size(),params[pos].getExtractor().getExtractToClass());
+      declr.setReadAccessor(reader);
+      varIndexes.add(pos);
+      arguments.set(pos,new Variable());
     }
   }
   Declaration[] declrsArray=requiredDeclarations.toArray(new Declaration[requiredDeclarations.size()]);

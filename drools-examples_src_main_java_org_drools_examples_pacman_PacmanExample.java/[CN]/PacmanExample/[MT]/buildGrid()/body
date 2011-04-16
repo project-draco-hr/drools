@@ -1,0 +1,59 @@
+{
+  BufferedReader reader;
+  List<String> lines=new ArrayList<String>();
+  try {
+    reader=new BufferedReader(ResourceFactory.newClassPathResource("grid1.dat",PacmanExample.class).getReader());
+    String line;
+    while ((line=reader.readLine()) != null) {
+      lines.add(line);
+    }
+  }
+ catch (  IOException e) {
+    throw new IllegalStateException("Reading dat file failed.",e);
+  }
+  for (int row=lines.size() - 1; row >= 0; row--) {
+    String line=lines.get(row);
+    int whiteCellCount=0;
+    for (int col=0; col < line.length(); col++) {
+      char c=line.charAt(col);
+      Cell cell=new Cell(lines.size() - row - 1,col - whiteCellCount);
+      CellContents contents=null;
+switch (c) {
+case '*':
+{
+          contents=new CellContents(cell,CellType.WALL);
+          break;
+        }
+case '.':
+{
+        contents=new CellContents(cell,CellType.FOOD);
+        break;
+      }
+case '#':
+{
+      contents=new CellContents(cell,CellType.POWER_PILL);
+      break;
+    }
+case '_':
+{
+    contents=new CellContents(cell,CellType.EMPTY);
+    break;
+  }
+case ' ':
+{
+  whiteCellCount++;
+  break;
+}
+default :
+{
+throw new IllegalArgumentException("'" + c + "' is an invalid cell type");
+}
+}
+if (contents != null) {
+System.out.println(cell + " : " + contents);
+ksession.insert(cell);
+ksession.insert(contents);
+}
+}
+}
+}
