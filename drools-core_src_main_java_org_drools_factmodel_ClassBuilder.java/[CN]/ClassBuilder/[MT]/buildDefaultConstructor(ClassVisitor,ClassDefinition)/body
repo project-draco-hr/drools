@@ -9,11 +9,26 @@
       mv.visitLabel(l0);
     }
     mv.visitVarInsn(Opcodes.ALOAD,0);
+    String sup="";
     try {
-      mv.visitMethodInsn(Opcodes.INVOKESPECIAL,Type.getInternalName(Class.forName(classDef.getSuperClass())),"<init>",Type.getMethodDescriptor(Type.VOID_TYPE,new Type[]{}));
+      sup=Type.getInternalName(Class.forName(classDef.getSuperClass()));
     }
  catch (    ClassNotFoundException e) {
-      e.printStackTrace();
+      sup=getInternalType(classDef.getSuperClass());
+    }
+    mv.visitMethodInsn(Opcodes.INVOKESPECIAL,sup,"<init>",Type.getMethodDescriptor(Type.VOID_TYPE,new Type[]{}));
+    for (    FieldDefinition field : classDef.getFieldsDefinitions()) {
+      if (!field.isInherited()) {
+        Object val=getDefaultValue(field);
+        if (val != null) {
+          mv.visitVarInsn(Opcodes.ALOAD,0);
+          mv.visitLdcInsn(val);
+          if (isBoxed(field.getTypeName())) {
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC,getInternalType(field.getTypeName()),"valueOf","(" + unBox(field.getTypeName()) + ")"+ getTypeDescriptor(field.getTypeName()));
+          }
+          mv.visitFieldInsn(Opcodes.PUTFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
+        }
+      }
     }
     mv.visitInsn(Opcodes.RETURN);
     Label l1=null;

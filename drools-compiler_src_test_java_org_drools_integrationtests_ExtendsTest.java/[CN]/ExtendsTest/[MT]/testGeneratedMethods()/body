@@ -1,0 +1,34 @@
+{
+  StatefulKnowledgeSession ksession=genSession("test_Extends.drl");
+  FactType student=ksession.getKnowledgeBase().getFactType("defaultpkg","Student");
+  Constructor constructor=student.getFactClass().getConstructor(String.class,int.class,String.class);
+  assertNotNull(constructor);
+  Method equals=student.getFactClass().getMethod("equals",Object.class);
+  assertNotNull(equals);
+  Object s1=constructor.newInstance("John",18,"Skool");
+  assertNotNull(s1);
+  assertEquals("Student( name=John, age=18, school=Skool )",s1.toString());
+  Object s2=constructor.newInstance("John",25,"Skool");
+  assertNotNull(s2);
+  assertEquals("Student( name=John, age=25, school=Skool )",s2.toString());
+  assertEquals(s1.hashCode(),s2.hashCode());
+  assertTrue((Boolean)equals.invoke(s1,s2));
+  assertTrue(s1.equals(s2));
+  Object s3=constructor.newInstance("Mark",18,"Skool");
+  assertNotNull(s3);
+  assertEquals("Student( name=Mark, age=18, school=Skool )",s3.toString());
+  assertNotSame(s1.hashCode(),s3.hashCode());
+  assertNotSame(s2.hashCode(),s3.hashCode());
+  assertFalse(s1.equals(s3));
+  assertFalse(s2.equals(s3));
+  Object s4=constructor.newInstance("John",25,"AnotherSkool");
+  assertNotNull(s4);
+  assertEquals("Student( name=John, age=25, school=AnotherSkool )",s4.toString());
+  assertNotSame(s1.hashCode(),s4.hashCode());
+  assertNotSame(s2.hashCode(),s4.hashCode());
+  assertNotSame(s3.hashCode(),s4.hashCode());
+  assertFalse(s1.equals(s4));
+  assertFalse(s2.equals(s4));
+  assertFalse(s3.equals(s4));
+  ksession.dispose();
+}

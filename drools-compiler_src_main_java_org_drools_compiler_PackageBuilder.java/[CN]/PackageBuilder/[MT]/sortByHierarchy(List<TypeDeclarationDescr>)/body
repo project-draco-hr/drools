@@ -1,0 +1,35 @@
+{
+  Node<TypeDeclarationDescr> root=new Node<TypeDeclarationDescr>(null);
+  Map<String,Node<TypeDeclarationDescr>> map=new HashMap<String,Node<TypeDeclarationDescr>>();
+  for (  TypeDeclarationDescr tdescr : typeDeclarations) {
+    String typeName=tdescr.getNamespace() + "." + tdescr.getTypeName();
+    String superTypeName=tdescr.getSuperTypeNamespace() + "." + tdescr.getSuperTypeName();
+    Node<TypeDeclarationDescr> node=map.get(typeName);
+    if (node == null) {
+      node=new Node(typeName,tdescr);
+      map.put(typeName,node);
+    }
+ else     if (node.getData() == null) {
+      node.setData(tdescr);
+    }
+    if (superTypeName == null) {
+      root.addChild(node);
+    }
+ else {
+      Node<TypeDeclarationDescr> superNode=map.get(superTypeName);
+      if (superNode == null) {
+        superNode=new Node<TypeDeclarationDescr>(superTypeName);
+        map.put(superTypeName,superNode);
+      }
+      superNode.addChild(node);
+    }
+  }
+  Iterator<Node<TypeDeclarationDescr>> iter=map.values().iterator();
+  while (iter.hasNext()) {
+    Node<TypeDeclarationDescr> n=iter.next();
+    if (n.getData() == null)     root.addChild(n);
+  }
+  List<TypeDeclarationDescr> sortedList=new LinkedList<TypeDeclarationDescr>();
+  root.accept(sortedList);
+  return sortedList;
+}

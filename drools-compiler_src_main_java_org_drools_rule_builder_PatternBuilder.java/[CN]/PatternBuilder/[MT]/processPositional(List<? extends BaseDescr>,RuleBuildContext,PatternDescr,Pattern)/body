@@ -1,0 +1,52 @@
+{
+  List<BaseDescr> victims=new LinkedList<BaseDescr>();
+  for (  BaseDescr baseDescr : descrs) {
+    ExprConstraintDescr descr=(ExprConstraintDescr)baseDescr;
+    if (descr.getType() == ExprConstraintDescr.Type.POSITIONAL && pattern.getObjectType() instanceof ClassObjectType) {
+      Class klazz=((ClassObjectType)pattern.getObjectType()).getClassType();
+      TypeDeclaration tDecl=context.getPackageBuilder().getTypeDeclaration(klazz);
+      if (tDecl == null) {
+        context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,klazz,"Unable to find @positional definitions for :" + klazz + "\n"));
+        continue;
+      }
+      FieldDefinition field=tDecl.getTypeClassDef().getField(descr.getPosition());
+      if (field == null) {
+        context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to find @positional field " + descr.getPosition()) + "\n");
+        continue;
+      }
+      DRLLexer lex=new DRLLexer(new ANTLRStringStream(descr.getExpression()));
+      boolean isSimpleIdentifier=false;
+      try {
+        lex.mID();
+        isSimpleIdentifier=lex.getCharIndex() >= descr.getExpression().length();
+      }
+ catch (      RecognitionException e) {
+      }
+      boolean isBound=false;
+      if (isSimpleIdentifier) {
+        isBound=context.getDeclaration(descr.getExpression()) != null;
+        if (!isBound) {
+          Iterator<? extends BaseDescr> inner=patternDescr.getConstraint().getDescrs().iterator();
+          BaseDescr innerDescr=inner.next();
+          while (!isBound && innerDescr != descr) {
+            if (innerDescr.getText().equals(descr.getExpression()))             isBound=true;
+            innerDescr=inner.next();
+          }
+        }
+      }
+      if (isSimpleIdentifier && !isBound) {
+        BindingDescr binder=new BindingDescr();
+        binder.setExpression(field.getName());
+        binder.setVariable(descr.getExpression());
+        patternDescr.addBinding(binder);
+        victims.add(descr);
+        continue;
+      }
+ else {
+        descr.setText(field.getName() + " == " + descr.getExpression());
+        descr.setType(ExprConstraintDescr.Type.NAMED);
+      }
+    }
+  }
+  return victims;
+}
