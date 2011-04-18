@@ -1,0 +1,29 @@
+{
+  String str="" + "package org.drools.test  \n" + "import java.util.List\n"+ "import java.util.ArrayList\n"+ "global List list\n"+ "dialect \"mvel\"\n"+ "\n"+ "import org.drools.integrationtests.BackwardChainingTest.Q\n"+ "import org.drools.integrationtests.BackwardChainingTest.R\n"+ "import org.drools.integrationtests.BackwardChainingTest.S\n"+ "\n"+ "query q(int x)\n"+ "    Q( x : value )\n"+ "end\n"+ "\n"+ "query r(int x)\n"+ "    R( x : value )\n"+ "end\n"+ "\n"+ "query s(int x)\n"+ "    S( x : value )    \n"+ "end\n"+ "\n"+ "query p(int x)\n"+ "    (q(x) and r(x) ) \n"+ "    or\n"+ "    s(x)\n"+ "end\n"+ "rule init when\n"+ "then\n"+ " insert( new Q(1) );\n "+ " insert( new R(1) );\n "+ " insert( new R(2) );\n "+ " insert( new S(2) );\n "+ " insert( new S(3) );\n "+ "end\n"+ "";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
+  QueryResults results=null;
+  results=ksession.getQueryResults("p",new Integer[]{1});
+  for (  QueryResultsRow result : results) {
+    System.out.println("  " + "result( " + result.get("x") + " )");
+  }
+  System.out.println();
+  results=ksession.getQueryResults("p",new Integer[]{2});
+  for (  QueryResultsRow result : results) {
+    System.out.println("  " + "result( " + result.get("x") + " )");
+  }
+  System.out.println();
+  results=ksession.getQueryResults("p",new Integer[]{3});
+  for (  QueryResultsRow result : results) {
+    System.out.println("  " + "result( " + result.get("x") + " )");
+  }
+}
