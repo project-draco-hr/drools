@@ -1,35 +1,27 @@
 {
-  ClassBuilder cb=new ClassBuilder();
   String fullName=typeDescr.getNamespace() + "." + typeDescr.getTypeName();
-  String superType=typeDescr.getSuperTypeName() == null ? Object.class.getName() : typeDescr.getSuperTypeName();
-  ClassDefinition def=new ClassDefinition(fullName,superType,new String[]{Serializable.class.getName()});
-  Map<String,TypeFieldDescr> flds=typeDescr.getFields();
-  try {
-    PriorityQueue<TypeFieldDescr> queue=new PriorityQueue<TypeFieldDescr>();
-    for (    TypeFieldDescr field : flds.values()) {
-      AnnotationDescr annonDescr=field.getAnnotation(TypeDeclaration.ATTR_FIELD_POSITION);
-      String idx=(annonDescr != null) ? annonDescr.getText() : null;
-      if (idx != null) {
-        field.setIndex(Integer.valueOf(idx));
-      }
-      queue.add(field);
+  String fullSuperType=typeDescr.getSuperTypeName() != null ? (typeDescr.getSuperTypeNamespace() + "." + typeDescr.getSuperTypeName()) : Object.class.getName();
+  String[] interfaces=new String[]{Serializable.class.getName()};
+  ClassDefinition def=new ClassDefinition(fullName,fullSuperType,interfaces);
+  if (typeDescr.getFields().size() > 0) {
+    PriorityQueue<FieldDefinition> fieldDefs=sortFields(typeDescr.getFields(),pkgRegistry);
+    while (fieldDefs.size() > 0) {
+      FieldDefinition fld=fieldDefs.poll();
+      def.addField(fld);
     }
-    TypeFieldDescr field=queue.poll();
-    while (field != null) {
-      String fullFieldType=pkgRegistry.getTypeResolver().resolveType(field.getPattern().getObjectType()).getName();
-      FieldDefinition fieldDef=new FieldDefinition(field.getFieldName(),fullFieldType);
-      boolean isKey=field.getAnnotationNames().contains("key");
-      fieldDef.setKey(isKey);
-      def.addField(fieldDef);
-      field=queue.poll();
+  }
+  type.setNovel(isNovelClass(typeDescr));
+  if (type.isNovel()) {
+    try {
+      ClassBuilder cb=new ClassBuilder();
+      byte[] d=cb.buildClass(def);
+      JavaDialectRuntimeData dialect=(JavaDialectRuntimeData)pkgRegistry.getDialectRuntimeRegistry().getDialectData("java");
+      dialect.write(JavaDialectRuntimeData.convertClassToResourcePath(fullName),d);
     }
-    byte[] d=cb.buildClass(def);
-    JavaDialectRuntimeData dialect=(JavaDialectRuntimeData)pkgRegistry.getDialectRuntimeRegistry().getDialectData("java");
-    dialect.write(JavaDialectRuntimeData.convertClassToResourcePath(fullName),d);
-    type.setTypeClassDef(def);
+ catch (    Exception e) {
+      e.printStackTrace();
+      this.results.add(new TypeDeclarationError("Unable to create a class for declared type " + fullName + ": "+ e.getMessage()+ ";",typeDescr.getLine()));
+    }
   }
- catch (  Exception e) {
-    e.printStackTrace();
-    this.results.add(new TypeDeclarationError("Unable to create a class for declared type " + fullName + ": "+ e.getMessage()+ ";",typeDescr.getLine()));
-  }
+  type.setTypeClassDef(def);
 }

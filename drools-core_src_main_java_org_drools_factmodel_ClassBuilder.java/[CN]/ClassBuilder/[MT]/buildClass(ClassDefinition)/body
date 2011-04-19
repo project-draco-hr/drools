@@ -2,10 +2,12 @@
   ClassWriter cw=new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
   this.buildClassHeader(cw,classDef);
   for (  FieldDefinition fieldDef : classDef.getFieldsDefinitions()) {
-    this.buildField(cw,fieldDef);
+    if (!fieldDef.isInherited())     this.buildField(cw,fieldDef);
   }
   this.buildDefaultConstructor(cw,classDef);
-  this.buildConstructorWithFields(cw,classDef,classDef.getFieldsDefinitions());
+  if (classDef.getFieldsDefinitions().size() > 0) {
+    this.buildConstructorWithFields(cw,classDef,classDef.getFieldsDefinitions());
+  }
   List<FieldDefinition> keys=new LinkedList<FieldDefinition>();
   for (  FieldDefinition fieldDef : classDef.getFieldsDefinitions()) {
     if (fieldDef.isKey()) {
@@ -16,8 +18,10 @@
     this.buildConstructorWithFields(cw,classDef,keys);
   }
   for (  FieldDefinition fieldDef : classDef.getFieldsDefinitions()) {
-    this.buildGetMethod(cw,classDef,fieldDef);
-    this.buildSetMethod(cw,classDef,fieldDef);
+    if (!fieldDef.isInherited()) {
+      this.buildGetMethod(cw,classDef,fieldDef);
+      this.buildSetMethod(cw,classDef,fieldDef);
+    }
   }
   this.buildEquals(cw,classDef);
   this.buildHashCode(cw,classDef);

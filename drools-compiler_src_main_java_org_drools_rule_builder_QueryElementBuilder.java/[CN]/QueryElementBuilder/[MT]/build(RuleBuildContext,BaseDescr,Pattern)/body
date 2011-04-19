@@ -1,6 +1,13 @@
 {
   PatternDescr patternDescr=(PatternDescr)descr;
+  if (!patternDescr.isQuery()) {
+    context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Query's must ? as they are pull only:\n"));
+    return null;
+  }
   Query query=(Query)context.getPkg().getRule(patternDescr.getObjectType());
+  if (query == null) {
+    query=(Query)context.getRule();
+  }
   Declaration[] params=query.getParameters();
   List<BaseDescr> args=(List<BaseDescr>)patternDescr.getDescrs();
   List<Integer> declrIndexes=new ArrayList<Integer>();
@@ -15,7 +22,9 @@
   Pattern pattern=new Pattern(context.getNextPatternId(),0,argsObjectType,null);
   for (int i=0, length=args.size(); i < length; i++) {
     ExprConstraintDescr arg=(ExprConstraintDescr)args.get(i);
-    if (arg.getPosition() == -1) {
+    if (arg.getType() != ExprConstraintDescr.Type.POSITIONAL || arg.getPosition() == -1) {
+      context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Query's must use positional or bindings, not field constraints:\n" + arg.getExpression()));
+      continue;
     }
     String expr=arg.getExpression().trim();
     if (isVariable(expr)) {
