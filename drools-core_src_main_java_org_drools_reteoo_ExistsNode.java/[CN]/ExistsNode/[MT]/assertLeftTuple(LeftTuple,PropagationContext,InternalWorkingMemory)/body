@@ -1,17 +1,22 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  memory.setOpen(true);
   RightTupleMemory rightMemory=memory.getRightTupleMemory();
-  this.constraints.updateFromTuple(memory.getContext(),workingMemory,leftTuple);
+  ContextEntry[] contextEntry=memory.getContext();
   boolean useLeftMemory=true;
   if (!this.tupleMemoryEnabled) {
+    if (memory.isOpen()) {
+      contextEntry=this.constraints.createContext();
+    }
     Object object=((InternalFactHandle)context.getFactHandle()).getObject();
     if (memory.getLeftTupleMemory() == null || object instanceof DroolsQuery && !((DroolsQuery)object).isOpen()) {
       useLeftMemory=false;
     }
   }
+  this.constraints.updateFromTuple(contextEntry,workingMemory,leftTuple);
   FastIterator it=getRightIterator(rightMemory);
   for (RightTuple rightTuple=getFirstRightTuple(leftTuple,rightMemory,context,it); rightTuple != null; rightTuple=(RightTuple)it.next(rightTuple)) {
-    if (this.constraints.isAllowedCachedLeft(memory.getContext(),rightTuple.getFactHandle())) {
+    if (this.constraints.isAllowedCachedLeft(contextEntry,rightTuple.getFactHandle())) {
       leftTuple.setBlocker(rightTuple);
       if (useLeftMemory) {
         rightTuple.addBlocked(leftTuple);
@@ -19,11 +24,12 @@
       break;
     }
   }
-  this.constraints.resetTuple(memory.getContext());
+  this.constraints.resetTuple(contextEntry);
   if (leftTuple.getBlocker() != null) {
     this.sink.propagateAssertLeftTuple(leftTuple,context,workingMemory,useLeftMemory);
   }
  else   if (useLeftMemory) {
     memory.getLeftTupleMemory().add(leftTuple);
   }
+  memory.setOpen(false);
 }

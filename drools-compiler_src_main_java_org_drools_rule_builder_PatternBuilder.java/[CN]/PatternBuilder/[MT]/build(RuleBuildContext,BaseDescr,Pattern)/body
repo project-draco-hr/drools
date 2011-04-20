@@ -21,15 +21,22 @@
     }
   }
   if (objectType == null) {
-    Rule rule=context.getPkg().getRule(patternDescr.getObjectType());
-    if (rule != null && rule instanceof Query) {
+    RuleConditionElement rce=null;
+    if (context.getRule().getName().equals(patternDescr.getObjectType())) {
       QueryElementBuilder qeBuilder=new QueryElementBuilder();
-      return qeBuilder.build(context,descr,prefixPattern);
+      rce=qeBuilder.build(context,descr,prefixPattern);
     }
+    if (rce == null) {
+      Rule rule=context.getPkg().getRule(patternDescr.getObjectType());
+      if (rule != null && rule instanceof Query) {
+        QueryElementBuilder qeBuilder=new QueryElementBuilder();
+        rce=qeBuilder.build(context,descr,prefixPattern);
+      }
  else {
-      context.getErrors().add(new DescrBuildError(context.getParentDescr(),patternDescr,null,"Unable to resolve ObjectType '" + patternDescr.getObjectType() + "'"));
-      return null;
+        context.getErrors().add(new DescrBuildError(context.getParentDescr(),patternDescr,null,"Unable to resolve ObjectType '" + patternDescr.getObjectType() + "'"));
+      }
     }
+    return rce;
   }
   Pattern pattern;
   boolean duplicateBindings=context.getDeclarationResolver().isDuplicated(context.getRule(),patternDescr.getIdentifier());
@@ -57,13 +64,15 @@
     }
   }
   List<BaseDescr> notAConstraints=processPositional(patternDescr.getDescrs(),context,patternDescr,pattern);
-  for (  BaseDescr nac : notAConstraints)   patternDescr.removeConstraint(nac);
+  for (  BaseDescr nac : notAConstraints) {
+    patternDescr.removeConstraint(nac);
+  }
   for (  BindingDescr b : patternDescr.getBindings()) {
     if (true) {
       String expression=b.getExpression();
       DrlExprParser parser=new DrlExprParser();
       ConstraintConnectiveDescr result=parser.parse(expression);
-      if (parser.hasErrors()) {
+      if (result == null || parser.hasErrors()) {
         for (        DroolsParserException error : parser.getErrors()) {
           context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to parser pattern expression:\n" + error.getMessage()));
         }
