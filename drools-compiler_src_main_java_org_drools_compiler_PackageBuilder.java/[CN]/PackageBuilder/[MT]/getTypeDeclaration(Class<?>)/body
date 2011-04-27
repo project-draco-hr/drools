@@ -1,5 +1,15 @@
 {
-  TypeDeclaration tdecl=this.builtinTypes.get((cls.getName()));
+  if (cls.isPrimitive() || cls.isArray()) {
+    return null;
+  }
+  TypeDeclaration tdecl=null;
+  if (this.cacheTypes != null) {
+    tdecl=cacheTypes.get(cls.getName());
+    if (tdecl != null) {
+      return tdecl;
+    }
+  }
+  tdecl=this.builtinTypes.get((cls.getName()));
   PackageRegistry pkgReg=null;
   if (tdecl == null) {
     String pack=ClassUtils.getPackage(cls);
@@ -45,5 +55,9 @@
       }
     }
   }
+  if (this.cacheTypes == null) {
+    this.cacheTypes=new HashMap<String,TypeDeclaration>();
+  }
+  this.cacheTypes.put(originalCls.getName(),tdecl);
   return tdecl;
 }
