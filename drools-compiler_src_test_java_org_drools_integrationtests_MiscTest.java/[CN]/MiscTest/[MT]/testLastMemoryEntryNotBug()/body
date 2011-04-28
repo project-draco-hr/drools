@@ -1,0 +1,28 @@
+{
+  String str="";
+  str+="package org.simple \n";
+  str+="import " + A.class.getCanonicalName() + "\n";
+  str+="global java.util.List list \n";
+  str+="rule xxx \n";
+  str+="when \n";
+  str+="    not A( this != null ) \n";
+  str+="then \n";
+  str+="  list.add(\"fired\"); \n";
+  str+="end  \n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  A a1=new A("2","2");
+  FactHandle fa1=(FactHandle)ksession.insert(a1);
+  ksession.update(fa1,a1);
+  ksession.fireAllRules();
+  assertEquals(0,list.size());
+  ksession.dispose();
+}
