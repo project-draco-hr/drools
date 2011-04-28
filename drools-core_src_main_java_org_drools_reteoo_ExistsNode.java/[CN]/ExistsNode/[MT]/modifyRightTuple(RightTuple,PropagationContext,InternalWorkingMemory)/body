@@ -24,15 +24,12 @@
   if (firstBlocked != null) {
     FastIterator rightIt=memory.getRightTupleMemory().fastIterator();
     final RightTuple rootBlocker=(RightTuple)rightIt.next(rightTuple);
+    memory.getRightTupleMemory().remove(rightTuple);
+    memory.getRightTupleMemory().add(rightTuple);
     for (LeftTuple leftTuple=(LeftTuple)firstBlocked; leftTuple != null; ) {
       LeftTuple temp=leftTuple.getBlockedNext();
       leftTuple.setBlockedPrevious(null);
       leftTuple.setBlockedNext(null);
-      if (this.constraints.isAllowedCachedRight(memory.getContext(),leftTuple)) {
-        rightTuple.addBlocked(leftTuple);
-        leftTuple=temp;
-        continue;
-      }
       leftTuple.setBlocker(null);
       this.constraints.updateFromTuple(memory.getContext(),workingMemory,leftTuple);
       for (RightTuple newBlocker=rootBlocker; newBlocker != null; newBlocker=(RightTuple)rightIt.next(newBlocker)) {
@@ -49,8 +46,10 @@
       leftTuple=temp;
     }
   }
+ else {
+    memory.getRightTupleMemory().remove(rightTuple);
+    memory.getRightTupleMemory().add(rightTuple);
+  }
   this.constraints.resetFactHandle(memory.getContext());
   this.constraints.resetTuple(memory.getContext());
-  memory.getRightTupleMemory().remove(rightTuple);
-  memory.getRightTupleMemory().add(rightTuple);
 }
