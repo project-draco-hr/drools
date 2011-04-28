@@ -1,0 +1,26 @@
+{
+  Accumulate accumulate=null;
+  final List<AccumulateFunctionCallDescr> funcCalls=accumDescr.getFunctions();
+  final Declaration[] sourceDeclArr=(Declaration[])source.getOuterDeclarations().values().toArray(new Declaration[0]);
+  Accumulator[] accumulators=new Accumulator[funcCalls.size()];
+  Set<Declaration> requiredDecl=new HashSet<Declaration>();
+  InternalReadAccessor arrayReader=new SelfReferenceClassFieldReader(Object[].class,"this");
+  int index=0;
+  for (  AccumulateFunctionCallDescr fc : funcCalls) {
+    AccumulateFunction function=context.getConfiguration().getAccumulateFunction(fc.getFunction());
+    if (function == null) {
+      context.getErrors().add(new DescrBuildError(accumDescr,context.getRuleDescr(),null,"Unknown accumulate function: '" + fc.getFunction() + "' on rule '"+ context.getRuleDescr().getName()+ "'. All accumulate functions must be registered before building a resource."));
+      return null;
+    }
+    if (fc.getBind() != null) {
+      createResultBind(context,index,arrayReader,fc,function);
+    }
+    final JavaAnalysisResult analysis=(JavaAnalysisResult)context.getDialect().analyzeBlock(context,accumDescr,fc.getParams().length > 0 ? fc.getParams()[0] : "\"\"",new BoundIdentifiers(declCls,context.getPackageBuilder().getGlobals()));
+    final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
+    final Declaration[] previousDeclarations=collectRequiredDeclarations(declsInScope,requiredDecl,usedIdentifiers);
+    accumulators[index++]=generateFunctionCallCodeTemplate(context,accumDescr,sourceDeclArr,fc,function,usedIdentifiers,previousDeclarations);
+  }
+  boolean isMultiFunction=((Pattern)context.getBuildStack().peek()).getObjectType().getValueType().equals(ValueType.ARRAY_TYPE) && funcCalls.size() > 1;
+  accumulate=new Accumulate(source,requiredDecl.toArray(new Declaration[requiredDecl.size()]),sourceDeclArr,accumulators,isMultiFunction);
+  return accumulate;
+}
