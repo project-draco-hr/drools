@@ -1,8 +1,10 @@
 {
+  boolean typesafe=context.isTypesafe();
   try {
     MVELDialect dialect=(MVELDialect)context.getDialect(context.getDialect().getId());
     Map<String,Class<?>> declIds=context.getDeclarationResolver().getDeclarationClasses(context.getRule());
     Pattern p=(Pattern)context.getBuildStack().peek();
+    context.setTypesafe(((MVELAnalysisResult)analysis).isTypesafe());
     MVELCompilationUnit unit=dialect.getMVELCompilationUnit((String)returnValueRestrictionDescr.getContent(),analysis,previousDeclarations,localDeclarations,null,context,"drools",KnowledgeHelper.class);
     MVELReturnValueExpression expr=new MVELReturnValueExpression(unit,context.getDialect().getId());
     returnValueRestriction.setReturnValueExpression(expr);
@@ -12,5 +14,8 @@
   }
  catch (  final Exception e) {
     context.getErrors().add(new DescrBuildError(context.getParentDescr(),context.getRuleDescr(),null,"Unable to build expression for 'returnValue' : " + e.getMessage() + "'"+ context.getRuleDescr().getSalience()+ "'"));
+  }
+ finally {
+    context.setTypesafe(typesafe);
   }
 }

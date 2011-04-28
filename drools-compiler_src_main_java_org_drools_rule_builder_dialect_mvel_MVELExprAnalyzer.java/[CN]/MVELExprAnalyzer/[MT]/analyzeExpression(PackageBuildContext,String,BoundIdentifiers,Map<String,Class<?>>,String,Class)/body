@@ -30,6 +30,11 @@
     Set<String> requiredInputs=new HashSet<String>();
     requiredInputs.addAll(parserContext1.getInputs().keySet());
     HashMap<String,Class<?>> variables=(HashMap<String,Class<?>>)((Map)parserContext1.getVariables());
+    if (localTypes != null) {
+      for (      String str : localTypes.keySet()) {
+        variables.remove(str);
+      }
+    }
     if (availableIdentifiers.getThisClass() != null) {
       for (Iterator<String> it=requiredInputs.iterator(); it.hasNext(); ) {
         if (PropertyTools.getFieldOrAccessor(availableIdentifiers.getThisClass(),it.next()) != null) {
@@ -41,21 +46,25 @@
     parserContext2.setStrictTypeEnforcement(true);
     parserContext2.setStrongTyping(true);
     parserContext2.setInterceptors(dialect.getInterceptors());
-    if (context.isTypesafe()) {
-      if (localTypes != null) {
-        for (        Entry<String,Class<?>> entry : localTypes.entrySet()) {
-          parserContext2.addInput(entry.getKey(),entry.getValue());
-        }
-      }
+    boolean typesafe=context.isTypesafe();
+    if (typesafe) {
       for (      String str : requiredInputs) {
-        Class<?> cls=availableIdentifiers.getDeclarations().get(str);
+        Class<?> cls=null;
+        if (!typesafe) {
+          break;
+        }
+        cls=availableIdentifiers.getDeclrClasses().get(str);
         if (cls != null) {
+          TypeDeclaration type=context.getPackageBuilder().getTypeDeclaration(cls);
+          typesafe=(type != null) ? type.isTypesafe() : true;
           parserContext2.addInput(str,cls);
           continue;
         }
         if (cls == null) {
           cls=availableIdentifiers.getGlobals().get(str);
           if (cls != null) {
+            TypeDeclaration type=context.getPackageBuilder().getTypeDeclaration(cls);
+            typesafe=(type != null) ? type.isTypesafe() : true;
             parserContext2.addInput(str,cls);
             continue;
           }
@@ -63,6 +72,8 @@
         if (cls == null) {
           cls=availableIdentifiers.getOperators().keySet().contains(str) ? EvaluatorWrapper.class : null;
           if (cls != null) {
+            TypeDeclaration type=context.getPackageBuilder().getTypeDeclaration(cls);
+            typesafe=(type != null) ? type.isTypesafe() : true;
             parserContext2.addInput(str,cls);
             continue;
           }
@@ -78,7 +89,18 @@
             parserContext2.addInput("rule",Rule.class);
           }
         }
+        if (cls == null && localTypes != null) {
+          cls=localTypes.get(str);
+          if (cls != null) {
+            TypeDeclaration type=context.getPackageBuilder().getTypeDeclaration(cls);
+            typesafe=(type != null) ? type.isTypesafe() : true;
+            parserContext2.addInput(str,cls);
+            continue;
+          }
+        }
       }
+    }
+    if (typesafe) {
       if (availableIdentifiers.getThisClass() != null) {
         parserContext2.addInput("this",availableIdentifiers.getThisClass());
       }
@@ -93,14 +115,21 @@
       requiredInputs.addAll(parserContext2.getInputs().keySet());
       requiredInputs.addAll(variables.keySet());
       variables=(HashMap<String,Class<?>>)((Map)parserContext2.getVariables());
+      if (localTypes != null) {
+        for (        String str : localTypes.keySet()) {
+          variables.remove(str);
+        }
+      }
     }
     result=analyze(requiredInputs,availableIdentifiers);
     result.setReturnType(returnType);
     result.setMvelVariables(variables);
+    result.setTypesafe(typesafe);
   }
  else {
     result=analyze((Set<String>)Collections.EMPTY_SET,availableIdentifiers);
     result.setMvelVariables(new HashMap<String,Class<?>>());
+    result.setTypesafe(true);
   }
   return result;
 }

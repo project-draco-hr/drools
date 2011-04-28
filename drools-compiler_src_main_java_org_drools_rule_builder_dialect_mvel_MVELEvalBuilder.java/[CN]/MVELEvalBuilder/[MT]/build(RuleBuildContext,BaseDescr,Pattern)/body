@@ -1,14 +1,15 @@
 {
+  boolean typesafe=context.isTypesafe();
   final EvalDescr evalDescr=(EvalDescr)descr;
   try {
     MVELDialect dialect=(MVELDialect)context.getDialect(context.getDialect().getId());
     Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
     AnalysisResult analysis=context.getDialect().analyzeExpression(context,evalDescr,evalDescr.getContent(),new BoundIdentifiers(context.getDeclarationResolver().getDeclarationClasses(decls),context.getPackageBuilder().getGlobals()));
     final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
-    int i=usedIdentifiers.getDeclarations().keySet().size();
+    int i=usedIdentifiers.getDeclrClasses().keySet().size();
     Declaration[] previousDeclarations=new Declaration[i];
     i=0;
-    for (    String id : usedIdentifiers.getDeclarations().keySet()) {
+    for (    String id : usedIdentifiers.getDeclrClasses().keySet()) {
       previousDeclarations[i++]=decls.get(id);
     }
     Arrays.sort(previousDeclarations,SortDeclarations.instance);
@@ -24,5 +25,8 @@
  catch (  final Exception e) {
     context.getErrors().add(new DescrBuildError(context.getParentDescr(),evalDescr,e,"Unable to build expression for 'eval':" + e.getMessage() + " '"+ evalDescr.getContent()+ "'"));
     return null;
+  }
+ finally {
+    context.setTypesafe(typesafe);
   }
 }

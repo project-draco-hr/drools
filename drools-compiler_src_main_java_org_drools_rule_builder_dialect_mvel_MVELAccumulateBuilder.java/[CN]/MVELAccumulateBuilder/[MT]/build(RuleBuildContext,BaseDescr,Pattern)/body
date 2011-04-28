@@ -1,4 +1,5 @@
 {
+  boolean typesafe=context.isTypesafe();
   try {
     final AccumulateDescr accumDescr=(AccumulateDescr)descr;
     if (!accumDescr.hasValidInput()) {
@@ -12,10 +13,13 @@
     MVELDialect dialect=(MVELDialect)context.getDialect();
     Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
     Map<String,Declaration> sourceOuterDeclr=source.getOuterDeclarations();
+    Map<String,Declaration> mergedDecl=new HashMap(decls);
+    mergedDecl.putAll(sourceOuterDeclr);
     Map<String,Class<?>> declarationClasses=context.getDeclarationResolver().getDeclarationClasses(decls);
     declarationClasses.putAll(context.getDeclarationResolver().getDeclarationClasses(sourceOuterDeclr));
     Accumulator accumulator=null;
     BoundIdentifiers boundIds=new BoundIdentifiers(declarationClasses,context.getPackageBuilder().getGlobals());
+    boundIds.setDeclarations(mergedDecl);
     if (accumDescr.isExternalFunction()) {
       AccumulateFunctionCallDescr func=accumDescr.getFunctions().get(0);
       AccumulateFunction function=context.getConfiguration().getAccumulateFunction(func.getFunction());
@@ -31,21 +35,25 @@
       final MVELAnalysisResult initCodeAnalysis=(MVELAnalysisResult)dialect.analyzeBlock(context,accumDescr,accumDescr.getInitCode(),boundIds);
       final MVELAnalysisResult actionCodeAnalysis=(MVELAnalysisResult)dialect.analyzeBlock(context,accumDescr,null,accumDescr.getActionCode(),boundIds,initCodeAnalysis.getMvelVariables(),"drools",KnowledgeHelper.class);
       final MVELAnalysisResult resultCodeAnalysis=(MVELAnalysisResult)dialect.analyzeExpression(context,accumDescr,accumDescr.getResultCode(),boundIds,initCodeAnalysis.getMvelVariables());
-      AnalysisResult reverseCodeAnalysis=null;
+      MVELAnalysisResult reverseCodeAnalysis=null;
       if (accumDescr.getReverseCode() != null) {
-        reverseCodeAnalysis=dialect.analyzeBlock(context,accumDescr,null,accumDescr.getActionCode(),boundIds,initCodeAnalysis.getMvelVariables(),"drools",KnowledgeHelper.class);
+        reverseCodeAnalysis=(MVELAnalysisResult)dialect.analyzeBlock(context,accumDescr,null,accumDescr.getActionCode(),boundIds,initCodeAnalysis.getMvelVariables(),"drools",KnowledgeHelper.class);
       }
+      context.setTypesafe(initCodeAnalysis.isTypesafe());
       MVELCompilationUnit initUnit=dialect.getMVELCompilationUnit((String)accumDescr.getInitCode(),initCodeAnalysis,getUsedDeclarations(decls,initCodeAnalysis),getUsedDeclarations(sourceOuterDeclr,initCodeAnalysis),initCodeAnalysis.getMvelVariables(),context,"drools",KnowledgeHelper.class);
+      context.setTypesafe(actionCodeAnalysis.isTypesafe());
       MVELCompilationUnit actionUnit=dialect.getMVELCompilationUnit((String)accumDescr.getActionCode(),actionCodeAnalysis,getUsedDeclarations(decls,actionCodeAnalysis),getUsedDeclarations(sourceOuterDeclr,actionCodeAnalysis),initCodeAnalysis.getMvelVariables(),context,"drools",KnowledgeHelper.class);
       MVELCompilationUnit reverseUnit=null;
       if (accumDescr.getReverseCode() != null) {
+        context.setTypesafe(reverseCodeAnalysis.isTypesafe());
         reverseUnit=dialect.getMVELCompilationUnit((String)accumDescr.getReverseCode(),reverseCodeAnalysis,getUsedDeclarations(decls,reverseCodeAnalysis),getUsedDeclarations(sourceOuterDeclr,reverseCodeAnalysis),initCodeAnalysis.getMvelVariables(),context,"drools",KnowledgeHelper.class);
       }
+      context.setTypesafe(resultCodeAnalysis.isTypesafe());
       MVELCompilationUnit resultUnit=dialect.getMVELCompilationUnit((String)accumDescr.getResultCode(),resultCodeAnalysis,getUsedDeclarations(decls,resultCodeAnalysis),getUsedDeclarations(sourceOuterDeclr,resultCodeAnalysis),initCodeAnalysis.getMvelVariables(),context,"drools",KnowledgeHelper.class);
       if (reverseUnit != null) {
         Set<String> shadow=new HashSet<String>(source.getOuterDeclarations().keySet());
         shadow.retainAll(reverseCodeAnalysis.getNotBoundedIdentifiers());
-        shadow.addAll(reverseCodeAnalysis.getBoundIdentifiers().getDeclarations().keySet());
+        shadow.addAll(reverseCodeAnalysis.getBoundIdentifiers().getDeclrClasses().keySet());
         String[] shadowVars=(String[])shadow.toArray(new String[shadow.size()]);
         actionUnit.setShadowIdentifiers(shadowVars);
         reverseUnit.setShadowIdentifiers(shadowVars);
@@ -61,5 +69,8 @@
  catch (  Exception e) {
     context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,e,"Unable to build expression for 'accumulate' : " + e.getMessage()));
     return null;
+  }
+ finally {
+    context.setTypesafe(typesafe);
   }
 }

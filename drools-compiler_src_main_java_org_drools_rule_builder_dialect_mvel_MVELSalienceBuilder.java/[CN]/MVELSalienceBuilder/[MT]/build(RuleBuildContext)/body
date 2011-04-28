@@ -1,14 +1,16 @@
 {
+  boolean typesafe=context.isTypesafe();
   context.getBuildStack().push(context.getRule().getLhs());
   try {
     MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
     Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
-    AnalysisResult analysis=dialect.analyzeExpression(context,context.getRuleDescr(),(String)context.getRuleDescr().getSalience(),new BoundIdentifiers(context.getDeclarationResolver().getDeclarationClasses(decls),context.getPackageBuilder().getGlobals()));
+    MVELAnalysisResult analysis=(MVELAnalysisResult)dialect.analyzeExpression(context,context.getRuleDescr(),(String)context.getRuleDescr().getSalience(),new BoundIdentifiers(context.getDeclarationResolver().getDeclarationClasses(decls),context.getPackageBuilder().getGlobals()));
+    context.setTypesafe(analysis.isTypesafe());
     final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
-    int i=usedIdentifiers.getDeclarations().keySet().size();
+    int i=usedIdentifiers.getDeclrClasses().keySet().size();
     Declaration[] previousDeclarations=new Declaration[i];
     i=0;
-    for (    String id : usedIdentifiers.getDeclarations().keySet()) {
+    for (    String id : usedIdentifiers.getDeclrClasses().keySet()) {
       previousDeclarations[i++]=decls.get(id);
     }
     Arrays.sort(previousDeclarations,SortDeclarations.instance);
@@ -21,5 +23,8 @@
   }
  catch (  final Exception e) {
     context.getErrors().add(new DescrBuildError(context.getParentDescr(),context.getRuleDescr(),null,"Unable to build expression for 'salience' : " + e.getMessage() + "'"+ context.getRuleDescr().getSalience()+ "'"));
+  }
+ finally {
+    context.setTypesafe(typesafe);
   }
 }
