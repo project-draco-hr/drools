@@ -41,7 +41,20 @@
       continue;
     }
     pkgRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
-    mergeInheritedFields(typeDescr);
+    if (typeDescr.getSuperTypeName() != null) {
+      mergeInheritedFields(typeDescr);
+      Iterator<TypeDeclarationDescr> iter=sortedTypeDescriptors.iterator();
+      while (iter.hasNext()) {
+        TypeDeclarationDescr descr=iter.next();
+        if ((typeDescr.getSuperTypeName().equals(descr.getTypeName()) && typeDescr.getSuperTypeNamespace().equals(descr.getNamespace()))) {
+          typeDescr.getAnnotations().putAll(descr.getAnnotations());
+          break;
+        }
+ else         if ((typeDescr.getTypeName().equals(descr.getTypeName()) && typeDescr.getNamespace().equals(descr.getNamespace()))) {
+          break;
+        }
+      }
+    }
     TypeDeclaration type=new TypeDeclaration(typeDescr.getTypeName());
     if (resource != null && ((InternalResource)resource).hasURL()) {
       type.setResource(this.resource);
