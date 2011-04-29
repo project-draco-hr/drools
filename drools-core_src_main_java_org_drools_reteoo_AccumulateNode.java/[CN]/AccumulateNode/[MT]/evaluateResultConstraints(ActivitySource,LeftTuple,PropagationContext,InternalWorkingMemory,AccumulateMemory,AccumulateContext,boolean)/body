@@ -1,16 +1,14 @@
 {
-  final Object[] result=this.accumulate.getResult(memory.workingMemoryContext,accctx.context,leftTuple,workingMemory);
-  if (result[0] == null) {
-    throw new IllegalArgumentException("Accumulate's cannot return null");
-  }
+  final Object[] resultArray=this.accumulate.getResult(memory.workingMemoryContext,accctx.context,leftTuple,workingMemory);
+  Object result=this.accumulate.isMultiFunction() ? resultArray : resultArray[0];
   if (accctx.result == null) {
-    final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(result[0],workingMemory.getObjectTypeConfigurationRegistry().getObjectTypeConf(context.getEntryPoint(),result[0]),workingMemory,null);
+    final InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(result,workingMemory.getObjectTypeConfigurationRegistry().getObjectTypeConf(context.getEntryPoint(),result),workingMemory,null);
     accctx.result=new RightTuple(handle,this);
   }
  else {
-    accctx.result.getFactHandle().setObject(result[0]);
+    accctx.result.getFactHandle().setObject(result);
   }
-  boolean isAllowed=result[0] != null;
+  boolean isAllowed=result != null;
   for (int i=0, length=this.resultConstraints.length; isAllowed && i < length; i++) {
     if (!this.resultConstraints[i].isAllowed(accctx.result.getFactHandle(),workingMemory,memory.alphaContexts[i])) {
       isAllowed=false;

@@ -1,0 +1,31 @@
+{
+  Accumulator[] accumulators;
+  final MVELAnalysisResult initCodeAnalysis=(MVELAnalysisResult)dialect.analyzeBlock(context,accumDescr,accumDescr.getInitCode(),boundIds);
+  final MVELAnalysisResult actionCodeAnalysis=(MVELAnalysisResult)dialect.analyzeBlock(context,accumDescr,null,accumDescr.getActionCode(),boundIds,initCodeAnalysis.getMvelVariables(),"drools",KnowledgeHelper.class);
+  final MVELAnalysisResult resultCodeAnalysis=(MVELAnalysisResult)dialect.analyzeExpression(context,accumDescr,accumDescr.getResultCode(),boundIds,initCodeAnalysis.getMvelVariables());
+  MVELAnalysisResult reverseCodeAnalysis=null;
+  if (accumDescr.getReverseCode() != null) {
+    reverseCodeAnalysis=(MVELAnalysisResult)dialect.analyzeBlock(context,accumDescr,null,accumDescr.getActionCode(),boundIds,initCodeAnalysis.getMvelVariables(),"drools",KnowledgeHelper.class);
+  }
+  context.setTypesafe(initCodeAnalysis.isTypesafe());
+  MVELCompilationUnit initUnit=dialect.getMVELCompilationUnit((String)accumDescr.getInitCode(),initCodeAnalysis,getUsedDeclarations(decls,initCodeAnalysis),getUsedDeclarations(sourceOuterDeclr,initCodeAnalysis),initCodeAnalysis.getMvelVariables(),context,"drools",KnowledgeHelper.class);
+  context.setTypesafe(actionCodeAnalysis.isTypesafe());
+  MVELCompilationUnit actionUnit=dialect.getMVELCompilationUnit((String)accumDescr.getActionCode(),actionCodeAnalysis,getUsedDeclarations(decls,actionCodeAnalysis),getUsedDeclarations(sourceOuterDeclr,actionCodeAnalysis),initCodeAnalysis.getMvelVariables(),context,"drools",KnowledgeHelper.class);
+  MVELCompilationUnit reverseUnit=null;
+  if (accumDescr.getReverseCode() != null) {
+    context.setTypesafe(reverseCodeAnalysis.isTypesafe());
+    reverseUnit=dialect.getMVELCompilationUnit((String)accumDescr.getReverseCode(),reverseCodeAnalysis,getUsedDeclarations(decls,reverseCodeAnalysis),getUsedDeclarations(sourceOuterDeclr,reverseCodeAnalysis),initCodeAnalysis.getMvelVariables(),context,"drools",KnowledgeHelper.class);
+  }
+  context.setTypesafe(resultCodeAnalysis.isTypesafe());
+  MVELCompilationUnit resultUnit=dialect.getMVELCompilationUnit((String)accumDescr.getResultCode(),resultCodeAnalysis,getUsedDeclarations(decls,resultCodeAnalysis),getUsedDeclarations(sourceOuterDeclr,resultCodeAnalysis),initCodeAnalysis.getMvelVariables(),context,"drools",KnowledgeHelper.class);
+  if (reverseUnit != null) {
+    Set<String> shadow=new HashSet<String>(source.getOuterDeclarations().keySet());
+    shadow.retainAll(reverseCodeAnalysis.getNotBoundedIdentifiers());
+    shadow.addAll(reverseCodeAnalysis.getBoundIdentifiers().getDeclrClasses().keySet());
+    String[] shadowVars=(String[])shadow.toArray(new String[shadow.size()]);
+    actionUnit.setShadowIdentifiers(shadowVars);
+    reverseUnit.setShadowIdentifiers(shadowVars);
+  }
+  accumulators=new Accumulator[]{new MVELAccumulator(initUnit,actionUnit,reverseUnit,resultUnit)};
+  return accumulators;
+}

@@ -1,0 +1,21 @@
+{
+  Accumulator[] accumulators;
+  List<AccumulateFunctionCallDescr> functions=accumDescr.getFunctions();
+  accumulators=new Accumulator[functions.size()];
+  InternalReadAccessor arrayReader=new SelfReferenceClassFieldReader(Object[].class,"this");
+  int index=0;
+  for (  AccumulateFunctionCallDescr func : functions) {
+    AccumulateFunction function=context.getConfiguration().getAccumulateFunction(func.getFunction());
+    if (function == null) {
+      context.getErrors().add(new DescrBuildError(accumDescr,context.getRuleDescr(),null,"Unknown accumulate function: '" + func.getFunction() + "' on rule '"+ context.getRuleDescr().getName()+ "'. All accumulate functions must be registered before building a resource."));
+      return null;
+    }
+    if (func.getBind() != null) {
+      createResultBind(context,index,arrayReader,func,function);
+    }
+    final AnalysisResult analysis=dialect.analyzeExpression(context,accumDescr,func.getParams().length > 0 ? func.getParams()[0] : "\"\"",boundIds);
+    MVELCompilationUnit unit=dialect.getMVELCompilationUnit(func.getParams().length > 0 ? func.getParams()[0] : "\"\"",analysis,getUsedDeclarations(decls,analysis),getUsedDeclarations(sourceOuterDeclr,analysis),null,context,"drools",KnowledgeHelper.class);
+    accumulators[index++]=new MVELAccumulatorFunctionExecutor(unit,function);
+  }
+  return accumulators;
+}
