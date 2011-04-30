@@ -1,0 +1,28 @@
+{
+  ClassLoader parentClassLoader=Thread.currentThread().getContextClassLoader();
+  final ClassLoader p=parentClassLoader;
+  MapBackedClassLoader loader=AccessController.doPrivileged(new PrivilegedAction<MapBackedClassLoader>(){
+    public MapBackedClassLoader run(){
+      return new MapBackedClassLoader(p);
+    }
+  }
+);
+  try {
+    JarEntry entry=null;
+    byte[] buf=new byte[1024];
+    int len=0;
+    while ((entry=jis.getNextJarEntry()) != null) {
+      if (!entry.isDirectory() && !entry.getName().endsWith(".java")) {
+        ByteArrayOutputStream out=new ByteArrayOutputStream();
+        while ((len=jis.read(buf)) >= 0) {
+          out.write(buf,0,len);
+        }
+        loader.addResource(entry.getName(),out.toByteArray());
+      }
+    }
+  }
+ catch (  IOException e) {
+    fail("failed to read the jar");
+  }
+  return loader;
+}
