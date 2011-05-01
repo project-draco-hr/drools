@@ -1,5 +1,21 @@
 {
   validateUniqueRuleNames(packageDescr);
+  if (isEmpty(packageDescr.getNamespace())) {
+    packageDescr.setNamespace(this.configuration.getDefaultPackageName());
+  }
+  if (!checkNamespace(packageDescr.getNamespace())) {
+    return;
+  }
+  if (packageDescr.getAttributes().size() > 0) {
+    Map<String,AttributeDescr> pkgAttributes=packageAttributes.get(packageDescr.getNamespace());
+    if (pkgAttributes == null) {
+      pkgAttributes=new HashMap<String,AttributeDescr>();
+      this.packageAttributes.put(packageDescr.getNamespace(),pkgAttributes);
+    }
+    for (    AttributeDescr attr : packageDescr.getAttributes()) {
+      pkgAttributes.put(attr.getName(),attr);
+    }
+  }
   String dialectName=this.defaultDialect;
   for (Iterator it=packageDescr.getAttributes().iterator(); it.hasNext(); ) {
     AttributeDescr value=(AttributeDescr)it.next();
@@ -7,12 +23,6 @@
       dialectName=value.getValue();
       break;
     }
-  }
-  if (isEmpty(packageDescr.getNamespace())) {
-    packageDescr.setNamespace(this.configuration.getDefaultPackageName());
-  }
-  if (!checkNamespace(packageDescr.getNamespace())) {
-    return;
   }
   PackageRegistry pkgRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
   if (pkgRegistry == null) {
@@ -49,6 +59,8 @@
       if (isEmpty(ruleDescr.getNamespace())) {
         ruleDescr.setNamespace(packageDescr.getNamespace());
       }
+      Map<String,AttributeDescr> pkgAttributes=packageAttributes.get(packageDescr.getNamespace());
+      inheritPackageAttributes(pkgAttributes,ruleDescr);
       if (isEmpty(ruleDescr.getDialect())) {
         ruleDescr.addAttribute(new AttributeDescr("dialect",pkgRegistry.getDialect()));
       }

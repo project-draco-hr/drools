@@ -1,0 +1,27 @@
+{
+  String str="" + "package org.test \n" + "import org.drools.examples.eventing.EventRequest \n"+ "global java.util.List list \n"+ "rule 'zaa'\n  "+ "when \n  "+ "request: EventRequest( status == EventRequest.Status.ACTIVE )\n   "+ "then \n "+ "request.setStatus(EventRequest.Status.ACTIVE); \n  "+ "end";
+  JarInputStream jis=null;
+  try {
+    jis=new JarInputStream(this.getClass().getResourceAsStream("/eventing-example.jar"));
+  }
+ catch (  IOException e) {
+    fail("Failed to load the jar");
+  }
+  MapBackedClassLoader loader=createClassLoader(jis);
+  KnowledgeBuilderConfiguration knowledgeBuilderConfiguration=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,loader);
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(knowledgeBuilderConfiguration);
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBaseConfiguration knowledgeBaseConfiguration=KnowledgeBaseFactory.newKnowledgeBaseConfiguration(null,loader);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(knowledgeBaseConfiguration);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  Triangle t=new Triangle(Triangle.Type.ACUTE);
+  ksession.insert(t);
+  ksession.fireAllRules();
+  assertEquals(Triangle.Type.ACUTE,list.get(0));
+}
