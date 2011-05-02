@@ -8,9 +8,15 @@
     result=pattern.getDescr();
   }
   String label=null;
+  boolean isUnification=false;
   if (input.LA(1) == DRLLexer.ID && input.LA(2) == DRLLexer.COLON && !helper.validateCEKeyword(1)) {
     label=label(DroolsEditorType.IDENTIFIER_PATTERN);
     if (state.failed)     return null;
+  }
+ else   if (input.LA(1) == DRLLexer.ID && input.LA(2) == DRLLexer.UNIFY && !helper.validateCEKeyword(1)) {
+    label=unif(DroolsEditorType.IDENTIFIER_PATTERN);
+    if (state.failed)     return null;
+    isUnification=true;
   }
   if (input.LA(1) == DRLLexer.LEFT_PAREN) {
     try {
@@ -20,7 +26,7 @@
         failMismatchedTokenException();
         return null;
       }
-      lhsPattern(pattern,label);
+      lhsPattern(pattern,label,isUnification);
       if (state.failed)       return null;
       if (allowOr && helper.validateIdentifierKey(DroolsSoftKeywords.OR) && ce instanceof CEDescrBuilder) {
         if (state.backtracking == 0) {
@@ -36,7 +42,7 @@
           match(input,DRLLexer.ID,DroolsSoftKeywords.OR,null,DroolsEditorType.KEYWORD);
           if (state.failed)           return null;
           pattern=helper.start(PatternDescrBuilder.class,null,null);
-          lhsPattern(pattern,label);
+          lhsPattern(pattern,label,isUnification);
           if (state.failed)           return null;
           helper.end(PatternDescrBuilder.class,null);
         }
@@ -55,7 +61,7 @@
   }
  else {
     try {
-      lhsPattern(pattern,label);
+      lhsPattern(pattern,label,isUnification);
       if (state.failed)       return null;
     }
   finally {
