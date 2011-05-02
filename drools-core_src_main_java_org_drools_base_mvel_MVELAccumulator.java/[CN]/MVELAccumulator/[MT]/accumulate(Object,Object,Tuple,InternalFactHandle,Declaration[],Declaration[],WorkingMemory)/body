@@ -1,13 +1,20 @@
 {
   Object[] localVars=((MVELAccumulatorContext)context).getVariables();
-  DroolsMVELIndexedFactory factory=actionUnit.getFactory(null,null,handle.getObject(),(LeftTuple)leftTuple,localVars,(InternalWorkingMemory)workingMemory,workingMemory.getGlobalResolver());
+  MVELAccumulatorFactoryContext factoryContext=(MVELAccumulatorFactoryContext)workingMemoryContext;
+  VariableResolverFactory factory=factoryContext.getActionFactory();
+  actionUnit.updateFactory(null,null,handle.getObject(),(LeftTuple)leftTuple,localVars,(InternalWorkingMemory)workingMemory,workingMemory.getGlobalResolver(),factory);
+  DroolsVarFactory df=(DroolsVarFactory)factory.getNextFactory();
   if (reverse != null) {
-    ((MVELAccumulatorContext)context).getShadow().put(handle.getId(),factory);
+    Object[] shadow=new Object[df.getOtherVarsPos()];
+    for (int i=0; i < df.getOtherVarsPos(); i++) {
+      shadow[i]=factory.getIndexedVariableResolver(i).getValue();
+    }
+    ((MVELAccumulatorContext)context).getShadow().put(handle.getId(),shadow);
   }
   MVEL.executeExpression(this.action,null,factory);
   if (localVars.length > 0) {
-    for (int i=0; i < factory.getOtherVarsLength(); i++) {
-      localVars[i]=factory.getIndexedVariableResolver(factory.getOtherVarsPos() + i).getValue();
+    for (int i=0; i < df.getOtherVarsLength(); i++) {
+      localVars[i]=factory.getIndexedVariableResolver(df.getOtherVarsPos() + i).getValue();
     }
   }
   ((MVELAccumulatorContext)context).setVariables(localVars);
