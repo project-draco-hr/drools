@@ -1,0 +1,38 @@
+{
+  String drl="";
+  drl+="package org.test\n";
+  drl+="import org.drools.Person\n";
+  drl+="global java.util.List list\n";
+  drl+="rule test1\n";
+  drl+="when\n";
+  drl+="   $p1 : Person( eval( name \n != null ), name == ( new String(\"xxx\") ) )\n";
+  drl+="then\n";
+  drl+="end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newReaderResource(new StringReader(drl)),ResourceType.DRL);
+  KnowledgeBuilderErrors errors=kbuilder.getErrors();
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  List<ObjectTypeNode> nodes=((InternalRuleBase)((KnowledgeBaseImpl)kbase).ruleBase).getRete().getObjectTypeNodes();
+  ObjectTypeNode node=null;
+  for (  ObjectTypeNode n : nodes) {
+    if (((ClassObjectType)n.getObjectType()).getClassType() == Person.class) {
+      node=n;
+      break;
+    }
+  }
+  AlphaNode alphanode=(AlphaNode)node.getSinkPropagator().getSinks()[0];
+  PredicateConstraint c=(PredicateConstraint)alphanode.getConstraint();
+  assertTrue(c.getPredicateExpression() instanceof PredicateExpression);
+  assertTrue(c.getPredicateExpression() instanceof CompiledInvoker);
+  assertTrue(!(c.getPredicateExpression() instanceof MVELPredicateExpression));
+  alphanode=(AlphaNode)alphanode.getSinkPropagator().getSinks()[0];
+  ReturnValueRestriction r=(ReturnValueRestriction)((VariableConstraint)alphanode.getConstraint()).getRestriction();
+  assertTrue(r.getExpression() instanceof ReturnValueExpression);
+  assertTrue(r.getExpression() instanceof CompiledInvoker);
+  assertTrue(!(r.getExpression() instanceof MVELReturnValueExpression));
+}

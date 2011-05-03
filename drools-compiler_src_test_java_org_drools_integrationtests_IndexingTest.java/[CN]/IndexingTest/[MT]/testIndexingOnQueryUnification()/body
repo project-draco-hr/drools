@@ -1,0 +1,32 @@
+{
+  String str="";
+  str+="package org.drools.test  \n";
+  str+="import org.drools.Person \n";
+  str+="query peeps( String $name, String $likes, String $street) \n";
+  str+="    $p : Person( $name : name, $likes : likes, $street : address.street ) \n";
+  str+="end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  List<ObjectTypeNode> nodes=((InternalRuleBase)((KnowledgeBaseImpl)kbase).ruleBase).getRete().getObjectTypeNodes();
+  ObjectTypeNode node=null;
+  for (  ObjectTypeNode n : nodes) {
+    if (((ClassObjectType)n.getObjectType()).getClassType() == DroolsQuery.class) {
+      node=n;
+      break;
+    }
+  }
+  ReteooWorkingMemory wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession()).session;
+  AlphaNode alphanode=(AlphaNode)node.getSinkPropagator().getSinks()[0];
+  LeftInputAdapterNode liaNode=(LeftInputAdapterNode)alphanode.getSinkPropagator().getSinks()[0];
+  JoinNode j=(JoinNode)liaNode.getSinkPropagator().getSinks()[0];
+  TripleNonIndexSkipBetaConstraints c=(TripleNonIndexSkipBetaConstraints)j.getRawConstraints();
+  assertTrue(c.isIndexed());
+  BetaMemory bm=(BetaMemory)wm.getNodeMemory(j);
+  assertTrue(bm.getLeftTupleMemory() instanceof LeftTupleIndexHashTable);
+  assertTrue(bm.getRightTupleMemory() instanceof RightTupleIndexHashTable);
+}

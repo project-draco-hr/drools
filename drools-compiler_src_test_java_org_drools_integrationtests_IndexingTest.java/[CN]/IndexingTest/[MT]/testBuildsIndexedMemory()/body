@@ -1,0 +1,46 @@
+{
+  String drl="";
+  drl+="package org.test\n";
+  drl+="import org.drools.Person\n";
+  drl+="global java.util.List list\n";
+  drl+="rule test1\n";
+  drl+="when\n";
+  drl+="   $p1  : Person($name : name )\n";
+  drl+="   $p2 : Person(name == $name)\n";
+  drl+="   $p3 : Person(name == $p1.name)\n";
+  drl+="then\n";
+  drl+="end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newReaderResource(new StringReader(drl)),ResourceType.DRL);
+  KnowledgeBuilderErrors errors=kbuilder.getErrors();
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  List<ObjectTypeNode> nodes=((InternalRuleBase)((KnowledgeBaseImpl)kbase).ruleBase).getRete().getObjectTypeNodes();
+  ObjectTypeNode node=null;
+  for (  ObjectTypeNode n : nodes) {
+    if (((ClassObjectType)n.getObjectType()).getClassType() == Person.class) {
+      node=n;
+      break;
+    }
+  }
+  ReteooWorkingMemory wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession()).session;
+  LeftInputAdapterNode liaNode=(LeftInputAdapterNode)node.getSinkPropagator().getSinks()[0];
+  JoinNode j2=(JoinNode)liaNode.getSinkPropagator().getSinks()[0];
+  JoinNode j3=(JoinNode)j2.getSinkPropagator().getSinks()[0];
+  SingleBetaConstraints c=(SingleBetaConstraints)j2.getRawConstraints();
+  assertEquals("$name",((VariableConstraint)c.getConstraint()).getRequiredDeclarations()[0].getIdentifier());
+  assertTrue(c.isIndexed());
+  BetaMemory bm=(BetaMemory)wm.getNodeMemory(j2);
+  assertTrue(bm.getLeftTupleMemory() instanceof LeftTupleIndexHashTable);
+  assertTrue(bm.getRightTupleMemory() instanceof RightTupleIndexHashTable);
+  c=(SingleBetaConstraints)j3.getRawConstraints();
+  assertEquals("name",((VariableConstraint)c.getConstraint()).getRequiredDeclarations()[0].getIdentifier());
+  assertTrue(c.isIndexed());
+  bm=(BetaMemory)wm.getNodeMemory(j3);
+  assertTrue(bm.getLeftTupleMemory() instanceof LeftTupleIndexHashTable);
+  assertTrue(bm.getRightTupleMemory() instanceof RightTupleIndexHashTable);
+}

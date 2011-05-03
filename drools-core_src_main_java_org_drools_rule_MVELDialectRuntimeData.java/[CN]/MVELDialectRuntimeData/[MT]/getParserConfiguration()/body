@@ -1,0 +1,38 @@
+{
+  if (parserConfiguration == null) {
+    ClassLoader classLoader=rootClassLoader;
+{
+      String key=null;
+      Object value=null;
+      try {
+        for (        Entry<String,Object> entry : this.imports.entrySet()) {
+          key=entry.getKey();
+          value=entry.getValue();
+          if (entry.getValue() instanceof String) {
+            String str=(String)value;
+            Class cls=this.rootClassLoader.loadClass(str.substring(2));
+            if (str.startsWith("m:")) {
+              String methodName=key;
+              for (              Method method : cls.getDeclaredMethods()) {
+                if (method.getName().equals(methodName)) {
+                  entry.setValue(method);
+                  continue;
+                }
+              }
+            }
+ else {
+            }
+          }
+        }
+      }
+ catch (      ClassNotFoundException e) {
+        throw new IllegalArgumentException("Unable to resolve method of field: " + key + " - "+ value,e);
+      }
+    }
+    this.parserConfiguration=new ParserConfiguration();
+    this.parserConfiguration.setImports(this.imports);
+    this.parserConfiguration.setPackageImports(this.packageImports);
+    this.parserConfiguration.setClassLoader(classLoader);
+  }
+  return this.parserConfiguration;
+}
