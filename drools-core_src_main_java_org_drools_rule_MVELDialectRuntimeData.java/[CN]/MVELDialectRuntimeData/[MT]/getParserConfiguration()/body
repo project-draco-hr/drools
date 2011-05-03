@@ -1,12 +1,11 @@
 {
   if (parserConfiguration == null) {
-    String[] pkgImports=getPackageImports().toArray(new String[getPackageImports().size()]);
     ClassLoader classLoader=rootClassLoader;
 {
       String key=null;
       Object value=null;
       try {
-        for (        Entry<String,Object> entry : getImports().entrySet()) {
+        for (        Entry<String,Object> entry : this.imports.entrySet()) {
           key=entry.getKey();
           value=entry.getValue();
           if (entry.getValue() instanceof String) {
@@ -16,19 +15,12 @@
               String methodName=key;
               for (              Method method : cls.getDeclaredMethods()) {
                 if (method.getName().equals(methodName)) {
-                  getImports().put(methodName,method);
+                  entry.setValue(method);
                   continue;
                 }
               }
             }
  else {
-              String fieldName=key;
-              for (              Field field : cls.getFields()) {
-                if (field.isAccessible() && field.getName().equals(fieldName)) {
-                  getImports().put(fieldName,"f:" + cls.getName());
-                  continue;
-                }
-              }
             }
           }
         }
@@ -38,8 +30,8 @@
       }
     }
     this.parserConfiguration=new ParserConfiguration();
-    this.parserConfiguration.setImports(getImports());
-    this.parserConfiguration.setPackageImports(getPackageImports());
+    this.parserConfiguration.setImports(this.imports);
+    this.parserConfiguration.setPackageImports(this.packageImports);
     this.parserConfiguration.setClassLoader(classLoader);
   }
   return this.parserConfiguration;
