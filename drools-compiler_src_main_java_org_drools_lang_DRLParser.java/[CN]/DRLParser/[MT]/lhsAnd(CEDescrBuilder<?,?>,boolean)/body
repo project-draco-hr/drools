@@ -7,21 +7,25 @@
       result=ce.getDescr();
       helper.start(CEDescrBuilder.class,null,and);
     }
-    match(input,DRLLexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
-    if (state.failed)     return null;
-    match(input,DRLLexer.ID,DroolsSoftKeywords.AND,null,DroolsEditorType.KEYWORD);
-    if (state.failed)     return null;
-    if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
-      helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION_AND_OR);
-    }
-    while (input.LA(1) != DRLLexer.RIGHT_PAREN) {
-      lhsUnary(and,allowOr);
+    try {
+      match(input,DRLLexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+      match(input,DRLLexer.ID,DroolsSoftKeywords.AND,null,DroolsEditorType.KEYWORD);
+      if (state.failed)       return null;
+      if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+        helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION_AND_OR);
+      }
+      while (input.LA(1) != DRLLexer.RIGHT_PAREN) {
+        lhsUnary(and,allowOr);
+        if (state.failed)         return null;
+      }
+      match(input,DRLLexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
       if (state.failed)       return null;
     }
-    match(input,DRLLexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
-    if (state.failed)     return null;
-    if (state.backtracking == 0) {
-      helper.end(CEDescrBuilder.class,and);
+  finally {
+      if (state.backtracking == 0) {
+        helper.end(CEDescrBuilder.class,and);
+      }
     }
   }
  else {
@@ -31,35 +35,39 @@
       result=and.getDescr();
       helper.start(CEDescrBuilder.class,null,and);
     }
-    lhsUnary(and,allowOr);
-    if (state.failed)     return null;
-    if (helper.validateIdentifierKey(DroolsSoftKeywords.AND) || input.LA(1) == DRLLexer.DOUBLE_AMPER) {
-      while (helper.validateIdentifierKey(DroolsSoftKeywords.AND) || input.LA(1) == DRLLexer.DOUBLE_AMPER) {
-        if (input.LA(1) == DRLLexer.DOUBLE_AMPER) {
-          match(input,DRLLexer.DOUBLE_AMPER,null,null,DroolsEditorType.SYMBOL);
-        }
+    try {
+      lhsUnary(and,allowOr);
+      if (state.failed)       return null;
+      if (helper.validateIdentifierKey(DroolsSoftKeywords.AND) || input.LA(1) == DRLLexer.DOUBLE_AMPER) {
+        while (helper.validateIdentifierKey(DroolsSoftKeywords.AND) || input.LA(1) == DRLLexer.DOUBLE_AMPER) {
+          if (input.LA(1) == DRLLexer.DOUBLE_AMPER) {
+            match(input,DRLLexer.DOUBLE_AMPER,null,null,DroolsEditorType.SYMBOL);
+          }
  else {
-          match(input,DRLLexer.ID,DroolsSoftKeywords.AND,null,DroolsEditorType.KEYWORD);
+            match(input,DRLLexer.ID,DroolsSoftKeywords.AND,null,DroolsEditorType.KEYWORD);
+          }
+          if (state.failed)           return null;
+          if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+            helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION_AND_OR);
+          }
+          lhsUnary(and,allowOr);
+          if (state.failed)           return null;
         }
-        if (state.failed)         return null;
-        if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
-          helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION_AND_OR);
+      }
+ else {
+        if (state.backtracking == 0) {
+          ((ConditionalElementDescr)ce.getDescr()).getDescrs().remove(and.getDescr());
+          for (          BaseDescr base : and.getDescr().getDescrs()) {
+            ((ConditionalElementDescr)ce.getDescr()).addDescr(base);
+          }
+          result=ce.getDescr();
         }
-        lhsUnary(and,allowOr);
-        if (state.failed)         return null;
       }
     }
- else {
+  finally {
       if (state.backtracking == 0) {
-        ((ConditionalElementDescr)ce.getDescr()).getDescrs().remove(and.getDescr());
-        for (        BaseDescr base : and.getDescr().getDescrs()) {
-          ((ConditionalElementDescr)ce.getDescr()).addDescr(base);
-        }
-        result=ce.getDescr();
+        helper.end(CEDescrBuilder.class,and);
       }
-    }
-    if (state.backtracking == 0) {
-      helper.end(CEDescrBuilder.class,and);
     }
   }
   return result;
