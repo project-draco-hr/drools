@@ -1,9 +1,19 @@
 {
   if (ev.getSource().equals(solveButton)) {
     sudoku.solve();
+    buttonsActive(false);
+    if (!sudoku.isSolved()) {
+      sudoku.dumpGrid();
+      System.out.println("Sorry - can't solve this grid.");
+    }
   }
  else   if (ev.getSource().equals(stepButton)) {
     sudoku.step();
+    if (sudoku.isSolved() || sudoku.isUnsolvable())     buttonsActive(false);
+    if (sudoku.isUnsolvable()) {
+      sudoku.dumpGrid();
+      System.out.println("Sorry - can't solve this grid.");
+    }
   }
  else   if (ev.getSource().equals(dumpButton)) {
     sudoku.dumpGrid();
@@ -17,6 +27,7 @@
         String path=fileChooser.getSelectedFile().getCanonicalPath();
         System.out.println(path);
         runFile(path);
+        buttonsActive(true);
       }
     }
  catch (    IOException ex) {
@@ -29,6 +40,8 @@
  else   if (ev.getSource() instanceof JMenuItem) {
     JMenuItem menuItem=(JMenuItem)ev.getSource();
     sudoku.setCellValues(SudokuGridSamples.getInstance().getSample(menuItem.getText()));
+    sudoku.validate();
+    buttonsActive(true);
   }
  else {
   }
