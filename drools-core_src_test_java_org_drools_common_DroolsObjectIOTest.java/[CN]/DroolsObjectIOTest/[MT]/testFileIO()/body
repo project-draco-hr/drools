@@ -1,12 +1,15 @@
 {
+  FooBar fooBar1=new FooBar();
+  ByteArrayOutputStream byteArrayOut=new ByteArrayOutputStream();
+  new ObjectOutputStream(byteArrayOut).writeObject(fooBar1);
+  ByteArrayInputStream byteArrayIn=new ByteArrayInputStream(byteArrayOut.toByteArray());
+  FooBar fooBar2=(FooBar)new ObjectInputStream(byteArrayIn).readObject();
+  final String TEST_FILE="test.dat";
   File file=new File(getClass().getResource("DroolsObjectIOTest.class").getFile());
-  ByteArrayOutputStream bytes=new ByteArrayOutputStream();
-  new ObjectOutputStream(bytes).writeObject(new FooBar());
-  FooBar t=(FooBar)new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray())).readObject();
-  String str=TEST_FILE;
-  file=new File(file.getParent().replaceAll("%20"," "),str);
-  DroolsStreamUtils.streamOut(new FileOutputStream(file),testGroupElement);
+  File parentFile=new File(file.getParent().replaceAll("%20"," "),TEST_FILE);
+  GroupElement testGroupElement=new GroupElement();
+  DroolsStreamUtils.streamOut(new FileOutputStream(parentFile),testGroupElement);
   InputStream fis=getClass().getResourceAsStream(TEST_FILE);
-  GroupElement that=(GroupElement)DroolsStreamUtils.streamIn(fis);
-  assertEquals(that,testGroupElement);
+  GroupElement streamedGroupElement=(GroupElement)DroolsStreamUtils.streamIn(fis);
+  assertEquals(streamedGroupElement,testGroupElement);
 }
