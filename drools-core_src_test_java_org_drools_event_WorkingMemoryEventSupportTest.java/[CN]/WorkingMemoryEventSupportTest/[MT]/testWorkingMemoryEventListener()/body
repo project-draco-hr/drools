@@ -1,6 +1,6 @@
 {
-  final RuleBase rb=RuleBaseFactory.newRuleBase();
-  final WorkingMemory wm=rb.newStatefulSession();
+  final KnowledgeBase rb=KnowledgeBaseFactory.newKnowledgeBase();
+  final StatefulKnowledgeSession wm=rb.newStatefulKnowledgeSession();
   final List wmList=new ArrayList();
   final WorkingMemoryEventListener workingMemoryListener=new WorkingMemoryEventListener(){
     public void objectInserted(    ObjectInsertedEvent event){
@@ -20,9 +20,11 @@
   final FactHandle stiltonHandle=wm.insert(stilton);
   ObjectInsertedEvent oae=(ObjectInsertedEvent)wmList.get(0);
   assertSame(stiltonHandle,oae.getFactHandle());
-  wm.update(stiltonHandle,stilton);
+  wm.update(stiltonHandle,cheddar);
   final ObjectUpdatedEvent ome=(ObjectUpdatedEvent)wmList.get(1);
   assertSame(stiltonHandle,ome.getFactHandle());
+  assertEquals(cheddar,ome.getObject());
+  assertEquals(stilton,ome.getOldObject());
   wm.retract(stiltonHandle);
   final ObjectRetractedEvent ore=(ObjectRetractedEvent)wmList.get(2);
   assertSame(stiltonHandle,ore.getFactHandle());
