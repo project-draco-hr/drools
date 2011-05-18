@@ -1,0 +1,17 @@
+{
+  String str="package org.drools\n" + "query queryWithEval \n" + "    $do: DomainObject()\n"+ "    not DomainObject( id == $do.id, eval(interval.isAfter($do.getInterval())))\n"+ "end";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  DomainObject do1=new DomainObject();
+  do1.setId(1);
+  do1.setInterval(new Interval(10,5));
+  DomainObject do2=new DomainObject();
+  do2.setId(1);
+  do2.setInterval(new Interval(20,5));
+  ksession.insert(do1);
+  ksession.insert(do2);
+  org.drools.runtime.rule.QueryResults results=ksession.getQueryResults("queryWithEval");
+  assertEquals(1,results.size());
+  assertEquals(do2,results.iterator().next().get("$do"));
+  ksession.dispose();
+}
