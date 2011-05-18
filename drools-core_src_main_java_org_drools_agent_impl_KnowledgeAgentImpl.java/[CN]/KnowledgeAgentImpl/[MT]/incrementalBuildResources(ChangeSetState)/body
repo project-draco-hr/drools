@@ -13,8 +13,8 @@ synchronized (this.registeredResources) {
       }
     }
     for (    Map.Entry<Resource,Set<KnowledgeDefinition>> entry : changeSetState.modifiedResourceMappings.entrySet()) {
-      KnowledgePackageImp kpkg=createPackageFromResource(entry.getKey());
-      if (kpkg == null) {
+      KnowledgePackageImp newPackage=createPackageFromResource(entry.getKey());
+      if (newPackage == null) {
         this.listener.warning("KnowledgeAgent: The resource didn't create any package: " + entry.getKey() + ". Removing any existing knowledge definition of "+ entry.getKey());
         for (        KnowledgeDefinition kd : entry.getValue()) {
           this.listener.debug("KnowledgeAgent: Removing: " + kd);
@@ -22,9 +22,16 @@ synchronized (this.registeredResources) {
         }
         continue;
       }
+      KnowledgePackageImp oldPackage=(KnowledgePackageImp)this.kbase.getKnowledgePackage(newPackage.getName());
+      AbstractRuleBase abstractRuleBase=(AbstractRuleBase)((KnowledgeBaseImpl)this.kbase).ruleBase;
+      CompositeClassLoader rootClassLoader=abstractRuleBase.getRootClassLoader();
+      newPackage.pkg.getDialectRuntimeRegistry().onAdd(rootClassLoader);
+      newPackage.pkg.getDialectRuntimeRegistry().onBeforeExecute();
+      newPackage.pkg.getClassFieldAccessorStore().setClassFieldAccessorCache(abstractRuleBase.getClassFieldAccessorCache());
+      newPackage.pkg.getClassFieldAccessorStore().wire();
       this.listener.debug("KnowledgeAgent: Diffing: " + entry.getKey());
       ResourceDiffProducer rdp=new BinaryResourceDiffProducerImpl();
-      ResourceDiffResult diff=rdp.diff(entry.getValue(),kpkg,(KnowledgePackageImp)this.kbase.getKnowledgePackage(kpkg.getName()));
+      ResourceDiffResult diff=rdp.diff(entry.getValue(),newPackage,oldPackage);
       for (      KnowledgeDefinition kd : diff.getRemovedDefinitions()) {
         this.listener.debug("KnowledgeAgent: Removing: " + kd);
         removeKnowledgeDefinitionFromBase(kd);
