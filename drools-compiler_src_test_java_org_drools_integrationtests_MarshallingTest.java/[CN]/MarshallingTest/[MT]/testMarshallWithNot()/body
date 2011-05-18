@@ -1,0 +1,15 @@
+{
+  String str="import " + getClass().getCanonicalName() + ".*\n"+ "rule one\n"+ "when\n"+ "   A()\n"+ "   not(B())\n"+ "then\n"+ "System.out.println(\"a\");\n"+ "end\n"+ "\n"+ "rule two\n"+ "when\n"+ "   A()\n"+ "then\n"+ "System.out.println(\"b\");\n"+ "end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newReaderResource(new StringReader(str)),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    throw new RuntimeException(kbuilder.getErrors().toString());
+  }
+  KnowledgeBaseConfiguration config=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  config.setOption(EventProcessingOption.STREAM);
+  KnowledgeBase knowledgeBase=KnowledgeBaseFactory.newKnowledgeBase(config);
+  knowledgeBase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=knowledgeBase.newStatefulKnowledgeSession();
+  ksession.insert(new A());
+  MarshallerFactory.newMarshaller(knowledgeBase).marshall(new ByteArrayOutputStream(),ksession);
+}
