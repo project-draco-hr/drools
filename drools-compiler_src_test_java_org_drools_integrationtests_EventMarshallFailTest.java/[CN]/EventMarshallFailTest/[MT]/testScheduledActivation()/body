@@ -1,0 +1,33 @@
+{
+  KnowledgeBaseImpl knowledgeBase=(KnowledgeBaseImpl)KnowledgeBaseFactory.newKnowledgeBase();
+  KnowledgePackageImp impl=new KnowledgePackageImp();
+  impl.pkg=new org.drools.rule.Package("test");
+  BuildContext buildContext=new BuildContext((InternalRuleBase)knowledgeBase.getRuleBase(),((ReteooRuleBase)knowledgeBase.getRuleBase()).getReteooBuilder().getIdGenerator());
+  final Rule rule=new Rule("test-rule");
+  new RuleTerminalNode(1,new MockTupleSource(2),rule,rule.getLhs(),buildContext);
+  final List<String> fired=new ArrayList<String>();
+  rule.setConsequence(new Consequence(){
+    public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory) throws Exception {
+      fired.add("a");
+    }
+    public String getName(){
+      return "default";
+    }
+  }
+);
+  rule.setTimer(new DurationTimer(10000));
+  rule.setPackage("test");
+  impl.pkg.addRule(rule);
+  knowledgeBase.addKnowledgePackages(Collections.singleton((KnowledgePackage)impl));
+  SessionConfiguration config=new SessionConfiguration();
+  config.setClockType(ClockType.PSEUDO_CLOCK);
+  StatefulKnowledgeSession ksession=knowledgeBase.newStatefulKnowledgeSession(config,KnowledgeBaseFactory.newEnvironment());
+  PseudoClockScheduler scheduler=ksession.getSessionClock();
+  Marshaller marshaller=MarshallerFactory.newMarshaller(knowledgeBase);
+  ksession.insert("cheese");
+  assertTrue(fired.isEmpty());
+  readWrite(knowledgeBase,ksession,config);
+  assertTrue(fired.isEmpty());
+  scheduler.advanceTime(12,TimeUnit.SECONDS);
+  assertFalse(fired.isEmpty());
+}
