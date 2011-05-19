@@ -1,0 +1,18 @@
+{
+  String str="package org.drools\n" + "rule NotContains\n" + "when\n"+ "    $oi : OrderItem( )\n"+ "    $o  : Order( items.values() not contains $oi )"+ "then\n"+ "end";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  Order order1=new Order(1,"XYZ");
+  Order order2=new Order(2,"ABC");
+  OrderItem item11=new OrderItem(order1,1);
+  order1.addItem(item11);
+  OrderItem item21=new OrderItem(order2,1);
+  order2.addItem(item21);
+  ksession.insert(order1);
+  ksession.insert(item11);
+  int rules=ksession.fireAllRules();
+  assertEquals(0,rules);
+  ksession.insert(item21);
+  rules=ksession.fireAllRules();
+  assertEquals(1,rules);
+}
