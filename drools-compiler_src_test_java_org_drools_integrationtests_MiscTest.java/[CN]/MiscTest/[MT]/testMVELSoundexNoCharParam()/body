@@ -1,0 +1,22 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("MVEL_soundexNPE2500.drl",getClass()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  Cheese foobarCheese=new Cheese("foobar",2);
+  Cheese nullCheese=new Cheese(null,2);
+  Cheese starCheese=new Cheese("*",2);
+  ksession.insert(foobarCheese);
+  ksession.insert(nullCheese);
+  ksession.insert(starCheese);
+  ksession.fireAllRules();
+  assertEquals(42,foobarCheese.getPrice());
+  assertEquals(2,nullCheese.getPrice());
+  assertEquals(2,starCheese.getPrice());
+}
