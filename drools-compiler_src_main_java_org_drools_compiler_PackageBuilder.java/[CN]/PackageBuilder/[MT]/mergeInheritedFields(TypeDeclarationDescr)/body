@@ -1,13 +1,22 @@
 {
-  if (typeDescr.getSuperTypeName() == null)   return;
+  if (typeDescr.getSuperTypeName() == null)   return false;
   String simpleSuperTypeName=typeDescr.getSuperTypeName();
   String superTypePackageName=typeDescr.getSuperTypeNamespace();
+  String fullSuper=superTypePackageName + "." + simpleSuperTypeName;
   Map<String,TypeFieldDescr> fieldMap=new LinkedHashMap<String,TypeFieldDescr>();
   boolean isSuperClassDeclared=true;
   boolean isSuperClassTagged=false;
   PackageRegistry registry=this.pkgRegistryMap.get(superTypePackageName);
   Package pack=null;
-  if (registry != null)   pack=registry.getPackage();
+  if (registry != null) {
+    pack=registry.getPackage();
+  }
+ else {
+    this.results.add(new TypeDeclarationError("Cannot extend supertype '" + fullSuper + "' (not a declared type)",typeDescr.getLine()));
+    typeDescr.setSuperTypeName(null);
+    typeDescr.setSuperTypeNamespace(null);
+    return false;
+  }
   if (pack != null) {
     TypeDeclaration superTypeDeclaration=pack.getTypeDeclaration(simpleSuperTypeName);
     if (superTypeDeclaration != null) {
@@ -26,7 +35,6 @@
     isSuperClassDeclared=false;
   }
   if (!isSuperClassDeclared || isSuperClassTagged) {
-    String fullSuper=superTypePackageName + "." + simpleSuperTypeName;
     try {
       ClassFieldInspector inspector=new ClassFieldInspector(registry.getTypeResolver().resolveType(fullSuper));
       for (      String name : inspector.getGetterMethods().keySet()) {
@@ -39,11 +47,12 @@
       }
     }
  catch (    ClassNotFoundException cnfe) {
-      throw new RuntimeDroolsException("unable to resolve Type Declaration superclass '" + fullSuper + "'");
+      throw new RuntimeDroolsException("Unable to resolve Type Declaration superclass '" + fullSuper + "'");
     }
 catch (    IOException e) {
     }
   }
   fieldMap.putAll(typeDescr.getFields());
   typeDescr.setFields(fieldMap);
+  return true;
 }
