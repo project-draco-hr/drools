@@ -1,0 +1,26 @@
+{
+  StringBuilder buf=new StringBuilder(80000);
+  buf.append("package mypackage\n");
+  buf.append("import " + LargeRuleBaseSerializationTest.class.getCanonicalName() + ".Parent\n");
+  buf.append("import " + LargeRuleBaseSerializationTest.class.getCanonicalName() + ".Child\n");
+  buf.append("import " + LargeRuleBaseSerializationTest.class.getCanonicalName() + ".Item\n");
+  for (int i=0; i < 3000; i++) {
+    buf.append("rule 'Rule " + i + "'\n");
+    buf.append(" when\n");
+    buf.append(" $g:Parent()\n");
+    buf.append(" $c:Child(parent==$g,code=='" + i + "')\n");
+    buf.append(" Item(parentObject==$c,name=='xxx1', value == '1')\n");
+    buf.append(" Item(parentObject==$c,name=='xxx2',value == '1')\n");
+    buf.append(" Item(parentObject==$g,name=='xxx3',value == '200')\n");
+    buf.append(" then\n");
+    buf.append(" System.out.println('2');\n");
+    buf.append("end\n");
+  }
+  Reader source=new StringReader(buf.toString());
+  PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(source);
+  Package pkg=builder.getPackage();
+  RuleBase ruleBase=RuleBaseFactory.newRuleBase();
+  ruleBase.addPackage(pkg);
+  SerializationHelper.serializeObject(ruleBase);
+}

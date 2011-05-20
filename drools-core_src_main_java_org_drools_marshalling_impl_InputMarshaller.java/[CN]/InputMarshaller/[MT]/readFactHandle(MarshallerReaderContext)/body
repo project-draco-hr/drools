@@ -1,4 +1,5 @@
 {
+  int type=context.stream.readInt();
   int id=context.stream.readInt();
   long recency=context.stream.readLong();
   int strategyIndex=context.stream.readInt();
@@ -11,6 +12,22 @@
       entryPoint=context.wm.getEntryPoints().get(entryPointId);
     }
   }
-  InternalFactHandle handle=new DefaultFactHandle(id,object,recency,entryPoint);
-  return handle;
+  InternalFactHandle handle=null;
+switch (type) {
+case 0:
+{
+      handle=new DefaultFactHandle(id,object,recency,entryPoint);
+      break;
+    }
+case 1:
+{
+    handle=new QueryElementFactHandle(object,id,recency);
+    break;
+  }
+default :
+{
+  throw new IllegalStateException("Unable to marshal FactHandle, as type does not exist:" + type);
+}
+}
+return handle;
 }
