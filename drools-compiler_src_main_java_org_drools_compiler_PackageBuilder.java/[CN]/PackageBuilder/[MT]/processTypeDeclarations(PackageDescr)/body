@@ -42,16 +42,17 @@
     }
     pkgRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
     if (typeDescr.getSuperTypeName() != null) {
-      mergeInheritedFields(typeDescr);
-      Iterator<TypeDeclarationDescr> iter=sortedTypeDescriptors.iterator();
-      while (iter.hasNext()) {
-        TypeDeclarationDescr descr=iter.next();
-        if ((typeDescr.getSuperTypeName().equals(descr.getTypeName()) && typeDescr.getSuperTypeNamespace().equals(descr.getNamespace()))) {
-          typeDescr.getAnnotations().putAll(descr.getAnnotations());
-          break;
-        }
- else         if ((typeDescr.getTypeName().equals(descr.getTypeName()) && typeDescr.getNamespace().equals(descr.getNamespace()))) {
-          break;
+      if (mergeInheritedFields(typeDescr)) {
+        Iterator<TypeDeclarationDescr> iter=sortedTypeDescriptors.iterator();
+        while (iter.hasNext()) {
+          TypeDeclarationDescr descr=iter.next();
+          if ((typeDescr.getSuperTypeName().equals(descr.getTypeName()) && typeDescr.getSuperTypeNamespace().equals(descr.getNamespace()))) {
+            typeDescr.getAnnotations().putAll(descr.getAnnotations());
+            break;
+          }
+ else           if ((typeDescr.getTypeName().equals(descr.getTypeName()) && typeDescr.getNamespace().equals(descr.getNamespace()))) {
+            break;
+          }
         }
       }
     }
@@ -105,7 +106,7 @@
         }
       }
  catch (      final ClassNotFoundException e) {
-        this.results.add(new TypeDeclarationError("Class not found TypeDeclaration'" + className + "' for type '"+ type.getTypeName()+ "'",typeDescr.getLine()));
+        this.results.add(new TypeDeclarationError("Class '" + className + "' not found for type declaration of '"+ type.getTypeName()+ "'",typeDescr.getLine()));
         continue;
       }
     }
