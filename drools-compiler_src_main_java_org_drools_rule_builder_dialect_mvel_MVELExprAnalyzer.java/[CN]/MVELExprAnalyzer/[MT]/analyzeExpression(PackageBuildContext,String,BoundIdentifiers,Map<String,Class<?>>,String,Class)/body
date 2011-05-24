@@ -45,71 +45,61 @@
     parserContext2.setStrictTypeEnforcement(true);
     parserContext2.setStrongTyping(true);
     parserContext2.setInterceptors(dialect.getInterceptors());
-    boolean typesafe=context.isTypesafe();
-    if (typesafe) {
-      for (      String str : requiredInputs) {
-        Class<?> cls=null;
-        if (!typesafe) {
-          break;
-        }
-        cls=availableIdentifiers.getDeclrClasses().get(str);
+    for (    String str : requiredInputs) {
+      Class<?> cls=null;
+      cls=availableIdentifiers.getDeclrClasses().get(str);
+      if (cls != null) {
+        parserContext2.addInput(str,cls);
+        continue;
+      }
+      if (cls == null) {
+        cls=availableIdentifiers.getGlobals().get(str);
         if (cls != null) {
-          TypeDeclaration type=context.getPackageBuilder().getTypeDeclaration(cls);
-          typesafe=(type != null) ? type.isTypesafe() : true;
           parserContext2.addInput(str,cls);
           continue;
         }
-        if (cls == null) {
-          cls=availableIdentifiers.getGlobals().get(str);
-          if (cls != null) {
-            TypeDeclaration type=context.getPackageBuilder().getTypeDeclaration(cls);
-            typesafe=(type != null) ? type.isTypesafe() : true;
-            parserContext2.addInput(str,cls);
-            continue;
-          }
+      }
+      if (cls == null) {
+        cls=availableIdentifiers.getOperators().keySet().contains(str) ? EvaluatorWrapper.class : null;
+        if (cls != null) {
+          parserContext2.addInput(str,cls);
+          continue;
         }
-        if (cls == null) {
-          cls=availableIdentifiers.getOperators().keySet().contains(str) ? EvaluatorWrapper.class : null;
-          if (cls != null) {
-            TypeDeclaration type=context.getPackageBuilder().getTypeDeclaration(cls);
-            typesafe=(type != null) ? type.isTypesafe() : true;
-            parserContext2.addInput(str,cls);
-            continue;
-          }
+      }
+      if (cls == null) {
+        if (str.equals(contextIndeifier)) {
+          parserContext2.addInput(contextIndeifier,kcontextClass);
         }
-        if (cls == null) {
-          if (str.equals(contextIndeifier)) {
-            parserContext2.addInput(contextIndeifier,kcontextClass);
-          }
- else           if (str.equals("kcontext")) {
-            parserContext2.addInput("kcontext",kcontextClass);
-          }
-          if (str.equals("rule")) {
-            parserContext2.addInput("rule",Rule.class);
-          }
+ else         if (str.equals("kcontext")) {
+          parserContext2.addInput("kcontext",kcontextClass);
         }
-        if (cls == null && localTypes != null) {
-          cls=localTypes.get(str);
-          if (cls != null) {
-            TypeDeclaration type=context.getPackageBuilder().getTypeDeclaration(cls);
-            typesafe=(type != null) ? type.isTypesafe() : true;
-            parserContext2.addInput(str,cls);
-            continue;
-          }
+        if (str.equals("rule")) {
+          parserContext2.addInput("rule",Rule.class);
+        }
+      }
+      if (cls == null && localTypes != null) {
+        cls=localTypes.get(str);
+        if (cls != null) {
+          parserContext2.addInput(str,cls);
+          continue;
         }
       }
     }
-    if (typesafe) {
-      if (availableIdentifiers.getThisClass() != null) {
-        parserContext2.addInput("this",availableIdentifiers.getThisClass());
-      }
-      try {
-        returnType=MVEL.analyze(expr,parserContext2);
-      }
- catch (      Exception e) {
+    if (availableIdentifiers.getThisClass() != null) {
+      parserContext2.addInput("this",availableIdentifiers.getThisClass());
+    }
+    boolean typesafe=context.isTypesafe();
+    try {
+      returnType=MVEL.analyze(expr,parserContext2);
+      typesafe=true;
+    }
+ catch (    Exception e) {
+      if (typesafe) {
         context.getErrors().add(new DescrBuildError(context.getParentDescr(),null,null,"Unable to Analyse Expression " + expr + ":\n"+ e.getMessage()));
         return null;
       }
+    }
+    if (typesafe) {
       requiredInputs=new HashSet<String>();
       requiredInputs.addAll(parserContext2.getInputs().keySet());
       requiredInputs.addAll(variables.keySet());

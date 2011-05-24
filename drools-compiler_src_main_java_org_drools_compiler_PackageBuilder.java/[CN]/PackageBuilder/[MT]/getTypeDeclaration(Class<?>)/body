@@ -3,61 +3,41 @@
     return null;
   }
   TypeDeclaration tdecl=null;
-  if (this.cacheTypes != null) {
+  PackageRegistry pkgReg=null;
+  if (this.cacheTypes == null) {
+    this.cacheTypes=new HashMap<String,TypeDeclaration>();
+  }
+ else {
     tdecl=cacheTypes.get(cls.getName());
     if (tdecl != null) {
       return tdecl;
     }
   }
   tdecl=this.builtinTypes.get((cls.getName()));
-  PackageRegistry pkgReg=null;
   if (tdecl == null) {
-    String pack=ClassUtils.getPackage(cls);
-    pkgReg=this.pkgRegistryMap.get(pack);
+    pkgReg=this.pkgRegistryMap.get(ClassUtils.getPackage(cls));
     if (pkgReg != null) {
       tdecl=pkgReg.getPackage().getTypeDeclaration(cls.getSimpleName());
     }
   }
-  Class<?> originalCls=cls;
-  while (tdecl == null && cls != Object.class) {
-    cls=cls.getSuperclass();
-    if (cls == null) {
-      break;
-    }
-    tdecl=this.builtinTypes.get((cls.getName()));
-    if (tdecl == null) {
-      pkgReg=this.pkgRegistryMap.get(ClassUtils.getPackage(cls));
-      if (pkgReg != null) {
-        tdecl=pkgReg.getPackage().getTypeDeclaration(cls.getSimpleName());
-      }
-    }
-  }
   if (tdecl == null) {
-    Class<?>[] intfs=originalCls.getInterfaces();
-    for (    Class<?> intf : intfs) {
-      cls=intf;
-      pkgReg=this.pkgRegistryMap.get(ClassUtils.getPackage(cls));
-      if (pkgReg != null) {
-        tdecl=pkgReg.getPackage().getTypeDeclaration(cls.getSimpleName());
-      }
-      while (tdecl == null) {
-        cls=cls.getSuperclass();
-        if (cls == null) {
-          break;
-        }
-        tdecl=this.builtinTypes.get((cls.getName()));
-        if (tdecl == null) {
-          pkgReg=this.pkgRegistryMap.get(ClassUtils.getPackage(cls));
-          if (pkgReg != null) {
-            tdecl=pkgReg.getPackage().getTypeDeclaration(cls.getSimpleName());
-          }
-        }
-      }
+    tdecl=new TypeDeclaration(cls.getSimpleName());
+  }
+  Set<TypeDeclaration> tdecls=new LinkedHashSet<TypeDeclaration>();
+  buildTypeDeclarations(cls,tdecls);
+  TypeDeclaration[] tarray=tdecls.toArray(new TypeDeclaration[tdecls.size()]);
+  for (int i=tarray.length - 1; i >= 0; i--) {
+    TypeDeclaration currentTDecl=tarray[i];
+    if ((tdecl.getSetMask() & TypeDeclaration.ROLE_BIT) != TypeDeclaration.ROLE_BIT) {
+      tdecl.setRole(currentTDecl.getRole());
+    }
+    if ((tdecl.getSetMask() & TypeDeclaration.FORMAT_BIT) != TypeDeclaration.FORMAT_BIT) {
+      tdecl.setFormat(currentTDecl.getFormat());
+    }
+    if ((tdecl.getSetMask() & TypeDeclaration.TYPESAFE_BIT) != TypeDeclaration.TYPESAFE_BIT) {
+      tdecl.setTypesafe(currentTDecl.isTypesafe());
     }
   }
-  if (this.cacheTypes == null) {
-    this.cacheTypes=new HashMap<String,TypeDeclaration>();
-  }
-  this.cacheTypes.put(originalCls.getName(),tdecl);
+  this.cacheTypes.put(cls.getName(),tdecl);
   return tdecl;
 }

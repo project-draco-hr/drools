@@ -7,6 +7,19 @@
       target.setReadAccessor(reader);
     }
   }
+ else   if (fieldName.indexOf('.') > -1 || fieldName.indexOf('[') > -1 || fieldName.indexOf('(') > -1) {
+    try {
+      reader=context.getPkg().getClassFieldAccessorStore().getMVELReader(context.getPkg().getName(),((ClassObjectType)objectType).getClassName(),fieldName,context.isTypesafe());
+      MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
+      data.addCompileable((MVELCompileable)reader);
+      ((MVELCompileable)reader).compile(data);
+    }
+ catch (    final Exception e) {
+      if (reportError) {
+        context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,e,"Unable to create Field Extractor for '" + fieldName + "'"));
+      }
+    }
+  }
  else {
     try {
       reader=context.getPkg().getClassFieldAccessorStore().getReader(((ClassObjectType)objectType).getClassName(),fieldName,target);

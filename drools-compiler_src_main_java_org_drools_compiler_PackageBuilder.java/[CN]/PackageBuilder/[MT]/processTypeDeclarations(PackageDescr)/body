@@ -4,8 +4,32 @@
   for (  TypeDeclarationDescr typeDescr : packageDescr.getTypeDeclarations()) {
     int dotPos=typeDescr.getTypeName().lastIndexOf('.');
     if (dotPos >= 0) {
-      typeDescr.setNamespace(typeDescr.getTypeName().substring(0,dotPos));
-      typeDescr.setTypeName(typeDescr.getTypeName().substring(dotPos + 1));
+      Class cls=null;
+      try {
+        cls=Class.forName(typeDescr.getTypeName(),true,this.rootClassLoader);
+      }
+ catch (      ClassNotFoundException e) {
+      }
+      String qualifiedClass=typeDescr.getTypeName();
+      int lastIndex;
+      while (cls == null && (lastIndex=qualifiedClass.lastIndexOf('.')) != -1) {
+        try {
+          qualifiedClass=qualifiedClass.substring(0,lastIndex) + "$" + qualifiedClass.substring(lastIndex + 1);
+          cls=Class.forName(qualifiedClass,true,this.rootClassLoader);
+        }
+ catch (        final ClassNotFoundException e) {
+          cls=null;
+        }
+      }
+      if (cls != null) {
+        String str=ClassUtils.getPackage(cls);
+        typeDescr.setNamespace(str);
+        typeDescr.setTypeName(cls.getSimpleName());
+      }
+ else {
+        typeDescr.setNamespace(typeDescr.getTypeName().substring(0,dotPos));
+        typeDescr.setTypeName(typeDescr.getTypeName().substring(dotPos + 1));
+      }
     }
     if (isEmpty(typeDescr.getNamespace())) {
       try {
@@ -32,7 +56,12 @@
       for (      ImportDescr imp : packageDescr.getImports()) {
         altDescr.addImport(imp);
       }
-      newPackage(altDescr);
+      if (getPackageRegistry().containsKey(altDescr.getNamespace())) {
+        mergePackage(altDescr);
+      }
+ else {
+        newPackage(altDescr);
+      }
     }
   }
   Collection<TypeDeclarationDescr> sortedTypeDescriptors=sortByHierarchy(packageDescr.getTypeDeclarations());
