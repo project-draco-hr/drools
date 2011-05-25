@@ -50,7 +50,12 @@
     pattern=new Pattern(context.getNextPatternId(),0,objectType,null);
   }
   if (duplicateBindings) {
-    build(context,pattern,new ExprConstraintDescr("this == " + patternDescr.getIdentifier()));
+    if (patternDescr.isUnification()) {
+      build(context,pattern,new ExprConstraintDescr("this == " + patternDescr.getIdentifier()));
+    }
+ else {
+      context.getErrors().add(new DescrBuildError(context.getParentDescr(),patternDescr,null,"Duplicate declaration for variable '" + patternDescr.getIdentifier() + "' in the rule '"+ context.getRule().getName()+ "'"));
+    }
   }
   if (objectType instanceof ClassObjectType) {
     context.getPkg().getClassFieldAccessorStore().getClassObjectType(((ClassObjectType)objectType),pattern);

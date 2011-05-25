@@ -1,11 +1,16 @@
 {
   FieldValue field=null;
+  ValueType vtype=extractor.getValueType();
   try {
     String value=literalRestrictionDescr.getText().trim();
     MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
     ParserConfiguration pconf=data.getParserConfiguration();
     ParserContext pctx=new ParserContext(pconf);
-    field=FieldFactory.getFieldValue(MVEL.executeExpression(MVEL.compileExpression(value,pctx)),extractor.getValueType(),context.getPackageBuilder().getDateFormats());
+    Object o=MVEL.executeExpression(MVEL.compileExpression(value,pctx));
+    if (o != null && vtype == null) {
+      vtype=ValueType.determineValueType(o.getClass());
+    }
+    field=FieldFactory.getFieldValue(o,vtype,context.getPackageBuilder().getDateFormats());
   }
  catch (  final Exception e) {
     context.getErrors().add(new DescrBuildError(context.getParentDescr(),literalRestrictionDescr,e,"Unable to create a Field value of type  '" + extractor.getValueType() + "' and value '"+ literalRestrictionDescr.getText()+ "'"));
@@ -15,7 +20,7 @@
   }
   Target right=getRightTarget(extractor);
   Target left=Target.FACT;
-  final Evaluator evaluator=getEvaluator(context,literalRestrictionDescr,extractor.getValueType(),literalRestrictionDescr.getEvaluator(),literalRestrictionDescr.isNegated(),literalRestrictionDescr.getParameterText(),left,right);
+  final Evaluator evaluator=getEvaluator(context,literalRestrictionDescr,vtype,literalRestrictionDescr.getEvaluator(),literalRestrictionDescr.isNegated(),literalRestrictionDescr.getParameterText(),left,right);
   if (evaluator == null) {
     return null;
   }
