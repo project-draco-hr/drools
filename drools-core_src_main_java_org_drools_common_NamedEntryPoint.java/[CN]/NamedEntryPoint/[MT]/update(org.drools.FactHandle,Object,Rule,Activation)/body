@@ -4,16 +4,19 @@
     this.lock.lock();
     this.wm.startOperation();
     this.ruleBase.executeQueuedActions();
-    if (((InternalFactHandle)factHandle).isDisconnected()) {
-      factHandle=this.objectStore.reconnect(factHandle);
+    InternalFactHandle handle=(InternalFactHandle)factHandle;
+    final Object originalObject=handle.getObject();
+    if (handle.isDisconnected()) {
+      handle=(InternalFactHandle)this.objectStore.reconnect(factHandle);
+    }
+    if (handle.getEntryPoint() != this) {
+      throw new IllegalArgumentException("Invalid Entry Point. You updated the FactHandle on entry point '" + handle.getEntryPoint().getEntryPointId() + "' instead of '"+ getEntryPointId()+ "'");
     }
     final ObjectTypeConf typeConf=this.typeConfReg.getObjectTypeConf(this.entryPoint,object);
     int status=-1;
     if (typeConf.isTMSEnabled()) {
-      status=((InternalFactHandle)factHandle).getEqualityKey().getStatus();
+      status=handle.getEqualityKey().getStatus();
     }
-    final InternalFactHandle handle=(InternalFactHandle)factHandle;
-    final Object originalObject=handle.getObject();
     if (handle.getId() == -1 || object == null || (handle.isEvent() && ((EventFactHandle)handle).isExpired())) {
       return;
     }

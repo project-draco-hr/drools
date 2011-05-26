@@ -1,0 +1,27 @@
+{
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  ReteooRuleBase rbase=(ReteooRuleBase)((KnowledgeBaseImpl)kbase).getRuleBase();
+  Rete rete=rbase.getRete();
+  EntryPointNode epn=new EntryPointNode(rbase.getReteooBuilder().getIdGenerator().getNextId(),RuleBasePartitionId.MAIN_PARTITION,rbase.getConfig().isMultithreadEvaluation(),rete,new EntryPoint("xxx"));
+  rbase.getRete().addObjectSink(epn);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  org.drools.runtime.rule.FactHandle f1=ksession.insert("f1");
+  WorkingMemoryEntryPoint ep=ksession.getWorkingMemoryEntryPoint("xxx");
+  try {
+    ep.update(f1,"s1");
+    fail("Should throw an exception");
+  }
+ catch (  IllegalArgumentException e) {
+  }
+  try {
+    ep.retract(f1);
+    fail("Should throw an exception");
+  }
+ catch (  IllegalArgumentException e) {
+  }
+  ksession.update(f1,"s1");
+  assertNotNull(ksession.getObject(f1));
+  ksession.retract(f1);
+  ksession.retract(f1);
+  assertNull(ksession.getObject(f1));
+}
