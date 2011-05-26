@@ -1,8 +1,16 @@
 {
   try {
     createParser(charStream);
-    Method ruleName=DRLParser.class.getMethod(testRuleName);
-    Object ruleReturn=ruleName.invoke(parser);
+    Method ruleName=null;
+    Object[] params=null;
+    for (    Method method : DRLParser.class.getMethods()) {
+      if (method.getName().equals(testRuleName)) {
+        ruleName=method;
+        Class<?>[] parameterTypes=method.getParameterTypes();
+        params=new Object[parameterTypes.length];
+      }
+    }
+    Object ruleReturn=ruleName.invoke(parser,params);
     if (parser.hasErrors()) {
       System.out.println(parser.getErrorMessages());
     }

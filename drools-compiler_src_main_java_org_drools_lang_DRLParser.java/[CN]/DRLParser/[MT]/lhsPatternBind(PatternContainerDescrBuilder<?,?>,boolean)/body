@@ -3,7 +3,7 @@
   CEDescrBuilder<?,OrDescr> or=null;
   BaseDescr result=null;
   Token first=input.LT(1);
-  pattern=helper.start(PatternDescrBuilder.class,null,null);
+  pattern=helper.start(ce,PatternDescrBuilder.class,null);
   if (pattern != null) {
     result=pattern.getDescr();
   }
@@ -32,8 +32,8 @@
         if (state.backtracking == 0) {
           or=((CEDescrBuilder<DescrBuilder<?>,OrDescr>)ce).or();
           result=or.getDescr();
-          helper.end(PatternDescrBuilder.class,null);
-          helper.start(CEDescrBuilder.class,null,or);
+          helper.end(PatternDescrBuilder.class,pattern);
+          helper.start(or,CEDescrBuilder.class,null);
           helper.setStart(or,first);
           ((ConditionalElementDescr)ce.getDescr()).getDescrs().remove(pattern.getDescr());
           or.getDescr().addDescr(pattern.getDescr());
@@ -41,10 +41,10 @@
         while (helper.validateIdentifierKey(DroolsSoftKeywords.OR)) {
           match(input,DRLLexer.ID,DroolsSoftKeywords.OR,null,DroolsEditorType.KEYWORD);
           if (state.failed)           return null;
-          pattern=helper.start(PatternDescrBuilder.class,null,null);
+          pattern=helper.start(or,PatternDescrBuilder.class,null);
           lhsPattern(pattern,label,isUnification);
           if (state.failed)           return null;
-          helper.end(PatternDescrBuilder.class,null);
+          helper.end(PatternDescrBuilder.class,pattern);
         }
       }
       match(input,DRLLexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
@@ -55,7 +55,7 @@
         helper.end(CEDescrBuilder.class,or);
       }
  else {
-        helper.end(PatternDescrBuilder.class,null);
+        helper.end(PatternDescrBuilder.class,pattern);
       }
     }
   }
@@ -65,7 +65,7 @@
       if (state.failed)       return null;
     }
   finally {
-      helper.end(PatternDescrBuilder.class,null);
+      helper.end(PatternDescrBuilder.class,pattern);
     }
   }
   return result;

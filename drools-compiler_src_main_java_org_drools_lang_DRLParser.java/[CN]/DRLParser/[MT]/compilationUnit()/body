@@ -1,16 +1,15 @@
 {
   PackageDescrBuilder pkg=DescrFactory.newPackage();
   try {
-    helper.pushBuilderContext(pkg);
     if (input.LA(1) != DRLLexer.EOF && helper.validateIdentifierKey(DroolsSoftKeywords.PACKAGE)) {
-      String pkgName=packageStatement();
+      String pkgName=packageStatement(pkg);
       pkg.name(pkgName);
       if (state.failed)       return pkg.getDescr();
     }
     while (input.LA(1) != DRLLexer.EOF) {
       int next=input.index();
       if (helper.validateStatement(1)) {
-        statement();
+        statement(pkg);
         if (state.failed)         return pkg.getDescr();
         if (next == input.index()) {
           resyncToNextStatement();
@@ -28,8 +27,7 @@ catch (  Exception e) {
     helper.reportError(e);
   }
  finally {
-    helper.setEnd();
-    helper.popBuilderContext();
+    helper.setEnd(pkg);
   }
   return pkg.getDescr();
 }

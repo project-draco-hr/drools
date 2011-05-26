@@ -1,0 +1,47 @@
+{
+  QueryDescrBuilder query=null;
+  try {
+    query=helper.start(pkg,QueryDescrBuilder.class,null);
+    match(input,DRLLexer.ID,DroolsSoftKeywords.QUERY,null,DroolsEditorType.KEYWORD);
+    if (state.failed)     return null;
+    if (helper.validateIdentifierKey(DroolsSoftKeywords.WHEN) || helper.validateIdentifierKey(DroolsSoftKeywords.THEN) || helper.validateIdentifierKey(DroolsSoftKeywords.END)) {
+      failMissingTokenException();
+      return null;
+    }
+    String name=stringId();
+    if (state.backtracking == 0)     query.name(name);
+    if (state.failed)     return null;
+    if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+      helper.emit(Location.LOCATION_RULE_HEADER);
+    }
+    if (speculateParameters(true)) {
+      parameters(query,true);
+      if (state.failed)       return null;
+    }
+ else     if (speculateParameters(false)) {
+      parameters(query,false);
+      if (state.failed)       return null;
+    }
+    while (input.LA(1) == DRLLexer.AT) {
+      annotation(query);
+      if (state.failed)       return null;
+    }
+    if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+      helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
+    }
+    lhsStatement(query != null ? query.lhs() : null);
+    match(input,DRLLexer.ID,DroolsSoftKeywords.END,null,DroolsEditorType.KEYWORD);
+    if (state.failed)     return null;
+    if (input.LA(1) == DRLLexer.SEMICOLON) {
+      match(input,DRLLexer.SEMICOLON,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+    }
+  }
+ catch (  RecognitionException re) {
+    reportError(re);
+  }
+ finally {
+    helper.end(QueryDescrBuilder.class,query);
+  }
+  return (query != null) ? query.getDescr() : null;
+}

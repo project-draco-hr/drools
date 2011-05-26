@@ -1,0 +1,28 @@
+{
+  GlobalDescrBuilder global=null;
+  try {
+    global=helper.start(pkg,GlobalDescrBuilder.class,null);
+    match(input,DRLLexer.ID,DroolsSoftKeywords.GLOBAL,null,DroolsEditorType.KEYWORD);
+    if (state.failed)     return null;
+    String type=type();
+    if (state.backtracking == 0)     global.type(type);
+    if (state.failed)     return null;
+    Token id=match(input,DRLLexer.ID,null,null,DroolsEditorType.IDENTIFIER_TYPE);
+    if (state.failed)     return null;
+    if (state.backtracking == 0) {
+      global.identifier(id.getText());
+      helper.setParaphrasesValue(DroolsParaphraseTypes.GLOBAL,id.getText());
+    }
+    if (input.LA(1) == DRLLexer.SEMICOLON) {
+      match(input,DRLLexer.SEMICOLON,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return global.getDescr();
+    }
+  }
+ catch (  RecognitionException re) {
+    reportError(re);
+  }
+ finally {
+    helper.end(GlobalDescrBuilder.class,global);
+  }
+  return (global != null) ? global.getDescr() : null;
+}
