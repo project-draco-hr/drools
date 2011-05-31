@@ -51,7 +51,7 @@
   }
   if (duplicateBindings) {
     if (patternDescr.isUnification()) {
-      build(context,pattern,new ExprConstraintDescr("this == " + patternDescr.getIdentifier()));
+      build(context,patternDescr,pattern,"this == " + patternDescr.getIdentifier());
     }
  else {
       context.getErrors().add(new DescrBuildError(context.getParentDescr(),patternDescr,null,"Duplicate declaration for variable '" + patternDescr.getIdentifier() + "' in the rule '"+ context.getRule().getName()+ "'"));
@@ -62,7 +62,7 @@
   }
   context.getBuildStack().push(pattern);
   if (pattern.getObjectType() instanceof ClassObjectType) {
-    Class cls=((ClassObjectType)pattern.getObjectType()).getClassType();
+    Class<?> cls=((ClassObjectType)pattern.getObjectType()).getClassType();
     TypeDeclaration typeDeclr=context.getPackageBuilder().getTypeDeclaration(cls);
     if (typeDeclr != null) {
       context.setTypesafe(typeDeclr.isTypesafe());
@@ -71,39 +71,11 @@
       context.setTypesafe(true);
     }
   }
-  List<BaseDescr> notAConstraints=processPositional(patternDescr.getDescrs(),context,patternDescr,pattern);
+  List<BaseDescr> notAConstraints=processPositional(new ArrayList<BaseDescr>(patternDescr.getDescrs()),context,patternDescr,pattern);
   for (  BaseDescr nac : notAConstraints) {
     patternDescr.removeConstraint(nac);
   }
-  for (  BindingDescr b : patternDescr.getBindings()) {
-    if (true) {
-      String expression=b.getExpression();
-      DrlExprParser parser=new DrlExprParser();
-      ConstraintConnectiveDescr result=parser.parse(expression);
-      if (result == null || parser.hasErrors()) {
-        for (        DroolsParserException error : parser.getErrors()) {
-          context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to parser pattern expression:\n" + error.getMessage()));
-        }
-        return null;
-      }
-      String left=parser.getLeftMostExpr();
-      if (expression.equals(left)) {
-        buildRuleBindings(context,pattern,b,null);
-      }
- else {
-        b.setExpression(left);
-        buildRuleBindings(context,pattern,b,null);
-        b.setExpression(expression);
-        build(context,pattern,new ExprConstraintDescr(b.getExpression()));
-      }
-    }
- else {
-      buildRuleBindings(context,pattern,b,null);
-    }
-  }
-  for (  BaseDescr b : patternDescr.getDescrs()) {
-    build(context,pattern,(ExprConstraintDescr)b);
-  }
+  processConstraintsAndBinds(context,patternDescr,pattern);
   if (patternDescr.getSource() != null) {
     RuleConditionBuilder builder=(RuleConditionBuilder)context.getDialect().getBuilder(patternDescr.getSource().getClass());
     PatternSource source=(PatternSource)builder.build(context,patternDescr.getSource());

@@ -1,0 +1,25 @@
+{
+  for (  BaseDescr b : patternDescr.getDescrs()) {
+    String expression=null;
+    if (b instanceof BindingDescr) {
+      BindingDescr bind=(BindingDescr)b;
+      expression=bind.getVariable() + (bind.isUnification() ? " := " : " : ") + bind.getExpression();
+    }
+ else     if (b instanceof ExprConstraintDescr) {
+      expression=((ExprConstraintDescr)b).getExpression();
+    }
+ else {
+      expression=b.getText();
+    }
+    ConstraintConnectiveDescr result=parseExpression(context,patternDescr,expression);
+    if (result == null) {
+      return;
+    }
+    if (result.getDescrs().size() == 1 && result.getDescrs().get(0) instanceof BindingDescr) {
+      buildRuleBindings(context,patternDescr,pattern,(BindingDescr)result.getDescrs().get(0),null);
+    }
+ else {
+      build(context,patternDescr,pattern,result);
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  String source="($a : a > $b : b[10].prop || 10 != 20) && $x : someMethod(10) == 20";
+  ConstraintConnectiveDescr result=parser.parse(source);
+  assertFalse(parser.getErrors().toString(),parser.hasErrors());
+  assertEquals(ConnectiveType.AND,result.getConnective());
+  assertEquals(2,result.getDescrs().size());
+  ConstraintConnectiveDescr or=(ConstraintConnectiveDescr)result.getDescrs().get(0);
+  assertEquals(ConnectiveType.OR,or.getConnective());
+  assertEquals(2,or.getDescrs().size());
+  RelationalExprDescr expr=(RelationalExprDescr)or.getDescrs().get(0);
+  assertEquals(">",expr.getOperator());
+  BindingDescr leftBind=(BindingDescr)expr.getLeft();
+  BindingDescr rightBind=(BindingDescr)expr.getRight();
+  assertEquals("$a",leftBind.getVariable());
+  assertEquals("a",leftBind.getExpression());
+  assertEquals("$b",rightBind.getVariable());
+  assertEquals("b[10].prop",rightBind.getExpression());
+  expr=(RelationalExprDescr)or.getDescrs().get(1);
+  assertEquals("!=",expr.getOperator());
+  AtomicExprDescr leftExpr=(AtomicExprDescr)expr.getLeft();
+  AtomicExprDescr rightExpr=(AtomicExprDescr)expr.getRight();
+  assertEquals("10",leftExpr.getExpression());
+  assertEquals("20",rightExpr.getExpression());
+  expr=(RelationalExprDescr)result.getDescrs().get(1);
+  assertEquals("==",expr.getOperator());
+  leftBind=(BindingDescr)expr.getLeft();
+  rightExpr=(AtomicExprDescr)expr.getRight();
+  assertEquals("$x",leftBind.getVariable());
+  assertEquals("someMethod(10)",leftBind.getExpression());
+  assertEquals("20",rightExpr.getExpression());
+}
