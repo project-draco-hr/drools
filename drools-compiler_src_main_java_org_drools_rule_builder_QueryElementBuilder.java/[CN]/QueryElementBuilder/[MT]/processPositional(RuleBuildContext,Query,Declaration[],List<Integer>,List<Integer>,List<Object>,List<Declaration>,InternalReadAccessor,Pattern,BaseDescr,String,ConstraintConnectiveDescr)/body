@@ -1,0 +1,23 @@
+{
+  int position=((ExprConstraintDescr)base).getPosition();
+  if (isVariable(expression)) {
+    Declaration declr=context.getDeclarationResolver().getDeclaration(query,expression);
+    if (declr != null) {
+      arguments.set(position,declr);
+      declrIndexes.add(position);
+      requiredDeclarations.add(declr);
+    }
+ else {
+      declr=pattern.addDeclaration(expression);
+      ArrayElementReader reader=new ArrayElementReader(arrayReader,varIndexes.size(),params[position].getExtractor().getExtractToClass());
+      declr.setReadAccessor(reader);
+      varIndexes.add(position);
+      arguments.set(position,Variable.variable);
+    }
+  }
+ else {
+    MVELDumper.MVELDumperContext mvelCtx=new MVELDumper.MVELDumperContext();
+    String rewrittenExpr=new MVELDumper().dump(result,mvelCtx);
+    arguments.set(position,MVEL.eval(rewrittenExpr));
+  }
+}

@@ -21,91 +21,49 @@
   InternalReadAccessor arrayReader=new SelfReferenceClassFieldReader(Object[].class,"this");
   Pattern pattern=new Pattern(context.getNextPatternId(),0,argsObjectType,null);
   for (int i=0, length=args.size(); i < length; i++) {
-    ExprConstraintDescr arg=(ExprConstraintDescr)args.get(i);
-    if (arg.getType() != ExprConstraintDescr.Type.POSITIONAL || arg.getPosition() == -1) {
-      context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Query's must use positional or bindings, not field constraints:\n" + arg.getExpression()));
+    BaseDescr base=args.get(i);
+    String expression=null;
+    boolean isPositional=false;
+    boolean isBinding=false;
+    BindingDescr bind=null;
+    ConstraintConnectiveDescr result=null;
+    if (base instanceof BindingDescr) {
+      bind=(BindingDescr)base;
+      expression=bind.getVariable() + (bind.isUnification() ? " := " : " : ") + bind.getExpression();
+      isBinding=true;
+    }
+ else {
+      if (base instanceof ExprConstraintDescr) {
+        ExprConstraintDescr ecd=(ExprConstraintDescr)base;
+        expression=ecd.getExpression();
+        isPositional=ecd.getType() == ExprConstraintDescr.Type.POSITIONAL;
+      }
+ else {
+        expression=base.getText();
+      }
+      result=parseExpression(context,patternDescr,expression);
+      if (result == null) {
+        context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to parse constraint: \n" + expression));
+        continue;
+      }
+      isBinding=result.getDescrs().size() == 1 && result.getDescrs().get(0) instanceof BindingDescr;
+      if (isBinding) {
+        bind=(BindingDescr)result.getDescrs().get(0);
+      }
+    }
+    if ((!isPositional) && (!isBinding)) {
+      context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Query's must use positional or bindings, not field constraints:\n" + expression));
       continue;
     }
-    String expr=arg.getExpression().trim();
-    if (isVariable(expr)) {
-      Declaration declr=context.getDeclarationResolver().getDeclaration(query,expr);
-      if (declr != null) {
-        arguments.set(arg.getPosition(),declr);
-        declrIndexes.add(arg.getPosition());
-        requiredDeclarations.add(declr);
-      }
- else {
-        declr=pattern.addDeclaration(expr);
-        ArrayElementReader reader=new ArrayElementReader(arrayReader,varIndexes.size(),params[arg.getPosition()].getExtractor().getExtractToClass());
-        declr.setReadAccessor(reader);
-        varIndexes.add(arg.getPosition());
-        arguments.set(arg.getPosition(),Variable.variable);
-      }
-    }
- else {
-      DrlExprParser parser=new DrlExprParser();
-      ConstraintConnectiveDescr result=parser.parse(expr);
-      if (parser.hasErrors()) {
-        for (        DroolsParserException error : parser.getErrors()) {
-          context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to parser pattern expression:\n" + error.getMessage()));
-        }
-        return null;
-      }
-      MVELDumper.MVELDumperContext mvelCtx=new MVELDumper.MVELDumperContext();
-      expr=new MVELDumper().dump(result,mvelCtx);
-      arguments.set(arg.getPosition(),MVEL.eval(expr));
-    }
-  }
-  for (  BaseDescr base : patternDescr.getDescrs()) {
-    if (!(base instanceof BindingDescr)) {
+ else     if (isPositional && isBinding) {
+      context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Query's can't use positional bindings:\n" + expression));
       continue;
     }
-    BindingDescr binding=(BindingDescr)base;
-    Declaration declr=context.getDeclarationResolver().getDeclaration(context.getRule(),binding.getVariable());
-    if (declr != null) {
-      int pos=getPos(binding.getExpression().trim(),params);
-      if (pos >= 0) {
-        String slot=binding.getExpression().trim();
-        String var=binding.getVariable().trim();
-        binding.setVariable(slot);
-        binding.setExpression(var);
-      }
- else {
-      }
-    }
-    int pos=getPos(binding.getVariable(),params);
-    if (pos >= 0) {
-      declr=context.getDeclarationResolver().getDeclaration(context.getRule(),binding.getExpression());
-      if (declr != null) {
-        arguments.set(pos,declr);
-        declrIndexes.add(pos);
-        requiredDeclarations.add(declr);
-      }
- else {
-        DrlExprParser parser=new DrlExprParser();
-        ConstraintConnectiveDescr result=parser.parse(binding.getExpression());
-        if (parser.hasErrors()) {
-          for (          DroolsParserException error : parser.getErrors()) {
-            context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to parser pattern expression:\n" + error.getMessage()));
-          }
-          return null;
-        }
-        MVELDumper.MVELDumperContext mvelCtx=new MVELDumper.MVELDumperContext();
-        String expr=new MVELDumper().dump(result,mvelCtx);
-        Object o=MVEL.eval(expr);
-        arguments.set(pos,o);
-      }
+ else     if (isPositional) {
+      processPositional(context,query,params,declrIndexes,varIndexes,arguments,requiredDeclarations,arrayReader,pattern,base,expression,result);
     }
  else {
-      declr=pattern.addDeclaration(binding.getVariable());
-      pos=getPos(binding.getExpression(),params);
-      if (pos < 0) {
-        throw new RuntimeException("named argument does not exist");
-      }
-      ArrayElementReader reader=new ArrayElementReader(arrayReader,varIndexes.size(),params[pos].getExtractor().getExtractToClass());
-      declr.setReadAccessor(reader);
-      varIndexes.add(pos);
-      arguments.set(pos,Variable.variable);
+      processBinding(context,descr,params,declrIndexes,varIndexes,arguments,requiredDeclarations,arrayReader,pattern,bind,result);
     }
   }
   Declaration[] declrsArray=requiredDeclarations.toArray(new Declaration[requiredDeclarations.size()]);

@@ -1,12 +1,15 @@
 {
   for (  BaseDescr b : patternDescr.getDescrs()) {
     String expression=null;
+    boolean isPositional=false;
     if (b instanceof BindingDescr) {
       BindingDescr bind=(BindingDescr)b;
       expression=bind.getVariable() + (bind.isUnification() ? " := " : " : ") + bind.getExpression();
     }
  else     if (b instanceof ExprConstraintDescr) {
-      expression=((ExprConstraintDescr)b).getExpression();
+      ExprConstraintDescr descr=(ExprConstraintDescr)b;
+      expression=descr.getExpression();
+      isPositional=descr.getType() == ExprConstraintDescr.Type.POSITIONAL;
     }
  else {
       expression=b.getText();
@@ -17,6 +20,9 @@
     }
     if (result.getDescrs().size() == 1 && result.getDescrs().get(0) instanceof BindingDescr) {
       buildRuleBindings(context,patternDescr,pattern,(BindingDescr)result.getDescrs().get(0),null);
+    }
+ else     if (isPositional) {
+      processPositional(context,patternDescr,pattern,(ExprConstraintDescr)b);
     }
  else {
       build(context,patternDescr,pattern,result);

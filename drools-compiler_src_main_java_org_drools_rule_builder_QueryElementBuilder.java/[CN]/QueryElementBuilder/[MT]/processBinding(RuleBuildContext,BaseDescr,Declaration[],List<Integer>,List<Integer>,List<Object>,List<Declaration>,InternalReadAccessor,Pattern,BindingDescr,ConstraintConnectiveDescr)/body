@@ -1,0 +1,48 @@
+{
+  Declaration declr=context.getDeclarationResolver().getDeclaration(context.getRule(),bind.getVariable());
+  if (declr != null) {
+    int pos=getPos(bind.getExpression(),params);
+    if (pos >= 0) {
+      String slot=bind.getExpression();
+      String var=bind.getVariable();
+      bind.setVariable(slot);
+      bind.setExpression(var);
+    }
+ else {
+    }
+  }
+  int pos=getPos(bind.getVariable(),params);
+  if (pos >= 0) {
+    declr=context.getDeclarationResolver().getDeclaration(context.getRule(),bind.getExpression());
+    if (declr != null) {
+      arguments.set(pos,declr);
+      declrIndexes.add(pos);
+      requiredDeclarations.add(declr);
+    }
+ else {
+      DrlExprParser parser=new DrlExprParser();
+      ConstraintConnectiveDescr bresult=parser.parse(bind.getExpression());
+      if (parser.hasErrors()) {
+        for (        DroolsParserException error : parser.getErrors()) {
+          context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to parser pattern expression:\n" + error.getMessage()));
+        }
+        return;
+      }
+      MVELDumper.MVELDumperContext mvelCtx=new MVELDumper.MVELDumperContext();
+      String expr=new MVELDumper().dump(bresult,mvelCtx);
+      Object o=MVEL.eval(expr);
+      arguments.set(pos,o);
+    }
+  }
+ else {
+    declr=pattern.addDeclaration(bind.getVariable());
+    pos=getPos(bind.getExpression(),params);
+    if (pos < 0) {
+      throw new RuntimeException("named argument does not exist");
+    }
+    ArrayElementReader reader=new ArrayElementReader(arrayReader,varIndexes.size(),params[pos].getExtractor().getExtractToClass());
+    declr.setReadAccessor(reader);
+    varIndexes.add(pos);
+    arguments.set(pos,Variable.variable);
+  }
+}

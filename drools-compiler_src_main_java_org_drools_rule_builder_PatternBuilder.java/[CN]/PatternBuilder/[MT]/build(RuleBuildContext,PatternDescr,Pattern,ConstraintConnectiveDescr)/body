@@ -18,7 +18,7 @@
     RelationalExprDescr relDescr=null;
     if (d instanceof RelationalExprDescr) {
       relDescr=(RelationalExprDescr)d;
-      if (relDescr.getLeft() instanceof AtomicExprDescr && relDescr.getRight() instanceof AtomicExprDescr) {
+      if ((relDescr.getLeft() instanceof AtomicExprDescr || relDescr.getLeft() instanceof BindingDescr) && (relDescr.getRight() instanceof AtomicExprDescr || relDescr.getRight() instanceof BindingDescr)) {
         simple=true;
       }
     }
@@ -35,9 +35,25 @@
       throw new RuntimeException("What caused this?: " + d);
     }
     RelationalExprDescr exprDescr=(RelationalExprDescr)d;
-    AtomicExprDescr rdescr=((AtomicExprDescr)exprDescr.getRight());
-    String fieldName=((AtomicExprDescr)exprDescr.getLeft()).getExpression();
-    String value=rdescr.getExpression().trim();
+    boolean isLiteral=false;
+    String fieldName=null;
+    String value=null;
+    if (exprDescr.getRight() instanceof AtomicExprDescr) {
+      AtomicExprDescr rdescr=((AtomicExprDescr)exprDescr.getRight());
+      value=rdescr.getExpression().trim();
+      isLiteral=rdescr.isLiteral();
+    }
+ else {
+      BindingDescr rdescr=((BindingDescr)exprDescr.getRight());
+      value=rdescr.getExpression().trim();
+      isLiteral=false;
+    }
+    if (exprDescr.getLeft() instanceof AtomicExprDescr) {
+      fieldName=((AtomicExprDescr)exprDescr.getLeft()).getExpression();
+    }
+ else {
+      fieldName=((BindingDescr)exprDescr.getLeft()).getExpression();
+    }
     ExprBindings rightExpr=new ExprBindings();
     setInputs(context,rightExpr,(pattern.getObjectType() instanceof ClassObjectType) ? ((ClassObjectType)pattern.getObjectType()).getClassType() : FactTemplate.class,value);
     String[] parts=fieldName.split("\\.");
@@ -69,7 +85,7 @@
     }
     String operator=relDescr.getOperator().trim();
     Restriction restriction=null;
-    if (rdescr.isLiteral()) {
+    if (isLiteral) {
       restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),value,LiteralRestrictionDescr.TYPE_STRING));
       if (restriction == null) {
         continue;
