@@ -18,14 +18,13 @@
     jpm.getApplicationScopedPersistenceContext().persist(this.sessionInfo);
     this.txm.commit();
   }
- catch (  Exception t1) {
-    try {
-      this.txm.rollback();
-    }
- catch (    Throwable t2) {
-      throw new RuntimeException("Could not commit session or rollback",t2);
-    }
-    throw new RuntimeException("Could not commit session",t1);
+ catch (  RuntimeException re) {
+    rollbackTransaction(re);
+    throw re;
+  }
+catch (  Exception t1) {
+    rollbackTransaction(t1);
+    throw new RuntimeException("Wrapped exception see cause",t1);
   }
   ((InternalKnowledgeRuntime)ksession).setId(this.sessionInfo.getId());
 }
