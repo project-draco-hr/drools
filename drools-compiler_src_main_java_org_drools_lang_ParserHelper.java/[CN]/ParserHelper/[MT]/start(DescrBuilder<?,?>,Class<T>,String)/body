@@ -1,0 +1,116 @@
+{
+  if (state.backtracking == 0) {
+    if (PackageDescrBuilder.class.isAssignableFrom(clazz)) {
+      pushParaphrases(DroolsParaphraseTypes.PACKAGE);
+      beginSentence(DroolsSentenceType.PACKAGE);
+      setStart(ctxBuilder);
+    }
+ else     if (ImportDescrBuilder.class.isAssignableFrom(clazz)) {
+      ImportDescrBuilder imp;
+      if (validateLT(2,DroolsSoftKeywords.FUNCTION) || validateLT(2,DroolsSoftKeywords.STATIC)) {
+        imp=ctxBuilder == null ? DescrFactory.newPackage().newFunctionImport() : ((PackageDescrBuilder)ctxBuilder).newFunctionImport();
+      }
+ else {
+        imp=ctxBuilder == null ? DescrFactory.newPackage().newImport() : ((PackageDescrBuilder)ctxBuilder).newImport();
+      }
+      pushParaphrases(DroolsParaphraseTypes.IMPORT);
+      beginSentence(DroolsSentenceType.IMPORT_STATEMENT);
+      setStart(imp);
+      return (T)imp;
+    }
+ else     if (GlobalDescrBuilder.class.isAssignableFrom(clazz)) {
+      GlobalDescrBuilder global=ctxBuilder == null ? DescrFactory.newPackage().newGlobal() : ((PackageDescrBuilder)ctxBuilder).newGlobal();
+      pushParaphrases(DroolsParaphraseTypes.GLOBAL);
+      beginSentence(DroolsSentenceType.GLOBAL);
+      setStart(global);
+      return (T)global;
+    }
+ else     if (DeclareDescrBuilder.class.isAssignableFrom(clazz)) {
+      DeclareDescrBuilder declare=ctxBuilder == null ? DescrFactory.newPackage().newDeclare() : ((PackageDescrBuilder)ctxBuilder).newDeclare();
+      pushParaphrases(DroolsParaphraseTypes.TYPE_DECLARE);
+      beginSentence(DroolsSentenceType.TYPE_DECLARATION);
+      setStart(declare);
+      return (T)declare;
+    }
+ else     if (FieldDescrBuilder.class.isAssignableFrom(clazz)) {
+      FieldDescrBuilder field=((DeclareDescrBuilder)ctxBuilder).newField(param);
+      setStart(field);
+      return (T)field;
+    }
+ else     if (FunctionDescrBuilder.class.isAssignableFrom(clazz)) {
+      FunctionDescrBuilder function=null;
+      if (ctxBuilder == null) {
+        function=DescrFactory.newPackage().newFunction();
+      }
+ else {
+        PackageDescrBuilder pkg=(PackageDescrBuilder)ctxBuilder;
+        function=pkg.newFunction().namespace(pkg.getDescr().getName());
+        AttributeDescr attribute=pkg.getDescr().getAttribute("dialect");
+        if (attribute != null) {
+          function.dialect(attribute.getValue());
+        }
+      }
+      pushParaphrases(DroolsParaphraseTypes.FUNCTION);
+      beginSentence(DroolsSentenceType.FUNCTION);
+      setStart(function);
+      return (T)function;
+    }
+ else     if (RuleDescrBuilder.class.isAssignableFrom(clazz)) {
+      RuleDescrBuilder rule=ctxBuilder == null ? DescrFactory.newPackage().newRule() : ((PackageDescrBuilder)ctxBuilder).newRule();
+      pushParaphrases(DroolsParaphraseTypes.RULE);
+      beginSentence(DroolsSentenceType.RULE);
+      setStart(rule);
+      return (T)rule;
+    }
+ else     if (QueryDescrBuilder.class.isAssignableFrom(clazz)) {
+      QueryDescrBuilder query=ctxBuilder == null ? DescrFactory.newPackage().newQuery() : ((PackageDescrBuilder)ctxBuilder).newQuery();
+      pushParaphrases(DroolsParaphraseTypes.QUERY);
+      beginSentence(DroolsSentenceType.QUERY);
+      setStart(query);
+      return (T)query;
+    }
+ else     if (AttributeDescrBuilder.class.isAssignableFrom(clazz)) {
+      AttributeDescrBuilder<?> attribute=((AttributeSupportBuilder<?>)ctxBuilder).attribute(param);
+      setStart(attribute);
+      return (T)attribute;
+    }
+ else     if (EvalDescrBuilder.class.isAssignableFrom(clazz)) {
+      EvalDescrBuilder<?> eval=((CEDescrBuilder<?,?>)ctxBuilder).eval();
+      pushParaphrases(DroolsParaphraseTypes.EVAL);
+      beginSentence(DroolsSentenceType.EVAL);
+      setStart(eval);
+      return (T)eval;
+    }
+ else     if (ForallDescrBuilder.class.isAssignableFrom(clazz)) {
+      ForallDescrBuilder<?> forall=((CEDescrBuilder<?,?>)ctxBuilder).forall();
+      setStart(forall);
+      return (T)forall;
+    }
+ else     if (CEDescrBuilder.class.isAssignableFrom(clazz)) {
+      setStart(ctxBuilder);
+      return (T)ctxBuilder;
+    }
+ else     if (PatternDescrBuilder.class.isAssignableFrom(clazz)) {
+      PatternDescrBuilder<?> pattern=((PatternContainerDescrBuilder<?,?>)ctxBuilder).pattern();
+      pushParaphrases(DroolsParaphraseTypes.PATTERN);
+      setStart(pattern);
+      return (T)pattern;
+    }
+ else     if (CollectDescrBuilder.class.isAssignableFrom(clazz)) {
+      CollectDescrBuilder<?> collect=((PatternDescrBuilder<?>)ctxBuilder).from().collect();
+      setStart(collect);
+      return (T)collect;
+    }
+ else     if (AccumulateDescrBuilder.class.isAssignableFrom(clazz)) {
+      AccumulateDescrBuilder<?> accumulate=((PatternDescrBuilder<?>)ctxBuilder).from().accumulate();
+      setStart(accumulate);
+      return (T)accumulate;
+    }
+ else     if (BehaviorDescrBuilder.class.isAssignableFrom(clazz)) {
+      BehaviorDescrBuilder<?> behavior=((PatternDescrBuilder<?>)ctxBuilder).behavior();
+      setStart(behavior);
+      return (T)behavior;
+    }
+  }
+  return null;
+}
