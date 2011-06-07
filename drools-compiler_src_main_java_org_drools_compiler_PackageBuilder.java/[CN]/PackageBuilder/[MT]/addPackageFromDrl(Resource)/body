@@ -1,12 +1,20 @@
 {
   this.resource=resource;
-  final DrlParser parser=new DrlParser();
-  final PackageDescr pkg=parser.parse(resource.getInputStream());
-  this.results.addAll(parser.getErrors());
-  if (pkg == null) {
-    this.results.add(new ParserError("Parser returned a null Package",0,0));
+  PackageDescr pkg=null;
+  boolean hasErrors=false;
+  if (resource instanceof DescrResource) {
+    pkg=(PackageDescr)((DescrResource)resource).getDescr();
   }
-  if (!parser.hasErrors()) {
+ else {
+    final DrlParser parser=new DrlParser();
+    pkg=parser.parse(resource.getInputStream());
+    this.results.addAll(parser.getErrors());
+    if (pkg == null) {
+      this.results.add(new ParserError("Parser returned a null Package",0,0));
+    }
+    hasErrors=parser.hasErrors();
+  }
+  if (!hasErrors) {
     addPackage(pkg);
   }
   this.resource=null;
