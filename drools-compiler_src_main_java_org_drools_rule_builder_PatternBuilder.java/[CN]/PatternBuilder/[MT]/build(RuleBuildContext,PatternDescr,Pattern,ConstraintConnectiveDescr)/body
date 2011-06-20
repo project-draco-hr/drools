@@ -23,83 +23,80 @@
       }
     }
     if (!simple || new ClassObjectType(Map.class).isAssignableFrom(pattern.getObjectType())) {
-      Dialect dialect=context.getDialect();
-      MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
-      context.setDialect(mvelDialect);
-      PredicateDescr pdescr=new PredicateDescr(expr);
-      buildEval(context,pattern,pdescr,null,aliases);
-      context.setDialect(dialect);
+      createAndBuildPredicate(context,pattern,expr,aliases);
       continue;
     }
     if (!(d instanceof RelationalExprDescr)) {
       throw new RuntimeException("What caused this?: " + d);
     }
     RelationalExprDescr exprDescr=(RelationalExprDescr)d;
-    boolean isLiteral=false;
-    String fieldName=null;
-    String value=null;
+    String leftValue=null;
+    String rightValue=null;
+    boolean isRightLiteral=false;
+    boolean usesThisRef=false;
     if (exprDescr.getRight() instanceof AtomicExprDescr) {
       AtomicExprDescr rdescr=((AtomicExprDescr)exprDescr.getRight());
-      value=rdescr.getExpression().trim();
-      isLiteral=rdescr.isLiteral();
+      rightValue=rdescr.getExpression().trim();
+      usesThisRef="this".equals(rightValue) || rightValue.startsWith("this.");
+      isRightLiteral=rdescr.isLiteral();
     }
  else {
       BindingDescr rdescr=((BindingDescr)exprDescr.getRight());
-      value=rdescr.getExpression().trim();
-      isLiteral=false;
+      rightValue=rdescr.getExpression().trim();
+      usesThisRef="this".equals(rightValue) || rightValue.startsWith("this.");
     }
     if (exprDescr.getLeft() instanceof AtomicExprDescr) {
-      fieldName=((AtomicExprDescr)exprDescr.getLeft()).getExpression();
+      AtomicExprDescr ldescr=(AtomicExprDescr)exprDescr.getLeft();
+      leftValue=ldescr.getExpression();
+      usesThisRef=usesThisRef || "this".equals(leftValue) || leftValue.startsWith("this.");
     }
  else {
-      fieldName=((BindingDescr)exprDescr.getLeft()).getExpression();
+      leftValue=((BindingDescr)exprDescr.getLeft()).getExpression();
+      usesThisRef=usesThisRef || "this".equals(leftValue) || leftValue.startsWith("this.");
     }
+    ExprBindings leftExpr=new ExprBindings();
+    setInputs(context,leftExpr,(pattern.getObjectType() instanceof ClassObjectType) ? ((ClassObjectType)pattern.getObjectType()).getClassType() : FactTemplate.class,leftValue);
     ExprBindings rightExpr=new ExprBindings();
-    setInputs(context,rightExpr,(pattern.getObjectType() instanceof ClassObjectType) ? ((ClassObjectType)pattern.getObjectType()).getClassType() : FactTemplate.class,value);
-    String[] parts=fieldName.split("\\.");
+    setInputs(context,rightExpr,(pattern.getObjectType() instanceof ClassObjectType) ? ((ClassObjectType)pattern.getObjectType()).getClassType() : FactTemplate.class,rightValue);
+    if ((!usesThisRef) && leftExpr.isConstant() && rightExpr.isConstant()) {
+      createAndBuildPredicate(context,pattern,expr,aliases);
+      continue;
+    }
+    String[] parts=leftValue.split("\\.");
     if (parts.length == 2) {
       if ("this".equals(parts[0].trim())) {
-        fieldName=parts[1];
+        leftValue=parts[1];
       }
  else       if (pattern.getDeclaration() != null && parts[0].trim().equals(pattern.getDeclaration().getIdentifier())) {
-        fieldName=parts[1];
+        leftValue=parts[1];
       }
     }
-    if (fieldName.indexOf('.') >= 0 || fieldName.indexOf('[') >= 0 || fieldName.indexOf('(') >= 0) {
-      ExprBindings leftExpr=new ExprBindings();
-      setInputs(context,leftExpr,((ClassObjectType)((Pattern)context.getBuildStack().peek()).getObjectType()).getClassType(),fieldName);
-      if (!leftExpr.getRuleBindings().isEmpty()) {
-        Dialect dialect=context.getDialect();
-        MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
-        context.setDialect(mvelDialect);
-        PredicateDescr pdescr=new PredicateDescr(expr);
-        buildEval(context,pattern,pdescr,null,aliases);
-        context.setDialect(dialect);
-        continue;
-      }
+    if (leftValue.indexOf('.') >= 0 || leftValue.indexOf('[') >= 0 || leftValue.indexOf('(') >= 0 || leftExpr.getFieldAccessors().size() > 2 || !leftExpr.getRuleBindings().isEmpty() || !leftExpr.getRuleBindings().isEmpty()) {
+      createAndBuildPredicate(context,pattern,expr,aliases);
+      continue;
     }
-    final InternalReadAccessor extractor=getFieldReadAccessor(context,d,pattern.getObjectType(),fieldName,null,false);
+    final InternalReadAccessor extractor=getFieldReadAccessor(context,d,pattern.getObjectType(),leftValue,null,false);
     if (extractor == null) {
-      context.getErrors().add(new DescrBuildError(context.getParentDescr(),d,null,"Unable to build constraint as  '" + fieldName + "' is invalid"));
+      context.getErrors().add(new DescrBuildError(context.getParentDescr(),d,null,"Unable to build constraint as  '" + leftValue + "' is invalid"));
       continue;
     }
     String operator=relDescr.getOperator().trim();
     Restriction restriction=null;
-    if (isLiteral) {
-      restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),value,LiteralRestrictionDescr.TYPE_STRING));
+    if (isRightLiteral) {
+      restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),rightValue,LiteralRestrictionDescr.TYPE_STRING));
       if (restriction == null) {
         continue;
       }
     }
  else {
-      int dotPos=value.lastIndexOf('.');
+      int dotPos=rightValue.lastIndexOf('.');
       if (dotPos >= 0) {
-        final String mainPart=value.substring(0,dotPos);
-        String lastPart=value.substring(dotPos + 1);
+        final String mainPart=rightValue.substring(0,dotPos);
+        String lastPart=rightValue.substring(dotPos + 1);
         try {
           final Class<?> cls=context.getDialect().getTypeResolver().resolveType(mainPart);
           if (lastPart.indexOf('(') < 0 && lastPart.indexOf('.') < 0 && lastPart.indexOf('[') < 0) {
-            restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),value,LiteralRestrictionDescr.TYPE_STRING));
+            restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),rightValue,LiteralRestrictionDescr.TYPE_STRING));
           }
         }
  catch (        ClassNotFoundException e) {
@@ -111,30 +108,30 @@
       continue;
     }
     Declaration declr=null;
-    if (value.indexOf('(') < 0 && value.indexOf('.') < 0 && value.indexOf('[') < 0) {
-      declr=context.getDeclarationResolver().getDeclaration(context.getRule(),value);
+    if (rightValue.indexOf('(') < 0 && rightValue.indexOf('.') < 0 && rightValue.indexOf('[') < 0) {
+      declr=context.getDeclarationResolver().getDeclaration(context.getRule(),rightValue);
       if (declr == null) {
         final Pattern thisPattern=(Pattern)context.getBuildStack().peek();
-        declr=this.createDeclarationObject(context,value,thisPattern);
+        declr=this.createDeclarationObject(context,rightValue,thisPattern);
         if (declr == null) {
-          context.getErrors().add(new DescrBuildError(context.getParentDescr(),d,null,"Unable to return Declaration for identifier '" + value + "'"));
+          context.getErrors().add(new DescrBuildError(context.getParentDescr(),d,null,"Unable to return Declaration for identifier '" + rightValue + "'"));
           continue;
         }
       }
     }
     if (declr == null) {
-      parts=value.split("\\.");
+      parts=rightValue.split("\\.");
       if (parts.length == 2) {
         if ("this".equals(parts[0].trim())) {
           declr=this.createDeclarationObject(context,parts[1].trim(),(Pattern)context.getBuildStack().peek());
-          value=parts[1].trim();
+          rightValue=parts[1].trim();
         }
  else {
           declr=context.getDeclarationResolver().getDeclaration(context.getRule(),parts[0].trim());
           if (declr != null) {
             if (declr.isPatternDeclaration()) {
               declr=this.createDeclarationObject(context,parts[1].trim(),declr.getPattern());
-              value=parts[1].trim();
+              rightValue=parts[1].trim();
             }
  else {
               context.getErrors().add(new DescrBuildError(context.getParentDescr(),d,"","Not possible to directly access the property '" + parts[1] + "' of declaration '"+ parts[0]+ "' since it is not a pattern"));
@@ -158,11 +155,11 @@
     }
     if (restriction == null) {
       Dialect dialect=context.getDialect();
-      if (!value.startsWith("(")) {
+      if (!rightValue.startsWith("(")) {
         MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
         context.setDialect(mvelDialect);
       }
-      restriction=buildRestriction(context,(Pattern)context.getBuildStack().peek(),extractor,new ReturnValueRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParametersText(),value),aliases);
+      restriction=buildRestriction(context,(Pattern)context.getBuildStack().peek(),extractor,new ReturnValueRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParametersText(),rightValue),aliases);
       context.setDialect(dialect);
     }
     if (restriction == null || extractor == null) {
