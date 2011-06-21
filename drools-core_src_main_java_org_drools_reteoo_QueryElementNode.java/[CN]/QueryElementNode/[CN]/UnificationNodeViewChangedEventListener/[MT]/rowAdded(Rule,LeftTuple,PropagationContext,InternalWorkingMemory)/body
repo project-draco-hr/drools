@@ -1,10 +1,26 @@
 {
-  Variable[] vars=query.getVariables();
-  Object[] objects=new Object[this.variables.length];
+  QueryTerminalNode node=(QueryTerminalNode)resultLeftTuple.getLeftTupleSink();
+  Declaration[] decls=node.getDeclarations();
+  DroolsQuery query=(DroolsQuery)this.factHandle.getObject();
+  Object[] objects=new Object[query.getElements().length];
+  Declaration decl;
   for (int i=0, length=this.variables.length; i < length; i++) {
-    objects[i]=vars[this.variables[i]].getValue();
+    decl=decls[this.variables[i]];
+    objects[this.variables[i]]=decl.getValue(workingMemory,resultLeftTuple.get(decl).getObject());
   }
-  QueryElementFactHandle handle=new QueryElementFactHandle(objects,workingMemory.getFactHandleFactory().getAtomicId().incrementAndGet(),workingMemory.getFactHandleFactory().getAtomicRecency().incrementAndGet());
-  RightTuple rightTuple=new RightTuple(handle);
-  this.sink.createChildLeftTuplesforQuery(this.leftTuple,rightTuple,this.tupleMemoryEnabled);
+  QueryElementFactHandle resultHandle=new QueryElementFactHandle(objects,workingMemory.getFactHandleFactory().getAtomicId().incrementAndGet(),workingMemory.getFactHandleFactory().getAtomicRecency().incrementAndGet());
+  RightTuple rightTuple=new RightTuple(resultHandle);
+  if (query.isOpen()) {
+    rightTuple.setLeftTuple(resultLeftTuple);
+    resultLeftTuple.setBlocker(rightTuple);
+  }
+  this.node.getSinkPropagator().createChildLeftTuplesforQuery(this.leftTuple,rightTuple,true,query.isOpen());
+  RightTupleList rightTuples=query.getRightTupleList();
+  if (rightTuples == null) {
+    rightTuples=new RightTupleList();
+    query.setRightTupleList(rightTuples);
+    QueryEvaluationAction evalAction=new QueryEvaluationAction(context,this.factHandle,leftTuple,this.node);
+    context.getQueue2().addFirst(evalAction);
+  }
+  rightTuples.add(rightTuple);
 }

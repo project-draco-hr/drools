@@ -1,0 +1,56 @@
+{
+  String str="" + "package org.drools.test  \n" + "import java.util.List\n"+ "import java.util.ArrayList\n"+ "import org.drools.Person\n"+ "global List list\n"+ "dialect \"mvel\"\n"+ "declare Location\n"+ "    thing : String \n"+ "    location : String \n"+ "end"+ "\n"+ "query isContainedIn( String x, String y ) \n"+ "    Location(x, y;)\n"+ "    or \n"+ "    ( Location(z, y;) and isContainedIn(x, z;) )\n"+ "end\n"+ "\n"+ "rule look when \n"+ "    Person( $l : likes ) \n"+ "    isContainedIn( $l, 'office'; )\n"+ "then\n"+ "   insertLogical( 'blah' );"+ "end\n"+ "rule existsBlah when \n"+ "    exists String( this == 'blah') \n"+ "then\n"+ "   list.add( 'exists blah' );"+ "end\n"+ "\n"+ "rule notBlah when \n"+ "    not String( this == 'blah') \n"+ "then\n"+ "   list.add( 'not blah' );"+ "end\n"+ "\n"+ "rule init when\n"+ "then\n"+ "        insert( new Location(\"apple\", \"kitchen\") );\n"+ "        insert( new Location(\"desk\", \"office\") );\n"+ "        insert( new Location(\"flashlight\", \"desk\") );\n"+ "        insert( new Location(\"envelope\", \"desk\") );\n"+ "        insert( new Location(\"key\", \"envelope\") );\n"+ "        insert( new Location(\"washing machine\", \"cellar\") );\n"+ "        insert( new Location(\"nani\", \"washing machine\") );\n"+ "        insert( new Location(\"broccoli\", \"kitchen\") );\n"+ "        insert( new Location(\"crackers\", \"kitchen\") );\n"+ "        insert( new Location(\"computer\", \"office\") );\n"+ "end\n"+ "\n"+ "rule go1 when \n"+ "    String( this == 'go1') \n"+ "then\n"+ "        list.add( rule.getName() ); \n"+ "        insert( new Location('lamp', 'desk') );\n"+ "end\n"+ "\n"+ "rule go2 when \n"+ "    String( this == 'go2') \n"+ "    $l : Location('lamp', 'desk'; )\n"+ "then\n"+ "    list.add( rule.getName() ); \n"+ "    retract( $l );\n"+ "end\n"+ "\n"+ "rule go3 when \n"+ "    String( this == 'go3') \n"+ "then\n"+ "        list.add( rule.getName() ); \n"+ "        insert( new Location('lamp', 'desk') );\n"+ "end\n"+ "\n"+ "rule go4 when \n"+ "    String( this == 'go4') \n"+ "    $l : Location('lamp', 'desk'; )\n"+ "then\n"+ "        list.add( rule.getName() ); \n"+ "    modify( $l ) { thing = 'book' };\n"+ "end\n"+ "\n"+ "rule go5 when \n"+ "    String( this == 'go5') \n"+ "    $l : Location('book', 'desk'; )\n"+ "then\n"+ "    list.add( rule.getName() ); \n"+ "    modify( $l ) { thing = 'lamp' };\n"+ "end\n"+ "\n"+ "rule go6 when \n"+ "    String( this == 'go6') \n"+ "    $l : Location( 'lamp', 'desk'; )\n"+ "then\n"+ "    list.add( rule.getName() ); \n"+ "    modify( $l ) { thing = 'book' };\n"+ "end\n"+ "\n"+ "rule go7 when \n"+ "    String( this == 'go7') \n"+ "    $p : Person( likes == 'lamp' ) \n"+ "then\n"+ "    list.add( rule.getName() ); \n"+ "    modify( $p ) { likes = 'key' };\n"+ "end\n"+ "\n";
+  System.out.println(str);
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  QueryResults results=null;
+  Person p=new Person();
+  p.setLikes("lamp");
+  FactHandle handle=ksession.insert(p);
+  ksession.fireAllRules();
+  list.clear();
+  FactHandle fh=ksession.insert("go1");
+  ksession.fireAllRules();
+  ksession.retract(fh);
+  assertEquals("go1",list.get(0));
+  assertEquals("exists blah",list.get(1));
+  fh=ksession.insert("go2");
+  ksession.fireAllRules();
+  ksession.retract(fh);
+  assertEquals("go2",list.get(2));
+  assertEquals("not blah",list.get(3));
+  fh=ksession.insert("go3");
+  ksession.fireAllRules();
+  ksession.retract(fh);
+  assertEquals("go3",list.get(4));
+  assertEquals("exists blah",list.get(5));
+  fh=ksession.insert("go4");
+  ksession.fireAllRules();
+  ksession.retract(fh);
+  assertEquals("go4",list.get(6));
+  assertEquals("not blah",list.get(7));
+  fh=ksession.insert("go5");
+  ksession.fireAllRules();
+  ksession.retract(fh);
+  assertEquals("go5",list.get(8));
+  assertEquals("exists blah",list.get(9));
+  fh=ksession.insert("go6");
+  ksession.fireAllRules();
+  ksession.retract(fh);
+  assertEquals("go6",list.get(10));
+  assertEquals("not blah",list.get(11));
+  fh=ksession.insert("go7");
+  ksession.fireAllRules();
+  ksession.retract(fh);
+  assertEquals("go7",list.get(12));
+  assertEquals("exists blah",list.get(13));
+}

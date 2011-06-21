@@ -1,0 +1,28 @@
+{
+  if (leftTuple.getFirstChild() == null) {
+    this.node.assertLeftTuple(leftTuple,context,workingMemory);
+  }
+ else {
+    if (retract) {
+      this.node.getSinkPropagator().propagateRetractLeftTuple(leftTuple,context,workingMemory);
+    }
+ else {
+      this.node.getSinkPropagator().propagateModifyChildLeftTuple(leftTuple,context,workingMemory,true);
+    }
+  }
+  Object node=workingMemory.getNodeMemory(this.node);
+  RightTupleMemory rightMemory=null;
+  if (node instanceof BetaMemory) {
+    rightMemory=((BetaMemory)node).getRightTupleMemory();
+  }
+ else   if (node instanceof AccumulateMemory) {
+    rightMemory=((AccumulateMemory)node).betaMemory.getRightTupleMemory();
+  }
+  FastIterator rightIt=rightMemory.fastIterator();
+  RightTuple temp=null;
+  for (RightTuple rightTuple=rightMemory.getFirst(leftTuple,(InternalFactHandle)context.getFactHandle()); rightTuple != null; ) {
+    temp=(RightTuple)rightIt.next(rightTuple);
+    rightMemory.remove(rightTuple);
+    rightTuple=temp;
+  }
+}

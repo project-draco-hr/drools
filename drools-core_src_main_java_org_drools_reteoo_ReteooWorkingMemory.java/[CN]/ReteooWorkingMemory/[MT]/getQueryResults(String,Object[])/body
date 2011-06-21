@@ -3,16 +3,23 @@
     startOperation();
     this.ruleBase.readLock();
     this.lock.lock();
-    DroolsQuery queryObject=new DroolsQuery(query,arguments,getQueryListenerInstance(),false);
-    ObjectTypeConf objectTypeConf=this.defaultEntryPoint.getObjectTypeConfigurationRegistry().getObjectTypeConf(this.defaultEntryPoint.getEntryPoint(),queryObject);
-    InternalFactHandle handle=this.handleFactory.newFactHandle(queryObject,objectTypeConf,this,this);
-    insert(handle,queryObject,null,null,objectTypeConf);
+    this.ruleBase.executeQueuedActions();
+    executeQueuedActions();
+    DroolsQuery queryObject=new DroolsQuery(queryName,arguments,getQueryListenerInstance(),false);
+    InternalFactHandle handle=this.handleFactory.newFactHandle(queryObject,null,this,this);
+    final PropagationContext propagationContext=new PropagationContextImpl(getNextPropagationIdCounter(),PropagationContext.ASSERTION,null,null,handle,agenda.getActiveActivations(),agenda.getDormantActivations(),getEntryPoint());
+    getEntryPointNode().assertQuery(handle,propagationContext,this);
+    propagationContext.evaluateActionQueue(this);
     this.handleFactory.destroyFactHandle(handle);
-    Declaration[] declarations=new Declaration[0];
-    if (queryObject.getQuery() != null) {
-      declarations=queryObject.getQuery().getDeclarations().values().toArray(new Declaration[0]);
+    BaseNode[] nodes=this.ruleBase.getReteooBuilder().getTerminalNodes(queryObject.getQuery());
+    List<Map<String,Declaration>> decls=new ArrayList<Map<String,Declaration>>();
+    if (nodes != null) {
+      for (      BaseNode node : nodes) {
+        decls.add(((QueryTerminalNode)node).getSubrule().getOuterDeclarations());
+      }
     }
-    return new QueryResults((List<FactHandle[]>)queryObject.getQueryResultCollector().getResults(),declarations,this);
+    executeQueuedActions();
+    return new QueryResults((List<QueryRowWithSubruleIndex>)queryObject.getQueryResultCollector().getResults(),decls.toArray(new Map[decls.size()]),this);
   }
   finally {
     this.lock.unlock();

@@ -1,4 +1,27 @@
 {
-  retractLeftTuple(leftTuple,context,workingMemory);
-  assertLeftTuple(leftTuple,context,workingMemory);
+  if (!openQuery) {
+    if (leftTuple.getFirstChild() != null) {
+      this.sink.propagateRetractLeftTuple(leftTuple,context,workingMemory);
+    }
+    assertLeftTuple(leftTuple,context,workingMemory);
+    return;
+  }
+  Object[] argTemplate=this.queryElement.getArgTemplate();
+  Object[] args=new Object[argTemplate.length];
+  System.arraycopy(argTemplate,0,args,0,args.length);
+  int[] declIndexes=this.queryElement.getDeclIndexes();
+  List<Integer> srcVarIndexes=null;
+  for (int i=0, length=declIndexes.length; i < length; i++) {
+    Declaration declr=(Declaration)argTemplate[declIndexes[i]];
+    Object tupleObject=leftTuple.get(declr).getObject();
+    Object o=declr.getValue(workingMemory,tupleObject);
+    args[declIndexes[i]]=o;
+  }
+  int[] varIndexes=this.queryElement.getVariableIndexes();
+  InternalFactHandle handle=(InternalFactHandle)leftTuple.getObject();
+  DroolsQuery queryObject=(DroolsQuery)handle.getObject();
+  queryObject.setParameters(args);
+  ((UnificationNodeViewChangedEventListener)queryObject.getQueryResultCollector()).setVariables(varIndexes);
+  QueryInsertModifyAction action=new QueryInsertModifyAction(context,handle,leftTuple,varIndexes,srcVarIndexes,this);
+  context.getQueue1().addFirst(action);
 }

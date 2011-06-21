@@ -3,23 +3,13 @@
   if (lrUnlinkingEnabled && leftUnlinked(context,workingMemory,memory)) {
     return;
   }
-  memory.setOpen(true);
   RightTupleMemory rightMemory=memory.getRightTupleMemory();
   ContextEntry[] contextEntry=memory.getContext();
   boolean useLeftMemory=true;
-  if (this.tupleMemoryEnabled) {
-    memory.getLeftTupleMemory().add(leftTuple);
-  }
- else {
-    if (memory.isOpen()) {
-      contextEntry=this.constraints.createContext();
-    }
-    Object object=((InternalFactHandle)context.getFactHandle()).getObject();
-    if (object instanceof DroolsQuery && !((DroolsQuery)object).isOpen()) {
+  if (!this.tupleMemoryEnabled) {
+    Object object=((InternalFactHandle)leftTuple.get(0)).getObject();
+    if (!(object instanceof DroolsQuery) || !((DroolsQuery)object).isOpen()) {
       useLeftMemory=false;
-    }
- else     if (memory.getLeftTupleMemory() != null) {
-      memory.getLeftTupleMemory().add(leftTuple);
     }
   }
   this.constraints.updateFromTuple(contextEntry,workingMemory,leftTuple);
@@ -30,6 +20,8 @@
       this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,null,null,context,workingMemory,useLeftMemory);
     }
   }
+  if (this.tupleMemoryEnabled || (useLeftMemory && memory.getLeftTupleMemory() != null)) {
+    memory.getLeftTupleMemory().add(leftTuple);
+  }
   this.constraints.resetTuple(contextEntry);
-  memory.setOpen(false);
 }
