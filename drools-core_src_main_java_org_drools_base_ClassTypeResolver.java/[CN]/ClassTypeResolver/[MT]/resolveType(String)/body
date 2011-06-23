@@ -30,12 +30,20 @@
     clazz=importClass(className,className);
   }
   if (clazz == null) {
-    final Set validClazzCandidates=new HashSet();
+    final Set<Class> validClazzCandidates=new HashSet<Class>();
     final Iterator it=this.imports.iterator();
     while (it.hasNext()) {
       clazz=importClass((String)it.next(),className);
       if (clazz != null) {
         validClazzCandidates.add(clazz);
+      }
+    }
+    if (validClazzCandidates.size() > 1) {
+      for (Iterator<Class> validIt=validClazzCandidates.iterator(); validIt.hasNext(); ) {
+        Class cls=validIt.next();
+        if (this.defaultPackagName.equals(cls.getPackage().getName())) {
+          validIt.remove();
+        }
       }
     }
     if (validClazzCandidates.size() > 1) {
@@ -81,5 +89,6 @@
   if (clazz == null) {
     throw new ClassNotFoundException("Unable to find class '" + className + "'");
   }
+  this.cachedImports.put(clazz.getSimpleName(),clazz);
   return clazz;
 }
