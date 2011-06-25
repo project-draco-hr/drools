@@ -12,7 +12,7 @@ case NodeTypeEnums.JoinNode:
         int factHandleId=stream.readInt();
         RightTupleKey key=new RightTupleKey(factHandleId,sink);
         RightTuple rightTuple=context.rightTuples.get(key);
-        LeftTuple childLeftTuple=new LeftTupleImpl(parentLeftTuple,rightTuple,childSink,true);
+        LeftTuple childLeftTuple=childSink.createLeftTuple(parentLeftTuple,rightTuple,null,null,childSink,true);
         readLeftTuple(childLeftTuple,context);
       }
       break;
@@ -21,7 +21,7 @@ case NodeTypeEnums.EvalConditionNode:
 {
     while (stream.readShort() == PersisterEnums.LEFT_TUPLE) {
       LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
-      LeftTuple childLeftTuple=new LeftTupleImpl(parentLeftTuple,childSink,true);
+      LeftTuple childLeftTuple=childSink.createLeftTuple(parentLeftTuple,childSink,true);
       readLeftTuple(childLeftTuple,context);
     }
     break;
@@ -35,7 +35,7 @@ case NodeTypeEnums.ForallNotNode:
     addToLeftMemory(parentLeftTuple,memory);
     while (stream.readShort() == PersisterEnums.LEFT_TUPLE) {
       LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
-      LeftTuple childLeftTuple=new LeftTupleImpl(parentLeftTuple,childSink,true);
+      LeftTuple childLeftTuple=childSink.createLeftTuple(parentLeftTuple,childSink,true);
       readLeftTuple(childLeftTuple,context);
     }
   }
@@ -63,7 +63,7 @@ if (type == PersisterEnums.LEFT_TUPLE_NOT_BLOCKED) {
   rightTuple.addBlocked(parentLeftTuple);
   while (stream.readShort() == PersisterEnums.LEFT_TUPLE) {
     LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
-    LeftTuple childLeftTuple=new LeftTupleImpl(parentLeftTuple,childSink,true);
+    LeftTuple childLeftTuple=childSink.createLeftTuple(parentLeftTuple,childSink,true);
     readLeftTuple(childLeftTuple,context);
   }
 }
@@ -87,7 +87,7 @@ case PersisterEnums.RIGHT_TUPLE:
     int factHandleId=stream.readInt();
     RightTupleKey key=new RightTupleKey(factHandleId,sink);
     RightTuple rightTuple=context.rightTuples.get(key);
-    new LeftTupleImpl(parentLeftTuple,rightTuple,sink,true);
+    sink.createLeftTuple(parentLeftTuple,rightTuple,null,null,sink,true);
     break;
   }
 case PersisterEnums.LEFT_TUPLE:
