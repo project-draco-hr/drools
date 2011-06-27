@@ -3,6 +3,18 @@
   String fullSuperType=typeDescr.getSuperTypeName() != null ? (typeDescr.getSuperTypeNamespace() + "." + typeDescr.getSuperTypeName()) : Object.class.getName();
   String[] interfaces=new String[]{Serializable.class.getName()};
   ClassDefinition def=new ClassDefinition(fullName,fullSuperType,interfaces);
+  for (  String annotationName : typeDescr.getAnnotationNames()) {
+    Class annotation=resolveAnnotation(annotationName,pkgRegistry.getTypeResolver());
+    if (annotation != null) {
+      try {
+        AnnotationDefinition annotationDefinition=AnnotationDefinition.build(annotation,typeDescr.getAnnotations().get(annotationName).getValueMap(),pkgRegistry.getTypeResolver());
+        def.addAnnotation(annotationDefinition);
+      }
+ catch (      NoSuchMethodException nsme) {
+        this.results.add(new TypeDeclarationError("Annotated type " + fullName + "  - wrong property in annotation "+ annotationName+ ": "+ nsme.getMessage()+ ";",typeDescr.getLine()));
+      }
+    }
+  }
   if (typeDescr.getFields().size() > 0) {
     PriorityQueue<FieldDefinition> fieldDefs=sortFields(typeDescr.getFields(),pkgRegistry);
     while (fieldDefs.size() > 0) {

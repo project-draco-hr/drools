@@ -17,6 +17,18 @@
       fieldDef.setIndex(field.getIndex());
       fieldDef.setInherited(field.isInherited());
       fieldDef.setInitExpr(field.getInitExpr());
+      for (      String annotationName : field.getAnnotationNames()) {
+        Class annotation=resolveAnnotation(annotationName,pkgRegistry.getTypeResolver());
+        if (annotation != null) {
+          try {
+            AnnotationDefinition annotationDefinition=AnnotationDefinition.build(annotation,field.getAnnotations().get(annotationName).getValueMap(),pkgRegistry.getTypeResolver());
+            fieldDef.addAnnotation(annotationDefinition);
+          }
+ catch (          NoSuchMethodException nsme) {
+            this.results.add(new TypeDeclarationError("Annotated field " + field.getFieldName() + "  - wrong property in annotation "+ annotationName+ ": "+ nsme.getMessage()+ ";",field.getLine()));
+          }
+        }
+      }
       queue.add(fieldDef);
     }
  catch (    ClassNotFoundException cnfe) {

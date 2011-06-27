@@ -1,0 +1,67 @@
+{
+  if (returnType.isArray()) {
+    int sIndex=valueStr.indexOf("{");
+    int eIndex=valueStr.lastIndexOf("}");
+    String content=valueStr.substring(sIndex + 1,eIndex).trim();
+    StringTokenizer tok=new StringTokenizer(content,",");
+    Object ar=java.lang.reflect.Array.newInstance(returnType.getComponentType(),tok.countTokens());
+    int j=0;
+    while (tok.hasMoreElements()) {
+      java.lang.reflect.Array.set(ar,j++,decode(returnType.getComponentType(),tok.nextToken(),resolver));
+    }
+    return ar;
+  }
+ else   if (returnType.isEnum()) {
+    try {
+      String value=valueStr.trim();
+      if (value.indexOf('.') > 0) {
+        value=valueStr.substring(valueStr.lastIndexOf(".") + 1);
+      }
+      return returnType.getMethod("valueOf",String.class).invoke(null,value);
+    }
+ catch (    IllegalAccessException e) {
+      e.printStackTrace();
+    }
+catch (    InvocationTargetException e) {
+      e.printStackTrace();
+    }
+catch (    NoSuchMethodException e) {
+      e.printStackTrace();
+    }
+  }
+ else   if (String.class.equals(returnType)) {
+    return unquote(valueStr);
+  }
+ else   if (boolean.class.equals(returnType)) {
+    return Boolean.valueOf(valueStr);
+  }
+ else   if (int.class.equals(returnType)) {
+    return Integer.valueOf(valueStr);
+  }
+ else   if (double.class.equals(returnType)) {
+    return Double.valueOf(valueStr);
+  }
+ else   if (long.class.equals(returnType)) {
+    return Long.valueOf(valueStr);
+  }
+ else   if (float.class.equals(returnType)) {
+    return Float.valueOf(valueStr);
+  }
+ else   if (short.class.equals(returnType)) {
+    return Short.valueOf(valueStr);
+  }
+ else   if (char.class.equals(returnType)) {
+    return unquote(valueStr).charAt(0);
+  }
+ else   if (Class.class.equals(returnType)) {
+    try {
+      String cName=valueStr.trim().replace(".class","");
+      return resolver.resolveType(cName);
+    }
+ catch (    ClassNotFoundException cnfe) {
+      cnfe.printStackTrace();
+      return Object.class;
+    }
+  }
+  return null;
+}

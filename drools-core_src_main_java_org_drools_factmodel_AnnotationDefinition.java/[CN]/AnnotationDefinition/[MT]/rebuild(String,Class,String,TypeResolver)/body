@@ -1,0 +1,34 @@
+{
+  Method prop=annotationClass.getMethod(key);
+  Class returnType=prop.getReturnType();
+  Object val=decode(returnType,valueStr,resolver);
+  AnnotationPropertyVal.ValType valType;
+  if (returnType.isPrimitive()) {
+    valType=AnnotationPropertyVal.ValType.PRIMITIVE;
+  }
+ else   if (returnType.isEnum()) {
+    valType=AnnotationPropertyVal.ValType.ENUMERATION;
+  }
+ else   if (returnType.isArray()) {
+    if (returnType.getComponentType().isEnum()) {
+      valType=AnnotationPropertyVal.ValType.ENUMARRAY;
+    }
+ else     if (returnType.getComponentType().isPrimitive()) {
+      valType=AnnotationPropertyVal.ValType.PRIMARRAY;
+    }
+ else     if (String.class.equals(returnType.getComponentType())) {
+      valType=AnnotationPropertyVal.ValType.STRINGARRAY;
+    }
+ else {
+      valType=AnnotationPropertyVal.ValType.CLASSARRAY;
+    }
+  }
+ else   if (String.class.equals(returnType)) {
+    valType=AnnotationPropertyVal.ValType.STRING;
+  }
+ else {
+    valType=AnnotationPropertyVal.ValType.KLASS;
+  }
+  AnnotationPropertyVal pv=new AnnotationPropertyVal(key,returnType,val,valType);
+  return pv;
+}

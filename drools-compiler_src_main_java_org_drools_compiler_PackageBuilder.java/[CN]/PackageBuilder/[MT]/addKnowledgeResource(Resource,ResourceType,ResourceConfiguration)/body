@@ -83,8 +83,13 @@
     }
  else     if (ResourceType.PMML.equals(type)) {
       PMMLCompiler compiler=getPMMLCompiler();
-      String theory=compiler.compile(resource.getInputStream());
-      addKnowledgeResource(new ByteArrayResource(theory.getBytes()),ResourceType.DRL,configuration);
+      if (compiler != null) {
+        String theory=compiler.compile(resource.getInputStream(),getPackageRegistry());
+        addKnowledgeResource(new ByteArrayResource(theory.getBytes()),ResourceType.DRL,configuration);
+      }
+ else {
+        throw new RuntimeException("Unknown resource type: " + type);
+      }
     }
  else {
       ResourceTypeBuilder builder=ResourceTypeBuilderRegistry.getInstance().getResourceTypeBuilder(type);
