@@ -20,22 +20,14 @@
         this.addError(new ExpanderException("Unable to expand: " + lines[i].replaceAll("[\n\r]","").trim(),i + lineOffset));
       }
       if (trimmed.startsWith("-") && (!lines[i].equals(expanded[lastExpanded]))) {
-        int lastMatchStart=-1;
-        int lastMatchEnd=-1;
-        String constraints="";
         if (lastPattern >= 0) {
-          final Matcher m2=constraintFinder.matcher(expanded[lastPattern]);
-          while (m2.find()) {
-            lastMatchStart=m2.start();
-            lastMatchEnd=m2.end();
-            constraints=m2.group(1).trim();
+          ConstraintInformation c=ConstraintInformation.findConstraintInformationInPattern(expanded[lastPattern]);
+          if (c.start > -1) {
+            expanded[lastPattern]=expanded[lastPattern].substring(0,c.start) + c.constraints + ((c.constraints.length() == 0) ? "" : ", ")+ expanded[lastExpanded].trim()+ expanded[lastPattern].substring(c.end);
           }
-        }
-        if (lastMatchStart > -1) {
-          expanded[lastPattern]=expanded[lastPattern].substring(0,lastMatchStart) + "( " + constraints+ ((constraints.length() == 0) ? "" : ", ")+ expanded[lastExpanded].trim()+ " )"+ expanded[lastPattern].substring(lastMatchEnd);
-        }
  else {
-          this.addError(new ExpanderException("No pattern was found to add the constraint to: " + lines[i].trim(),i + lineOffset));
+            this.addError(new ExpanderException("No pattern was found to add the constraint to: " + lines[i].trim(),i + lineOffset));
+          }
         }
         lastExpanded--;
       }
