@@ -17,16 +17,20 @@
     if (childLeftTuple == null) {
       for (; leftTuple != null; leftTuple=(LeftTuple)leftIt.next(leftTuple)) {
         if (this.constraints.isAllowedCachedRight(memory.betaMemory.getContext(),leftTuple)) {
-          final AccumulateContext accctx=(AccumulateContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
+          final AccumulateContext accctx=(AccumulateContext)leftTuple.getObject();
           addMatch(leftTuple,rightTuple,null,null,workingMemory,memory,accctx,true);
-          evaluateResultConstraints(ActivitySource.RIGHT,leftTuple,context,workingMemory,memory,accctx,true);
+          if (accctx.getAction() == null) {
+            EvaluateResultConstraints action=new EvaluateResultConstraints(ActivitySource.LEFT,leftTuple,context,workingMemory,memory,accctx,true,this);
+            accctx.setAction(action);
+            context.getQueue1().addFirst(action);
+          }
         }
       }
     }
  else {
       for (; leftTuple != null; leftTuple=(LeftTuple)leftIt.next(leftTuple)) {
         if (this.constraints.isAllowedCachedRight(memory.betaMemory.getContext(),leftTuple)) {
-          final AccumulateContext accctx=(AccumulateContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
+          final AccumulateContext accctx=(AccumulateContext)leftTuple.getObject();
           LeftTuple temp=null;
           if (childLeftTuple != null && childLeftTuple.getLeftParent() == leftTuple) {
             temp=childLeftTuple.getRightParentNext();
@@ -38,13 +42,21 @@
           if (temp != null) {
             childLeftTuple=temp;
           }
-          evaluateResultConstraints(ActivitySource.RIGHT,leftTuple,context,workingMemory,memory,accctx,true);
+          if (accctx.getAction() == null) {
+            EvaluateResultConstraints action=new EvaluateResultConstraints(ActivitySource.LEFT,leftTuple,context,workingMemory,memory,accctx,true,this);
+            accctx.setAction(action);
+            context.getQueue1().addFirst(action);
+          }
         }
  else         if (childLeftTuple != null && childLeftTuple.getLeftParent() == leftTuple) {
           LeftTuple temp=childLeftTuple.getRightParentNext();
-          final AccumulateContext accctx=(AccumulateContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
+          final AccumulateContext accctx=(AccumulateContext)leftTuple.getObject();
           removeMatch(rightTuple,childLeftTuple,workingMemory,memory,accctx,true);
-          evaluateResultConstraints(ActivitySource.RIGHT,leftTuple,context,workingMemory,memory,accctx,true);
+          if (accctx.getAction() == null) {
+            EvaluateResultConstraints action=new EvaluateResultConstraints(ActivitySource.LEFT,leftTuple,context,workingMemory,memory,accctx,true,this);
+            accctx.setAction(action);
+            context.getQueue1().addFirst(action);
+          }
           childLeftTuple=temp;
         }
       }

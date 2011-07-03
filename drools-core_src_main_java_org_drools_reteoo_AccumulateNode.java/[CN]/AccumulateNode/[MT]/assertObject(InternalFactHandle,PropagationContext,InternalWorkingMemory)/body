@@ -14,9 +14,13 @@
   FastIterator leftIt=getLeftIterator(leftMemory);
   for (LeftTuple leftTuple=getFirstLeftTuple(rightTuple,leftMemory,context,leftIt); leftTuple != null; leftTuple=(LeftTuple)leftIt.next(leftTuple)) {
     if (this.constraints.isAllowedCachedRight(memory.betaMemory.getContext(),leftTuple)) {
-      final AccumulateContext accctx=(AccumulateContext)memory.betaMemory.getCreatedHandles().get(leftTuple);
+      final AccumulateContext accctx=(AccumulateContext)leftTuple.getObject();
       addMatch(leftTuple,rightTuple,null,null,workingMemory,memory,accctx,true);
-      evaluateResultConstraints(ActivitySource.RIGHT,leftTuple,context,workingMemory,memory,accctx,true);
+      if (accctx.getAction() == null) {
+        EvaluateResultConstraints action=new EvaluateResultConstraints(ActivitySource.LEFT,leftTuple,context,workingMemory,memory,accctx,true,this);
+        accctx.setAction(action);
+        context.getQueue1().addFirst(action);
+      }
     }
   }
   this.constraints.resetFactHandle(memory.betaMemory.getContext());
