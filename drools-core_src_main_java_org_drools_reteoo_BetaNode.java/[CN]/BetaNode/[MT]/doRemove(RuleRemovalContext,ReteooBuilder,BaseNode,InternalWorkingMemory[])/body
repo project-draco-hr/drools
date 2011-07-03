@@ -13,7 +13,7 @@
         memory=(BetaMemory)object;
       }
       FastIterator it=memory.getLeftTupleMemory().fullFastIterator();
-      for (LeftTuple leftTuple=(LeftTuple)memory.getLeftTupleMemory().getFirst(null); leftTuple != null; ) {
+      for (LeftTuple leftTuple=getFirstLeftTuple(memory.getLeftTupleMemory(),it); leftTuple != null; ) {
         LeftTuple tmp=(LeftTuple)it.next(leftTuple);
         if (context.getCleanupAdapter() != null) {
           for (LeftTuple child=leftTuple.getFirstChild(); child != null; child=child.getLeftParentNext()) {
@@ -26,9 +26,9 @@
             }
           }
         }
+        memory.getLeftTupleMemory().remove(leftTuple);
         leftTuple.unlinkFromLeftParent();
         leftTuple.unlinkFromRightParent();
-        memory.getLeftTupleMemory().remove(leftTuple);
         leftTuple=tmp;
       }
       if (object instanceof AccumulateMemory) {
@@ -36,7 +36,7 @@
       }
       if (!this.isInUse()) {
         it=memory.getRightTupleMemory().fullFastIterator();
-        for (RightTuple rightTuple=(RightTuple)memory.getRightTupleMemory().getFirst(null,null); rightTuple != null; ) {
+        for (RightTuple rightTuple=getFirstRightTuple(memory.getRightTupleMemory(),it); rightTuple != null; ) {
           RightTuple tmp=(RightTuple)it.next(rightTuple);
           if (rightTuple.getBlocked() != null) {
             for (LeftTuple leftTuple=(LeftTuple)rightTuple.getBlocked(); leftTuple != null; ) {
@@ -48,8 +48,8 @@
               leftTuple=temp;
             }
           }
-          rightTuple.unlinkFromRightParent();
           memory.getRightTupleMemory().remove(rightTuple);
+          rightTuple.unlinkFromRightParent();
           rightTuple=tmp;
         }
         workingMemories[i].clearNodeMemory(this);
