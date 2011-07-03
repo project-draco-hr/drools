@@ -1,7 +1,10 @@
 {
-  RightTuple rightTuple=resultLeftTuple.getBlocker();
+  RightTuple rightTuple=(RightTuple)resultLeftTuple.getObject();
+  if (rightTuple.getMemory() != null) {
+    return;
+  }
   rightTuple.setLeftTuple(null);
-  resultLeftTuple.setBlocker(null);
+  resultLeftTuple.setObject(null);
   QueryTerminalNode node=(QueryTerminalNode)resultLeftTuple.getLeftTupleSink();
   Declaration[] decls=node.getDeclarations();
   InternalFactHandle rootHandle=resultLeftTuple.get(0);
@@ -17,13 +20,12 @@
   handle.setObject(objects);
   if (query.isOpen()) {
     rightTuple.setLeftTuple(resultLeftTuple);
-    resultLeftTuple.setBlocker(rightTuple);
+    resultLeftTuple.setObject(rightTuple);
   }
-  this.node.getSinkPropagator().createChildLeftTuplesforQuery(this.leftTuple,rightTuple,true,query.isOpen());
-  RightTupleList rightTuples=query.getRightTupleList();
+  RightTupleList rightTuples=query.getResultUpdateRightTupleList();
   if (rightTuples == null) {
     rightTuples=new RightTupleList();
-    query.setRightTupleList(rightTuples);
+    query.setResultUpdateRightTupleList(rightTuples);
     QueryResultUpdateAction updateAction=new QueryResultUpdateAction(context,this.factHandle,leftTuple,this.node);
     context.getQueue2().addFirst(updateAction);
   }

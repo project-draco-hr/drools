@@ -7,19 +7,32 @@
     String rightInput=a[2];
     String sourceType=a[3];
     String expr=a[4];
+    Class cls=null;
     LeftTupleSource leftTupleSource;
-    if ("mock".equals(leftInput)) {
-      leftTupleSource=Mockito.mock(LeftTupleSource.class);
+    if (leftInput.startsWith("mock")) {
+      leftTupleSource=new MockTupleSource(buildContext.getNextId());
     }
  else {
       leftTupleSource=(LeftTupleSource)context.get(leftInput);
     }
     ObjectSource rightObjectSource;
-    if ("mock".equals(rightInput)) {
-      rightObjectSource=Mockito.mock(ObjectSource.class);
+    if (rightInput.startsWith("mock")) {
+      String type=rightInput.substring(5,rightInput.length() - 1);
+      try {
+        cls=reteTesterHelper.getTypeResolver().resolveType(type);
+      }
+ catch (      ClassNotFoundException e) {
+        throw new RuntimeException(e);
+      }
+      rightObjectSource=new MockObjectSource(buildContext.getNextId());
     }
  else {
       rightObjectSource=(ObjectSource)context.get(rightInput);
+      ObjectSource source=rightObjectSource;
+      while (!(source instanceof ObjectTypeNode)) {
+        source=source.getParentObjectSource();
+      }
+      cls=((ClassObjectType)((ObjectTypeNode)source).getObjectType()).getClassType();
     }
     Pattern sourcePattern;
     Pattern resultPattern;
@@ -30,7 +43,7 @@
  catch (    Exception e) {
       throw new IllegalArgumentException("Not possible to process arguments: " + Arrays.toString(a));
     }
-    BetaConstraints betaSourceConstraints=new EmptyBetaConstraints();
+    List<BetaNodeFieldConstraint> list=new ArrayList<BetaNodeFieldConstraint>();
     AlphaNodeFieldConstraint[] alphaResultConstraint=new AlphaNodeFieldConstraint[0];
     for (int i=1; i < args.size(); i++) {
       a=args.get(i);
@@ -41,8 +54,8 @@
       if ("source".equals(type)) {
         Declaration declr=(Declaration)context.get(val);
         try {
-          BetaNodeFieldConstraint sourceBetaConstraint=this.reteTesterHelper.getBoundVariableConstraint(((ClassObjectType)sourcePattern.getObjectType()).getClassType(),fieldName,declr,operator);
-          betaSourceConstraints=new SingleBetaConstraints(sourceBetaConstraint,buildContext.getRuleBase().getConfiguration());
+          BetaNodeFieldConstraint sourceBetaConstraint=this.reteTesterHelper.getBoundVariableConstraint(cls,fieldName,declr,operator);
+          list.add(sourceBetaConstraint);
         }
  catch (        IntrospectionException e) {
           throw new IllegalArgumentException();
@@ -58,41 +71,62 @@
         }
       }
     }
-    MVELDialectRuntimeData data=(MVELDialectRuntimeData)buildContext.getRuleBase().getPackage(buildContext.getRule().getPackageName()).getDialectRuntimeRegistry().getDialectData("mvel");
-    data.onAdd(null,((InternalRuleBase)buildContext.getRuleBase()).getRootClassLoader());
-    NodeTestCase testCase=(NodeTestCase)context.get("TestCase");
-    try {
-      for (      String imp : testCase.getImports()) {
-        if (imp.endsWith(".*")) {
-          data.addPackageImport(imp.substring(0,imp.lastIndexOf('.')));
-        }
+    BetaConstraints betaSourceConstraints;
+switch (list.size()) {
+case 0:
+      betaSourceConstraints=new EmptyBetaConstraints();
+    break;
+case 1:
+  betaSourceConstraints=new SingleBetaConstraints(list.get(0),buildContext.getRuleBase().getConfiguration());
+break;
+case 2:
+betaSourceConstraints=new DoubleBetaConstraints(list.toArray(new BetaNodeFieldConstraint[2]),buildContext.getRuleBase().getConfiguration());
+break;
+case 3:
+betaSourceConstraints=new TripleBetaConstraints(list.toArray(new BetaNodeFieldConstraint[2]),buildContext.getRuleBase().getConfiguration());
+break;
+case 4:
+betaSourceConstraints=new QuadroupleBetaConstraints(list.toArray(new BetaNodeFieldConstraint[2]),buildContext.getRuleBase().getConfiguration());
+break;
+default :
+betaSourceConstraints=new DefaultBetaConstraints(list.toArray(new BetaNodeFieldConstraint[2]),buildContext.getRuleBase().getConfiguration());
+break;
+}
+MVELDialectRuntimeData data=(MVELDialectRuntimeData)buildContext.getRuleBase().getPackage(buildContext.getRule().getPackageName()).getDialectRuntimeRegistry().getDialectData("mvel");
+data.onAdd(null,((InternalRuleBase)buildContext.getRuleBase()).getRootClassLoader());
+NodeTestCase testCase=(NodeTestCase)context.get("TestCase");
+try {
+for (String imp : testCase.getImports()) {
+if (imp.endsWith(".*")) {
+data.addPackageImport(imp.substring(0,imp.lastIndexOf('.')));
+}
  else {
-          Class cls=data.getRootClassLoader().loadClass(imp);
-          data.addImport(cls.getSimpleName(),cls);
-        }
-      }
-    }
- catch (    Exception e) {
-      throw new RuntimeException("Unable to load class",e);
-    }
-    Declaration decl=(Declaration)context.get(expr);
-    MVELCompilationUnit compilationUnit=new MVELCompilationUnit(name,expr,new String[]{},new EvaluatorWrapper[]{},new Declaration[]{},new Declaration[]{decl},new String[]{},new String[]{"this","drools","kcontext","rule",decl.getIdentifier()},new String[]{Object.class.getName(),KnowledgeHelper.class.getName(),KnowledgeHelper.class.getName(),Rule.class.getName(),decl.getValueType().getClassType().getName()},4,false);
-    AccumulateFunction accFunction=new SumAccumulateFunction();
-    Accumulator accumulator=new MVELAccumulatorFunctionExecutor(compilationUnit,accFunction);
-    ((MVELCompileable)accumulator).compile(data);
-    Accumulate accumulate=new Accumulate(sourcePattern,new Declaration[]{},new Declaration[]{},new Accumulator[]{accumulator},false);
-    AccumulateNode accNode=new AccumulateNode(buildContext.getNextId(),leftTupleSource,rightObjectSource,alphaResultConstraint,betaSourceConstraints,new EmptyBetaConstraints(),new Behavior[]{},accumulate,false,buildContext);
-    accNode.attach();
-    context.put(name,accNode);
-  }
+cls=data.getRootClassLoader().loadClass(imp);
+data.addImport(cls.getSimpleName(),cls);
+}
+}
+}
+ catch (Exception e) {
+throw new RuntimeException("Unable to load class",e);
+}
+Declaration decl=(Declaration)context.get(expr);
+MVELCompilationUnit compilationUnit=new MVELCompilationUnit(name,expr,new String[]{},new EvaluatorWrapper[]{},new Declaration[]{},new Declaration[]{decl},new String[]{},new String[]{"this","drools","kcontext","rule",decl.getIdentifier()},new String[]{Object.class.getName(),KnowledgeHelper.class.getName(),KnowledgeHelper.class.getName(),Rule.class.getName(),decl.getValueType().getClassType().getName()},4,false);
+AccumulateFunction accFunction=new SumAccumulateFunction();
+Accumulator accumulator=new MVELAccumulatorFunctionExecutor(compilationUnit,accFunction);
+((MVELCompileable)accumulator).compile(data);
+Accumulate accumulate=new Accumulate(sourcePattern,new Declaration[]{},new Declaration[]{},new Accumulator[]{accumulator},false);
+AccumulateNode accNode=new AccumulateNode(buildContext.getNextId(),leftTupleSource,rightObjectSource,alphaResultConstraint,betaSourceConstraints,new EmptyBetaConstraints(),new Behavior[]{},accumulate,false,buildContext);
+accNode.attach();
+context.put(name,accNode);
+}
  else {
-    StringBuilder msgBuilder=new StringBuilder();
-    msgBuilder.append("Can not parse AccumulateNode step arguments: \n");
-    for (    String[] arg : args) {
-      msgBuilder.append("    ");
-      msgBuilder.append(Arrays.toString(arg));
-      msgBuilder.append("\n");
-    }
-    throw new IllegalArgumentException(msgBuilder.toString());
-  }
+StringBuilder msgBuilder=new StringBuilder();
+msgBuilder.append("Can not parse AccumulateNode step arguments: \n");
+for (String[] arg : args) {
+msgBuilder.append("    ");
+msgBuilder.append(Arrays.toString(arg));
+msgBuilder.append("\n");
+}
+throw new IllegalArgumentException(msgBuilder.toString());
+}
 }

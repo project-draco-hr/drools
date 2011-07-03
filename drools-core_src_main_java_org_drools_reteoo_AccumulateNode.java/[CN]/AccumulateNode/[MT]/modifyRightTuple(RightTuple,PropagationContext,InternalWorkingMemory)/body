@@ -6,13 +6,13 @@
   }
   LeftTuple childLeftTuple=rightTuple.firstChild;
   LeftTupleMemory leftMemory=memory.betaMemory.getLeftTupleMemory();
-  LeftTuple leftTuple=leftMemory.getFirst(rightTuple);
+  FastIterator leftIt=getLeftIterator(leftMemory);
+  LeftTuple leftTuple=getFirstLeftTuple(rightTuple,leftMemory,context,leftIt);
   this.constraints.updateFromFactHandle(memory.betaMemory.getContext(),workingMemory,rightTuple.getFactHandle());
-  if (childLeftTuple != null && leftMemory.isIndexed() && (leftTuple == null || (leftTuple.getMemory() != childLeftTuple.getLeftParent().getMemory()))) {
+  if (childLeftTuple != null && leftMemory.isIndexed() && !leftIt.isFullIterator() && (leftTuple == null || (leftTuple.getMemory() != childLeftTuple.getLeftParent().getMemory()))) {
     removePreviousMatchesForRightTuple(rightTuple,context,workingMemory,memory,childLeftTuple);
     childLeftTuple=null;
   }
-  FastIterator leftIt=memory.betaMemory.getLeftTupleMemory().fastIterator();
   if (leftTuple != null) {
     if (childLeftTuple == null) {
       for (; leftTuple != null; leftTuple=(LeftTuple)leftIt.next(leftTuple)) {

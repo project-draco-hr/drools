@@ -1,7 +1,14 @@
 {
   final FromMemory memory=(FromMemory)workingMemory.getNodeMemory(this);
   Map<Object,RightTuple> matches=null;
-  if (this.tupleMemoryEnabled) {
+  boolean useLeftMemory=true;
+  if (!this.tupleMemoryEnabled) {
+    Object object=((InternalFactHandle)leftTuple.get(0)).getObject();
+    if (!(object instanceof DroolsQuery) || !((DroolsQuery)object).isOpen()) {
+      useLeftMemory=false;
+    }
+  }
+  if (this.tupleMemoryEnabled || (useLeftMemory)) {
     memory.betaMemory.getLeftTupleMemory().add(leftTuple);
     matches=new LinkedHashMap<Object,RightTuple>();
     memory.betaMemory.getCreatedHandles().put(leftTuple,matches);

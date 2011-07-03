@@ -3,19 +3,36 @@
   Object[] args=new Object[argTemplate.length];
   System.arraycopy(argTemplate,0,args,0,args.length);
   int[] declIndexes=this.queryElement.getDeclIndexes();
-  List<Integer> srcVarIndexes=null;
   for (int i=0, length=declIndexes.length; i < length; i++) {
     Declaration declr=(Declaration)argTemplate[declIndexes[i]];
     Object tupleObject=leftTuple.get(declr).getObject();
-    Object o=declr.getValue(workingMemory,tupleObject);
+    Object o;
+    if (tupleObject instanceof DroolsQuery) {
+      ArrayElementReader arrayReader=(ArrayElementReader)declr.getExtractor();
+      if (((DroolsQuery)tupleObject).getVariables()[arrayReader.getIndex()] != null) {
+        o=Variable.v;
+      }
+ else {
+        o=declr.getValue(workingMemory,tupleObject);
+      }
+    }
+ else {
+      o=declr.getValue(workingMemory,tupleObject);
+    }
     args[declIndexes[i]]=o;
   }
   int[] varIndexes=this.queryElement.getVariableIndexes();
+  for (int i=0, length=varIndexes.length; i < length; i++) {
+    if (argTemplate[varIndexes[i]] == Variable.v) {
+      args[varIndexes[i]]=Variable.v;
+    }
+  }
   UnificationNodeViewChangedEventListener collector=new UnificationNodeViewChangedEventListener(leftTuple,varIndexes,this,this.tupleMemoryEnabled);
   DroolsQuery queryObject=new DroolsQuery(this.queryElement.getQueryName(),args,collector,openQuery);
   InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(queryObject,null,workingMemory,null);
   collector.setFactHandle(handle);
-  QueryInsertModifyAction action=new QueryInsertModifyAction(context,handle,leftTuple,varIndexes,srcVarIndexes,this);
+  QueryInsertAction action=new QueryInsertAction(context,handle,leftTuple,this);
+  queryObject.setAction(action);
   context.getQueue1().addFirst(action);
   leftTuple.setObject(handle);
 }

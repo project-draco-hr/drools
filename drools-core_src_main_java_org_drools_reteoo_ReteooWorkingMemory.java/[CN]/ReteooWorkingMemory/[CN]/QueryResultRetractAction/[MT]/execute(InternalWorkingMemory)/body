@@ -1,8 +1,11 @@
 {
   DroolsQuery query=(DroolsQuery)factHandle.getObject();
-  RightTupleList rightTuples=query.getRightTupleList();
-  query.setRightTupleList(null);
-  for (RightTuple rightTuple=rightTuples.getFirst(); rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
+  RightTupleList rightTuples=query.getResultRetractRightTupleList();
+  query.setResultRetractRightTupleList(null);
+  for (RightTuple rightTuple=rightTuples.getFirst(); rightTuple != null; ) {
+    RightTuple tmp=(RightTuple)rightTuple.getNext();
+    rightTuples.remove(rightTuple);
     this.node.getSinkPropagator().propagateRetractRightTuple(rightTuple,context,workingMemory);
+    rightTuple=tmp;
   }
 }

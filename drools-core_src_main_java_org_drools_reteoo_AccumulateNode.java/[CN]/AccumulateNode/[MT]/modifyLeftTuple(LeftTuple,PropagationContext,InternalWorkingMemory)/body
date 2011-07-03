@@ -5,12 +5,12 @@
   this.constraints.updateFromTuple(memory.betaMemory.getContext(),workingMemory,leftTuple);
   LeftTuple childLeftTuple=getFirstMatch(leftTuple,accctx,false);
   RightTupleMemory rightMemory=memory.betaMemory.getRightTupleMemory();
-  RightTuple rightTuple=rightMemory.getFirst(leftTuple,(InternalFactHandle)context.getFactHandle());
-  if (childLeftTuple != null && rightMemory.isIndexed() && (rightTuple == null || (rightTuple.getMemory() != childLeftTuple.getRightParent().getMemory()))) {
+  FastIterator rightIt=getRightIterator(rightMemory);
+  RightTuple rightTuple=getFirstRightTuple(leftTuple,rightMemory,context,rightIt);
+  if (childLeftTuple != null && rightMemory.isIndexed() && !rightIt.isFullIterator() && (rightTuple == null || (rightTuple.getMemory() != childLeftTuple.getRightParent().getMemory()))) {
     removePreviousMatchesForLeftTuple(leftTuple,workingMemory,memory,accctx);
     childLeftTuple=null;
   }
-  FastIterator rightIt=rightMemory.fastIterator();
   if (rightTuple != null) {
     if (childLeftTuple == null) {
       for (; rightTuple != null; rightTuple=(RightTuple)rightIt.next(rightTuple)) {
