@@ -1,0 +1,20 @@
+{
+  String rule="";
+  rule+="package " + Message.class.getPackage().getName() + "\n"+ "declare "+ Message.class.getCanonicalName()+ "\n"+ "   @role( event ) \n"+ "   @timestamp( getProperties().get( 'timestamp' ) ) \n"+ "end\n";
+  System.out.println(rule);
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newReaderResource(new StringReader(rule)),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  Message msg=new Message();
+  Properties props=new Properties();
+  props.put("timestamp",new Integer(99));
+  msg.setProperties(props);
+  EventFactHandle efh=(EventFactHandle)ksession.insert(msg);
+  assertEquals(99,efh.getStartTimestamp());
+}
