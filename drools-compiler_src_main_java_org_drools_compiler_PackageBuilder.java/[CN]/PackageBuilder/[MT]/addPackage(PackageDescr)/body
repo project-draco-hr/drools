@@ -6,21 +6,20 @@
   if (!checkNamespace(packageDescr.getNamespace())) {
     return;
   }
-  List<ImportDescr> existingImports=packageImports.get(packageDescr.getName());
-  if (existingImports == null) {
-    existingImports=new ArrayList<ImportDescr>();
+  List<PackageDescr> packageDescrsForPackage=packages.get(packageDescr.getName());
+  if (packageDescrsForPackage == null) {
+    packageDescrsForPackage=new ArrayList<PackageDescr>();
+    packages.put(packageDescr.getName(),packageDescrsForPackage);
   }
-  if (packageDescr.getImports().size() > 0) {
-    for (    ImportDescr imp : packageDescr.getImports()) {
-      existingImports.add(imp);
-    }
-    packageImports.put(packageDescr.getName(),existingImports);
+  packageDescrsForPackage.add(packageDescr);
+  List<ImportDescr> imports=new ArrayList<ImportDescr>();
+  for (  PackageDescr pd : packageDescrsForPackage) {
+    imports.addAll(pd.getImports());
   }
- else {
-    for (    ImportDescr imp : existingImports) {
-      if (!packageDescr.getImports().contains(imp)) {
-        packageDescr.addImport(imp);
-      }
+  for (  PackageDescr pd : packageDescrsForPackage) {
+    pd.getImports().clear();
+    for (    ImportDescr id : imports) {
+      pd.addImport(id);
     }
   }
   if (packageDescr.getAttributes().size() > 0) {
