@@ -1,0 +1,36 @@
+{
+  if (activations == null) {
+    return null;
+  }
+  if (pos < activations.length) {
+    Activation act=activations[pos++];
+    return act;
+  }
+ else {
+    if (group == AGENDA_GROUPS) {
+      InternalAgendaGroup agendaGroup=null;
+      for (; groupsIter.hasNext(); ) {
+        agendaGroup=(InternalAgendaGroup)groupsIter.next();
+        if (!agendaGroup.isEmpty()) {
+          activations=(Activation[])agendaGroup.getActivations();
+          pos=0;
+          Activation act=activations[pos++];
+          return act;
+        }
+      }
+      groupsIter=agenda.getRuleFlowGroupsMap().values().iterator();
+      group=RULEFLOW_GROUPS;
+    }
+    RuleFlowGroupImpl ruleflowGroup=null;
+    for (; groupsIter.hasNext(); ) {
+      ruleflowGroup=(RuleFlowGroupImpl)groupsIter.next();
+      if (!ruleflowGroup.isEmpty()) {
+        activations=(Activation[])ruleflowGroup.getActivations();
+        pos=0;
+        Activation act=activations[pos++];
+        return act;
+      }
+    }
+  }
+  return null;
+}
