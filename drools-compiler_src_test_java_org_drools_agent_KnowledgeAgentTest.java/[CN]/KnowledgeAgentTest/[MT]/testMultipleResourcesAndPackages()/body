@@ -1,0 +1,34 @@
+{
+  String drl="package org.test.myPack;\n" + "\n" + "import java.util.List;\n"+ "\n"+ "declare org.anotherPack.MyType\n"+ "    field : String\n"+ "end\n"+ "\n"+ "rule \"init\"\n"+ "when \n"+ "then \n"+ "  System.out.println(\"X\");\n"+ "end";
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  KnowledgeAgent kagent=createKAgent(kbase,false);
+  ByteArrayResource bres=(ByteArrayResource)ResourceFactory.newByteArrayResource(drl.getBytes());
+  bres.setResourceType(ResourceType.DRL);
+  ChangeSetImpl cs=new ChangeSetImpl();
+  cs.setResourcesAdded(Arrays.<Resource>asList(bres));
+  kagent.applyChangeSet(cs);
+  KnowledgePackage pack=kagent.getKnowledgeBase().getKnowledgePackage("org.test.myPack");
+  assertNotNull(pack);
+  assertEquals(1,pack.getRules().size());
+  KnowledgePackage pack2=kagent.getKnowledgeBase().getKnowledgePackage("org.anotherPack");
+  assertNotNull(pack2);
+  assertEquals(0,pack2.getRules().size());
+  String drl2="package org.test.myPack;\n" + "function void foo() { \n" + "} \n"+ "\n"+ "\n"+ "declare org.anotherPack.MyType2\n"+ "    field : String\n"+ "end\n"+ ""+ "rule \"rool\" \n"+ "when\n"+ "then\n"+ "end\n";
+  ByteArrayResource bres2=(ByteArrayResource)ResourceFactory.newByteArrayResource(drl2.getBytes());
+  bres2.setResourceType(ResourceType.DRL);
+  ChangeSetImpl cs2=new ChangeSetImpl();
+  cs2.setResourcesAdded(Arrays.<Resource>asList(bres2));
+  kagent.applyChangeSet(cs2);
+  pack=kagent.getKnowledgeBase().getKnowledgePackage("org.test.myPack");
+  assertNotNull(pack);
+  assertEquals(2,pack.getRules().size());
+  pack2=kagent.getKnowledgeBase().getKnowledgePackage("org.anotherPack");
+  assertNotNull(pack2);
+  assertEquals(0,pack2.getRules().size());
+  Collection<KnowledgeDefinition> def1=((KnowledgeAgentImpl)kagent).getRegisteredResources().get(bres);
+  assertEquals(2,def1.size());
+  checkAllDefinitionsBelongToResource(def1,bres);
+  Collection<KnowledgeDefinition> def2=((KnowledgeAgentImpl)kagent).getRegisteredResources().get(bres2);
+  assertEquals(2,def2.size());
+  checkAllDefinitionsBelongToResource(def2,bres2);
+}

@@ -1,26 +1,18 @@
 {
-  List<Package> packages=new ArrayList<Package>();
-  for (  Resource resource : changeSetState.addedResources) {
-    KnowledgePackageImp createdPackage=this.createPackageFromResource(resource);
-    changeSetState.createdPackages.put(resource,createdPackage);
-  }
-  for (  Map.Entry<Resource,KnowledgePackage> entry : changeSetState.createdPackages.entrySet()) {
-    Resource resource=entry.getKey();
-    this.listener.debug("KnowledgeAgent obtaining pkg resource=" + resource);
-    try {
-      Package pkg=((KnowledgePackageImp)entry.getValue()).pkg;
-      for (      Rule rule : pkg.getRules()) {
-        rule.setResource(resource);
+  if (changeSetState.addedResources.size() > 0) {
+    KnowledgeBuilder builder=createKBuilder();
+    for (    Resource resource : changeSetState.addedResources) {
+      Collection<KnowledgePackage> createdPackages=this.createPackageFromResource(resource,builder);
+      Set<KnowledgePackage> packs=changeSetState.createdPackages.get(resource);
+      if (packs == null) {
+        packs=new HashSet<KnowledgePackage>();
+        changeSetState.createdPackages.put(resource,packs);
       }
-      packages.add(pkg);
-      this.buildResourceMapping(pkg,resource);
-    }
- catch (    Exception e) {
-      this.listener.exception(new RuntimeException("KnowledgeAgent exception while trying to deserialize KnowledgeDefinitionsPackage  ",e));
+      packs.addAll(createdPackages);
     }
   }
-  for (  Package pkg : packages) {
-    this.listener.debug("KnowledgeAgent adding KnowledgeDefinitionsPackage " + pkg.getName());
-    ((KnowledgeBaseImpl)this.kbase).ruleBase.addPackage(pkg);
+  for (  Resource resource : changeSetState.createdPackages.keySet()) {
+    this.kbase.addKnowledgePackages(changeSetState.createdPackages.get(resource));
   }
+  autoBuildResourceMapping();
 }
