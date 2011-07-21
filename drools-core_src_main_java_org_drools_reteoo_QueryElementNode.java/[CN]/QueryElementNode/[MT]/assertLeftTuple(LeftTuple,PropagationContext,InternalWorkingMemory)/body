@@ -29,7 +29,11 @@
   }
   UnificationNodeViewChangedEventListener collector=new UnificationNodeViewChangedEventListener(leftTuple,varIndexes,this,this.tupleMemoryEnabled);
   DroolsQuery queryObject=new DroolsQuery(this.queryElement.getQueryName(),args,collector,openQuery);
-  InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(queryObject,null,workingMemory,null);
+  if (queryObjectTypeConf == null) {
+    EntryPoint ep=workingMemory.getEntryPoint();
+    queryObjectTypeConf=((InternalWorkingMemoryEntryPoint)workingMemory.getWorkingMemoryEntryPoint(ep.getEntryPointId())).getObjectTypeConfigurationRegistry().getObjectTypeConf(ep,queryObject);
+  }
+  InternalFactHandle handle=workingMemory.getFactHandleFactory().newFactHandle(queryObject,queryObjectTypeConf,workingMemory,workingMemory);
   collector.setFactHandle(handle);
   QueryInsertAction action=new QueryInsertAction(context,handle,leftTuple,this);
   queryObject.setAction(action);

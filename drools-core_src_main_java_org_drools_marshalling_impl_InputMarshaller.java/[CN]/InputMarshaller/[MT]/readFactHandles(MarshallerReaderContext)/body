@@ -21,17 +21,6 @@
     }
     readRightTuples(handle,context);
   }
-  EntryPointNode node=ruleBase.getRete().getEntryPointNode(EntryPoint.DEFAULT);
-  Map<ObjectType,ObjectTypeNode> objectTypeNodes=node.getObjectTypeNodes();
-  for (  InternalFactHandle handle : handles) {
-    Object object=handle.getObject();
-    ClassObjectType objectType=new ClassObjectType((object != null) ? object.getClass() : AgendaItem.class);
-    ObjectTypeNode objectTypeNode=objectTypeNodes.get(objectType);
-    if (objectTypeNode != null) {
-      ObjectHashSet set=(ObjectHashSet)context.wm.getNodeMemory(objectTypeNode);
-      set.add(handle,false);
-    }
-  }
   InternalFactHandle handle=wm.getInitialFactHandle();
   while (stream.readShort() == PersisterEnums.LEFT_TUPLE) {
     LeftTupleSink sink=(LeftTupleSink)context.sinks.get(stream.readInt());
@@ -41,4 +30,14 @@
   readLeftTuples(context);
   readPropagationContexts(context);
   readActivations(context);
+  for (  InternalFactHandle factHandle : handles) {
+    Object object=factHandle.getObject();
+    EntryPoint ep=((InternalWorkingMemoryEntryPoint)factHandle.getEntryPoint()).getEntryPoint();
+    ObjectTypeConf typeConf=((InternalWorkingMemoryEntryPoint)factHandle.getEntryPoint()).getObjectTypeConfigurationRegistry().getObjectTypeConf(ep,object);
+    ObjectTypeNode[] cachedNodes=typeConf.getObjectTypeNodes();
+    for (int i=0, length=cachedNodes.length; i < length; i++) {
+      ObjectHashSet set=(ObjectHashSet)wm.getNodeMemory(cachedNodes[i]);
+      set.add(factHandle,false);
+    }
+  }
 }
