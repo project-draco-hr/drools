@@ -8,31 +8,37 @@ synchronized (this.registeredResources) {
       this.listener.warning("KnowledgeAgent: building resource map with resource set and autoDiscoverResource=true. Resource value wil be overwritten!");
     }
     for (    Rule rule : pkg.getRules()) {
-      if (resource != null && !((InternalResource)resource).hasURL()) {
+      if (resource == null) {
         this.listener.debug("KnowledgeAgent no resource mapped for rule=" + rule);
       }
       if (autoDiscoverResource) {
         resource=rule.getResource();
       }
-      this.addDefinitionMapping(resource,rule,true);
+      if (isNewDefinition(resource,rule)) {
+        this.addDefinitionMapping(resource,rule,true);
+      }
     }
     for (    Process process : pkg.getRuleFlows().values()) {
-      if (resource != null && !((InternalResource)resource).hasURL()) {
+      if (resource == null) {
         this.listener.debug("KnowledgeAgent no resource mapped for process=" + process);
       }
       if (autoDiscoverResource) {
         resource=((ResourcedObject)process).getResource();
       }
-      this.addDefinitionMapping(resource,process,true);
+      if (isNewDefinition(resource,process)) {
+        this.addDefinitionMapping(resource,process,true);
+      }
     }
     for (    TypeDeclaration typeDeclaration : pkg.getTypeDeclarations().values()) {
-      if (resource != null && !((InternalResource)resource).hasURL()) {
+      if (resource == null) {
         this.listener.debug("KnowledgeAgent no resource mapped for type=" + typeDeclaration);
       }
       if (autoDiscoverResource) {
         resource=typeDeclaration.getResource();
       }
-      this.addDefinitionMapping(resource,typeDeclaration,true);
+      if (isNewDefinition(resource,typeDeclaration)) {
+        this.addDefinitionMapping(resource,typeDeclaration,true);
+      }
     }
     for (    Function function : pkg.getFunctions().values()) {
       if (resource != null && !((InternalResource)resource).hasURL()) {
@@ -41,7 +47,9 @@ synchronized (this.registeredResources) {
       if (autoDiscoverResource) {
         resource=function.getResource();
       }
-      this.addDefinitionMapping(resource,function,true);
+      if (isNewDefinition(resource,function)) {
+        this.addDefinitionMapping(resource,function,true);
+      }
     }
   }
 }
