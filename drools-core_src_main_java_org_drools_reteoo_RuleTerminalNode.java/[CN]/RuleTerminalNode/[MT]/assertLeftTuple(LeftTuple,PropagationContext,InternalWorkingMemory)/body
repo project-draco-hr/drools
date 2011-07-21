@@ -1,39 +1,7 @@
 {
-  if (!this.rule.isEffective(tuple,workingMemory)) {
-    return;
+  createActivations(leftTuple,context,workingMemory);
+  if (leftTuple.getObject() != null && rule.getSalience().getValue(leftTuple,rule,workingMemory) != 101) {
+    final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
+    agenda.addActivation((AgendaItem)leftTuple.getObject());
   }
-  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
-  if (this.rule.isNoLoop() && this.rule.equals(context.getRuleOrigin())) {
-    agenda.increaseDormantActivations();
-    return;
-  }
-  final Timer timer=this.rule.getTimer();
-  if (timer != null) {
-    final ScheduledAgendaItem item=agenda.createScheduledAgendaItem(tuple,context,this);
-    agenda.scheduleItem(item,workingMemory);
-    tuple.setObject(item);
-    item.setActivated(true);
-    tuple.increaseActivationCountForEvents();
-    ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCreated(item,workingMemory);
-  }
- else {
-    if (this.rule.getCalendars() != null) {
-      long timestamp=workingMemory.getSessionClock().getCurrentTime();
-      for (      String cal : this.rule.getCalendars()) {
-        if (!workingMemory.getCalendars().get(cal).isTimeIncluded(timestamp)) {
-          return;
-        }
-      }
-    }
-    final AgendaItem item=agenda.createAgendaItem(tuple,rule.getSalience().getValue(tuple,this.rule,workingMemory),context,this);
-    item.setSequenence(this.sequence);
-    tuple.setObject(item);
-    boolean added=agenda.addActivation(item);
-    if (added) {
-      item.setActivated(true);
-      tuple.increaseActivationCountForEvents();
-      ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCreated(item,workingMemory);
-    }
-  }
-  agenda.increaseActiveActivations();
 }

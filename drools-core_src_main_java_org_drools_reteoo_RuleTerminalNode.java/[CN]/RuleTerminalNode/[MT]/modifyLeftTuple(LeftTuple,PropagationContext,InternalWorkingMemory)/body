@@ -1,49 +1,17 @@
 {
-  if (!this.rule.isEffective(leftTuple,workingMemory)) {
+  Activation originalAcitvation=(Activation)leftTuple.getObject();
+  InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
+  if (originalAcitvation != null && originalAcitvation.isActivated()) {
+    agenda.modifyActivation((AgendaItem)leftTuple.getObject());
     return;
   }
-  AgendaItem item=(AgendaItem)leftTuple.getObject();
-  if (item != null && item.isActivated()) {
-    return;
+  agenda.decreaseDormantActivations();
+  createActivations(leftTuple,context,workingMemory);
+  if (leftTuple.getObject() != null && rule.getSalience().getValue(leftTuple,rule,workingMemory) != 101) {
+    InternalFactHandle factHandle=originalAcitvation.getFactHandle();
+    AgendaItem newActivation=(AgendaItem)leftTuple.getObject();
+    newActivation.setFactHandle(factHandle);
+    factHandle.setObject(newActivation);
+    agenda.modifyActivation((AgendaItem)leftTuple.getObject());
   }
-  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
-  if (this.rule.isNoLoop() && this.rule.equals(context.getRuleOrigin())) {
-    agenda.increaseDormantActivations();
-    return;
-  }
-  final Timer timer=this.rule.getTimer();
-  if (timer != null) {
-    if (item == null) {
-      item=agenda.createScheduledAgendaItem(leftTuple,context,this);
-    }
-    agenda.scheduleItem((ScheduledAgendaItem)item,workingMemory);
-    leftTuple.increaseActivationCountForEvents();
-    item.setActivated(true);
-    ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCreated(item,workingMemory);
-  }
- else {
-    if (this.rule.getCalendars() != null) {
-      long timestamp=workingMemory.getSessionClock().getCurrentTime();
-      for (      String cal : this.rule.getCalendars()) {
-        if (!workingMemory.getCalendars().get(cal).isTimeIncluded(timestamp)) {
-          return;
-        }
-      }
-    }
-    if (item == null) {
-      item=agenda.createAgendaItem(leftTuple,rule.getSalience().getValue(leftTuple,this.rule,workingMemory),context,this);
-      item.setSequenence(this.sequence);
-    }
- else {
-      item.setSalience(rule.getSalience().getValue(leftTuple,this.rule,workingMemory));
-      item.setPropagationContext(context);
-    }
-    boolean added=agenda.addActivation(item);
-    item.setActivated(added);
-    if (added) {
-      leftTuple.increaseActivationCountForEvents();
-      ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCreated(item,workingMemory);
-    }
-  }
-  agenda.increaseActiveActivations();
 }

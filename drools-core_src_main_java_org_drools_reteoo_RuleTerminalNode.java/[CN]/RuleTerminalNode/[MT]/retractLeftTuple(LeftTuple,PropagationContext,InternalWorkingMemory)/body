@@ -3,6 +3,14 @@
   if (activation == null) {
     return;
   }
+  final DefaultAgenda agenda=(DefaultAgenda)workingMemory.getAgenda();
+  if (activation.getFactHandle() == null) {
+    agenda.decreaseDormantActivations();
+    return;
+  }
+ else {
+    agenda.removeActivation((AgendaItem)activation);
+  }
   if (activation.isActivated()) {
     if (context.getType() == PropagationContext.EXPIRATION && context.getFactHandleOrigin() != null) {
     }
@@ -17,11 +25,11 @@
       }
       leftTuple.decreaseActivationCountForEvents();
       ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCancelled(activation,workingMemory,ActivationCancelledCause.WME_MODIFY);
-      ((InternalAgenda)workingMemory.getAgenda()).decreaseActiveActivations();
+      agenda.decreaseActiveActivations();
     }
   }
  else {
-    ((InternalAgenda)workingMemory.getAgenda()).decreaseDormantActivations();
+    agenda.decreaseDormantActivations();
   }
   workingMemory.getTruthMaintenanceSystem().removeLogicalDependencies(activation,context,this.rule);
 }

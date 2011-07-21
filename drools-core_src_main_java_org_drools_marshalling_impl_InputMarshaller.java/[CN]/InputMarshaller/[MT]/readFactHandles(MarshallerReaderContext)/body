@@ -16,14 +16,16 @@
     InternalFactHandle handle=readFactHandle(context);
     context.handles.put(handle.getId(),handle);
     handles[i]=handle;
-    context.wm.getObjectStore().addHandle(handle,handle.getObject());
+    if (handle.getObject() != null) {
+      context.wm.getObjectStore().addHandle(handle,handle.getObject());
+    }
     readRightTuples(handle,context);
   }
   EntryPointNode node=ruleBase.getRete().getEntryPointNode(EntryPoint.DEFAULT);
   Map<ObjectType,ObjectTypeNode> objectTypeNodes=node.getObjectTypeNodes();
   for (  InternalFactHandle handle : handles) {
     Object object=handle.getObject();
-    ClassObjectType objectType=new ClassObjectType(object.getClass());
+    ClassObjectType objectType=new ClassObjectType((object != null) ? object.getClass() : AgendaItem.class);
     ObjectTypeNode objectTypeNode=objectTypeNodes.get(objectType);
     if (objectTypeNode != null) {
       ObjectHashSet set=(ObjectHashSet)context.wm.getNodeMemory(objectTypeNode);

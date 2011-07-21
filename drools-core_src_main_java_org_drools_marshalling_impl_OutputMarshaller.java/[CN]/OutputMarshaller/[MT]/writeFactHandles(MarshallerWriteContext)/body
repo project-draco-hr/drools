@@ -3,9 +3,21 @@
   InternalWorkingMemory wm=context.wm;
   ObjectMarshallingStrategyStore objectMarshallingStrategyStore=context.objectMarshallingStrategyStore;
   writeInitialFactHandleRightTuples(context);
-  stream.writeInt(wm.getObjectStore().size());
+  ActiveActivationIterator it=ActiveActivationIterator.iterator(wm);
+  List<InternalFactHandle> list=new ArrayList<InternalFactHandle>(100);
+  for (Activation item=(Activation)it.next(); item != null; item=(Activation)it.next()) {
+    list.add(item.getFactHandle());
+  }
+  stream.writeInt(wm.getObjectStore().size() + list.size());
   for (  InternalFactHandle handle : orderFacts(wm.getObjectStore())) {
     writeFactHandle(context,stream,objectMarshallingStrategyStore,handle);
+    writeRightTuples(handle,context);
+  }
+  for (  InternalFactHandle handle : list) {
+    Object object=handle.getObject();
+    handle.setObject(null);
+    writeFactHandle(context,stream,objectMarshallingStrategyStore,handle);
+    handle.setObject(object);
     writeRightTuples(handle,context);
   }
   writeInitialFactHandleLeftTuples(context);

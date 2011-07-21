@@ -1,0 +1,32 @@
+{
+  if (getStageActivationsGroup().isEmpty()) {
+    return;
+  }
+  org.drools.core.util.LinkedList list=getStageActivationsGroup().getList();
+  for (Entry entry=list.removeFirst(); entry != null; entry=list.removeFirst()) {
+    ActivationGroupNode node=(ActivationGroupNode)entry;
+    AgendaItem item=(AgendaItem)node.getActivation();
+    item.setActivationGroupNode(null);
+    Rule rule=item.getRule();
+    if (rule.getAutoFocus()) {
+      this.setFocus(rule.getAgendaGroup());
+    }
+    addItemToActivationGroup(item);
+    final Timer timer=rule.getTimer();
+    if (timer != null) {
+      scheduleItem((ScheduledAgendaItem)item,workingMemory);
+    }
+ else {
+      AgendaItem agendaItem=(AgendaItem)item;
+      InternalAgendaGroup agendaGroup=(InternalAgendaGroup)this.getAgendaGroup(rule.getAgendaGroup());
+      if (agendaItem.getRule().getRuleFlowGroup() == null) {
+        agendaGroup.add(agendaItem);
+      }
+ else {
+        InternalRuleFlowGroup rfg=(InternalRuleFlowGroup)this.getRuleFlowGroup(rule.getRuleFlowGroup());
+        rfg.addActivation(agendaItem);
+      }
+    }
+  }
+  notifyHalt();
+}
