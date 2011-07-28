@@ -1,0 +1,37 @@
+{
+  TypeDeclarationDescrBuilder declare=null;
+  try {
+    declare=helper.start(ddb,TypeDeclarationDescrBuilder.class,null);
+    if (helper.validateIdentifierKey(DroolsSoftKeywords.TYPE)) {
+      match(input,DRLLexer.ID,DroolsSoftKeywords.TYPE,null,DroolsEditorType.KEYWORD);
+      if (state.failed)       return null;
+    }
+    String type=qualifiedIdentifier();
+    if (state.failed)     return null;
+    if (state.backtracking == 0)     declare.name(type);
+    if (helper.validateIdentifierKey(DroolsSoftKeywords.EXTENDS)) {
+      match(input,DRLLexer.ID,DroolsSoftKeywords.EXTENDS,null,DroolsEditorType.KEYWORD);
+      if (!state.failed) {
+        String superType=qualifiedIdentifier();
+        declare.superType(superType);
+      }
+    }
+    while (input.LA(1) == DRLLexer.AT) {
+      annotation(declare);
+      if (state.failed)       return null;
+    }
+    while (input.LA(1) == DRLLexer.ID && !helper.validateIdentifierKey(DroolsSoftKeywords.END)) {
+      field(declare);
+      if (state.failed)       return null;
+    }
+    match(input,DRLLexer.ID,DroolsSoftKeywords.END,null,DroolsEditorType.KEYWORD);
+    if (state.failed)     return null;
+  }
+ catch (  RecognitionException re) {
+    reportError(re);
+  }
+ finally {
+    helper.end(TypeDeclarationDescrBuilder.class,declare);
+  }
+  return (declare != null) ? declare.getDescr() : null;
+}
