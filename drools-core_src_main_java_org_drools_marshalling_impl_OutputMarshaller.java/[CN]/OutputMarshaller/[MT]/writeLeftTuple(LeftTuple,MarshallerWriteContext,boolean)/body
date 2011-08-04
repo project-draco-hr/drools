@@ -8,13 +8,15 @@ case NodeTypeEnums.JoinNode:
 {
       for (LeftTuple childLeftTuple=leftTuple.getFirstChild(); childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentNext()) {
         stream.writeShort(PersisterEnums.RIGHT_TUPLE);
-        stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
+        int childSinkId=childLeftTuple.getLeftTupleSink().getId();
+        stream.writeInt(childSinkId);
         stream.writeInt(childLeftTuple.getRightParent().getFactHandle().getId());
         writeLeftTuple(childLeftTuple,context,recurse);
       }
       stream.writeShort(PersisterEnums.END);
       break;
     }
+case NodeTypeEnums.QueryRiaFixerNode:
 case NodeTypeEnums.EvalConditionNode:
 {
     for (LeftTuple childLeftTuple=leftTuple.getFirstChild(); childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentNext()) {
@@ -74,7 +76,8 @@ if (leftTuple.getLeftTupleSink().getId() == childLeftTuple.getLeftTupleSink().ge
 }
  else {
   stream.writeShort(PersisterEnums.LEFT_TUPLE);
-  stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
+  int sinkId=childLeftTuple.getLeftTupleSink().getId();
+  stream.writeInt(sinkId);
   writeLeftTuple(childLeftTuple,context,recurse);
 }
 }
@@ -112,6 +115,18 @@ break;
 }
 case NodeTypeEnums.UnificationNode:
 {
+QueryElementNode node=(QueryElementNode)sink;
+boolean isOpen=node.isOpenQuery();
+context.writeBoolean(isOpen);
+if (isOpen) {
+InternalFactHandle factHandle=(InternalFactHandle)leftTuple.getObject();
+DroolsQuery query=(DroolsQuery)factHandle.getObject();
+factHandle.setObject(null);
+writeFactHandle(context,stream,context.objectMarshallingStrategyStore,0,factHandle);
+factHandle.setObject(query);
+writeLeftTuples(context,new InternalFactHandle[]{factHandle});
+}
+ else {
 for (LeftTuple childLeftTuple=leftTuple.getFirstChild(); childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getLeftParentNext()) {
 stream.writeShort(PersisterEnums.LEFT_TUPLE);
 stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
@@ -119,12 +134,26 @@ writeFactHandle(context,stream,context.objectMarshallingStrategyStore,1,childLef
 writeLeftTuple(childLeftTuple,context,recurse);
 }
 stream.writeShort(PersisterEnums.END);
+}
 break;
 }
 case NodeTypeEnums.RuleTerminalNode:
 {
 int pos=context.terminalTupleMap.size();
 context.terminalTupleMap.put(leftTuple,pos);
+break;
+}
+case NodeTypeEnums.QueryTerminalNode:
+{
+context.writeBoolean(true);
+RightTuple rightTuple=(RightTuple)leftTuple.getObject();
+writeFactHandle(context,stream,context.objectMarshallingStrategyStore,1,rightTuple.getFactHandle());
+for (LeftTuple childLeftTuple=rightTuple.firstChild; childLeftTuple != null; childLeftTuple=(LeftTuple)childLeftTuple.getRightParentNext()) {
+stream.writeShort(PersisterEnums.LEFT_TUPLE);
+stream.writeInt(childLeftTuple.getLeftTupleSink().getId());
+writeLeftTuple(childLeftTuple,context,recurse);
+}
+stream.writeShort(PersisterEnums.END);
 break;
 }
 }

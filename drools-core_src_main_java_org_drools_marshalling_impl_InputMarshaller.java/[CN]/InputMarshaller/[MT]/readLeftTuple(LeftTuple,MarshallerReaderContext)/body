@@ -8,7 +8,8 @@ case NodeTypeEnums.JoinNode:
       BetaMemory memory=(BetaMemory)context.wm.getNodeMemory((BetaNode)sink);
       addToLeftMemory(parentLeftTuple,memory);
       while (stream.readShort() == PersisterEnums.RIGHT_TUPLE) {
-        LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
+        int childSinkId=stream.readInt();
+        LeftTupleSink childSink=(LeftTupleSink)sinks.get(childSinkId);
         int factHandleId=stream.readInt();
         RightTupleKey key=new RightTupleKey(factHandleId,sink);
         RightTuple rightTuple=context.rightTuples.get(key);
@@ -92,7 +93,8 @@ case PersisterEnums.RIGHT_TUPLE:
   }
 case PersisterEnums.LEFT_TUPLE:
 {
-  LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
+  int sinkId=stream.readInt();
+  LeftTupleSink childSink=(LeftTupleSink)sinks.get(sinkId);
   LeftTuple childLeftTuple=new LeftTupleImpl(parentLeftTuple,accctx.result,childSink,true);
   readLeftTuple(childLeftTuple,context);
   break;
@@ -140,6 +142,15 @@ break;
 }
 case NodeTypeEnums.UnificationNode:
 {
+boolean isOpen=context.readBoolean();
+if (isOpen) {
+QueryElementNode node=(QueryElementNode)sink;
+InternalFactHandle handle=readFactHandle(context);
+context.handles.put(handle.getId(),handle);
+node.createDroolsQuery(parentLeftTuple,handle,context.wm);
+readLeftTuples(context);
+}
+ else {
 while (stream.readShort() == PersisterEnums.LEFT_TUPLE) {
 LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
 InternalFactHandle handle=readFactHandle(context);
@@ -148,12 +159,35 @@ RightTuple rightTuple=new RightTuple(handle);
 LeftTuple childLeftTuple=new LeftTupleImpl(parentLeftTuple,rightTuple,childSink,true);
 readLeftTuple(childLeftTuple,context);
 }
+}
 break;
 }
 case NodeTypeEnums.RuleTerminalNode:
 {
 int pos=context.terminalTupleMap.size();
 context.terminalTupleMap.put(pos,parentLeftTuple);
+break;
+}
+case NodeTypeEnums.QueryTerminalNode:
+{
+boolean unificationNode=context.readBoolean();
+if (unificationNode) {
+InternalFactHandle handle=readFactHandle(context);
+context.handles.put(handle.getId(),handle);
+RightTuple rightTuple=new RightTuple(handle);
+parentLeftTuple.setObject(rightTuple);
+LeftTuple entry=parentLeftTuple;
+while (entry.getParent() != null) {
+entry=entry.getParent();
+}
+DroolsQuery query=(DroolsQuery)entry.getLastHandle().getObject();
+LeftTuple leftTuple=((UnificationNodeViewChangedEventListener)query.getQueryResultCollector()).getLeftTuple();
+while (stream.readShort() == PersisterEnums.LEFT_TUPLE) {
+LeftTupleSink childSink=(LeftTupleSink)sinks.get(stream.readInt());
+LeftTuple childLeftTuple=childSink.createLeftTuple(leftTuple,rightTuple,childSink);
+readLeftTuple(childLeftTuple,context);
+}
+}
 break;
 }
 }

@@ -46,10 +46,13 @@
     StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
     List<String> list=new ArrayList<String>();
     ksession.setGlobal("list",list);
+    ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
     ksession.fireAllRules();
     list.clear();
-    FactHandle fh=ksession.insert(Integer.valueOf(i));
+    InternalFactHandle fh=(InternalFactHandle)ksession.insert(Integer.valueOf(i));
+    ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
     ksession.fireAllRules();
+    ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
     assertEquals(2,list.size());
     assertEquals("peach",list.get(0));
     assertEquals("peach",list.get(1));
@@ -59,21 +62,28 @@
       if (handles[j].getObject() instanceof InitialFact || handles[j].getObject() instanceof Integer) {
         continue;
       }
+      ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
+      handles[j]=getFactHandle(handles[j],ksession);
       Object o=handles[j].getObject();
       ksession.retract(handles[j]);
+      ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
       handles[j]=(InternalFactHandle)ksession.insert(o);
+      ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
       ksession.fireAllRules();
       assertEquals(2,list.size());
       assertEquals("peach",list.get(0));
       assertEquals("peach",list.get(1));
       list.clear();
+      handles[j]=getFactHandle(handles[j],ksession);
       ksession.update(handles[j],handles[j].getObject());
+      ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
       ksession.fireAllRules();
       assertEquals(2,list.size());
       assertEquals("peach",list.get(0));
       assertEquals("peach",list.get(1));
       list.clear();
     }
+    fh=getFactHandle(fh,ksession);
     ksession.retract(fh);
     ksession.dispose();
   }
@@ -83,32 +93,43 @@
     ksession.setGlobal("list",list);
     ksession.fireAllRules();
     list.clear();
-    FactHandle fh=ksession.insert(Integer.valueOf(i));
+    ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
+    InternalFactHandle fh=(InternalFactHandle)ksession.insert(Integer.valueOf(i));
     ksession.fireAllRules();
     assertEquals(2,list.size());
     assertEquals("table",list.get(0));
     assertEquals("peach",list.get(1));
     list.clear();
+    ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
     InternalFactHandle[] handles=ksession.getFactHandles().toArray(new InternalFactHandle[0]);
     for (int j=0; j < handles.length; j++) {
       if (handles[j].getObject() instanceof InitialFact || handles[j].getObject() instanceof Integer) {
         continue;
       }
+      ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
+      handles[j]=getFactHandle(handles[j],ksession);
       Object o=handles[j].getObject();
       ksession.retract(handles[j]);
+      ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
       handles[j]=(InternalFactHandle)ksession.insert(o);
+      ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
       ksession.fireAllRules();
       assertEquals(2,list.size());
       assertEquals("table",list.get(0));
       assertEquals("peach",list.get(1));
       list.clear();
+      ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
+      handles[j]=getFactHandle(handles[j],ksession);
       ksession.update(handles[j],handles[j].getObject());
+      ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
       ksession.fireAllRules();
       assertEquals(2,list.size());
       assertEquals("table",list.get(0));
       assertEquals("peach",list.get(1));
       list.clear();
     }
+    ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
+    fh=getFactHandle(fh,ksession);
     ksession.retract(fh);
     ksession.dispose();
   }

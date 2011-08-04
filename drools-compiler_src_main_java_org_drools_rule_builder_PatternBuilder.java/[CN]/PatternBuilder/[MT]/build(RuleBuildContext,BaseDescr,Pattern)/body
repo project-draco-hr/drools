@@ -24,17 +24,33 @@
     RuleConditionElement rce=null;
     if (context.getRule().getName().equals(patternDescr.getObjectType())) {
       QueryElementBuilder qeBuilder=new QueryElementBuilder();
-      rce=qeBuilder.build(context,descr,prefixPattern);
+      rce=qeBuilder.build(context,descr,prefixPattern,(Query)context.getRule());
     }
     if (rce == null) {
       Rule rule=context.getPkg().getRule(patternDescr.getObjectType());
       if (rule != null && rule instanceof Query) {
         QueryElementBuilder qeBuilder=new QueryElementBuilder();
-        rce=qeBuilder.build(context,descr,prefixPattern);
+        rce=qeBuilder.build(context,descr,prefixPattern,(Query)rule);
       }
- else {
-        context.getErrors().add(new DescrBuildError(context.getParentDescr(),patternDescr,null,"Unable to resolve ObjectType '" + patternDescr.getObjectType() + "'"));
+      for (      String importName : context.getDialect().getTypeResolver().getImports()) {
+        importName=importName.trim();
+        int pos=importName.indexOf('*');
+        if (pos >= 0) {
+          String pkgName=importName.substring(0,pos - 1);
+          PackageRegistry pkgReg=context.getPackageBuilder().getPackageRegistry(pkgName);
+          if (pkgReg != null) {
+            rule=pkgReg.getPackage().getRule(patternDescr.getObjectType());
+            if (rule != null && rule instanceof Query) {
+              QueryElementBuilder qeBuilder=new QueryElementBuilder();
+              rce=qeBuilder.build(context,descr,prefixPattern,(Query)rule);
+              break;
+            }
+          }
+        }
       }
+    }
+    if (rce == null) {
+      context.getErrors().add(new DescrBuildError(context.getParentDescr(),patternDescr,null,"Unable to resolve ObjectType '" + patternDescr.getObjectType() + "'"));
     }
     return rce;
   }

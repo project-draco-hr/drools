@@ -2,16 +2,20 @@
   Activation originalAcitvation=(Activation)leftTuple.getObject();
   InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
   if (originalAcitvation != null && originalAcitvation.isActivated()) {
-    agenda.modifyActivation((AgendaItem)leftTuple.getObject());
+    agenda.modifyActivation((AgendaItem)leftTuple.getObject(),true);
     return;
   }
-  agenda.decreaseDormantActivations();
-  createActivations(leftTuple,context,workingMemory);
-  if (leftTuple.getObject() != null && rule.getSalience().getValue(leftTuple,rule,workingMemory) != 101) {
+  if (this.rule.isNoLoop() && this.rule.equals(context.getRuleOrigin())) {
+    agenda.increaseDormantActivations();
+    return;
+  }
+  boolean fire=createActivations(leftTuple,context,workingMemory,true);
+  if (fire && rule.getSalience().getValue(leftTuple,rule,workingMemory) != 101) {
     InternalFactHandle factHandle=originalAcitvation.getFactHandle();
     AgendaItem newActivation=(AgendaItem)leftTuple.getObject();
     newActivation.setFactHandle(factHandle);
     factHandle.setObject(newActivation);
-    agenda.modifyActivation((AgendaItem)leftTuple.getObject());
+    agenda.decreaseDormantActivations();
+    agenda.modifyActivation((AgendaItem)leftTuple.getObject(),false);
   }
 }

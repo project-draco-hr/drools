@@ -1,4 +1,13 @@
 {
-  final RiaQueryFixerNodeAdapter adapter=new RiaQueryFixerNodeAdapter(this,sink);
-  this.tupleSource.updateSink(adapter,context,workingMemory);
+  LeftTupleIterator it=LeftTupleIterator.iterator(workingMemory,this);
+  for (LeftTuple leftTuple=(LeftTuple)it.next(); leftTuple != null; leftTuple=(LeftTuple)it.next()) {
+    LeftTuple childLeftTuple=leftTuple.getFirstChild();
+    while (childLeftTuple != null) {
+      RightTuple rightParent=childLeftTuple.getRightParent();
+      sink.assertLeftTuple(sink.createLeftTuple(leftTuple,rightParent,childLeftTuple,null,sink,true),context,workingMemory);
+      while (childLeftTuple != null && childLeftTuple.getRightParent() == rightParent) {
+        childLeftTuple=childLeftTuple.getLeftParentNext();
+      }
+    }
+  }
 }

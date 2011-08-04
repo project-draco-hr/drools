@@ -1,0 +1,98 @@
+{
+  String str="" + "package org.drools.test  \n" + "import java.util.List\n"+ "import java.util.ArrayList\n"+ "import java.util.Map\n"+ "import java.util.HashMap\n"+ "global List list\n"+ "dialect \"mvel\"\n"+ "\n"+ "declare Location\n"+ "    thing : String \n"+ "    location : String \n"+ "end"+ "\n"+ "declare Edible\n"+ "   thing : String\n"+ "end"+ "\n"+ "query whereFood( String x, String y ) \n"+ "    Location(x, y;) Edible(x;) \n"+ "end\n"+ "\n"+ "query look(String place, List food ) \n"+ "    $s : String() // just here to give a OTN lookup point\n"+ "    food := List() from accumulate( whereFood(thing, place;) ,"+ "                                    collectList( thing ) )\n"+ "    exists( whereFood(thing, place;) )\n"+ "    not( whereFood(thing, place;) and\n "+ "         String( this == $s ) from thing )\n"+ "end\n"+ "\n"+ "rule init when\n"+ "then\n"+ "        \n"+ "        insert( new Location(\"apple\", \"kitchen\") );\n"+ "        insert( new Location(\"crackers\", \"kitchen\") );\n"+ "        insert( new Location(\"broccoli\", \"kitchen\") );\n"+ "        insert( new Location(\"computer\", \"office\") );\n"+ "        insert( new Edible(\"apple\") );\n"+ "        insert( new Edible(\"crackers\") );\n"+ "end\n"+ "";
+  System.out.println(str);
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  List<ObjectTypeNode> nodes=((InternalRuleBase)((KnowledgeBaseImpl)kbase).ruleBase).getRete().getObjectTypeNodes();
+  ObjectTypeNode node=null;
+  for (  ObjectTypeNode n : nodes) {
+    if (((ClassObjectType)n.getObjectType()).getClassType() == String.class) {
+      node=n;
+      break;
+    }
+  }
+  BetaNode stringBetaNode=(BetaNode)node.getSinkPropagator().getSinks()[0];
+  QueryElementNode queryElementNode1=(QueryElementNode)stringBetaNode.getSinkPropagator().getSinks()[0];
+  RightInputAdapterNode riaNode1=(RightInputAdapterNode)queryElementNode1.getSinkPropagator().getSinks()[0];
+  AccumulateNode accNode=(AccumulateNode)riaNode1.getSinkPropagator().getSinks()[0];
+  QueryElementNode queryElementNode2=(QueryElementNode)accNode.getSinkPropagator().getSinks()[0];
+  RightInputAdapterNode riaNode2=(RightInputAdapterNode)queryElementNode2.getSinkPropagator().getSinks()[0];
+  ExistsNode existsNode=(ExistsNode)riaNode2.getSinkPropagator().getSinks()[0];
+  QueryElementNode queryElementNode3=(QueryElementNode)existsNode.getSinkPropagator().getSinks()[0];
+  FromNode fromNode=(FromNode)queryElementNode3.getSinkPropagator().getSinks()[0];
+  RightInputAdapterNode riaNode3=(RightInputAdapterNode)fromNode.getSinkPropagator().getSinks()[0];
+  NotNode notNode=(NotNode)riaNode3.getSinkPropagator().getSinks()[0];
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ReteooWorkingMemory wm=((StatefulKnowledgeSessionImpl)ksession).session;
+  AccumulateMemory accMemory=(AccumulateMemory)wm.getNodeMemory(accNode);
+  BetaMemory existsMemory=(BetaMemory)wm.getNodeMemory(existsNode);
+  FromMemory fromMemory=(FromMemory)wm.getNodeMemory(fromNode);
+  BetaMemory notMemory=(BetaMemory)wm.getNodeMemory(notNode);
+  List<Map<String,Object>> list=new ArrayList<Map<String,Object>>();
+  ksession.setGlobal("list",list);
+  FactHandle fh=ksession.insert("bread");
+  ksession.fireAllRules();
+  final List food=new ArrayList();
+  QueryResults results=null;
+  results=ksession.getQueryResults("look",new Object[]{"kitchen",Variable.v});
+  assertEquals(1,results.size());
+  for (  org.drools.runtime.rule.QueryResultsRow row : results) {
+    food.addAll((Collection)row.get("food"));
+    System.out.println(row.get("food"));
+  }
+  assertEquals(2,food.size());
+  assertContains(new String[]{"crackers","apple"},food);
+  assertEquals(0,accMemory.betaMemory.getRightTupleMemory().size());
+  assertEquals(0,existsMemory.getRightTupleMemory().size());
+  assertEquals(0,fromMemory.betaMemory.getLeftTupleMemory().size());
+  assertEquals(0,notMemory.getRightTupleMemory().size());
+  food.clear();
+  final List foodUpdated=new ArrayList();
+  LiveQuery query=ksession.openLiveQuery("look",new Object[]{"kitchen",Variable.v},new ViewChangedEventListener(){
+    public void rowUpdated(    Row row){
+      foodUpdated.addAll((Collection)row.get("food"));
+    }
+    public void rowRemoved(    Row row){
+    }
+    public void rowAdded(    Row row){
+      food.addAll((Collection)row.get("food"));
+    }
+  }
+);
+  assertEquals(2,food.size());
+  assertContains(new String[]{"crackers","apple"},food);
+  assertEquals(2,accMemory.betaMemory.getRightTupleMemory().size());
+  assertEquals(2,existsMemory.getRightTupleMemory().size());
+  assertEquals(2,fromMemory.betaMemory.getLeftTupleMemory().size());
+  assertEquals(0,notMemory.getRightTupleMemory().size());
+  food.clear();
+  results=ksession.getQueryResults("look",new Object[]{"kitchen",Variable.v});
+  assertEquals(1,results.size());
+  for (  org.drools.runtime.rule.QueryResultsRow row : results) {
+    food.addAll((Collection)row.get("food"));
+    System.out.println(row.get("food"));
+  }
+  assertEquals(2,food.size());
+  assertContains(new String[]{"crackers","apple"},food);
+  assertEquals(2,accMemory.betaMemory.getRightTupleMemory().size());
+  assertEquals(2,existsMemory.getRightTupleMemory().size());
+  assertEquals(2,fromMemory.betaMemory.getLeftTupleMemory().size());
+  assertEquals(0,notMemory.getRightTupleMemory().size());
+  ksession.update(fh,"crackers");
+  assertEquals(2,accMemory.betaMemory.getRightTupleMemory().size());
+  assertEquals(2,existsMemory.getRightTupleMemory().size());
+  assertEquals(2,fromMemory.betaMemory.getLeftTupleMemory().size());
+  assertEquals(1,notMemory.getRightTupleMemory().size());
+  assertContains(new String[]{"crackers","apple"},foodUpdated);
+  query.close();
+  assertEquals(0,accMemory.betaMemory.getRightTupleMemory().size());
+  assertEquals(0,existsMemory.getRightTupleMemory().size());
+  assertEquals(0,fromMemory.betaMemory.getLeftTupleMemory().size());
+  assertEquals(0,notMemory.getRightTupleMemory().size());
+}

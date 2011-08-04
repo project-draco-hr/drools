@@ -1,0 +1,83 @@
+{
+  if (source instanceof JoinNode || source instanceof NotNode || source instanceof FromNode|| source instanceof AccumulateNode) {
+    BetaMemory memory;
+    FastIterator localIt;
+    if (source instanceof FromNode) {
+      memory=((FromMemory)wm.getNodeMemory((NodeMemory)source)).betaMemory;
+    }
+ else     if (source instanceof AccumulateNode) {
+      memory=((AccumulateMemory)wm.getNodeMemory((NodeMemory)source)).betaMemory;
+    }
+ else {
+      memory=(BetaMemory)wm.getNodeMemory((NodeMemory)source);
+    }
+    localIt=memory.getLeftTupleMemory().fullFastIterator();
+    LeftTuple leftTuple=BetaNode.getFirstLeftTuple(memory.getLeftTupleMemory(),localIt);
+    while (leftTuple != null) {
+      for (LeftTuple childleftTuple=leftTuple.getFirstChild(); childleftTuple != null; childleftTuple=childleftTuple.getLeftParentNext()) {
+        if (childleftTuple.getLeftTupleSink() == sink) {
+          return childleftTuple;
+        }
+      }
+      leftTuple=(LeftTuple)localIt.next(leftTuple);
+    }
+  }
+  if (source instanceof ExistsNode) {
+    BetaMemory memory=(BetaMemory)wm.getNodeMemory((NodeMemory)source);
+    FastIterator localIt=memory.getRightTupleMemory().fullFastIterator();
+    RightTuple rightTuple=BetaNode.getFirstRightTuple(memory.getRightTupleMemory(),localIt);
+    while (rightTuple != null) {
+      if (rightTuple.getBlocked() != null) {
+        for (LeftTuple leftTuple=rightTuple.getBlocked(); leftTuple != null; leftTuple=leftTuple.getBlockedNext()) {
+          for (LeftTuple childleftTuple=leftTuple.getFirstChild(); childleftTuple != null; childleftTuple=childleftTuple.getLeftParentNext()) {
+            if (childleftTuple.getLeftTupleSink() == sink) {
+              return childleftTuple;
+            }
+          }
+        }
+      }
+      rightTuple=(RightTuple)localIt.next(rightTuple);
+    }
+  }
+ else   if (source instanceof LeftInputAdapterNode) {
+    ObjectTypeNode otn=null;
+    ObjectSource os=((LeftInputAdapterNode)source).getParentObjectSource();
+    while (!(os instanceof ObjectTypeNode)) {
+      os=os.getParentObjectSource();
+    }
+    otn=(ObjectTypeNode)os;
+    ObjectHashSet memory=(ObjectHashSet)wm.getNodeMemory(otn);
+    otnIterator=memory.iterator();
+    for (factHandleEntry=(ObjectEntry)otnIterator.next(); factHandleEntry != null; factHandleEntry=(ObjectEntry)otnIterator.next()) {
+      InternalFactHandle handle=(InternalFactHandle)factHandleEntry.getValue();
+      for (LeftTuple leftTuple=handle.getFirstLeftTuple(); leftTuple != null; leftTuple=leftTuple.getLeftParentNext()) {
+        if (leftTuple.getLeftTupleSink() == sink) {
+          return leftTuple;
+        }
+      }
+    }
+  }
+ else   if (source instanceof EvalConditionNode || source instanceof QueryElementNode) {
+    LeftTuple parentLeftTuple=null;
+    if (source instanceof EvalConditionNode) {
+      parentLeftTuple=getFirstLeftTuple(((EvalConditionNode)source).getLeftTupleSource(),(LeftTupleSink)source,wm);
+    }
+ else {
+      parentLeftTuple=getFirstLeftTuple(((QueryElementNode)source).getLeftTupleSource(),(LeftTupleSink)source,wm);
+    }
+    while (parentLeftTuple != null) {
+      for (LeftTuple leftTuple=parentLeftTuple.getFirstChild(); leftTuple != null; leftTuple=leftTuple.getLeftParentNext()) {
+        if (leftTuple.getLeftTupleSink() == sink) {
+          return leftTuple;
+        }
+      }
+      if (source instanceof EvalConditionNode) {
+        parentLeftTuple=getNextLeftTuple(((EvalConditionNode)source).getLeftTupleSource(),(LeftTupleSink)source,parentLeftTuple,wm);
+      }
+ else {
+        parentLeftTuple=getNextLeftTuple(((QueryElementNode)source).getLeftTupleSource(),(LeftTupleSink)source,parentLeftTuple,wm);
+      }
+    }
+  }
+  return null;
+}

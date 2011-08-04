@@ -1,0 +1,66 @@
+{
+  if (!this.rule.isEffective(tuple,workingMemory)) {
+    return false;
+  }
+  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
+  if (this.rule.isNoLoop() && this.rule.equals(context.getRuleOrigin())) {
+    return false;
+  }
+  if (rule.getSalience().getValue(tuple,rule,workingMemory) == 101) {
+    final AgendaItem item=agenda.createAgendaItem(tuple,0,context,this);
+    tuple.setObject(item);
+    item.setActivated(true);
+    tuple.increaseActivationCountForEvents();
+    agenda.increaseActiveActivations();
+    agenda.fireActivation(item);
+    return true;
+  }
+  AgendaItem item=null;
+  final Timer timer=this.rule.getTimer();
+  if (timer != null) {
+    if (reuseActivation) {
+      item=(AgendaItem)tuple.getObject();
+    }
+ else {
+      item=agenda.createScheduledAgendaItem(tuple,context,this);
+    }
+  }
+ else {
+    if (rule.getCalendars() != null) {
+      long timestamp=workingMemory.getSessionClock().getCurrentTime();
+      for (      String cal : rule.getCalendars()) {
+        if (!workingMemory.getCalendars().get(cal).isTimeIncluded(timestamp)) {
+          return false;
+        }
+      }
+    }
+    InternalAgendaGroup agendaGroup=(InternalAgendaGroup)agenda.getAgendaGroup(rule.getAgendaGroup());
+    if (rule.getRuleFlowGroup() == null) {
+      if (rule.isLockOnActive() && agendaGroup.isActive()) {
+        return false;
+      }
+    }
+ else {
+      InternalRuleFlowGroup rfg=(InternalRuleFlowGroup)agenda.getRuleFlowGroup(rule.getRuleFlowGroup());
+      if (rule.isLockOnActive() && rfg.isActive()) {
+        return false;
+      }
+    }
+    if (reuseActivation) {
+      item=(AgendaItem)tuple.getObject();
+      item.setSalience(rule.getSalience().getValue(tuple,this.rule,workingMemory));
+      item.setPropagationContext(context);
+    }
+ else {
+      item=agenda.createAgendaItem(tuple,rule.getSalience().getValue(tuple,this.rule,workingMemory),context,this);
+    }
+    item.setAgendaGroup(agendaGroup);
+  }
+  tuple.setObject(item);
+  item.setActivated(true);
+  tuple.increaseActivationCountForEvents();
+  agenda.increaseActiveActivations();
+  item.setSequenence(this.sequence);
+  ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCreated(item,workingMemory);
+  return true;
+}
