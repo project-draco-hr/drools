@@ -3,26 +3,37 @@
   InternalWorkingMemory wm=context.wm;
   ObjectMarshallingStrategyStore objectMarshallingStrategyStore=context.objectMarshallingStrategyStore;
   writeInitialFactHandleRightTuples(context);
-  ActivationIterator it=ActivationIterator.iterator(wm);
-  List<InternalFactHandle> matchFactHandles=new ArrayList<InternalFactHandle>(100);
-  for (Activation item=(Activation)it.next(); item != null; item=(Activation)it.next()) {
-    matchFactHandles.add(item.getFactHandle());
+  List<InternalFactHandle> matchFactHandles=null;
+  if (((InternalAgenda)wm.getAgenda()).isDeclarativeAgenda()) {
+    ActivationIterator it=ActivationIterator.iterator(wm);
+    matchFactHandles=new ArrayList<InternalFactHandle>(100);
+    for (Activation item=(Activation)it.next(); item != null; item=(Activation)it.next()) {
+      matchFactHandles.add(item.getFactHandle());
+    }
   }
-  stream.writeInt(wm.getObjectStore().size() + matchFactHandles.size());
+  stream.writeInt(wm.getObjectStore().size() + ((matchFactHandles == null) ? 0 : matchFactHandles.size()));
   for (  InternalFactHandle handle : orderFacts(wm.getObjectStore())) {
     writeFactHandle(context,stream,objectMarshallingStrategyStore,handle);
     writeRightTuples(handle,context);
   }
-  for (  InternalFactHandle handle : orderFacts(matchFactHandles)) {
-    Object object=handle.getObject();
-    handle.setObject(null);
-    writeFactHandle(context,stream,objectMarshallingStrategyStore,handle);
-    handle.setObject(object);
-    writeRightTuples(handle,context);
+  if (matchFactHandles != null) {
+    for (    InternalFactHandle handle : orderFacts(matchFactHandles)) {
+      Object object=handle.getObject();
+      handle.setObject(null);
+      writeFactHandle(context,stream,objectMarshallingStrategyStore,handle);
+      handle.setObject(object);
+      writeRightTuples(handle,context);
+    }
   }
   writeInitialFactHandleLeftTuples(context);
   writeLeftTuples(context,orderFacts(wm.getObjectStore()));
-  writeLeftTuples(context,orderFacts(matchFactHandles));
+  if (matchFactHandles != null) {
+    stream.writeBoolean(true);
+    writeLeftTuples(context,orderFacts(matchFactHandles));
+  }
+ else {
+    stream.writeBoolean(false);
+  }
   writePropagationContexts(context);
   writeActivations(context);
 }
