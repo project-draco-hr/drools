@@ -5,18 +5,22 @@
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
   kbase.addKnowledgePackages(kpkgs);
   kbase=SerializationHelper.serializeObject(kbase);
-  final StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
   final List list=new ArrayList();
   session.setGlobal("list",list);
   final Cheese brie=new Cheese("brie",12);
-  final FactHandle brieHandle=session.insert(brie);
+  FactHandle brieHandle=session.insert(brie);
   final Cheese provolone=new Cheese("provolone",12);
-  final FactHandle provoloneHandle=session.insert(provolone);
+  FactHandle provoloneHandle=session.insert(provolone);
   session.fireAllRules();
+  session=getSerialisedStatefulKnowledgeSession(session,true);
   assertEquals(3,list.size());
   assertEquals(3,session.getObjects().size());
+  brieHandle=getFactHandle(brieHandle,session);
   session.retract(brieHandle);
+  session=getSerialisedStatefulKnowledgeSession(session,true);
   assertEquals(2,session.getObjects().size());
+  provoloneHandle=getFactHandle(provoloneHandle,session);
   session.retract(provoloneHandle);
   assertEquals(0,session.getObjects().size());
 }

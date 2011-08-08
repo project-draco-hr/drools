@@ -1,0 +1,26 @@
+{
+  AgendaItem targetMatch=(AgendaItem)act;
+  LogicalDependency dep=null;
+  if (this.previousJustified != null) {
+    for (dep=(LogicalDependency)this.previousJustified.getFirst(); dep != null; dep=(LogicalDependency)dep.getNext()) {
+      if (targetMatch == dep.getJustified()) {
+        this.previousJustified.remove(dep);
+        break;
+      }
+    }
+  }
+  if (dep == null) {
+    dep=new LogicalDependency(activation,targetMatch);
+  }
+  this.activation.addBlocked(dep);
+  if (targetMatch.getBlockers().size() == 1 && targetMatch.isActive()) {
+    targetMatch.remove();
+    if (targetMatch.getActivationGroupNode() != null) {
+      targetMatch.getActivationGroupNode().getActivationGroup().removeActivation(targetMatch);
+    }
+    if (targetMatch.getActivationNode() != null) {
+      final InternalRuleFlowGroup ruleFlowGroup=(InternalRuleFlowGroup)targetMatch.getActivationNode().getParentContainer();
+      ruleFlowGroup.removeActivation(targetMatch);
+    }
+  }
+}

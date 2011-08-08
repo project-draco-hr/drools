@@ -5,7 +5,7 @@
   KnowledgeBase kbase=getKnowledgeBase();
   kbase.addKnowledgePackages(pkgs);
   kbase=SerializationHelper.serializeObject(kbase);
-  final StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
   Sensor sensor1=new Sensor(100,0);
   FactHandle sensor1Handle=session.insert(sensor1);
   Sensor sensor2=new Sensor(200,0);
@@ -13,12 +13,15 @@
   Sensor sensor3=new Sensor(200,0);
   FactHandle sensor3Handle=session.insert(sensor3);
   session.fireAllRules();
+  session=getSerialisedStatefulKnowledgeSession(session,true);
   List temperatureList=new ArrayList(session.getObjects(new ClassObjectFilter(Integer.class)));
   assertTrue(temperatureList.contains(Integer.valueOf(100)));
   assertTrue(temperatureList.contains(Integer.valueOf(200)));
   assertEquals(2,temperatureList.size());
   sensor1.setTemperature(150);
-  ((StatefulKnowledgeSessionImpl)session).session.update((org.drools.FactHandle)sensor1Handle,sensor1);
+  sensor1Handle=getFactHandle((org.drools.FactHandle)sensor1Handle,session);
+  session.update(sensor1Handle,sensor1);
+  session=getSerialisedStatefulKnowledgeSession(session,true);
   session.fireAllRules();
   temperatureList=new ArrayList(session.getObjects(new ClassObjectFilter(Integer.class)));
   assertFalse(temperatureList.contains(Integer.valueOf(100)));

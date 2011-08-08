@@ -13,9 +13,10 @@
   final Cheese c3=new Cheese("c",3);
   List list;
   ksession.insert(c1);
-  final FactHandle h=ksession.insert(c2);
+  FactHandle h=ksession.insert(c2);
   ksession.insert(c3);
   ksession.fireAllRules();
+  ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
   list=new ArrayList(ksession.getObjects(new ClassObjectFilter(Person.class)));
   assertEquals(2,list.size());
   assertFalse(list.contains(new Person(c1.getType())));
@@ -30,12 +31,14 @@
   kbase.addKnowledgePackages(kpkgs2);
   kbase=SerializationHelper.serializeObject(kbase);
   ksession.fireAllRules();
+  ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
   kbase=ksession.getKnowledgeBase();
   list=new ArrayList(ksession.getObjects(new ClassObjectFilter(Person.class)));
   assertEquals(3,list.size());
   assertTrue(list.contains(new Person(c1.getType())));
   assertTrue(list.contains(new Person(c2.getType())));
   assertTrue(list.contains(new Person(c3.getType())));
+  ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
   KnowledgePackage[] pkgs=(KnowledgePackage[])kbase.getKnowledgePackages().toArray(new KnowledgePackage[]{});
   assertEquals("org.drools.test",pkgs[0].getName());
   assertEquals("org.drools.test2",pkgs[1].getName());
@@ -53,7 +56,9 @@
   assertTrue("c2's logical assertion should  not be retracted",list.contains(new Person(c2.getType())));
   assertFalse("c3's logical assertion should be  retracted",list.contains(new Person(c3.getType())));
   c2.setPrice(3);
+  h=getFactHandle(h,ksession);
   ksession.update(h,c2);
+  ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
   list=new ArrayList(ksession.getObjects(new ClassObjectFilter(Person.class)));
   assertEquals("c2 now has a higher price, its logical assertion should  be cancelled",1,list.size());
   assertFalse("The logical assertion cor c2 should have been retracted",list.contains(new Person(c2.getType())));
