@@ -1,0 +1,22 @@
+{
+  ReteooRuleBase rbase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
+  StatefulSession wm=rbase.newStatefulSession();
+  DefaultAgenda agenda=(DefaultAgenda)wm.getAgenda();
+  AgendaItem item1=agenda.createAgendaItem(null,0,null,null);
+  AgendaItem item2=agenda.createAgendaItem(null,0,null,null);
+  AgendaItem item3=agenda.createAgendaItem(null,0,null,null);
+  AgendaItem item4=agenda.createAgendaItem(null,0,null,null);
+  DefaultKnowledgeHelper kcontext=new DefaultKnowledgeHelper(wm);
+  kcontext.setActivation(item1);
+  kcontext.block(item2);
+  kcontext.block(item3);
+  kcontext.reset();
+  kcontext.setActivation(item1);
+  kcontext.block(item4);
+  kcontext.cancelRemainingPreviousLogicalDependencies();
+  assertEquals(1,item1.getBlocked().size());
+  assertEquals(item4,((LogicalDependency)item1.getBlocked().getFirst()).getJustified());
+  assertEquals(0,item2.getBlockers().size());
+  assertEquals(0,item3.getBlockers().size());
+  assertEquals(1,item4.getBlockers().size());
+}
