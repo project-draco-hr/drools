@@ -1,14 +1,11 @@
 {
-  String newName=prefix + "_" + name.replaceAll("[ -/:-@\\[-`\\{-\\xff]","_");
+  final String newName=prefix + "_" + NON_ALPHA_REGEX.matcher(name).replaceAll("_");
+  final String fileName=packageName.replace('.','/') + "/" + newName+ "_";
   int counter=-1;
-  boolean exists=true;
-  while (exists) {
+  while (true) {
     counter++;
-    final String fileName=packageName.replaceAll("\\.","/") + "/" + newName+ "_"+ counter+ "."+ ext;
-    exists=src != null && src.isAvailable(fileName);
+    final String actualName=fileName + counter + "."+ ext;
+    if (src == null || !src.isAvailable(actualName))     break;
   }
-  if (counter >= 0) {
-    newName=newName + "_" + counter;
-  }
-  return newName;
+  return counter >= 0 ? (newName + "_" + counter) : newName;
 }
