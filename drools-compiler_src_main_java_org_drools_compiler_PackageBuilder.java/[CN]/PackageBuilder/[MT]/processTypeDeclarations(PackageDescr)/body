@@ -2,7 +2,19 @@
   PackageRegistry defaultRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
   PackageRegistry pkgRegistry=null;
   for (  TypeDeclarationDescr typeDescr : packageDescr.getTypeDeclarations()) {
-    int dotPos=typeDescr.getTypeName().lastIndexOf('.');
+    if (isEmpty(typeDescr.getNamespace())) {
+      for (      ImportDescr id : packageDescr.getImports()) {
+        String imp=id.getTarget();
+        if (imp.endsWith(typeDescr.getTypeName())) {
+          typeDescr.setNamespace(imp.substring(0,imp.lastIndexOf('.')));
+        }
+      }
+    }
+    String qName=typeDescr.getTypeName();
+    if (typeDescr.getNamespace() != null) {
+      qName=typeDescr.getNamespace() + "." + qName;
+    }
+    int dotPos=qName.lastIndexOf('.');
     if (dotPos >= 0) {
       Class cls=null;
       try {
@@ -10,7 +22,7 @@
       }
  catch (      ClassNotFoundException e) {
       }
-      String qualifiedClass=typeDescr.getTypeName();
+      String qualifiedClass=qName;
       int lastIndex;
       while (cls == null && (lastIndex=qualifiedClass.lastIndexOf('.')) != -1) {
         try {
@@ -28,29 +40,12 @@
         typeDescr.setTypeName(cls.getName().substring(dotPos + 1));
       }
  else {
-        typeDescr.setNamespace(typeDescr.getTypeName().substring(0,dotPos));
-        typeDescr.setTypeName(typeDescr.getTypeName().substring(dotPos + 1));
+        typeDescr.setNamespace(qName.substring(0,dotPos));
+        typeDescr.setTypeName(qName.substring(dotPos + 1));
       }
     }
     if (isEmpty(typeDescr.getNamespace())) {
-      try {
-        Class<?> cls=defaultRegistry.getTypeResolver().resolveType(typeDescr.getTypeName());
-        typeDescr.setNamespace(ClassUtils.getPackage(cls));
-        String name=cls.getName();
-        dotPos=name.lastIndexOf('.');
-        typeDescr.setTypeName(name.substring(dotPos + 1));
-      }
- catch (      ClassNotFoundException e) {
-        typeDescr.setNamespace(packageDescr.getNamespace());
-      }
-    }
-    if (isEmpty(typeDescr.getNamespace())) {
-      for (      ImportDescr id : packageDescr.getImports()) {
-        String imp=id.getTarget();
-        if (imp.endsWith(typeDescr.getTypeName())) {
-          typeDescr.setNamespace(imp.substring(0,imp.lastIndexOf('.')));
-        }
-      }
+      typeDescr.setNamespace(packageDescr.getNamespace());
     }
     fillSuperType(typeDescr,packageDescr);
     if (!typeDescr.getNamespace().equals(packageDescr.getNamespace())) {
