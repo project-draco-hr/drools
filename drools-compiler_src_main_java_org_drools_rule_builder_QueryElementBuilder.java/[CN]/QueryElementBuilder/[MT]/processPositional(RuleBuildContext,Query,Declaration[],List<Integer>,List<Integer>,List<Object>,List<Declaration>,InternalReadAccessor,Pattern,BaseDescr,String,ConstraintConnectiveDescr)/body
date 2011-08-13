@@ -1,6 +1,6 @@
 {
   int position=((ExprConstraintDescr)base).getPosition();
-  if (isVariable(expression)) {
+  if (isSingleInputVariable(context,null,expression)) {
     Declaration declr=context.getDeclarationResolver().getDeclaration(query,expression);
     if (declr != null) {
       arguments.set(position,declr);
@@ -18,6 +18,11 @@
  else {
     MVELDumper.MVELDumperContext mvelCtx=new MVELDumper.MVELDumperContext();
     String rewrittenExpr=new MVELDumper().dump(result,mvelCtx);
-    arguments.set(position,MVEL.eval(rewrittenExpr));
+    try {
+      arguments.set(position,MVEL.eval(rewrittenExpr));
+    }
+ catch (    Exception e) {
+      context.getErrors().add(new DescrBuildError(context.getParentDescr(),base,null,"Unable to compile expression:\n" + rewrittenExpr));
+    }
   }
 }
