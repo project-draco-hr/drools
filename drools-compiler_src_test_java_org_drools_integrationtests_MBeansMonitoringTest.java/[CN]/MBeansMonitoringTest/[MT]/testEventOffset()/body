@@ -1,0 +1,12 @@
+{
+  String drl="package org.drools;\n" + "declare StockTick\n" + "    @role(event)\n"+ "    @expires(10s)\n"+ "end\n"+ "rule X\n"+ "when\n"+ "    StockTick()\n"+ "then\n"+ "end";
+  KnowledgeBaseConfiguration conf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  conf.setOption(EventProcessingOption.STREAM);
+  conf.setOption(MBeansOption.ENABLED);
+  KnowledgeBase kbase=loadKnowledgeBase("kb1",drl,conf);
+  MBeanServer mbserver=ManagementFactory.getPlatformMBeanServer();
+  ObjectName kbOn=new ObjectName("org.drools.kbases:type=kb1");
+  mbserver.invoke(kbOn,"startInternalMBeans",new Object[0],new String[0]);
+  Object expOffset=mbserver.getAttribute(new ObjectName("org.drools.kbases:type=kb1,group=EntryPoints,EntryPoint=DEFAULT,ObjectType=org.drools.StockTick"),"ExpirationOffset");
+  Assert.assertEquals(10001,((Number)expOffset).longValue());
+}
