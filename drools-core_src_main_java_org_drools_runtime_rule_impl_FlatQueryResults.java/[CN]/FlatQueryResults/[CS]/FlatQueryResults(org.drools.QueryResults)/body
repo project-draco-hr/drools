@@ -1,16 +1,35 @@
 {
-  Declaration[] declrs=results.getDeclarations(0).values().toArray(new Declaration[results.getDeclarations(0).size()]);
+  Declaration[] parameters=results.getParameters();
+  Set<String> set=new HashSet<String>();
+  for (  Declaration declr : parameters) {
+    set.add(declr.getIdentifier());
+  }
+  Collection<Declaration> declrCollection=new ArrayList(results.getDeclarations(0).values());
+  for (Iterator<Declaration> it=declrCollection.iterator(); it.hasNext(); ) {
+    Declaration declr=it.next();
+    if (set.contains(declr.getIdentifier())) {
+      it.remove();
+    }
+  }
+  Declaration[] declrs=new Declaration[parameters.length + declrCollection.size()];
+  int i=0;
+  for (  Declaration declr : parameters) {
+    declrs[i++]=declr;
+  }
+  for (  Declaration declr : declrCollection) {
+    declrs[i++]=declr;
+  }
   this.results=new ArrayList<ArrayList<Object>>(results.size());
   this.factHandles=new ArrayList<ArrayList<FactHandle>>(results.size());
   int length=declrs.length;
-  identifiers=new HashMap<String,Integer>(length);
-  for (int i=0; i < length; i++) {
+  identifiers=new LinkedHashMap<String,Integer>(length);
+  for (i=0; i < length; i++) {
     identifiers.put(declrs[i].getIdentifier(),i);
   }
   for (  org.drools.QueryResult result : results) {
     ArrayList<Object> row=new ArrayList<Object>();
     ArrayList<FactHandle> rowHandle=new ArrayList<FactHandle>();
-    for (int i=0; i < length; i++) {
+    for (i=0; i < length; i++) {
       Declaration declr=declrs[i];
       row.add(result.get(declr));
       rowHandle.add(result.getFactHandle(declr));
