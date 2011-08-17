@@ -28,12 +28,18 @@
       TypeDeclaration lastType=null;
       try {
         if (newPkg.getTypeDeclarations() != null) {
-          for (          TypeDeclaration type : newPkg.getTypeDeclarations().values()) {
-            lastType=type;
-            type.setTypeClass(this.rootClassLoader.loadClass(type.getTypeClassName()));
-            if (!this.classTypeDeclaration.containsKey(type.getTypeClass())) {
-              this.classTypeDeclaration.put(type.getTypeClass(),type);
+          for (          TypeDeclaration newDecl : newPkg.getTypeDeclarations().values()) {
+            lastType=newDecl;
+            newDecl.setTypeClass(this.rootClassLoader.loadClass(newDecl.getTypeClassName()));
+            TypeDeclaration typeDeclaration=this.classTypeDeclaration.get(newDecl.getTypeClass());
+            if (typeDeclaration == null) {
+              this.classTypeDeclaration.put(newDecl.getTypeClass(),newDecl);
+              typeDeclaration=newDecl;
             }
+ else {
+              mergeTypeDeclarations(typeDeclaration,newDecl);
+            }
+            updateDependentTypes(newPkg,typeDeclaration);
           }
         }
       }
