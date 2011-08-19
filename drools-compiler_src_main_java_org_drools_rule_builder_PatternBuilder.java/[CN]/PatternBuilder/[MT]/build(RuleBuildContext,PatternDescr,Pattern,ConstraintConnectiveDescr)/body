@@ -1,5 +1,6 @@
 {
   for (  BaseDescr d : descr.getDescrs()) {
+    d.copyLocation(descr);
     if (d instanceof BindingDescr) {
       buildRuleBindings(context,patternDescr,pattern,(BindingDescr)d,null);
       continue;
@@ -15,6 +16,7 @@
       Matcher m=evalRegexp.matcher(((AtomicExprDescr)d).getExpression());
       if (m.find()) {
         PredicateDescr pdescr=new PredicateDescr(expr);
+        pdescr.copyLocation(d);
         buildEval(context,pattern,pdescr,null,aliases);
         continue;
       }
@@ -27,7 +29,7 @@
       }
     }
     if (!simple || ClassObjectType.Map_ObjectType.isAssignableFrom(pattern.getObjectType()) || ClassObjectType.Activation_ObjectType.isAssignableFrom(pattern.getObjectType())) {
-      createAndBuildPredicate(context,pattern,expr,aliases);
+      createAndBuildPredicate(context,pattern,d,expr,aliases);
       continue;
     }
     if (!(d instanceof RelationalExprDescr)) {
@@ -63,7 +65,7 @@
     ExprBindings rightExpr=new ExprBindings();
     setInputs(context,rightExpr,(pattern.getObjectType() instanceof ClassObjectType) ? ((ClassObjectType)pattern.getObjectType()).getClassType() : FactTemplate.class,rightValue);
     if ((!usesThisRef) && leftExpr.isConstant() && rightExpr.isConstant()) {
-      createAndBuildPredicate(context,pattern,expr,aliases);
+      createAndBuildPredicate(context,pattern,d,expr,aliases);
       continue;
     }
     String[] parts=leftValue.split("\\.");
@@ -76,7 +78,7 @@
       }
     }
     if ((leftValue.indexOf('.') >= 0 || leftValue.indexOf('[') >= 0 || leftValue.indexOf('(') >= 0) && (leftExpr.getFieldAccessors().size() > 2 || !leftExpr.getRuleBindings().isEmpty() || !leftExpr.getGlobalBindings().isEmpty())) {
-      createAndBuildPredicate(context,pattern,expr,aliases);
+      createAndBuildPredicate(context,pattern,d,expr,aliases);
       continue;
     }
     final InternalReadAccessor extractor=getFieldReadAccessor(context,d,pattern.getObjectType(),leftValue,null,false);
