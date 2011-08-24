@@ -1,0 +1,46 @@
+{
+  ClassLoader currentClassLoader=Thread.currentThread().getContextClassLoader();
+  String baseStr="import  org.drools.adventures.*;  import org.drools.adventures.commands.*;\n";
+  try {
+    Thread.currentThread().setContextClassLoader(classLoader);
+    Map vars=new HashMap();
+    vars.put("args",cmd);
+    MapVariableResolverFactory f=new MapVariableResolverFactory(vars);
+    CommandEnum c=(CommandEnum)cmd.get(0);
+switch (c) {
+case MOVE:
+{
+        ksession.insert(new Request(session,MVEL.eval(baseStr + "new MoveCommand(args[1], args[2])",f)));
+        ksession.fireAllRules();
+        break;
+      }
+case PICKUP:
+{
+      ksession.insert(new Request(session,MVEL.eval(baseStr + "new PickupCommand(args[1], args[2])",f)));
+      ksession.fireAllRules();
+      break;
+    }
+case DROP:
+{
+    ksession.insert(new Request(session,MVEL.eval(baseStr + "new DropCommand(args[1], args[2])",f)));
+    ksession.fireAllRules();
+    break;
+  }
+case LOOK:
+{
+  ksession.insert(new Request(session,MVEL.eval(baseStr + "new LookCommand(args[1])",f)));
+  ksession.fireAllRules();
+  break;
+}
+case SELECT_CHARACTER:
+{
+ksession.insert(new Request(session,MVEL.eval(baseStr + "new SetSessionCharacterCommand(args[1], args[2])",f)));
+ksession.fireAllRules();
+break;
+}
+}
+}
+  finally {
+Thread.currentThread().setContextClassLoader(currentClassLoader);
+}
+}
