@@ -1,11 +1,15 @@
 {
+  final Rule rule=context.getRule();
+  final RuleDescr ruleDescr=context.getRuleDescr();
   RuleClassBuilder classBuilder=context.getDialect().getRuleClassBuilder();
   String ruleClass=classBuilder.buildRule(context);
   if (ruleClass == null) {
+    if (rule.getConsequence() != null) {
+      String consequenceRes=pkg.getName().replace('.','/') + "/" + ruleDescr.getClassName()+ ".java";
+      src.add(consequenceRes,null);
+    }
     return;
   }
-  final Rule rule=context.getRule();
-  final RuleDescr ruleDescr=context.getRuleDescr();
   addClassCompileTask(this.pkg.getName() + "." + ruleDescr.getClassName(),ruleDescr,ruleClass,this.src,new RuleErrorHandler(ruleDescr,rule,"Rule Compilation error"));
   JavaDialectRuntimeData data=(JavaDialectRuntimeData)this.pkg.getDialectRuntimeRegistry().getDialectData(this.ID);
   for (final Iterator it=context.getInvokers().keySet().iterator(); it.hasNext(); ) {
