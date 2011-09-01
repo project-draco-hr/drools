@@ -4,7 +4,22 @@
   }
   boolean typeSafety=context.isTypesafe();
   context.setTypesafe(false);
-  MVELAnalysisResult mvelAnalysis=(MVELAnalysisResult)mvel.analyzeBlock(context,context.getRuleDescr(),mvel.getInterceptors(),d.getTargetExpression(),bindings,d.getInputs(),"drools",KnowledgeHelper.class);
+  Map<String,Class<?>> localTypes=d.getInputs();
+  if (d.getInScopeLocalVars() != null && !d.getInScopeLocalVars().isEmpty()) {
+    localTypes=new HashMap<String,Class<?>>(d.getInputs() != null ? d.getInputs() : Collections.EMPTY_MAP);
+    for (    JavaLocalDeclarationDescr local : d.getInScopeLocalVars()) {
+      try {
+        Class<?> type=context.getDialect("java").getPackageRegistry().getTypeResolver().resolveType(local.getType());
+        for (        IdentifierDescr id : local.getIdentifiers()) {
+          localTypes.put(id.getIdentifier(),type);
+        }
+      }
+ catch (      ClassNotFoundException e) {
+        context.getErrors().add(new DescrBuildError(context.getRuleDescr(),context.getParentDescr(),null,"Unable to resolve type " + local.getType() + ":\n"+ e.getMessage()));
+      }
+    }
+  }
+  MVELAnalysisResult mvelAnalysis=(MVELAnalysisResult)mvel.analyzeBlock(context,context.getRuleDescr(),mvel.getInterceptors(),d.getTargetExpression(),bindings,localTypes,"drools",KnowledgeHelper.class);
   context.setTypesafe(typeSafety);
   if (mvelAnalysis == null) {
     return false;
