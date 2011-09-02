@@ -26,11 +26,17 @@ case DROP:
     ksession.fireAllRules();
     break;
   }
-case LOOK:
+case GIVE:
 {
-  ksession.insert(new Request(session,MVEL.eval(baseStr + "new LookCommand(args[1])",f)));
+  ksession.insert(new Request(session,MVEL.eval(baseStr + "new GiveCommand(args[1], args[2], args[3])",f)));
   ksession.fireAllRules();
   break;
+}
+case LOOK:
+{
+ksession.insert(new Request(session,MVEL.eval(baseStr + "new LookCommand(args[1])",f)));
+ksession.fireAllRules();
+break;
 }
 case SELECT_CHARACTER:
 {
@@ -40,7 +46,10 @@ break;
 }
 }
 }
-  finally {
+ catch (Exception e) {
+session.getChannels().get("output").send("Unable to Execute Command: " + cmd);
+}
+ finally {
 Thread.currentThread().setContextClassLoader(currentClassLoader);
 }
 }
