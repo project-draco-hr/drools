@@ -2,5 +2,13 @@
   String className=consequenceName + "Consequence";
   Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
   JavaAnalysisResult analysis=createJavaAnalysisResult(context,consequenceName,decls);
-  return createConsequenceContext(context,consequenceName,className,analysis.getAnalyzedExpr(),decls,analysis.getBoundIdentifiers());
+  if (analysis == null) {
+    return null;
+  }
+  String fixedConsequence=fixBlockDescr(context,analysis,decls);
+  if (fixedConsequence == null) {
+    return null;
+  }
+  fixedConsequence=KnowledgeHelperFixer.fix(fixedConsequence);
+  return createConsequenceContext(context,consequenceName,className,fixedConsequence,decls,analysis.getBoundIdentifiers());
 }
