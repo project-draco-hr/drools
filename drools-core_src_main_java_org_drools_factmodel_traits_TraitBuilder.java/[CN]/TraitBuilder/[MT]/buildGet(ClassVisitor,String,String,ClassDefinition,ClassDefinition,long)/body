@@ -1,0 +1,29 @@
+{
+  String internalWrapper=BuildUtils.getInternalType(wrapperName);
+  String internalCore=BuildUtils.getInternalType(coreName);
+  String descrCore=BuildUtils.getTypeDescriptor(coreName);
+  MethodVisitor mv=cw.visitMethod(ACC_PUBLIC,"get","(Ljava/lang/Object;)Ljava/lang/Object;",null,null);
+  mv.visitCode();
+  if (core.getFieldsDefinitions().size() > 0) {
+    for (    FieldDefinition field : core.getFieldsDefinitions()) {
+      mv.visitLdcInsn(field.getName());
+      mv.visitVarInsn(ALOAD,1);
+      mv.visitMethodInsn(INVOKEVIRTUAL,"java/lang/String","equals","(Ljava/lang/Object;)Z");
+      Label l0=new Label();
+      mv.visitJumpInsn(IFEQ,l0);
+      invokeExtractor(mv,wrapperName,trait,core,field);
+      if (BuildUtils.isPrimitive(field.getTypeName())) {
+        valueOf(mv,field.getTypeName());
+      }
+      mv.visitInsn(ARETURN);
+      mv.visitLabel(l0);
+    }
+  }
+  mv.visitVarInsn(ALOAD,0);
+  mv.visitFieldInsn(GETFIELD,internalWrapper,"map","Ljava/util/Map;");
+  mv.visitVarInsn(ALOAD,1);
+  mv.visitMethodInsn(INVOKEINTERFACE,"java/util/Map","get","(Ljava/lang/Object;)Ljava/lang/Object;");
+  mv.visitInsn(ARETURN);
+  mv.visitMaxs(2,2);
+  mv.visitEnd();
+}

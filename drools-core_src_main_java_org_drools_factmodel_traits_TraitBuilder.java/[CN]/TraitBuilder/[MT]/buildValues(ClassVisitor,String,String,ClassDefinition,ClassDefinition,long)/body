@@ -1,0 +1,30 @@
+{
+  String internalWrapper=BuildUtils.getInternalType(wrapperName);
+  String internalCore=BuildUtils.getInternalType(coreName);
+  String descrCore=BuildUtils.getTypeDescriptor(coreName);
+  MethodVisitor mv=cw.visitMethod(ACC_PUBLIC,"values","()Ljava/util/Collection;","()Ljava/util/Collection<Ljava/lang/Object;>;",null);
+  mv.visitCode();
+  mv.visitTypeInsn(NEW,"java/util/ArrayList");
+  mv.visitInsn(DUP);
+  mv.visitMethodInsn(INVOKESPECIAL,"java/util/ArrayList","<init>","()V");
+  mv.visitVarInsn(ASTORE,1);
+  for (  FieldDefinition field : core.getFieldsDefinitions()) {
+    mv.visitVarInsn(ALOAD,1);
+    invokeExtractor(mv,wrapperName,trait,core,field);
+    if (BuildUtils.isPrimitive(field.getTypeName())) {
+      valueOf(mv,field.getTypeName());
+    }
+    mv.visitMethodInsn(INVOKEINTERFACE,"java/util/Collection","add","(Ljava/lang/Object;)Z");
+    mv.visitInsn(POP);
+  }
+  mv.visitVarInsn(ALOAD,1);
+  mv.visitVarInsn(ALOAD,0);
+  mv.visitFieldInsn(GETFIELD,internalWrapper,"map","Ljava/util/Map;");
+  mv.visitMethodInsn(INVOKEINTERFACE,"java/util/Map","values","()Ljava/util/Collection;");
+  mv.visitMethodInsn(INVOKEINTERFACE,"java/util/Collection","addAll","(Ljava/util/Collection;)Z");
+  mv.visitInsn(POP);
+  mv.visitVarInsn(ALOAD,1);
+  mv.visitInsn(ARETURN);
+  mv.visitMaxs(core.getFieldsDefinitions().size() > 0 ? 3 : 2,2);
+  mv.visitEnd();
+}

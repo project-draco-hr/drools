@@ -1,0 +1,31 @@
+{
+  String source="org/drools/factmodel/traits/testTraitDon.drl";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  Resource res=ResourceFactory.newClassPathResource(source);
+  assertNotNull(res);
+  kbuilder.add(res,ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kb=KnowledgeBaseFactory.newKnowledgeBase();
+  kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  try {
+    FactType impClass=kb.getFactType("org.test","Imp");
+    ITraitable imp=(ITraitable)impClass.newInstance();
+    Class trait=kb.getFactType("org.test","Student").getFactClass();
+    TraitProxy proxy=(TraitProxy)new TraitBuilder(kb).getProxy(imp,trait);
+    Map<String,Object> virtualFields=imp.getDynamicProperties();
+    Map<String,Object> wrapper=proxy.getFields();
+    wrapper.put("name","john");
+    wrapper.put("virtualField","xyz");
+    assertEquals(4,wrapper.size());
+    assertEquals(2,virtualFields.size());
+    assertEquals("john",wrapper.get("name"));
+    assertEquals("xyz",wrapper.get("virtualField"));
+    assertEquals("john",impClass.get(imp,"name"));
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}

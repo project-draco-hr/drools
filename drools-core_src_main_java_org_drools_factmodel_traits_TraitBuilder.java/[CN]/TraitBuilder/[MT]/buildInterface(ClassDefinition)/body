@@ -1,0 +1,34 @@
+{
+  ClassWriter cw=new ClassWriter(0);
+  MethodVisitor mv;
+  try {
+    String cName=BuildUtils.getInternalType(classDef.getClassName());
+    String genericTypes=BuildUtils.getGenericTypes(classDef.getInterfaces());
+    String superType=BuildUtils.getInternalType("java.lang.Object");
+    String[] intfaces=null;
+    if (Object.class.getName().equals(classDef.getSuperClass())) {
+      intfaces=BuildUtils.getInternalTypes(classDef.getInterfaces());
+    }
+ else {
+      intfaces=BuildUtils.getInternalTypes(classDef.getInterfaces());
+      intfaces=Arrays.copyOf(intfaces,intfaces.length + 1);
+      intfaces[intfaces.length - 1]=BuildUtils.getInternalType(classDef.getSuperClass());
+    }
+    cw.visit(V1_5,ACC_PUBLIC + ACC_ABSTRACT + ACC_INTERFACE,cName,genericTypes,superType,intfaces);
+    for (    FieldDefinition field : classDef.getFieldsDefinitions()) {
+      String name=field.getName();
+      name=name.substring(0,1).toUpperCase() + name.substring(1);
+      String target=BuildUtils.getTypeDescriptor(field.getTypeName());
+      String prefix=BuildUtils.isBoolean(field.getTypeName()) ? "is" : "get";
+      mv=cw.visitMethod(ACC_PUBLIC + ACC_ABSTRACT,prefix + name,"()" + target,null,null);
+      mv.visitEnd();
+      mv=cw.visitMethod(ACC_PUBLIC + ACC_ABSTRACT,"set" + name,"(" + target + ")V",null,null);
+      mv.visitEnd();
+    }
+    cw.visitEnd();
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+  }
+  return cw.toByteArray();
+}

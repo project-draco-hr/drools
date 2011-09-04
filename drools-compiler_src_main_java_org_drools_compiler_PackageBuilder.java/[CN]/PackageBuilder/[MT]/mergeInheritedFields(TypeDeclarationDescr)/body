@@ -1,88 +1,11 @@
 {
-  if (typeDescr.getSuperTypeName() == null)   return false;
-  String simpleSuperTypeName=typeDescr.getSuperTypeName();
-  String superTypePackageName=typeDescr.getSuperTypeNamespace();
-  String fullSuper=superTypePackageName + "." + simpleSuperTypeName;
-  Map<String,TypeFieldDescr> fieldMap=new LinkedHashMap<String,TypeFieldDescr>();
-  boolean isSuperClassDeclared=true;
-  boolean isSuperClassTagged=false;
-  PackageRegistry registry=this.pkgRegistryMap.get(superTypePackageName);
-  Package pack=null;
-  if (registry != null) {
-    pack=registry.getPackage();
+  if (typeDescr.getSuperTypes().isEmpty())   return false;
+  boolean merge=false;
+  for (  TypeDeclarationDescr.QualifiedName qname : typeDescr.getSuperTypes()) {
+    String simpleSuperTypeName=qname.getName();
+    String superTypePackageName=qname.getNamespace();
+    String fullSuper=qname.getFullName();
+    merge=merge || mergeInheritedFields(simpleSuperTypeName,superTypePackageName,fullSuper,typeDescr);
   }
- else {
-    this.results.add(new TypeDeclarationError("Cannot extend supertype '" + fullSuper + "' (not a declared type)",typeDescr.getLine()));
-    typeDescr.setSuperTypeName(null);
-    typeDescr.setSuperTypeNamespace(null);
-    return false;
-  }
-  if (pack != null) {
-    TypeDeclaration superTypeDeclaration=pack.getTypeDeclaration(simpleSuperTypeName);
-    if (superTypeDeclaration != null) {
-      ClassDefinition classDef=superTypeDeclaration.getTypeClassDef();
-      for (      FactField fld : classDef.getFields()) {
-        TypeFieldDescr inheritedFlDescr=TypeFieldDescr.buildInheritedFromDefinition(fld);
-        fieldMap.put(inheritedFlDescr.getFieldName(),inheritedFlDescr);
-      }
-      isSuperClassTagged=!superTypeDeclaration.isNovel();
-    }
- else {
-      isSuperClassDeclared=false;
-    }
-  }
- else {
-    isSuperClassDeclared=false;
-  }
-  if (!isSuperClassDeclared || isSuperClassTagged) {
-    try {
-      ClassFieldInspector inspector=new ClassFieldInspector(registry.getTypeResolver().resolveType(fullSuper));
-      for (      String name : inspector.getGetterMethods().keySet()) {
-        if (inspector.getSetterMethods().containsKey(name)) {
-          if (!inspector.isNonGetter(name) && !"class".equals(name)) {
-            TypeFieldDescr inheritedFlDescr=new TypeFieldDescr(name,new PatternDescr(inspector.getFieldTypes().get(name).getName()));
-            inheritedFlDescr.setInherited(true);
-            inheritedFlDescr.setIndex(inspector.getFieldNames().size() + inspector.getFieldNames().get(name));
-            if (!fieldMap.containsKey(inheritedFlDescr.getFieldName()))             fieldMap.put(inheritedFlDescr.getFieldName(),inheritedFlDescr);
-          }
-        }
-      }
-    }
- catch (    ClassNotFoundException cnfe) {
-      throw new RuntimeDroolsException("Unable to resolve Type Declaration superclass '" + fullSuper + "'");
-    }
-catch (    IOException e) {
-    }
-  }
-  for (  String fieldName : typeDescr.getFields().keySet()) {
-    if (fieldMap.containsKey(fieldName)) {
-      String type1=fieldMap.get(fieldName).getPattern().getObjectType();
-      String type2=typeDescr.getFields().get(fieldName).getPattern().getObjectType();
-      if (type2.lastIndexOf(".") < 0) {
-        try {
-          type1=pkgRegistryMap.get(pack.getName()).getTypeResolver().resolveType(type1).getName();
-          type2=pkgRegistryMap.get(pack.getName()).getTypeResolver().resolveType(type2).getName();
-          fieldMap.get(fieldName).getPattern().setObjectType(type1);
-          typeDescr.getFields().get(fieldName).getPattern().setObjectType(type2);
-        }
- catch (        ClassNotFoundException cnfe) {
-        }
-      }
-      if (!type1.equals(type2)) {
-        this.results.add(new TypeDeclarationError("Cannot redeclare field '" + fieldName + " from "+ type1+ " to "+ type2,typeDescr.getLine()));
-        typeDescr.setSuperTypeName(null);
-        typeDescr.setSuperTypeNamespace(null);
-        return false;
-      }
- else {
-        String initVal=fieldMap.get(fieldName).getInitExpr();
-        if (typeDescr.getFields().get(fieldName).getInitExpr() == null) {
-          typeDescr.getFields().get(fieldName).setInitExpr(initVal);
-        }
-      }
-    }
-    fieldMap.put(fieldName,typeDescr.getFields().get(fieldName));
-  }
-  typeDescr.setFields(fieldMap);
-  return true;
+  return merge;
 }

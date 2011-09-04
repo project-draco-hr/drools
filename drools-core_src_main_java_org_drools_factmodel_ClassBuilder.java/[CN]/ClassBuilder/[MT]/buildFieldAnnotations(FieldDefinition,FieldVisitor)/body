@@ -1,7 +1,7 @@
 {
   if (fieldDef.getAnnotations() != null) {
     for (    AnnotationDefinition ad : fieldDef.getAnnotations()) {
-      AnnotationVisitor av=fv.visitAnnotation("L" + getInternalType(ad.getName()) + ";",true);
+      AnnotationVisitor av=fv.visitAnnotation("L" + BuildUtils.getInternalType(ad.getName()) + ";",true);
       for (      String key : ad.getValues().keySet()) {
         AnnotationDefinition.AnnotationPropertyVal apv=ad.getValues().get(key);
 switch (apv.getValType()) {
@@ -19,7 +19,7 @@ break;
 case ENUMARRAY:
 AnnotationVisitor subEnav=av.visitArray(apv.getProperty());
 Enum[] enArray=(Enum[])apv.getValue();
-String aenumType="L" + getInternalType(enArray[0].getClass().getName()) + ";";
+String aenumType="L" + BuildUtils.getInternalType(enArray[0].getClass().getName()) + ";";
 for (Enum enumer : enArray) {
 subEnav.visitEnum(null,aenumType,enumer.name());
 }
@@ -29,16 +29,16 @@ case CLASSARRAY:
 AnnotationVisitor subKlav=av.visitArray(apv.getProperty());
 Class[] klarray=(Class[])apv.getValue();
 for (Class klass : klarray) {
-subKlav.visit(null,Type.getType("L" + getInternalType(klass.getName()) + ";"));
+subKlav.visit(null,Type.getType("L" + BuildUtils.getInternalType(klass.getName()) + ";"));
 }
 subKlav.visitEnd();
 break;
 case ENUMERATION:
-String enumType="L" + getInternalType(apv.getType().getName()) + ";";
+String enumType="L" + BuildUtils.getInternalType(apv.getType().getName()) + ";";
 av.visitEnum(apv.getProperty(),enumType,((Enum)apv.getValue()).name());
 break;
 case KLASS:
-String klassName=getInternalType(((Class)apv.getValue()).getName());
+String klassName=BuildUtils.getInternalType(((Class)apv.getValue()).getName());
 av.visit(apv.getProperty(),Type.getType("L" + klassName + ";"));
 break;
 case PRIMITIVE:

@@ -5,15 +5,14 @@
     if (isEmpty(typeDescr.getNamespace())) {
       for (      ImportDescr id : packageDescr.getImports()) {
         String imp=id.getTarget();
-        if (imp.endsWith(typeDescr.getTypeName())) {
-          typeDescr.setNamespace(imp.substring(0,imp.lastIndexOf('.')));
+        int separator=imp.lastIndexOf('.');
+        String tail=imp.substring(separator + 1);
+        if (tail.equals(typeDescr.getTypeName())) {
+          typeDescr.setNamespace(imp.substring(0,separator));
         }
       }
     }
-    String qName=typeDescr.getTypeName();
-    if (typeDescr.getNamespace() != null) {
-      qName=typeDescr.getNamespace() + "." + qName;
-    }
+    String qName=typeDescr.getType().getFullName();
     int dotPos=qName.lastIndexOf('.');
     if (dotPos >= 0) {
       Class cls=null;
@@ -64,6 +63,7 @@
       typeDescr.setNamespace(packageDescr.getNamespace());
     }
     fillSuperType(typeDescr,packageDescr);
+    fillFieldTypes(typeDescr,packageDescr);
     if (!typeDescr.getNamespace().equals(packageDescr.getNamespace())) {
       PackageDescr altDescr=new PackageDescr(typeDescr.getNamespace());
       altDescr.addTypeDeclaration(typeDescr);
@@ -84,16 +84,16 @@
       continue;
     }
     pkgRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
-    if (typeDescr.getSuperTypeName() != null) {
+    for (    TypeDeclarationDescr.QualifiedName qname : typeDescr.getSuperTypes()) {
       if (mergeInheritedFields(typeDescr)) {
         Iterator<TypeDeclarationDescr> iter=sortedTypeDescriptors.iterator();
         while (iter.hasNext()) {
           TypeDeclarationDescr descr=iter.next();
-          if ((typeDescr.getSuperTypeName().equals(descr.getTypeName()) && typeDescr.getSuperTypeNamespace().equals(descr.getNamespace()))) {
+          if (qname.equals(descr.getType())) {
             typeDescr.getAnnotations().putAll(descr.getAnnotations());
             break;
           }
- else           if ((typeDescr.getTypeName().equals(descr.getTypeName()) && typeDescr.getNamespace().equals(descr.getNamespace()))) {
+ else           if (typeDescr.getType().equals(descr.getType())) {
             break;
           }
         }
@@ -113,45 +113,34 @@
     if (typesafe != null) {
       type.setTypesafe(Boolean.parseBoolean(typesafe));
     }
-    annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_TEMPLATE);
-    String templateName=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
-    if (templateName != null) {
-      type.setFormat(TypeDeclaration.Format.TEMPLATE);
-      FactTemplate template=pkgRegistry.getPackage().getFactTemplate(templateName);
-      if (template != null) {
-        type.setTypeTemplate(template);
-      }
- else {
-        this.results.add(new TypeDeclarationError("Template not found for TypeDeclaration '" + template + "' for type '"+ type.getTypeName()+ "'",typeDescr.getLine()));
-        continue;
-      }
+    annotationDescr=typeDescr.getAnnotation(TypeDeclaration.Format.ID);
+    String format=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
+    if (format != null) {
+      type.setFormat(TypeDeclaration.Format.parseFormat(format));
     }
- else {
-      annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_CLASS);
-      String className=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
-      if (StringUtils.isEmpty(className)) {
-        className=type.getTypeName();
-      }
-      type.setFormat(TypeDeclaration.Format.POJO);
-      Class clazz;
-      try {
-        generateDeclaredBean(typeDescr,type,pkgRegistry);
-        clazz=pkgRegistry.getTypeResolver().resolveType(className);
-        type.setTypeClass(clazz);
-        if (type.getTypeClassDef() != null) {
-          try {
-            buildFieldAccessors(type,pkgRegistry);
-          }
- catch (          Exception e) {
-            this.results.add(new TypeDeclarationError("Error creating field accessors for TypeDeclaration '" + className + "' for type '"+ type.getTypeName()+ "'",typeDescr.getLine()));
-            continue;
-          }
+    annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_CLASS);
+    String className=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
+    if (StringUtils.isEmpty(className)) {
+      className=type.getTypeName();
+    }
+    Class clazz;
+    try {
+      generateDeclaredBean(typeDescr,type,pkgRegistry);
+      clazz=pkgRegistry.getTypeResolver().resolveType(typeDescr.getType().getFullName());
+      type.setTypeClass(clazz);
+      if (type.getTypeClassDef() != null) {
+        try {
+          buildFieldAccessors(type,pkgRegistry);
+        }
+ catch (        Exception e) {
+          this.results.add(new TypeDeclarationError("Error creating field accessors for TypeDeclaration '" + className + "' for type '"+ type.getTypeName()+ "'",typeDescr.getLine()));
+          continue;
         }
       }
- catch (      final ClassNotFoundException e) {
-        this.results.add(new TypeDeclarationError("Class '" + className + "' not found for type declaration of '"+ type.getTypeName()+ "'",typeDescr.getLine()));
-        continue;
-      }
+    }
+ catch (    final ClassNotFoundException e) {
+      this.results.add(new TypeDeclarationError("Class '" + className + "' not found for type declaration of '"+ type.getTypeName()+ "'",typeDescr.getLine()));
+      continue;
     }
     annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_TIMESTAMP);
     String timestamp=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;

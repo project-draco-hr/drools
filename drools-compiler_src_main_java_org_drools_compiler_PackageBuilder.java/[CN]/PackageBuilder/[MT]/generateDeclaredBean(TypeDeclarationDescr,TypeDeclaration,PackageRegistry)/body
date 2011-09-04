@@ -1,8 +1,35 @@
 {
-  String fullName=typeDescr.getNamespace() + "." + typeDescr.getTypeName();
-  String fullSuperType=typeDescr.getSuperTypeName() != null ? (typeDescr.getSuperTypeNamespace() + "." + typeDescr.getSuperTypeName()) : Object.class.getName();
-  String[] interfaces=new String[]{Serializable.class.getName()};
-  ClassDefinition def=new ClassDefinition(fullName,fullSuperType,interfaces);
+  String fullName=typeDescr.getType().getFullName();
+  if (type.getFormat().equals(TypeDeclaration.Format.POJO)) {
+    if (typeDescr.getSuperTypes().size() > 1) {
+      this.results.add(new TypeDeclarationError("Declared class " + fullName + "  - has more than one supertype;",typeDescr.getLine()));
+      return;
+    }
+ else     if (typeDescr.getSuperTypes().size() == 0) {
+      typeDescr.addSuperType("java.lang.Object");
+    }
+  }
+  boolean traitable=typeDescr.getAnnotation(Traitable.class.getSimpleName()) != null;
+  String[] fullSuperTypes=new String[typeDescr.getSuperTypes().size() + 1];
+  int j=0;
+  for (  TypeDeclarationDescr.QualifiedName qname : typeDescr.getSuperTypes()) {
+    fullSuperTypes[j++]=qname.getFullName();
+  }
+  fullSuperTypes[j++]=IThing.class.getName();
+  List<String> interfaceList=new ArrayList<String>();
+  interfaceList.add(Serializable.class.getName());
+  if (traitable) {
+    interfaceList.add(ITraitable.class.getName());
+  }
+  String[] interfaces=interfaceList.toArray(new String[interfaceList.size()]);
+  ClassDefinition def=null;
+  if (type.getFormat().equals(TypeDeclaration.Format.TRAIT)) {
+    def=new ClassDefinition(fullName,"java.lang.Object",fullSuperTypes);
+  }
+ else {
+    def=new ClassDefinition(fullName,fullSuperTypes[0],interfaces);
+    def.setTraitable(traitable);
+  }
   for (  String annotationName : typeDescr.getAnnotationNames()) {
     Class annotation=resolveAnnotation(annotationName,pkgRegistry.getTypeResolver());
     if (annotation != null) {
@@ -23,16 +50,6 @@
     }
   }
   type.setNovel(isNovelClass(typeDescr));
-  if (type.isNovel()) {
-    try {
-      ClassBuilder cb=new ClassBuilder();
-      byte[] d=cb.buildClass(def);
-      JavaDialectRuntimeData dialect=(JavaDialectRuntimeData)pkgRegistry.getDialectRuntimeRegistry().getDialectData("java");
-      dialect.write(JavaDialectRuntimeData.convertClassToResourcePath(fullName),d);
-    }
- catch (    Exception e) {
-      this.results.add(new TypeDeclarationError("Unable to create a class for declared type " + fullName + ": "+ e.getMessage()+ ";",typeDescr.getLine()));
-    }
-  }
   type.setTypeClassDef(def);
+  generateDeclaredBean(typeDescr,type,pkgRegistry,def);
 }

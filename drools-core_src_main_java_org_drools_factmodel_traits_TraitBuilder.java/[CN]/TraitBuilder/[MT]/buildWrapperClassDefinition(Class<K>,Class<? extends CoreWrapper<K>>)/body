@@ -1,0 +1,23 @@
+{
+  ClassFieldInspector inspector=new ClassFieldInspector(coreKlazz);
+  ClassFieldAccessorStore store=ruleBase.getPackagesMap().get(pack).getClassFieldAccessorStore();
+  String className=coreKlazz.getName() + "Wrapper";
+  String superClass=coreKlazz.getName();
+  String[] interfaces=new String[]{CoreWrapper.class.getName()};
+  ClassDefinition def=new ClassDefinition(className,superClass,interfaces);
+  def.setTraitable(true);
+  def.setDefinedClass(wrapperClass);
+  Map<String,Field> fields=inspector.getFieldTypesField();
+  for (  Field f : fields.values()) {
+    if (f != null) {
+      FieldDefinition fld=new FieldDefinition();
+      fld.setName(f.getName());
+      fld.setTypeName(f.getType().getName());
+      fld.setInherited(true);
+      ClassFieldAccessor accessor=store.getAccessor(def.getDefinedClass().getName(),fld.getName());
+      fld.setReadWriteAccessor(accessor);
+      def.addField(fld);
+    }
+  }
+  return def;
+}

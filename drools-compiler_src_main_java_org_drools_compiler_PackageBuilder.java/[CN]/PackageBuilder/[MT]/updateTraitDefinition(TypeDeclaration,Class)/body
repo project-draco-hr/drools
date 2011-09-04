@@ -1,0 +1,24 @@
+{
+  try {
+    ClassFieldInspector inspector=new ClassFieldInspector(concrete);
+    Map<String,Method> methods=inspector.getGetterMethods();
+    Map<String,Method> setters=inspector.getSetterMethods();
+    int j=0;
+    for (    String fieldName : methods.keySet()) {
+      if ("core".equals(fieldName) || "fields".equals(fieldName)) {
+        continue;
+      }
+      if (!inspector.isNonGetter(fieldName) && setters.keySet().contains(fieldName)) {
+        Class ret=methods.get(fieldName).getReturnType();
+        FieldDefinition field=new FieldDefinition();
+        field.setName(fieldName);
+        field.setTypeName(ret.getName());
+        field.setIndex(j++);
+        type.getTypeClassDef().addField(field);
+      }
+    }
+  }
+ catch (  IOException e) {
+    e.printStackTrace();
+  }
+}

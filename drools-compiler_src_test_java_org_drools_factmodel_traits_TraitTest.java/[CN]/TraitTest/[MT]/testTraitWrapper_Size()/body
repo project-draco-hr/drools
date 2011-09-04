@@ -1,0 +1,62 @@
+{
+  String source="org/drools/factmodel/traits/testTraitDon.drl";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  Resource res=ResourceFactory.newClassPathResource(source);
+  assertNotNull(res);
+  kbuilder.add(res,ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kb=KnowledgeBaseFactory.newKnowledgeBase();
+  kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  TraitBuilder traitBuilder=new TraitBuilder(kb);
+  try {
+    FactType impClass=kb.getFactType("org.test","Imp");
+    ITraitable imp=(ITraitable)impClass.newInstance();
+    FactType traitClass=kb.getFactType("org.test","Student");
+    Class trait=traitClass.getFactClass();
+    TraitProxy proxy=(TraitProxy)traitBuilder.getProxy(imp,trait);
+    Map<String,Object> virtualFields=imp.getDynamicProperties();
+    Map<String,Object> wrapper=proxy.getFields();
+    assertEquals(3,wrapper.size());
+    assertEquals(1,virtualFields.size());
+    impClass.set(imp,"name","john");
+    assertEquals(3,wrapper.size());
+    assertEquals(1,virtualFields.size());
+    proxy.getFields().put("school","skol");
+    assertEquals(3,wrapper.size());
+    assertEquals(1,virtualFields.size());
+    proxy.getFields().put("surname","xxx");
+    assertEquals(4,wrapper.size());
+    assertEquals(2,virtualFields.size());
+    ITraitable ind=new Individual();
+    TraitProxy proxy2=(TraitProxy)traitBuilder.getProxy(ind,trait);
+    Map virtualFields2=ind.getDynamicProperties();
+    Map wrapper2=proxy2.getFields();
+    assertEquals(3,wrapper2.size());
+    assertEquals(3,virtualFields2.size());
+    traitClass.set(proxy2,"name","john");
+    assertEquals(3,wrapper2.size());
+    assertEquals(3,virtualFields2.size());
+    proxy2.getFields().put("school","skol");
+    assertEquals(3,wrapper2.size());
+    assertEquals(3,virtualFields2.size());
+    proxy2.getFields().put("surname","xxx");
+    assertEquals(4,wrapper2.size());
+    assertEquals(4,virtualFields2.size());
+    FactType traitClass2=kb.getFactType("org.test","Role");
+    Class trait2=traitClass2.getFactClass();
+    ITraitable ind2=new Individual();
+    TraitProxy proxy99=(TraitProxy)traitBuilder.getProxy(ind2,trait2);
+    proxy99.getFields().put("surname","xxx");
+    proxy99.getFields().put("name","xyz");
+    proxy99.getFields().put("school","skol");
+    assertEquals(3,proxy99.getFields().size());
+    TraitProxy proxy100=(TraitProxy)traitBuilder.getProxy(ind2,trait);
+    assertEquals(4,proxy100.getFields().size());
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}

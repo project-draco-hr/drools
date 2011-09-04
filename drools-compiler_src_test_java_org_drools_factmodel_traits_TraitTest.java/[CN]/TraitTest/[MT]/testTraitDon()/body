@@ -1,0 +1,20 @@
+{
+  String source="org/drools/factmodel/traits/testTraitDon.drl";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  Resource res=ResourceFactory.newClassPathResource(source);
+  assertNotNull(res);
+  kbuilder.add(res,ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kb=KnowledgeBaseFactory.newKnowledgeBase();
+  kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ks=kb.newStatefulKnowledgeSession();
+  List info=new ArrayList();
+  ks.setGlobal("list",info);
+  ks.fireAllRules();
+  ks.insert("die");
+  ks.fireAllRules();
+  Assert.assertTrue(info.contains("DON"));
+  Assert.assertTrue(info.contains("SHED"));
+}

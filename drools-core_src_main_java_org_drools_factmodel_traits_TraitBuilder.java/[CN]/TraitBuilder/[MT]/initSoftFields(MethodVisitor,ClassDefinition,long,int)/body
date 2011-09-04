@@ -1,0 +1,24 @@
+{
+  int j=0;
+  int nonPrimitiveFields=0;
+  int stackSize=0;
+  for (  FieldDefinition field : trait.getFieldsDefinitions()) {
+    boolean isSoftField=(mask & (1 << j++)) == 0;
+    if (isSoftField) {
+      mv.visitVarInsn(ALOAD,varNum);
+      mv.visitLdcInsn(field.getName());
+      mv.visitInsn(BuildUtils.zero(field.getTypeName()));
+      if (BuildUtils.isPrimitive(field.getTypeName())) {
+        valueOf(mv,field.getTypeName());
+        int size=BuildUtils.sizeOf(field.getTypeName());
+        stackSize=Math.max(stackSize,size);
+      }
+ else {
+        stackSize=Math.max(stackSize,2);
+      }
+      mv.visitMethodInsn(INVOKEINTERFACE,"java/util/Map","put","(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+      mv.visitInsn(POP);
+    }
+  }
+  return stackSize;
+}

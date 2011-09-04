@@ -31,14 +31,14 @@
     mv.visitInsn(Opcodes.IRETURN);
     mv.visitLabel(l3);
     mv.visitVarInsn(Opcodes.ALOAD,1);
-    mv.visitTypeInsn(Opcodes.CHECKCAST,getInternalType(classDef.getClassName()));
+    mv.visitTypeInsn(Opcodes.CHECKCAST,BuildUtils.getInternalType(classDef.getClassName()));
     mv.visitVarInsn(Opcodes.ASTORE,2);
     int count=0;
     for (    FieldDefinition field : classDef.getFieldsDefinitions()) {
       if (field.isKey()) {
         count++;
         Label goNext=new Label();
-        if (isPrimitive(field.getTypeName())) {
+        if (BuildUtils.isPrimitive(field.getTypeName())) {
           mv.visitVarInsn(Opcodes.ALOAD,0);
           visitFieldOrGetter(mv,classDef,field);
           mv.visitVarInsn(Opcodes.ALOAD,2);
@@ -78,7 +78,7 @@
           visitFieldOrGetter(mv,classDef,field);
           mv.visitVarInsn(Opcodes.ALOAD,2);
           visitFieldOrGetter(mv,classDef,field);
-          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,getInternalType(field.getTypeName()),"equals","(Ljava/lang/Object;)Z");
+          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,BuildUtils.getInternalType(field.getTypeName()),"equals","(Ljava/lang/Object;)Z");
           mv.visitJumpInsn(Opcodes.IFNE,goNext);
           mv.visitLabel(returnFalse);
           mv.visitInsn(Opcodes.ICONST_0);
@@ -98,9 +98,9 @@
     if (this.debug) {
       lastLabel=new Label();
       mv.visitLabel(lastLabel);
-      mv.visitLocalVariable("this",getTypeDescriptor(classDef.getClassName()),null,l0,lastLabel,0);
+      mv.visitLocalVariable("this",BuildUtils.getTypeDescriptor(classDef.getClassName()),null,l0,lastLabel,0);
       mv.visitLocalVariable("obj",Type.getDescriptor(Object.class),null,l0,lastLabel,1);
-      mv.visitLocalVariable("other",getTypeDescriptor(classDef.getClassName()),null,l0,lastLabel,2);
+      mv.visitLocalVariable("other",BuildUtils.getTypeDescriptor(classDef.getClassName()),null,l0,lastLabel,2);
     }
     mv.visitMaxs(0,0);
     mv.visitEnd();

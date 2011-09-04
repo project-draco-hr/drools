@@ -14,30 +14,43 @@
       sup=Type.getInternalName(Class.forName(classDef.getSuperClass()));
     }
  catch (    ClassNotFoundException e) {
-      sup=getInternalType(classDef.getSuperClass());
+      sup=BuildUtils.getInternalType(classDef.getSuperClass());
     }
     mv.visitMethodInsn(Opcodes.INVOKESPECIAL,sup,"<init>",Type.getMethodDescriptor(Type.VOID_TYPE,new Type[]{}));
+    boolean hasObjects=false;
     for (    FieldDefinition field : classDef.getFieldsDefinitions()) {
       if (!field.isInherited()) {
-        Object val=getDefaultValue(field);
+        Object val=BuildUtils.getDefaultValue(field);
         if (val != null) {
           mv.visitVarInsn(Opcodes.ALOAD,0);
-          mv.visitLdcInsn(val);
-          if (isBoxed(field.getTypeName())) {
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC,getInternalType(field.getTypeName()),"valueOf","(" + unBox(field.getTypeName()) + ")"+ getTypeDescriptor(field.getTypeName()));
+          if (BuildUtils.isPrimitive(field.getTypeName()) || BuildUtils.isBoxed(field.getTypeName()) || String.class.getName().equals(field.getTypeName())) {
+            mv.visitLdcInsn(val);
+            if (BuildUtils.isBoxed(field.getTypeName())) {
+              mv.visitMethodInsn(Opcodes.INVOKESTATIC,BuildUtils.getInternalType(field.getTypeName()),"valueOf","(" + BuildUtils.unBox(field.getTypeName()) + ")"+ BuildUtils.getTypeDescriptor(field.getTypeName()));
+            }
           }
-          mv.visitFieldInsn(Opcodes.PUTFIELD,getInternalType(classDef.getClassName()),field.getName(),getTypeDescriptor(field.getTypeName()));
+ else {
+            hasObjects=true;
+            String type=BuildUtils.getInternalType(val.getClass().getName());
+            mv.visitTypeInsn(NEW,type);
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL,type,"<init>","()V");
+          }
+          mv.visitFieldInsn(Opcodes.PUTFIELD,BuildUtils.getInternalType(classDef.getClassName()),field.getName(),BuildUtils.getTypeDescriptor(field.getTypeName()));
         }
       }
+    }
+    if (classDef.isTraitable()) {
+      initializeDynamicTypeStructures(mv,classDef);
     }
     mv.visitInsn(Opcodes.RETURN);
     Label l1=null;
     if (this.debug) {
       l1=new Label();
       mv.visitLabel(l1);
-      mv.visitLocalVariable("this",getTypeDescriptor(classDef.getClassName()),null,l0,l1,0);
+      mv.visitLocalVariable("this",BuildUtils.getTypeDescriptor(classDef.getClassName()),null,l0,l1,0);
     }
-    mv.visitMaxs(0,0);
+    mv.visitMaxs(hasObjects ? 3 : 0,hasObjects ? 1 : 0);
     mv.visitEnd();
   }
 }

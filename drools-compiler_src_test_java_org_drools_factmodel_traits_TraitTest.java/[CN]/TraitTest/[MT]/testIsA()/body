@@ -1,0 +1,22 @@
+{
+  String source="org/drools/factmodel/traits/testTraitIsA.drl";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  Resource res=ResourceFactory.newClassPathResource(source);
+  assertNotNull(res);
+  kbuilder.add(res,ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kb=KnowledgeBaseFactory.newKnowledgeBase();
+  kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ks=kb.newStatefulKnowledgeSession();
+  List info=new ArrayList();
+  ks.setGlobal("list",info);
+  ks.fireAllRules();
+  int num=10;
+  System.out.println(info);
+  assertEquals(num,info.size());
+  for (int j=0; j < num; j++) {
+    assertTrue(info.contains("" + j));
+  }
+}

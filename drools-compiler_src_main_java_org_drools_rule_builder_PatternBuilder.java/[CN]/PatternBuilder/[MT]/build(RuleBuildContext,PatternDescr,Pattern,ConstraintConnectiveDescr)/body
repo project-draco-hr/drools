@@ -120,8 +120,14 @@
         final Pattern thisPattern=(Pattern)context.getBuildStack().peek();
         declr=this.createDeclarationObject(context,rightValue,thisPattern);
         if (declr == null) {
-          context.getErrors().add(new DescrBuildError(context.getParentDescr(),d,null,"Unable to return Declaration for identifier '" + rightValue + "'"));
-          continue;
+          try {
+            final Class<?> cls=context.getDialect().getTypeResolver().resolveType(rightValue);
+            restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),cls.getName(),LiteralRestrictionDescr.TYPE_STRING));
+          }
+ catch (          ClassNotFoundException cnfe) {
+            context.getErrors().add(new DescrBuildError(context.getParentDescr(),d,null,"Unable to return Declaration for identifier '" + rightValue + "'"));
+            continue;
+          }
         }
       }
     }
