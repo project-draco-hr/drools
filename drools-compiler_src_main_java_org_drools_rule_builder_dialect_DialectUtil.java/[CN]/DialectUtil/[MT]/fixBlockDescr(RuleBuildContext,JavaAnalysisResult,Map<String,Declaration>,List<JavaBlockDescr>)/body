@@ -1,0 +1,36 @@
+{
+  MVELDialect mvel=(MVELDialect)context.getDialect("mvel");
+  String originalCode=analysis.getAnalyzedExpr();
+  BoundIdentifiers bindings=analysis.getBoundIdentifiers();
+  Collections.sort(blocks,new Comparator<JavaBlockDescr>(){
+    public int compare(    JavaBlockDescr o1,    JavaBlockDescr o2){
+      return o1.getStart() - o2.getStart();
+    }
+  }
+);
+  StringBuilder consequence=new StringBuilder();
+  int lastAdded=0;
+  for (  JavaBlockDescr block : blocks) {
+    if (block.getEnd() == 0) {
+      continue;
+    }
+    consequence.append(originalCode.substring(lastAdded,block.getStart() - 1));
+    lastAdded=block.getEnd();
+switch (block.getType()) {
+case MODIFY:
+case UPDATE:
+case RETRACT:
+      rewriteDescr(context,originalCode,mvel,consequence,(JavaBlockDescr)block,bindings,decls);
+    break;
+case ENTRY:
+case EXIT:
+case CHANNEL:
+  rewriteInterfacePoint(context,originalCode,consequence,(JavaInterfacePointsDescr)block);
+break;
+default :
+consequence.append(originalCode.substring(block.getStart() - 1,lastAdded));
+}
+}
+consequence.append(originalCode.substring(lastAdded));
+return consequence.toString();
+}
