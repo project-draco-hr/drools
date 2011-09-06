@@ -1,9 +1,17 @@
 {
   final Set<String> names=new HashSet<String>();
+  PackageRegistry packageRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
+  Package pkg=null;
+  if (packageRegistry != null) {
+    pkg=packageRegistry.getPackage();
+  }
   for (  final RuleDescr rule : packageDescr.getRules()) {
     final String name=rule.getName();
     if (names.contains(name)) {
       this.results.add(new ParserError("Duplicate rule name: " + name,rule.getLine(),rule.getColumn()));
+    }
+    if (pkg != null && pkg.getRule(name) != null) {
+      this.results.add(new DuplicateRuleProblem(name,packageDescr,this.configuration));
     }
     names.add(name);
   }
