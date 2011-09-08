@@ -1,0 +1,27 @@
+{
+  String traitName=trait.getName();
+  if (core.getTraits().containsKey(traitName)) {
+    return (T)core.getTraits().get(traitName);
+  }
+  String key=getKey(core.getClass(),trait);
+  Constructor<T> konst=factoryCache.get(key);
+  if (konst == null) {
+    konst=cacheConstructor(key,core,trait);
+  }
+  T proxy=null;
+  try {
+    proxy=konst.newInstance(core,core.getDynamicProperties());
+    core.getTraits().put(traitName,proxy);
+    return proxy;
+  }
+ catch (  InstantiationException e) {
+    e.printStackTrace();
+  }
+catch (  IllegalAccessException e) {
+    e.printStackTrace();
+  }
+catch (  InvocationTargetException e) {
+    e.printStackTrace();
+  }
+  return null;
+}

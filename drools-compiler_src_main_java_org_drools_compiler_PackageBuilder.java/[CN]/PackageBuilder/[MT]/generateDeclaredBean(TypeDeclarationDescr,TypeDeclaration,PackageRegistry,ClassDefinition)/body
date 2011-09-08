@@ -20,7 +20,7 @@
         Class<?> resolvedType=reg.getTypeResolver().resolveType(availableName);
         if (!IThing.class.isAssignableFrom(resolvedType)) {
           updateTraitDefinition(type,resolvedType);
-          String target=typeDescr.getTypeName() + "_Trait__Extension";
+          String target=typeDescr.getTypeName() + TraitFactory.SUFFIX;
           TypeDeclarationDescr tempDescr=new TypeDeclarationDescr();
           tempDescr.setNamespace(typeDescr.getNamespace());
           tempDescr.setFields(typeDescr.getFields());
@@ -68,7 +68,8 @@ switch (type.getFormat()) {
 case TRAIT:
       try {
         byte[] d;
-        d=TraitBuilder.buildInterface(def);
+        ClassBuilder tb=ClassBuilderFactory.getTraitBuilderService();
+        d=tb.buildClass(def);
         dialect.write(JavaDialectRuntimeData.convertClassToResourcePath(fullName),d);
       }
  catch (      Exception e) {
@@ -78,7 +79,7 @@ case TRAIT:
 case POJO:
 default :
   try {
-    ClassBuilder cb=new ClassBuilder();
+    ClassBuilder cb=ClassBuilderFactory.getBeanClassBuilderService();
     byte[] d=cb.buildClass(def);
     dialect.write(JavaDialectRuntimeData.convertClassToResourcePath(fullName),d);
   }
