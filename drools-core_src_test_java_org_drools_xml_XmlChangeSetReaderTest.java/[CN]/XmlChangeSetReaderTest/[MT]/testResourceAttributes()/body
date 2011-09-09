@@ -1,0 +1,36 @@
+{
+  SemanticModules semanticModules=new SemanticModules();
+  semanticModules.addSemanticModule(new ChangeSetSemanticModule());
+  XmlChangeSetReader changeSetReader=new XmlChangeSetReader(semanticModules);
+  changeSetReader.setClassLoader(XmlChangeSetReaderTest.class.getClassLoader(),null);
+  ChangeSet changeSet=changeSetReader.read(XmlChangeSetReaderTest.class.getClassLoader().getResourceAsStream("org/drools/xml/test-change-set.xml"));
+  Assert.assertNotNull(changeSet);
+  Collection<Resource> resourcesAdded=changeSet.getResourcesAdded();
+  Assert.assertNotNull(resourcesAdded);
+  Assert.assertEquals(4,resourcesAdded.size());
+  Resource resource1=null;
+  Resource resource2=null;
+  Resource resource3=null;
+  Resource secureResource=null;
+  for (  Resource resource : resourcesAdded) {
+    if (resource.getName() != null && resource.getName().equals("resource1")) {
+      resource1=resource;
+    }
+ else     if (resource.getName() != null && resource.getName().equals("secureResource")) {
+      secureResource=resource;
+    }
+ else     if (resource.getName() == null && resource.getDescription() == null) {
+      resource3=resource;
+    }
+ else     if (resource.getName() == null) {
+      resource2=resource;
+    }
+  }
+  Assert.assertNotNull(resource1);
+  Assert.assertNotNull(resource2);
+  Assert.assertNotNull(resource3);
+  Assert.assertNotNull(secureResource);
+  Assert.assertNull(resource1.getDescription());
+  Assert.assertEquals("another description",resource2.getDescription());
+  Assert.assertEquals("some useful description",secureResource.getDescription());
+}
