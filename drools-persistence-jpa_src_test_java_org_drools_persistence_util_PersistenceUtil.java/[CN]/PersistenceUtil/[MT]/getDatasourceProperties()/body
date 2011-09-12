@@ -1,14 +1,23 @@
 {
-  String propertiesNotFound="Unable to load datasource properties [" + DATASOURCE_PROPERTIES + "]";
+  boolean propertiesNotFound=false;
   InputStream propsInputStream=PersistenceUtil.class.getResourceAsStream(DATASOURCE_PROPERTIES);
-  Assert.assertNotNull(propertiesNotFound,propsInputStream);
   Properties props=new Properties();
-  try {
-    props.load(propsInputStream);
+  if (propsInputStream != null) {
+    try {
+      props.load(propsInputStream);
+    }
+ catch (    IOException ioe) {
+      propertiesNotFound=true;
+      logger.warn("Unable to find properties, using default H2 properties: " + ioe.getMessage());
+      ioe.printStackTrace();
+    }
   }
- catch (  IOException ioe) {
-    Assert.fail(propertiesNotFound + ": " + ioe.getMessage());
-    ioe.printStackTrace();
+ else {
+    propertiesNotFound=true;
+  }
+  String password=props.getProperty("password");
+  if ("${maven.jdbc.password}".equals(password) || propertiesNotFound) {
+    props=getDefaultProperties();
   }
   return props;
 }
