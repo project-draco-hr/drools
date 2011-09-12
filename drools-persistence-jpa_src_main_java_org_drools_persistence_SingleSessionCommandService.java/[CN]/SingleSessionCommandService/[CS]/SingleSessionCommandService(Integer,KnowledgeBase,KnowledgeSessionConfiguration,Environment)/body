@@ -5,5 +5,19 @@
   this.env=env;
   checkEnvironment(this.env);
   initTransactionManager(this.env);
-  initKsession(sessionId,kbase,conf);
+  boolean transactionOwner=false;
+  try {
+    transactionOwner=txm.begin();
+    registerRollbackSync();
+    initKsession(sessionId,kbase,conf);
+    txm.commit(transactionOwner);
+  }
+ catch (  RuntimeException re) {
+    rollbackTransaction(re,transactionOwner);
+    throw re;
+  }
+catch (  Exception t1) {
+    rollbackTransaction(t1,transactionOwner);
+    throw new RuntimeException("Wrapped exception see cause",t1);
+  }
 }

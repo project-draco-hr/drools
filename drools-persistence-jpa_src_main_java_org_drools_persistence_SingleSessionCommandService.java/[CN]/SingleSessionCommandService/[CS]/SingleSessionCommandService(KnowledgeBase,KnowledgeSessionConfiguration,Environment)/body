@@ -13,18 +13,19 @@
   this.marshallingHelper=new SessionMarshallingHelper(this.ksession,conf);
   this.sessionInfo.setJPASessionMashallingHelper(this.marshallingHelper);
   ((InternalKnowledgeRuntime)this.ksession).setEndOperationListener(new EndOperationListenerImpl(this.sessionInfo));
+  boolean transactionOwner=false;
   try {
-    this.txm.begin();
+    transactionOwner=txm.begin();
     registerRollbackSync();
     jpm.getApplicationScopedPersistenceContext().persist(this.sessionInfo);
-    this.txm.commit();
+    txm.commit(transactionOwner);
   }
  catch (  RuntimeException re) {
-    rollbackTransaction(re);
+    rollbackTransaction(re,transactionOwner);
     throw re;
   }
 catch (  Exception t1) {
-    rollbackTransaction(t1);
+    rollbackTransaction(t1,transactionOwner);
     throw new RuntimeException("Wrapped exception see cause",t1);
   }
   ((InternalKnowledgeRuntime)ksession).setId(this.sessionInfo.getId());

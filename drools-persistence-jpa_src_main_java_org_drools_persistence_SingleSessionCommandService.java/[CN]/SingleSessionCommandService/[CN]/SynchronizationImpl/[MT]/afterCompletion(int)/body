@@ -2,11 +2,14 @@
   if (status != TransactionManager.STATUS_COMMITTED) {
     this.service.rollback();
   }
-  SingleSessionCommandService.synchronizations.remove(this.service);
+  Object removedSynchronization=SingleSessionCommandService.synchronizations.remove(this.service);
   this.service.jpm.endCommandScopedEntityManager();
   StatefulKnowledgeSession ksession=this.service.ksession;
   if (ksession != null) {
-    ((InternalKnowledgeRuntime)ksession).getProcessRuntime().clearProcessInstances();
+    InternalProcessRuntime internalProcessRuntime=((InternalKnowledgeRuntime)ksession).getProcessRuntime();
+    if (internalProcessRuntime != null) {
+      internalProcessRuntime.clearProcessInstances();
+    }
     ((JPAWorkItemManager)ksession.getWorkItemManager()).clearWorkItems();
   }
 }
