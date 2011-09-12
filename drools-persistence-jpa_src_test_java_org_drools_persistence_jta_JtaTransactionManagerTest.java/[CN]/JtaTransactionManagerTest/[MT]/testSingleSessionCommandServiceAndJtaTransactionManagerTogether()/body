@@ -1,0 +1,19 @@
+{
+  Environment env=initializeEnvironment(emf);
+  KnowledgeBase kbase=initializeKnowledgeBase(simpleRule);
+  StatefulKnowledgeSession commandKSession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
+  SingleSessionCommandService commandService=(SingleSessionCommandService)((CommandBasedStatefulKnowledgeSession)commandKSession).getCommandService();
+  JpaPersistenceContextManager jpm=(JpaPersistenceContextManager)getValueOfField("jpm",commandService);
+  jpm.getApplicationScopedPersistenceContext();
+  EntityManager em=(EntityManager)getValueOfField("appScopedEntityManager",jpm);
+  TransactionTestObject mainObject=new TransactionTestObject();
+  mainObject.setName("mainCommand");
+  TransactionTestObject subObject=new TransactionTestObject();
+  subObject.setName("subCommand");
+  mainObject.setSubObject(subObject);
+  HashMap<String,Object> emEnv=new HashMap<String,Object>();
+  emEnv.put(COMMAND_ENTITY_MANAGER_FACTORY,emf);
+  emEnv.put(COMMAND_ENTITY_MANAGER,em);
+  TransactionTestCommand txTestCmd=new TransactionTestCommand(mainObject,subObject,emEnv);
+  commandKSession.execute(txTestCmd);
+}

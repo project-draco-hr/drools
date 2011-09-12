@@ -1,0 +1,38 @@
+{
+  String testName=getTestName();
+  TransactionTestObject badMainObject=new TransactionTestObject();
+  badMainObject.setName("bad" + testName);
+  TransactionTestObject subObject=new TransactionTestObject();
+  subObject.setName("sub" + testName);
+  badMainObject.setSubObject(subObject);
+  EntityManager em=emf.createEntityManager();
+  em.setFlushMode(FlushModeType.COMMIT);
+  UserTransaction tx=findUserTransaction();
+  tx.begin();
+  em.joinTransaction();
+  em.persist(badMainObject);
+  boolean rollBackExceptionthrown=false;
+  try {
+    tx.commit();
+  }
+ catch (  Exception e) {
+    if (e instanceof BitronixRollbackException) {
+      rollBackExceptionthrown=true;
+    }
+  }
+  assertTrue("A rollback exception should have been thrown because of foreign key violations.",rollBackExceptionthrown);
+  TransactionTestObject mainObject=new TransactionTestObject();
+  mainObject.setName("main" + testName);
+  mainObject.setSubObject(subObject);
+  tx.begin();
+  em.joinTransaction();
+  em.persist(mainObject);
+  em.persist(subObject);
+  try {
+    tx.commit();
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail("No exception should have been thrown: " + e.getMessage());
+  }
+}

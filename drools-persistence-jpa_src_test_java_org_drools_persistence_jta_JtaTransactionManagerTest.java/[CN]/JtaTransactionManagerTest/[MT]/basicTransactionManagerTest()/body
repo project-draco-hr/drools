@@ -1,0 +1,23 @@
+{
+  String testName=getTestName();
+  Environment env=initializeEnvironment(emf);
+  Object tm=env.get(EnvironmentName.TRANSACTION_MANAGER);
+  TransactionManager txm=new JtaTransactionManager(env.get(EnvironmentName.TRANSACTION),env.get(EnvironmentName.TRANSACTION_SYNCHRONIZATION_REGISTRY),tm);
+  TransactionTestObject mainObject=new TransactionTestObject();
+  mainObject.setName("main" + testName);
+  TransactionTestObject subObject=new TransactionTestObject();
+  subObject.setName("sub" + testName);
+  mainObject.setSubObject(subObject);
+  EntityManager em=emf.createEntityManager();
+  try {
+    boolean txOwner=txm.begin();
+    boolean notTxOwner=txm.begin();
+    em.persist(mainObject);
+    txm.commit(notTxOwner);
+    em.persist(subObject);
+    txm.commit(txOwner);
+  }
+ catch (  Throwable t) {
+    fail("No exception should have been thrown: " + t.getMessage());
+  }
+}
