@@ -1,0 +1,30 @@
+{
+  Environment env=initializeEnvironment(emf);
+  KnowledgeBase kbase=initializeKnowledgeBase(simpleRule);
+  StatefulKnowledgeSession commandKSession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
+  assertTrue("There should be NO facts present in a new (empty) knowledge session.",commandKSession.getFactHandles().isEmpty());
+  Integer integerFact=(new Random()).nextInt(Integer.MAX_VALUE - 1) + 1;
+  commandKSession.insert(integerFact);
+  Collection<FactHandle> factHandles=commandKSession.getFactHandles();
+  assertTrue("At least one fact should have been inserted by the ksession.insert() method above.",!factHandles.isEmpty());
+  FactHandle origFactHandle=factHandles.iterator().next();
+  assertTrue("The stored fact should contain the same number as the value inserted (but does not).",Integer.parseInt(((DefaultFactHandle)origFactHandle).getObject().toString()) == integerFact.intValue());
+  int sessionInfoId=commandKSession.getId();
+  PersistenceContextManager pcm=(PersistenceContextManager)commandKSession.getEnvironment().get(EnvironmentName.PERSISTENCE_CONTEXT_MANAGER);
+  commandKSession.dispose();
+  pcm.dispose();
+  emf.close();
+  emf=Persistence.createEntityManagerFactory(DROOLS_PERSISTENCE_UNIT_NAME);
+  env=initializeEnvironment(emf);
+  KnowledgeBase newkbase=initializeKnowledgeBase(simpleRule);
+  StatefulKnowledgeSession newCommandKSession=JPAKnowledgeService.loadStatefulKnowledgeSession(sessionInfoId,newkbase,null,env);
+  factHandles=newCommandKSession.getFactHandles();
+  assertTrue("At least one fact should have been persisted by the ksession.insert above.",!factHandles.isEmpty() && factHandles.size() == 1);
+  FactHandle retrievedFactHandle=factHandles.iterator().next();
+  assertTrue("If the retrieved and original FactHandle object are the same, then the knowledge session has NOT been reloaded!",origFactHandle != retrievedFactHandle);
+  assertTrue("The retrieved fact should contain the same info as the original (but does not).",Integer.parseInt(((DefaultFactHandle)retrievedFactHandle).getObject().toString()) == integerFact.intValue());
+  ArrayList<Object> list=new ArrayList<Object>();
+  newCommandKSession.setGlobal("list",list);
+  newCommandKSession.fireAllRules();
+  assertEquals(1,list.size());
+}
