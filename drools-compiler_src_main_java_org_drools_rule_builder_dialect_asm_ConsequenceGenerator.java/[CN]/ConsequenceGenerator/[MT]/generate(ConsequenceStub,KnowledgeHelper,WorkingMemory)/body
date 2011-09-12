@@ -1,0 +1,125 @@
+{
+  Package pkg=workingMemory.getRuleBase().getPackage(stub.getPackageName());
+  CompositeClassLoader classLoader=getCompositeClassLoader(stub);
+  if (classLoader == null)   classLoader=((AbstractRuleBase)workingMemory.getRuleBase()).getRootClassLoader();
+  TypeResolver typeResolver=pkg == null ? null : pkg.getTypeResolver();
+  if (typeResolver == null) {
+    Set<String> imports=new HashSet<String>();
+    for (    String imp : stub.getPackageImports())     imports.add(imp);
+    typeResolver=new ClassTypeResolver(imports,classLoader,stub.getPackageName());
+  }
+  final String[] declarationTypes=stub.getDeclarationTypes();
+  final Declaration[] declarations=((RuleTerminalNode)knowledgeHelper.getActivation().getTuple().getLeftTupleSink()).getDeclarations();
+  final LeftTuple tuple=(LeftTuple)knowledgeHelper.getTuple();
+  final List<DeclarationMatcher> declarationMatchers=matchDeclarationsToTuple(declarationTypes,declarations,tuple);
+  final ClassGenerator generator=new ClassGenerator(stub.getPackageName() + "." + stub.getConsequenceClassName(),classLoader,typeResolver).setInterfaces(Consequence.class,CompiledInvoker.class);
+  generator.addStaticField(ACC_PRIVATE + ACC_FINAL,"serialVersionUID",Long.TYPE,ConsequenceBuilder.CONSEQUENCE_SERIAL_UID);
+  generator.addDefaultConstructor(new ClassGenerator.MethodBody(){
+    public void body(    MethodVisitor mv){
+    }
+  }
+).addMethod(ACC_PUBLIC,"getName",generator.methodDescr(String.class),new ClassGenerator.MethodBody(){
+    public void body(    MethodVisitor mv){
+      push(stub.getConsequenceClassName());
+      mv.visitInsn(ARETURN);
+    }
+  }
+).addMethod(ACC_PUBLIC,"hashCode",generator.methodDescr(Integer.TYPE),new ClassGenerator.MethodBody(){
+    public void body(    MethodVisitor mv){
+      push(stub.hashCode());
+      mv.visitInsn(IRETURN);
+    }
+  }
+).addMethod(ACC_PUBLIC,"getMethodBytecode",generator.methodDescr(List.class),new ConsequenceGenerator.GetMethodBytecodeMethod(stub)).addMethod(ACC_PUBLIC,"equals",generator.methodDescr(Boolean.TYPE,Object.class),new ConsequenceGenerator.EqualsMethod()).addMethod(ACC_PUBLIC,"evaluate",generator.methodDescr(null,KnowledgeHelper.class,WorkingMemory.class),new String[]{"java/lang/Exception"},new ClassGenerator.MethodBody(){
+    public void body(    MethodVisitor mv){
+      mv.visitVarInsn(ALOAD,1);
+      invokeInterface(KnowledgeHelper.class,"getTuple",Tuple.class);
+      cast(LeftTuple.class);
+      mv.visitVarInsn(ASTORE,3);
+      mv.visitVarInsn(ALOAD,1);
+      invokeInterface(KnowledgeHelper.class,"getActivation",Activation.class);
+      invokeInterface(Activation.class,"getTuple",LeftTuple.class);
+      invokeInterface(LeftTuple.class,"getLeftTupleSink",LeftTupleSink.class);
+      cast(RuleTerminalNode.class);
+      invokeVirtual(RuleTerminalNode.class,"getDeclarations",Declaration[].class);
+      mv.visitVarInsn(ASTORE,4);
+      int offset=6;
+      int[] paramsPos=new int[declarations.length];
+      for (      DeclarationMatcher matcher : declarationMatchers) {
+        int i=matcher.getOriginalIndex();
+        int handlePos=offset;
+        int objPos=++offset;
+        paramsPos[i]=handlePos;
+        mv.visitVarInsn(ALOAD,4);
+        push(i);
+        mv.visitInsn(AALOAD);
+        invokeVirtual(Declaration.class,"getPattern",Pattern.class);
+        invokeVirtual(Pattern.class,"getOffset",Integer.TYPE);
+        mv.visitVarInsn(ISTORE,5);
+        Label whileStart=new Label();
+        Label whileExit=new Label();
+        mv.visitLabel(whileStart);
+        mv.visitVarInsn(ALOAD,3);
+        invokeInterface(LeftTuple.class,"getIndex",Integer.TYPE);
+        mv.visitVarInsn(ILOAD,5);
+        mv.visitJumpInsn(IF_ICMPLE,whileExit);
+        mv.visitVarInsn(ALOAD,3);
+        invokeInterface(LeftTuple.class,"getParent",LeftTuple.class);
+        mv.visitVarInsn(ASTORE,3);
+        mv.visitJumpInsn(GOTO,whileStart);
+        mv.visitLabel(whileExit);
+        mv.visitVarInsn(ALOAD,3);
+        invokeInterface(LeftTuple.class,"getHandle",InternalFactHandle.class);
+        mv.visitVarInsn(ASTORE,handlePos);
+        if (stub.getNotPatterns()[i]) {
+          mv.visitVarInsn(ALOAD,4);
+          push(i);
+          mv.visitInsn(AALOAD);
+          mv.visitVarInsn(ALOAD,2);
+          cast(InternalWorkingMemory.class);
+          mv.visitVarInsn(ALOAD,handlePos);
+          invokeInterface(InternalFactHandle.class,"getObject",Object.class);
+          String readMethod=declarations[i].getNativeReadMethod().getName();
+          boolean isObject=readMethod.equals("getValue");
+          String returnedType=isObject ? "Ljava/lang/Object;" : typeDescr(declarationTypes[i]);
+          mv.visitMethodInsn(INVOKEVIRTUAL,"org/drools/rule/Declaration",readMethod,"(Lorg/drools/common/InternalWorkingMemory;Ljava/lang/Object;)" + returnedType);
+          if (isObject)           mv.visitTypeInsn(CHECKCAST,internalName(declarationTypes[i]));
+          offset+=store(objPos,declarationTypes[i]);
+          mv.visitVarInsn(ALOAD,1);
+          invokeInterface(KnowledgeHelper.class,"getWorkingMemory",WorkingMemory.class);
+          loadAsObject(objPos);
+          invokeInterface(WorkingMemory.class,"getFactHandle",FactHandle.class,Object.class);
+          cast(InternalFactHandle.class);
+          mv.visitVarInsn(ASTORE,handlePos);
+        }
+ else {
+          mv.visitVarInsn(ALOAD,handlePos);
+          invokeInterface(InternalFactHandle.class,"getObject",Object.class);
+          mv.visitTypeInsn(CHECKCAST,internalName(declarationTypes[i]));
+          offset+=store(objPos,declarationTypes[i]);
+        }
+      }
+      StringBuilder consequenceMethodDescr=new StringBuilder("(Lorg/drools/spi/KnowledgeHelper;");
+      mv.visitVarInsn(ALOAD,1);
+      for (int i=0; i < declarations.length; i++) {
+        load(paramsPos[i] + 1);
+        mv.visitVarInsn(ALOAD,paramsPos[i]);
+        consequenceMethodDescr.append(typeDescr(declarationTypes[i]) + "Lorg/drools/FactHandle;");
+      }
+      String[] globals=stub.getGlobals();
+      String[] globalTypes=stub.getGlobalTypes();
+      for (int i=0; i < globals.length; i++) {
+        mv.visitVarInsn(ALOAD,2);
+        push(globals[i]);
+        invokeInterface(WorkingMemory.class,"getGlobal",Object.class,String.class);
+        mv.visitTypeInsn(CHECKCAST,internalName(globalTypes[i]));
+        consequenceMethodDescr.append(typeDescr(globalTypes[i]));
+      }
+      consequenceMethodDescr.append(")V");
+      mv.visitMethodInsn(INVOKESTATIC,stub.getInternalRuleClassName(),stub.getMethodName(),consequenceMethodDescr.toString());
+      mv.visitInsn(RETURN);
+    }
+  }
+);
+  stub.setConsequence(generator.<Consequence>newInstance());
+}
