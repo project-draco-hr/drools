@@ -1,4 +1,12 @@
 {
-  System.out.println("quering");
-  return emf.createEntityManager().createQuery("FROM SessionInfo").getResultList().size();
+  logger.info("quering number of saved sessions.");
+  boolean transactionOwner=false;
+  if (useTransactions) {
+    transactionOwner=txm.begin();
+  }
+  long savedSessionsCount=emf.createEntityManager().createQuery("FROM SessionInfo").getResultList().size();
+  if (useTransactions) {
+    txm.commit(transactionOwner);
+  }
+  return savedSessionsCount;
 }

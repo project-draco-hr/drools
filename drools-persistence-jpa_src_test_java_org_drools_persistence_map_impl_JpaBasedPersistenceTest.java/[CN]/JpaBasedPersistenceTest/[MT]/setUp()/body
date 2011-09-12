@@ -1,5 +1,11 @@
 {
   ds1=setupPoolingDataSource();
   ds1.init();
-  emf=Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+  emf=Persistence.createEntityManagerFactory(DROOLS_PERSISTENCE_UNIT_NAME);
+  if (useTransactions()) {
+    useTransactions=true;
+    Environment env=createEnvironment();
+    Object tm=env.get(EnvironmentName.TRANSACTION_MANAGER);
+    this.txm=new JtaTransactionManager(env.get(EnvironmentName.TRANSACTION),env.get(EnvironmentName.TRANSACTION_SYNCHRONIZATION_REGISTRY),tm);
+  }
 }
