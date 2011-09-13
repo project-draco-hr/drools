@@ -1,37 +1,14 @@
 {
-  final String packageName=(String)vars.get("package");
+  final InvokerDataProvider data=new InvokerContext(vars);
   final String invokerClassName=(String)vars.get("invokerClassName");
-  final String ruleClassName=(String)vars.get("ruleClassName");
-  final String internalRuleClassName=(packageName + "." + ruleClassName).replace(".","/");
-  final String methodName=(String)vars.get("methodName");
-  final ClassGenerator generator=new ClassGenerator(packageName + "." + invokerClassName,ruleContext.getPackageBuilder().getRootClassLoader(),ruleContext.getDialect("java").getPackageRegistry().getTypeResolver()).setInterfaces(PredicateExpression.class,CompiledInvoker.class);
-  generator.addStaticField(ACC_PRIVATE + ACC_FINAL,"serialVersionUID",Long.TYPE,new Long(510L)).addDefaultConstructor();
+  final ClassGenerator generator=createInvokerClassGenerator(data,ruleContext).setInterfaces(PredicateExpression.class,CompiledInvoker.class);
   generator.addMethod(ACC_PUBLIC,"createContext",generator.methodDescr(Object.class),new ClassGenerator.MethodBody(){
     public void body(    MethodVisitor mv){
       mv.visitInsn(ACONST_NULL);
       mv.visitInsn(ARETURN);
     }
   }
-).addMethod(ACC_PUBLIC,"hashCode",generator.methodDescr(Integer.TYPE),new ClassGenerator.MethodBody(){
-    public void body(    MethodVisitor mv){
-      int hashCode=(Integer)vars.get("hashCode");
-      push(hashCode);
-      mv.visitInsn(IRETURN);
-    }
-  }
-).addMethod(ACC_PUBLIC,"getMethodBytecode",generator.methodDescr(List.class),new ClassGenerator.MethodBody(){
-    public void body(    MethodVisitor mv){
-      mv.visitVarInsn(ALOAD,0);
-      invokeVirtual(Object.class,"getClass",Class.class);
-      push(ruleClassName);
-      push(packageName);
-      push(methodName);
-      push(internalRuleClassName + ".class");
-      invokeStatic(Rule.class,"getMethodBytecode",List.class,Class.class,String.class,String.class,String.class,String.class);
-      mv.visitInsn(ARETURN);
-    }
-  }
-).addMethod(ACC_PUBLIC,"equals",generator.methodDescr(Boolean.TYPE,Object.class),new ConsequenceGenerator.EqualsMethod()).addMethod(ACC_PUBLIC,"evaluate",generator.methodDescr(Boolean.TYPE,Object.class,Tuple.class,Declaration[].class,Declaration[].class,WorkingMemory.class,Object.class),new String[]{"java/lang/Exception"},new ConsequenceGenerator.EvaluateMethod(){
+).addMethod(ACC_PUBLIC,"evaluate",generator.methodDescr(Boolean.TYPE,Object.class,Tuple.class,Declaration[].class,Declaration[].class,WorkingMemory.class,Object.class),new String[]{"java/lang/Exception"},new InvokerGenerator.EvaluateMethod(){
     public void body(    MethodVisitor mv){
       final Declaration[] previousDeclarations=(Declaration[])vars.get("declarations");
       final String[] previousDeclarationTypes=(String[])vars.get("declarationTypes");
@@ -53,7 +30,7 @@
       }
       parseGlobals(globals,globalTypes,5,predicateMethodDescr);
       predicateMethodDescr.append(")Z");
-      mv.visitMethodInsn(INVOKESTATIC,internalRuleClassName,methodName,predicateMethodDescr.toString());
+      mv.visitMethodInsn(INVOKESTATIC,data.getInternalRuleClassName(),data.getMethodName(),predicateMethodDescr.toString());
       mv.visitInsn(IRETURN);
     }
   }
