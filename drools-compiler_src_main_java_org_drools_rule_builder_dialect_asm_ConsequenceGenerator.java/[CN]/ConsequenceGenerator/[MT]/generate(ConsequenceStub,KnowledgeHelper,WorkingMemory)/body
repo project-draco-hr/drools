@@ -1,0 +1,74 @@
+{
+  final String[] declarationTypes=stub.getDeclarationTypes();
+  final Declaration[] declarations=((RuleTerminalNode)knowledgeHelper.getActivation().getTuple().getLeftTupleSink()).getDeclarations();
+  final LeftTuple tuple=(LeftTuple)knowledgeHelper.getTuple();
+  final List<DeclarationMatcher> declarationMatchers=matchDeclarationsToTuple(declarationTypes,declarations,tuple);
+  final ClassGenerator generator=createInvokerClassGenerator(stub,workingMemory).setInterfaces(Consequence.class,CompiledInvoker.class);
+  generator.addMethod(ACC_PUBLIC,"getName",generator.methodDescr(String.class),new ClassGenerator.MethodBody(){
+    public void body(    MethodVisitor mv){
+      push(stub.getGeneratedInvokerClassName());
+      mv.visitInsn(ARETURN);
+    }
+  }
+).addMethod(ACC_PUBLIC,"evaluate",generator.methodDescr(null,KnowledgeHelper.class,WorkingMemory.class),new String[]{"java/lang/Exception"},new EvaluateMethod(){
+    public void body(    MethodVisitor mv){
+      mv.visitVarInsn(ALOAD,1);
+      invokeInterface(KnowledgeHelper.class,"getTuple",Tuple.class);
+      cast(LeftTuple.class);
+      mv.visitVarInsn(ASTORE,3);
+      mv.visitVarInsn(ALOAD,1);
+      invokeInterface(KnowledgeHelper.class,"getActivation",Activation.class);
+      invokeInterface(Activation.class,"getTuple",LeftTuple.class);
+      invokeInterface(LeftTuple.class,"getLeftTupleSink",LeftTupleSink.class);
+      cast(RuleTerminalNode.class);
+      invokeVirtual(RuleTerminalNode.class,"getDeclarations",Declaration[].class);
+      mv.visitVarInsn(ASTORE,4);
+      offset=6;
+      int[] paramsPos=new int[declarations.length];
+      for (      DeclarationMatcher matcher : declarationMatchers) {
+        int i=matcher.getOriginalIndex();
+        int handlePos=offset;
+        int objPos=++offset;
+        paramsPos[i]=handlePos;
+        traverseTuplesUntilDeclaration(i,4,3,5);
+        mv.visitVarInsn(ALOAD,3);
+        invokeInterface(LeftTuple.class,"getHandle",InternalFactHandle.class);
+        mv.visitVarInsn(ASTORE,handlePos);
+        if (stub.getNotPatterns()[i]) {
+          mv.visitVarInsn(ALOAD,4);
+          push(i);
+          mv.visitInsn(AALOAD);
+          mv.visitVarInsn(ALOAD,2);
+          cast(InternalWorkingMemory.class);
+          mv.visitVarInsn(ALOAD,handlePos);
+          invokeInterface(InternalFactHandle.class,"getObject",Object.class);
+          storeObjectFromDeclaration(declarations[i],declarationTypes[i]);
+          mv.visitVarInsn(ALOAD,2);
+          loadAsObject(objPos);
+          invokeInterface(WorkingMemory.class,"getFactHandle",FactHandle.class,Object.class);
+          cast(InternalFactHandle.class);
+          mv.visitVarInsn(ASTORE,handlePos);
+        }
+ else {
+          mv.visitVarInsn(ALOAD,handlePos);
+          invokeInterface(InternalFactHandle.class,"getObject",Object.class);
+          mv.visitTypeInsn(CHECKCAST,internalName(declarationTypes[i]));
+          offset+=store(objPos,declarationTypes[i]);
+        }
+      }
+      StringBuilder consequenceMethodDescr=new StringBuilder("(Lorg/drools/spi/KnowledgeHelper;");
+      mv.visitVarInsn(ALOAD,1);
+      for (int i=0; i < declarations.length; i++) {
+        load(paramsPos[i] + 1);
+        mv.visitVarInsn(ALOAD,paramsPos[i]);
+        consequenceMethodDescr.append(typeDescr(declarationTypes[i]) + "Lorg/drools/FactHandle;");
+      }
+      parseGlobals(stub.getGlobals(),stub.getGlobalTypes(),2,consequenceMethodDescr);
+      consequenceMethodDescr.append(")V");
+      mv.visitMethodInsn(INVOKESTATIC,stub.getInternalRuleClassName(),stub.getMethodName(),consequenceMethodDescr.toString());
+      mv.visitInsn(RETURN);
+    }
+  }
+);
+  stub.setConsequence(generator.<Consequence>newInstance());
+}
