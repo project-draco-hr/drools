@@ -1,10 +1,10 @@
 {
-  JDKJobHandle jobHandle=new JDKJobHandle();
-  Date date=trigger.nextFireTime();
+  JDKJobHandle jobHandle=new JDKJobHandle(idCounter.getAndIncrement());
+  Date date=trigger.hasNextFireTime();
   if (date != null) {
-    Callable<Void> callableJob=createCallableJob(job,ctx,trigger,jobHandle,this.scheduler);
-    ScheduledFuture future=schedule(date,callableJob,this.scheduler);
-    jobHandle.setFuture(future);
+    TimerJobInstance jobInstance=jobFactoryManager.createTimerJobInstance(job,ctx,trigger,jobHandle,this);
+    jobHandle.setTimerJobInstance((TimerJobInstance)jobInstance);
+    internalSchedule((TimerJobInstance)jobInstance);
     return jobHandle;
   }
  else {

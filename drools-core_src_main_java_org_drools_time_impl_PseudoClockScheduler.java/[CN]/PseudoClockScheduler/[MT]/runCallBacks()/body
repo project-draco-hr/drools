@@ -1,19 +1,15 @@
 {
-  ScheduledJob item=queue.peek();
+  TimerJobInstance item=(TimerJobInstance)queue.peek();
   long fireTime;
-  while (item != null && ((fireTime=item.getTrigger().hasNextFireTime().getTime()) <= this.timer)) {
+  while (item != null && ((item.getTrigger().hasNextFireTime() != null && ((fireTime=item.getTrigger().hasNextFireTime().getTime()) <= this.timer)))) {
     queue.remove();
-    if (item.getHandle().isCancel()) {
+    if (item.getJobHandle().isCancel()) {
       continue;
-    }
-    item.getTrigger().nextFireTime();
-    if (item.getTrigger().hasNextFireTime() != null) {
-      queue.add(item);
     }
     long savedTimer=this.timer;
     try {
       this.timer=fireTime;
-      item.call();
+      ((Callable<Void>)item).call();
     }
  catch (    Exception e) {
       SystemEventListenerFactory.getSystemEventListener().exception(e);
@@ -21,6 +17,6 @@
  finally {
       this.timer=savedTimer;
     }
-    item=queue.peek();
+    item=(TimerJobInstance)queue.peek();
   }
 }

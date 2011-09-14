@@ -1,14 +1,15 @@
 {
-  Marshaller marshaller=MarshallerFactory.newMarshaller(ksession.getKnowledgeBase(),(ObjectMarshallingStrategy[])ksession.getEnvironment().get(EnvironmentName.OBJECT_MARSHALLING_STRATEGIES));
+  DefaultMarshaller marshaller=(DefaultMarshaller)MarshallerFactory.newMarshaller(ksession.getKnowledgeBase(),(ObjectMarshallingStrategy[])ksession.getEnvironment().get(EnvironmentName.OBJECT_MARSHALLING_STRATEGIES));
+  long time=ksession.getSessionClock().getCurrentTime();
   ByteArrayOutputStream bos=new ByteArrayOutputStream();
-  marshaller.marshall(bos,ksession);
+  marshaller.marshall(bos,ksession,time);
   final byte[] b1=bos.toByteArray();
   bos.close();
   ByteArrayInputStream bais=new ByteArrayInputStream(b1);
   StatefulKnowledgeSession ksession2=marshaller.unmarshall(bais,new SessionConfiguration(),ksession.getEnvironment());
   bais.close();
   bos=new ByteArrayOutputStream();
-  marshaller.marshall(bos,ksession2);
+  marshaller.marshall(bos,ksession2,time);
   final byte[] b2=bos.toByteArray();
   bos.close();
   if (!areByteArraysEqual(b1,b2)) {

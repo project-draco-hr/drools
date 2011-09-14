@@ -1,5 +1,6 @@
 {
   boolean multithread=context.readBoolean();
+  long time=context.readLong();
   int handleId=context.readInt();
   long handleCounter=context.readLong();
   long propagationCounter=context.readLong();
@@ -7,6 +8,10 @@
   context.readLong();
   session.reset(handleId,handleCounter,propagationCounter);
   DefaultAgenda agenda=(DefaultAgenda)session.getAgenda();
+  if (session.getTimerService() instanceof PseudoClockScheduler) {
+    PseudoClockScheduler clock=(PseudoClockScheduler)session.getTimerService();
+    clock.advanceTime(time,TimeUnit.MILLISECONDS);
+  }
   readAgenda(context,agenda);
   for (  RuleFlowGroup group : agenda.getRuleFlowGroupsMap().values()) {
     ((RuleFlowGroupImpl)group).setWorkingMemory(session);
@@ -15,9 +20,7 @@
   context.handles.put(context.wm.getInitialFactHandle().getId(),context.wm.getInitialFactHandle());
   readFactHandles(context);
   readActionQueue(context);
-  if (context.readBoolean()) {
-    readTruthMaintenanceSystem(context);
-  }
+  readTruthMaintenanceSystem(context);
   if (context.marshalProcessInstances && processMarshaller != null) {
     processMarshaller.readProcessInstances(context);
   }
@@ -26,6 +29,12 @@
   }
   if (processMarshaller != null) {
     processMarshaller.readProcessTimers(context);
+  }
+ else {
+    int token;
+    while ((token=context.readShort()) == PersisterEnums.DEFAULT_TIMER) {
+      InputMarshaller.readTimer(context);
+    }
   }
   if (multithread) {
     session.startPartitionManagers();

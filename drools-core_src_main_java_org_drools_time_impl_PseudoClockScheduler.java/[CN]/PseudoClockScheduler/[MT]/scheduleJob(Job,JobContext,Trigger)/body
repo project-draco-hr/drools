@@ -1,9 +1,11 @@
 {
   Date date=trigger.hasNextFireTime();
   if (date != null) {
-    ScheduledJob callableJob=new ScheduledJob(job,ctx,trigger);
-    queue.add(callableJob);
-    return callableJob.getHandle();
+    DefaultJobHandle jobHandle=new DefaultJobHandle(idCounter.getAndIncrement());
+    TimerJobInstance jobInstance=jobFactoryManager.createTimerJobInstance(job,ctx,trigger,jobHandle,this);
+    jobHandle.setTimerJobInstance((TimerJobInstance)jobInstance);
+    internalSchedule((TimerJobInstance)jobInstance);
+    return jobHandle;
   }
   return null;
 }

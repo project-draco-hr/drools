@@ -1,0 +1,11 @@
+{
+  int leftTupleId=inCtx.readInt();
+  LeftTuple leftTuple=inCtx.terminalTupleMap.get(leftTupleId);
+  ScheduledAgendaItem item=(ScheduledAgendaItem)leftTuple.getObject();
+  Trigger trigger=InputMarshaller.readTrigger(inCtx);
+  DefaultAgenda agenda=(DefaultAgenda)inCtx.wm.getAgenda();
+  ActivationTimerJob job=new ActivationTimerJob();
+  ActivationTimerJobContext ctx=new ActivationTimerJobContext(trigger,item,agenda);
+  JobHandle jobHandle=((InternalWorkingMemory)agenda.getWorkingMemory()).getTimerService().scheduleJob(job,ctx,trigger);
+  item.setJobHandle(jobHandle);
+}

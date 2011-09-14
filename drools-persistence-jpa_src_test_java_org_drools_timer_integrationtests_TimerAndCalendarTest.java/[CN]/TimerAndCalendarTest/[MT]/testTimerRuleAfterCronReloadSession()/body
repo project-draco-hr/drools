@@ -1,0 +1,36 @@
+{
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  StatefulKnowledgeSession ksession=createSession(kbase);
+  SessionPseudoClock clock=ksession.getSessionClock();
+  clock.advanceTime(300,TimeUnit.MILLISECONDS);
+  ksession.fireAllRules();
+  clock=ksession.getSessionClock();
+  clock.advanceTime(300,TimeUnit.MILLISECONDS);
+  ksession=disposeAndReloadSession(ksession,kbase);
+  clock=ksession.getSessionClock();
+  clock.advanceTime(300,TimeUnit.MILLISECONDS);
+  String timerRule="package org.drools.test\n" + "global java.util.List list \n" + "rule TimerRule \n"+ "   timer (cron: * * * * * ?) \n"+ "when \n"+ "then \n"+ "        list.add(list.size()); \n"+ " end";
+  Resource resource=ResourceFactory.newByteArrayResource(timerRule.getBytes());
+  Collection<KnowledgePackage> kpackages=buildKnowledgePackage(resource,ResourceType.DRL);
+  kbase.addKnowledgePackages(kpackages);
+  List<Integer> list=Collections.synchronizedList(new ArrayList<Integer>());
+  ksession.setGlobal("list",list);
+  ksession.setGlobal("list",list);
+  clock.advanceTime(10,TimeUnit.MILLISECONDS);
+  ksession.fireAllRules();
+  clock=ksession.getSessionClock();
+  clock.advanceTime(10,TimeUnit.MILLISECONDS);
+  ksession=disposeAndReloadSession(ksession,kbase);
+  ksession.setGlobal("list",list);
+  clock=ksession.getSessionClock();
+  clock.advanceTime(10,TimeUnit.MILLISECONDS);
+  Assert.assertEquals(1,list.size());
+  clock=ksession.getSessionClock();
+  clock.advanceTime(3,TimeUnit.SECONDS);
+  Assert.assertEquals(4,list.size());
+  ksession=disposeAndReloadSession(ksession,kbase);
+  ksession.setGlobal("list",list);
+  clock=ksession.getSessionClock();
+  clock.advanceTime(2,TimeUnit.SECONDS);
+  Assert.assertEquals(6,list.size());
+}

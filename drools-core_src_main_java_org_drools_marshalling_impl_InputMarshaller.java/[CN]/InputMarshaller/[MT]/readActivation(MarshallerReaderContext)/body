@@ -12,7 +12,15 @@
   Rule rule=pkg.getRule(ruleName);
   RuleTerminalNode ruleTerminalNode=(RuleTerminalNode)leftTuple.getLeftTupleSink();
   PropagationContext pc=context.propagationContexts.get(stream.readLong());
-  AgendaItem activation=new AgendaItem(activationNumber,leftTuple,salience,pc,ruleTerminalNode);
+  AgendaItem activation;
+  boolean scheduled=false;
+  if (rule.getTimer() != null) {
+    activation=new ScheduledAgendaItem(activationNumber,leftTuple,(InternalAgenda)wm.getAgenda(),pc,ruleTerminalNode);
+    scheduled=true;
+  }
+ else {
+    activation=new AgendaItem(activationNumber,leftTuple,salience,pc,ruleTerminalNode);
+  }
   leftTuple.setObject(activation);
   if (stream.readBoolean()) {
     String activationGroupName=stream.readUTF();
@@ -33,7 +41,7 @@
     agendaGroup=(InternalAgendaGroup)((DefaultAgenda)wm.getAgenda()).getAgendaGroup(rule.getAgendaGroup());
   }
   activation.setAgendaGroup(agendaGroup);
-  if (activated) {
+  if (!scheduled && activated) {
     if (rule.getRuleFlowGroup() == null) {
       agendaGroup.add(activation);
     }

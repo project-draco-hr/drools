@@ -1,0 +1,16 @@
+{
+  Date date=timerJobInstance.getTrigger().hasNextFireTime();
+  Callable<Void> item=(Callable<Void>)timerJobInstance;
+  JDKJobHandle jobHandle=(JDKJobHandle)timerJobInstance.getJobHandle();
+  long then=date.getTime();
+  long now=System.currentTimeMillis();
+  ScheduledFuture<Void> future=null;
+  if (then >= now) {
+    future=scheduler.schedule(item,then - now,TimeUnit.MILLISECONDS);
+  }
+ else {
+    future=scheduler.schedule(item,0,TimeUnit.MILLISECONDS);
+  }
+  jobHandle.setFuture(future);
+  jobFactoryManager.addTimerJobInstance(timerJobInstance);
+}

@@ -1,5 +1,6 @@
 {
   boolean multithread=context.readBoolean();
+  long time=context.readLong();
   FactHandleFactory handleFactory=context.ruleBase.newFactHandleFactory(context.readInt(),context.readLong());
   InternalFactHandle initialFactHandle=new DefaultFactHandle(context.readInt(),InitialFactImpl.getInstance(),context.readLong(),null);
   context.handles.put(initialFactHandle.getId(),initialFactHandle);
@@ -9,6 +10,10 @@
   ReteooStatefulSession session=new ReteooStatefulSession(id,context.ruleBase,executor,handleFactory,initialFactHandle,propagationCounter,config,agenda,environment);
   session.setKnowledgeRuntime(new StatefulKnowledgeSessionImpl(session));
   initialFactHandle.setEntryPoint(session.getEntryPoints().get(EntryPoint.DEFAULT.getEntryPointId()));
+  if (session.getTimerService() instanceof PseudoClockScheduler) {
+    PseudoClockScheduler clock=(PseudoClockScheduler)session.getTimerService();
+    clock.advanceTime(time,TimeUnit.MILLISECONDS);
+  }
   for (  RuleFlowGroup group : agenda.getRuleFlowGroupsMap().values()) {
     ((RuleFlowGroupImpl)group).setWorkingMemory(session);
   }
@@ -24,6 +29,12 @@
   }
   if (processMarshaller != null) {
     processMarshaller.readProcessTimers(context);
+  }
+ else {
+    int token;
+    while ((token=context.readShort()) == PersisterEnums.DEFAULT_TIMER) {
+      InputMarshaller.readTimer(context);
+    }
   }
   if (multithread) {
     session.startPartitionManagers();
