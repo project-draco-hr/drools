@@ -1,0 +1,22 @@
+{
+  String str="package org.drools.test \n" + "\n" + "rule rule1 when\n"+ "    $s1 : Double() from accumulate( $i : Integer(), sum ( $i ) )    "+ "then\n"+ "end\n"+ "rule rule2  when\n"+ "    $s1 : Double() from accumulate( $i : Integer(), sum ( $i ) )    "+ "    eval( 1 == 1 ) \n"+ "then\n"+ "end\n"+ "rule rule3  salience 10 when\n"+ "    eval( 1 == 1 ) \n"+ "    $s1 : Double() from accumulate( $i : Integer(), sum ( $i ) )    "+ "    eval( 1 == 1 ) \n"+ "then\n"+ "    kcontext.getKnowledgeRuntime().halt();\n"+ "end\n"+ "\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.insert(new Integer(1));
+  ksession.insert(new Integer(2));
+  ksession.insert(new Integer(3));
+  ksession.fireAllRules();
+  ActivationIterator it=ActivationIterator.iterator(ksession);
+  List list=new ArrayList();
+  list=new ArrayList();
+  for (Activation act=(Activation)it.next(); act != null; act=(Activation)it.next()) {
+    list.add(act.getRule().getName() + ":" + act.getDeclarationValue("$s1")+ ":"+ act.isActive());
+  }
+  assertContains(new String[]{"rule1:6.0:true","rule2:6.0:true","rule3:6.0:false"},list);
+}

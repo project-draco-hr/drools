@@ -1,0 +1,21 @@
+{
+  String str="package org.drools.test \n" + "\n" + "rule rule0 salience ( Integer.parseInt('1'+$s) ) when\n"+ "    $s : String( this != 'xx' )\n"+ "then\n"+ "end\n"+ "rule rule1 salience ( Integer.parseInt('1'+$s)) when\n"+ "    $s : String( this != 'xx' )\n"+ "    eval( Integer.parseInt( $s ) <= 2 ) \n"+ "then\n"+ "end\n"+ "rule rule2 salience ( Integer.parseInt('1'+$s)) when\n"+ "    $s : String( this != 'xx' )\n"+ "    eval( Integer.parseInt( $s ) <= 2 ) \n"+ "then\n"+ "    kcontext.getKnowledgeRuntime().halt();\n"+ "end\n"+ "rule rule3 salience ( Integer.parseInt('1'+$s)) when\n"+ "    $s : String( this != 'xx' )\n"+ "    eval( Integer.parseInt( $s ) > 2 ) \n"+ "then\n"+ "end\n"+ "rule rule4 salience ( Integer.parseInt('1'+$s) ) when\n"+ "    $s : String( this != 'xx' )\n"+ "    eval( Integer.parseInt( $s ) > 2 ) \n"+ "    eval( Integer.parseInt( $s ) > 3 ) \n"+ "then\n"+ "end\n"+ "\n"+ "rule rule6 when\n"+ "     java.util.Map()\n"+ "then\n"+ "end\n"+ "\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  for (int i=0; i < 5; i++) {
+    ksession.insert(new String("" + i));
+  }
+  ksession.fireAllRules();
+  ActivationIterator it=ActivationIterator.iterator(ksession);
+  List list=new ArrayList();
+  for (Activation act=(Activation)it.next(); act != null; act=(Activation)it.next()) {
+    list.add(act.getRule().getName() + ":" + act.getDeclarationValue("$s")+ ":"+ act.isActive());
+  }
+  assertContains(new String[]{"rule0:0:true","rule0:1:true","rule0:2:true","rule0:3:false","rule0:4:false","rule1:0:true","rule1:1:true","rule1:2:true","rule2:0:true","rule2:1:true","rule2:2:false","rule3:3:false","rule3:4:false","rule3:4:false"},list);
+}
