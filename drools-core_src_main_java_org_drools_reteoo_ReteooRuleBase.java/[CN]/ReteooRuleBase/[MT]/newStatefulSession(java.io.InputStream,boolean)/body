@@ -1,36 +1,3 @@
 {
-  StatefulSession session=null;
-  try {
-    readLock();
-    try {
-      ObjectInputStream ois=new ObjectInputStream(stream);
-      ReteooStatefulSession rsession=(ReteooStatefulSession)ois.readObject();
-      ByteArrayInputStream bais=new ByteArrayInputStream(rsession.bytes);
-      Marshaller marshaller=MarshallerFactory.newMarshaller(new KnowledgeBaseImpl(this),new ObjectMarshallingStrategy[]{MarshallerFactory.newSerializeMarshallingStrategy()});
-      StatefulKnowledgeSession ksession=marshaller.unmarshall(bais,SessionConfiguration.getDefaultInstance(),EnvironmentFactory.newEnvironment());
-      session=(StatefulSession)((StatefulKnowledgeSessionImpl)ksession).session;
-      if (keepReference) {
-        super.addStatefulSession(session);
-        for (        Object listener : session.getRuleBaseUpdateListeners()) {
-          addEventListener((RuleBaseEventListener)listener);
-        }
-      }
-      bais.close();
-    }
-  finally {
-      readUnlock();
-    }
-  }
- catch (  Exception e) {
-    throw new RuntimeException("Unable to unmarshall session",e);
-  }
- finally {
-    try {
-      stream.close();
-    }
- catch (    IOException e) {
-      throw new RuntimeException("Unable to close stream",e);
-    }
-  }
-  return session;
+  return newStatefulSession(stream,keepReference,SessionConfiguration.getDefaultInstance());
 }
