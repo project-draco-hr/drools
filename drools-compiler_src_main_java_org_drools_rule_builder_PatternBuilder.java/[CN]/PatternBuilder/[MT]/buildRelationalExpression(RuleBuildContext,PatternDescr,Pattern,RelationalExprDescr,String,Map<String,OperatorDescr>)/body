@@ -1,0 +1,39 @@
+{
+  String value1=null;
+  String value2=null;
+  boolean usesThisRef=false;
+  if (relDescr.getRight() instanceof AtomicExprDescr) {
+    AtomicExprDescr rdescr=((AtomicExprDescr)relDescr.getRight());
+    value2=rdescr.getExpression().trim();
+    usesThisRef="this".equals(value2) || value2.startsWith("this.");
+  }
+ else {
+    BindingDescr rdescr=((BindingDescr)relDescr.getRight());
+    value2=rdescr.getExpression().trim();
+    usesThisRef="this".equals(value2) || value2.startsWith("this.");
+  }
+  if (relDescr.getLeft() instanceof AtomicExprDescr) {
+    AtomicExprDescr ldescr=(AtomicExprDescr)relDescr.getLeft();
+    value1=ldescr.getExpression();
+    usesThisRef=usesThisRef || "this".equals(value1) || value1.startsWith("this.");
+  }
+ else {
+    value1=((BindingDescr)relDescr.getLeft()).getExpression();
+    usesThisRef=usesThisRef || "this".equals(value1) || value1.startsWith("this.");
+  }
+  ExprBindings value1Expr=new ExprBindings();
+  setInputs(context,value1Expr,(pattern.getObjectType() instanceof ClassObjectType) ? ((ClassObjectType)pattern.getObjectType()).getClassType() : FactTemplate.class,value1);
+  ExprBindings value2Expr=new ExprBindings();
+  setInputs(context,value2Expr,(pattern.getObjectType() instanceof ClassObjectType) ? ((ClassObjectType)pattern.getObjectType()).getClassType() : FactTemplate.class,value2);
+  boolean succeeded=false;
+  if ((!usesThisRef) && value1Expr.isConstant()) {
+    createAndBuildPredicate(context,pattern,relDescr,expr,aliases);
+    return;
+  }
+ else {
+    succeeded=buildConstraint(context,pattern,relDescr,aliases,value1,value2,value2Expr);
+  }
+  if (!succeeded) {
+    createAndBuildPredicate(context,pattern,relDescr,expr,aliases);
+  }
+}

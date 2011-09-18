@@ -1,0 +1,103 @@
+{
+  String[] parts=value1.split("\\.");
+  if (parts.length == 2) {
+    if ("this".equals(parts[0].trim())) {
+      value1=parts[1];
+    }
+ else     if (pattern.getDeclaration() != null && parts[0].trim().equals(pattern.getDeclaration().getIdentifier())) {
+      value1=parts[1];
+    }
+  }
+  final InternalReadAccessor extractor=getFieldReadAccessor(context,relDescr,pattern.getObjectType(),value1,null,false);
+  if (extractor == null) {
+    return false;
+  }
+  String operator=relDescr.getOperator().trim();
+  Restriction restriction=null;
+  if (value2Expr.isConstant()) {
+    restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),value2,LiteralRestrictionDescr.TYPE_STRING));
+  }
+ else {
+    int dotPos=value2.lastIndexOf('.');
+    if (dotPos >= 0) {
+      final String mainPart=value2.substring(0,dotPos);
+      String lastPart=value2.substring(dotPos + 1);
+      try {
+        final Class<?> cls=context.getDialect().getTypeResolver().resolveType(mainPart);
+        if (lastPart.indexOf('(') < 0 && lastPart.indexOf('.') < 0 && lastPart.indexOf('[') < 0) {
+          restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),value2,LiteralRestrictionDescr.TYPE_STRING));
+        }
+      }
+ catch (      ClassNotFoundException e) {
+      }
+    }
+  }
+  if (restriction != null) {
+    pattern.addConstraint(new LiteralConstraint(extractor,(LiteralRestriction)restriction));
+    return true;
+  }
+  Declaration declr=null;
+  if (value2.indexOf('(') < 0 && value2.indexOf('.') < 0 && value2.indexOf('[') < 0) {
+    declr=context.getDeclarationResolver().getDeclaration(context.getRule(),value2);
+    if (declr == null) {
+      final Pattern thisPattern=(Pattern)context.getBuildStack().peek();
+      declr=this.createDeclarationObject(context,value2,thisPattern);
+      if (declr == null) {
+        try {
+          final Class<?> cls=context.getDialect().getTypeResolver().resolveType(value2);
+          restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),cls.getName(),LiteralRestrictionDescr.TYPE_STRING));
+        }
+ catch (        ClassNotFoundException cnfe) {
+          return false;
+        }
+      }
+    }
+  }
+  if (declr == null) {
+    parts=value2.split("\\.");
+    if (parts.length == 2) {
+      if ("this".equals(parts[0].trim())) {
+        declr=this.createDeclarationObject(context,parts[1].trim(),(Pattern)context.getBuildStack().peek());
+        value2=parts[1].trim();
+      }
+ else {
+        declr=context.getDeclarationResolver().getDeclaration(context.getRule(),parts[0].trim());
+        if (declr != null) {
+          if (declr.isPatternDeclaration()) {
+            declr=this.createDeclarationObject(context,parts[1].trim(),declr.getPattern());
+            value2=parts[1].trim();
+          }
+ else {
+            return false;
+          }
+        }
+      }
+    }
+  }
+  if (declr != null) {
+    Target right=getRightTarget(extractor);
+    Target left=(declr.isPatternDeclaration() && !(Date.class.isAssignableFrom(declr.getExtractor().getExtractToClass()) || Number.class.isAssignableFrom(declr.getExtractor().getExtractToClass()))) ? Target.HANDLE : Target.FACT;
+    final Evaluator evaluator=getEvaluator(context,relDescr,extractor.getValueType(),operator,relDescr.isNegated(),relDescr.getParametersText(),left,right);
+    if (evaluator == null) {
+      return false;
+    }
+    restriction=new VariableRestriction(extractor,declr,evaluator);
+    if (declr.getPattern().getObjectType().equals(new ClassObjectType(DroolsQuery.class)) && Operator.EQUAL.getOperatorString().equals(operator)) {
+      restriction=new UnificationRestriction((VariableRestriction)restriction);
+    }
+  }
+  if (restriction == null) {
+    Dialect dialect=context.getDialect();
+    if (!value2.startsWith("(")) {
+      MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
+      context.setDialect(mvelDialect);
+    }
+    restriction=buildRestriction(context,(Pattern)context.getBuildStack().peek(),extractor,new ReturnValueRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParametersText(),value2),aliases);
+    context.setDialect(dialect);
+  }
+  if (restriction == null || extractor == null) {
+    return false;
+  }
+  pattern.addConstraint(new VariableConstraint(extractor,restriction));
+  return true;
+}
