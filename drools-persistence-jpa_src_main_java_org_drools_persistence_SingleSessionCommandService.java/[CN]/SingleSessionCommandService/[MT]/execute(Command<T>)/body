@@ -1,11 +1,14 @@
 {
   boolean transactionOwner=false;
   try {
-    transactionOwner=txm.begin();
     initKsession(this.sessionInfo.getId(),this.marshallingHelper.getKbase(),this.marshallingHelper.getConf());
+    transactionOwner=txm.begin();
     this.jpm.beginCommandScopedEntityManager();
     registerRollbackSync();
-    T result=commandService.execute((GenericCommand<T>)command);
+    T result=null;
+    if (!(command instanceof DisposeCommand)) {
+      result=commandService.execute((GenericCommand<T>)command);
+    }
     txm.commit(transactionOwner);
     return result;
   }
@@ -19,6 +22,7 @@ catch (  Exception t1) {
   }
  finally {
     if (command instanceof DisposeCommand) {
+      commandService.execute((GenericCommand<T>)command);
       this.jpm.dispose();
     }
   }
