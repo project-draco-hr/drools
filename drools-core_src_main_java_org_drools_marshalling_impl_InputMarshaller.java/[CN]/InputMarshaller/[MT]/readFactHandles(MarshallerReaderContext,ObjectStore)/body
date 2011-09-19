@@ -2,14 +2,6 @@
   ObjectInputStream stream=context.stream;
   InternalRuleBase ruleBase=context.ruleBase;
   InternalWorkingMemory wm=context.wm;
-  if (stream.readBoolean()) {
-    InternalFactHandle initialFactHandle=wm.getInitialFactHandle();
-    int sinkId=stream.readInt();
-    ObjectTypeNode initialFactNode=(ObjectTypeNode)context.sinks.get(sinkId);
-    ObjectHashSet initialFactMemory=(ObjectHashSet)context.wm.getNodeMemory(initialFactNode);
-    initialFactMemory.add(initialFactHandle);
-    readRightTuples(initialFactHandle,context);
-  }
   int size=stream.readInt();
   InternalFactHandle[] handles=new InternalFactHandle[size];
   for (int i=0; i < size; i++) {
@@ -17,22 +9,14 @@
     context.handles.put(handle.getId(),handle);
     handles[i]=handle;
     if (handle.getObject() != null) {
-      context.wm.getObjectStore().addHandle(handle,handle.getObject());
+      objectStore.addHandle(handle,handle.getObject());
     }
     readRightTuples(handle,context);
-  }
-  InternalFactHandle handle=wm.getInitialFactHandle();
-  while (stream.readShort() == PersisterEnums.LEFT_TUPLE) {
-    LeftTupleSink sink=(LeftTupleSink)context.sinks.get(stream.readInt());
-    LeftTuple leftTuple=sink.createLeftTuple(handle,sink,true);
-    readLeftTuple(leftTuple,context);
   }
   readLeftTuples(context);
   if (stream.readBoolean()) {
     readLeftTuples(context);
   }
-  readPropagationContexts(context);
-  readActivations(context);
   for (  InternalFactHandle factHandle : handles) {
     Object object=factHandle.getObject();
     EntryPoint ep=((InternalWorkingMemoryEntryPoint)factHandle.getEntryPoint()).getEntryPoint();

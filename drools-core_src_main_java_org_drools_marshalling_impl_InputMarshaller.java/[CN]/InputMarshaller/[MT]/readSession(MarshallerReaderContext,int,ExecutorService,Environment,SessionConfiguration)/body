@@ -10,34 +10,5 @@
   ReteooStatefulSession session=new ReteooStatefulSession(id,context.ruleBase,executor,handleFactory,initialFactHandle,propagationCounter,config,agenda,environment);
   session.setKnowledgeRuntime(new StatefulKnowledgeSessionImpl(session));
   initialFactHandle.setEntryPoint(session.getEntryPoints().get(EntryPoint.DEFAULT.getEntryPointId()));
-  if (session.getTimerService() instanceof PseudoClockScheduler) {
-    PseudoClockScheduler clock=(PseudoClockScheduler)session.getTimerService();
-    clock.advanceTime(time,TimeUnit.MILLISECONDS);
-  }
-  for (  RuleFlowGroup group : agenda.getRuleFlowGroupsMap().values()) {
-    ((RuleFlowGroupImpl)group).setWorkingMemory(session);
-  }
-  context.wm=session;
-  readFactHandles(context);
-  readActionQueue(context);
-  readTruthMaintenanceSystem(context);
-  if (context.marshalProcessInstances && processMarshaller != null) {
-    processMarshaller.readProcessInstances(context);
-  }
-  if (context.marshalWorkItems && processMarshaller != null) {
-    processMarshaller.readWorkItems(context);
-  }
-  if (processMarshaller != null) {
-    processMarshaller.readProcessTimers(context);
-  }
- else {
-    int token;
-    while ((token=context.readShort()) == PersisterEnums.DEFAULT_TIMER) {
-      InputMarshaller.readTimer(context);
-    }
-  }
-  if (multithread) {
-    session.startPartitionManagers();
-  }
-  return session;
+  return readSession(session,agenda,time,multithread,context);
 }

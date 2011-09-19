@@ -21,7 +21,16 @@
   context.writeLong(handle.getRecency());
   context.writeLong(wm.getPropagationIdCounter());
   writeAgenda(context);
-  writeFactHandles(context);
+  writeInitialFactHandleRightTuples(context);
+  for (  WorkingMemoryEntryPoint wmep : wm.getEntryPoints().values()) {
+    context.stream.writeShort(PersisterEnums.ENTRY_POINT);
+    context.stream.writeUTF(wmep.getEntryPointId());
+    writeFactHandles(context,((NamedEntryPoint)wmep).getObjectStore());
+  }
+  context.stream.writeShort(PersisterEnums.END);
+  writeInitialFactHandleLeftTuples(context);
+  writePropagationContexts(context);
+  writeActivations(context);
   writeActionQueue(context);
   writeTruthMaintenanceSystem(context);
   if (context.marshalProcessInstances && processMarshaller != null) {

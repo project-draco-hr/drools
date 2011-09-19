@@ -1,0 +1,53 @@
+{
+  if (session.getTimerService() instanceof PseudoClockScheduler) {
+    PseudoClockScheduler clock=(PseudoClockScheduler)session.getTimerService();
+    clock.advanceTime(time,TimeUnit.MILLISECONDS);
+  }
+  for (  RuleFlowGroup group : agenda.getRuleFlowGroupsMap().values()) {
+    ((RuleFlowGroupImpl)group).setWorkingMemory(session);
+  }
+  context.wm=session;
+  context.handles.put(context.wm.getInitialFactHandle().getId(),context.wm.getInitialFactHandle());
+  int token;
+  if (context.stream.readBoolean()) {
+    InternalFactHandle initialFactHandle=context.wm.getInitialFactHandle();
+    int sinkId=context.stream.readInt();
+    ObjectTypeNode initialFactNode=(ObjectTypeNode)context.sinks.get(sinkId);
+    ObjectHashSet initialFactMemory=(ObjectHashSet)context.wm.getNodeMemory(initialFactNode);
+    initialFactMemory.add(initialFactHandle);
+    readRightTuples(initialFactHandle,context);
+  }
+  while ((token=context.readShort()) == PersisterEnums.ENTRY_POINT) {
+    String entryPointId=context.stream.readUTF();
+    WorkingMemoryEntryPoint wmep=context.wm.getEntryPoints().get(entryPointId);
+    readFactHandles(context,((NamedEntryPoint)wmep).getObjectStore());
+  }
+  InternalFactHandle handle=context.wm.getInitialFactHandle();
+  while (context.stream.readShort() == PersisterEnums.LEFT_TUPLE) {
+    LeftTupleSink sink=(LeftTupleSink)context.sinks.get(context.stream.readInt());
+    LeftTuple leftTuple=sink.createLeftTuple(handle,sink,true);
+    readLeftTuple(leftTuple,context);
+  }
+  readPropagationContexts(context);
+  readActivations(context);
+  readActionQueue(context);
+  readTruthMaintenanceSystem(context);
+  if (context.marshalProcessInstances && processMarshaller != null) {
+    processMarshaller.readProcessInstances(context);
+  }
+  if (context.marshalWorkItems && processMarshaller != null) {
+    processMarshaller.readWorkItems(context);
+  }
+  if (processMarshaller != null) {
+    processMarshaller.readProcessTimers(context);
+  }
+ else {
+    while ((token=context.readShort()) == PersisterEnums.DEFAULT_TIMER) {
+      InputMarshaller.readTimer(context);
+    }
+  }
+  if (multithread) {
+    session.startPartitionManagers();
+  }
+  return session;
+}
