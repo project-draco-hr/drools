@@ -1,0 +1,16 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("empty.drl",getClass()),ResourceType.DRL);
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession_1=kbase.newStatefulKnowledgeSession();
+  for (int i=0; i < 20; i++) {
+    Object object=new Object();
+    ksession_1.insert(object);
+    org.drools.runtime.rule.FactHandle factHandle=ksession_1.getFactHandle(object);
+    assertNotNull(factHandle);
+    assertEquals(object,ksession_1.getObject(factHandle));
+  }
+  ksession_1.dispose();
+}
