@@ -44,6 +44,22 @@
         typeDescr.setTypeName(qName.substring(dotPos + 1));
       }
     }
+    if (isEmpty(typeDescr.getNamespace()) && typeDescr.getFields().isEmpty()) {
+      PackageRegistry pkgReg=this.pkgRegistryMap.get(packageDescr.getName());
+      if (pkgReg != null) {
+        try {
+          Class<?> clz=pkgReg.getTypeResolver().resolveType(typeDescr.getTypeName());
+          java.lang.Package pkg=clz.getPackage();
+          if (pkg != null) {
+            typeDescr.setNamespace(pkg.getName());
+            int index=typeDescr.getNamespace() != null && typeDescr.getNamespace().length() > 0 ? typeDescr.getNamespace().length() + 1 : 0;
+            typeDescr.setTypeName(clz.getCanonicalName().substring(index));
+          }
+        }
+ catch (        Exception e) {
+        }
+      }
+    }
     if (isEmpty(typeDescr.getNamespace())) {
       typeDescr.setNamespace(packageDescr.getNamespace());
     }
