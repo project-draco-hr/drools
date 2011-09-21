@@ -1,6 +1,15 @@
 {
   final PropagationQueueingNodeMemory memory=(PropagationQueueingNodeMemory)workingMemory.getNodeMemory(this);
-  memory.addAction(new ModifyAction(factHandle,modifyPreviousTuples,context));
+  for (  ObjectSink s : this.sink.getSinks()) {
+    RightTuple rightTuple=modifyPreviousTuples.removeRightTuple((RightTupleSink)s);
+    if (rightTuple != null) {
+      rightTuple.reAdd();
+      memory.addAction(new ModifyToSinkAction(rightTuple,context,(RightTupleSink)s));
+    }
+ else {
+      memory.addAction(new AssertToSinkAction(factHandle,context,s));
+    }
+  }
   if (memory.isQueued().compareAndSet(false,true)) {
     workingMemory.queueWorkingMemoryAction(this.action);
   }
