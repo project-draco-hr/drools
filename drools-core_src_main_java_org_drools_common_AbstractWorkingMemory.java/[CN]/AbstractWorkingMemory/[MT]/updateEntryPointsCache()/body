@@ -1,13 +1,15 @@
 {
-  Map<EntryPoint,EntryPointNode> reteEPs=this.ruleBase.getRete().getEntryPointNodes();
-  Map<String,WorkingMemoryEntryPoint> cache=new HashMap<String,WorkingMemoryEntryPoint>(this.entryPoints);
-  for (  EntryPointNode entryPointNode : reteEPs.values()) {
-    EntryPoint id=entryPointNode.getEntryPoint();
-    cache.remove(id.getEntryPointId());
-    if (!EntryPoint.DEFAULT.equals(id) && !this.entryPoints.containsKey(id)) {
-      WorkingMemoryEntryPoint wmEntryPoint=new NamedEntryPoint(id,entryPointNode,this);
-      this.entryPoints.put(entryPointNode.getEntryPoint().getEntryPointId(),wmEntryPoint);
+  if (ruleBase.getAddedEntryNodeCache() != null) {
+    for (    EntryPointNode addedNode : ruleBase.getAddedEntryNodeCache()) {
+      EntryPoint id=addedNode.getEntryPoint();
+      if (EntryPoint.DEFAULT.equals(id))       continue;
+      WorkingMemoryEntryPoint wmEntryPoint=new NamedEntryPoint(id,addedNode,this);
+      entryPoints.put(id.getEntryPointId(),wmEntryPoint);
     }
   }
-  this.entryPoints.keySet().removeAll(cache.keySet());
+  if (ruleBase.getRemovedEntryNodeCache() != null) {
+    for (    EntryPointNode removedNode : ruleBase.getRemovedEntryNodeCache()) {
+      entryPoints.remove(removedNode.getEntryPoint().getEntryPointId());
+    }
+  }
 }

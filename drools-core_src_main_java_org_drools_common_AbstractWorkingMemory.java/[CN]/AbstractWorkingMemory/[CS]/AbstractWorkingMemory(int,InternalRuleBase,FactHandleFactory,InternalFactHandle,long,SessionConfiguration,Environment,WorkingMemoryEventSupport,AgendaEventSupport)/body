@@ -30,27 +30,16 @@
  else {
     this.initialFactHandle=initialFactHandle;
   }
-  this.actionQueue=new ConcurrentLinkedQueue<WorkingMemoryAction>();
   this.evaluatingActionQueue=new AtomicBoolean(false);
   this.workingMemoryEventSupport=workingMemoryEventSupport;
   this.agendaEventSupport=agendaEventSupport;
   this.__ruleBaseEventListeners=new LinkedList();
   this.lock=new ReentrantLock();
-  this.liaPropagations=Collections.EMPTY_LIST;
   timerService=TimerServiceFactory.getTimerService(this.config);
   ((AcceptsTimerJobFactoryManager)timerService).setTimerJobFactoryManager(config.getTimerJobFactoryManager());
-  this.nodeMemories=new ConcurrentNodeMemories(this.ruleBase);
-  this.tms=new TruthMaintenanceSystem(this);
   this.propagationIdCounter=new AtomicLong(propagationContext);
-  if (LogicalOverride.DISCARD.equals(conf.getLogicalOverride())) {
-    this.discardOnLogicalOverride=true;
-  }
- else {
-    this.discardOnLogicalOverride=false;
-  }
+  this.discardOnLogicalOverride=LogicalOverride.DISCARD.equals(conf.getLogicalOverride());
   this.firing=new AtomicBoolean(false);
-  this.exitPoints=new ConcurrentHashMap<String,ExitPoint>();
-  this.channels=new ConcurrentHashMap<String,Channel>();
   initPartitionManagers();
   initTransient();
   this.opCounter=new AtomicLong(0);

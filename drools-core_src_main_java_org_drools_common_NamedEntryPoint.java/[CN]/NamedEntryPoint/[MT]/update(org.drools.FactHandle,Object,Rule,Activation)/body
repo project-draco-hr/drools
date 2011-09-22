@@ -7,7 +7,7 @@
     InternalFactHandle handle=(InternalFactHandle)factHandle;
     final Object originalObject=handle.getObject();
     if (handle.isDisconnected()) {
-      handle=(InternalFactHandle)this.objectStore.reconnect(factHandle);
+      handle=this.objectStore.reconnect(factHandle);
     }
     if (handle.getEntryPoint() != this) {
       throw new IllegalArgumentException("Invalid Entry Point. You updated the FactHandle on entry point '" + handle.getEntryPoint().getEntryPointId() + "' instead of '"+ getEntryPointId()+ "'");
@@ -31,13 +31,14 @@
     if (typeConf.isTMSEnabled()) {
       EqualityKey key=handle.getEqualityKey();
       key.removeFactHandle(handle);
+      TruthMaintenanceSystem tms=wm.getTruthMaintenanceSystem();
       if (key.isEmpty()) {
-        this.wm.tms.remove(key);
+        tms.remove(key);
       }
-      key=this.wm.tms.get(object);
+      key=tms.get(object);
       if (key == null) {
         key=new EqualityKey(handle,status);
-        this.wm.tms.put(key);
+        tms.put(key);
       }
  else {
         key.addFactHandle(handle);
@@ -48,10 +49,10 @@
     final PropagationContext propagationContext=new PropagationContextImpl(this.wm.getNextPropagationIdCounter(),PropagationContext.MODIFICATION,rule,(activation == null) ? null : activation.getTuple(),handle,this.wm.agenda.getActiveActivations(),this.wm.agenda.getDormantActivations(),entryPoint);
     this.entryPointNode.modifyObject(handle,propagationContext,typeConf,this.wm);
     propagationContext.evaluateActionQueue(this.wm);
-    this.wm.workingMemoryEventSupport.fireObjectUpdated(propagationContext,(org.drools.FactHandle)factHandle,originalObject,object,this.wm);
+    this.wm.workingMemoryEventSupport.fireObjectUpdated(propagationContext,factHandle,originalObject,object,this.wm);
     this.wm.executeQueuedActions();
     if (rule == null) {
-      ((DefaultAgenda)this.wm.getAgenda()).unstageActivations();
+      this.wm.getAgenda().unstageActivations();
     }
   }
   finally {
