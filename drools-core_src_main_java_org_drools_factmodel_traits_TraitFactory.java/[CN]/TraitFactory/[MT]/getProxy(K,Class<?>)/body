@@ -1,7 +1,7 @@
 {
   String traitName=trait.getName();
-  if (core.getTraits().containsKey(traitName)) {
-    return (T)core.getTraits().get(traitName);
+  if (core.hasTrait(traitName)) {
+    return (T)core.getTrait(traitName);
   }
   String key=getKey(core.getClass(),trait);
   Constructor<T> konst=factoryCache.get(key);
@@ -10,18 +10,27 @@
   }
   T proxy=null;
   try {
-    proxy=konst.newInstance(core,core.getDynamicProperties());
-    core.getTraits().put(traitName,proxy);
-    return proxy;
-  }
- catch (  InstantiationException e) {
-    e.printStackTrace();
-  }
-catch (  IllegalAccessException e) {
-    e.printStackTrace();
-  }
-catch (  InvocationTargetException e) {
-    e.printStackTrace();
-  }
-  return null;
+switch (mode) {
+case MAP:
+      proxy=konst.newInstance(core,core.getDynamicProperties());
+    break;
+case TRIPLES:
+  proxy=konst.newInstance(core,store);
+break;
+default :
+throw new RuntimeException(" This should not happen : unexpected property wrapping method " + mode);
+}
+core.addTrait(traitName,proxy);
+return proxy;
+}
+ catch (InstantiationException e) {
+e.printStackTrace();
+}
+catch (IllegalAccessException e) {
+e.printStackTrace();
+}
+catch (InvocationTargetException e) {
+e.printStackTrace();
+}
+return null;
 }

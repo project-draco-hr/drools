@@ -1,39 +1,14 @@
 {
   ClassWriter cw=new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
   this.buildClassHeader(cw,classDef);
-  for (  FieldDefinition fieldDef : classDef.getFieldsDefinitions()) {
-    if (!fieldDef.isInherited())     this.buildField(cw,fieldDef);
-  }
+  this.buildFields(cw,classDef);
   if (classDef.isTraitable()) {
     this.buildDynamicPropertyMap(cw,classDef);
     this.buildTraitMap(cw,classDef);
   }
-  try {
-    this.buildDefaultConstructor(cw,classDef);
-  }
- catch (  Exception e) {
-    e.printStackTrace();
-  }
-  if (classDef.getFieldsDefinitions().size() > 0) {
-    this.buildConstructorWithFields(cw,classDef,classDef.getFieldsDefinitions());
-  }
-  List<FieldDefinition> keys=new LinkedList<FieldDefinition>();
-  for (  FieldDefinition fieldDef : classDef.getFieldsDefinitions()) {
-    if (fieldDef.isKey()) {
-      keys.add(fieldDef);
-    }
-  }
-  if (!keys.isEmpty() && keys.size() != classDef.getFieldsDefinitions().size()) {
-    this.buildConstructorWithFields(cw,classDef,keys);
-  }
-  for (  FieldDefinition fieldDef : classDef.getFieldsDefinitions()) {
-    if (!fieldDef.isInherited()) {
-      this.buildGetMethod(cw,classDef,fieldDef);
-      this.buildSetMethod(cw,classDef,fieldDef);
-    }
-  }
-  this.buildEquals(cw,classDef);
-  this.buildHashCode(cw,classDef);
+  this.buildConstructors(cw,classDef);
+  this.buildGettersAndSetters(cw,classDef);
+  this.buildEqualityMethods(cw,classDef);
   this.buildToString(cw,classDef);
   cw.visitEnd();
   byte[] serializedClass=cw.toByteArray();

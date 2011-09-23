@@ -11,13 +11,14 @@
   kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
   TraitFactory traitBuilder=new TraitFactory(kb);
   try {
-    ITraitable imp=(ITraitable)kb.getFactType("org.test","Imp").newInstance();
+    FactType impClass=kb.getFactType("org.test","Imp");
+    TraitableBean imp=(TraitableBean)impClass.newInstance();
+    impClass.set(imp,"name","aaa");
     Class trait=kb.getFactType("org.test","Student").getFactClass();
     Class trait2=kb.getFactType("org.test","Role").getFactClass();
     assertNotNull(trait);
     TraitProxy proxy=(TraitProxy)traitBuilder.getProxy(imp,trait);
     proxy.getFields().put("field","xyz");
-    proxy.getFields().put("name","aaa");
     assertNotNull(proxy);
     TraitProxy proxy2=(TraitProxy)traitBuilder.getProxy(imp,trait);
     assertSame(proxy2,proxy);
@@ -25,10 +26,9 @@
     assertNotNull(proxy3);
     assertEquals("xyz",proxy3.getFields().get("field"));
     assertEquals("aaa",proxy3.getFields().get("name"));
-    System.out.println(proxy2.equals(proxy3));
-    ITraitable imp2=(ITraitable)kb.getFactType("org.test","Imp").newInstance();
+    TraitableBean imp2=(TraitableBean)impClass.newInstance();
+    impClass.set(imp2,"name","aaa");
     TraitProxy proxy4=(TraitProxy)traitBuilder.getProxy(imp2,trait);
-    proxy4.getFields().put("name","aaa");
     proxy4.getFields().put("field","xyz");
     Assert.assertEquals(proxy2,proxy4);
   }

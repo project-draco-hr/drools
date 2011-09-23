@@ -1,0 +1,19 @@
+{
+  String setter=BuildUtils.setterName(fieldName,type);
+  MethodVisitor mv=cw.visitMethod(ACC_PUBLIC,setter,"(" + BuildUtils.getTypeDescriptor(type) + ")V",null,null);
+  mv.visitCode();
+  mv.visitVarInsn(ALOAD,0);
+  mv.visitFieldInsn(GETFIELD,BuildUtils.getInternalType(proxy),"store","Lorg/drools/core/util/TripleStore;");
+  mv.visitVarInsn(ALOAD,0);
+  mv.visitLdcInsn(fieldName);
+  mv.visitVarInsn(BuildUtils.varType(type),1);
+  if (BuildUtils.isPrimitive(type)) {
+    TraitFactory.valueOf(mv,type);
+  }
+  mv.visitMethodInsn(INVOKEVIRTUAL,BuildUtils.getInternalType(proxy),"property","(Ljava/lang/String;Ljava/lang/Object;)Lorg/drools/core/util/TripleImpl;");
+  mv.visitMethodInsn(INVOKEVIRTUAL,"org/drools/core/util/TripleStore","put","(Lorg/drools/core/util/Triple;)Z");
+  mv.visitInsn(POP);
+  mv.visitInsn(RETURN);
+  mv.visitMaxs(3 + BuildUtils.sizeOf(type),1 + BuildUtils.sizeOf(type));
+  mv.visitEnd();
+}

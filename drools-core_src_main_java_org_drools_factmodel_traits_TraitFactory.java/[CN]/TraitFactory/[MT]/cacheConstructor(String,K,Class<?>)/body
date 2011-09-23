@@ -4,11 +4,22 @@
     return null;
   }
   try {
-    Constructor konst=proxyClass.getConstructor(core.getClass(),Map.class);
-    factoryCache.put(key,konst);
-    return konst;
-  }
- catch (  NoSuchMethodException e) {
-    return null;
-  }
+    Constructor konst;
+switch (mode) {
+case MAP:
+      konst=proxyClass.getConstructor(core.getClass(),Map.class);
+    break;
+case TRIPLES:
+  konst=proxyClass.getConstructor(core.getClass(),TripleStore.class);
+break;
+default :
+throw new RuntimeException(" This should not happen : unexpected property wrapping method " + mode);
+}
+factoryCache.put(key,konst);
+return konst;
+}
+ catch (NoSuchMethodException e) {
+e.printStackTrace();
+return null;
+}
 }

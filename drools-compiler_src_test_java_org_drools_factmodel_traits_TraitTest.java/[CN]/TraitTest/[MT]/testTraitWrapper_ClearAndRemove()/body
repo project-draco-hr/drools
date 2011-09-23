@@ -12,11 +12,11 @@
   TraitFactory traitBuilder=new TraitFactory(kb);
   try {
     FactType impClass=kb.getFactType("org.test","Imp");
-    ITraitable imp=(ITraitable)impClass.newInstance();
+    TraitableBean imp=(TraitableBean)impClass.newInstance();
+    impClass.set(imp,"name","john");
     FactType traitClass=kb.getFactType("org.test","Student");
     Class trait=traitClass.getFactClass();
     TraitProxy proxy=(TraitProxy)traitBuilder.getProxy(imp,trait);
-    impClass.set(imp,"name","john");
     proxy.getFields().put("surname","xxx");
     proxy.getFields().put("name2","john");
     proxy.getFields().put("nfield",null);
@@ -37,8 +37,7 @@
     assertTrue(fields.containsKey("name"));
     assertEquals(0,fields.get("age"));
     assertNull(fields.get("school"));
-    assertNull(fields.get("name"));
-    impClass.set(imp,"name","john");
+    assertNotNull(fields.get("name"));
     proxy.getFields().put("surname","xxx");
     proxy.getFields().put("name2","john");
     proxy.getFields().put("nfield",null);
@@ -49,7 +48,6 @@
     assertEquals(null,proxy.getFields().get("nfield"));
     assertEquals(24,proxy.getFields().get("age"));
     assertEquals(null,proxy.getFields().get("school"));
-    proxy.getFields().remove("name");
     proxy.getFields().remove("surname");
     proxy.getFields().remove("name2");
     proxy.getFields().remove("age");
@@ -58,7 +56,7 @@
     assertEquals(3,proxy.getFields().size());
     assertEquals(0,proxy.getFields().get("age"));
     assertEquals(null,proxy.getFields().get("school"));
-    assertEquals(null,proxy.getFields().get("name"));
+    assertEquals("john",proxy.getFields().get("name"));
     assertEquals(null,proxy.getFields().get("nfield"));
     assertFalse(proxy.getFields().containsKey("nfield"));
     assertEquals(null,proxy.getFields().get("name2"));

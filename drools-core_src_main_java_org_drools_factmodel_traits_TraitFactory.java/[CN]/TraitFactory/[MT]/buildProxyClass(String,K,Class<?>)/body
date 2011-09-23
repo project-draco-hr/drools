@@ -5,33 +5,55 @@
   String proxyName=getProxyName(tdef,cdef);
   String wrapperName=getPropertyWrapperName(tdef,cdef);
   JavaDialectRuntimeData data=((JavaDialectRuntimeData)getPackage(tdef.getDefinedClass().getPackage().getName()).getDialectRuntimeRegistry().getDialectData("java"));
-  TraitProxyClassBuilder propWrapperBuilder=new TraitPropertyWrapperClassBuilderImpl();
-  propWrapperBuilder.init(tdef);
-  try {
-    byte[] propWrapper=propWrapperBuilder.buildClass(cdef);
-    data.write(JavaDialectRuntimeData.convertClassToResourcePath(wrapperName),propWrapper);
-  }
- catch (  Exception e) {
-  }
-  TraitProxyClassBuilder proxyBuilder=new TraitProxyClassBuilderImpl();
-  proxyBuilder.init(tdef);
-  try {
-    byte[] proxy=proxyBuilder.buildClass(cdef);
-    data.write(JavaDialectRuntimeData.convertClassToResourcePath(proxyName),proxy);
-  }
- catch (  Exception e) {
-  }
-  data.onBeforeExecute();
-  try {
-    long mask=TraitRegistry.getInstance().getFieldMask(trait.getName(),cdef.getDefinedClass().getName());
-    Class<T> proxyClass=(Class<T>)ruleBase.getRootClassLoader().loadClass(proxyName,true);
-    bindAccessors(proxyClass,tdef,cdef,mask);
-    Class<T> wrapperClass=(Class<T>)ruleBase.getRootClassLoader().loadClass(wrapperName,true);
-    bindCoreAccessors(wrapperClass,cdef);
-    return proxyClass;
-  }
- catch (  ClassNotFoundException e) {
-    e.printStackTrace();
-    return null;
-  }
+  TraitProxyClassBuilder propWrapperBuilder;
+switch (mode) {
+case TRIPLES:
+    propWrapperBuilder=new TraitTripleWrapperClassBuilderImpl();
+  break;
+case MAP:
+propWrapperBuilder=new TraitPropertyWrapperClassBuilderImpl();
+break;
+default :
+throw new RuntimeException(" This should not happen : unexpected property wrapping method " + mode);
+}
+propWrapperBuilder.init(tdef);
+try {
+byte[] propWrapper=propWrapperBuilder.buildClass(cdef);
+data.write(JavaDialectRuntimeData.convertClassToResourcePath(wrapperName),propWrapper);
+}
+ catch (Exception e) {
+e.printStackTrace();
+}
+TraitProxyClassBuilder proxyBuilder;
+switch (mode) {
+case TRIPLES:
+proxyBuilder=new TraitTripleProxyClassBuilderImpl();
+break;
+case MAP:
+proxyBuilder=new TraitProxyClassBuilderImpl();
+break;
+default :
+throw new RuntimeException(" This should not happen : unexpected property wrapping method " + mode);
+}
+proxyBuilder.init(tdef);
+try {
+byte[] proxy=proxyBuilder.buildClass(cdef);
+data.write(JavaDialectRuntimeData.convertClassToResourcePath(proxyName),proxy);
+}
+ catch (Exception e) {
+e.printStackTrace();
+}
+data.onBeforeExecute();
+try {
+long mask=TraitRegistry.getInstance().getFieldMask(trait.getName(),cdef.getDefinedClass().getName());
+Class<T> proxyClass=(Class<T>)ruleBase.getRootClassLoader().loadClass(proxyName,true);
+bindAccessors(proxyClass,tdef,cdef,mask);
+Class<T> wrapperClass=(Class<T>)ruleBase.getRootClassLoader().loadClass(wrapperName,true);
+bindCoreAccessors(wrapperClass,cdef);
+return proxyClass;
+}
+ catch (ClassNotFoundException e) {
+e.printStackTrace();
+return null;
+}
 }

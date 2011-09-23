@@ -1,0 +1,33 @@
+{
+  String source="org/drools/factmodel/traits/testTraitDon.drl";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  Resource res=ResourceFactory.newClassPathResource(source);
+  assertNotNull(res);
+  kbuilder.add(res,ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kb=KnowledgeBaseFactory.newKnowledgeBase();
+  kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  TraitFactory traitBuilder=new TraitFactory(kb);
+  try {
+    FactType impClass=kb.getFactType("org.test","Imp");
+    TraitableBean imp=(TraitableBean)impClass.newInstance();
+    impClass.set(imp,"name","aaabcd");
+    Class trait=kb.getFactType("org.test","Student").getFactClass();
+    Class trait2=kb.getFactType("org.test","Role").getFactClass();
+    assertNotNull(trait);
+    TraitProxy proxy=(TraitProxy)traitBuilder.getProxy(imp,trait);
+    Thing thing=traitBuilder.getProxy(imp,Thing.class);
+    TraitableBean core=(TraitableBean)proxy.getObject();
+    TraitProxy proxy2=(TraitProxy)traitBuilder.getProxy(imp,trait);
+    Thing thing2=traitBuilder.getProxy(imp,Thing.class);
+    assertSame(proxy,proxy2);
+    assertSame(thing,thing2);
+    assertEquals(2,core.getTraits().size());
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}

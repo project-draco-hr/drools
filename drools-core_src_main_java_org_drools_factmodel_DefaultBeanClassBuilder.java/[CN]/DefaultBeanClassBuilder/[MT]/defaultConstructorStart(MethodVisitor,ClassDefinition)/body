@@ -1,0 +1,38 @@
+{
+  mv.visitVarInsn(Opcodes.ALOAD,0);
+  String sup="";
+  try {
+    sup=Type.getInternalName(Class.forName(classDef.getSuperClass()));
+  }
+ catch (  ClassNotFoundException e) {
+    sup=BuildUtils.getInternalType(classDef.getSuperClass());
+  }
+  mv.visitMethodInsn(Opcodes.INVOKESPECIAL,sup,"<init>",Type.getMethodDescriptor(Type.VOID_TYPE,new Type[]{}));
+  boolean hasObjects=false;
+  for (  FieldDefinition field : classDef.getFieldsDefinitions()) {
+    if (!field.isInherited()) {
+      Object val=BuildUtils.getDefaultValue(field);
+      if (val != null) {
+        mv.visitVarInsn(Opcodes.ALOAD,0);
+        if (BuildUtils.isPrimitive(field.getTypeName()) || BuildUtils.isBoxed(field.getTypeName()) || String.class.getName().equals(field.getTypeName())) {
+          mv.visitLdcInsn(val);
+          if (BuildUtils.isBoxed(field.getTypeName())) {
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC,BuildUtils.getInternalType(field.getTypeName()),"valueOf","(" + BuildUtils.unBox(field.getTypeName()) + ")"+ BuildUtils.getTypeDescriptor(field.getTypeName()));
+          }
+        }
+ else {
+          hasObjects=true;
+          String type=BuildUtils.getInternalType(val.getClass().getName());
+          mv.visitTypeInsn(NEW,type);
+          mv.visitInsn(DUP);
+          mv.visitMethodInsn(INVOKESPECIAL,type,"<init>","()V");
+        }
+        mv.visitFieldInsn(Opcodes.PUTFIELD,BuildUtils.getInternalType(classDef.getClassName()),field.getName(),BuildUtils.getTypeDescriptor(field.getTypeName()));
+      }
+    }
+  }
+  if (classDef.isTraitable()) {
+    initializeDynamicTypeStructures(mv,classDef);
+  }
+  return hasObjects;
+}

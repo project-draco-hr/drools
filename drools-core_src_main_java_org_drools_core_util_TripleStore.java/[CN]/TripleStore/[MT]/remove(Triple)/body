@@ -3,18 +3,21 @@
   final int index=indexOf(hashCode,this.table.length);
   TripleImpl previous=(TripleImpl)this.table[index];
   TripleImpl current=previous;
+  Triple key=new TripleImpl(triple.getInstance(),triple.getProperty(),Variable.v);
   while (current != null) {
     final TripleImpl next=(TripleImpl)current.getNext();
-    if (hashCode == this.comparator.hashCodeOf(current) && this.comparator.equal(triple,current)) {
-      if (previous == current) {
-        this.table[index]=next;
-      }
+    if (hashCode == this.comparator.hashCodeOf(current) && this.comparator.equal(key,current)) {
+      if ((current.getValue() == null && triple.getValue() == null) || (current.getValue() != null && current.getValue().equals(triple.getValue()))) {
+        if (previous == current) {
+          this.table[index]=next;
+        }
  else {
-        previous.setNext(next);
+          previous.setNext(next);
+        }
+        current.setNext(null);
+        this.size--;
+        return true;
       }
-      current.setNext(null);
-      this.size--;
-      return true;
     }
     previous=current;
     current=next;
