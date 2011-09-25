@@ -1,31 +1,16 @@
 {
   outputCtx.writeShort(PersisterEnums.BEHAVIOR_TIMER);
   BehaviorJobContext bjobCtx=(BehaviorJobContext)jobCtx;
-  outputCtx.writeObject(bjobCtx.behavior);
   SlidingTimeWindowContext slCtx=(SlidingTimeWindowContext)bjobCtx.behaviorContext;
-  if (slCtx.expiringTuple != null) {
-    outputCtx.writeBoolean(true);
-    if (slCtx.expiringTuple != null) {
-      outputCtx.writeBoolean(true);
-      outputCtx.writeInt(slCtx.expiringTuple.getRightTupleSink().getId());
-      outputCtx.writeInt(slCtx.expiringTuple.getFactHandle().getId());
-    }
- else {
-      outputCtx.writeBoolean(false);
-    }
-    if (slCtx.getQueue() != null) {
-      outputCtx.writeBoolean(true);
-      outputCtx.writeInt(slCtx.getQueue().size());
-      for (      RightTuple rightTuple : slCtx.getQueue()) {
-        outputCtx.writeInt(rightTuple.getRightTupleSink().getId());
-        outputCtx.writeInt(rightTuple.getFactHandle().getId());
-      }
-    }
- else {
-      outputCtx.writeBoolean(false);
+  RightTuple rightTuple=slCtx.getQueue().peek();
+  BetaNode node=(BetaNode)rightTuple.getRightTupleSink();
+  outputCtx.writeInt(node.getId());
+  Behavior[] behaviors=node.getBehaviors();
+  int i=0;
+  for (; i < behaviors.length; i++) {
+    if (behaviors[i] == bjobCtx.behavior) {
+      break;
     }
   }
- else {
-    outputCtx.writeBoolean(false);
-  }
+  outputCtx.writeInt(i);
 }

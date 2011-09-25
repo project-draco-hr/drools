@@ -1,0 +1,47 @@
+{
+  String str="package org.domain.test \n" + "import " + getClass().getCanonicalName() + ".*\n"+ "import java.util.List\n"+ "global java.util.List list\n"+ "declare A\n"+ " @role( event )\n"+ " @expires( 10m )\n"+ "end\n"+ "declare B\n"+ ""+ " @role( event )\n"+ " @expires( 10m )\n"+ "end\n"+ ""+ "rule a1\n"+ "when\n"+ "   $l : List() from collect( A()  over window:time(30s) from entry-point 'a-ep') \n"+ "then\n"+ "   list.add( $l );"+ "end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newReaderResource(new StringReader(str)),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    throw new RuntimeException(kbuilder.getErrors().toString());
+  }
+  KnowledgeBaseConfiguration config=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  config.setOption(EventProcessingOption.STREAM);
+  KnowledgeBase knowledgeBase=KnowledgeBaseFactory.newKnowledgeBase(config);
+  knowledgeBase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  KnowledgeSessionConfiguration ksconf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  ksconf.setOption(ClockTypeOption.get("pseudo"));
+  ((SessionConfiguration)ksconf).setTimerJobFactoryManager(new TrackableTimeJobFactoryManager());
+  StatefulKnowledgeSession ksession=knowledgeBase.newStatefulKnowledgeSession(ksconf,null);
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  WorkingMemoryEntryPoint aep=ksession.getWorkingMemoryEntryPoint("a-ep");
+  aep.insert(new A());
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  aep=ksession.getWorkingMemoryEntryPoint("a-ep");
+  aep.insert(new A());
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  list.clear();
+  ksession.fireAllRules();
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  assertEquals(2,((List)list.get(0)).size());
+  PseudoClockScheduler timeService=(PseudoClockScheduler)ksession.getSessionClock();
+  timeService.advanceTime(15,TimeUnit.SECONDS);
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  aep=ksession.getWorkingMemoryEntryPoint("a-ep");
+  aep.insert(new A());
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  aep=ksession.getWorkingMemoryEntryPoint("a-ep");
+  aep.insert(new A());
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  list.clear();
+  ksession.fireAllRules();
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  assertEquals(4,((List)list.get(0)).size());
+  timeService=(PseudoClockScheduler)ksession.getSessionClock();
+  timeService.advanceTime(20,TimeUnit.SECONDS);
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  list.clear();
+  ksession.fireAllRules();
+  assertEquals(2,((List)list.get(0)).size());
+}

@@ -9,12 +9,14 @@
   config.setOption(EventProcessingOption.STREAM);
   KnowledgeBase knowledgeBase=KnowledgeBaseFactory.newKnowledgeBase(config);
   knowledgeBase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  StatefulKnowledgeSession ksession=knowledgeBase.newStatefulKnowledgeSession();
+  KnowledgeSessionConfiguration ksconf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  ksconf.setOption(ClockTypeOption.get("pseudo"));
+  ((SessionConfiguration)ksconf).setTimerJobFactoryManager(new TrackableTimeJobFactoryManager());
+  StatefulKnowledgeSession ksession=knowledgeBase.newStatefulKnowledgeSession(ksconf,null);
   ksession.insert(new A());
-  ByteArrayOutputStream out=new ByteArrayOutputStream();
-  MarshallerFactory.newMarshaller(knowledgeBase).marshall(out,ksession);
-  ksession=MarshallerFactory.newMarshaller(knowledgeBase).unmarshall(new ByteArrayInputStream(out.toByteArray()));
+  ksession=marsallStatefulKnowledgeSession(ksession);
   ksession.insert(new B());
+  ksession=marsallStatefulKnowledgeSession(ksession);
   ksession.fireAllRules();
-  assertEquals(3,ksession.getObjects().size());
+  assertEquals(2,ksession.getObjects().size());
 }

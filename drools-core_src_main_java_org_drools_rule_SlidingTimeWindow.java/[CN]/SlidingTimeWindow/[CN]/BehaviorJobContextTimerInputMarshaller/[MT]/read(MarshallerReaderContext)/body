@@ -1,26 +1,15 @@
 {
-  SlidingTimeWindow beh=(SlidingTimeWindow)inCtx.readObject();
-  SlidingTimeWindowContext slCtx=new SlidingTimeWindowContext();
-  if (inCtx.readBoolean()) {
-    if (inCtx.readBoolean()) {
-      int sinkId=inCtx.readInt();
-      int factHandleId=inCtx.readInt();
-      RightTupleSink sink=(RightTupleSink)inCtx.sinks.get(sinkId);
-      RightTupleKey key=new RightTupleKey(factHandleId,sink);
-      slCtx.expiringTuple=inCtx.rightTuples.get(key);
-    }
-    if (inCtx.readBoolean()) {
-      int size=inCtx.readInt();
-      for (int i=0; i < size; i++) {
-        int sinkId=inCtx.readInt();
-        int factHandleId=inCtx.readInt();
-        RightTupleSink sink=(RightTupleSink)inCtx.sinks.get(sinkId);
-        RightTupleKey key=new RightTupleKey(factHandleId,sink);
-        slCtx.queue.add(inCtx.rightTuples.get(key));
-      }
-    }
-    if (slCtx.queue.peek() != null) {
-      updateNextExpiration((RightTuple)slCtx.queue.peek(),inCtx.wm,beh,slCtx);
-    }
+  int sinkId=inCtx.readInt();
+  BetaNode betaNode=(BetaNode)inCtx.sinks.get(sinkId);
+  BetaMemory betaMemory=null;
+  if (betaNode instanceof AccumulateNode) {
+    betaMemory=((AccumulateMemory)inCtx.wm.getNodeMemory(betaNode)).betaMemory;
   }
+ else {
+    betaMemory=(BetaMemory)inCtx.wm.getNodeMemory(betaNode);
+  }
+  Object[] behaviorContext=(Object[])betaMemory.getBehaviorContext();
+  int i=inCtx.readInt();
+  SlidingTimeWindowContext stwCtx=(SlidingTimeWindowContext)behaviorContext[i];
+  updateNextExpiration((RightTuple)stwCtx.queue.peek(),inCtx.wm,(SlidingTimeWindow)betaNode.getBehaviors()[i],stwCtx);
 }

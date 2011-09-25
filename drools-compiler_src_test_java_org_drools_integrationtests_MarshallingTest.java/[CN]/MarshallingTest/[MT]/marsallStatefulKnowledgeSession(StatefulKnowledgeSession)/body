@@ -1,0 +1,12 @@
+{
+  Globals globals=ksession.getGlobals();
+  KnowledgeBase kbase=ksession.getKnowledgeBase();
+  ByteArrayOutputStream out=new ByteArrayOutputStream();
+  MarshallerFactory.newMarshaller(kbase).marshall(out,ksession);
+  KnowledgeSessionConfiguration ksconf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  ((SessionConfiguration)ksconf).setTimerJobFactoryManager(new TrackableTimeJobFactoryManager());
+  ksconf.setOption(ClockTypeOption.get("pseudo"));
+  ksession=MarshallerFactory.newMarshaller(kbase).unmarshall(new ByteArrayInputStream(out.toByteArray()),ksconf,null);
+  ((StatefulKnowledgeSessionImpl)ksession).session.setGlobalResolver((GlobalResolver)globals);
+  return ksession;
+}
