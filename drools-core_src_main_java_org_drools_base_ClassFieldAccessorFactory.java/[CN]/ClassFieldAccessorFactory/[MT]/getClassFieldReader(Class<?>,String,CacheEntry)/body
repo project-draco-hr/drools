@@ -11,13 +11,21 @@
         inspector=new ClassFieldInspector(clazz);
         inspectors.put(clazz,inspector);
       }
-      final Class<?> fieldType=(Class<?>)inspector.getFieldTypes().get(fieldName);
-      final Method getterMethod=(Method)inspector.getGetterMethods().get(fieldName);
+      Class<?> fieldType=(Class<?>)inspector.getFieldTypes().get(fieldName);
+      Method getterMethod=(Method)inspector.getGetterMethods().get(fieldName);
+      Integer index=(Integer)inspector.getFieldNames().get(fieldName);
+      if (fieldType == null && fieldName.length() > 1 && Character.isLowerCase(fieldName.charAt(0)) && Character.isUpperCase(fieldName.charAt(1))) {
+        String altFieldName=Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+        fieldType=(Class<?>)inspector.getFieldTypes().get(altFieldName);
+        if (fieldType != null) {
+          getterMethod=(Method)inspector.getGetterMethods().get(altFieldName);
+          index=(Integer)inspector.getFieldNames().get(altFieldName);
+        }
+      }
       if (fieldType != null && getterMethod != null) {
         final String className=ClassFieldAccessorFactory.BASE_PACKAGE + "/" + Type.getInternalName(clazz)+ Math.abs(System.identityHashCode(clazz))+ "$"+ getterMethod.getName();
         final byte[] bytes=dumpReader(clazz,className,getterMethod,fieldType,clazz.isInterface());
         final Class<?> newClass=byteArrayClassLoader.defineClass(className.replace('/','.'),bytes,PROTECTION_DOMAIN);
-        final Integer index=(Integer)inspector.getFieldNames().get(fieldName);
         final ValueType valueType=ValueType.determineValueType(fieldType);
         final Object[] params={index,fieldType,valueType};
         return (BaseClassFieldReader)newClass.getConstructors()[0].newInstance(params);
