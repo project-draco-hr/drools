@@ -1,11 +1,10 @@
 {
-  Class clazz=null;
+  Class<?> clazz=null;
   boolean isArray=false;
+  boolean isPrimitive=false;
   final StringBuilder arrayClassName=new StringBuilder();
-  if (internalNamesMap.containsKey(className)) {
-    clazz=Class.forName("[" + internalNamesMap.get(className),true,this.classLoader).getComponentType();
-  }
- else   if (className.indexOf('[') > 0) {
+  clazz=lookupFromCache(className);
+  if (clazz == null && className.indexOf('[') > 0) {
     isArray=true;
     int bracketIndex=className.indexOf('[');
     final String componentName=className.substring(0,bracketIndex);
@@ -15,8 +14,9 @@
     }
     className=componentName;
   }
-  if (clazz == null) {
-    clazz=lookupFromCache(className);
+  if (clazz == null && internalNamesMap.containsKey(className)) {
+    clazz=Class.forName("[" + internalNamesMap.get(className),true,this.classLoader).getComponentType();
+    isPrimitive=true;
   }
   if (clazz == null) {
     try {
@@ -30,8 +30,8 @@
     clazz=importClass(className,className);
   }
   if (clazz == null) {
-    final Set<Class> validClazzCandidates=new HashSet<Class>();
-    final Iterator it=this.imports.iterator();
+    final Set<Class<?>> validClazzCandidates=new HashSet<Class<?>>();
+    final Iterator<String> it=this.imports.iterator();
     while (it.hasNext()) {
       clazz=importClass((String)it.next(),className);
       if (clazz != null) {
@@ -39,8 +39,8 @@
       }
     }
     if (validClazzCandidates.size() > 1) {
-      for (Iterator<Class> validIt=validClazzCandidates.iterator(); validIt.hasNext(); ) {
-        Class cls=validIt.next();
+      for (Iterator<Class<?>> validIt=validClazzCandidates.iterator(); validIt.hasNext(); ) {
+        Class<?> cls=validIt.next();
         if (this.defaultPackagName.equals(cls.getPackage().getName())) {
           validIt.remove();
         }
@@ -48,17 +48,17 @@
     }
     if (validClazzCandidates.size() > 1) {
       final StringBuilder sb=new StringBuilder();
-      final Iterator clazzCandIter=validClazzCandidates.iterator();
+      final Iterator<Class<?>> clazzCandIter=validClazzCandidates.iterator();
       while (clazzCandIter.hasNext()) {
         if (0 != sb.length()) {
           sb.append(", ");
         }
-        sb.append(((Class)clazzCandIter.next()).getName());
+        sb.append(clazzCandIter.next().getName());
       }
       throw new Error("Unable to find ambiguously defined class '" + className + "', candidates are: ["+ sb.toString()+ "]");
     }
  else     if (validClazzCandidates.size() == 1) {
-      clazz=(Class)validClazzCandidates.toArray()[0];
+      clazz=(Class<?>)validClazzCandidates.toArray()[0];
     }
  else {
       clazz=null;
@@ -68,7 +68,7 @@
     clazz=defaultClass(className);
   }
   if (isArray) {
-    if (clazz == null && internalNamesMap.containsKey(className)) {
+    if (isPrimitive) {
       arrayClassName.append(internalNamesMap.get(className));
     }
  else {
@@ -80,7 +80,7 @@
       }
     }
     try {
-      clazz=Class.forName(arrayClassName.toString());
+      clazz=Class.forName(arrayClassName.toString(),true,this.classLoader);
     }
  catch (    final ClassNotFoundException e) {
       clazz=null;
