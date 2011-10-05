@@ -1,0 +1,26 @@
+{
+  String str="package org.drools\n" + "declare StockTick\n" + "        @role ( event )\n"+ "end\n"+ "rule R1 salience 1000\n"+ "    when\n"+ "        $s1 : StockTick( company == 'RHT' )\n"+ "        $s2 : StockTick( company == 'ACME', this after[0s,1m] $s1 )\n"+ "    then\n"+ "end\n"+ "rule R2 salience 1000\n"+ "    when\n"+ "        $s1 : StockTick( company == 'RHT' )\n"+ "        not StockTick( company == 'ACME', this after[0s,1m] $s1 )\n"+ "    then\n"+ "end\n"+ "rule R3 salience 100\n"+ "    when\n"+ "        $s2 : StockTick( company == 'ACME' )\n"+ "    then\n"+ "end\n";
+  KnowledgeBaseConfiguration config=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  config.setOption(EventProcessingOption.STREAM);
+  KnowledgeBase kbase=loadKnowledgeBase(new StringReader(str),config);
+  KnowledgeSessionConfiguration ksconf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  ksconf.setOption(ClockTypeOption.get(ClockType.REALTIME_CLOCK.getId()));
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(ksconf,null);
+  AgendaEventListener ael=mock(AgendaEventListener.class);
+  ksession.addEventListener(ael);
+  ksession.insert(new StockTick(1,"RHT",10,1000));
+  ksession.insert(new StockTick(2,"RHT",10,1000));
+  ksession.insert(new StockTick(3,"RHT",10,1000));
+  Thread.currentThread().sleep(2000);
+  ksession.insert(new StockTick(4,"ACME",10,1000));
+  Thread.currentThread().sleep(1000);
+  int rulesFired=ksession.fireAllRules();
+  assertEquals(4,rulesFired);
+  ArgumentCaptor<AfterActivationFiredEvent> captor=ArgumentCaptor.forClass(AfterActivationFiredEvent.class);
+  verify(ael,times(4)).afterActivationFired(captor.capture());
+  List<AfterActivationFiredEvent> aafe=captor.getAllValues();
+  Assert.assertThat("R1",is(aafe.get(0).getActivation().getRule().getName()));
+  Assert.assertThat("R1",is(aafe.get(1).getActivation().getRule().getName()));
+  Assert.assertThat("R1",is(aafe.get(2).getActivation().getRule().getName()));
+  Assert.assertThat("R3",is(aafe.get(3).getActivation().getRule().getName()));
+}
