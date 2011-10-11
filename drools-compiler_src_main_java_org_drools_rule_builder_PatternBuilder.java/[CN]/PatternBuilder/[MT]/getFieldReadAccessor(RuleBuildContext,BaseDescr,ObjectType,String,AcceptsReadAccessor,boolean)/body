@@ -9,6 +9,22 @@
   }
  else   if (fieldName.indexOf('.') > -1 || fieldName.indexOf('[') > -1 || fieldName.indexOf('(') > -1) {
     try {
+      Map<String,Class<?>> declarations=getDeclarationsMap(descr,context,false);
+      Map<String,Class<?>> globals=context.getPackageBuilder().getGlobals();
+      final AnalysisResult analysis=context.getDialect().analyzeExpression(context,descr,fieldName,new BoundIdentifiers(declarations,globals,null,((ClassObjectType)objectType).getClassType()));
+      if (analysis == null) {
+        if (reportError) {
+          context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to analyze expression '" + fieldName + "'"));
+        }
+        return null;
+      }
+      final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
+      if (!usedIdentifiers.getDeclrClasses().isEmpty()) {
+        if (reportError) {
+          context.getErrors().add(new DescrBuildError(context.getParentDescr(),descr,null,"Variables can not be used inside bindings. Variable " + usedIdentifiers.getDeclrClasses().keySet() + " is being used in binding '"+ fieldName+ "'"));
+        }
+        return null;
+      }
       reader=context.getPkg().getClassFieldAccessorStore().getMVELReader(context.getPkg().getName(),((ClassObjectType)objectType).getClassName(),fieldName,context.isTypesafe());
       MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
       ((MVELCompileable)reader).compile(data);
