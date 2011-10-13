@@ -149,11 +149,24 @@
       buildHardSetter(cw,field,masterName,trait,core);
     }
   }
-  buildEqualityMethods(cw,masterName,core.getClassName());
+  boolean hasKeys=false;
+  for (  FactField ff : trait.getFields()) {
+    if (ff.isKey()) {
+      hasKeys=true;
+      break;
+    }
+  }
+  if (!hasKeys) {
+    buildEqualityMethods(cw,masterName,core.getClassName());
+  }
+ else {
+    buildKeyedEqualityMethods(cw,trait,masterName,core.getClassName());
+  }
   if (mixinClass != null) {
     buildMixinMethods(cw,masterName,mixin,mixinClass,mixinMethods);
     buildMixinMethods(cw,masterName,mixin,mixinClass,mixinGetSet.values());
   }
+  buildCommonMethods(cw,masterName,core.getClassName());
   cw.visitEnd();
   return cw.toByteArray();
 }
