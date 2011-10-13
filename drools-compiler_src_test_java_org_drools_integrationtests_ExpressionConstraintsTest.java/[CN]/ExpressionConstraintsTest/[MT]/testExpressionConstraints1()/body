@@ -1,0 +1,14 @@
+{
+  String drl="package org.drools\n" + "import org.drools.Mailbox.FolderType;\n" + "rule R1\n"+ "        dialect \"mvel\"\n"+ "    when\n"+ "        $m : Mailbox( \n"+ "                $folderType : getDefaultFolderType(),\n"+ "                FolderType.INBOX == $folderType,\n"+ "                $folderType == FolderType.INBOX,\n"+ "                $mailForFolder2 : getMailTypeForFolderType(getDefaultFolderType()),\n"+ "                FolderType.SENT != getDefaultFolderType(), \n"+ "                getDefaultFolderType() != FolderType.SENT, \n"+ "                getMailTypeForFolderType($folderType) == MailType.WORK,\n"+ "                1 > 0\n"+ "        )\n"+ "    then\n"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(drl);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  Mailbox mbox=new Mailbox(Mailbox.TEST_EMAIL);
+  Message message=new Message();
+  message.setMessage("Welcome");
+  message.setStatus(Message.HELLO);
+  mbox.getFolder(FolderType.INBOX).add(message);
+  ksession.insert(mbox);
+  ksession.insert(message);
+  int rules=ksession.fireAllRules();
+  Assert.assertEquals(1,rules);
+}
