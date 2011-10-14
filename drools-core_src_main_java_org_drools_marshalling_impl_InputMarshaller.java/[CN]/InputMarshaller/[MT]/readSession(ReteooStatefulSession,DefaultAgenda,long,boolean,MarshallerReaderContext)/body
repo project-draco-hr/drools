@@ -54,9 +54,13 @@
     processMarshaller.readProcessTimers(context);
   }
  else {
-    while ((token=context.readShort()) == PersisterEnums.DEFAULT_TIMER) {
-      InputMarshaller.readTimer(context);
+    short type=context.stream.readShort();
+    if (PersisterEnums.END != type) {
+      throw new IllegalStateException("No process marshaller, unable to unmarshall type: " + type);
     }
+  }
+  while ((token=context.readShort()) == PersisterEnums.DEFAULT_TIMER) {
+    InputMarshaller.readTimer(context);
   }
   if (multithread) {
     session.startPartitionManagers();
