@@ -1,0 +1,111 @@
+{
+  MethodVisitor mv;
+  mv=cw.visitMethod(ACC_PUBLIC,"equals","(Ljava/lang/Object;)Z",null,null);
+  mv.visitCode();
+  mv.visitVarInsn(ALOAD,0);
+  mv.visitVarInsn(ALOAD,1);
+  Label l0=new Label();
+  mv.visitJumpInsn(IF_ACMPNE,l0);
+  mv.visitInsn(ICONST_1);
+  mv.visitInsn(IRETURN);
+  mv.visitLabel(l0);
+  mv.visitVarInsn(ALOAD,1);
+  Label l1=new Label();
+  mv.visitJumpInsn(IFNULL,l1);
+  mv.visitVarInsn(ALOAD,0);
+  mv.visitMethodInsn(INVOKEVIRTUAL,"java/lang/Object","getClass","()Ljava/lang/Class;");
+  mv.visitVarInsn(ALOAD,1);
+  mv.visitMethodInsn(INVOKEVIRTUAL,"java/lang/Object","getClass","()Ljava/lang/Class;");
+  Label l2=new Label();
+  mv.visitJumpInsn(IF_ACMPEQ,l2);
+  mv.visitLabel(l1);
+  mv.visitInsn(ICONST_0);
+  mv.visitInsn(IRETURN);
+  mv.visitLabel(l2);
+  mv.visitVarInsn(ALOAD,1);
+  mv.visitTypeInsn(CHECKCAST,proxyType);
+  mv.visitVarInsn(ASTORE,2);
+  int x=2;
+  int count=0;
+  for (  FieldDefinition field : classDef.getFieldsDefinitions()) {
+    if (field.isKey()) {
+      count++;
+      if (!BuildUtils.isPrimitive(field.getTypeName())) {
+        mv.visitVarInsn(ALOAD,0);
+        mv.visitMethodInsn(INVOKEVIRTUAL,proxyType,BuildUtils.getterName(field.getName(),field.getTypeName()),"()" + BuildUtils.getTypeDescriptor(field.getTypeName()));
+        Label l11=new Label();
+        mv.visitJumpInsn(IFNULL,l11);
+        mv.visitVarInsn(ALOAD,0);
+        mv.visitMethodInsn(INVOKEVIRTUAL,proxyType,BuildUtils.getterName(field.getName(),field.getTypeName()),"()" + BuildUtils.getTypeDescriptor(field.getTypeName()));
+        mv.visitVarInsn(ALOAD,2);
+        mv.visitMethodInsn(INVOKEVIRTUAL,proxyType,BuildUtils.getterName(field.getName(),field.getTypeName()),"()" + BuildUtils.getTypeDescriptor(field.getTypeName()));
+        mv.visitMethodInsn(INVOKEVIRTUAL,BuildUtils.getInternalType(field.getTypeName()),"equals","(Ljava/lang/Object;)Z");
+        Label l12=new Label();
+        mv.visitJumpInsn(IFNE,l12);
+        Label l13=new Label();
+        mv.visitJumpInsn(GOTO,l13);
+        mv.visitLabel(l11);
+        mv.visitVarInsn(ALOAD,2);
+        mv.visitMethodInsn(INVOKEVIRTUAL,proxyType,BuildUtils.getterName(field.getName(),field.getTypeName()),"()" + BuildUtils.getTypeDescriptor(field.getTypeName()));
+        mv.visitJumpInsn(IFNULL,l12);
+        mv.visitLabel(l13);
+        mv.visitInsn(ICONST_0);
+        mv.visitInsn(IRETURN);
+        mv.visitLabel(l12);
+      }
+ else       if ("double".equals(field.getTypeName())) {
+        mv.visitVarInsn(ALOAD,2);
+        mv.visitMethodInsn(INVOKEVIRTUAL,proxyType,BuildUtils.getterName(field.getName(),field.getTypeName()),"()" + BuildUtils.getTypeDescriptor(field.getTypeName()));
+        mv.visitVarInsn(ALOAD,0);
+        mv.visitMethodInsn(INVOKEVIRTUAL,proxyType,BuildUtils.getterName(field.getName(),field.getTypeName()),"()" + BuildUtils.getTypeDescriptor(field.getTypeName()));
+        mv.visitMethodInsn(INVOKESTATIC,"java/lang/Double","compare","(DD)I");
+        Label l5=new Label();
+        mv.visitJumpInsn(IFEQ,l5);
+        mv.visitInsn(ICONST_0);
+        mv.visitInsn(IRETURN);
+        mv.visitLabel(l5);
+        x=Math.max(x,4);
+      }
+ else       if ("float".equals(field.getTypeName())) {
+        mv.visitVarInsn(ALOAD,2);
+        mv.visitMethodInsn(INVOKEVIRTUAL,proxyType,BuildUtils.getterName(field.getName(),field.getTypeName()),"()" + BuildUtils.getTypeDescriptor(field.getTypeName()));
+        mv.visitVarInsn(ALOAD,0);
+        mv.visitMethodInsn(INVOKEVIRTUAL,proxyType,BuildUtils.getterName(field.getName(),field.getTypeName()),"()" + BuildUtils.getTypeDescriptor(field.getTypeName()));
+        mv.visitMethodInsn(INVOKESTATIC,"java/lang/Float","compare","(FF)I");
+        Label l6=new Label();
+        mv.visitJumpInsn(IFEQ,l6);
+        mv.visitInsn(ICONST_0);
+        mv.visitInsn(IRETURN);
+        mv.visitLabel(l6);
+      }
+ else       if ("long".equals(field.getTypeName())) {
+        mv.visitVarInsn(ALOAD,0);
+        mv.visitMethodInsn(INVOKEVIRTUAL,proxyType,BuildUtils.getterName(field.getName(),field.getTypeName()),"()" + BuildUtils.getTypeDescriptor(field.getTypeName()));
+        mv.visitVarInsn(ALOAD,2);
+        mv.visitMethodInsn(INVOKEVIRTUAL,proxyType,BuildUtils.getterName(field.getName(),field.getTypeName()),"()" + BuildUtils.getTypeDescriptor(field.getTypeName()));
+        mv.visitInsn(LCMP);
+        Label l8=new Label();
+        mv.visitJumpInsn(IFEQ,l8);
+        mv.visitInsn(ICONST_0);
+        mv.visitInsn(IRETURN);
+        mv.visitLabel(l8);
+        x=Math.max(x,4);
+      }
+ else {
+        mv.visitVarInsn(ALOAD,0);
+        mv.visitMethodInsn(INVOKEVIRTUAL,proxyType,BuildUtils.getterName(field.getName(),field.getTypeName()),"()" + BuildUtils.getTypeDescriptor(field.getTypeName()));
+        mv.visitVarInsn(ALOAD,2);
+        mv.visitMethodInsn(INVOKEVIRTUAL,proxyType,BuildUtils.getterName(field.getName(),field.getTypeName()),"()" + BuildUtils.getTypeDescriptor(field.getTypeName()));
+        Label l4=new Label();
+        mv.visitJumpInsn(IF_ICMPEQ,l4);
+        mv.visitInsn(ICONST_0);
+        mv.visitInsn(IRETURN);
+        mv.visitLabel(l4);
+      }
+    }
+  }
+  mv.visitInsn(ICONST_1);
+  mv.visitInsn(IRETURN);
+  mv.visitMaxs(x,3);
+  mv.visitEnd();
+}
