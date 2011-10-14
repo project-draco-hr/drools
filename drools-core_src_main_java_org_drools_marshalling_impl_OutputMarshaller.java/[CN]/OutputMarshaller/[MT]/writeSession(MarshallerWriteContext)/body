@@ -16,10 +16,10 @@
   context.writeLong(time);
   context.writeInt(wm.getFactHandleFactory().getId());
   context.writeLong(wm.getFactHandleFactory().getRecency());
+  context.writeLong(wm.getPropagationIdCounter());
   InternalFactHandle handle=context.wm.getInitialFactHandle();
   context.writeInt(handle.getId());
   context.writeLong(handle.getRecency());
-  context.writeLong(wm.getPropagationIdCounter());
   writeAgenda(context);
   writeInitialFactHandleRightTuples(context);
   for (  WorkingMemoryEntryPoint wmep : wm.getEntryPoints().values()) {
@@ -36,11 +36,20 @@
   if (context.marshalProcessInstances && processMarshaller != null) {
     processMarshaller.writeProcessInstances(context);
   }
+ else {
+    context.stream.writeShort(PersisterEnums.END);
+  }
   if (context.marshalWorkItems && processMarshaller != null) {
     processMarshaller.writeWorkItems(context);
   }
+ else {
+    context.stream.writeShort(PersisterEnums.END);
+  }
   if (processMarshaller != null) {
     processMarshaller.writeProcessTimers(context);
+  }
+ else {
+    context.stream.writeShort(PersisterEnums.END);
   }
   writeTimers(context.wm.getTimerService().getTimerJobInstances(),context);
   if (multithread) {

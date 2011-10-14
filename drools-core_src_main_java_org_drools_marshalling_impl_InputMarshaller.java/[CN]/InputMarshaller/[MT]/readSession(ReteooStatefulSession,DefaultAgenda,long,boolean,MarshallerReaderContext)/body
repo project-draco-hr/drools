@@ -32,11 +32,23 @@
   readActivations(context);
   readActionQueue(context);
   readTruthMaintenanceSystem(context);
-  if (context.marshalProcessInstances && processMarshaller != null) {
+  if (processMarshaller != null) {
     processMarshaller.readProcessInstances(context);
   }
-  if (context.marshalWorkItems && processMarshaller != null) {
+ else {
+    short type=context.stream.readShort();
+    if (PersisterEnums.END != type) {
+      throw new IllegalStateException("No process marshaller, unable to unmarshall type: " + type);
+    }
+  }
+  if (processMarshaller != null) {
     processMarshaller.readWorkItems(context);
+  }
+ else {
+    short type=context.stream.readShort();
+    if (PersisterEnums.END != type) {
+      throw new IllegalStateException("No process marshaller, unable to unmarshall type: " + type);
+    }
   }
   if (processMarshaller != null) {
     processMarshaller.readProcessTimers(context);
