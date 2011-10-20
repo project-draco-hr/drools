@@ -1,13 +1,13 @@
 {
   final InvokerDataProvider data=new InvokerContext(vars);
-  final ClassGenerator generator=InvokerGenerator.createInvokerClassGenerator(data,ruleContext).setInterfaces(ReturnValueExpression.class,CompiledInvoker.class);
+  final ClassGenerator generator=createInvokerClassGenerator(data,ruleContext).setInterfaces(PredicateExpression.class,CompiledInvoker.class);
   generator.addMethod(ACC_PUBLIC,"createContext",generator.methodDescr(Object.class),new ClassGenerator.MethodBody(){
     public void body(    MethodVisitor mv){
       mv.visitInsn(ACONST_NULL);
       mv.visitInsn(ARETURN);
     }
   }
-).addMethod(ACC_PUBLIC,"replaceDeclaration",generator.methodDescr(null,Declaration.class,Declaration.class)).addMethod(ACC_PUBLIC,"evaluate",generator.methodDescr(FieldValue.class,Object.class,Tuple.class,Declaration[].class,Declaration[].class,WorkingMemory.class,Object.class),new String[]{"java/lang/Exception"},new EvaluateMethod(){
+).addMethod(ACC_PUBLIC,"evaluate",generator.methodDescr(Boolean.TYPE,Object.class,Tuple.class,Declaration[].class,Declaration[].class,WorkingMemory.class,Object.class),new String[]{"java/lang/Exception"},new GeneratorHelper.EvaluateMethod(){
     public void body(    MethodVisitor mv){
       final Declaration[] previousDeclarations=(Declaration[])vars.get("declarations");
       final String[] previousDeclarationTypes=(String[])vars.get("declarationTypes");
@@ -17,7 +17,7 @@
       final String[] globalTypes=(String[])vars.get("globalTypes");
       objAstorePos=7;
       int[] previousDeclarationsParamsPos=parseDeclarations(previousDeclarations,previousDeclarationTypes,3,2,5,true);
-      int[] localDeclarationsParamsPos=parseDeclarations(localDeclarations,localDeclarationTypes,4,2,5,readLocalsFromTuple);
+      int[] localDeclarationsParamsPos=parseDeclarations(localDeclarations,localDeclarationTypes,4,2,5,false);
       StringBuilder predicateMethodDescr=new StringBuilder("(");
       for (int i=0; i < previousDeclarations.length; i++) {
         load(previousDeclarationsParamsPos[i]);
@@ -28,9 +28,9 @@
         predicateMethodDescr.append(typeDescr(localDeclarationTypes[i]));
       }
       parseGlobals(globals,globalTypes,5,predicateMethodDescr);
-      predicateMethodDescr.append(")Lorg/drools/spi/FieldValue;");
+      predicateMethodDescr.append(")Z");
       mv.visitMethodInsn(INVOKESTATIC,data.getInternalRuleClassName(),data.getMethodName(),predicateMethodDescr.toString());
-      mv.visitInsn(ARETURN);
+      mv.visitInsn(IRETURN);
     }
   }
 );
