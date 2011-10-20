@@ -13,13 +13,22 @@
     activationsCount=context.stream.readLong();
   }
   int strategyIndex=context.stream.readInt();
-  Object object;
+  Object object=null;
+  ObjectMarshallingStrategy strategy=null;
   if (strategyIndex >= 0) {
-    ObjectMarshallingStrategy strategy=context.resolverStrategyFactory.getStrategy(strategyIndex);
-    object=strategy.read(context.stream);
+    strategy=context.resolverStrategyFactory.getStrategy(strategyIndex);
   }
- else {
-    object=null;
+ else   if (strategyIndex == -2) {
+    String strategyClassName=context.stream.readUTF();
+    if (!StringUtils.isEmpty(strategyClassName)) {
+      strategy=context.resolverStrategyFactory.getStrategyObject(strategyClassName);
+      if (strategy == null) {
+        throw new IllegalStateException("No strategy of type " + strategyClassName + " available.");
+      }
+    }
+  }
+  if (strategy != null) {
+    object=strategy.read(context.stream);
   }
   WorkingMemoryEntryPoint entryPoint=null;
   if (context.readBoolean()) {

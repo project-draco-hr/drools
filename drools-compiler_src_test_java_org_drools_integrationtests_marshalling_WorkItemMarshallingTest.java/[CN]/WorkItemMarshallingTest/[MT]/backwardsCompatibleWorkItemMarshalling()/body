@@ -1,0 +1,18 @@
+{
+  WorkItem workItem=createWorkItem(input);
+  byte[] byteArray;
+{
+    ObjectMarshallingStrategy[] strats=new ObjectMarshallingStrategy[]{MarshallerFactory.newSerializeMarshallingStrategy(),new MarshallerProviderImpl().newIdentityMarshallingStrategy()};
+    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    MarshallerWriteContext outContext=new MarshallerWriteContext(baos,null,null,null,new ObjectMarshallingStrategyStore(strats),true,true,null);
+    OldOutputMarshallerMethods.writeWorkItem_v1(outContext,workItem);
+    byteArray=baos.toByteArray();
+  }
+{
+    ObjectMarshallingStrategy[] newStrats=new ObjectMarshallingStrategy[]{MarshallerFactory.newSerializeMarshallingStrategy()};
+    ByteArrayInputStream bais=new ByteArrayInputStream(byteArray);
+    MarshallerReaderContext inContext=new MarshallerReaderContext(bais,null,null,new ObjectMarshallingStrategyStore(newStrats),true,true,null);
+    workItem=InputMarshaller.readWorkItem(inContext);
+  }
+  checkWorkItem(workItem,input);
+}

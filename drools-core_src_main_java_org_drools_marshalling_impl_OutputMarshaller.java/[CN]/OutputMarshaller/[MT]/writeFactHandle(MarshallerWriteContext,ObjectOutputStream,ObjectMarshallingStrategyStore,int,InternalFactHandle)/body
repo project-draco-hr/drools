@@ -10,14 +10,15 @@
     stream.writeLong(efh.getActivationsCount());
   }
   Object object=handle.getObject();
+  stream.writeInt(-2);
   if (object != null) {
-    int index=objectMarshallingStrategyStore.getStrategy(object);
-    ObjectMarshallingStrategy strategy=objectMarshallingStrategyStore.getStrategy(index);
-    stream.writeInt(index);
+    ObjectMarshallingStrategy strategy=objectMarshallingStrategyStore.getStrategy(object);
+    String strategyClassName=strategy.getClass().getName();
+    stream.writeUTF(strategyClassName);
     strategy.write(stream,object);
   }
  else {
-    stream.writeInt(-1);
+    stream.writeUTF("");
   }
   if (handle.getEntryPoint() instanceof InternalWorkingMemoryEntryPoint) {
     String entryPoint=((InternalWorkingMemoryEntryPoint)handle.getEntryPoint()).getEntryPoint().getEntryPointId();

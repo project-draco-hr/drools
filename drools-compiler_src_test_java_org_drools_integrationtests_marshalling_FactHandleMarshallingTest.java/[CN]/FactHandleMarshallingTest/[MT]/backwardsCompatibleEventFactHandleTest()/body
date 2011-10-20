@@ -1,0 +1,24 @@
+{
+  RuleBase ruleBase=createRuleBase();
+  AbstractWorkingMemory wm=createWorkingMemory(ruleBase);
+  InternalFactHandle factHandle=createEventFactHandle(wm,ruleBase);
+  byte[] byteArray;
+{
+    ObjectMarshallingStrategy[] strats=new ObjectMarshallingStrategy[]{MarshallerFactory.newSerializeMarshallingStrategy(),new MarshallerProviderImpl().newIdentityMarshallingStrategy()};
+    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    MarshallerWriteContext outContext=new MarshallerWriteContext(baos,null,null,null,new ObjectMarshallingStrategyStore(strats),true,true,null);
+    OldOutputMarshallerMethods.writeFactHandle_v1(outContext,(ObjectOutputStream)outContext,outContext.objectMarshallingStrategyStore,2,factHandle);
+    outContext.close();
+    byteArray=baos.toByteArray();
+  }
+  InternalFactHandle newFactHandle;
+{
+    ObjectMarshallingStrategy[] newStrats=new ObjectMarshallingStrategy[]{MarshallerFactory.newSerializeMarshallingStrategy()};
+    ByteArrayInputStream bais=new ByteArrayInputStream(byteArray);
+    MarshallerReaderContext inContext=new MarshallerReaderContext(bais,null,null,new ObjectMarshallingStrategyStore(newStrats),true,true,null);
+    inContext.wm=wm;
+    newFactHandle=InputMarshaller.readFactHandle(inContext);
+    inContext.close();
+  }
+  assertTrue("Serialized FactHandle not the same as the original.",compareInstances(factHandle,newFactHandle));
+}
