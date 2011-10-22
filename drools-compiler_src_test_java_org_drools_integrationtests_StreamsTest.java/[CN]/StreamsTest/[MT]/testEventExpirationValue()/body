@@ -1,0 +1,19 @@
+{
+  String drl1="package org.drools.pkg1\n" + "import org.drools.StockTick\n" + "declare StockTick\n"+ "    @role(event)\n"+ "end\n"+ "rule X\n"+ "when\n"+ "    StockTick()\n"+ "then\n"+ "end\n";
+  String drl2="package org.drools.pkg2\n" + "import org.drools.StockTick\n" + "declare StockTick\n"+ "    @role(event)\n"+ "end\n"+ "rule X\n"+ "when\n"+ "    StockTick()\n"+ "then\n"+ "end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(drl1.getBytes()),ResourceType.DRL);
+  kbuilder.add(ResourceFactory.newByteArrayResource(drl2.getBytes()),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(EventProcessingOption.STREAM);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  List<ObjectTypeNode> otns=((ReteooRuleBase)((KnowledgeBaseImpl)kbase).getRuleBase()).getRete().getObjectTypeNodes();
+  ObjectType stot=new ClassObjectType(StockTick.class);
+  for (  ObjectTypeNode otn : otns) {
+    if (otn.getObjectType().isAssignableFrom(stot)) {
+      assertEquals(-1,otn.getExpirationOffset());
+    }
+  }
+}
