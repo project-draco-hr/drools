@@ -1,41 +1,39 @@
 {
-  String[] parts=value1.split("\\.");
-  if (parts.length == 2) {
-    if ("this".equals(parts[0].trim())) {
-      value1=parts[1];
+  int dotPos=value1.indexOf('.');
+  if (dotPos > 0) {
+    String part0=value1.substring(0,dotPos).trim();
+    if ("this".equals(part0.trim())) {
+      value1=value1.substring(dotPos + 1);
     }
- else     if (pattern.getDeclaration() != null && parts[0].trim().equals(pattern.getDeclaration().getIdentifier())) {
-      value1=parts[1];
+ else     if (pattern.getDeclaration() != null && part0.equals(pattern.getDeclaration().getIdentifier())) {
+      value1=value1.substring(dotPos + 1);
+      expr=expr.substring(dotPos + 1);
     }
   }
   final InternalReadAccessor extractor=getFieldReadAccessor(context,relDescr,pattern.getObjectType(),value1,null,false);
   if (extractor == null) {
     return false;
   }
+  ValueType vtype=extractor.getValueType();
   String operator=relDescr.getOperator().trim();
-  Restriction restriction=null;
-  if (value2Expr.isConstant()) {
-    restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),value2,LiteralRestrictionDescr.TYPE_STRING));
-  }
- else {
-    int dotPos=value2.lastIndexOf('.');
-    if (dotPos >= 0) {
-      final String mainPart=value2.substring(0,dotPos);
-      String lastPart=value2.substring(dotPos + 1);
-      try {
-        final Class<?> cls=context.getDialect().getTypeResolver().resolveType(mainPart);
-        if (lastPart.indexOf('(') < 0 && lastPart.indexOf('.') < 0 && lastPart.indexOf('[') < 0) {
-          restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),value2,LiteralRestrictionDescr.TYPE_STRING));
-        }
+  LiteralRestrictionDescr restrictionDescr=buildLiteralRestrictionDescr(context,relDescr,extractor,value2,operator,isConstant);
+  if (restrictionDescr != null) {
+    FieldValue field=getFieldValue(context,vtype,restrictionDescr);
+    if (field != null) {
+      if (USE_MVEL_EXPRESSION) {
+        pattern.addConstraint(buildMVELConstraint(context,vtype,field,expr,value1,operator,value2));
+        return true;
       }
- catch (      ClassNotFoundException e) {
+ else {
+        LiteralRestriction restriction=buildLiteralRestriction(context,extractor,restrictionDescr,field,vtype);
+        if (restriction != null) {
+          pattern.addConstraint(new LiteralConstraint(extractor,restriction));
+          return true;
+        }
       }
     }
   }
-  if (restriction != null) {
-    pattern.addConstraint(new LiteralConstraint(extractor,(LiteralRestriction)restriction));
-    return true;
-  }
+  Restriction restriction=null;
   Declaration declr=null;
   if (value2.indexOf('(') < 0 && value2.indexOf('.') < 0 && value2.indexOf('[') < 0) {
     declr=context.getDeclarationResolver().getDeclaration(context.getRule(),value2);
@@ -45,7 +43,8 @@
       if (declr == null) {
         try {
           final Class<?> cls=context.getDialect().getTypeResolver().resolveType(value2);
-          restriction=buildLiteralRestriction(context,extractor,new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),cls.getName(),LiteralRestrictionDescr.TYPE_STRING));
+          restrictionDescr=new LiteralRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParameters(),cls.getName(),LiteralRestrictionDescr.TYPE_STRING);
+          restriction=buildLiteralRestriction(context,extractor,restrictionDescr,getFieldValue(context,vtype,restrictionDescr),vtype);
         }
  catch (        ClassNotFoundException cnfe) {
           return false;
@@ -54,7 +53,7 @@
     }
   }
   if (declr == null) {
-    parts=value2.split("\\.");
+    String[] parts=value2.split("\\.");
     if (parts.length == 2) {
       if ("this".equals(parts[0].trim())) {
         declr=this.createDeclarationObject(context,parts[1].trim(),(Pattern)context.getBuildStack().peek());
