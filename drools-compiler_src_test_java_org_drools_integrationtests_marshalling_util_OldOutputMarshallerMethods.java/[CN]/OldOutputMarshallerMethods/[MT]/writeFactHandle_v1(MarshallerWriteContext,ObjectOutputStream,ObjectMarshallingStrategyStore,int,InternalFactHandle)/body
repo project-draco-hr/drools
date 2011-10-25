@@ -1,0 +1,35 @@
+{
+  stream.writeInt(type);
+  stream.writeInt(handle.getId());
+  stream.writeLong(handle.getRecency());
+  if (type == 2) {
+    EventFactHandle efh=(EventFactHandle)handle;
+    stream.writeLong(efh.getStartTimestamp());
+    stream.writeLong(efh.getDuration());
+    stream.writeBoolean(efh.isExpired());
+    stream.writeLong(efh.getActivationsCount());
+  }
+  Object object=handle.getObject();
+  if (object != null) {
+    int index=objectMarshallingStrategyStore.getStrategyIndex(object);
+    ObjectMarshallingStrategy strategy=objectMarshallingStrategyStore.getStrategy(index);
+    stream.writeInt(index);
+    strategy.write(stream,object);
+  }
+ else {
+    stream.writeInt(-1);
+  }
+  if (handle.getEntryPoint() instanceof InternalWorkingMemoryEntryPoint) {
+    String entryPoint=((InternalWorkingMemoryEntryPoint)handle.getEntryPoint()).getEntryPoint().getEntryPointId();
+    if (entryPoint != null && !entryPoint.equals("")) {
+      stream.writeBoolean(true);
+      stream.writeUTF(entryPoint);
+    }
+ else {
+      stream.writeBoolean(false);
+    }
+  }
+ else {
+    stream.writeBoolean(false);
+  }
+}

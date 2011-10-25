@@ -11,7 +11,20 @@
       String name=stream.readUTF();
       try {
         int index=stream.readInt();
-        ObjectMarshallingStrategy strategy=context.resolverStrategyFactory.getStrategy(index);
+        ObjectMarshallingStrategy strategy=null;
+        if (index >= 0) {
+          strategy=context.resolverStrategyFactory.getStrategy(index);
+          if (strategy == null) {
+            throw new IllegalStateException("No strategy of with index " + index + " available.");
+          }
+        }
+ else         if (index == -2) {
+          String strategyClassName=stream.readUTF();
+          strategy=context.resolverStrategyFactory.getStrategyObject(strategyClassName);
+          if (strategy == null) {
+            throw new IllegalStateException("No strategy of type " + strategyClassName + " available.");
+          }
+        }
         Object value=strategy.read(stream);
         workItem.setParameter(name,value);
       }
