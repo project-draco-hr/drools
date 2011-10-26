@@ -13,15 +13,39 @@
   }
 ).addMethod(ACC_PUBLIC,"evaluate",generator.methodDescr(null,KnowledgeHelper.class,WorkingMemory.class),new String[]{"java/lang/Exception"},new ClassGenerator.MethodBody(){
     public void body(    MethodVisitor mv){
+      Label syncStart=new Label();
+      Label syncEnd=new Label();
       Label l1=new Label();
+      Label l2=new Label();
+      mv.visitTryCatchBlock(syncStart,l1,l2,null);
+      Label l3=new Label();
+      mv.visitTryCatchBlock(l2,l3,l2,null);
+      mv.visitVarInsn(ALOAD,0);
+      mv.visitInsn(DUP);
+      mv.visitVarInsn(ASTORE,3);
+      mv.visitInsn(MONITORENTER);
+      mv.visitLabel(syncStart);
       mv.visitVarInsn(ALOAD,0);
       getField("consequence",Consequence.class);
-      mv.visitJumpInsn(IFNONNULL,l1);
+      Label ifNotInitialized=new Label();
+      mv.visitJumpInsn(IFNONNULL,ifNotInitialized);
       mv.visitVarInsn(ALOAD,0);
       mv.visitVarInsn(ALOAD,1);
       mv.visitVarInsn(ALOAD,2);
       invokeStatic(ConsequenceGenerator.class,"generate",null,ConsequenceStub.class,KnowledgeHelper.class,WorkingMemory.class);
+      mv.visitLabel(ifNotInitialized);
+      mv.visitVarInsn(ALOAD,3);
+      mv.visitInsn(MONITOREXIT);
       mv.visitLabel(l1);
+      mv.visitJumpInsn(GOTO,syncEnd);
+      mv.visitLabel(l2);
+      mv.visitVarInsn(ASTORE,4);
+      mv.visitVarInsn(ALOAD,3);
+      mv.visitInsn(MONITOREXIT);
+      mv.visitLabel(l3);
+      mv.visitVarInsn(ALOAD,4);
+      mv.visitInsn(ATHROW);
+      mv.visitLabel(syncEnd);
       mv.visitVarInsn(ALOAD,0);
       getField("consequence",Consequence.class);
       mv.visitVarInsn(ALOAD,1);

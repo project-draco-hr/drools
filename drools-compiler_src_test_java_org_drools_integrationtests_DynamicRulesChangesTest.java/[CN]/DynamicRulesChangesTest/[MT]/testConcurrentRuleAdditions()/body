@@ -1,0 +1,15 @@
+{
+  addRule("raiseAlarm");
+  Collection<Callable<List<String>>> solvers=new ArrayList<Callable<List<String>>>();
+  for (int i=0; i < PARALLEL_THREADS; ++i) {
+    solvers.add(new RulesExecutor());
+  }
+  CompletionService<List<String>> ecs=new ExecutorCompletionService<List<String>>(executor);
+  for (  Callable<List<String>> s : solvers) {
+    ecs.submit(s);
+  }
+  for (int i=0; i < PARALLEL_THREADS; ++i) {
+    List<String> events=ecs.take().get();
+    assertEquals(5,events.size());
+  }
+}
