@@ -1,0 +1,32 @@
+{
+  List<CommonToken> dataFromInsert=getTokensFromThenPart(insert);
+  String relName="";
+  if (dataFromInsert.size() == 0) {
+    throw new IllegalStateException("The insert does not contain data: " + insert);
+  }
+ else {
+    relName=dataFromInsert.get(0).getText();
+    dataFromInsert.remove(0);
+  }
+  if (relName.isEmpty()) {
+    throw new IllegalStateException("The relation name is empty: " + relName);
+  }
+ else {
+    Class<?> clazz=Class.forName("ruleml.translator.TestDataModel$" + relName);
+    List<String> classProperties=Drools2RuleMLTranslator.getPropertiesFromClass(clazz);
+    if (dataFromInsert.size() != classProperties.size()) {
+      System.out.printf("Warning : the relation properties count %s does not coincide with arguments found in the counstructor:" + classProperties,insert);
+    }
+    List<JAXBElement<?>> jaxbElements=new ArrayList<JAXBElement<?>>();
+    RelType relType=Drools2RuleMLTranslator.builder.createRel(relName);
+    jaxbElements.add(Drools2RuleMLTranslator.builder.createOp(relType));
+    for (int i=0; i < classProperties.size(); i++) {
+      JAXBElement<IndType> slotName=Drools2RuleMLTranslator.builder.createInd(classProperties.get(i));
+      JAXBElement<?> slotValue=getSlotValue(dataFromInsert.get(i).getText());
+      JAXBElement<SlotType> slot=Drools2RuleMLTranslator.builder.createSlot(slotName,slotValue);
+      jaxbElements.add(slot);
+    }
+    JAXBElement<AtomType> atom=Drools2RuleMLTranslator.builder.createAtom(jaxbElements.toArray(new JAXBElement<?>[jaxbElements.size()]));
+    return atom;
+  }
+}

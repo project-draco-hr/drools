@@ -1,0 +1,28 @@
+{
+  List<Object> formulaOrRulebaseOrAtom=assertType.getFormulaOrRulebaseOrAtom();
+  for (  Object o : formulaOrRulebaseOrAtom) {
+    if (o instanceof AtomType) {
+      Rule currentRule=new Rule();
+      translator.setCurrentContext(PartType.THEN);
+      translator.dispatchType(o);
+      currentRule.setRuleName("rule" + ruleNumber++);
+      if (translator.getWhenPatterns().isEmpty()) {
+        currentRule.setWhenPart(new String[]{"eval(true)"});
+      }
+ else {
+        currentRule.setWhenPart(translator.getWhenPatterns().toArray());
+      }
+      for (      DrlPattern pattern : translator.getThenPatterns()) {
+        pattern.setPrefix("insert");
+      }
+      currentRule.setThenPart(translator.getThenPatterns().toArray());
+      translator.getDrl().addRule(currentRule);
+      translator.getWhenPatterns().clear();
+      translator.getThenPatterns().clear();
+      translator.setCurrentContext(PartType.NONE);
+    }
+ else     if (o instanceof RuleType) {
+      translator.dispatchType(o);
+    }
+  }
+}

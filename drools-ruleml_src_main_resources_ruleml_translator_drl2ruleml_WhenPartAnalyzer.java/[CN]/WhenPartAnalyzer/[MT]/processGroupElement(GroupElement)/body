@@ -1,0 +1,28 @@
+{
+  if (groupElement.getChildren().size() == 0) {
+    return null;
+  }
+  List<JAXBElement<?>> elements=new ArrayList<JAXBElement<?>>();
+  for (  Object obj : groupElement.getChildren()) {
+    if (obj instanceof Pattern) {
+      elements.add(processPattern((Pattern)obj));
+    }
+ else     if (obj instanceof GroupElement) {
+      elements.add(processGroupElement((GroupElement)obj));
+    }
+  }
+  Type type=groupElement.getType();
+  if (type.equals(Type.AND)) {
+    return builder.createAnd(elements.toArray(new JAXBElement<?>[elements.size()]));
+  }
+ else   if (type.equals(Type.OR)) {
+    return builder.createOr(elements.toArray(new JAXBElement<?>[elements.size()]));
+  }
+ else   if (type.equals(Type.NOT)) {
+    return builder.createNeg(elements.toArray(new JAXBElement<?>[elements.size()]));
+  }
+ else   if (type.equals(Type.EXISTS)) {
+    return builder.createExists(elements.toArray(new JAXBElement<?>[elements.size()]));
+  }
+  throw new UnsupportedOperationException();
+}
