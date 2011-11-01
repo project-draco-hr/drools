@@ -1,0 +1,18 @@
+{
+  if (shouldTryAtomicUpgrade && tryingLockUpgrade.get() && lock.getReadHoldCount() == 0) {
+    try {
+synchronized (lowPriotityMonitor) {
+        lowPriotityMonitor.wait();
+      }
+    }
+ catch (    InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  lock.readLock().lock();
+  long threadId=Thread.currentThread().getId();
+  Integer upgradedReadCount=upgradedReadCounters.get(threadId);
+  if (upgradedReadCount != null) {
+    upgradedReadCounters.put(threadId,upgradedReadCount + 1);
+  }
+}

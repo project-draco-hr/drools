@@ -1,0 +1,15 @@
+{
+  long threadId=Thread.currentThread().getId();
+  Integer upgradedReadCount=upgradedReadCounters.get(threadId);
+  if (upgradedReadCount != null) {
+    if (upgradedReadCount < 2) {
+      upgradedReadCounters.remove(threadId);
+    }
+ else {
+      upgradedReadCounters.put(threadId,upgradedReadCount - 1);
+    }
+    return;
+  }
+  lock.readLock().unlock();
+  notifyUpgradingThread();
+}

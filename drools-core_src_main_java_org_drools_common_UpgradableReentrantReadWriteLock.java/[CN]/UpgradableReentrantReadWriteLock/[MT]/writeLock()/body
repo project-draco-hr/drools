@@ -1,0 +1,21 @@
+{
+  if (lock.isWriteLockedByCurrentThread()) {
+    lock.writeLock().lock();
+    return;
+  }
+  int readHoldCount=lock.getReadHoldCount();
+  if (readHoldCount > 0) {
+    if (shouldTryAtomicUpgrade && tryingLockUpgrade.compareAndSet(false,true)) {
+      atomicLockUpgrade(readHoldCount);
+    }
+ else {
+      upgradedReadCounters.put(Thread.currentThread().getId(),readHoldCount);
+      for (int i=readHoldCount; i > 0; i--)       lock.readLock().unlock();
+      notifyUpgradingThread();
+      lowPriorityWriteLock();
+    }
+  }
+ else {
+    lowPriorityWriteLock();
+  }
+}
