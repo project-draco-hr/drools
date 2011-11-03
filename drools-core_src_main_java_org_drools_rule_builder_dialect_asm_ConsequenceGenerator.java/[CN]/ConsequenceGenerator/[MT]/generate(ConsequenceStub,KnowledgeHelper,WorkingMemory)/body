@@ -1,9 +1,10 @@
 {
-  final String[] declarationTypes=stub.getDeclarationTypes();
-  final RuleTerminalNode rtn=(RuleTerminalNode)knowledgeHelper.getActivation().getTuple().getLeftTupleSink();
+  RuleTerminalNode rtn=(RuleTerminalNode)knowledgeHelper.getActivation().getTuple().getLeftTupleSink();
   final Declaration[] declarations=rtn.getDeclarations();
+  final boolean isOrRule=rtn.getRule().getTransformedLhs().length > 1;
+  final String[] declarationTypes=stub.getDeclarationTypes();
   final LeftTuple tuple=(LeftTuple)knowledgeHelper.getTuple();
-  final List<DeclarationMatcher> declarationMatchers=matchDeclarationsToTuple(declarationTypes,declarations,tuple);
+  final List<DeclarationMatcher> declarationMatchers=matchDeclarationsToTuple(declarationTypes,declarations);
   final ClassGenerator generator=createInvokerClassGenerator(stub,workingMemory).setInterfaces(Consequence.class,CompiledInvoker.class);
   generator.addMethod(ACC_PUBLIC,"getName",generator.methodDescr(String.class),new ClassGenerator.MethodBody(){
     public void body(    MethodVisitor mv){
@@ -32,7 +33,7 @@
         int handlePos=objAstorePos;
         int objPos=++objAstorePos;
         paramsPos[i]=handlePos;
-        if (rtn.getRule().getTransformedLhs().length > 1) {
+        if (isOrRule) {
           traverseTuplesUntilDeclarationWithOr(i,4,3,5);
         }
  else {

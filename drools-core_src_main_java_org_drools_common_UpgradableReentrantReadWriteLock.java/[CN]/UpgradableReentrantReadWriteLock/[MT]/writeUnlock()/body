@@ -1,11 +1,7 @@
 {
   if (lock.getWriteHoldCount() == 1) {
-    long threadId=Thread.currentThread().getId();
-    Integer upgradedReadCount=upgradedReadCounters.get(threadId);
-    if (upgradedReadCount != null) {
-      for (int i=upgradedReadCount; i > 0; i--)       lock.readLock().lock();
-      upgradedReadCounters.remove(threadId);
-    }
+    for (int i=getUpgradedReadCount(); i > 0; i--)     lock.readLock().lock();
+    upgradedReadCounters.remove(Thread.currentThread().getId());
   }
   lock.writeLock().unlock();
   notifyUpgradingThread();
