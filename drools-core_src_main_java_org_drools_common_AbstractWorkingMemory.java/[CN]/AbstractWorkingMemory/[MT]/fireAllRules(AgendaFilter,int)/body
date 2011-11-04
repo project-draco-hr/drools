@@ -2,19 +2,19 @@
   if (this.firing.compareAndSet(false,true)) {
     try {
       startOperation();
-synchronized (this) {
-        if (liaPropagations != null && isSequential()) {
-          for (Iterator it=liaPropagations.iterator(); it.hasNext(); ) {
-            ((LIANodePropagation)it.next()).doPropagation(this);
-          }
+      ruleBase.readLock();
+      if (liaPropagations != null && isSequential()) {
+        for (Iterator it=liaPropagations.iterator(); it.hasNext(); ) {
+          ((LIANodePropagation)it.next()).doPropagation(this);
         }
-        executeQueuedActions();
-        int fireCount=0;
-        fireCount=this.agenda.fireAllRules(agendaFilter,fireLimit);
-        return fireCount;
       }
+      executeQueuedActions();
+      int fireCount=0;
+      fireCount=this.agenda.fireAllRules(agendaFilter,fireLimit);
+      return fireCount;
     }
   finally {
+      ruleBase.readUnlock();
       endOperation();
       this.firing.set(false);
     }

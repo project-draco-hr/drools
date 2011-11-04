@@ -1,24 +1,29 @@
 {
-  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   final List<String> events=new ArrayList<String>();
-  ksession.setGlobal("events",events);
-  Room room1=new Room("Room 1");
-  Fire fire1=new Fire(room1);
-  List<Command> cmds=new ArrayList<Command>();
-  cmds.add(CommandFactory.newInsert(room1,"room1"));
-  cmds.add(CommandFactory.newInsert(fire1,"fire1"));
-  cmds.add(CommandFactory.newFireAllRules());
-  ksession.execute(CommandFactory.newBatchExecution(cmds));
-  assertEquals(1,events.size());
-  cmds=new ArrayList<Command>();
-  cmds.add(CommandFactory.newInsert(new Sprinkler(room1),"sprinkler1"));
-  cmds.add(CommandFactory.newFireAllRules());
-  ksession.execute(CommandFactory.newBatchExecution(cmds));
-  assertEquals(2,events.size());
-  cmds=new ArrayList<Command>();
-  cmds.add(CommandFactory.newRetract(ksession.getFactHandle(fire1)));
-  cmds.add(CommandFactory.newFireAllRules());
-  ksession.execute(CommandFactory.newBatchExecution(cmds));
-  System.out.println(Thread.currentThread().getName() + " finished with: " + events);
+  try {
+    StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+    ksession.setGlobal("events",events);
+    Room room1=new Room("Room 1");
+    Fire fire1=new Fire(room1);
+    List<Command> cmds=new ArrayList<Command>();
+    cmds.add(CommandFactory.newInsert(room1,"room1"));
+    cmds.add(CommandFactory.newInsert(fire1,"fire1"));
+    cmds.add(CommandFactory.newFireAllRules());
+    ksession.execute(CommandFactory.newBatchExecution(cmds));
+    assertEquals(1,events.size());
+    cmds=new ArrayList<Command>();
+    cmds.add(CommandFactory.newInsert(new Sprinkler(room1),"sprinkler1"));
+    cmds.add(CommandFactory.newFireAllRules());
+    ksession.execute(CommandFactory.newBatchExecution(cmds));
+    assertEquals(2,events.size());
+    cmds=new ArrayList<Command>();
+    cmds.add(CommandFactory.newRetract(ksession.getFactHandle(fire1)));
+    cmds.add(CommandFactory.newFireAllRules());
+    ksession.execute(CommandFactory.newBatchExecution(cmds));
+  }
+ catch (  Exception e) {
+    System.err.println("Exception in thread " + Thread.currentThread().getName() + ": "+ e.getLocalizedMessage());
+    throw e;
+  }
   return events;
 }
