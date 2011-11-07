@@ -1,0 +1,26 @@
+{
+  String tableName=null;
+  Annotation[] anno=dataClass.getDeclaredAnnotations();
+  for (int i=0; i < anno.length; ++i) {
+    Class<?> annoClass=anno[i].annotationType();
+    if (annoClass.equals(Table.class)) {
+      Method[] annoMethod=annoClass.getMethods();
+      int a=0;
+      while (a < annoMethod.length && !annoMethod[a].getName().equals("name")) {
+        ++a;
+      }
+      try {
+        tableName=(String)annoMethod[a].invoke(anno[i]);
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        fail("Unable to generate HQL query - could not get table name: " + e.getMessage());
+      }
+    }
+  }
+  if (tableName == null) {
+    tableName=dataClass.getName();
+    tableName=tableName.substring(tableName.lastIndexOf('.') + 1).toLowerCase();
+  }
+  return tableName;
+}

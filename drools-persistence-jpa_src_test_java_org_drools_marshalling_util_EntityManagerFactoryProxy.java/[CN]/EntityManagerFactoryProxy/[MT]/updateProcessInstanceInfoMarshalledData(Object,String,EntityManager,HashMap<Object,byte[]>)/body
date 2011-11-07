@@ -1,0 +1,16 @@
+{
+  byte[] origMarshalledBytes=managedProcessInstanceInfoDataMap.get().get(processInstanceInfo);
+  byte[] currMarshalledBytes=getProcessInstanceInfoByteArray(processInstanceInfo);
+  if (Arrays.equals(origMarshalledBytes,currMarshalledBytes)) {
+    return;
+  }
+  updateManagedProcessInfoMap.put(processInstanceInfo,currMarshalledBytes);
+  Long id=MarshallingTestUtil.getProcessInstanceInfoId(processInstanceInfo);
+  byte[] thisMarshalledData=processInstanceInfoMarshalledDataMap.get().get(id);
+  if (thisMarshalledData == null || !Arrays.equals(thisMarshalledData,currMarshalledBytes)) {
+    MarshalledData marshalledData=new MarshalledData(processInstanceInfo);
+    em.persist(marshalledData);
+    processInstanceInfoMarshalledDataMap.get().put(id,marshalledData.byteArray);
+    logger.trace("-!-: " + marshalledData);
+  }
+}

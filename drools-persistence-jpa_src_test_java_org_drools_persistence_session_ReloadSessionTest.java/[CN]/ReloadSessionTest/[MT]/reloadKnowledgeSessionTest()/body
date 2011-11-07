@@ -1,5 +1,5 @@
 {
-  Environment env=initializeEnvironment(emf);
+  Environment env=createEnvironment(context);
   KnowledgeBase kbase=initializeKnowledgeBase(simpleRule);
   StatefulKnowledgeSession commandKSession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
   assertTrue("There should be NO facts present in a new (empty) knowledge session.",commandKSession.getFactHandles().isEmpty());
@@ -15,7 +15,8 @@
   pcm.dispose();
   emf.close();
   emf=Persistence.createEntityManagerFactory(DROOLS_PERSISTENCE_UNIT_NAME);
-  env=initializeEnvironment(emf);
+  context.put(ENTITY_MANAGER_FACTORY,emf);
+  env=createEnvironment(context);
   StatefulKnowledgeSession newCommandKSession=JPAKnowledgeService.loadStatefulKnowledgeSession(sessionInfoId,kbase,null,env);
   factHandles=newCommandKSession.getFactHandles();
   assertTrue("At least one fact should have been persisted by the ksession.insert above.",!factHandles.isEmpty() && factHandles.size() == 1);

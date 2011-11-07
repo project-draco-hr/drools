@@ -1,0 +1,51 @@
+{
+  String testMethodName=null;
+  StackTraceElement[] ste=Thread.currentThread().getStackTrace();
+  FINDTESTMETHOD:   for (int i=3; i < ste.length; ++i) {
+    Class<?> steClass=getSTEClass(ste[i]);
+    if (steClass == null) {
+      continue;
+    }
+    Method[] classMethods=steClass.getMethods();
+    String methodName=ste[i].getMethodName();
+    for (int m=0; m < classMethods.length; ++m) {
+      if (classMethods[m].getName().equals(methodName)) {
+        Annotation[] annos=classMethods[m].getAnnotations();
+        for (int a=0; a < annos.length; ++a) {
+          if (annos[a] instanceof Test) {
+            testMethodName=steClass.getName() + "." + methodName;
+            break FINDTESTMETHOD;
+          }
+        }
+      }
+    }
+  }
+  for (int i=0; testMethodName == null && i < ste.length; ++i) {
+    Class<?> steClass=getSTEClass(ste[i]);
+    if ("runTest".equals(ste[i].getMethodName())) {
+      do {
+        if (TestCase.class.equals(steClass)) {
+          StackTraceElement testMethodSTE=ste[i - 5];
+          testMethodName=getSTEClass(testMethodSTE).getName() + "." + testMethodSTE.getMethodName();
+        }
+        steClass=steClass.getSuperclass();
+      }
+ while (testMethodName == null && steClass != null);
+    }
+  }
+  if (testMethodName == null) {
+    for (int i=0; testMethodName == null && i < ste.length; ++i) {
+      Class<?> steClass=getSTEClass(ste[i]);
+      if ("call".equals(ste[i].getMethodName())) {
+        do {
+          if (DefaultTimerJobInstance.class.equals(steClass)) {
+            StackTraceElement testMethodSTE=ste[i - 5];
+            testMethodName=getSTEClass(testMethodSTE).getName() + "." + testMethodSTE.getMethodName();
+          }
+        }
+ while (true);
+      }
+    }
+  }
+  return testMethodName;
+}

@@ -1,0 +1,52 @@
+{
+  Object result=null;
+  String methodName=method.getName();
+  logger.trace(methodName);
+  lazyInitializeStateMaps(args);
+  if ("createEntityManager".equals(methodName)) {
+    return createEntityManager(methodName,args);
+  }
+ else   if ("persist".equals(methodName) && args.length == 1) {
+    em.persist(args[0]);
+    String testMethodName=MarshallingTestUtil.getTestMethodName();
+    if (testMethodName != null) {
+      persist(testMethodName,args);
+    }
+    return result;
+  }
+ else   if ("merge".equals(methodName) && args.length == 1) {
+    result=em.merge(args[0]);
+    String testMethodName=MarshallingTestUtil.getTestMethodName();
+    if (testMethodName != null) {
+      merge(testMethodName,result);
+    }
+    return result;
+  }
+ else   if ("joinTransaction".equals(methodName) && args == null) {
+    em.joinTransaction();
+    String testMethodName=MarshallingTestUtil.getTestMethodName();
+    if (testMethodName != null) {
+      updateManagedObjects(testMethodName,em);
+    }
+    return result;
+  }
+ else   if ("find".equals(methodName) && args.length == 2) {
+    result=em.find((Class<?>)args[0],args[1]);
+    find(result);
+  }
+ else {
+    Class<?> methodClass=method.getDeclaringClass();
+    if (methodClass.equals(EntityManagerFactory.class)) {
+      result=invoke(method,emf,args);
+    }
+ else     if (methodClass.equals(EntityManager.class)) {
+      result=invoke(method,em,args);
+    }
+ else {
+      RuntimeException re=new RuntimeException("Unexpected class " + methodClass + " for method "+ methodName);
+      re.fillInStackTrace();
+      throw re;
+    }
+  }
+  return result;
+}

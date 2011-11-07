@@ -1,0 +1,34 @@
+{
+  MarshalledData marshalledData=null;
+  if (args[0] instanceof SessionInfo) {
+    SessionInfo sessionInfo=(SessionInfo)args[0];
+    byte[] byteArray=sessionInfo.getData();
+    managedSessionInfoDataMap.get().put(sessionInfo,byteArray != null ? byteArray.clone() : null);
+    if (byteArray != null) {
+      marshalledData=new MarshalledData(sessionInfo);
+      em.persist(marshalledData);
+      logger.trace("-.-: " + marshalledData);
+    }
+  }
+ else   if (args[0] instanceof WorkItemInfo) {
+    WorkItemInfo workItemInfo=(WorkItemInfo)args[0];
+    byte[] byteArray=workItemInfo.getWorkItemByteArray();
+    managedWorkItemInfoDataMap.get().put(workItemInfo,byteArray != null ? byteArray.clone() : null);
+    if (byteArray != null) {
+      marshalledData=new MarshalledData(workItemInfo);
+      em.persist(marshalledData);
+      logger.trace("-.-: " + marshalledData);
+    }
+  }
+ else   if (PROCESS_INSTANCE_INFO_CLASS_NAME.equals(args[0].getClass().getName())) {
+    byte[] byteArray=MarshallingTestUtil.getProcessInstanceInfoByteArray(args[0]);
+    managedProcessInstanceInfoDataMap.get().put(args[0],byteArray != null ? byteArray.clone() : null);
+    Long id=MarshallingTestUtil.getProcessInstanceInfoId(args[0]);
+    processInstanceInfoMarshalledDataMap.get().put(id,byteArray);
+    if (byteArray != null) {
+      marshalledData=new MarshalledData(args[0]);
+      em.persist(marshalledData);
+      logger.trace("-.-: " + marshalledData);
+    }
+  }
+}

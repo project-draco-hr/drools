@@ -1,0 +1,28 @@
+{
+  boolean same=false;
+  try {
+    Field[] fields=objA.getClass().getDeclaredFields();
+    if (fields.length == 0) {
+      same=true;
+    }
+ else {
+      same=true;
+      int i=0;
+      for (; same && i < fields.length; ++i) {
+        DebugContext subContext=context.clone();
+        subContext.level=context.level + 1;
+        subContext.name=context.name + ": " + fields[i].getName()+ " > ";
+        fields[i].setAccessible(true);
+        Object subObjA=fields[i].get(objA);
+        Object subObjB=fields[i].get(objB);
+        same=compareInstances(subContext,subObjA,subObjB);
+      }
+    }
+    context.name+=": " + (same == true ? "=" : "X");
+  }
+ catch (  Exception e) {
+    same=false;
+    Assert.fail(e.getClass().getSimpleName() + ":" + e.getMessage());
+  }
+  return same;
+}

@@ -1,0 +1,65 @@
+{
+  if (context == null) {
+    context=new DebugContext(0,"",true);
+  }
+  boolean same=false;
+  if (objA == null && objB == null) {
+    context.name+="0";
+    same=true;
+  }
+ else   if (objA == null || objB == null) {
+    context.name+="X";
+    same=false;
+  }
+ else   if (objA == objB) {
+    context.name+=objA.getClass().getSimpleName() + " ";
+    String stateSymbol="==";
+    if (objA instanceof Class<?> | objA instanceof Class) {
+      stateSymbol="(=)";
+    }
+    context.name+=stateSymbol;
+    same=true;
+  }
+ else   if (objA.getClass().getName().equals(objB.getClass().getName())) {
+    Class<?> objClass=objA.getClass();
+    context.name+="|" + context.level + "| "+ objClass.getSimpleName();
+    boolean primitiveBasedObjectOrCollection=false;
+    if (javaPackages.contains(objClass.getPackage())) {
+      primitiveBasedObjectOrCollection=true;
+      same=comparePrimitiveBasedOrCollectionInstances(context,objA,objB);
+    }
+ else     if (objA.getClass().isArray()) {
+      same=compareArrays(objA,objB);
+    }
+ else {
+      Class<?> superClass=objClass.getSuperclass();
+      while (superClass != null) {
+        if (superClass.equals(Enum.class)) {
+          same=objA.equals(objB);
+          primitiveBasedObjectOrCollection=true;
+          break;
+        }
+        superClass=superClass.getSuperclass();
+      }
+    }
+    if (!primitiveBasedObjectOrCollection) {
+      if (seenObjects.add(objA)) {
+        same=compareInstancesOfSameClass(context,objA,objB);
+        if (!same) {
+          seenObjects.remove(objA);
+        }
+      }
+ else {
+        context.name+=": !";
+        same=true;
+      }
+    }
+  }
+ else {
+    context.name+=": X";
+  }
+  if (context.print) {
+    logger.trace(context.name);
+  }
+  return same;
+}

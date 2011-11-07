@@ -1,0 +1,54 @@
+{
+  HashMap<String,Object> testContext=initializeMarshalledDataEMF(persistenceUnitName,testClass,DO_NOT_COMPARE_MAKING_BASE_DB);
+  if (DO_NOT_COMPARE_MAKING_BASE_DB) {
+    List<MarshalledData> baseDataList=null;
+    try {
+      EntityManagerFactory testEMF=(EntityManagerFactory)testContext.get(ENTITY_MANAGER_FACTORY);
+      baseDataList=retrieveMarshallingData(testEMF);
+    }
+  finally {
+      tearDown(testContext);
+    }
+    assertNotNull("Could not rerieve list of MarshalledData from base db.",baseDataList);
+    assertTrue("List of MarshalledData from base db is empty.",!baseDataList.isEmpty());
+    for (    MarshalledData marshalledData : baseDataList) {
+      try {
+        logger.debug("Unmarshalling snapshot: " + marshalledData.getTestMethodAndSnapshotNum());
+        unmarshallSession(marshalledData);
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        fail("Exception thrown while unmarshalling [" + marshalledData.getTestMethodAndSnapshotNum() + "] data stored in base database");
+      }
+    }
+    logger.debug("MarshalledData objects saved in base db:");
+    for (    MarshalledData marshalledData : baseDataList) {
+      logger.debug("- " + marshalledData);
+    }
+    return;
+  }
+  List<MarshalledData> testDataList=null;
+  try {
+    EntityManagerFactory testEMF=(EntityManagerFactory)testContext.get(ENTITY_MANAGER_FACTORY);
+    testDataList=retrieveMarshallingData(testEMF);
+  }
+  finally {
+    tearDown(testContext);
+  }
+  assertNotNull("Not marshalled data found for " + testClass.getSimpleName(),testDataList != null && !testDataList.isEmpty());
+  String[] baseDbVersions=getListOfBaseDbVers(testClass);
+  for (int v=0; v < baseDbVersions.length; ++v) {
+    logger.info("Loading marshalled data from base DB version: [" + baseDbVersions[v] + "]");
+    HashMap<String,Object> baseContext=initializeMarshalledDataEMF(persistenceUnitName,testClass,true,baseDbVersions[v]);
+    List<MarshalledData> baseDataList=null;
+    try {
+      EntityManagerFactory baseEMF=(EntityManagerFactory)baseContext.get(ENTITY_MANAGER_FACTORY);
+      baseDataList=retrieveMarshallingData(baseEMF);
+    }
+  finally {
+      tearDown(baseContext);
+    }
+    assertTrue("No base marshalled data found",baseDataList != null && !baseDataList.isEmpty());
+    compareTestAndBaseMarshallingData(testClass,testDataList,baseDataList);
+  }
+}

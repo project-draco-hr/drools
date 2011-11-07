@@ -1,0 +1,45 @@
+{
+  boolean same=true;
+  Object[] arrayA=(Object[])toArrayMethod.invoke(objA,(Object[])null);
+  Object[] arrayB=(Object[])toArrayMethod.invoke(objB,(Object[])null);
+  if (arrayA == null && arrayB == null) {
+    return true;
+  }
+ else   if (arrayA == null || arrayB == null) {
+    return false;
+  }
+ else {
+    if (arrayA.length != arrayB.length) {
+      return false;
+    }
+    if (arrayA.length == 0) {
+      return true;
+    }
+    Class<?> superClass=objA.getClass().getSuperclass();
+    boolean isSet=false;
+    while (superClass != null) {
+      if (superClass.equals(AbstractSet.class)) {
+        isSet=true;
+      }
+      superClass=superClass.getSuperclass();
+    }
+    for (int a=0; same && a < arrayA.length; ++a) {
+      Object subObjA=arrayA[a];
+      if (!isSet) {
+        Object subObjB=arrayB[a];
+        same=compareInstances(context,subObjA,subObjB);
+      }
+ else {
+        boolean elementIsSame=false;
+        for (int b=0; !elementIsSame && b < arrayB.length; ++b) {
+          Object subObjB=arrayB[b];
+          elementIsSame=compareInstances(context,subObjA,subObjB);
+        }
+        if (elementIsSame == false) {
+          same=false;
+        }
+      }
+    }
+  }
+  return same;
+}

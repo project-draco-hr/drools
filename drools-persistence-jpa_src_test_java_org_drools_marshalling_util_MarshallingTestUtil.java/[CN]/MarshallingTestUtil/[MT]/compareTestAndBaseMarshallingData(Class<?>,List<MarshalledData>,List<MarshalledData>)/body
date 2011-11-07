@@ -1,0 +1,40 @@
+{
+  HashMap<String,List<MarshalledData>> testSnapshotsPerTestMap=extractSnapshotsPerTestMethodMap(testClass,testData);
+  HashMap<String,List<MarshalledData>> baseSnapshotsPerTestMap=extractSnapshotsPerTestMethodMap(testClass,baseData);
+  sanityCheckMarshalledData(testClass,testSnapshotsPerTestMap,baseSnapshotsPerTestMap);
+  HashMap<String,MarshalledData> testMarshalledDataSnapshotMap=new HashMap<String,MarshalledData>();
+  HashMap<String,MarshalledData> baseMarshalledDataSnapshotMap=new HashMap<String,MarshalledData>();
+  for (  String testMethod : testSnapshotsPerTestMap.keySet()) {
+    for (    MarshalledData testMarshalledData : testSnapshotsPerTestMap.get(testMethod)) {
+      testMarshalledDataSnapshotMap.put(testMarshalledData.getTestMethodAndSnapshotNum(),testMarshalledData);
+    }
+  }
+  for (  String testMethod : baseSnapshotsPerTestMap.keySet()) {
+    for (    MarshalledData baseMarshalledData : baseSnapshotsPerTestMap.get(testMethod)) {
+      baseMarshalledDataSnapshotMap.put(baseMarshalledData.getTestMethodAndSnapshotNum(),baseMarshalledData);
+    }
+  }
+  for (  String testMethodVer : testMarshalledDataSnapshotMap.keySet()) {
+    logger.info("Comparing marshalled info for " + testMethodVer);
+    StatefulKnowledgeSession baseKSession=null;
+    try {
+      MarshalledData baseMarshalledData=baseMarshalledDataSnapshotMap.get(testMethodVer);
+      baseKSession=unmarshallSession(baseMarshalledData);
+    }
+ catch (    Exception e) {
+      e.printStackTrace();
+      fail("Unable to unmarshall base data [" + testMethodVer + "]: "+ e.getClass().getSimpleName()+ ": "+ e.getMessage()+ "]");
+    }
+    StatefulKnowledgeSession testKSession=null;
+    try {
+      MarshalledData testMarshalledData=testMarshalledDataSnapshotMap.get(testMethodVer);
+      testKSession=unmarshallSession(testMarshalledData);
+    }
+ catch (    Exception e) {
+      fail("Unable to unmarshall test data: [" + e.getClass().getSimpleName() + ": "+ e.getMessage()+ "]");
+    }
+    assertNotNull("Unmarshalled test data resulted in null object!",testKSession);
+    assertNotNull("Unmarshalled base data resulted in null object!",baseKSession);
+    assertTrue("Unmarshalled " + baseKSession.getClass().getSimpleName() + " objects are not equal.",CompareViaReflectionUtil.compareInstances(baseKSession,testKSession));
+  }
+}

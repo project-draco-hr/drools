@@ -1,0 +1,17 @@
+{
+  ArrayList<MarshalledData> marshalledDataList=new ArrayList<MarshalledData>();
+  JtaTransactionManager txm=new JtaTransactionManager(null,null,null);
+  boolean txOwner=txm.begin();
+  EntityManager em=emf.createEntityManager();
+  @SuppressWarnings("unchecked") List<Object> mdList=em.createQuery("SELECT m FROM MarshalledData m").getResultList();
+  for (  Object resultObject : mdList) {
+    MarshalledData marshalledData=(MarshalledData)resultObject;
+    if (StringUtils.isEmpty(marshalledData.testMethodName) || marshalledData.snapshotNumber == null) {
+      fail("MarshalledData object does not contain the proper identification information.");
+    }
+    marshalledDataList.add(marshalledData);
+    logger.trace("> " + marshalledData);
+  }
+  txm.commit(txOwner);
+  return marshalledDataList;
+}

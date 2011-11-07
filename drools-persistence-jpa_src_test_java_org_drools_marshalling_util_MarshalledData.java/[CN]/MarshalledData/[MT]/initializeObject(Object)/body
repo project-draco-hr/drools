@@ -1,0 +1,37 @@
+{
+  if (testMethodSnapshotNumMap.get(this.testMethodName) == null) {
+    testMethodSnapshotNumMap.put(this.testMethodName,new AtomicInteger(-1));
+  }
+  this.snapshotNumber=testMethodSnapshotNumMap.get(this.testMethodName).incrementAndGet();
+  String className=marshalledClassInstance.getClass().getName();
+  this.marshalledObjectClassName=className;
+  if (className.equals(SessionInfo.class.getName())) {
+    SessionInfo sessionInfo=(SessionInfo)marshalledClassInstance;
+    this.byteArray=sessionInfo.getData();
+    this.marshalledObjectId=sessionInfo.getId().longValue();
+    try {
+      storeAssociatedKnowledgeBase(sessionInfo);
+    }
+ catch (    IOException ioe) {
+      Assert.fail("Unable to retrieve marshalled data or id for " + className + " object: ["+ ioe.getClass().getSimpleName()+ ", "+ ioe.getMessage());
+    }
+  }
+ else   if (className.equals(WorkItemInfo.class.getName())) {
+    WorkItemInfo workItemInfo=(WorkItemInfo)marshalledClassInstance;
+    this.byteArray=workItemInfo.getWorkItemByteArray();
+    this.marshalledObjectId=workItemInfo.getId();
+  }
+ else   if (PROCESS_INSTANCE_INFO_CLASS_NAME.equals(className)) {
+    Class<?> processInstanceInfoClass=null;
+    try {
+      this.byteArray=getProcessInstanceInfoByteArray(marshalledClassInstance);
+      processInstanceInfoClass=Class.forName(className);
+      Method getIdMethod=processInstanceInfoClass.getMethod("getId",(Class[])null);
+      Object idObject=getIdMethod.invoke(marshalledClassInstance,(Object[])null);
+      this.marshalledObjectId=(Long)idObject;
+    }
+ catch (    Exception e) {
+      Assert.fail("Unable to retrieve marshalled data or id for " + className + " object: ["+ e.getClass().getSimpleName()+ ", "+ e.getMessage());
+    }
+  }
+}

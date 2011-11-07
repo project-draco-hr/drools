@@ -1,0 +1,43 @@
+{
+  boolean same=true;
+  @SuppressWarnings("unchecked") Set<Map.Entry<?,?>> entrySetA=(Set<Map.Entry<?,?>>)entrySetMethod.invoke(objA,(Object[])null);
+  @SuppressWarnings("unchecked") Set<Map.Entry<?,?>> entrySetB=(Set<Map.Entry<?,?>>)entrySetMethod.invoke(objB,(Object[])null);
+  if (entrySetA == null && entrySetB == null) {
+    return true;
+  }
+ else   if (entrySetA == null || entrySetB == null) {
+    return false;
+  }
+ else {
+    if (entrySetA.size() != entrySetB.size()) {
+      return false;
+    }
+    if (entrySetA.size() == 0) {
+      return true;
+    }
+    for (    Entry<?,?> entryA : entrySetA) {
+      boolean elementIsSame=false;
+      Object keyA=entryA.getKey();
+      for (      Entry<?,?> entryB : entrySetB) {
+        Object keyB=entryB.getKey();
+        DebugContext entryContext=context.clone();
+        String name=context.name + ": ";
+        entryContext.level=context.level + 1;
+        entryContext.name=name + "<key> ";
+        entryContext.print=false;
+        if (compareInstances(entryContext,keyA,keyB)) {
+          logger.trace(entryContext.name);
+          entryContext.name=name + "<entry> ";
+          entryContext.print=true;
+          elementIsSame=compareInstances(entryContext,entryA.getValue(),entryB.getValue());
+          break;
+        }
+      }
+      if (!elementIsSame) {
+        same=false;
+        break;
+      }
+    }
+  }
+  return same;
+}

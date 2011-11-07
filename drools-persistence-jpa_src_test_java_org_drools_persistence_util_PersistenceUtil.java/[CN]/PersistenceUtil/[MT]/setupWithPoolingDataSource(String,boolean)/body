@@ -1,0 +1,50 @@
+{
+  HashMap<String,Object> context=new HashMap<String,Object>();
+  Properties dsProps=getDatasourceProperties();
+  String jdbcUrl=dsProps.getProperty("url");
+  String driverClass=dsProps.getProperty("driverClassName");
+  if (!driverClass.startsWith("org.h2")) {
+    testMarshalling=false;
+  }
+  Object testMarshallingProperty=dsProps.get("testMarshalling");
+  if (!"true".equals(testMarshallingProperty)) {
+    testMarshalling=false;
+  }
+  if (testMarshalling) {
+    System.setProperty("h2.lobInDatabase","true");
+    Class<?> testClass=null;
+    StackTraceElement[] ste=Thread.currentThread().getStackTrace();
+    int i=1;
+    do {
+      try {
+        testClass=Class.forName(ste[i++].getClassName());
+      }
+ catch (      ClassNotFoundException e) {
+      }
+    }
+ while (PersistenceUtil.class.equals(testClass) && i < ste.length);
+    assertNotNull("Unable to resolve test class!",testClass);
+    jdbcUrl=initializeTestDb(dsProps,testClass);
+  }
+ else {
+    jdbcUrl+="tcp://localhost/JPADroolsFlow";
+  }
+  PoolingDataSource ds1=setupPoolingDataSource(dsProps);
+  ds1.getDriverProperties().setProperty("url",jdbcUrl);
+  ds1.init();
+  context.put(DATASOURCE,ds1);
+  EntityManagerFactory emf;
+  if (testMarshalling) {
+    Properties overrideProperties=new Properties();
+    overrideProperties.setProperty("hibernate.connection.url",jdbcUrl);
+    EntityManagerFactory realEmf=Persistence.createEntityManagerFactory(persistenceUnitName,overrideProperties);
+    emf=(EntityManagerFactory)EntityManagerFactoryProxy.newInstance(realEmf);
+    UserTransaction ut=(UserTransaction)UserTransactionProxy.newInstance(realEmf);
+    context.put(TRANSACTION,ut);
+  }
+ else {
+    emf=Persistence.createEntityManagerFactory(persistenceUnitName);
+  }
+  context.put(ENTITY_MANAGER_FACTORY,emf);
+  return context;
+}
