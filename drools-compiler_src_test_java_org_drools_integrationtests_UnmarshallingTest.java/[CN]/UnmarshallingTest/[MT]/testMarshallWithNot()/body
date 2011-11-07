@@ -1,0 +1,20 @@
+{
+  String whenBenNotVilgaxRule="import " + getClass().getCanonicalName() + ".*\n"+ "rule one\n"+ "when\n"+ "   Ben()\n"+ "   not(Vilgax())\n"+ "then\n"+ "   //System.out.println(\"Ben!\");\n"+ "end\n"+ "\n"+ "rule two\n"+ "when\n"+ "   Ben()\n"+ "then\n"+ "   //System.out.println(\"Vilgax..\");\n"+ "end\n";
+  KnowledgeBase knowledgeBase=initializeKnowledgeBase(whenBenNotVilgaxRule);
+  StatefulKnowledgeSession ksession=knowledgeBase.newStatefulKnowledgeSession();
+  ksession.insert(new Ben());
+  ByteArrayOutputStream baos=new ByteArrayOutputStream();
+  MarshallerFactory.newMarshaller(knowledgeBase).marshall(baos,ksession);
+  ksession.dispose();
+  knowledgeBase=SerializationHelper.serializeObject(knowledgeBase);
+  ByteArrayInputStream bais=new ByteArrayInputStream(baos.toByteArray());
+  try {
+    ksession=MarshallerFactory.newMarshaller(knowledgeBase).unmarshall(bais);
+  }
+ catch (  Throwable t) {
+    t.printStackTrace();
+    fail(t.getClass().getSimpleName() + " thrown when trying to unmarshall (see stack trace in output).");
+  }
+  int rules=ksession.fireAllRules();
+  Assert.assertEquals(2,rules);
+}
