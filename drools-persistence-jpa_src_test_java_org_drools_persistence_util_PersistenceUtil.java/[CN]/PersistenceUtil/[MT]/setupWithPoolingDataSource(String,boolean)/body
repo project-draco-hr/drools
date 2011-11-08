@@ -3,14 +3,15 @@
   Properties dsProps=getDatasourceProperties();
   String jdbcUrl=dsProps.getProperty("url");
   String driverClass=dsProps.getProperty("driverClassName");
+  TEST_MARSHALLING=testMarshalling;
   if (!driverClass.startsWith("org.h2")) {
-    testMarshalling=false;
+    TEST_MARSHALLING=false;
   }
   Object testMarshallingProperty=dsProps.get("testMarshalling");
   if (!"true".equals(testMarshallingProperty)) {
-    testMarshalling=false;
+    TEST_MARSHALLING=false;
   }
-  if (testMarshalling) {
+  if (TEST_MARSHALLING) {
     System.setProperty("h2.lobInDatabase","true");
     Class<?> testClass=null;
     StackTraceElement[] ste=Thread.currentThread().getStackTrace();
@@ -34,7 +35,7 @@
   ds1.init();
   context.put(DATASOURCE,ds1);
   EntityManagerFactory emf;
-  if (testMarshalling) {
+  if (TEST_MARSHALLING) {
     Properties overrideProperties=new Properties();
     overrideProperties.setProperty("hibernate.connection.url",jdbcUrl);
     EntityManagerFactory realEmf=Persistence.createEntityManagerFactory(persistenceUnitName,overrideProperties);
