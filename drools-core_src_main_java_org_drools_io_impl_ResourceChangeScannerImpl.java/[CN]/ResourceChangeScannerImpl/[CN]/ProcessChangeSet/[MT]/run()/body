@@ -4,19 +4,25 @@ synchronized (this) {
       this.listener.info("ResourceChangeNotification scanner has started");
     }
     while (this.scan) {
-      Exception exception=null;
+      try {
 synchronized (this.resources) {
-        this.scanner.scan();
+          this.scanner.scan();
+        }
+      }
+ catch (      RuntimeException e) {
+        this.listener.exception(e);
+      }
+catch (      Error e) {
+        this.listener.exception(e);
       }
       try {
         this.listener.debug("ResourceChangeScanner thread is waiting for " + this.interval + " seconds.");
         wait(this.interval * 1000);
       }
  catch (      InterruptedException e) {
-        exception=e;
-      }
-      if (this.scan && exception != null) {
-        this.listener.exception(new RuntimeException("ResourceChangeNotification ChangeSet scanning thread was interrupted, but shutdown was not requested",exception));
+        if (this.scan) {
+          this.listener.exception(new RuntimeException("ResourceChangeNotification ChangeSet scanning thread was interrupted, but shutdown was not requested",e));
+        }
       }
     }
     this.listener.info("ResourceChangeNotification scanner has stopped");
