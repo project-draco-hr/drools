@@ -5,11 +5,13 @@
   this.env=env;
   checkEnvironment(this.env);
   initTransactionManager(this.env);
-  initKsession(sessionId,kbase,conf);
+  PersistenceContext persistenceContext=jpm.getApplicationScopedPersistenceContext();
   boolean transactionOwner=false;
   try {
     transactionOwner=txm.begin();
     registerRollbackSync();
+    persistenceContext.joinTransaction();
+    initKsession(sessionId,kbase,conf,persistenceContext);
     txm.commit(transactionOwner);
   }
  catch (  RuntimeException re) {

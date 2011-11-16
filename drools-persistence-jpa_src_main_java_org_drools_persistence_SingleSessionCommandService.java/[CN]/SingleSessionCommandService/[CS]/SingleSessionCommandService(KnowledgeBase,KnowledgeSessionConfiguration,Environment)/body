@@ -16,11 +16,13 @@
   config.setMarshallWorkItems(false);
   this.sessionInfo.setJPASessionMashallingHelper(this.marshallingHelper);
   ((InternalKnowledgeRuntime)this.ksession).setEndOperationListener(new EndOperationListenerImpl(this.sessionInfo));
+  PersistenceContext persistenceContext=jpm.getApplicationScopedPersistenceContext();
   boolean transactionOwner=false;
   try {
     transactionOwner=txm.begin();
     registerRollbackSync();
-    jpm.getApplicationScopedPersistenceContext().persist(this.sessionInfo);
+    persistenceContext.joinTransaction();
+    persistenceContext.persist(this.sessionInfo);
     txm.commit(transactionOwner);
   }
  catch (  RuntimeException re) {
