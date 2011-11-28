@@ -1,7 +1,19 @@
 {
-  if (compiledExpression == null)   compile();
+  if (TEST_JITTING)   return isJITAllowed(handle,workingMemory,context);
+  if (!jitted) {
+    if (conditionEvaluator == null) {
+      conditionEvaluator=new MvelConditionEvaluator(getImportString() + mvelExp);
+    }
+ else {
+      if (invocationCounter.getAndIncrement() == JIT_THRESOLD) {
+        CompositeClassLoader classLoader=((AbstractRuleBase)workingMemory.getRuleBase()).getRootClassLoader();
+        conditionEvaluator=ASMConditionEvaluatorJitter.jit(((MvelConditionEvaluator)conditionEvaluator).getCompiledExpression(),classLoader);
+        jitted=true;
+      }
+    }
+  }
   try {
-    return (Boolean)MVEL.executeExpression(compiledExpression,handle.getObject());
+    return conditionEvaluator.evaluate(handle.getObject());
   }
  catch (  ClassCastException cce) {
     return false;

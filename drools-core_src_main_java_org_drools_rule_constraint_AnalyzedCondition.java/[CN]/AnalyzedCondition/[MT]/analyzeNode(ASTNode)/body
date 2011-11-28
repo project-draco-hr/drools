@@ -1,0 +1,27 @@
+{
+  if (node instanceof RegExMatch) {
+    ExecutableAccessor executableAccessor=getFieldValue(RegExMatch.class,"stmt",(RegExMatch)node);
+    node=executableAccessor.getNode();
+  }
+  if (node instanceof LiteralNode) {
+    LiteralNode literalNode=(LiteralNode)node;
+    return new FixedExpression(new TypedValue(literalNode.getEgressType(),literalNode.getLiteralValue()));
+  }
+  Accessor accessor=node.getAccessor();
+  EvaluatedExpression expression=new EvaluatedExpression();
+  AccessorNode accessorNode=null;
+  if (accessor instanceof DynamicGetAccessor) {
+    accessorNode=getFieldValue(DynamicGetAccessor.class,"_accessor",(DynamicGetAccessor)accessor);
+  }
+ else   if (accessor instanceof AccessorNode) {
+    accessorNode=(AccessorNode)accessor;
+  }
+ else {
+    throw new RuntimeException("Unknown expression type: " + node);
+  }
+  while (accessorNode != null) {
+    expression.addInvocation(analyzeAccessor(accessorNode));
+    accessorNode=accessorNode.getNextNode();
+  }
+  return expression;
+}
