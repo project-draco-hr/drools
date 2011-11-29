@@ -1,7 +1,7 @@
 {
   boolean mvelValue=false;
   if (conditionEvaluator == null) {
-    conditionEvaluator=new MvelConditionEvaluator(getImportString() + mvelExp);
+    conditionEvaluator=new MvelConditionEvaluator(getParserConfiguration(workingMemory),mvelExp);
     try {
       mvelValue=conditionEvaluator.evaluate(handle.getObject());
     }
@@ -11,7 +11,7 @@
     }
     try {
       CompositeClassLoader classLoader=((AbstractRuleBase)workingMemory.getRuleBase()).getRootClassLoader();
-      conditionEvaluator=ASMConditionEvaluatorJitter.jit(((MvelConditionEvaluator)conditionEvaluator).getCompiledExpression(),classLoader);
+      conditionEvaluator=ASMConditionEvaluatorJitter.jit(((MvelConditionEvaluator)conditionEvaluator).getExecutableStatement(),classLoader);
     }
  catch (    Throwable t) {
       throw new RuntimeException("Exception jitting: " + mvelExp,t);
@@ -24,6 +24,5 @@
  catch (  ClassCastException cce) {
     return false;
   }
-  System.out.println(mvelExp + " => mvel = " + mvelValue+ "; asm = "+ asmValue);
   return asmValue;
 }

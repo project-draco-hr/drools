@@ -4,11 +4,11 @@
   }
   Class<?> leftType=left.getType();
   Class<?> rightType=right.getType();
-  jitTopExpression(mv,left,type);
+  jitTopExpression(mv,left,type != null ? type : leftType);
   store(2,leftType);
-  jitTopExpression(mv,right,type);
+  jitTopExpression(mv,right,type != null ? type : rightType);
   store(4,rightType);
-  Label notNullLabel=jitLeftIsNull(mv,leftType == type ? jitNullSafeOperationStart(mv) : jitNullSafeCoercion(mv,leftType,type));
+  Label notNullLabel=jitLeftIsNull(mv,type == null || leftType == type ? jitNullSafeOperationStart(mv) : jitNullSafeCoercion(mv,leftType,type));
   AnalyzedCondition.BooleanOperator operation=analyzedCondition.getOperation();
   if (operation.isEquality()) {
     checkNullEquality(mv,operation);
@@ -18,7 +18,10 @@
   }
   returnOnNull(mv,notNullLabel);
   loadOperands(mv,right,type,rightType);
-  if (operation == AnalyzedCondition.BooleanOperator.MATCHES) {
+  if (operation == AnalyzedCondition.BooleanOperator.CONTAINS) {
+    invokeStatic(EvaluatorHelper.class,"contains",boolean.class,Object.class,Object.class);
+  }
+ else   if (operation == AnalyzedCondition.BooleanOperator.MATCHES) {
     invokeVirtual(type,"matches",boolean.class,String.class);
   }
  else   if (operation.isEquality()) {
