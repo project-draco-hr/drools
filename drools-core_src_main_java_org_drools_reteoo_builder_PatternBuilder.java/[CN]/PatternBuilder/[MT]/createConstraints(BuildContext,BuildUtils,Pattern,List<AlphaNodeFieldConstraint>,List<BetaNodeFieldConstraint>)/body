@@ -1,0 +1,24 @@
+{
+  final List<?> constraints=pattern.getConstraints();
+  checkRemoveIdentities(context,pattern,betaConstraints);
+  final boolean isNegative=isNegative(context);
+  for (final Iterator<?> it=constraints.iterator(); it.hasNext(); ) {
+    final Object object=it.next();
+    if (object instanceof Declaration) {
+      continue;
+    }
+    final Constraint constraint=(Constraint)object;
+    if (constraint.getType().equals(Constraint.ConstraintType.ALPHA)) {
+      alphaConstraints.add((AlphaNodeFieldConstraint)constraint);
+    }
+ else     if (constraint.getType().equals(Constraint.ConstraintType.BETA)) {
+      betaConstraints.add((BetaNodeFieldConstraint)constraint);
+      if (isNegative && context.getRuleBase().getConfiguration().getEventProcessingMode() == EventProcessingOption.STREAM && pattern.getObjectType().isEvent() && constraint.isTemporal()) {
+        checkDelaying(context,constraint);
+      }
+    }
+ else {
+      throw new RuntimeDroolsException("Unknown constraint type: " + constraint.getType() + ". This is a bug. Please contact development team.");
+    }
+  }
+}
