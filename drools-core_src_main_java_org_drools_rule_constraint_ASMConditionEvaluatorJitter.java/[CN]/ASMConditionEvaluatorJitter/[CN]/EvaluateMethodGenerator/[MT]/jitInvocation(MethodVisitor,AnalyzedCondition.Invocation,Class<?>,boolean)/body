@@ -1,20 +1,18 @@
 {
-  Method method=invocation.method;
-  if (firstInvocation && (method == null || (method.getModifiers() & Modifier.STATIC) == 0)) {
-    mv.visitVarInsn(ALOAD,1);
+  if (invocation instanceof AnalyzedCondition.MethodInvocation) {
+    jitMethodInvocation(mv,(AnalyzedCondition.MethodInvocation)invocation,currentClass,firstInvocation);
   }
-  if (method == null) {
-    if (firstInvocation)     return invocation.getReturnType();
- else     throw new RuntimeException("access to this not in first position");
+ else   if (invocation instanceof AnalyzedCondition.ConstructorInvocation) {
+    jitConstructorInvocation(mv,(AnalyzedCondition.ConstructorInvocation)invocation);
   }
-  if (!method.getDeclaringClass().isAssignableFrom(currentClass)) {
-    cast(method.getDeclaringClass());
+ else   if (invocation instanceof AnalyzedCondition.ListAccessInvocation) {
+    jitListAccessInvocation(mv,(AnalyzedCondition.ListAccessInvocation)invocation);
   }
-  if (invocation.arguments != null) {
-    for (    AnalyzedCondition.Expression argument : invocation.arguments) {
-      jitExpression(mv,argument);
-    }
+ else   if (invocation instanceof AnalyzedCondition.MapAccessInvocation) {
+    jitMapAccessInvocation(mv,(AnalyzedCondition.MapAccessInvocation)invocation);
   }
-  invoke(method);
+ else {
+    jitFieldAccessInvocation(mv,(AnalyzedCondition.FieldAccessInvocation)invocation,currentClass,firstInvocation);
+  }
   return invocation.getReturnType();
 }

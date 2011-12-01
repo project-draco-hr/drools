@@ -1,0 +1,62 @@
+{
+  if (accessorNode instanceof GetterAccessor) {
+    return new MethodInvocation(((GetterAccessor)accessorNode).getMethod());
+  }
+  if (accessorNode instanceof MethodAccessor) {
+    MethodAccessor methodAccessor=(MethodAccessor)accessorNode;
+    MethodInvocation invocation=new MethodInvocation(methodAccessor.getMethod());
+    ExecutableStatement[] params=methodAccessor.getParms();
+    Class[] paramTypes=getFieldValue(MethodAccessor.class,"parameterTypes",methodAccessor);
+    readInvocationParams(invocation,params,paramTypes);
+    return invocation;
+  }
+  if (accessorNode instanceof ConstructorAccessor) {
+    ConstructorAccessor constructorAccessor=(ConstructorAccessor)accessorNode;
+    Constructor constructor=getFieldValue(ConstructorAccessor.class,"constructor",constructorAccessor);
+    ConstructorInvocation invocation=new ConstructorInvocation(constructor);
+    ExecutableStatement[] params=getFieldValue(ConstructorAccessor.class,"parms",constructorAccessor);
+    Class[] paramTypes=getFieldValue(ConstructorAccessor.class,"parmTypes",constructorAccessor);
+    readInvocationParams(invocation,params,paramTypes);
+    return invocation;
+  }
+  if (accessorNode instanceof ListAccessor) {
+    Class<?> listType=getListType(formerInvocation);
+    ListAccessor listAccessor=(ListAccessor)accessorNode;
+    return new ListAccessInvocation(listType,new FixedExpression(int.class,listAccessor.getIndex()));
+  }
+  if (accessorNode instanceof ListAccessorNest) {
+    Class<?> listType=getListType(formerInvocation);
+    ListAccessorNest listAccessorNest=(ListAccessorNest)accessorNode;
+    ExecutableAccessor index=(ExecutableAccessor)listAccessorNest.getIndex();
+    return new ListAccessInvocation(listType,analyzeNode(index.getNode()));
+  }
+  if (accessorNode instanceof MapAccessorNest) {
+    Class<?> keyType=Object.class;
+    Class<?> valueType=Object.class;
+    Type[] generics=getGenerics(formerInvocation);
+    if (generics != null && generics.length == 2 && generics[0] instanceof Class) {
+      if (generics[0] instanceof Class)       keyType=(Class<?>)generics[0];
+      if (generics[1] instanceof Class)       valueType=(Class<?>)generics[1];
+    }
+    MapAccessorNest mapAccessor=(MapAccessorNest)accessorNode;
+    ExecutableStatement statement=mapAccessor.getProperty();
+    if (statement instanceof ExecutableLiteral) {
+      return new MapAccessInvocation(keyType,valueType,new FixedExpression(keyType,((ExecutableLiteral)statement).getLiteral()));
+    }
+ else {
+      return new MapAccessInvocation(keyType,valueType,analyzeNode(((ExecutableAccessor)statement).getNode()));
+    }
+  }
+  if (accessorNode instanceof FieldAccessor) {
+    return new FieldAccessInvocation(((FieldAccessor)accessorNode).getField());
+  }
+  if (accessorNode instanceof StaticVarAccessor) {
+    StaticVarAccessor staticVarAccessor=((StaticVarAccessor)accessorNode);
+    Field field=getFieldValue(StaticVarAccessor.class,"field",staticVarAccessor);
+    return new FieldAccessInvocation(field);
+  }
+  if (accessorNode instanceof ThisValueAccessor) {
+    return new MethodInvocation(null);
+  }
+  throw new RuntimeException("Unknown AccessorNode type: " + accessorNode.getClass().getName());
+}

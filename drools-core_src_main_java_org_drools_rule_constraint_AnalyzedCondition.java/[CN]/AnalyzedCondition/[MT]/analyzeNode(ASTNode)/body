@@ -5,10 +5,17 @@
   }
   if (node instanceof LiteralNode) {
     LiteralNode literalNode=(LiteralNode)node;
-    return new FixedExpression(new TypedValue(literalNode.getEgressType(),literalNode.getLiteralValue()));
+    return new FixedExpression(literalNode.getEgressType(),literalNode.getLiteralValue());
+  }
+  if (node instanceof BinaryOperation) {
+    BinaryOperation binaryOperation=(BinaryOperation)node;
+    Object value=binaryOperation.getReducedValue(parserContext,null,new ImmutableDefaultFactory());
+    return new FixedExpression(binaryOperation.getEgressType(),value);
   }
   Accessor accessor=node.getAccessor();
-  EvaluatedExpression expression=new EvaluatedExpression();
+  if (accessor == null && node instanceof NewObjectNode) {
+    accessor=getFieldValue(NewObjectNode.class,"newObjectOptimizer",(NewObjectNode)node);
+  }
   AccessorNode accessorNode=null;
   if (accessor instanceof DynamicGetAccessor) {
     accessorNode=getFieldValue(DynamicGetAccessor.class,"_accessor",(DynamicGetAccessor)accessor);
@@ -16,11 +23,26 @@
  else   if (accessor instanceof AccessorNode) {
     accessorNode=(AccessorNode)accessor;
   }
+ else   if (accessor instanceof CompiledExpression) {
+    return analyzeNode(((CompiledExpression)accessor).getFirstNode());
+  }
  else {
     throw new RuntimeException("Unknown expression type: " + node);
   }
+  while (accessorNode != null && accessorNode instanceof VariableAccessor) {
+    accessorNode=accessorNode.getNextNode();
+  }
+  while (accessorNode instanceof StaticReferenceAccessor) {
+    StaticReferenceAccessor staticReferenceAccessor=((StaticReferenceAccessor)accessorNode);
+    Object literal=staticReferenceAccessor.getLiteral();
+    accessorNode=accessorNode.getNextNode();
+    if (accessorNode == null)     return new FixedExpression(literal.getClass(),literal);
+  }
+  EvaluatedExpression expression=new EvaluatedExpression();
+  Invocation invocation=null;
   while (accessorNode != null) {
-    expression.addInvocation(analyzeAccessor(accessorNode));
+    invocation=analyzeAccessor(accessorNode,invocation);
+    if (invocation != null)     expression.addInvocation(invocation);
     accessorNode=accessorNode.getNextNode();
   }
   return expression;

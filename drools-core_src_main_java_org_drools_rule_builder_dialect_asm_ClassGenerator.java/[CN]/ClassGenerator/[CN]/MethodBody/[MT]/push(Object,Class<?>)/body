@@ -1,0 +1,24 @@
+{
+  if (obj == null) {
+    mv.visitInsn(ACONST_NULL);
+    return;
+  }
+  if (type == String.class || type == Object.class) {
+    mv.visitLdcInsn(obj);
+  }
+ else   if (type.isPrimitive()) {
+    if (obj instanceof String) {
+      obj=coerceStringToPrimitive(type,(String)obj);
+    }
+ else {
+      obj=coercePrimitiveToPrimitive(type,obj);
+    }
+    mv.visitLdcInsn(obj);
+  }
+ else   if (type == Class.class) {
+    mv.visitLdcInsn(cg.toType((Class<?>)obj));
+  }
+ else {
+    invokeConstructor(type,new Object[]{obj.toString()},String.class);
+  }
+}

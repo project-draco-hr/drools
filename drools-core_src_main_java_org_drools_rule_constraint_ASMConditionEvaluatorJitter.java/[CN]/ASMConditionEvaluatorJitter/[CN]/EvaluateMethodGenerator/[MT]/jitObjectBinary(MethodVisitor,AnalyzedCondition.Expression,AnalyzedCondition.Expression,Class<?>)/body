@@ -25,13 +25,23 @@
     invokeVirtual(type,"matches",boolean.class,String.class);
   }
  else   if (operation.isEquality()) {
-    invokeVirtual(type,"equals",boolean.class,Object.class);
+    if (type.isInterface()) {
+      invokeInterface(type,"equals",boolean.class,Object.class);
+    }
+ else {
+      invokeVirtual(type,"equals",boolean.class,Object.class);
+    }
     if (operation == AnalyzedCondition.BooleanOperator.NE) {
       analyzedCondition.toggleNegation();
     }
   }
  else {
-    invokeVirtual(type,"compareTo",int.class,type);
+    if (type.isInterface()) {
+      invokeInterface(type,"compareTo",int.class,type);
+    }
+ else {
+      invokeVirtual(type,"compareTo",int.class,type);
+    }
     mv.visitInsn(ICONST_0);
     jitPrimitiveOperation(mv,operation,int.class);
   }
