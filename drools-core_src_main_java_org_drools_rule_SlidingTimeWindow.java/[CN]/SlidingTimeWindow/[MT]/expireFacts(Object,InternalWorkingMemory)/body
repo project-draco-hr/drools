@@ -2,19 +2,18 @@
   TimerService clock=workingMemory.getTimerService();
   long currentTime=clock.getCurrentTime();
   SlidingTimeWindowContext queue=(SlidingTimeWindowContext)context;
-  RightTuple tuple=queue.queue.peek();
-  while (tuple != null && isExpired(currentTime,tuple)) {
-    queue.expiringTuple=tuple;
+  EventFactHandle handle=queue.queue.peek();
+  while (handle != null && isExpired(currentTime,handle)) {
+    queue.expiringHandle=handle;
     queue.queue.remove();
-    final InternalFactHandle handle=tuple.getFactHandle();
     if (handle.isValid()) {
       final PropagationContext propagationContext=new PropagationContextImpl(workingMemory.getNextPropagationIdCounter(),PropagationContext.EXPIRATION,null,null,handle);
       tuple.getRightTupleSink().retractRightTuple(tuple,propagationContext,workingMemory);
       propagationContext.evaluateActionQueue(workingMemory);
     }
     tuple.unlinkFromRightParent();
-    queue.expiringTuple=null;
-    tuple=queue.queue.peek();
+    queue.expiringHandle=null;
+    handle=queue.queue.peek();
   }
-  updateNextExpiration(tuple,workingMemory,this,queue);
+  updateNextExpiration(fact,workingMemory,this,queue);
 }
