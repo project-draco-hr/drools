@@ -14,11 +14,6 @@ synchronized (this.events) {
     for (    LogEvent event : eventsToWrite) {
       fileWriter.write(xstream.toXML(event) + "\n");
     }
-    if (split) {
-      fileWriter.write("</object-stream>");
-      this.nbOfFile++;
-      initialized=false;
-    }
   }
  catch (  final FileNotFoundException exc) {
     throw new RuntimeException("Could not create the log file.  Please make sure that directory that the log file should be placed in does exist.");
@@ -36,6 +31,12 @@ catch (  final Throwable t) {
     }
   }
   if (terminate) {
-    terminateLog();
+    closeLog();
+    terminate=true;
+  }
+ else   if (split) {
+    closeLog();
+    this.nbOfFile++;
+    initialized=false;
   }
 }
