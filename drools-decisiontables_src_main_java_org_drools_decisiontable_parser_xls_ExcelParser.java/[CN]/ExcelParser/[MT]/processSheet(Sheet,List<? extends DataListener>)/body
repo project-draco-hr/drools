@@ -6,13 +6,23 @@
     newRow(listeners,i,row.length);
     for (int cellNum=0; cellNum < row.length; cellNum++) {
       Cell cell=row[cellNum];
+      double num=0;
       Range merged=getRangeIfMerged(cell,mergedRanges);
       if (merged != null) {
         Cell topLeft=merged.getTopLeft();
         newCell(listeners,i,cellNum,topLeft.getContents(),topLeft.getColumn());
       }
  else {
-        newCell(listeners,i,cellNum,cell.getContents(),DataListener.NON_MERGED);
+        if (cell.getType() == CellType.NUMBER) {
+          NumberCell nc=(NumberCell)cell;
+          num=nc.getValue();
+        }
+        if (Math.abs(num) - Math.ceil(num) != 0) {
+          newCell(listeners,i,cellNum,String.valueOf(num),DataListener.NON_MERGED);
+        }
+ else {
+          newCell(listeners,i,cellNum,cell.getContents(),DataListener.NON_MERGED);
+        }
       }
     }
   }
