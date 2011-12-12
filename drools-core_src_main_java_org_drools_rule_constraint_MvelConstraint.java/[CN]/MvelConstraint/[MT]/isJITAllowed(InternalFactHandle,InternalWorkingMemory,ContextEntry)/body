@@ -1,0 +1,31 @@
+{
+  boolean mvelValue=false;
+  if (conditionEvaluator == null) {
+    conditionEvaluator=new MvelConditionEvaluator(getParserConfiguration(workingMemory),expression,operator);
+    try {
+      mvelValue=conditionEvaluator.evaluate(handle.getObject());
+    }
+ catch (    ClassCastException cce) {
+      System.out.println("Got ClassCastException: " + cce);
+      mvelValue=false;
+    }
+    try {
+      CompositeClassLoader classLoader=((AbstractRuleBase)workingMemory.getRuleBase()).getRootClassLoader();
+      conditionEvaluator=ASMConditionEvaluatorJitter.jit(((MvelConditionEvaluator)conditionEvaluator).getExecutableStatement(),classLoader);
+    }
+ catch (    Throwable t) {
+      throw new RuntimeException("Exception jitting: " + expression,t);
+    }
+  }
+  boolean asmValue=false;
+  try {
+    asmValue=conditionEvaluator.evaluate(handle.getObject());
+  }
+ catch (  ClassCastException cce) {
+    return false;
+  }
+catch (  NumberFormatException nfe) {
+    return false;
+  }
+  return asmValue;
+}

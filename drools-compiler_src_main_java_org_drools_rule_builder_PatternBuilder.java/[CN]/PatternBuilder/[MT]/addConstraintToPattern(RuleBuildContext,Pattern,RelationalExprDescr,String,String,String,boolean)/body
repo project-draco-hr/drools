@@ -20,7 +20,7 @@
   if (restrictionDescr != null) {
     FieldValue field=getFieldValue(context,vtype,restrictionDescr);
     if (field != null) {
-      Constraint constraint=buildConstraint(context,vtype,field,expr,value1,operator,value2,extractor,restrictionDescr);
+      Constraint constraint=buildLiteralConstraint(context,vtype,field,expr,value1,operator,value2,extractor,restrictionDescr);
       if (constraint != null) {
         pattern.addConstraint(constraint);
         return true;
@@ -28,6 +28,7 @@
     }
   }
   Restriction restriction=null;
+  Declaration[] declarations=null;
   Declaration declr=null;
   if (value2.indexOf('(') < 0 && value2.indexOf('.') < 0 && value2.indexOf('[') < 0) {
     declr=context.getDeclarationResolver().getDeclaration(context.getRule(),value2);
@@ -57,6 +58,7 @@
         declr=context.getDeclarationResolver().getDeclaration(context.getRule(),parts[0].trim());
         if (declr != null) {
           if (declr.isPatternDeclaration()) {
+            declarations=new Declaration[]{declr};
             declr=this.createDeclarationObject(context,parts[1].trim(),declr.getPattern());
             value2=parts[1].trim();
           }
@@ -91,6 +93,22 @@
   if (restriction == null) {
     return false;
   }
-  pattern.addConstraint(new VariableConstraint(extractor,restriction));
+  if (declr == null) {
+    ReturnValueRestriction returnValueRestriction=(ReturnValueRestriction)restriction;
+    Declaration[] requiredDeclarations=restriction.getRequiredDeclarations();
+    String[] requiredGlobals=returnValueRestriction.getRequiredGlobals();
+    declarations=new Declaration[(requiredDeclarations != null ? requiredDeclarations.length : 0) + (requiredGlobals != null ? requiredGlobals.length : 0)];
+    int i=0;
+    if (requiredDeclarations != null) {
+      for (      Declaration requiredDeclaration : requiredDeclarations)       declarations[i++]=requiredDeclaration;
+    }
+    if (requiredGlobals != null) {
+      for (      String requiredGlobal : requiredGlobals)       declarations[i++]=context.getDeclarationResolver().getDeclaration(context.getRule(),requiredGlobal);
+    }
+  }
+ else {
+    if (declarations == null)     declarations=new Declaration[]{declr};
+  }
+  pattern.addConstraint(buildVariableConstraint(context,expr,declarations,operator,extractor,restriction));
   return true;
 }

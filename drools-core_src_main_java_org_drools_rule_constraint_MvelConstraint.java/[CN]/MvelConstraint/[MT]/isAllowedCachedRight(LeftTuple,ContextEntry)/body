@@ -1,0 +1,16 @@
+{
+  if (isUnification) {
+    DroolsQuery query=(DroolsQuery)tuple.get(0).getObject();
+    Variable v=query.getVariables()[((UnificationContextEntry)context).getReader().getIndex()];
+    if (v != null) {
+      return true;
+    }
+    context=((UnificationContextEntry)context).getContextEntry();
+  }
+  if (conditionEvaluator == null) {
+    ParserConfiguration conf=getParserConfiguration(((MvelContextEntry)context).workingMemory);
+    conditionEvaluator=new MvelConditionEvaluator(conf,expression,operator);
+  }
+  MvelContextEntry mvelContextEntry=(MvelContextEntry)context;
+  return conditionEvaluator.evaluate(mvelContextEntry.right,mvelContextEntry.getRightVars(tuple));
+}

@@ -1,0 +1,28 @@
+{
+  if (isUnification) {
+    throw new UnsupportedOperationException("Should not be called");
+  }
+  if (TEST_JITTING && isJittable) {
+    return isJITAllowed(handle,workingMemory,context);
+  }
+  if (!jitted) {
+    if (conditionEvaluator == null) {
+      conditionEvaluator=new MvelConditionEvaluator(getParserConfiguration(workingMemory),expression,operator);
+    }
+ else {
+      if (isJittable && invocationCounter.getAndIncrement() == JIT_THRESOLD) {
+        CompositeClassLoader classLoader=((AbstractRuleBase)workingMemory.getRuleBase()).getRootClassLoader();
+        conditionEvaluator=ASMConditionEvaluatorJitter.jit(((MvelConditionEvaluator)conditionEvaluator).getExecutableStatement(),classLoader);
+        jitted=true;
+      }
+    }
+  }
+  Map<String,Object> vars=context == null ? null : ((MvelContextEntry)context).getRightVars(workingMemory,handle);
+  try {
+    return conditionEvaluator.evaluate(handle.getObject(),vars);
+  }
+ catch (  ClassCastException cce) {
+    cce.printStackTrace();
+    return false;
+  }
+}
