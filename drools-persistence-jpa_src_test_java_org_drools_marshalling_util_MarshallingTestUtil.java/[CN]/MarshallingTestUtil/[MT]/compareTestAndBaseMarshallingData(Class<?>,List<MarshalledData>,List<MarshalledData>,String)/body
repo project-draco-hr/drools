@@ -1,0 +1,51 @@
+{
+  HashMap<String,List<MarshalledData>> testSnapshotsPerTestMap=extractSnapshotsPerTestMethodMap(testClass,testData);
+  HashMap<String,List<MarshalledData>> baseSnapshotsPerTestMap=extractSnapshotsPerTestMethodMap(testClass,baseData);
+  sanityCheckMarshalledData(testClass,testSnapshotsPerTestMap,baseSnapshotsPerTestMap);
+  HashMap<String,MarshalledData> testMarshalledDataSnapshotMap=new HashMap<String,MarshalledData>();
+  HashMap<String,MarshalledData> baseMarshalledDataSnapshotMap=new HashMap<String,MarshalledData>();
+  for (  String testMethod : testSnapshotsPerTestMap.keySet()) {
+    for (    MarshalledData testMarshalledData : testSnapshotsPerTestMap.get(testMethod)) {
+      testMarshalledDataSnapshotMap.put(testMarshalledData.getTestMethodAndSnapshotNum(),testMarshalledData);
+    }
+  }
+  for (  String testMethod : baseSnapshotsPerTestMap.keySet()) {
+    for (    MarshalledData baseMarshalledData : baseSnapshotsPerTestMap.get(testMethod)) {
+      baseMarshalledDataSnapshotMap.put(baseMarshalledData.getTestMethodAndSnapshotNum(),baseMarshalledData);
+    }
+  }
+  List<String> errors=new ArrayList<String>();
+  for (  String testMethodVer : testMarshalledDataSnapshotMap.keySet()) {
+    logger.info("Comparing marshalled info for " + testMethodVer);
+    Object baseObject=null;
+    MarshalledData baseMarshalledData=baseMarshalledDataSnapshotMap.get(testMethodVer);
+    try {
+      baseObject=unmarshallObject(baseMarshalledData);
+    }
+ catch (    Exception e) {
+      logger.info("Unable to unmarshall " + baseDbVersion + " data ["+ testMethodVer+ "]: "+ e.getClass().getSimpleName()+ ": "+ e.getMessage()+ "]");
+      continue;
+    }
+    Object testObject=null;
+    MarshalledData testMarshalledData=testMarshalledDataSnapshotMap.get(testMethodVer);
+    try {
+      testObject=unmarshallObject(testMarshalledData);
+    }
+ catch (    Exception e) {
+      fail("Unable to unmarshall " + baseDbVersion + " data: ["+ e.getClass().getSimpleName()+ ": "+ e.getMessage()+ "]");
+    }
+    assertNotNull("Unmarshalled test data resulted in null object!",testObject);
+    assertNotNull("Unmarshalled base data resulted in null object!",baseObject);
+    if (!CompareViaReflectionUtil.compareInstances(baseObject,testObject)) {
+      String errorMsg="Unmarshalled " + baseObject.getClass().getSimpleName() + " object from "+ baseDbVersion+ " data is not equal to test unmarshalled object ["+ baseMarshalledData.getTestMethodAndSnapshotNum()+ "]";
+      errors.add(errorMsg);
+    }
+  }
+  if (errors.size() > 0) {
+    int i=errors.size() - 1;
+    for (; i > 0; --i) {
+      logger.warn(errors.get(i));
+    }
+    fail(errors.get(1));
+  }
+}

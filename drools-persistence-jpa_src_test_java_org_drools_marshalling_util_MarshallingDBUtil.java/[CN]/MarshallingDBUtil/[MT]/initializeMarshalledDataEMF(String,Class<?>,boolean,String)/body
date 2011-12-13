@@ -1,22 +1,19 @@
 {
   HashMap<String,Object> context=new HashMap<String,Object>();
-  Properties dsProps=PersistenceUtil.getDatasourceProperties();
+  Properties dsProps=getDatasourceProperties();
   String driverClass=dsProps.getProperty("driverClassName");
   if (!driverClass.startsWith("org.h2")) {
     return null;
   }
-  String tempDbPath=generatePathToTestDb(testClass);
+  String dbFilePath=generatePathToTestDb(testClass);
   if (useBaseDb) {
-    tempDbPath=tempDbPath.replace(MARSHALLING_TEST_DB,MARSHALLING_BASE_DB);
-    String thisDbPath=tempDbPath;
+    dbFilePath=dbFilePath.replace(MARSHALLING_TEST_DB,MARSHALLING_BASE_DB);
     if (baseDbVer != null && baseDbVer.length() > 0) {
-      thisDbPath=thisDbPath.replace("current",baseDbVer);
+      dbFilePath=dbFilePath.replace("current",baseDbVer);
     }
-    tempDbPath=tempDbPath.replace("-current","");
-    copyH2DbFile(thisDbPath,tempDbPath);
   }
   String jdbcURLBase=dsProps.getProperty("url");
-  String jdbcUrl=jdbcURLBase + tempDbPath;
+  String jdbcUrl=jdbcURLBase + dbFilePath;
   PoolingDataSource ds1=setupPoolingDataSource(dsProps);
   ds1.getDriverProperties().setProperty("url",jdbcUrl);
   ds1.init();

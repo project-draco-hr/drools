@@ -1,6 +1,14 @@
 {
-  KnowledgeBase kbase=(KnowledgeBase)DroolsStreamUtils.streamIn(marshalledData.serializedKnowledgeBase);
-  Marshaller marshaller=MarshallerFactory.newMarshaller(kbase,new ObjectMarshallingStrategy[]{MarshallerFactory.newSerializeMarshallingStrategy()});
+  KnowledgeBase kbase;
+  if (STORE_KNOWLEDGE_BASE) {
+    kbase=(KnowledgeBase)DroolsStreamUtils.streamIn(marshalledData.serializedKnowledgeBase);
+  }
+ else {
+    kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  }
+  ObjectMarshallingStrategy[] strategies=new ObjectMarshallingStrategy[]{MarshallerFactory.newSerializeMarshallingStrategy()};
+  strategies=addProcessInstanceResolverStrategyIfAvailable(strategies);
+  Marshaller marshaller=MarshallerFactory.newMarshaller(kbase,strategies);
   ByteArrayInputStream bais=new ByteArrayInputStream(marshalledData.byteArray);
   SessionConfiguration conf=SessionConfiguration.getDefaultInstance();
   Environment env=EnvironmentFactory.newEnvironment();

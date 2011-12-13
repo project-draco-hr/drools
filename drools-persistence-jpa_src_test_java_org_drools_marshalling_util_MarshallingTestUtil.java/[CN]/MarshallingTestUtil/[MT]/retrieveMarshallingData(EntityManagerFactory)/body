@@ -1,7 +1,15 @@
 {
   ArrayList<MarshalledData> marshalledDataList=new ArrayList<MarshalledData>();
-  JtaTransactionManager txm=new JtaTransactionManager(null,null,null);
-  boolean txOwner=txm.begin();
+  TransactionManager txm=null;
+  try {
+    txm=TransactionManagerServices.getTransactionManager();
+    txm.begin();
+  }
+ catch (  Exception e) {
+    logger.warn("Unable to retrieve marshalled snapshots from marshalling database.");
+    e.printStackTrace();
+    return marshalledDataList;
+  }
   EntityManager em=emf.createEntityManager();
   @SuppressWarnings("unchecked") List<Object> mdList=em.createQuery("SELECT m FROM MarshalledData m").getResultList();
   for (  Object resultObject : mdList) {
@@ -12,6 +20,12 @@
     marshalledDataList.add(marshalledData);
     logger.trace("> " + marshalledData);
   }
-  txm.commit(txOwner);
+  try {
+    txm.commit();
+  }
+ catch (  Exception e) {
+    logger.warn(e.getClass().getSimpleName() + " thrown when retrieving marshalled snapshots.");
+    e.printStackTrace();
+  }
   return marshalledDataList;
 }

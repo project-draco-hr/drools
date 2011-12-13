@@ -1,6 +1,7 @@
 {
   boolean same=false;
-  Method[] methods=getMethodToRetrieveCollection(objA);
+  Class<?> objClass=objA.getClass();
+  Method[] methods=getMethodToRetrieveCollection(objClass);
   try {
     if (methods[TO_ARRAY] != null) {
       same=compareArrayBasedObjects(context,methods[TO_ARRAY],objA,objB);
@@ -8,8 +9,14 @@
  else     if (methods[ENTRY_SET] != null) {
       same=compareEntrySetBasedObjects(context,methods[ENTRY_SET],objA,objB);
     }
- else     if (objA.getClass().isArray()) {
-      same=compareArrays(objA,objB);
+ else     if (objClass.isArray()) {
+      same=compareArrays(context,objA,objB);
+    }
+ else     if (atomicPrimitiveClasses.contains(objClass)) {
+      same=compareAtomicPrimitives(objA,objB);
+    }
+ else     if (atomicArrayClasses.contains(objClass)) {
+      same=compareAtomicArrays(context,objA,objB);
     }
  else {
       same=objA.equals(objB);
@@ -17,8 +24,9 @@
     context.name+=": " + (same == true ? "=" : "X");
   }
  catch (  Exception e) {
+    e.printStackTrace();
     same=false;
-    Assert.fail(e.getClass().getSimpleName() + ":" + e.getMessage());
+    Assert.fail(e.getClass().getSimpleName() + ": " + e.getMessage());
   }
   return same;
 }

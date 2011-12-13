@@ -1,30 +1,12 @@
 {
-  HashMap<String,Object> testContext=initializeMarshalledDataEMF(persistenceUnitName,testClass,DO_NOT_COMPARE_MAKING_BASE_DB);
-  if (DO_NOT_COMPARE_MAKING_BASE_DB) {
-    List<MarshalledData> baseDataList=null;
-    try {
-      EntityManagerFactory testEMF=(EntityManagerFactory)testContext.get(ENTITY_MANAGER_FACTORY);
-      baseDataList=retrieveMarshallingData(testEMF);
-    }
-  finally {
-      tearDown(testContext);
-    }
-    assertNotNull("Could not rerieve list of MarshalledData from base db.",baseDataList);
-    assertTrue("List of MarshalledData from base db is empty.",!baseDataList.isEmpty());
-    for (    MarshalledData marshalledData : baseDataList) {
-      try {
-        logger.debug("Unmarshalling snapshot: " + marshalledData.getTestMethodAndSnapshotNum());
-        unmarshallSession(marshalledData);
-      }
- catch (      Exception e) {
-        e.printStackTrace();
-        fail("Exception thrown while unmarshalling [" + marshalledData.getTestMethodAndSnapshotNum() + "] data stored in base database");
-      }
-    }
-    logger.debug("MarshalledData objects saved in base db:");
-    for (    MarshalledData marshalledData : baseDataList) {
-      logger.debug("- " + marshalledData);
-    }
+  Object makeBaseDb=getDatasourceProperties().getProperty("makeBaseDb");
+  boolean baseDBCreationOngoing=false;
+  if ("true".equals(makeBaseDb)) {
+    baseDBCreationOngoing=true;
+  }
+  HashMap<String,Object> testContext=initializeMarshalledDataEMF(persistenceUnitName,testClass,baseDBCreationOngoing);
+  if (baseDBCreationOngoing) {
+    checkMarshalledSnapshots(testContext);
     return;
   }
   List<MarshalledData> testDataList=null;
@@ -49,6 +31,6 @@
       tearDown(baseContext);
     }
     assertTrue("No base marshalled data found",baseDataList != null && !baseDataList.isEmpty());
-    compareTestAndBaseMarshallingData(testClass,testDataList,baseDataList);
+    compareTestAndBaseMarshallingData(testClass,testDataList,baseDataList,baseDbVersions[v]);
   }
 }

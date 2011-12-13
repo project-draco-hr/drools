@@ -1,0 +1,39 @@
+{
+  boolean same=false;
+  int length=0;
+  try {
+    Method lengthMethod=objA.getClass().getMethod("length",new Class[0]);
+    Object valA=lengthMethod.invoke(objA,(Object[])null);
+    Object valB=lengthMethod.invoke(objB,(Object[])null);
+    if (valA.equals(valB)) {
+      same=true;
+      length=(Integer)valA;
+    }
+ else {
+      return false;
+    }
+  }
+ catch (  Exception e) {
+    same=false;
+    Assert.fail(e.getClass().getSimpleName() + ": " + e.getMessage());
+  }
+  try {
+    Method getMethod=objA.getClass().getMethod("get",new Class[]{int.class});
+    for (int i=0; i < length && same; ++i) {
+      Object subObjA=getMethod.invoke(objA,i);
+      Object subObjB=getMethod.invoke(objB,i);
+      if (subObjA == null && subObjB == null) {
+        continue;
+      }
+      DebugContext subContext=context.clone();
+      subContext.level=context.level + 1;
+      subContext.name=context.name + ": (" + i+ ") ";
+      same=compareInstances(subContext,subObjA,subObjB);
+    }
+  }
+ catch (  Exception e) {
+    same=false;
+    Assert.fail(e.getClass().getSimpleName() + ": " + e.getMessage());
+  }
+  return same;
+}

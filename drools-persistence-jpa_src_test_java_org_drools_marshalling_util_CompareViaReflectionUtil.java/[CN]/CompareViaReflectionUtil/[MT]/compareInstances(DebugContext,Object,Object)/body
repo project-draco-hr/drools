@@ -28,8 +28,13 @@
       primitiveBasedObjectOrCollection=true;
       same=comparePrimitiveBasedOrCollectionInstances(context,objA,objB);
     }
+ else     if (objA instanceof AbstractHashTable) {
+      primitiveBasedObjectOrCollection=true;
+      same=compareDroolsSets(context,objA,objB);
+    }
  else     if (objA.getClass().isArray()) {
-      same=compareArrays(objA,objB);
+      primitiveBasedObjectOrCollection=true;
+      same=compareArrays(context,objA,objB);
     }
  else {
       Class<?> superClass=objClass.getSuperclass();
@@ -43,7 +48,7 @@
       }
     }
     if (!primitiveBasedObjectOrCollection) {
-      if (seenObjects.add(objA)) {
+      if (seenObjects.put(objA,objA) == null) {
         same=compareInstancesOfSameClass(context,objA,objB);
         if (!same) {
           seenObjects.remove(objA);

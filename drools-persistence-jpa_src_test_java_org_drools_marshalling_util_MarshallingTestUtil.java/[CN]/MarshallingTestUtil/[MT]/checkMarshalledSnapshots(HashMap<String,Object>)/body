@@ -1,0 +1,26 @@
+{
+  logger.trace("Checking MarshalledData objects saved in base db.");
+  List<MarshalledData> baseDataList=null;
+  try {
+    EntityManagerFactory testEMF=(EntityManagerFactory)testContext.get(ENTITY_MANAGER_FACTORY);
+    baseDataList=retrieveMarshallingData(testEMF);
+  }
+  finally {
+    tearDown(testContext);
+  }
+  assertNotNull("Could not rerieve list of MarshalledData from base db.",baseDataList);
+  assertTrue("List of MarshalledData from base db is empty.",!baseDataList.isEmpty());
+  for (  MarshalledData marshalledData : baseDataList) {
+    try {
+      logger.debug("Unmarshalling snapshot: " + marshalledData.getTestMethodAndSnapshotNum());
+      unmarshallObject(marshalledData);
+    }
+ catch (    Exception e) {
+      logger.error(e.getClass().getSimpleName() + " thrown while unmarshalling [" + marshalledData.getTestMethodAndSnapshotNum()+ "] data stored in base database");
+    }
+  }
+  logger.trace("MarshalledData objects saved in base db:");
+  for (  MarshalledData marshalledData : baseDataList) {
+    logger.trace("- " + marshalledData);
+  }
+}
