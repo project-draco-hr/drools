@@ -3,16 +3,20 @@
   Properties dsProps=getDatasourceProperties();
   String jdbcUrl=dsProps.getProperty("url");
   String driverClass=dsProps.getProperty("driverClassName");
-  TEST_MARSHALLING=testMarshalling;
   if (!driverClass.startsWith("org.h2")) {
     TEST_MARSHALLING=false;
   }
   Object testMarshallingProperty=dsProps.get("testMarshalling");
-  if (!"true".equals(testMarshallingProperty)) {
+  if ("true".equals(testMarshallingProperty)) {
+    TEST_MARSHALLING=true;
+    if (!testMarshalling) {
+      TEST_MARSHALLING=false;
+    }
+  }
+ else {
     TEST_MARSHALLING=false;
   }
   if (TEST_MARSHALLING) {
-    System.setProperty("h2.lobInDatabase","true");
     Class<?> testClass=null;
     StackTraceElement[] ste=Thread.currentThread().getStackTrace();
     int i=1;
@@ -27,11 +31,13 @@
     assertNotNull("Unable to resolve test class!",testClass);
     jdbcUrl=initializeTestDb(dsProps,testClass);
   }
- else {
-    jdbcUrl+="tcp://localhost/JPADroolsFlow";
-  }
   PoolingDataSource ds1=setupPoolingDataSource(dsProps);
-  ds1.getDriverProperties().setProperty("url",jdbcUrl);
+  if (driverClass.startsWith("org.h2")) {
+    if (!TEST_MARSHALLING) {
+      jdbcUrl+="tcp://localhost/JPADroolsFlow";
+    }
+    ds1.getDriverProperties().setProperty("url",jdbcUrl);
+  }
   ds1.init();
   context.put(DATASOURCE,ds1);
   EntityManagerFactory emf;

@@ -17,8 +17,11 @@
     tx.commit();
   }
  catch (  Exception e) {
-    if (e instanceof BitronixRollbackException) {
+    if (e instanceof BitronixRollbackException || e.getCause() instanceof TransientObjectException) {
       rollBackExceptionthrown=true;
+      if (tx.getStatus() == 1) {
+        tx.rollback();
+      }
     }
   }
   assertTrue("A rollback exception should have been thrown because of foreign key violations.",rollBackExceptionthrown);
