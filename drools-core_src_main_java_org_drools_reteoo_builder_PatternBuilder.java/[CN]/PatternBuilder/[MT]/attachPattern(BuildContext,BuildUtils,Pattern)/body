@@ -11,8 +11,6 @@
   final List<Behavior> behaviors=new LinkedList<Behavior>();
   this.createConstraints(context,utils,pattern,alphaConstraints,betaConstraints);
   context.setBetaconstraints(betaConstraints);
-  behaviors.addAll(pattern.getBehaviors());
-  context.setBehaviors(behaviors);
   if (pattern.getSource() != null) {
     context.setAlphaConstraints(alphaConstraints);
     final int currentOffset=context.getCurrentPatternOffset();
@@ -28,6 +26,12 @@
     PatternSource source=EntryPoint.DEFAULT;
     ReteooComponentBuilder builder=utils.getBuilderFor(source);
     builder.build(context,utils,source);
+  }
+  attachObjectTypeNode(context,utils,pattern);
+  if (!behaviors.isEmpty()) {
+    WindowNode wn=new WindowNode(context.getNextId(),alphaConstraints,behaviors,context.getObjectSource(),context);
+    utils.attachNode(context,wn);
+    alphaConstraints.clear();
   }
   if (pattern.getSource() == null || context.getCurrentEntryPoint() != EntryPoint.DEFAULT) {
     attachAlphaNodes(context,utils,pattern,alphaConstraints);

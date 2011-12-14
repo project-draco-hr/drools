@@ -8,16 +8,22 @@
       break;
     }
   }
+  WindowTupleList list=(WindowTupleList)memory.events.get(factHandle);
   if (isAllowed) {
-    if (memory.facts.contains(factHandle)) {
+    if (list != null) {
+      context.setActiveWindowTupleList(list);
       this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context,workingMemory);
+      context.setActiveWindowTupleList(null);
     }
  else {
-      memory.facts.add(factHandle);
+      list=new WindowTupleList((EventFactHandle)factHandle,this);
+      context.setActiveWindowTupleList(list);
+      memory.events.put(factHandle,list);
       this.sink.propagateAssertObject(factHandle,context,workingMemory);
+      context.setActiveWindowTupleList(null);
     }
   }
  else {
-    memory.facts.remove(factHandle);
+    memory.events.remove(factHandle);
   }
 }
