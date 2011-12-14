@@ -1,0 +1,22 @@
+{
+  TimerService clock=workingMemory.getTimerService();
+  long currentTime=clock.getCurrentTime();
+  SlidingTimeWindowContext queue=(SlidingTimeWindowContext)context;
+  EventFactHandle handle=queue.queue.peek();
+  while (handle != null && isExpired(currentTime,handle)) {
+    queue.expiringHandle=handle;
+    queue.queue.remove();
+    if (handle.isValid()) {
+      final PropagationContext propagationContext=new PropagationContextImpl(workingMemory.getNextPropagationIdCounter(),PropagationContext.EXPIRATION,null,null,handle);
+      WindowTupleList list=(WindowTupleList)memory.events.get(handle);
+      for (RightTuple tuple=list.getFirstWindowTuple(); tuple != null; tuple=list.getFirstWindowTuple()) {
+        tuple.getRightTupleSink().retractRightTuple(tuple,propagationContext,workingMemory);
+        propagationContext.evaluateActionQueue(workingMemory);
+        tuple.unlinkFromRightParent();
+      }
+    }
+    queue.expiringHandle=null;
+    handle=queue.queue.peek();
+  }
+  updateNextExpiration(handle,workingMemory,memory,this,queue);
+}
