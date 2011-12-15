@@ -1,0 +1,21 @@
+{
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("WorkItemConsequence1.drl",WorkItemConsequenceExample1.class),ResourceType.DRL);
+  final KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  if (kbuilder.hasErrors()) {
+    throw new RuntimeException("Compilation error.\n" + kbuilder.getErrors().toString());
+  }
+  final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.getWorkItemManager().registerWorkItemHandler("EmailWorkItemHandler",new EmailWorkItemHandler());
+  PersonLocation brains=new PersonLocation("Brains",5);
+  ksession.insert(brains);
+  ksession.fireAllRules();
+  PersonLocation gargamel=new PersonLocation("Gargamel",10);
+  FactHandle gargamelFactHandle=ksession.insert(gargamel);
+  ksession.fireAllRules();
+  gargamel.setDistance(5);
+  ksession.update(gargamelFactHandle,gargamel);
+  ksession.fireAllRules();
+  ksession.dispose();
+}
