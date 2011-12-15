@@ -1,5 +1,4 @@
 {
-  GetDefaultValue sim=(GetDefaultValue)context.get("simulator");
   Context targetCtx;
   if (this.contextName == null) {
     targetCtx=context;
@@ -7,16 +6,23 @@
  else {
     targetCtx=context.getContextManager().getContext(this.contextName);
   }
-  Object o=sim.getObject();
-  if (o instanceof FactHandle) {
-    Map<String,FactHandle> handles=(Map<String,FactHandle>)targetCtx.get("h");
-    if (handles == null) {
-      handles=new HashMap<String,FactHandle>();
-      targetCtx.set("h",handles);
-    }
-    handles.put(identifier,(FactHandle)o);
-    o=((InternalFactHandle)o).getObject();
+  Object o;
+  if (cmd != null) {
+    o=((GenericCommand)this.cmd).execute(context);
   }
-  targetCtx.set(identifier,o);
+ else {
+    GetDefaultValue sim=(GetDefaultValue)context.get("simulator");
+    o=sim.getObject();
+    if (o instanceof FactHandle) {
+      Map<String,FactHandle> handles=(Map<String,FactHandle>)targetCtx.get("h");
+      if (handles == null) {
+        handles=new HashMap<String,FactHandle>();
+        targetCtx.set("h",handles);
+      }
+      handles.put(identifier,(FactHandle)o);
+      o=((InternalFactHandle)o).getObject();
+    }
+    targetCtx.set(identifier,o);
+  }
   return o;
 }
