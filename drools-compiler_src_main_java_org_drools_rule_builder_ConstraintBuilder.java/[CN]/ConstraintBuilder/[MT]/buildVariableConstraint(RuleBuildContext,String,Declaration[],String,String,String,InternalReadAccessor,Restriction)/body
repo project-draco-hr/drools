@@ -3,18 +3,8 @@
     if (!isMvelOperator(operator)) {
       return new EvaluatorConstraint(restriction.getRequiredDeclarations(),restriction.getEvaluator(),extractor);
     }
-    String packageName=context.getPkg().getName();
-    ParserConfiguration conf=getParserConfiguration(context);
-    if (restriction instanceof UnificationRestriction && leftValue.equals(rightValue)) {
-      rightValue=rightValue + "__";
-      for (      Declaration declaration : declrations) {
-        if (declaration.getIdentifier().equals(leftValue)) {
-          declaration.setBindingName(rightValue);
-        }
-      }
-      expr=leftValue + " == " + rightValue;
-    }
-    return new MvelConstraint(conf,packageName,expr,operator,declrations,getIndexingDeclaration(restriction),extractor);
+    expression=resolveUnificationAmbiguity(expression,declrations,leftValue,rightValue,restriction);
+    return new MvelConstraint(context.getPkg().getName(),expression,operator,declrations,getIndexingDeclaration(restriction),extractor);
   }
  else {
     return new VariableConstraint(extractor,restriction);
