@@ -1,30 +1,20 @@
 {
+  Map<String,Object> vars=context == null ? null : ((MvelContextEntry)context).getRightVars(workingMemory,handle);
   boolean mvelValue=false;
   if (conditionEvaluator == null) {
     conditionEvaluator=new MvelConditionEvaluator(getParserConfiguration(workingMemory),expression,operator);
-    try {
-      mvelValue=conditionEvaluator.evaluate(handle.getObject());
-    }
- catch (    ClassCastException cce) {
-      System.out.println("Got ClassCastException: " + cce);
-      mvelValue=false;
-    }
-    try {
-      CompositeClassLoader classLoader=((AbstractRuleBase)workingMemory.getRuleBase()).getRootClassLoader();
-      conditionEvaluator=ASMConditionEvaluatorJitter.jit(((MvelConditionEvaluator)conditionEvaluator).getExecutableStatement(),classLoader);
-    }
- catch (    Throwable t) {
-      throw new RuntimeException("Exception jitting: " + expression,t);
-    }
+    mvelValue=jitEvaluator(handle.getObject(),workingMemory,vars);
   }
   boolean asmValue=false;
   try {
-    asmValue=conditionEvaluator.evaluate(handle.getObject());
+    asmValue=conditionEvaluator.evaluate(handle.getObject(),vars);
   }
  catch (  ClassCastException cce) {
+    System.out.println("ASM - Got ClassCastException: " + cce + " on expression: "+ expression);
     return false;
   }
 catch (  NumberFormatException nfe) {
+    System.out.println("ASM - Got NumberFormatException: " + nfe + " on expression: "+ expression);
     return false;
   }
   return asmValue;

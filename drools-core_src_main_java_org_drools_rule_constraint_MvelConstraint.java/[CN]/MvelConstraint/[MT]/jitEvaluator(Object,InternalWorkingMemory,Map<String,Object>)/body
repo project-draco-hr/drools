@@ -1,0 +1,18 @@
+{
+  boolean mvelValue;
+  try {
+    mvelValue=conditionEvaluator.evaluate(object,vars);
+  }
+ catch (  ClassCastException cce) {
+    System.out.println("MVEL - Got ClassCastException: " + cce);
+    mvelValue=false;
+  }
+  try {
+    CompositeClassLoader classLoader=((AbstractRuleBase)workingMemory.getRuleBase()).getRootClassLoader();
+    conditionEvaluator=ASMConditionEvaluatorJitter.jit(((MvelConditionEvaluator)conditionEvaluator).getExecutableStatement(),classLoader);
+  }
+ catch (  Throwable t) {
+    throw new RuntimeException("Exception jitting: " + expression,t);
+  }
+  return mvelValue;
+}

@@ -1,0 +1,43 @@
+{
+  if (left.isFixed()) {
+    throw new RuntimeException("Unmanaged fixed left");
+  }
+  Class<?> leftType=left.getType();
+  Class<?> rightType=right.getType();
+  jitExpression(left,type != null ? type : leftType);
+  store(LEFT_OPERAND,leftType);
+  jitExpression(right,type != null ? type : rightType);
+  store(RIGHT_OPERAND,rightType);
+  AnalyzedCondition.BooleanOperator operation=analyzedCondition.getOperation();
+  prepareLeftOperand(operation,type,leftType,rightType);
+  prepareRightOperand(operation,right,type,rightType);
+  load(LEFT_OPERAND);
+  load(RIGHT_OPERAND);
+  if (operation == AnalyzedCondition.BooleanOperator.CONTAINS) {
+    invokeStatic(EvaluatorHelper.class,"contains",boolean.class,Object.class,rightType.isPrimitive() ? rightType : Object.class);
+  }
+ else   if (operation == AnalyzedCondition.BooleanOperator.MATCHES) {
+    invokeVirtual(type,"matches",boolean.class,String.class);
+  }
+ else   if (operation.isEquality()) {
+    if (type.isInterface()) {
+      invokeInterface(type,"equals",boolean.class,Object.class);
+    }
+ else {
+      invokeVirtual(type,"equals",boolean.class,Object.class);
+    }
+    if (operation == AnalyzedCondition.BooleanOperator.NE) {
+      analyzedCondition.toggleNegation();
+    }
+  }
+ else {
+    if (type.isInterface()) {
+      invokeInterface(type,"compareTo",int.class,type);
+    }
+ else {
+      invokeVirtual(type,"compareTo",int.class,type);
+    }
+    mv.visitInsn(ICONST_0);
+    jitPrimitiveOperation(operation,int.class);
+  }
+}
