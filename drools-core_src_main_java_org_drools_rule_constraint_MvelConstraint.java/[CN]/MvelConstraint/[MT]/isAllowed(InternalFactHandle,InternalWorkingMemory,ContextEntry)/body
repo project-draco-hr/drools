@@ -3,30 +3,5 @@
     throw new UnsupportedOperationException("Should not be called");
   }
   Map<String,Object> vars=context == null ? null : ((MvelContextEntry)context).getRightVars(workingMemory,handle);
-  if (!jitted) {
-    if (conditionEvaluator == null) {
-      conditionEvaluator=new MvelConditionEvaluator(getParserConfiguration(workingMemory),expression,operator);
-      if (TEST_JITTING) {
-        jitEvaluator(handle.getObject(),workingMemory,vars);
-      }
-    }
- else {
-      if (invocationCounter.getAndIncrement() == JIT_THRESOLD) {
-        CompositeClassLoader classLoader=((AbstractRuleBase)workingMemory.getRuleBase()).getRootClassLoader();
-        conditionEvaluator=ASMConditionEvaluatorJitter.jit(((MvelConditionEvaluator)conditionEvaluator).getExecutableStatement(),classLoader);
-        jitted=true;
-      }
-    }
-  }
-  try {
-    return conditionEvaluator.evaluate(handle.getObject(),vars);
-  }
- catch (  ClassCastException cce) {
-    System.out.println("ASM - Got ClassCastException: " + cce + " on expression: "+ expression);
-    return false;
-  }
-catch (  NumberFormatException nfe) {
-    System.out.println("ASM - Got NumberFormatException: " + nfe + " on expression: "+ expression);
-    return false;
-  }
+  return evaluate(handle.getObject(),workingMemory,vars);
 }
