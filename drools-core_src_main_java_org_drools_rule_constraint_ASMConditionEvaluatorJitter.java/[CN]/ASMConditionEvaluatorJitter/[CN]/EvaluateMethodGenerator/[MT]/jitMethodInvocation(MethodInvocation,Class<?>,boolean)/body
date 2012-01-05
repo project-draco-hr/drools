@@ -1,0 +1,17 @@
+{
+  Method method=invocation.getMethod();
+  if (firstInvocation && (method == null || (method.getModifiers() & Modifier.STATIC) == 0)) {
+    mv.visitVarInsn(ALOAD,1);
+  }
+  if (method == null) {
+    if (firstInvocation)     return;
+ else     throw new RuntimeException("access to this not in first position");
+  }
+  if (!method.getDeclaringClass().isAssignableFrom(currentClass) && (method.getModifiers() & Modifier.STATIC) == 0) {
+    cast(method.getDeclaringClass());
+  }
+  for (  Expression argument : invocation.getArguments()) {
+    jitExpression(argument);
+  }
+  invoke(method);
+}

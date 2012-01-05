@@ -3,8 +3,12 @@
     if (!isMvelOperator(operator)) {
       return new EvaluatorConstraint(restriction.getRequiredDeclarations(),restriction.getEvaluator(),extractor);
     }
-    expression=resolveUnificationAmbiguity(expression,declrations,leftValue,rightValue,restriction);
-    return new MvelConstraint(context.getPkg().getName(),expression,operator,declrations,getIndexingDeclaration(restriction),extractor);
+    boolean isUnification=restriction instanceof UnificationRestriction;
+    if (isUnification) {
+      expression=resolveUnificationAmbiguity(expression,declarations,leftValue,rightValue,restriction);
+    }
+    boolean isIndexable=operator.equals("==");
+    return new MvelConstraint(context.getPkg().getName(),expression,isIndexable,declarations,getIndexingDeclaration(restriction),extractor,isUnification);
   }
  else {
     return new VariableConstraint(extractor,restriction);

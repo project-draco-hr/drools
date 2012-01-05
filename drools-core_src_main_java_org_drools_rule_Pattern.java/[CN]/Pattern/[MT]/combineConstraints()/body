@@ -1,0 +1,35 @@
+{
+  List<MvelConstraint> combinableConstraints=new ArrayList<MvelConstraint>();
+  for (  Constraint constraint : constraints) {
+    if (constraint instanceof MvelConstraint && !((MvelConstraint)constraint).isUnification() && !((MvelConstraint)constraint).isIndexable()&& ((MvelConstraint)constraint).getType() == ConstraintType.BETA) {
+      combinableConstraints.add((MvelConstraint)constraint);
+    }
+  }
+  if (combinableConstraints.size() < 2) {
+    return;
+  }
+  List<Declaration> declarations=new ArrayList<Declaration>();
+  Set<String> declarationNames=new HashSet<String>();
+  Iterator<MvelConstraint> constraintIterator=combinableConstraints.iterator();
+  MvelConstraint firstConstraint=constraintIterator.next();
+  constraints.remove(firstConstraint);
+  String packageName=firstConstraint.getPackageName();
+  String expression=firstConstraint.getExpression();
+  for (  Declaration declaration : firstConstraint.getRequiredDeclarations()) {
+    if (declarationNames.add(declaration.getBindingName())) {
+      declarations.add(declaration);
+    }
+  }
+  while (constraintIterator.hasNext()) {
+    MvelConstraint constraint=constraintIterator.next();
+    constraints.remove(constraint);
+    expression+=" && " + constraint.getExpression();
+    for (    Declaration declaration : constraint.getRequiredDeclarations()) {
+      if (declarationNames.add(declaration.getBindingName())) {
+        declarations.add(declaration);
+      }
+    }
+  }
+  MvelConstraint combinedConstraint=new MvelConstraint(packageName,expression,false,declarations.toArray(new Declaration[declarations.size()]),null,null,false);
+  addConstraint(combinedConstraint);
+}

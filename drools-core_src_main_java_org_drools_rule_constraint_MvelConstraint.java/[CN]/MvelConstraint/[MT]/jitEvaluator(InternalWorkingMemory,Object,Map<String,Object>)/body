@@ -1,0 +1,12 @@
+{
+  jitted=true;
+  try {
+    CompositeClassLoader classLoader=((AbstractRuleBase)workingMemory.getRuleBase()).getRootClassLoader();
+    ExecutableStatement executableStatement=((MvelConditionEvaluator)conditionEvaluator).getExecutableStatement(object,vars);
+    ConditionAnalyzer.Condition condition=new ConditionAnalyzer(executableStatement).analyzeCondition();
+    conditionEvaluator=ASMConditionEvaluatorJitter.jit(condition,classLoader);
+  }
+ catch (  Throwable t) {
+    throw new RuntimeException("Exception jitting: " + expression,t);
+  }
+}

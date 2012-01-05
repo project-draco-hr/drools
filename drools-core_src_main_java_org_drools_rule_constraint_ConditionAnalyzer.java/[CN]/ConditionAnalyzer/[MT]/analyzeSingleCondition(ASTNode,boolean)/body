@@ -1,0 +1,24 @@
+{
+  SingleCondition condition=new SingleCondition(isNegated);
+  if (node instanceof BinaryOperation) {
+    BinaryOperation binaryOperation=(BinaryOperation)node;
+    condition.left=analyzeNode(binaryOperation.getLeft());
+    condition.operation=BooleanOperator.fromMvelOpCode(binaryOperation.getOperation());
+    condition.right=analyzeNode(binaryOperation.getRight());
+  }
+ else   if (node instanceof RegExMatch) {
+    condition.left=analyzeNode(node);
+    condition.operation=BooleanOperator.MATCHES;
+    Pattern pattern=((RegExMatch)node).getPattern();
+    condition.right=new FixedExpression(String.class,pattern.pattern());
+  }
+ else   if (node instanceof Contains) {
+    condition.left=analyzeNode(((Contains)node).getFirstStatement());
+    condition.operation=BooleanOperator.CONTAINS;
+    condition.right=analyzeNode(((Contains)node).getSecondStatement());
+  }
+ else {
+    condition.left=analyzeNode(node);
+  }
+  return condition;
+}
