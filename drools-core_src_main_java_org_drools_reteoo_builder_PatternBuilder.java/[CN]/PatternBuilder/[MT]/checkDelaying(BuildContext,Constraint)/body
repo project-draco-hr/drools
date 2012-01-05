@@ -3,27 +3,29 @@
     Declaration target=constraint.getRequiredDeclarations()[0];
     if (target.isPatternDeclaration() && target.getPattern().getObjectType().isEvent()) {
       long uplimit=((IntervalProviderConstraint)constraint).getInterval().getUpperBound();
-      Timer timer=context.getRule().getTimer();
-      DurationTimer durationTimer=new DurationTimer(uplimit);
-      if (timer instanceof CompositeMaxDurationTimer) {
-        ((CompositeMaxDurationTimer)timer).addDurationTimer(durationTimer);
-      }
- else {
-        if (timer == null) {
-          timer=durationTimer;
+      if (uplimit < Long.MAX_VALUE) {
+        Timer timer=context.getRule().getTimer();
+        DurationTimer durationTimer=new DurationTimer(uplimit);
+        if (timer instanceof CompositeMaxDurationTimer) {
+          ((CompositeMaxDurationTimer)timer).addDurationTimer(durationTimer);
         }
  else {
-          CompositeMaxDurationTimer temp=new CompositeMaxDurationTimer();
-          if (timer instanceof DurationTimer) {
-            temp.addDurationTimer((DurationTimer)timer);
+          if (timer == null) {
+            timer=durationTimer;
           }
  else {
-            temp.setTimer(context.getRule().getTimer());
+            CompositeMaxDurationTimer temp=new CompositeMaxDurationTimer();
+            if (timer instanceof DurationTimer) {
+              temp.addDurationTimer((DurationTimer)timer);
+            }
+ else {
+              temp.setTimer(context.getRule().getTimer());
+            }
+            temp.addDurationTimer(durationTimer);
+            timer=temp;
           }
-          temp.addDurationTimer(durationTimer);
-          timer=temp;
+          context.getRule().setTimer(timer);
         }
-        context.getRule().setTimer(timer);
       }
     }
   }

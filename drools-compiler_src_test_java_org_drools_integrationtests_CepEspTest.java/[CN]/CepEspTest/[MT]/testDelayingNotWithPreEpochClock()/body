@@ -1,0 +1,15 @@
+{
+  String str="package org.drools\n" + "declare A @role(event) symbol : String end\n" + "declare B @role(event) symbol : String end\n"+ "rule Setup when\n"+ "then\n"+ "    insert( new A() );\n"+ "end\n"+ "rule X\n"+ "when\n"+ "    $a : A() and not( B( this after $a ) )\n"+ "then\n"+ "end\n";
+  KnowledgeBaseConfiguration conf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  conf.setOption(EventProcessingOption.STREAM);
+  KnowledgeBase kbase=loadKnowledgeBase(new StringReader(str),conf);
+  KnowledgeSessionConfiguration ksconf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  ksconf.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(ksconf,null);
+  Calendar ts=Calendar.getInstance();
+  ts.set(1900,1,1);
+  SessionPseudoClock clock=ksession.getSessionClock();
+  clock.advanceTime(ts.getTimeInMillis(),TimeUnit.MILLISECONDS);
+  int rules=ksession.fireAllRules();
+  assertEquals(2,rules);
+}
