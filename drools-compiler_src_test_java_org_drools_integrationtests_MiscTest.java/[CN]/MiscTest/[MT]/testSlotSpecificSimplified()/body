@@ -1,0 +1,16 @@
+{
+  String rule="package org.drools\n" + "declare A\n" + "    s : String\n"+ "end\n"+ "declare B\n"+ "    on : boolean\n"+ "    s : String\n"+ "end\n"+ "rule R1\n"+ "when\n"+ "    A($s : s)\n"+ "    $b : B(s != $s)\n"+ "then\n"+ "    System.out.println(\"R1\");\n"+ "    modify($b) { setS($s) }\n"+ "end\n"+ "rule R2\n"+ "when\n"+ "    $b : B(on == false)\n"+ "then\n"+ "    System.out.println(\"R2\");\n"+ "    modify($b) { setOn(true) }\n"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(rule);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  FactType factTypeA=kbase.getFactType("org.drools","A");
+  Object factA=factTypeA.newInstance();
+  factTypeA.set(factA,"s","y");
+  ksession.insert(factA);
+  FactType factTypeB=kbase.getFactType("org.drools","B");
+  Object factB=factTypeB.newInstance();
+  factTypeB.set(factB,"on",false);
+  factTypeB.set(factB,"s","x");
+  ksession.insert(factB);
+  int rules=ksession.fireAllRules();
+  assertEquals(2,rules);
+}

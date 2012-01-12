@@ -1,10 +1,13 @@
 {
+  boolean isInternalFact=declr != null && !declr.isInternalFact();
+  long modificationMask=isInternalFact ? 0 : Long.MAX_VALUE;
   int end=originalBlock.indexOf("{");
   if (end == -1) {
     context.getErrors().add(new DescrBuildError(context.getParentDescr(),context.getRuleDescr(),null,"Block missing after modify" + d.getTargetExpression() + " ?\n"));
-    return false;
+    return;
   }
   addLineBreaks(consequence,originalBlock.substring(0,end));
+  List<String> settableProperties=isInternalFact ? getSettableProperties(((ClassObjectType)declr.getPattern().getObjectType()).getClassType()) : null;
   int start=end + 1;
   for (  String exprStr : ((JavaModifyBlockDescr)d).getExpressions()) {
     end=originalBlock.indexOf(exprStr,start);
@@ -13,13 +16,19 @@
     consequence.append(exprStr);
     consequence.append("; ");
     start=end + exprStr.length();
+    if (isInternalFact) {
+      int endMethodName=exprStr.indexOf('(');
+      String methodName=exprStr.substring(0,endMethodName).trim();
+      String propertyName=setter2property(methodName);
+      if (propertyName != null) {
+        int pos=settableProperties.indexOf(propertyName);
+        modificationMask=BitMaskUtil.set(modificationMask,pos);
+      }
+ else {
+        modificationMask=Long.MAX_VALUE;
+      }
+    }
   }
   addLineBreaks(consequence,originalBlock.substring(end));
-  if (declr != null && !declr.isInternalFact()) {
-    consequence.append("drools.update( " + obj + "__Handle__ ); }");
-  }
- else {
-    consequence.append("drools.update( " + obj + "__Handle2__ ); }");
-  }
-  return declr != null;
+  consequence.append("drools.update( ").append(obj).append(isInternalFact ? "__Handle__, " : "__Handle2__, ").append(modificationMask).append("L ); }");
 }
