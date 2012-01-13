@@ -1,0 +1,22 @@
+{
+  Class<?> nodeClass=node.getEgressType();
+  List<String> settableProperties=getSettableProperties(nodeClass);
+  modificationMask=0L;
+  WithNode.ParmValuePair[] parmValuePairs=getFieldValue(WithNode.class,"withExpressions",node);
+  for (  WithNode.ParmValuePair parmValuePair : parmValuePairs) {
+    Method method=extractMethod(parmValuePair);
+    if (method == null) {
+      modificationMask=Long.MAX_VALUE;
+      return;
+    }
+    String propertyName=setter2property(method.getName());
+    if (propertyName != null) {
+      int pos=settableProperties.indexOf(propertyName);
+      modificationMask=BitMaskUtil.set(modificationMask,pos);
+    }
+ else {
+      modificationMask=Long.MAX_VALUE;
+      return;
+    }
+  }
+}
