@@ -7,7 +7,7 @@
   KnowledgeBuilderErrors errors=kbuilder.getErrors();
   if (errors.size() > 0) {
     for (    KnowledgeBuilderError error : errors) {
-      System.err.println(error);
+      logger.warn(error.toString());
     }
     throw new IllegalArgumentException("Could not parse knowledge.");
   }
@@ -15,14 +15,14 @@
   Collection<KnowledgePackage> knowledgePackages=kbuilder.getKnowledgePackages();
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
   kbase.addKnowledgePackages(knowledgePackages);
-  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   session.insert(bonFromage);
   int rules=session.fireAllRules();
   assertEquals(2,rules);
   knowledgePackages=SerializationHelper.serializeObject(knowledgePackages);
   kbase=KnowledgeBaseFactory.newKnowledgeBase();
   kbase.addKnowledgePackages(knowledgePackages);
-  session=kbase.newStatefulKnowledgeSession();
+  session=createKnowledgeSession(kbase);
   session.insert(bonFromage);
   rules=session.fireAllRules();
   assertEquals(2,rules);

@@ -13,24 +13,26 @@
     }
     System.exit(1);
   }
-  KnowledgeBase kBase=KnowledgeBaseFactory.newKnowledgeBase();
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
   Collection<KnowledgePackage> knowledgePackages=kBuilder.getKnowledgePackages();
-  kBase.addKnowledgePackages(knowledgePackages);
-  StatefulKnowledgeSession session=kBase.newStatefulKnowledgeSession();
+  kbase.addKnowledgePackages(knowledgePackages);
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   Holder inrec=new Holder(1);
   System.out.println("Holds: " + inrec.getValue());
   session.insert(inrec);
   session.fireAllRules();
   Assert.assertEquals(1,session.getFactHandles().size());
   Assert.assertEquals("setting 1",inrec.getOutcome());
-  session=kBase.newStatefulKnowledgeSession();
+  session.dispose();
+  session=createKnowledgeSession(kbase);
   inrec=new Holder(null);
   System.out.println("Holds: " + inrec.getValue());
   session.insert(inrec);
   session.fireAllRules();
   Assert.assertEquals(1,session.getFactHandles().size());
   Assert.assertEquals("setting null",inrec.getOutcome());
-  session=kBase.newStatefulKnowledgeSession();
+  session.dispose();
+  session=createKnowledgeSession(kbase);
   inrec=new Holder(0);
   System.out.println("Holds: " + inrec.getValue());
   session.insert(inrec);

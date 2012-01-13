@@ -2,7 +2,7 @@
   final PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("assert_retract.drl")));
   final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getRuleBase();
+  RuleBase ruleBase=getSinglethreadRuleBase();
   ruleBase.addPackage(pkg);
   ruleBase=SerializationHelper.serializeObject(ruleBase);
   WorkingMemory workingMemory=ruleBase.newStatefulSession();
@@ -13,7 +13,9 @@
   workingMemory.insert(person);
   workingMemory.fireAllRules();
   List<String> results=(List<String>)workingMemory.getGlobal("list");
-  System.out.println(results);
+  for (  String result : results) {
+    logger.info(result);
+  }
   assertEquals(5,results.size());
   assertTrue(results.contains("first"));
   assertTrue(results.contains("second"));

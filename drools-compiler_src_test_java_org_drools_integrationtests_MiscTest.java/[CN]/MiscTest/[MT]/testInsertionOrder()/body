@@ -4,13 +4,13 @@
   KnowledgeBuilderErrors errors=kbuilder.getErrors();
   if (errors.size() > 0) {
     for (    KnowledgeBuilderError error : errors) {
-      System.err.println(error);
+      logger.warn(error.toString());
     }
     throw new IllegalArgumentException("Could not parse knowledge.");
   }
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
   kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   List<String> results=new ArrayList<String>();
   ksession.setGlobal("results",results);
   ksession.insert(new Move(1,2));
@@ -21,7 +21,8 @@
   assertEquals(2,results.size());
   assertTrue(results.contains(win2));
   assertTrue(results.contains(win3));
-  ksession=kbase.newStatefulKnowledgeSession();
+  ksession.dispose();
+  ksession=createKnowledgeSession(kbase);
   results=new ArrayList<String>();
   ksession.setGlobal("results",results);
   ksession.insert(new Move(2,3));

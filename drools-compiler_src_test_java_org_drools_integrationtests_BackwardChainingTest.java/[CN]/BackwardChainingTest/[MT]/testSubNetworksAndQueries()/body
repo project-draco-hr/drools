@@ -1,6 +1,6 @@
 {
   String str="" + "package org.drools.test  \n" + "import java.util.List\n"+ "import java.util.ArrayList\n"+ "import java.util.Map\n"+ "import java.util.HashMap\n"+ "global List list\n"+ "dialect \"mvel\"\n"+ "\n"+ "declare Location\n"+ "    thing : String \n"+ "    location : String \n"+ "end"+ "\n"+ "declare Edible\n"+ "   thing : String\n"+ "end"+ "\n"+ "query whereFood( String x, String y ) \n"+ "    Location(x, y;) Edible(x;) \n"+ "end\n"+ "\n"+ "query look(String place, List food ) \n"+ "    $s : String() // just here to give a OTN lookup point\n"+ "    food := List() from accumulate( whereFood(thing, place;) ,"+ "                                    collectList( thing ) )\n"+ "    exists( whereFood(thing, place;) )\n"+ "    not( whereFood(thing, place;) and\n "+ "         String( this == $s ) from thing )\n"+ "end\n"+ "\n"+ "rule init when\n"+ "then\n"+ "        \n"+ "        insert( new Location(\"apple\", \"kitchen\") );\n"+ "        insert( new Location(\"crackers\", \"kitchen\") );\n"+ "        insert( new Location(\"broccoli\", \"kitchen\") );\n"+ "        insert( new Location(\"computer\", \"office\") );\n"+ "        insert( new Edible(\"apple\") );\n"+ "        insert( new Edible(\"crackers\") );\n"+ "end\n"+ "";
-  System.out.println(str);
+  logger.debug(str);
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
   if (kbuilder.hasErrors()) {
@@ -28,7 +28,7 @@
   FromNode fromNode=(FromNode)queryElementNode3.getSinkPropagator().getSinks()[0];
   RightInputAdapterNode riaNode3=(RightInputAdapterNode)fromNode.getSinkPropagator().getSinks()[0];
   NotNode notNode=(NotNode)riaNode3.getSinkPropagator().getSinks()[0];
-  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   ReteooWorkingMemory wm=((StatefulKnowledgeSessionImpl)ksession).session;
   AccumulateMemory accMemory=(AccumulateMemory)wm.getNodeMemory(accNode);
   BetaMemory existsMemory=(BetaMemory)wm.getNodeMemory(existsNode);
@@ -44,7 +44,7 @@
   assertEquals(1,results.size());
   for (  org.drools.runtime.rule.QueryResultsRow row : results) {
     food.addAll((Collection)row.get("food"));
-    System.out.println(row.get("food"));
+    logger.debug(row.get("food").toString());
   }
   assertEquals(2,food.size());
   assertContains(new String[]{"crackers","apple"},food);
@@ -76,7 +76,7 @@
   assertEquals(1,results.size());
   for (  org.drools.runtime.rule.QueryResultsRow row : results) {
     food.addAll((Collection)row.get("food"));
-    System.out.println(row.get("food"));
+    logger.debug(row.get("food").toString());
   }
   assertEquals(2,food.size());
   assertContains(new String[]{"crackers","apple"},food);
