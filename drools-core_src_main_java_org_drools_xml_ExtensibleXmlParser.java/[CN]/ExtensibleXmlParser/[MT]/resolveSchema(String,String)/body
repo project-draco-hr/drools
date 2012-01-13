@@ -3,8 +3,12 @@
     return null;
   }
   try {
-    final URL url=new URL(systemId);
-    return new InputSource(url.openStream());
+    if (getTimeout() >= 0) {
+      final URL url=new URL(systemId);
+      URLConnection conn=url.openConnection();
+      conn.setConnectTimeout(getTimeout());
+      return new InputSource(conn.getInputStream());
+    }
   }
  catch (  final Exception e) {
   }
@@ -20,19 +24,19 @@
     xsd=systemId;
   }
 {
-    final InputStream is=classLoader.getResourceAsStream("META-INF/" + xsd);
+    InputStream is=ExtensibleXmlParser.class.getResourceAsStream("/" + xsd);
     if (is != null) {
       return new InputSource(is);
     }
   }
 {
-    final InputStream is=classLoader.getResourceAsStream("/META-INF/" + xsd);
+    final InputStream is=ExtensibleXmlParser.class.getResourceAsStream("/META-INF/" + xsd);
     if (is != null) {
       return new InputSource(is);
     }
   }
 {
-    final InputStream is=classLoader.getResourceAsStream("/" + xsd);
+    final InputStream is=ExtensibleXmlParser.class.getResourceAsStream("META-INF/" + xsd);
     if (is != null) {
       return new InputSource(is);
     }
