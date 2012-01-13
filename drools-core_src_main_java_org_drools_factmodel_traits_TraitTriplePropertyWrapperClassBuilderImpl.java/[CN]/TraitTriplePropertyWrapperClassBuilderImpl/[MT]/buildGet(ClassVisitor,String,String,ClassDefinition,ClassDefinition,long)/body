@@ -1,0 +1,25 @@
+{
+  MethodVisitor mv=cw.visitMethod(ACC_PUBLIC,"get","(Ljava/lang/Object;)Ljava/lang/Object;",null,null);
+  mv.visitCode();
+  if (core.getFieldsDefinitions().size() > 0) {
+    for (    FieldDefinition field : core.getFieldsDefinitions()) {
+      mv.visitLdcInsn(field.getName());
+      mv.visitVarInsn(ALOAD,1);
+      mv.visitMethodInsn(INVOKEVIRTUAL,"java/lang/String","equals","(Ljava/lang/Object;)Z");
+      Label l0=new Label();
+      mv.visitJumpInsn(IFEQ,l0);
+      TraitFactory.invokeExtractor(mv,wrapperName,trait,core,field);
+      if (BuildUtils.isPrimitive(field.getTypeName())) {
+        TraitFactory.valueOf(mv,field.getTypeName());
+      }
+      mv.visitInsn(ARETURN);
+      mv.visitLabel(l0);
+    }
+  }
+  mv.visitVarInsn(ALOAD,0);
+  mv.visitVarInsn(ALOAD,1);
+  mv.visitMethodInsn(INVOKESPECIAL,"org/drools/factmodel/traits/TripleBasedStruct","get","(Ljava/lang/Object;)Ljava/lang/Object;");
+  mv.visitInsn(ARETURN);
+  mv.visitMaxs(2,2);
+  mv.visitEnd();
+}
