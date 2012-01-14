@@ -12,7 +12,7 @@
     }
     TraitRegistry.getInstance().addTraitable(def);
   }
- else   if (type.getFormat().equals(TypeDeclaration.Format.TRAIT) || typeDescr.getAnnotation(Trait.class.getSimpleName()) != null) {
+ else   if (type.getKind().equals(TypeDeclaration.Kind.TRAIT) || typeDescr.getAnnotation(Trait.class.getSimpleName()) != null) {
     if (!type.isNovel()) {
       try {
         PackageRegistry reg=this.pkgRegistryMap.get(typeDescr.getNamespace());
@@ -27,7 +27,7 @@
           tempDescr.setType(target,typeDescr.getNamespace());
           tempDescr.addSuperType(typeDescr.getType());
           TypeDeclaration tempDeclr=new TypeDeclaration(target);
-          tempDeclr.setFormat(TypeDeclaration.Format.TRAIT);
+          tempDeclr.setKind(TypeDeclaration.Kind.TRAIT);
           tempDeclr.setTypesafe(type.isTypesafe());
           tempDeclr.setNovel(true);
           tempDeclr.setTypeClassName(tempDescr.getType().getFullName());
@@ -41,7 +41,7 @@
           tempDef.setInterfaces(def.getInterfaces());
           tempDef.setSuperClass(def.getClassName());
           tempDef.setDefinedClass(resolvedType);
-          type.setFormat(TypeDeclaration.Format.POJO);
+          type.setKind(TypeDeclaration.Kind.CLASS);
           generateDeclaredBean(tempDescr,tempDeclr,pkgRegistry,tempDef);
         }
  else {
@@ -64,19 +64,18 @@
   if (type.isNovel()) {
     String fullName=typeDescr.getType().getFullName();
     JavaDialectRuntimeData dialect=(JavaDialectRuntimeData)pkgRegistry.getDialectRuntimeRegistry().getDialectData("java");
-switch (type.getFormat()) {
+switch (type.getKind()) {
 case TRAIT:
       try {
-        byte[] d;
         ClassBuilder tb=ClassBuilderFactory.getTraitBuilderService();
-        d=tb.buildClass(def);
+        byte[] d=tb.buildClass(def);
         dialect.write(JavaDialectRuntimeData.convertClassToResourcePath(fullName),d);
       }
  catch (      Exception e) {
         this.results.add(new TypeDeclarationError("Unable to compile declared trait " + fullName + ": "+ e.getMessage()+ ";",typeDescr.getLine()));
       }
     break;
-case POJO:
+case CLASS:
 default :
   try {
     ClassBuilder cb=ClassBuilderFactory.getBeanClassBuilderService();

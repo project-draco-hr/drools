@@ -120,6 +120,11 @@
     if (format != null) {
       type.setFormat(TypeDeclaration.Format.parseFormat(format));
     }
+    annotationDescr=typeDescr.getAnnotation(TypeDeclaration.Kind.ID);
+    String kind=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
+    if (kind != null) {
+      type.setKind(TypeDeclaration.Kind.parseKind(kind));
+    }
     annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_CLASS);
     String className=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
     if (StringUtils.isEmpty(className)) {
@@ -130,6 +135,15 @@
       generateDeclaredBean(typeDescr,type,pkgRegistry);
       clazz=pkgRegistry.getTypeResolver().resolveType(typeDescr.getType().getFullName());
       type.setTypeClass(clazz);
+      if (type.getTypeClassDef() != null) {
+        try {
+          buildFieldAccessors(type,pkgRegistry);
+        }
+ catch (        Exception e) {
+          this.results.add(new TypeDeclarationError("Error creating field accessors for TypeDeclaration '" + className + "' for type '"+ type.getTypeName()+ "' "+ e.getMessage(),typeDescr.getLine()));
+          continue;
+        }
+      }
     }
  catch (    final ClassNotFoundException e) {
       this.results.add(new TypeDeclarationError("Class '" + className + "' not found for type declaration of '"+ type.getTypeName()+ "'",typeDescr.getLine()));
