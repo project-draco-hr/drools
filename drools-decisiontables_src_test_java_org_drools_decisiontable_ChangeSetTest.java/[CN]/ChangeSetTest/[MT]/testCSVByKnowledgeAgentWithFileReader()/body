@@ -1,0 +1,28 @@
+{
+  FailureDetectingSystemEventListener systemEventListener=new FailureDetectingSystemEventListener();
+  SystemEventListenerFactory.setSystemEventListener(systemEventListener);
+  try {
+    File targetTestFilesDir=new File("target/testFiles");
+    targetTestFilesDir.mkdirs();
+    File changeSetFile=new File(targetTestFilesDir,"changeSetTestCSV.xml");
+    FileUtils.copyURLToFile(getClass().getResource("changeSetTestCSV.xml"),changeSetFile);
+    KnowledgeAgent kagent=KnowledgeAgentFactory.newKnowledgeAgent("csv agent");
+    kagent.setSystemEventListener(systemEventListener);
+    kagent.applyChangeSet(ResourceFactory.newFileResource(changeSetFile));
+    KnowledgeBase kbase=kagent.getKnowledgeBase();
+    assertEquals(1,kbase.getKnowledgePackages().size());
+    assertEquals(3,kbase.getKnowledgePackages().iterator().next().getRules().size());
+    if (!systemEventListener.isSuccessful()) {
+      for (      Throwable throwable : systemEventListener.getExceptionList()) {
+        throwable.printStackTrace();
+      }
+      fail("The scanner ran into exceptions");
+    }
+  }
+ catch (  Throwable t) {
+    t.printStackTrace();
+    fail(t.getMessage());
+  }
+ finally {
+  }
+}
