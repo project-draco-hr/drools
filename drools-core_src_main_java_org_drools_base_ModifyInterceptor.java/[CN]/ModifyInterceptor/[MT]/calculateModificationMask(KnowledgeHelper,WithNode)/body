@@ -1,6 +1,12 @@
 {
   Class<?> nodeClass=node.getEgressType();
-  List<String> settableProperties=getSettableProperties(nodeClass);
+  InternalRuleBase ruleBase=(InternalRuleBase)knowledgeHelper.getWorkingMemory().getRuleBase();
+  TypeDeclaration typeDeclaration=ruleBase.getTypeDeclaration(nodeClass);
+  if (typeDeclaration == null || !typeDeclaration.isPropSpecific()) {
+    modificationMask=Long.MAX_VALUE;
+    return;
+  }
+  List<String> settableProperties=typeDeclaration.getSettableProperties();
   modificationMask=0L;
   WithNode.ParmValuePair[] parmValuePairs=getFieldValue(WithNode.class,"withExpressions",node);
   for (  WithNode.ParmValuePair parmValuePair : parmValuePairs) {
