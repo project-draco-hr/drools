@@ -9,7 +9,12 @@
     registerRollbackSync();
     T result=null;
     if (!(command instanceof DisposeCommand)) {
-      result=commandService.execute((GenericCommand<T>)command);
+      if (command instanceof BatchExecutionCommand) {
+        result=ksession.execute(command);
+      }
+ else {
+        result=commandService.execute((GenericCommand<T>)command);
+      }
     }
     txm.commit(transactionOwner);
     return result;
