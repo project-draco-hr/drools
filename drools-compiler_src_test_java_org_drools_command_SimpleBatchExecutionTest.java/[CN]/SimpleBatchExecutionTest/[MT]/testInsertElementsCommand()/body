@@ -1,0 +1,22 @@
+{
+  String expected_1="expected_1";
+  String expected_2="expected_2";
+  Object[] expectedArr={expected_1,expected_2};
+  Collection<Object> factCollection=Arrays.asList(expectedArr);
+  List<Command<?>> commands=new ArrayList<Command<?>>();
+  commands.add(CommandFactory.newInsertElements(factCollection,"out_list",true,null));
+  Command cmds=CommandFactory.newBatchExecution(commands);
+  ExecutionResults result=(ExecutionResults)ksession.execute(cmds);
+  Collection<? extends Object> outList=(Collection<? extends Object>)result.getValue("out_list");
+  assertNotNull(outList);
+  ksession.fireAllRules();
+  List<Object> expectedList=new ArrayList<Object>(Arrays.asList(expectedArr));
+  Collection<Object> factList=ksession.getObjects();
+  assertTrue("Expected " + expectedList.size() + " objects but retrieved "+ factList.size(),factList.size() == expectedList.size());
+  for (  Object fact : factList) {
+    if (expectedList.contains(fact)) {
+      expectedList.remove(fact);
+    }
+  }
+  assertTrue("Retrieved object list did not contain expected objects.",expectedList.isEmpty());
+}

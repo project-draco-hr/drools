@@ -1,0 +1,20 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("org/drools/integrationtests/simple_query_test.drl"),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  ksession.insert(new Cheese("stinky",5));
+  ksession.insert(new Cheese("smelly",7));
+  List<Command<?>> commands=new ArrayList<Command<?>>();
+  commands.add(CommandFactory.newQuery("numStinkyCheeses","simple query"));
+  Command<?> cmds=CommandFactory.newBatchExecution(commands);
+  ExecutionResults result=(ExecutionResults)ksession.execute(cmds);
+  assertNotNull("Batch execution result is null!",result);
+  Object queryResultsObject=result.getValue("numStinkyCheeses");
+  assertTrue("Retrieved object is null or incorrect!",queryResultsObject != null && queryResultsObject instanceof QueryResults);
+  assertEquals(1,((QueryResults)queryResultsObject).size());
+}
