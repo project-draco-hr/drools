@@ -1,0 +1,28 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("org/drools/integrationtests/test_ImportFunctions.drl"),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  final Cheese cheese=new Cheese("stilton",15);
+  ksession.insert(cheese);
+  List<?> list=new ArrayList();
+  ksession.setGlobal("list",list);
+  List<Command<?>> commands=new ArrayList<Command<?>>();
+  commands.add(CommandFactory.newFireAllRules("fired"));
+  Command<?> cmds=CommandFactory.newBatchExecution(commands);
+  ExecutionResults result=(ExecutionResults)ksession.execute(cmds);
+  assertNotNull("Batch execution result is null!",result);
+  Object firedObject=result.getValue("fired");
+  assertTrue("Retrieved object is null or incorrect!",firedObject != null && firedObject instanceof Integer);
+  assertEquals(4,firedObject);
+  list=(List<?>)ksession.getGlobal("list");
+  assertEquals(4,list.size());
+  assertEquals("rule1",list.get(0));
+  assertEquals("rule2",list.get(1));
+  assertEquals("rule3",list.get(2));
+  assertEquals("rule4",list.get(3));
+}

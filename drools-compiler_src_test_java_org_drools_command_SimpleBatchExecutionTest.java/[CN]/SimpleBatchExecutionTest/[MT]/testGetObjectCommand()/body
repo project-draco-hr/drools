@@ -1,0 +1,18 @@
+{
+  String expected_1="expected_1";
+  String expected_2="expected_2";
+  FactHandle handle_1=ksession.insert(expected_1);
+  FactHandle handle_2=ksession.insert(expected_2);
+  ksession.fireAllRules();
+  Object fact=ksession.getObject(handle_1);
+  assertNotNull(fact);
+  assertEquals(expected_1,fact);
+  List<Command<?>> commands=new ArrayList<Command<?>>();
+  commands.add(CommandFactory.newGetObject(handle_1,"out_1"));
+  commands.add(CommandFactory.newGetObject(handle_2,"out_2"));
+  Command cmds=CommandFactory.newBatchExecution(commands);
+  ExecutionResults result=(ExecutionResults)ksession.execute(cmds);
+  assertNotNull("GetObjectCommand result is null!",result);
+  assertEquals(expected_1,result.getValue("out_1"));
+  assertEquals(expected_2,result.getValue("out_2"));
+}

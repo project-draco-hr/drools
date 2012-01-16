@@ -1,0 +1,30 @@
+{
+  String expected_1="expected_1";
+  String expected_2="expected_2";
+  FactHandle handle_1=ksession.insert(expected_1);
+  FactHandle handle_2=ksession.insert(expected_2);
+  ksession.fireAllRules();
+  Object object=ksession.getObject(handle_1);
+  assertNotNull(object);
+  assertEquals(expected_1,object);
+  object=ksession.getObject(handle_2);
+  assertNotNull(object);
+  assertEquals(expected_2,object);
+  List<Command<?>> commands=new ArrayList<Command<?>>();
+  commands.add(CommandFactory.newGetObjects("out_list"));
+  Command cmds=CommandFactory.newBatchExecution(commands);
+  ExecutionResults result=(ExecutionResults)ksession.execute(cmds);
+  assertNotNull("GetObjectsCommand result is null!",result);
+  List<Object> objectList=(List)result.getValue("out_list");
+  assertTrue("Retrieved object list is null or empty!",objectList != null && !objectList.isEmpty());
+  Collection<Object> factList=ksession.getObjects();
+  Object[] expectedArr={expected_1,expected_2};
+  List<Object> expectedList=new ArrayList<Object>(Arrays.asList(expectedArr));
+  assertTrue("Expected " + expectedList.size() + " objects but retrieved "+ factList.size(),factList.size() == expectedList.size());
+  for (  Object fact : factList) {
+    if (expectedList.contains(fact)) {
+      expectedList.remove(fact);
+    }
+  }
+  assertTrue("Retrieved object list did not contain expected objects.",expectedList.isEmpty());
+}

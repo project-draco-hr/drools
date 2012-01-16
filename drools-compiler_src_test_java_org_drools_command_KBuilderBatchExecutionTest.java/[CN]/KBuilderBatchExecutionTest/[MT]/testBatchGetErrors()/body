@@ -1,0 +1,20 @@
+{
+  Resource res=ResourceFactory.newClassPathResource(source);
+  assertNotNull(res);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  List<Command<?>> commands=new ArrayList<Command<?>>();
+  commands.add(new NewKnowledgeBuilderCommand());
+  commands.add(new KnowledgeBuilderAddCommand(res,ResourceType.DRL,null));
+  commands.add(new KnowledgeBuilderGetErrorsCommand("errors"));
+  Command<?> cmds=CommandFactory.newBatchExecution(commands);
+  ExecutionResults result=(ExecutionResults)ksession.execute(cmds);
+  assertNotNull(result);
+  Object errors=result.getValue("errors");
+  assertNotNull(errors);
+  assertTrue(errors instanceof KnowledgeBuilderErrors);
+  KnowledgeBuilderErrors kbErrors=(KnowledgeBuilderErrors)errors;
+  assertEquals(2,kbErrors.size());
+  KnowledgeBuilderError kbError=kbErrors.iterator().next();
+  assertTrue(kbError.getMessage().startsWith("[ERR 102]"));
+}
