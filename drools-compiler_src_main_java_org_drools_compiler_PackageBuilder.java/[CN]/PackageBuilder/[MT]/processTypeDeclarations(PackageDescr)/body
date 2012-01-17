@@ -1,7 +1,7 @@
 {
   PackageRegistry defaultRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
-  PackageRegistry pkgRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
-  for (  TypeDeclarationDescr typeDescr : packageDescr.getTypeDeclarations()) {
+  PackageRegistry pkgRegistry=null;
+  for (  AbstractClassTypeDeclarationDescr typeDescr : packageDescr.getClassAndEnumDeclarationDescrs()) {
     if (isEmpty(typeDescr.getNamespace())) {
       for (      ImportDescr id : packageDescr.getImports()) {
         String imp=id.getTarget();
@@ -62,11 +62,18 @@
     if (isEmpty(typeDescr.getNamespace())) {
       typeDescr.setNamespace(packageDescr.getNamespace());
     }
-    fillSuperType(typeDescr,packageDescr);
+    if (typeDescr instanceof TypeDeclarationDescr) {
+      fillSuperType((TypeDeclarationDescr)typeDescr,packageDescr);
+    }
     fillFieldTypes(typeDescr,packageDescr);
     if (!typeDescr.getNamespace().equals(packageDescr.getNamespace())) {
       PackageDescr altDescr=new PackageDescr(typeDescr.getNamespace());
-      altDescr.addTypeDeclaration(typeDescr);
+      if (typeDescr instanceof TypeDeclarationDescr) {
+        altDescr.addTypeDeclaration((TypeDeclarationDescr)typeDescr);
+      }
+ else       if (typeDescr instanceof EnumDeclarationDescr) {
+        altDescr.addEnumDeclaration((EnumDeclarationDescr)typeDescr);
+      }
       for (      ImportDescr imp : packageDescr.getImports()) {
         altDescr.addImport(imp);
       }
@@ -78,25 +85,30 @@
       }
     }
   }
-  Collection<TypeDeclarationDescr> sortedTypeDescriptors=sortByHierarchy(packageDescr.getTypeDeclarations());
-  for (  TypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
+  Collection<AbstractClassTypeDeclarationDescr> sortedTypeDescriptors=sortByHierarchy(packageDescr.getClassAndEnumDeclarationDescrs());
+  for (  AbstractClassTypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
     generatedBeans.add(typeDescr.getType().getFullName());
   }
-  List<TypeDeclarationDescr> unresolvedTypeDescrs=null;
+  List<AbstractClassTypeDeclarationDescr> unresolvedTypeDescrs=null;
   List<TypeDeclaration> unresolvedTypes=null;
-  for (  TypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
+  for (  AbstractClassTypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
     if (!typeDescr.getNamespace().equals(packageDescr.getNamespace())) {
       continue;
     }
-    for (    TypeDeclarationDescr.QualifiedName qname : typeDescr.getSuperTypes()) {
-      if (mergeInheritedFields(typeDescr)) {
-        for (        TypeDeclarationDescr descr : sortedTypeDescriptors) {
-          if (qname.equals(descr.getType())) {
-            typeDescr.getAnnotations().putAll(descr.getAnnotations());
-            break;
-          }
- else           if (typeDescr.getType().equals(descr.getType())) {
-            break;
+    if (typeDescr instanceof TypeDeclarationDescr) {
+      TypeDeclarationDescr tDescr=(TypeDeclarationDescr)typeDescr;
+      for (      QualifiedName qname : tDescr.getSuperTypes()) {
+        if (mergeInheritedFields(tDescr)) {
+          Iterator<AbstractClassTypeDeclarationDescr> iter=sortedTypeDescriptors.iterator();
+          while (iter.hasNext()) {
+            AbstractClassTypeDeclarationDescr descr=iter.next();
+            if (qname.equals(descr.getType())) {
+              typeDescr.getAnnotations().putAll(descr.getAnnotations());
+              break;
+            }
+ else             if (typeDescr.getType().equals(descr.getType())) {
+              break;
+            }
           }
         }
       }
@@ -124,6 +136,9 @@
     String kind=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
     if (kind != null) {
       type.setKind(TypeDeclaration.Kind.parseKind(kind));
+    }
+    if (typeDescr instanceof EnumDeclarationDescr) {
+      type.setKind(TypeDeclaration.Kind.ENUM);
     }
     annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_CLASS);
     String className=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;

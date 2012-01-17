@@ -1,0 +1,46 @@
+{
+  Node<AbstractClassTypeDeclarationDescr> root=new Node<AbstractClassTypeDeclarationDescr>(null);
+  Map<String,Node<AbstractClassTypeDeclarationDescr>> map=new HashMap<String,Node<AbstractClassTypeDeclarationDescr>>();
+  for (  AbstractClassTypeDeclarationDescr tdescr : typeDeclarations) {
+    String typeName=tdescr.getType().getFullName();
+    Node<AbstractClassTypeDeclarationDescr> node=map.get(typeName);
+    if (node == null) {
+      node=new Node(typeName,tdescr);
+      map.put(typeName,node);
+    }
+ else     if (node.getData() == null) {
+      node.setData(tdescr);
+    }
+    if (tdescr.getSuperTypes().isEmpty()) {
+      root.addChild(node);
+    }
+ else {
+      for (      QualifiedName qname : tdescr.getSuperTypes()) {
+        String superTypeName=qname.getFullName();
+        Node<AbstractClassTypeDeclarationDescr> superNode=map.get(superTypeName);
+        if (superNode == null) {
+          superNode=new Node<AbstractClassTypeDeclarationDescr>(superTypeName);
+          map.put(superTypeName,superNode);
+        }
+        superNode.addChild(node);
+      }
+    }
+    for (    TypeFieldDescr field : tdescr.getFields().values()) {
+      String fieldTypeName=field.getPattern().getObjectType();
+      Node<AbstractClassTypeDeclarationDescr> superNode=map.get(fieldTypeName);
+      if (superNode == null) {
+        superNode=new Node<AbstractClassTypeDeclarationDescr>(fieldTypeName);
+        map.put(fieldTypeName,superNode);
+      }
+      superNode.addChild(node);
+    }
+  }
+  Iterator<Node<AbstractClassTypeDeclarationDescr>> iter=map.values().iterator();
+  while (iter.hasNext()) {
+    Node<AbstractClassTypeDeclarationDescr> n=iter.next();
+    if (n.getData() == null)     root.addChild(n);
+  }
+  List<AbstractClassTypeDeclarationDescr> sortedList=new LinkedList<AbstractClassTypeDeclarationDescr>();
+  root.accept(sortedList);
+  return sortedList;
+}
