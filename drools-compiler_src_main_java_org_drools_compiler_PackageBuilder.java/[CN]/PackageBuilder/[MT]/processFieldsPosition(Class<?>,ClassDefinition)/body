@@ -1,0 +1,27 @@
+{
+  Collection<Field> fields=new LinkedList<Field>();
+  Class<?> tempKlass=cls;
+  while (tempKlass != null && tempKlass != Object.class) {
+    for (    Field f : tempKlass.getDeclaredFields()) {
+      fields.add(f);
+    }
+    tempKlass=tempKlass.getSuperclass();
+  }
+  List<FieldDefinition> orderedFields=new ArrayList<FieldDefinition>(fields.size());
+  for (int i=0; i < fields.size(); i++) {
+    orderedFields.add(null);
+  }
+  for (  Field fld : fields) {
+    Position pos=fld.getAnnotation(Position.class);
+    if (pos != null) {
+      FieldDefinition fldDef=new FieldDefinition(fld.getName(),fld.getType().getName());
+      fldDef.setIndex(pos.value());
+      orderedFields.set(pos.value(),fldDef);
+    }
+  }
+  for (  FieldDefinition fld : orderedFields) {
+    if (fld != null) {
+      clsDef.addField(fld);
+    }
+  }
+}

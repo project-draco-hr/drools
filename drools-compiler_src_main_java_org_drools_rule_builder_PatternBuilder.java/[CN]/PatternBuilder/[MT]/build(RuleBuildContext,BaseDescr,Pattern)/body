@@ -1,7 +1,7 @@
 {
   final PatternDescr patternDescr=(PatternDescr)descr;
   if (patternDescr.getObjectType() == null || patternDescr.getObjectType().equals("")) {
-    context.getErrors().add(new DescrBuildError(context.getParentDescr(),patternDescr,null,"ObjectType not correctly defined"));
+    context.addError(new DescrBuildError(context.getParentDescr(),patternDescr,null,"ObjectType not correctly defined"));
     return null;
   }
   ObjectType objectType=null;
@@ -50,7 +50,7 @@
       }
     }
     if (rce == null) {
-      context.getErrors().add(new DescrBuildError(context.getParentDescr(),patternDescr,null,"Unable to resolve ObjectType '" + patternDescr.getObjectType() + "'"));
+      context.addError(new DescrBuildError(context.getParentDescr(),patternDescr,null,"Unable to resolve ObjectType '" + patternDescr.getObjectType() + "'"));
     }
     return rce;
   }
@@ -76,7 +76,7 @@
       build(context,patternDescr,pattern,patternDescr,"this == " + patternDescr.getIdentifier());
     }
  else {
-      context.getErrors().add(new DescrBuildError(context.getParentDescr(),patternDescr,null,"Duplicate declaration for variable '" + patternDescr.getIdentifier() + "' in the rule '"+ context.getRule().getName()+ "'"));
+      context.addError(new DescrBuildError(context.getParentDescr(),patternDescr,null,"Duplicate declaration for variable '" + patternDescr.getIdentifier() + "' in the rule '"+ context.getRule().getName()+ "'"));
     }
   }
   if (objectType instanceof ClassObjectType) {
@@ -85,7 +85,7 @@
   context.getBuildStack().push(pattern);
   if (pattern.getObjectType() instanceof ClassObjectType) {
     Class<?> cls=((ClassObjectType)pattern.getObjectType()).getClassType();
-    TypeDeclaration typeDeclr=context.getPackageBuilder().getTypeDeclaration(cls);
+    TypeDeclaration typeDeclr=context.getPackageBuilder().getAndRegisterTypeDeclaration(cls,context.getPkg().getName());
     if (typeDeclr != null) {
       context.setTypesafe(typeDeclr.isTypesafe());
     }
@@ -94,6 +94,7 @@
     }
   }
   processConstraintsAndBinds(context,patternDescr,pattern);
+  processAnnotations(context,patternDescr,pattern);
   if (patternDescr.getSource() != null) {
     RuleConditionBuilder builder=(RuleConditionBuilder)context.getDialect().getBuilder(patternDescr.getSource().getClass());
     PatternSource source=(PatternSource)builder.build(context,patternDescr.getSource());
@@ -114,7 +115,7 @@
       }
     }
  else {
-      context.getErrors().add(new DescrBuildError(context.getParentDescr(),patternDescr,null,"A Sliding Window behavior can only be assigned to patterns declared with @role( event ). The pattern '" + pattern.getObjectType() + "' in the rule '"+ context.getRule().getName()+ "' is not declared as an Event."));
+      context.addError(new DescrBuildError(context.getParentDescr(),patternDescr,null,"A Sliding Window behavior can only be assigned to patterns declared with @role( event ). The pattern '" + pattern.getObjectType() + "' in the rule '"+ context.getRule().getName()+ "' is not declared as an Event."));
     }
   }
   context.getBuildStack().pop();

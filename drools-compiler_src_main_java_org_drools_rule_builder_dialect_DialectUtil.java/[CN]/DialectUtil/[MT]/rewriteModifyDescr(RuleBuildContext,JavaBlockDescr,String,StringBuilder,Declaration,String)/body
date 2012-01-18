@@ -1,20 +1,21 @@
 {
   boolean isInternalFact=declr != null && !declr.isInternalFact();
-  boolean isPropSpecific=false;
+  boolean isPropertySpecific=false;
+  TypeDeclaration typeDeclaration=null;
   List<String> settableProperties=null;
   if (isInternalFact) {
     Class<?> typeClass=((ClassObjectType)declr.getPattern().getObjectType()).getClassType();
-    TypeDeclaration typeDeclaration=context.getPackageBuilder().getTypeDeclaration(typeClass);
-    if (typeDeclaration != null && typeDeclaration.isPropSpecific()) {
-      isPropSpecific=true;
+    typeDeclaration=context.getPackageBuilder().getTypeDeclaration(typeClass);
+    if (typeDeclaration != null && typeDeclaration.isPropertySpecific()) {
+      isPropertySpecific=true;
       typeDeclaration.setTypeClass(typeClass);
       settableProperties=typeDeclaration.getSettableProperties();
     }
   }
-  long modificationMask=isPropSpecific ? 0 : Long.MAX_VALUE;
+  long modificationMask=isPropertySpecific ? 0 : Long.MAX_VALUE;
   int end=originalBlock.indexOf("{");
   if (end == -1) {
-    context.getErrors().add(new DescrBuildError(context.getParentDescr(),context.getRuleDescr(),null,"Block missing after modify" + d.getTargetExpression() + " ?\n"));
+    context.addError(new DescrBuildError(context.getParentDescr(),context.getRuleDescr(),null,"Block missing after modify" + d.getTargetExpression() + " ?\n"));
     return;
   }
   addLineBreaks(consequence,originalBlock.substring(0,end));
@@ -26,16 +27,23 @@
     consequence.append(exprStr);
     consequence.append("; ");
     start=end + exprStr.length();
-    if (isPropSpecific) {
+    if (isPropertySpecific) {
       int endMethodName=exprStr.indexOf('(');
       String methodName=exprStr.substring(0,endMethodName).trim();
       String propertyName=setter2property(methodName);
       if (propertyName != null) {
         int pos=settableProperties.indexOf(propertyName);
-        modificationMask=BitMaskUtil.set(modificationMask,pos);
+        if (pos >= 0)         modificationMask=BitMaskUtil.set(modificationMask,pos);
       }
- else {
-        modificationMask=Long.MAX_VALUE;
+      String methodParams=exprStr.substring(endMethodName + 1,exprStr.indexOf(')'));
+      int argsNr=methodParams.trim().length() == 0 ? 0 : methodParams.split(",").length;
+      String methodWithArgsNr=methodName + "_" + argsNr;
+      List<String> modifiedProps=typeDeclaration.getTypeClassDef().getModifiedPropsByMethod(methodWithArgsNr);
+      if (modifiedProps != null) {
+        for (        String modifiedProp : modifiedProps) {
+          int pos=settableProperties.indexOf(modifiedProp);
+          if (pos >= 0)           modificationMask=BitMaskUtil.set(modificationMask,pos);
+        }
       }
     }
   }

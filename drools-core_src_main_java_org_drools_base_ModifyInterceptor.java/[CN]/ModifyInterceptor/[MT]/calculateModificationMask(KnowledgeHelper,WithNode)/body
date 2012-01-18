@@ -2,7 +2,7 @@
   Class<?> nodeClass=node.getEgressType();
   InternalRuleBase ruleBase=(InternalRuleBase)knowledgeHelper.getWorkingMemory().getRuleBase();
   TypeDeclaration typeDeclaration=ruleBase.getTypeDeclaration(nodeClass);
-  if (typeDeclaration == null || !typeDeclaration.isPropSpecific()) {
+  if (typeDeclaration == null || !typeDeclaration.isPropertySpecific()) {
     modificationMask=Long.MAX_VALUE;
     return;
   }
@@ -18,11 +18,14 @@
     String propertyName=setter2property(method.getName());
     if (propertyName != null) {
       int pos=settableProperties.indexOf(propertyName);
-      modificationMask=BitMaskUtil.set(modificationMask,pos);
+      if (pos >= 0)       modificationMask=BitMaskUtil.set(modificationMask,pos);
     }
- else {
-      modificationMask=Long.MAX_VALUE;
-      return;
+    List<String> modifiedProps=typeDeclaration.getTypeClassDef().getModifiedPropsByMethod(method);
+    if (modifiedProps != null) {
+      for (      String modifiedProp : modifiedProps) {
+        int pos=settableProperties.indexOf(modifiedProp);
+        if (pos >= 0)         modificationMask=BitMaskUtil.set(modificationMask,pos);
+      }
     }
   }
 }

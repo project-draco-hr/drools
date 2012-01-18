@@ -1,0 +1,27 @@
+{
+  AnnotationDescr listenedProps=annotationMap.get(Pattern.ATTR_LISTENED_PROPS);
+  if (listenedProps != null) {
+    List<String> settableProperties=getSettableProperties(context,patternDescr,pattern);
+    List<String> listenedProperties=new ArrayList<String>();
+    String listenedPropertyPattern=listenedProps.getValue().toString();
+    for (    String propertyName : listenedPropertyPattern.split(",")) {
+      propertyName=propertyName.trim();
+      if (propertyName.equals("*")) {
+        listenedProperties.add(propertyName);
+        continue;
+      }
+      boolean isNegative=propertyName.startsWith("!");
+      propertyName=isNegative ? propertyName.substring(1).trim() : propertyName;
+      if (settableProperties != null && !settableProperties.contains(propertyName)) {
+        context.addError(new DescrBuildError(context.getParentDescr(),patternDescr,null,"Unknown property " + propertyName + " in @"+ Pattern.ATTR_LISTENED_PROPS+ " annotation"));
+      }
+ else       if (listenedProperties.contains(propertyName) || listenedProperties.contains("!" + propertyName)) {
+        context.addError(new DescrBuildError(context.getParentDescr(),patternDescr,null,"Duplicate property " + propertyName + " in @"+ Pattern.ATTR_LISTENED_PROPS+ " annotation"));
+      }
+ else {
+        listenedProperties.add(isNegative ? "!" + propertyName : propertyName);
+      }
+    }
+    pattern.setListenedProperties(listenedProperties);
+  }
+}
