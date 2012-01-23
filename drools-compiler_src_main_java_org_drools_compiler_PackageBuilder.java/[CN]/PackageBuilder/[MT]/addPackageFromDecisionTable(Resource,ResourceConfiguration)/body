@@ -1,0 +1,18 @@
+{
+  this.resource=resource;
+  PackageDescr pkg=null;
+  boolean hasErrors=false;
+  DecisionTableConfiguration dtableConfiguration=(DecisionTableConfiguration)configuration;
+  String string=DecisionTableFactory.loadFromInputStream(resource.getInputStream(),dtableConfiguration);
+  final DrlParser parser=new DrlParser();
+  pkg=parser.parse(new StringReader(string));
+  this.results.addAll(parser.getErrors());
+  if (pkg == null) {
+    this.results.add(new ParserError("Parser returned a null Package",0,0));
+  }
+  hasErrors=parser.hasErrors();
+  if (!hasErrors) {
+    addPackage(pkg);
+  }
+  this.resource=null;
+}
