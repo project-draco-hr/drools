@@ -1,0 +1,41 @@
+{
+  SystemEventListenerFactory.setSystemEventListener(new PrintStreamSystemEventListener(System.out));
+  PackageBuilder builder=new PackageBuilder();
+  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("Sample.drl")));
+  Package pkg=builder.getPackage();
+  byte[] blob1=DroolsStreamUtils.streamOut(pkg);
+  File file=new File(TMP_DIR + "rules.pkg");
+  writeBinaryFile(file,blob1);
+  Thread.sleep(1100);
+  String XLS_CHANGESET="<change-set xmlns=\"http://drools.org/drools-5.0/change-set\"\n" + "            xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n" + "            xs:schemaLocation=\"http://drools.org/drools-5.0/change-set http://anonsvn.jboss.org/repos/labs/labs/jbossrules/trunk/drools-api/src/main/resources/change-set-1.0.0.xsd\">\n"+ "  <add>\n"+ "    <resource source=\"file:" + file.getAbsolutePath() + "\" type=\"PKG\" />\n"+ "  </add>\n"+ "</change-set>\n";
+  File xlsChangeset=new File(TMP_DIR + "pkgChangeset.xml");
+  xlsChangeset.deleteOnExit();
+  writeToFile(xlsChangeset,XLS_CHANGESET);
+  ResourceChangeScannerConfiguration config=ResourceFactory.getResourceChangeScannerService().newResourceChangeScannerConfiguration();
+  config.setProperty("drools.resource.scanner.interval","1");
+  ResourceFactory.getResourceChangeScannerService().configure(config);
+  KnowledgeAgent kagent=KnowledgeAgentFactory.newKnowledgeAgent("xls agent");
+  kagent.applyChangeSet(ResourceFactory.newFileResource(xlsChangeset));
+  KnowledgeBase kbase=kagent.getKnowledgeBase();
+  ResourceFactory.getResourceChangeNotifierService().start();
+  ResourceFactory.getResourceChangeScannerService().start();
+  assertEquals(1,kbase.getKnowledgePackages().size());
+  assertEquals(2,kbase.getKnowledgePackages().iterator().next().getRules().size());
+  Rule hw=pkg.getRule("Hello World");
+  pkg.removeRule(hw);
+  byte[] blob2=DroolsStreamUtils.streamOut(pkg);
+  Thread.sleep(1500);
+  writeBinaryFile(file,blob2);
+  Thread.sleep(1500);
+  try {
+    kbase=kagent.getKnowledgeBase();
+    assertEquals(1,kbase.getKnowledgePackages().size());
+    assertEquals(1,kbase.getKnowledgePackages().iterator().next().getRules().size());
+  }
+  finally {
+    ResourceFactory.getResourceChangeNotifierService().stop();
+    ResourceFactory.getResourceChangeScannerService().stop();
+    file.delete();
+    kagent.dispose();
+  }
+}
