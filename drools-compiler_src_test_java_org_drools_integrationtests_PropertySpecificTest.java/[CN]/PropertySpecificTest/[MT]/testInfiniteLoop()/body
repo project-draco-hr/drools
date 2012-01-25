@@ -1,11 +1,18 @@
 {
-  String rule="package org.drools\n" + "import org.drools.integrationtests.PropertySpecificTest.C\n" + "rule R1\n"+ "when\n"+ "    $c : C(s == \"test\")\n"+ "then\n"+ "    modify($c) { turnOn() }\n"+ "end\n";
+  String rule="package org.drools\n" + "import org.drools.integrationtests.PropertySpecificTest.C\n" + "global java.util.concurrent.atomic.AtomicInteger counter\n"+ "rule R1\n"+ "when\n"+ "    $c : C(s == \"test\") @watch( on )\n"+ "then\n"+ "    modify($c) { turnOn() }\n"+ "    if (counter.incrementAndGet() > 10) throw new RuntimeException();\n"+ "end\n";
   KnowledgeBase kbase=loadKnowledgeBaseFromString(rule);
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  AtomicInteger counter=new AtomicInteger(0);
+  ksession.setGlobal("counter",counter);
   C c=new C();
   c.setOn(false);
   c.setS("test");
   ksession.insert(c);
-  ksession.fireAllRules();
-  ksession.dispose();
+  try {
+    ksession.fireAllRules();
+  }
+  finally {
+    assertTrue(counter.get() >= 10);
+    ksession.dispose();
+  }
 }
