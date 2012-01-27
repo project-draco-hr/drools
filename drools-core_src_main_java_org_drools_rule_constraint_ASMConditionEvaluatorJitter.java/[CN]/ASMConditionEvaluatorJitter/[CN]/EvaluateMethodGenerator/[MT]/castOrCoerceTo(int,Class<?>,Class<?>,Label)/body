@@ -1,0 +1,39 @@
+{
+  Label nonInstanceOfLabel=new Label();
+  Label endOfCoercionLabel=new Label();
+  load(regNr);
+  instanceOf(toType);
+  mv.visitJumpInsn(IFEQ,nonInstanceOfLabel);
+  load(regNr);
+  cast(toType);
+  store(regNr,toType);
+  mv.visitJumpInsn(GOTO,endOfCoercionLabel);
+  mv.visitLabel(nonInstanceOfLabel);
+  boolean isNumber=Number.class.isAssignableFrom(toType);
+  Label tryOk=null;
+  Label inCatch=null;
+  if (isNumber) {
+    Label beforeTry=new Label();
+    tryOk=new Label();
+    inCatch=new Label();
+    mv.visitTryCatchBlock(beforeTry,tryOk,inCatch,"java/lang/NumberFormatException");
+    mv.visitLabel(beforeTry);
+  }
+  mv.visitTypeInsn(NEW,internalName(toType));
+  mv.visitInsn(DUP);
+  load(regNr);
+  coerceByConstructor(fromType,toType);
+  store(regNr,toType);
+  if (isNumber) {
+    Label afterCatch=new Label();
+    mv.visitLabel(tryOk);
+    mv.visitJumpInsn(GOTO,afterCatch);
+    mv.visitLabel(inCatch);
+    mv.visitInsn(POP);
+    mv.visitInsn(ACONST_NULL);
+    mv.visitVarInsn(ASTORE,regNr);
+    mv.visitJumpInsn(GOTO,nullLabel);
+    mv.visitLabel(afterCatch);
+  }
+  mv.visitLabel(endOfCoercionLabel);
+}
