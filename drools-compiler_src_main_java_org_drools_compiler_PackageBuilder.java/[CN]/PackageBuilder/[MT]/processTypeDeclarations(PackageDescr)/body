@@ -1,6 +1,5 @@
 {
-  PackageRegistry defaultRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
-  PackageRegistry pkgRegistry=null;
+  PackageRegistry pkgRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
   for (  AbstractClassTypeDeclarationDescr typeDescr : packageDescr.getClassAndEnumDeclarationDescrs()) {
     if (isEmpty(typeDescr.getNamespace())) {
       for (      ImportDescr id : packageDescr.getImports()) {
@@ -150,15 +149,6 @@
       generateDeclaredBean(typeDescr,type,pkgRegistry);
       clazz=pkgRegistry.getTypeResolver().resolveType(typeDescr.getType().getFullName());
       type.setTypeClass(clazz);
-      if (type.getTypeClassDef() != null) {
-        try {
-          buildFieldAccessors(type,pkgRegistry);
-        }
- catch (        Exception e) {
-          this.results.add(new TypeDeclarationError("Error creating field accessors for TypeDeclaration '" + className + "' for type '"+ type.getTypeName()+ "' "+ e.getMessage(),typeDescr.getLine()));
-          continue;
-        }
-      }
     }
  catch (    final ClassNotFoundException e) {
       this.results.add(new TypeDeclarationError("Class '" + className + "' not found for type declaration of '"+ type.getTypeName()+ "'",typeDescr.getLine()));
@@ -166,7 +156,7 @@
     }
     if (!processTypeFields(pkgRegistry,typeDescr,type,true)) {
       if (unresolvedTypeDescrs == null) {
-        unresolvedTypeDescrs=new ArrayList<TypeDeclarationDescr>();
+        unresolvedTypeDescrs=new ArrayList<AbstractClassTypeDeclarationDescr>();
         unresolvedTypes=new ArrayList<TypeDeclaration>();
       }
       unresolvedTypeDescrs.add(typeDescr);
@@ -175,7 +165,7 @@
   }
   if (unresolvedTypeDescrs != null) {
     Iterator<TypeDeclaration> typesIterator=unresolvedTypes.iterator();
-    for (    TypeDeclarationDescr typeDescr : unresolvedTypeDescrs) {
+    for (    AbstractClassTypeDeclarationDescr typeDescr : unresolvedTypeDescrs) {
       processTypeFields(pkgRegistry,typeDescr,typesIterator.next(),false);
     }
   }
