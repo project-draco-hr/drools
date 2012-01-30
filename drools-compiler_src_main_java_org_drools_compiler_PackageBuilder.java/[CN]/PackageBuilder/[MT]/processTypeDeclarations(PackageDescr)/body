@@ -76,17 +76,15 @@
       for (      ImportDescr imp : packageDescr.getImports()) {
         altDescr.addImport(imp);
       }
-      if (getPackageRegistry().containsKey(altDescr.getNamespace())) {
-        mergePackage(altDescr);
-      }
- else {
+      if (!getPackageRegistry().containsKey(altDescr.getNamespace())) {
         newPackage(altDescr);
       }
+      mergePackage(altDescr);
     }
   }
   Collection<AbstractClassTypeDeclarationDescr> sortedTypeDescriptors=sortByHierarchy(packageDescr.getClassAndEnumDeclarationDescrs());
   for (  AbstractClassTypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
-    generatedBeans.add(typeDescr.getType().getFullName());
+    generatedTypes.add(typeDescr.getType().getFullName());
   }
   List<AbstractClassTypeDeclarationDescr> unresolvedTypeDescrs=null;
   List<TypeDeclaration> unresolvedTypes=null;
@@ -113,9 +111,10 @@
       }
     }
     TypeDeclaration type=new TypeDeclaration(typeDescr.getTypeName());
-    if (resource != null) {
-      type.setResource(this.resource);
+    if (typeDescr.getResource() == null) {
+      typeDescr.setResource(resource);
     }
+    type.setResource(typeDescr.getResource());
     AnnotationDescr annotationDescr=typeDescr.getAnnotation(TypeDeclaration.Role.ID);
     String role=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
     if (role != null) {
