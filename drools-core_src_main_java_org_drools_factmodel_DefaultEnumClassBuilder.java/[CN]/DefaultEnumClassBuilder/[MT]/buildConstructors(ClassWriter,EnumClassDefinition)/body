@@ -1,0 +1,79 @@
+{
+  MethodVisitor mv;
+  String argTypes="";
+  int size=0;
+  for (  FieldDefinition fld : classDef.getFieldsDefinitions()) {
+    argTypes+=BuildUtils.getTypeDescriptor(fld.getTypeName());
+    size+=BuildUtils.sizeOf(fld.getTypeName());
+  }
+{
+    int ofs=3;
+    mv=cw.visitMethod(ACC_PRIVATE,"<init>","(Ljava/lang/String;I" + argTypes + ")V","(" + argTypes + ")V",null);
+    mv.visitCode();
+    mv.visitVarInsn(ALOAD,0);
+    mv.visitVarInsn(ALOAD,1);
+    mv.visitVarInsn(ILOAD,2);
+    mv.visitMethodInsn(INVOKESPECIAL,"java/lang/Enum","<init>","(Ljava/lang/String;I)V");
+    for (    FieldDefinition fld : classDef.getFieldsDefinitions()) {
+      mv.visitVarInsn(ALOAD,0);
+      mv.visitVarInsn(BuildUtils.varType(fld.getTypeName()),ofs);
+      mv.visitFieldInsn(PUTFIELD,BuildUtils.getInternalType(classDef.getName()),fld.getName(),BuildUtils.getTypeDescriptor(fld.getTypeName()));
+      ofs+=BuildUtils.sizeOf(fld.getTypeName());
+    }
+    mv.visitInsn(RETURN);
+    mv.visitMaxs(3,ofs);
+    mv.visitEnd();
+  }
+{
+    mv=cw.visitMethod(ACC_STATIC,"<clinit>","()V",null,null);
+    mv.visitCode();
+    int N=classDef.getEnumLiterals().size();
+    mv.visitTypeInsn(NEW,BuildUtils.getInternalType(classDef.getClassName()));
+    for (int j=0; j < N; j++) {
+      EnumLiteralDefinition lit=classDef.getEnumLiterals().get(j);
+      mv.visitInsn(DUP);
+      mv.visitLdcInsn(lit.getName());
+      BuildUtils.pushInt(mv,j);
+      List<String> args=lit.getConstructorArgs();
+      for (int k=0; k < args.size(); k++) {
+        String argType=classDef.getField(k).getTypeName();
+        mv.visitLdcInsn(args.get(k));
+        mv.visitMethodInsn(INVOKESTATIC,"org/mvel2/MVEL","eval","(Ljava/lang/String;)Ljava/lang/Object;");
+        if (BuildUtils.isPrimitive(argType)) {
+          mv.visitTypeInsn(CHECKCAST,BuildUtils.getInternalType(BuildUtils.box(argType)));
+          mv.visitMethodInsn(INVOKEVIRTUAL,BuildUtils.getInternalType(BuildUtils.box(argType)),BuildUtils.numericMorph(BuildUtils.box(argType)),"()" + BuildUtils.getTypeDescriptor(argType));
+        }
+ else {
+          mv.visitTypeInsn(CHECKCAST,BuildUtils.getInternalType(argType));
+        }
+      }
+      mv.visitMethodInsn(INVOKESPECIAL,BuildUtils.getInternalType(classDef.getClassName()),"<init>","(Ljava/lang/String;I" + argTypes + ")V");
+      mv.visitFieldInsn(PUTSTATIC,BuildUtils.getInternalType(classDef.getClassName()),lit.getName(),BuildUtils.getTypeDescriptor(classDef.getClassName()));
+      mv.visitTypeInsn(NEW,BuildUtils.getInternalType(classDef.getClassName()));
+    }
+    BuildUtils.pushInt(mv,N);
+    mv.visitTypeInsn(ANEWARRAY,BuildUtils.getInternalType(classDef.getClassName()));
+    for (int j=0; j < N; j++) {
+      EnumLiteralDefinition lit=classDef.getEnumLiterals().get(j);
+      mv.visitInsn(DUP);
+      BuildUtils.pushInt(mv,j);
+      mv.visitFieldInsn(GETSTATIC,BuildUtils.getInternalType(classDef.getClassName()),lit.getName(),BuildUtils.getTypeDescriptor(classDef.getClassName()));
+      mv.visitInsn(AASTORE);
+    }
+    mv.visitFieldInsn(PUTSTATIC,BuildUtils.getInternalType(classDef.getClassName()),"$VALUES","[" + BuildUtils.getTypeDescriptor(classDef.getClassName()));
+    mv.visitInsn(RETURN);
+    mv.visitMaxs(4 + size,0);
+    mv.visitEnd();
+  }
+{
+    mv=cw.visitMethod(ACC_PUBLIC + ACC_STATIC,"valueOf","(Ljava/lang/String;)" + BuildUtils.getTypeDescriptor(classDef.getClassName()),null,null);
+    mv.visitCode();
+    mv.visitLdcInsn(Type.getType(BuildUtils.getTypeDescriptor(classDef.getClassName())));
+    mv.visitVarInsn(ALOAD,0);
+    mv.visitMethodInsn(INVOKESTATIC,"java/lang/Enum","valueOf","(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Enum;");
+    mv.visitTypeInsn(CHECKCAST,BuildUtils.getInternalType(classDef.getClassName()));
+    mv.visitInsn(ARETURN);
+    mv.visitMaxs(2,1);
+    mv.visitEnd();
+  }
+}

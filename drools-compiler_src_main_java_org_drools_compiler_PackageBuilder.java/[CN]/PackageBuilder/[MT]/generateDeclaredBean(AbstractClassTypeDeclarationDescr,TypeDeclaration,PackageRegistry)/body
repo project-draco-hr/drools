@@ -1,0 +1,66 @@
+{
+  String fullName=typeDescr.getType().getFullName();
+  if (type.getKind().equals(TypeDeclaration.Kind.CLASS)) {
+    TypeDeclarationDescr tdescr=(TypeDeclarationDescr)typeDescr;
+    if (tdescr.getSuperTypes().size() > 1) {
+      this.results.add(new TypeDeclarationError("Declared class " + fullName + "  - has more than one supertype;",typeDescr.getLine()));
+      return;
+    }
+ else     if (tdescr.getSuperTypes().size() == 0) {
+      tdescr.addSuperType("java.lang.Object");
+    }
+  }
+  boolean traitable=typeDescr.getAnnotation(Traitable.class.getSimpleName()) != null;
+  String[] fullSuperTypes=new String[typeDescr.getSuperTypes().size() + 1];
+  int j=0;
+  for (  QualifiedName qname : typeDescr.getSuperTypes()) {
+    fullSuperTypes[j++]=qname.getFullName();
+  }
+  fullSuperTypes[j++]=Thing.class.getName();
+  List<String> interfaceList=new ArrayList<String>();
+  interfaceList.add(Serializable.class.getName());
+  if (traitable) {
+    interfaceList.add(TraitableBean.class.getName());
+  }
+  String[] interfaces=interfaceList.toArray(new String[interfaceList.size()]);
+  ClassDefinition def=null;
+switch (type.getKind()) {
+case TRAIT:
+    def=new ClassDefinition(fullName,"java.lang.Object",fullSuperTypes);
+  break;
+case ENUM:
+def=new EnumClassDefinition(fullName,fullSuperTypes[0],null);
+break;
+case CLASS:
+default :
+def=new ClassDefinition(fullName,fullSuperTypes[0],interfaces);
+def.setTraitable(traitable);
+}
+for (String annotationName : typeDescr.getAnnotationNames()) {
+Class annotation=resolveAnnotation(annotationName,pkgRegistry.getTypeResolver());
+if (annotation != null) {
+try {
+AnnotationDefinition annotationDefinition=AnnotationDefinition.build(annotation,typeDescr.getAnnotations().get(annotationName).getValueMap(),pkgRegistry.getTypeResolver());
+def.addAnnotation(annotationDefinition);
+}
+ catch (NoSuchMethodException nsme) {
+this.results.add(new TypeDeclarationError("Annotated type " + fullName + "  - undefined property in @annotation "+ annotationName+ ": "+ nsme.getMessage()+ ";",typeDescr.getLine()));
+}
+}
+}
+if (type.getKind() == TypeDeclaration.Kind.ENUM) {
+for (EnumLiteralDescr lit : ((EnumDeclarationDescr)typeDescr).getLiterals()) {
+((EnumClassDefinition)def).addLiteral(new EnumLiteralDefinition(lit.getName(),lit.getConstructorArgs()));
+}
+}
+if (typeDescr.getFields().size() > 0) {
+PriorityQueue<FieldDefinition> fieldDefs=sortFields(typeDescr.getFields(),pkgRegistry);
+while (fieldDefs.size() > 0) {
+FieldDefinition fld=fieldDefs.poll();
+def.addField(fld);
+}
+}
+type.setNovel(isNovelClass(typeDescr));
+type.setTypeClassDef(def);
+generateDeclaredBean(typeDescr,type,pkgRegistry,def);
+}

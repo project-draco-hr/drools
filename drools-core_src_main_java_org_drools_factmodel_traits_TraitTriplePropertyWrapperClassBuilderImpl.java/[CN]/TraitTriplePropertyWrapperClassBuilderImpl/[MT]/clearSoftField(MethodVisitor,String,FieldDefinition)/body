@@ -1,0 +1,20 @@
+{
+  int size=0;
+  mv.visitVarInsn(ALOAD,0);
+  mv.visitFieldInsn(GETFIELD,wrapperName,"store","Lorg/drools/core/util/TripleStore;");
+  mv.visitVarInsn(ALOAD,0);
+  mv.visitLdcInsn(field.getName());
+  mv.visitInsn(BuildUtils.zero(field.getTypeName()));
+  if (BuildUtils.isPrimitive(field.getTypeName())) {
+    TraitFactory.valueOf(mv,field.getTypeName());
+    size=BuildUtils.sizeOf(field.getTypeName());
+  }
+ else {
+    size=2;
+  }
+  mv.visitMethodInsn(INVOKEVIRTUAL,wrapperName,"property","(Ljava/lang/String;Ljava/lang/Object;)Lorg/drools/core/util/TripleImpl;");
+  mv.visitInsn(ICONST_1);
+  mv.visitMethodInsn(INVOKEVIRTUAL,"org/drools/core/util/TripleStore","put","(Lorg/drools/core/util/Triple;Z)Z");
+  mv.visitInsn(POP);
+  return size;
+}

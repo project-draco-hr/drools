@@ -1,0 +1,102 @@
+{
+  if (typeDescr.getAnnotation(Traitable.class.getSimpleName()) != null) {
+    if (!isNovelClass(typeDescr)) {
+      try {
+        PackageRegistry reg=this.pkgRegistryMap.get(typeDescr.getNamespace());
+        String availableName=typeDescr.getType().getFullName();
+        Class<?> resolvedType=reg.getTypeResolver().resolveType(availableName);
+        updateTraitDefinition(type,resolvedType);
+      }
+ catch (      ClassNotFoundException cnfe) {
+      }
+    }
+    TraitRegistry.getInstance().addTraitable(def);
+  }
+ else   if (type.getKind().equals(TypeDeclaration.Kind.TRAIT) || typeDescr.getAnnotation(Trait.class.getSimpleName()) != null) {
+    if (!type.isNovel()) {
+      try {
+        PackageRegistry reg=this.pkgRegistryMap.get(typeDescr.getNamespace());
+        String availableName=typeDescr.getType().getFullName();
+        Class<?> resolvedType=reg.getTypeResolver().resolveType(availableName);
+        if (!Thing.class.isAssignableFrom(resolvedType)) {
+          updateTraitDefinition(type,resolvedType);
+          String target=typeDescr.getTypeName() + TraitFactory.SUFFIX;
+          TypeDeclarationDescr tempDescr=new TypeDeclarationDescr();
+          tempDescr.setNamespace(typeDescr.getNamespace());
+          tempDescr.setFields(typeDescr.getFields());
+          tempDescr.setType(target,typeDescr.getNamespace());
+          tempDescr.addSuperType(typeDescr.getType());
+          TypeDeclaration tempDeclr=new TypeDeclaration(target);
+          tempDeclr.setKind(TypeDeclaration.Kind.TRAIT);
+          tempDeclr.setTypesafe(type.isTypesafe());
+          tempDeclr.setNovel(true);
+          tempDeclr.setTypeClassName(tempDescr.getType().getFullName());
+          tempDeclr.setResource(type.getResource());
+          ClassDefinition tempDef=new ClassDefinition(target);
+          tempDef.setClassName(tempDescr.getType().getFullName());
+          tempDef.setTraitable(false);
+          for (          FieldDefinition fld : def.getFieldsDefinitions()) {
+            tempDef.addField(fld);
+          }
+          tempDef.setInterfaces(def.getInterfaces());
+          tempDef.setSuperClass(def.getClassName());
+          tempDef.setDefinedClass(resolvedType);
+          type.setKind(TypeDeclaration.Kind.CLASS);
+          generateDeclaredBean(tempDescr,tempDeclr,pkgRegistry,tempDef);
+        }
+ else {
+          updateTraitDefinition(type,resolvedType);
+          TraitRegistry.getInstance().addTrait(def);
+        }
+      }
+ catch (      ClassNotFoundException cnfe) {
+      }
+    }
+ else {
+      if (def.getClassName().endsWith("_Trait__Extension")) {
+        TraitRegistry.getInstance().addTrait(def.getClassName().replace("_Trait__Extension",""),def);
+      }
+ else {
+        TraitRegistry.getInstance().addTrait(def);
+      }
+    }
+  }
+  if (type.isNovel()) {
+    String fullName=typeDescr.getType().getFullName();
+    JavaDialectRuntimeData dialect=(JavaDialectRuntimeData)pkgRegistry.getDialectRuntimeRegistry().getDialectData("java");
+switch (type.getKind()) {
+case TRAIT:
+      try {
+        ClassBuilder tb=ClassBuilderFactory.getTraitBuilderService();
+        byte[] d=tb.buildClass(def);
+        dialect.write(JavaDialectRuntimeData.convertClassToResourcePath(fullName),d);
+      }
+ catch (      Exception e) {
+        this.results.add(new TypeDeclarationError("Unable to compile declared trait " + fullName + ": "+ e.getMessage()+ ";",typeDescr.getLine()));
+      }
+    break;
+case ENUM:
+  try {
+    ClassBuilder eb=ClassBuilderFactory.getEnumClassBuilderService();
+    byte[] d=eb.buildClass(def);
+    dialect.write(JavaDialectRuntimeData.convertClassToResourcePath(fullName),d);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    this.results.add(new TypeDeclarationError("Unable to compile declared enum " + fullName + ": "+ e.getMessage()+ ";",typeDescr.getLine()));
+  }
+break;
+case CLASS:
+default :
+try {
+ClassBuilder cb=ClassBuilderFactory.getBeanClassBuilderService();
+byte[] d=cb.buildClass(def);
+dialect.write(JavaDialectRuntimeData.convertClassToResourcePath(fullName),d);
+}
+ catch (Exception e) {
+this.results.add(new TypeDeclarationError("Unable to create a class for declared type " + fullName + ": "+ e.getMessage()+ ";",typeDescr.getLine()));
+}
+break;
+}
+}
+}

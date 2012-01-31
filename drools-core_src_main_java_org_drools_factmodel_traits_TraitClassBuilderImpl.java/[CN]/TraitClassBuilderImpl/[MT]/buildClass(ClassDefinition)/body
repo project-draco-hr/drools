@@ -1,4 +1,5 @@
 {
+  init(classDef);
   ClassWriter cw=new ClassWriter(0);
   MethodVisitor mv;
   try {
@@ -17,15 +18,9 @@
     }
     cw.visit(V1_5,ACC_PUBLIC + ACC_ABSTRACT + ACC_INTERFACE,cName,genericTypes,superType,intfaces);
     for (    FieldDefinition field : classDef.getFieldsDefinitions()) {
-      String name=field.getName();
-      name=name.substring(0,1).toUpperCase() + name.substring(1);
-      String target=BuildUtils.getTypeDescriptor(field.getTypeName());
-      String prefix=BuildUtils.isBoolean(field.getTypeName()) ? "is" : "get";
-      mv=cw.visitMethod(ACC_PUBLIC + ACC_ABSTRACT,prefix + name,"()" + target,null,null);
-      mv.visitEnd();
-      mv=cw.visitMethod(ACC_PUBLIC + ACC_ABSTRACT,"set" + name,"(" + target + ")V",null,null);
-      mv.visitEnd();
+      buildField(cw,field);
     }
+    finalizeCreation(classDef);
     cw.visitEnd();
   }
  catch (  Exception e) {

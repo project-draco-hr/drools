@@ -1,7 +1,6 @@
 {
-  PackageRegistry defaultRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
-  PackageRegistry pkgRegistry=null;
-  for (  TypeDeclarationDescr typeDescr : packageDescr.getTypeDeclarations()) {
+  PackageRegistry pkgRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
+  for (  AbstractClassTypeDeclarationDescr typeDescr : packageDescr.getClassAndEnumDeclarationDescrs()) {
     if (isEmpty(typeDescr.getNamespace())) {
       for (      ImportDescr id : packageDescr.getImports()) {
         String imp=id.getTarget();
@@ -62,11 +61,18 @@
     if (isEmpty(typeDescr.getNamespace())) {
       typeDescr.setNamespace(packageDescr.getNamespace());
     }
-    fillSuperType(typeDescr,packageDescr);
+    if (typeDescr instanceof TypeDeclarationDescr) {
+      fillSuperType((TypeDeclarationDescr)typeDescr,packageDescr);
+    }
     fillFieldTypes(typeDescr,packageDescr);
     if (!typeDescr.getNamespace().equals(packageDescr.getNamespace())) {
       PackageDescr altDescr=new PackageDescr(typeDescr.getNamespace());
-      altDescr.addTypeDeclaration(typeDescr);
+      if (typeDescr instanceof TypeDeclarationDescr) {
+        altDescr.addTypeDeclaration((TypeDeclarationDescr)typeDescr);
+      }
+ else       if (typeDescr instanceof EnumDeclarationDescr) {
+        altDescr.addEnumDeclaration((EnumDeclarationDescr)typeDescr);
+      }
       for (      ImportDescr imp : packageDescr.getImports()) {
         altDescr.addImport(imp);
       }
@@ -78,23 +84,30 @@
       }
     }
   }
-  Collection<TypeDeclarationDescr> sortedTypeDescriptors=sortByHierarchy(packageDescr.getTypeDeclarations());
-  for (  TypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
+  Collection<AbstractClassTypeDeclarationDescr> sortedTypeDescriptors=sortByHierarchy(packageDescr.getClassAndEnumDeclarationDescrs());
+  for (  AbstractClassTypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
+    generatedBeans.add(typeDescr.getType().getFullName());
+  }
+  List<AbstractClassTypeDeclarationDescr> unresolvedTypeDescrs=null;
+  List<TypeDeclaration> unresolvedTypes=null;
+  for (  AbstractClassTypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
     if (!typeDescr.getNamespace().equals(packageDescr.getNamespace())) {
       continue;
     }
-    pkgRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
-    for (    TypeDeclarationDescr.QualifiedName qname : typeDescr.getSuperTypes()) {
-      if (mergeInheritedFields(typeDescr)) {
-        Iterator<TypeDeclarationDescr> iter=sortedTypeDescriptors.iterator();
-        while (iter.hasNext()) {
-          TypeDeclarationDescr descr=iter.next();
-          if (qname.equals(descr.getType())) {
-            typeDescr.getAnnotations().putAll(descr.getAnnotations());
-            break;
-          }
- else           if (typeDescr.getType().equals(descr.getType())) {
-            break;
+    if (typeDescr instanceof TypeDeclarationDescr) {
+      TypeDeclarationDescr tDescr=(TypeDeclarationDescr)typeDescr;
+      for (      QualifiedName qname : tDescr.getSuperTypes()) {
+        if (mergeInheritedFields(tDescr)) {
+          Iterator<AbstractClassTypeDeclarationDescr> iter=sortedTypeDescriptors.iterator();
+          while (iter.hasNext()) {
+            AbstractClassTypeDeclarationDescr descr=iter.next();
+            if (qname.equals(descr.getType())) {
+              typeDescr.getAnnotations().putAll(descr.getAnnotations());
+              break;
+            }
+ else             if (typeDescr.getType().equals(descr.getType())) {
+              break;
+            }
           }
         }
       }
@@ -118,6 +131,14 @@
     if (format != null) {
       type.setFormat(TypeDeclaration.Format.parseFormat(format));
     }
+    annotationDescr=typeDescr.getAnnotation(TypeDeclaration.Kind.ID);
+    String kind=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
+    if (kind != null) {
+      type.setKind(TypeDeclaration.Kind.parseKind(kind));
+    }
+    if (typeDescr instanceof EnumDeclarationDescr) {
+      type.setKind(TypeDeclaration.Kind.ENUM);
+    }
     annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_CLASS);
     String className=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
     if (StringUtils.isEmpty(className)) {
@@ -128,56 +149,24 @@
       generateDeclaredBean(typeDescr,type,pkgRegistry);
       clazz=pkgRegistry.getTypeResolver().resolveType(typeDescr.getType().getFullName());
       type.setTypeClass(clazz);
-      if (type.getTypeClassDef() != null) {
-        try {
-          buildFieldAccessors(type,pkgRegistry);
-        }
- catch (        Exception e) {
-          this.results.add(new TypeDeclarationError("Error creating field accessors for TypeDeclaration '" + className + "' for type '"+ type.getTypeName()+ "'",typeDescr.getLine()));
-          continue;
-        }
-      }
     }
  catch (    final ClassNotFoundException e) {
       this.results.add(new TypeDeclarationError("Class '" + className + "' not found for type declaration of '"+ type.getTypeName()+ "'",typeDescr.getLine()));
       continue;
     }
-    annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_TIMESTAMP);
-    String timestamp=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
-    if (timestamp != null) {
-      type.setTimestampAttribute(timestamp);
-      ClassDefinition cd=type.getTypeClassDef();
-      Package pkg=pkgRegistry.getPackage();
-      InternalReadAccessor reader=pkg.getClassFieldAccessorStore().getMVELReader(ClassUtils.getPackage(type.getTypeClass()),type.getTypeClass().getName(),timestamp,type.isTypesafe());
-      MVELDialectRuntimeData data=(MVELDialectRuntimeData)pkg.getDialectRuntimeRegistry().getDialectData("mvel");
-      data.addCompileable((MVELCompileable)reader);
-      ((MVELCompileable)reader).compile(data);
-      type.setTimestampExtractor(reader);
-    }
-    annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_DURATION);
-    String duration=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
-    if (duration != null) {
-      type.setDurationAttribute(duration);
-      ClassDefinition cd=type.getTypeClassDef();
-      Package pkg=pkgRegistry.getPackage();
-      InternalReadAccessor reader=pkg.getClassFieldAccessorStore().getMVELReader(ClassUtils.getPackage(type.getTypeClass()),type.getTypeClass().getName(),duration,type.isTypesafe());
-      MVELDialectRuntimeData data=(MVELDialectRuntimeData)pkg.getDialectRuntimeRegistry().getDialectData("mvel");
-      data.addCompileable((MVELCompileable)reader);
-      ((MVELCompileable)reader).compile(data);
-      type.setDurationExtractor(reader);
-    }
-    annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_EXPIRE);
-    String expiration=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
-    if (expiration != null) {
-      if (timeParser == null) {
-        timeParser=new TimeIntervalParser();
+    if (!processTypeFields(pkgRegistry,typeDescr,type,true)) {
+      if (unresolvedTypeDescrs == null) {
+        unresolvedTypeDescrs=new ArrayList<AbstractClassTypeDeclarationDescr>();
+        unresolvedTypes=new ArrayList<TypeDeclaration>();
       }
-      type.setExpirationOffset(timeParser.parse(expiration)[0].longValue());
+      unresolvedTypeDescrs.add(typeDescr);
+      unresolvedTypes.add(type);
     }
-    boolean dynamic=typeDescr.getAnnotationNames().contains(TypeDeclaration.ATTR_PROP_CHANGE_SUPPORT);
-    type.setDynamic(dynamic);
-    boolean propertySpecific=typeDescr.getAnnotationNames().contains(TypeDeclaration.ATTR_PROP_SPECIFIC);
-    type.setPropertySpecific(propertySpecific);
-    pkgRegistry.getPackage().addTypeDeclaration(type);
+  }
+  if (unresolvedTypeDescrs != null) {
+    Iterator<TypeDeclaration> typesIterator=unresolvedTypes.iterator();
+    for (    AbstractClassTypeDeclarationDescr typeDescr : unresolvedTypeDescrs) {
+      processTypeFields(pkgRegistry,typeDescr,typesIterator.next(),false);
+    }
   }
 }
