@@ -1,9 +1,9 @@
 {
-  KnowledgeBase kbase=data.getKbase();
+  KnowledgeBase kbase=view.getKbase();
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   KnowledgeRuntimeLogger klogger=KnowledgeRuntimeLoggerFactory.newFileLogger(ksession,"log/wumpus");
-  data.setKlogger(klogger);
-  List<Pitt> pitts=new ArrayList<Pitt>();
+  view.setKlogger(klogger);
+  List<Pit> pitts=new ArrayList<Pit>();
   java.util.Random gen=new java.util.Random();
   Cell[][] cells=new Cell[5][5];
   for (int i=0; i < 5; i++) {
@@ -15,7 +15,7 @@
       }
       ksession.insert(cell);
       if (j != 0 && i != 0 && gen.nextInt(99) <= 19) {
-        Pitt pitt=new Pitt(i,j);
+        Pit pitt=new Pit(i,j);
         ksession.insert(pitt);
         pitts.add(pitt);
       }
@@ -23,14 +23,14 @@
   }
   int row=0;
   int col=0;
-  while ((row == 0 && col == 0) || pitts.contains(new Pitt(row,col))) {
+  while (row == 0 && col == 0) {
     row=gen.nextInt(4);
     col=gen.nextInt(4);
   }
   Wumpus wumpus=new Wumpus(row,col);
   row=0;
   col=0;
-  while ((row == 0 && col == 0) || (wumpus.getRow() == row && wumpus.getCol() == col) || pitts.contains(new Pitt(row,col))) {
+  while (row == 0 && col == 0) {
     row=gen.nextInt(4);
     col=gen.nextInt(4);
   }
@@ -41,8 +41,8 @@
   ksession.insert(gold);
   ksession.insert(hero);
   ksession.insert(sensors);
-  ksession.insert(data);
+  ksession.insert(view);
   ksession.fireAllRules();
-  data.init(cells,sensors,pitts,wumpus,gold,hero);
-  data.setKsession(ksession);
+  view.init(cells,sensors,pitts,wumpus,gold,hero,50,50,3,20,5,5);
+  view.setKsession(ksession);
 }
