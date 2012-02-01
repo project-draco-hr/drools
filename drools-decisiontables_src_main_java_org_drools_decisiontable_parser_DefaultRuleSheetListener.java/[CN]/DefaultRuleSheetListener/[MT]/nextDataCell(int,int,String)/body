@@ -16,21 +16,24 @@ switch (actionType.getCode()) {
 case CONDITION:
 case ACTION:
 case METADATA:
-    actionType.addCellValue(row,column,value,_currentEscapeQuotesFlag);
-  break;
+    if (actionType.getSourceBuilder() == null) {
+      throw new DecisionTableParseException("Data cell " + RuleSheetParserUtil.rc2name(row,column) + " has an empty column header.");
+    }
+  actionType.addCellValue(row,column,value,_currentEscapeQuotesFlag);
+break;
 case SALIENCE:
 if (!this._currentSequentialFlag) {
-  if (value.startsWith("(") && value.endsWith(")")) {
-    this._currentRule.setSalience(value);
-  }
+if (value.startsWith("(") && value.endsWith(")")) {
+  this._currentRule.setSalience(value);
+}
  else {
-    try {
-      this._currentRule.setSalience(new Integer(value));
-    }
- catch (    NumberFormatException nfe) {
-      throw new DecisionTableParseException("Priority is not an integer literal, in cell " + RuleSheetParserUtil.rc2name(row,column));
-    }
+  try {
+    this._currentRule.setSalience(new Integer(value));
   }
+ catch (  NumberFormatException nfe) {
+    throw new DecisionTableParseException("Priority is not an integer literal, in cell " + RuleSheetParserUtil.rc2name(row,column));
+  }
+}
 }
 break;
 case NAME:
