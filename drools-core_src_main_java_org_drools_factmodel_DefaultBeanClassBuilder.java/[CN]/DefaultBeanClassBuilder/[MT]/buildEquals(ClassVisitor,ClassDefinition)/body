@@ -78,7 +78,12 @@
           visitFieldOrGetter(mv,classDef,field);
           mv.visitVarInsn(Opcodes.ALOAD,2);
           visitFieldOrGetter(mv,classDef,field);
-          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,BuildUtils.getInternalType(field.getTypeName()),"equals","(Ljava/lang/Object;)Z");
+          if (!BuildUtils.isArray(field.getTypeName())) {
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,BuildUtils.getInternalType(field.getTypeName()),"equals","(Ljava/lang/Object;)Z");
+          }
+ else {
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC,"java/util/Arrays","equals","(" + BuildUtils.arrayType(field.getTypeName()) + BuildUtils.arrayType(field.getTypeName())+ ")Z");
+          }
           mv.visitJumpInsn(Opcodes.IFNE,goNext);
           mv.visitLabel(returnFalse);
           mv.visitInsn(Opcodes.ICONST_0);

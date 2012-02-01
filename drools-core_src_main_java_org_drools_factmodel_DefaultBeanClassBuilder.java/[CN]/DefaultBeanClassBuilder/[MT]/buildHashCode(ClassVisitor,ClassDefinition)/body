@@ -56,7 +56,12 @@
           mv.visitLabel(olabel1);
           mv.visitVarInsn(Opcodes.ALOAD,0);
           visitFieldOrGetter(mv,classDef,field);
-          mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,BuildUtils.getInternalType(field.getTypeName()),"hashCode","()I");
+          if (!BuildUtils.isArray(field.getTypeName())) {
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,BuildUtils.getInternalType(field.getTypeName()),"hashCode","()I");
+          }
+ else {
+            mv.visitMethodInsn(INVOKESTATIC,"java/util/Arrays","hashCode","(" + BuildUtils.arrayType(field.getTypeName()) + ")I");
+          }
           mv.visitLabel(olabel2);
         }
         mv.visitInsn(Opcodes.IADD);

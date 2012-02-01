@@ -26,6 +26,17 @@
         mv.visitInsn(DUP);
         mv.visitMethodInsn(INVOKESPECIAL,type,"<init>","()V");
       }
+    }
+ else {
+      if (field.getInitExpr() != null) {
+        mv.visitVarInsn(ALOAD,0);
+        mv.visitLdcInsn(field.getInitExpr());
+        mv.visitMethodInsn(INVOKESTATIC,"org/mvel2/MVEL","eval","(Ljava/lang/String;)Ljava/lang/Object;");
+        mv.visitTypeInsn(CHECKCAST,BuildUtils.getInternalType(field.getTypeName()));
+        val=field.getInitExpr();
+      }
+    }
+    if (val != null) {
       if (!field.isInherited()) {
         mv.visitFieldInsn(Opcodes.PUTFIELD,BuildUtils.getInternalType(classDef.getClassName()),field.getName(),BuildUtils.getTypeDescriptor(field.getTypeName()));
       }
