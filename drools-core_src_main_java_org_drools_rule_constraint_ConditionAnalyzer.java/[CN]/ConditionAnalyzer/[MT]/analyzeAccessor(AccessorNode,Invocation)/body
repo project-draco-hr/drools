@@ -15,6 +15,18 @@
     readInvocationParams(invocation,constructorAccessor.getParameters(),constructorAccessor.getParameterTypes());
     return invocation;
   }
+  if (accessorNode instanceof ArrayAccessor) {
+    ArrayAccessor arrayAccessor=(ArrayAccessor)accessorNode;
+    return new ArrayAccessInvocation(new FixedExpression(int.class,arrayAccessor.getIndex()));
+  }
+  if (accessorNode instanceof ArrayAccessorNest) {
+    ArrayAccessorNest arrayAccessorNest=(ArrayAccessorNest)accessorNode;
+    ExecutableAccessor index=(ExecutableAccessor)arrayAccessorNest.getIndex();
+    return new ArrayAccessInvocation(analyzeNode(index.getNode()));
+  }
+  if (accessorNode instanceof ArrayLength) {
+    return new ArrayLengthInvocation();
+  }
   if (accessorNode instanceof ListAccessor) {
     Class<?> listType=getListType(formerInvocation);
     ListAccessor listAccessor=(ListAccessor)accessorNode;
