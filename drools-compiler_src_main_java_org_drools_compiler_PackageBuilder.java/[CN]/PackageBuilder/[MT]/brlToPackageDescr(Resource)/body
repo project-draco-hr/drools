@@ -1,0 +1,18 @@
+{
+  BusinessRuleProvider provider=BusinessRuleProviderFactory.getInstance().getProvider();
+  Reader knowledge=provider.getKnowledgeReader(resource);
+  DrlParser parser=new DrlParser();
+  if (provider.hasDSLSentences()) {
+    DefaultExpander expander=getDslExpander();
+    if (null != expander) {
+      knowledge=new StringReader(expander.expand(knowledge));
+      if (expander.hasErrors())       this.results.addAll(expander.getErrors());
+    }
+  }
+  PackageDescr pkg=parser.parse(knowledge);
+  if (parser.hasErrors()) {
+    this.results.addAll(parser.getErrors());
+    return null;
+  }
+  return pkg;
+}

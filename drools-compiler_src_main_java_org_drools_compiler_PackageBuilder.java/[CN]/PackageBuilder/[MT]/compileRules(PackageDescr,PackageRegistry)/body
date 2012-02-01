@@ -1,0 +1,32 @@
+{
+  List<FunctionDescr> functions=packageDescr.getFunctions();
+  if (!functions.isEmpty()) {
+    for (    FunctionDescr functionDescr : functions) {
+      if (isEmpty(functionDescr.getNamespace())) {
+        functionDescr.setNamespace(packageDescr.getNamespace());
+      }
+      if (isEmpty(functionDescr.getDialect())) {
+        functionDescr.setDialect(pkgRegistry.getDialect());
+      }
+      preCompileAddFunction(functionDescr);
+    }
+    for (    FunctionDescr functionDescr : functions) {
+      addFunction(functionDescr);
+    }
+    compileAll();
+    for (    FunctionDescr functionDescr : functions) {
+      postCompileAddFunction(functionDescr);
+    }
+  }
+  for (  RuleDescr ruleDescr : packageDescr.getRules()) {
+    if (isEmpty(ruleDescr.getNamespace())) {
+      ruleDescr.setNamespace(packageDescr.getNamespace());
+    }
+    Map<String,AttributeDescr> pkgAttributes=packageAttributes.get(packageDescr.getNamespace());
+    inheritPackageAttributes(pkgAttributes,ruleDescr);
+    if (isEmpty(ruleDescr.getDialect())) {
+      ruleDescr.addAttribute(new AttributeDescr("dialect",pkgRegistry.getDialect()));
+    }
+    addRule(ruleDescr);
+  }
+}

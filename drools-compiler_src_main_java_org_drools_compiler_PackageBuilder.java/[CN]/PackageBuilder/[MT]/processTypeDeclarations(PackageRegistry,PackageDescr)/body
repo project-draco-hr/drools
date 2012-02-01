@@ -1,0 +1,162 @@
+{
+  for (  AbstractClassTypeDeclarationDescr typeDescr : packageDescr.getClassAndEnumDeclarationDescrs()) {
+    if (isEmpty(typeDescr.getNamespace())) {
+      for (      ImportDescr id : packageDescr.getImports()) {
+        String imp=id.getTarget();
+        int separator=imp.lastIndexOf('.');
+        String tail=imp.substring(separator + 1);
+        if (tail.equals(typeDescr.getTypeName())) {
+          typeDescr.setNamespace(imp.substring(0,separator));
+        }
+      }
+    }
+    String qName=typeDescr.getType().getFullName();
+    int dotPos=qName.lastIndexOf('.');
+    if (dotPos >= 0) {
+      Class cls=null;
+      try {
+        cls=Class.forName(typeDescr.getTypeName(),true,this.rootClassLoader);
+      }
+ catch (      ClassNotFoundException e) {
+      }
+      String qualifiedClass=qName;
+      int lastIndex;
+      while (cls == null && (lastIndex=qualifiedClass.lastIndexOf('.')) != -1) {
+        try {
+          qualifiedClass=qualifiedClass.substring(0,lastIndex) + "$" + qualifiedClass.substring(lastIndex + 1);
+          cls=Class.forName(qualifiedClass,true,this.rootClassLoader);
+        }
+ catch (        final ClassNotFoundException e) {
+          cls=null;
+        }
+      }
+      if (cls != null) {
+        String str=ClassUtils.getPackage(cls);
+        typeDescr.setNamespace(str);
+        dotPos=cls.getName().lastIndexOf('.');
+        typeDescr.setTypeName(cls.getName().substring(dotPos + 1));
+      }
+ else {
+        typeDescr.setNamespace(qName.substring(0,dotPos));
+        typeDescr.setTypeName(qName.substring(dotPos + 1));
+      }
+    }
+    if (isEmpty(typeDescr.getNamespace()) && typeDescr.getFields().isEmpty()) {
+      PackageRegistry pkgReg=this.pkgRegistryMap.get(packageDescr.getName());
+      if (pkgReg != null) {
+        try {
+          Class<?> clz=pkgReg.getTypeResolver().resolveType(typeDescr.getTypeName());
+          java.lang.Package pkg=clz.getPackage();
+          if (pkg != null) {
+            typeDescr.setNamespace(pkg.getName());
+            int index=typeDescr.getNamespace() != null && typeDescr.getNamespace().length() > 0 ? typeDescr.getNamespace().length() + 1 : 0;
+            typeDescr.setTypeName(clz.getCanonicalName().substring(index));
+          }
+        }
+ catch (        Exception e) {
+        }
+      }
+    }
+    if (isEmpty(typeDescr.getNamespace())) {
+      typeDescr.setNamespace(packageDescr.getNamespace());
+    }
+    if (typeDescr instanceof TypeDeclarationDescr) {
+      fillSuperType((TypeDeclarationDescr)typeDescr,packageDescr);
+    }
+    fillFieldTypes(typeDescr,packageDescr);
+    if (!typeDescr.getNamespace().equals(packageDescr.getNamespace())) {
+      PackageDescr altDescr=new PackageDescr(typeDescr.getNamespace());
+      if (typeDescr instanceof TypeDeclarationDescr) {
+        altDescr.addTypeDeclaration((TypeDeclarationDescr)typeDescr);
+      }
+ else       if (typeDescr instanceof EnumDeclarationDescr) {
+        altDescr.addEnumDeclaration((EnumDeclarationDescr)typeDescr);
+      }
+      for (      ImportDescr imp : packageDescr.getImports()) {
+        altDescr.addImport(imp);
+      }
+      if (!getPackageRegistry().containsKey(altDescr.getNamespace())) {
+        newPackage(altDescr);
+      }
+      mergePackage(this.pkgRegistryMap.get(altDescr.getNamespace()),altDescr);
+    }
+  }
+  Collection<AbstractClassTypeDeclarationDescr> sortedTypeDescriptors=sortByHierarchy(packageDescr.getClassAndEnumDeclarationDescrs());
+  for (  AbstractClassTypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
+    registerGeneratedType(typeDescr);
+  }
+  List<TypeDefinition> unresolvedTypeDefinitions=null;
+  for (  AbstractClassTypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
+    if (!typeDescr.getNamespace().equals(packageDescr.getNamespace())) {
+      continue;
+    }
+    if (typeDescr instanceof TypeDeclarationDescr) {
+      TypeDeclarationDescr tDescr=(TypeDeclarationDescr)typeDescr;
+      for (      QualifiedName qname : tDescr.getSuperTypes()) {
+        if (mergeInheritedFields(tDescr)) {
+          Iterator<AbstractClassTypeDeclarationDescr> iter=sortedTypeDescriptors.iterator();
+          while (iter.hasNext()) {
+            AbstractClassTypeDeclarationDescr descr=iter.next();
+            if (qname.equals(descr.getType())) {
+              typeDescr.getAnnotations().putAll(descr.getAnnotations());
+              break;
+            }
+ else             if (typeDescr.getType().equals(descr.getType())) {
+              break;
+            }
+          }
+        }
+      }
+    }
+    TypeDeclaration type=new TypeDeclaration(typeDescr.getTypeName());
+    if (typeDescr.getResource() == null) {
+      typeDescr.setResource(resource);
+    }
+    type.setResource(typeDescr.getResource());
+    AnnotationDescr annotationDescr=typeDescr.getAnnotation(TypeDeclaration.Role.ID);
+    String role=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
+    if (role != null) {
+      type.setRole(TypeDeclaration.Role.parseRole(role));
+    }
+    annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_TYPESAFE);
+    String typesafe=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
+    if (typesafe != null) {
+      type.setTypesafe(Boolean.parseBoolean(typesafe));
+    }
+    annotationDescr=typeDescr.getAnnotation(TypeDeclaration.Format.ID);
+    String format=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
+    if (format != null) {
+      type.setFormat(TypeDeclaration.Format.parseFormat(format));
+    }
+    annotationDescr=typeDescr.getAnnotation(TypeDeclaration.Kind.ID);
+    String kind=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
+    if (kind != null) {
+      type.setKind(TypeDeclaration.Kind.parseKind(kind));
+    }
+    if (typeDescr instanceof EnumDeclarationDescr) {
+      type.setKind(TypeDeclaration.Kind.ENUM);
+    }
+    annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_CLASS);
+    String className=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
+    if (StringUtils.isEmpty(className)) {
+      className=type.getTypeName();
+    }
+    Class clazz;
+    try {
+      generateDeclaredBean(typeDescr,type,pkgRegistry);
+      clazz=pkgRegistry.getTypeResolver().resolveType(typeDescr.getType().getFullName());
+      type.setTypeClass(clazz);
+    }
+ catch (    final ClassNotFoundException e) {
+      this.results.add(new TypeDeclarationError("Class '" + className + "' not found for type declaration of '"+ type.getTypeName()+ "'",typeDescr.getLine()));
+      continue;
+    }
+    if (!processTypeFields(pkgRegistry,typeDescr,type,true)) {
+      if (unresolvedTypeDefinitions == null) {
+        unresolvedTypeDefinitions=new ArrayList<TypeDefinition>();
+      }
+      unresolvedTypeDefinitions.add(new TypeDefinition(type,typeDescr));
+    }
+  }
+  return unresolvedTypeDefinitions;
+}

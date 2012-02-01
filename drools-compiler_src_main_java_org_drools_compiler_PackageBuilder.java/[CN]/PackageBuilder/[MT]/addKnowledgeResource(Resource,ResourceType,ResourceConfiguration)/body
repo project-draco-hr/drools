@@ -30,65 +30,19 @@
       addPackageFromDecisionTable(resource,configuration);
     }
  else     if (ResourceType.PKG.equals(type)) {
-      InputStream is=resource.getInputStream();
-      Package pkg=(Package)DroolsStreamUtils.streamIn(is,this.configuration.getClassLoader());
-      is.close();
-      addPackage(pkg);
+      addPackageFromInputStream(resource);
     }
  else     if (ResourceType.CHANGE_SET.equals(type)) {
-      XmlChangeSetReader reader=new XmlChangeSetReader(this.configuration.getSemanticModules());
-      if (resource instanceof ClassPathResource) {
-        reader.setClassLoader(((ClassPathResource)resource).getClassLoader(),((ClassPathResource)resource).getClazz());
-      }
- else {
-        reader.setClassLoader(this.configuration.getClassLoader(),null);
-      }
-      ChangeSet changeSet=reader.read(resource.getReader());
-      if (changeSet == null) {
-      }
-      for (      Resource nestedResource : changeSet.getResourcesAdded()) {
-        InternalResource iNestedResourceResource=(InternalResource)nestedResource;
-        if (iNestedResourceResource.isDirectory()) {
-          this.resourceDirectories.add(iNestedResourceResource);
-          for (          Resource childResource : iNestedResourceResource.listResources()) {
-            if (((InternalResource)childResource).isDirectory()) {
-              continue;
-            }
-            ((InternalResource)childResource).setResourceType(iNestedResourceResource.getResourceType());
-            addKnowledgeResource(childResource,iNestedResourceResource.getResourceType(),iNestedResourceResource.getConfiguration());
-          }
-        }
- else {
-          addKnowledgeResource(iNestedResourceResource,iNestedResourceResource.getResourceType(),iNestedResourceResource.getConfiguration());
-        }
-      }
+      addPackageFromChangeSet(resource);
     }
  else     if (ResourceType.XSD.equals(type)) {
-      JaxbConfigurationImpl confImpl=(JaxbConfigurationImpl)configuration;
-      String[] classes=DroolsJaxbHelperProviderImpl.addXsdModel(resource,this,confImpl.getXjcOpts(),confImpl.getSystemId());
-      for (      String cls : classes) {
-        confImpl.getClasses().add(cls);
-      }
+      addPackageFromXSD(resource,(JaxbConfigurationImpl)configuration);
     }
  else     if (ResourceType.PMML.equals(type)) {
-      PMMLCompiler compiler=getPMMLCompiler();
-      if (compiler != null) {
-        String theory=compiler.compile(resource.getInputStream(),getPackageRegistry());
-        addKnowledgeResource(new ByteArrayResource(theory.getBytes()),ResourceType.DRL,configuration);
-      }
- else {
-        throw new RuntimeException("Unknown resource type: " + type);
-      }
+      addPackageFromPMML(resource,type,configuration);
     }
  else {
-      ResourceTypeBuilder builder=ResourceTypeBuilderRegistry.getInstance().getResourceTypeBuilder(type);
-      if (builder != null) {
-        builder.setPackageBuilder(this);
-        builder.addKnowledgeResource(resource,type,configuration);
-      }
- else {
-        throw new RuntimeException("Unknown resource type: " + type);
-      }
+      addPackageForExternalType(resource,type,configuration);
     }
   }
  catch (  RuntimeException e) {

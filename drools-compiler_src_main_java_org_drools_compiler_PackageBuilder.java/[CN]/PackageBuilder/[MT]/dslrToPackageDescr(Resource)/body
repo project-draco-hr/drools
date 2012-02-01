@@ -1,0 +1,22 @@
+{
+  boolean hasErrors=false;
+  PackageDescr pkg;
+  DrlParser parser=new DrlParser();
+  DefaultExpander expander=getDslExpander();
+  try {
+    if (expander == null) {
+      expander=new DefaultExpander();
+    }
+    String str=expander.expand(resource.getReader());
+    if (expander.hasErrors()) {
+      this.results.addAll(expander.getErrors());
+    }
+    pkg=parser.parse(str);
+    this.results.addAll(parser.getErrors());
+    hasErrors=parser.hasErrors();
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+  return hasErrors ? null : pkg;
+}
