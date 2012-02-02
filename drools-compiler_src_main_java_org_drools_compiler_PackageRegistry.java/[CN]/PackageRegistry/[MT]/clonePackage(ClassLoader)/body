@@ -1,0 +1,16 @@
+{
+  Package clonedPkg=ClassUtils.deepClone(pkg,classLoader);
+  clonedPkg.setDialectRuntimeRegistry(pkg.getDialectRuntimeRegistry());
+  for (  Rule rule : pkg.getRules()) {
+    Rule clonedRule=clonedPkg.getRule(rule.getName());
+    clonedRule.setConsequence(rule.getConsequence());
+    if (rule.hasNamedConsequences()) {
+      for (      Map.Entry<String,Consequence> namedConsequence : rule.getNamedConsequences().entrySet()) {
+        clonedRule.addNamedConsequence(namedConsequence.getKey(),namedConsequence.getValue());
+      }
+    }
+  }
+  PackageRegistry clone=new PackageRegistry(clonedPkg,dialectRuntimeRegistry,dialectCompiletimeRegistry,typeResolver);
+  clone.setDialect(dialect);
+  return clone;
+}
