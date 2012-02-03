@@ -8,11 +8,17 @@
       if (group != null) {
         final AgendaItem item=(AgendaItem)group.getNext();
         if (item != null) {
+          if (item.getActivationNode() != null) {
+            InternalRuleFlowGroup ruleFlowGroup=(InternalRuleFlowGroup)item.getActivationNode().getParentContainer();
+            ruleFlowGroup.removeActivation(item);
+            ruleFlowGroup.deactivateIfEmpty();
+          }
           if (filter == null || filter.accept(item)) {
             fireActivation(item);
             result=true;
           }
  else {
+            this.workingMemory.executeQueuedActions();
             final EventSupport eventsupport=(EventSupport)this.workingMemory;
             eventsupport.getAgendaEventSupport().fireActivationCancelled(item,this.workingMemory,ActivationCancelledCause.FILTER);
             tryagain=true;
