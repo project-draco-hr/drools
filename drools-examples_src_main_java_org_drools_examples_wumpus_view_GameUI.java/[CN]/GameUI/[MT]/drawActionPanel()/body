@@ -2,9 +2,10 @@
   JPanel actionPanel=new JPanel();
   actionPanel.setBackground(Color.WHITE);
   actionPanel.setLayout(new GridLayout(0,2,0,0));
-  JButton btnNewButton_4=new JButton("START");
-  btnNewButton_4.setBackground(Color.LIGHT_GRAY);
-  btnNewButton_4.addMouseListener(new MouseAdapter(){
+  JButton restartButton=new JButton("RESTART");
+  restartButton.setToolTipText("Restart game");
+  restartButton.setBackground(Color.LIGHT_GRAY);
+  restartButton.addMouseListener(new MouseAdapter(){
     public void mousePressed(    MouseEvent e){
       gameView.getKsession().insert(new Reset());
       gameView.getKsession().fireAllRules();
@@ -13,10 +14,11 @@
     }
   }
 );
-  actionPanel.add(btnNewButton_4);
-  JButton btnNewButton_5=new JButton("SHOOT");
-  btnNewButton_5.setBackground(Color.LIGHT_GRAY);
-  btnNewButton_5.addMouseListener(new MouseAdapter(){
+  actionPanel.add(restartButton);
+  JButton shootButton=new JButton("SHOOT");
+  shootButton.setToolTipText("Shoot Arrow");
+  shootButton.setBackground(Color.LIGHT_GRAY);
+  shootButton.addMouseListener(new MouseAdapter(){
     public void mousePressed(    MouseEvent e){
       gameView.getKsession().insert(new ShootCommand());
       gameView.getKsession().fireAllRules();
@@ -25,21 +27,68 @@
     }
   }
 );
-  actionPanel.add(btnNewButton_5);
-  JButton btnNewButton_8=new JButton("CAVE?");
-  btnNewButton_8.setBackground(Color.LIGHT_GRAY);
-  btnNewButton_8.addMouseListener(new MouseAdapter(){
+  actionPanel.add(shootButton);
+  JButton grabButton=new JButton("GRAB");
+  grabButton.setToolTipText("Grab gold");
+  grabButton.setBackground(Color.LIGHT_GRAY);
+  grabButton.addMouseListener(new MouseAdapter(){
     public void mousePressed(    MouseEvent e){
+      gameView.getKsession().insert(new GrabCommand());
+      gameView.getKsession().fireAllRules();
+      updateCave();
+      updateSensors();
+    }
+  }
+);
+  actionPanel.add(grabButton);
+  JButton climbButton=new JButton("CLIMB");
+  climbButton.setToolTipText("Climb out of the cave");
+  climbButton.setBackground(Color.LIGHT_GRAY);
+  climbButton.addMouseListener(new MouseAdapter(){
+    public void mousePressed(    MouseEvent e){
+      gameView.getKsession().insert(new ClimbCommand());
+      gameView.getKsession().fireAllRules();
+      updateCave();
+      updateSensors();
+    }
+  }
+);
+  actionPanel.add(climbButton);
+  final JButton showCaveButton=new JButton("HIDE");
+  showCaveButton.setToolTipText("Hide/Show the cave");
+  showCaveButton.setBackground(Color.LIGHT_GRAY);
+  showCaveButton.addMouseListener(new MouseAdapter(){
+    public void mousePressed(    MouseEvent e){
+      if (cavePanel.isVisible()) {
+        cavePanel.setVisible(false);
+        showCaveButton.setText("SHOW");
+      }
+ else {
+        cavePanel.setVisible(true);
+        showCaveButton.setText("HIDE");
+      }
+    }
+  }
+);
+  actionPanel.add(showCaveButton);
+  JButton cheatButton=new JButton("CHEAT");
+  cheatButton.setToolTipText("Reveal all squares");
+  cheatButton.setBackground(Color.LIGHT_GRAY);
+  cheatButton.addMouseListener(new MouseAdapter(){
+    public void mousePressed(    MouseEvent e){
+      FactHandle fh=gameView.getKsession().getFactHandle(gameView);
       if (gameView.isShowAllCells()) {
         gameView.setShowAllCells(false);
       }
  else {
         gameView.setShowAllCells(true);
       }
+      gameView.getKsession().update(fh,gameView);
+      gameView.getKsession().fireAllRules();
       updateCave();
     }
   }
 );
-  actionPanel.add(btnNewButton_8);
+  actionPanel.add(cheatButton);
   return actionPanel;
 }

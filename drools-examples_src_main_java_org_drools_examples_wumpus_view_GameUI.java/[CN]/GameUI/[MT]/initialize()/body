@@ -1,26 +1,44 @@
 {
-  frame=new JFrame("Display image");
+  frame=new JFrame("Wumpus World");
   frame.getContentPane().setBackground(Color.WHITE);
   frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-  frame.setSize(840,602);
-  frame.getContentPane().setLayout(new MigLayout("","[grow]","[300px:n,grow][100px:n,grow]"));
-  JPanel panel=new JPanel();
-  panel.setBackground(Color.WHITE);
-  frame.getContentPane().add(panel,"cell 0 0,grow");
-  panel.setLayout(new MigLayout("","[200px:200px:200px,left][grow]","[grow]"));
+  frame.setSize(926,603);
+  frame.getContentPane().setLayout(new MigLayout("","[520px][grow,fill]","[30px,top][300px,top][100px,top][grow]"));
+  JPanel scorePanel=new JPanel();
+  FlowLayout flowLayout=(FlowLayout)scorePanel.getLayout();
+  flowLayout.setAlignment(FlowLayout.LEFT);
+  scorePanel.setBackground(Color.WHITE);
+  frame.getContentPane().add(scorePanel,"cell 0 0,grow");
+  JLabel lblScore=new JLabel("Score");
+  scorePanel.add(lblScore);
+  final JTextField txtScore=new JTextField();
+  gameView.getKsession().getChannels().put("score",new Channel(){
+    public void send(    Object object){
+      txtScore.setText("" + ((Score)object).getValue());
+    }
+  }
+);
+  txtScore.setEditable(false);
+  scorePanel.add(txtScore);
+  txtScore.setColumns(10);
+  JScrollPane scrollPane=new JScrollPane();
+  frame.getContentPane().add(scrollPane,"cell 1 0 1 4,grow");
+  JPanel actionPanel=new JPanel();
+  actionPanel.setBackground(Color.WHITE);
+  frame.getContentPane().add(actionPanel,"cell 0 1,grow");
+  actionPanel.setLayout(new MigLayout("","[200px,left][300px]","[grow]"));
   JPanel controls=new JPanel();
   controls.setBackground(Color.WHITE);
   controls.setLayout(new MigLayout("","[grow,fill]","[::100px,top][200px,top]"));
   controls.add(drawActionPanel(),"cell 0 0,alignx left,aligny top");
   controls.add(drawMovePanel(),"cell 0 1,alignx left,growy");
-  panel.add(controls,"cell 0 0,grow");
+  actionPanel.add(controls,"cell 0 0,grow");
   cavePanel=drawCave();
-  panel.add(cavePanel,"cell 1 0,grow");
-  JPanel panel_1=new JPanel();
-  panel_1.setBackground(Color.WHITE);
-  panel_1.setLayout(new MigLayout("","[grow]","[150px:n,grow]"));
+  actionPanel.add(cavePanel,"cell 1 0,grow");
   sensorPanel=drawSensorPanel();
-  panel_1.add(sensorPanel,"cell 0 0,grow");
-  frame.getContentPane().add(panel_1,"cell 0 1,grow");
+  frame.getContentPane().add(sensorPanel,"cell 0 2,grow");
+  JPanel blank=new JPanel();
+  blank.setBackground(Color.WHITE);
+  frame.getContentPane().add(blank,"cell 0 3,grow");
   frame.setVisible(true);
 }
