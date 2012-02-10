@@ -1,0 +1,17 @@
+{
+  if (leftType.isPrimitive()) {
+    if (type != null) {
+      castOrCoercePrimitive(LEFT_OPERAND,leftType,type);
+    }
+    return;
+  }
+  Label notNullLabel=jitLeftIsNull(type == null || leftType == type ? jitNullSafeOperationStart() : jitNullSafeCoercion(leftType,type));
+  if (operation.isEquality() && !rightType.isPrimitive()) {
+    checkNullEquality();
+  }
+ else {
+    mv.visitInsn(ICONST_0);
+  }
+  mv.visitJumpInsn(GOTO,shortcutEvaluation);
+  mv.visitLabel(notNullLabel);
+}

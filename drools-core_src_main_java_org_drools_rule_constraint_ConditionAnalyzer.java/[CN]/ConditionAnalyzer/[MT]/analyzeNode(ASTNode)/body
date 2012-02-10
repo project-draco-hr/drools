@@ -13,6 +13,23 @@
       return new FixedExpression(op.getEgressType(),op.getReducedValue(parserContext,null,new ImmutableDefaultFactory()));
     }
   }
+  if (node instanceof Union) {
+    ASTNode main=getFieldValue(Union.class,"main",(Union)node);
+    Accessor accessor=getFieldValue(Union.class,"accessor",(Union)node);
+    EvaluatedExpression expression=new EvaluatedExpression();
+    expression.firstExpression=analyzeNode(main);
+    if (accessor instanceof DynamicGetAccessor) {
+      AccessorNode accessorNode=(AccessorNode)((DynamicGetAccessor)accessor).getAccessor();
+      expression.addInvocation(analyzeAccessor(accessorNode,null));
+    }
+ else     if (accessor instanceof AccessorNode) {
+      expression.addInvocation(analyzeAccessor((AccessorNode)accessor,null));
+    }
+ else {
+      throw new RuntimeException("Unexpected accessor: " + accessor);
+    }
+    return expression;
+  }
   Accessor accessor=node.getAccessor();
   if (accessor == null && node instanceof NewObjectNode) {
     accessor=((NewObjectNode)node).getNewObjectOptimizer();

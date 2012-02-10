@@ -5,8 +5,18 @@
       vars.put(declaration.getBindingName(),declaration.getExtractor().getValue(workingMemory,tuple.get(declaration).getObject()));
     }
  catch (    NullPointerException npe) {
-      vars.put(declaration.getBindingName(),declarations[0].getExtractor().getValue(workingMemory,tuple.get(declarations[0]).getObject()));
-      unresolvedDeclaration=declaration;
+      if (right != null) {
+        evaluateInternalDeclaration(declaration,right);
+      }
+ else       if (left != null && declaration.getValueType().getClassType().isInstance(left)) {
+        vars.put(declaration.getBindingName(),left);
+      }
+ else {
+        if (localDeclarations == null) {
+          localDeclarations=new ArrayList<Declaration>();
+        }
+        localDeclarations.add(declaration);
+      }
     }
   }
   return vars;

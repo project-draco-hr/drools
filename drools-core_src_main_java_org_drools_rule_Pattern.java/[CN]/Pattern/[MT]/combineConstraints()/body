@@ -10,26 +10,33 @@
   }
   List<Declaration> declarations=new ArrayList<Declaration>();
   Set<String> declarationNames=new HashSet<String>();
-  Iterator<MvelConstraint> constraintIterator=combinableConstraints.iterator();
-  MvelConstraint firstConstraint=constraintIterator.next();
-  constraints.remove(firstConstraint);
-  String packageName=firstConstraint.getPackageName();
-  String expression=firstConstraint.getExpression();
-  for (  Declaration declaration : firstConstraint.getRequiredDeclarations()) {
-    if (declarationNames.add(declaration.getBindingName())) {
-      declarations.add(declaration);
-    }
-  }
-  while (constraintIterator.hasNext()) {
-    MvelConstraint constraint=constraintIterator.next();
+  boolean isFirst=true;
+  String packageName=null;
+  StringBuilder expression=new StringBuilder(combinableConstraints.size() * 25);
+  for (  MvelConstraint constraint : combinableConstraints) {
     constraints.remove(constraint);
-    expression+=" && " + constraint.getExpression();
+    if (isFirst) {
+      packageName=constraint.getPackageName();
+      isFirst=false;
+    }
+ else {
+      expression.append(" && ");
+    }
+    String constraintExpression=constraint.getExpression();
+    boolean isComplex=constraintExpression.contains("&&") || constraintExpression.contains("||");
+    if (isComplex) {
+      expression.append("( ");
+    }
+    expression.append(constraintExpression);
+    if (isComplex) {
+      expression.append(" )");
+    }
     for (    Declaration declaration : constraint.getRequiredDeclarations()) {
       if (declarationNames.add(declaration.getBindingName())) {
         declarations.add(declaration);
       }
     }
   }
-  MvelConstraint combinedConstraint=new MvelConstraint(packageName,expression,false,declarations.toArray(new Declaration[declarations.size()]),null,null,false);
+  MvelConstraint combinedConstraint=new MvelConstraint(packageName,expression.toString(),false,declarations.toArray(new Declaration[declarations.size()]),null,null,false);
   addConstraint(combinedConstraint);
 }

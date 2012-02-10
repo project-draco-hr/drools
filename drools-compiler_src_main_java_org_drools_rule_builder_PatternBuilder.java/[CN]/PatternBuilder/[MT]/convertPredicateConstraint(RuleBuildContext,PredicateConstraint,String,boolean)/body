@@ -1,0 +1,21 @@
+{
+  boolean isJavaEval=isEvalExpression && context.getDialect() instanceof JavaDialect;
+  if (!USE_MVEL_EXPRESSION || isJavaEval || predicateConstraint.getOperators().length > 0) {
+    return predicateConstraint;
+  }
+  Declaration[] requiredDeclarations=predicateConstraint.getRequiredDeclarations();
+  Set<String> reqDecNames=new HashSet<String>();
+  for (  Declaration d : requiredDeclarations) {
+    reqDecNames.add(d.getIdentifier());
+  }
+  String[] globals=predicateConstraint.getGlobals();
+  Declaration[] declarations=new Declaration[requiredDeclarations.length + globals.length];
+  int i=0;
+  for (  Declaration d : requiredDeclarations) {
+    declarations[i++]=d;
+  }
+  for (  String global : globals) {
+    declarations[i++]=context.getDeclarationResolver().getDeclaration(context.getRule(),global);
+  }
+  return new MvelConstraint(context.getPkg().getName(),expression,declarations);
+}

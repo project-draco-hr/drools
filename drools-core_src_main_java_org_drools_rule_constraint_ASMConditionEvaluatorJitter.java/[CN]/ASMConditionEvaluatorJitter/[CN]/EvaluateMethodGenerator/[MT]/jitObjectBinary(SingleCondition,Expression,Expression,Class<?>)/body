@@ -8,9 +8,10 @@
   store(LEFT_OPERAND,leftType);
   jitExpression(right,type != null ? type : rightType);
   store(RIGHT_OPERAND,rightType);
+  Label shortcutEvaluation=new Label();
   BooleanOperator operation=singleCondition.getOperation();
-  prepareLeftOperand(operation,type,leftType,rightType);
-  prepareRightOperand(operation,right,type,rightType);
+  prepareLeftOperand(operation,type,leftType,rightType,shortcutEvaluation);
+  prepareRightOperand(right,type,rightType,shortcutEvaluation);
   load(LEFT_OPERAND);
   load(RIGHT_OPERAND);
   if (operation == BooleanOperator.CONTAINS) {
@@ -18,6 +19,9 @@
   }
  else   if (operation == BooleanOperator.MATCHES) {
     invokeVirtual(type,"matches",boolean.class,String.class);
+  }
+ else   if (operation == BooleanOperator.SOUNDSLIKE) {
+    invokeStatic(EvaluatorHelper.class,"soundslike",boolean.class,String.class,String.class);
   }
  else   if (operation.isEquality()) {
     if (type.isInterface()) {
@@ -40,4 +44,5 @@
     mv.visitInsn(ICONST_0);
     jitPrimitiveOperation(operation,int.class);
   }
+  mv.visitLabel(shortcutEvaluation);
 }

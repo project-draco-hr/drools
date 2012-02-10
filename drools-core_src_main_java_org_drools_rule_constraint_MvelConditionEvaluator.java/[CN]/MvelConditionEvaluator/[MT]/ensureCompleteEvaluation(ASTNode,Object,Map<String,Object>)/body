@@ -1,8 +1,9 @@
 {
-  if (!(node instanceof And || node instanceof Or))   return;
-  ASTNode rightNode=((BooleanNode)node).getRight();
-  if (!isEvaluated(rightNode)) {
-    evaluate(asCompiledExpression(rightNode),object,vars);
+  node=unwrapNegation(node);
+  node=unwrapSubstatement(node);
+  if (!(node instanceof And || node instanceof Or)) {
+    return;
   }
-  ensureCompleteEvaluation(rightNode,object,vars);
+  ensureBranchEvaluation(object,vars,((BooleanNode)node).getLeft());
+  ensureBranchEvaluation(object,vars,((BooleanNode)node).getRight());
 }

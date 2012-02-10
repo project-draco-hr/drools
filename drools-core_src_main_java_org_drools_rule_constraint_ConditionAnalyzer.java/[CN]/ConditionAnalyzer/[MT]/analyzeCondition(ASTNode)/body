@@ -5,8 +5,17 @@
     node=((ExecutableAccessor)((Negation)node).getStatement()).getNode();
   }
   node=analyzeSubstatement(node);
+  if (node instanceof LiteralNode && node.getEgressType() == Boolean.class) {
+    boolean literalValue=(Boolean)((LiteralNode)node).getLiteralValue();
+    return new FixedValueCondition(isNegated ? !literalValue : literalValue);
+  }
   if (node instanceof And || node instanceof Or) {
     return analyzeCombinedCondition((BooleanNode)node,isNegated);
+  }
+  if (node instanceof Negation) {
+    isNegated=!isNegated;
+    node=((ExecutableAccessor)((Negation)node).getStatement()).getNode();
+    node=analyzeSubstatement(node);
   }
   return analyzeSingleCondition(node,isNegated);
 }
