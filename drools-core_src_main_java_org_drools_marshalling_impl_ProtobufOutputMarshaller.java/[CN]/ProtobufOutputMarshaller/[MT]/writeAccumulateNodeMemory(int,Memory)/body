@@ -1,0 +1,16 @@
+{
+  AccumulateMemory accmem=(AccumulateMemory)memory;
+  if (accmem.betaMemory.getLeftTupleMemory().size() > 0) {
+    ProtobufMessages.NodeMemory.AccumulateNodeMemory.Builder _accumulate=ProtobufMessages.NodeMemory.AccumulateNodeMemory.newBuilder();
+    final org.drools.core.util.Iterator tupleIter=accmem.betaMemory.getLeftTupleMemory().iterator();
+    for (LeftTuple leftTuple=(LeftTuple)tupleIter.next(); leftTuple != null; leftTuple=(LeftTuple)tupleIter.next()) {
+      AccumulateContext accctx=(AccumulateContext)leftTuple.getObject();
+      if (accctx.result != null) {
+        FactHandle _handle=ProtobufMessages.FactHandle.newBuilder().setId(accctx.result.getFactHandle().getId()).setRecency(accctx.result.getFactHandle().getRecency()).build();
+        _accumulate.addContext(ProtobufMessages.NodeMemory.AccumulateNodeMemory.AccumulateContext.newBuilder().setTuple(PersisterHelper.createTuple(leftTuple)).setResultHandle(_handle).build());
+      }
+    }
+    return ProtobufMessages.NodeMemory.newBuilder().setNodeId(nodeId).setNodeType(ProtobufMessages.NodeMemory.NodeType.ACCUMULATE).setAccumulate(_accumulate.build()).build();
+  }
+  return null;
+}

@@ -1,0 +1,48 @@
+{
+  for (  ProtobufMessages.NodeMemory _node : _session.getNodeMemoryList()) {
+    Object memory=null;
+switch (_node.getNodeType()) {
+case ACCUMULATE:
+{
+        Map<TupleKey,ProtobufMessages.FactHandle> map=new HashMap<TupleKey,ProtobufMessages.FactHandle>();
+        for (        ProtobufMessages.NodeMemory.AccumulateNodeMemory.AccumulateContext _ctx : _node.getAccumulate().getContextList()) {
+          map.put(PersisterHelper.createTupleKey(_ctx.getTuple()),_ctx.getResultHandle());
+        }
+        memory=map;
+        break;
+      }
+case RIA:
+{
+      Map<TupleKey,ProtobufMessages.FactHandle> map=new HashMap<TupleKey,ProtobufMessages.FactHandle>();
+      for (      ProtobufMessages.NodeMemory.RIANodeMemory.RIAContext _ctx : _node.getRia().getContextList()) {
+        map.put(PersisterHelper.createTupleKey(_ctx.getTuple()),_ctx.getResultHandle());
+      }
+      memory=map;
+      break;
+    }
+case FROM:
+{
+    Map<TupleKey,List<ProtobufMessages.FactHandle>> map=new HashMap<TupleKey,List<ProtobufMessages.FactHandle>>();
+    for (    ProtobufMessages.NodeMemory.FromNodeMemory.FromContext _ctx : _node.getFrom().getContextList()) {
+      map.put(PersisterHelper.createTupleKey(_ctx.getTuple()),new LinkedList<ProtobufMessages.FactHandle>(_ctx.getHandleList()));
+    }
+    memory=map;
+    break;
+  }
+case QUERY_ELEMENT:
+{
+  Map<TupleKey,QueryElementContext> map=new HashMap<TupleKey,QueryElementContext>();
+  for (  ProtobufMessages.NodeMemory.QueryElementNodeMemory.QueryContext _ctx : _node.getQueryElement().getContextList()) {
+    map.put(PersisterHelper.createTupleKey(_ctx.getTuple()),new QueryElementContext(_ctx));
+  }
+  memory=map;
+  break;
+}
+default :
+{
+throw new IllegalArgumentException("Unknown node type " + _node.getNodeType() + " while deserializing session.");
+}
+}
+context.nodeMemories.put(_node.getNodeId(),memory);
+}
+}

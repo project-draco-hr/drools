@@ -1,0 +1,27 @@
+{
+  ProtobufMessages.Activation.Builder _activation=ProtobufMessages.Activation.newBuilder();
+  Rule rule=agendaItem.getRule();
+  _activation.setPackageName(rule.getPackage());
+  _activation.setRuleName(rule.getName());
+  ProtobufMessages.Tuple.Builder _tb=ProtobufMessages.Tuple.newBuilder();
+  for (LeftTuple entry=agendaItem.getTuple(); entry != null; entry=entry.getParent()) {
+    InternalFactHandle handle=entry.getLastHandle();
+    _tb.addHandleId(handle.getId());
+  }
+  _activation.setTuple(_tb.build());
+  _activation.setSalience(agendaItem.getSalience());
+  _activation.setIsActivated(agendaItem.isActivated());
+  if (agendaItem.getActivationGroupNode() != null) {
+    _activation.setActivationGroup(agendaItem.getActivationGroupNode().getActivationGroup().getName());
+  }
+  if (agendaItem.getFactHandle() != null) {
+    _activation.setHandleId(agendaItem.getFactHandle().getId());
+  }
+  org.drools.core.util.LinkedList list=agendaItem.getLogicalDependencies();
+  if (list != null && !list.isEmpty()) {
+    for (LogicalDependency node=(LogicalDependency)list.getFirst(); node != null; node=(LogicalDependency)node.getNext()) {
+      _activation.addLogicalDependency(((InternalFactHandle)node.getJustified()).getId());
+    }
+  }
+  return _activation.build();
+}

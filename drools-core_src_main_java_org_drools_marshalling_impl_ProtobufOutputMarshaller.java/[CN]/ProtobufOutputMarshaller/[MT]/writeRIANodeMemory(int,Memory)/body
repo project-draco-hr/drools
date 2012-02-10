@@ -1,0 +1,15 @@
+{
+  RIAMemory mem=(RIAMemory)memory;
+  if (!mem.memory.isEmpty()) {
+    ProtobufMessages.NodeMemory.RIANodeMemory.Builder _ria=ProtobufMessages.NodeMemory.RIANodeMemory.newBuilder();
+    final org.drools.core.util.Iterator it=mem.memory.iterator();
+    for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
+      LeftTuple leftTuple=(LeftTuple)entry.getKey();
+      InternalFactHandle handle=(InternalFactHandle)entry.getValue();
+      FactHandle _handle=ProtobufMessages.FactHandle.newBuilder().setId(handle.getId()).setRecency(handle.getRecency()).build();
+      _ria.addContext(ProtobufMessages.NodeMemory.RIANodeMemory.RIAContext.newBuilder().setTuple(PersisterHelper.createTuple(leftTuple)).setResultHandle(_handle).build());
+    }
+    return ProtobufMessages.NodeMemory.newBuilder().setNodeId(nodeId).setNodeType(ProtobufMessages.NodeMemory.NodeType.RIA).setRia(_ria.build()).build();
+  }
+  return null;
+}

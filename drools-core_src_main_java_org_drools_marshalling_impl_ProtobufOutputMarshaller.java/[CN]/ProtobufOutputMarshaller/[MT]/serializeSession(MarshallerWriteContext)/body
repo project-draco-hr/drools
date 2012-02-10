@@ -1,0 +1,38 @@
+{
+  ReteooWorkingMemory wm=(ReteooWorkingMemory)context.wm;
+  wm.getAgenda().unstageActivations();
+  ProtobufMessages.KnowledgeSession.Builder _session=ProtobufMessages.KnowledgeSession.newBuilder();
+  final boolean multithread=wm.isPartitionManagersActive();
+  if (multithread) {
+    wm.stopPartitionManagers();
+  }
+  _session.setMultithread(multithread);
+  long time=0;
+  if (context.wm.getTimerService() instanceof PseudoClockScheduler) {
+    time=context.clockTime;
+  }
+  _session.setTime(time);
+  _session.setLastId(wm.getFactHandleFactory().getId());
+  _session.setLastRecency(wm.getFactHandleFactory().getRecency());
+  InternalFactHandle handle=context.wm.getInitialFactHandle();
+  ProtobufMessages.FactHandle _ifh=ProtobufMessages.FactHandle.newBuilder().setType(ProtobufMessages.FactHandle.HandleType.INITIAL_FACT).setId(handle.getId()).setRecency(handle.getRecency()).build();
+  _session.setInitialFact(_ifh);
+  writeAgenda(context,_session);
+  writeNodeMemories(context,_session);
+  for (  WorkingMemoryEntryPoint wmep : wm.getEntryPoints().values()) {
+    org.drools.marshalling.impl.ProtobufMessages.EntryPoint.Builder _epb=ProtobufMessages.EntryPoint.newBuilder();
+    _epb.setEntryPointId(wmep.getEntryPointId());
+    writeFactHandles(context,_epb,((NamedEntryPoint)wmep).getObjectStore());
+    _session.addEntryPoint(_epb.build());
+  }
+  writeActionQueue(context,_session);
+  writeTruthMaintenanceSystem(context,_session);
+  Timers _timers=writeTimers(context.wm.getTimerService().getTimerJobInstances(),context);
+  if (_timers != null) {
+    _session.setTimers(_timers);
+  }
+  if (multithread) {
+    wm.startPartitionManagers();
+  }
+  return _session.build();
+}

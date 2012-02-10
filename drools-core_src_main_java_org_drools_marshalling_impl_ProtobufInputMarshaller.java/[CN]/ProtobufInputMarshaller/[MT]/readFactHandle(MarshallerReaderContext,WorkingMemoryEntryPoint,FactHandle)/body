@@ -1,0 +1,32 @@
+{
+  Object object=null;
+  ObjectMarshallingStrategy strategy=null;
+  if (_handle.hasStrategyIndex()) {
+    strategy=context.usedStrategies.get(_handle.getStrategyIndex());
+    object=strategy.unmarshal(_handle.getObject().toByteArray(),(context.ruleBase == null) ? null : context.ruleBase.getRootClassLoader());
+  }
+  InternalFactHandle handle=null;
+switch (_handle.getType()) {
+case FACT:
+{
+      handle=new DefaultFactHandle(_handle.getId(),object,_handle.getRecency(),entryPoint);
+      break;
+    }
+case QUERY:
+{
+    handle=new QueryElementFactHandle(object,_handle.getId(),_handle.getRecency());
+    break;
+  }
+case EVENT:
+{
+  handle=new EventFactHandle(_handle.getId(),object,_handle.getRecency(),_handle.getTimestamp(),_handle.getDuration(),entryPoint);
+  ((EventFactHandle)handle).setExpired(_handle.getIsExpired());
+  break;
+}
+default :
+{
+throw new IllegalStateException("Unable to marshal FactHandle, as type does not exist:" + _handle.getType());
+}
+}
+return handle;
+}

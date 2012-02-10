@@ -1,0 +1,19 @@
+{
+  LeftTupleIterator it=LeftTupleIterator.iterator(wm,((QueryElementNodeMemory)memory).node);
+  ProtobufMessages.NodeMemory.QueryElementNodeMemory.Builder _query=ProtobufMessages.NodeMemory.QueryElementNodeMemory.newBuilder();
+  for (LeftTuple leftTuple=(LeftTuple)it.next(); leftTuple != null; leftTuple=(LeftTuple)it.next()) {
+    InternalFactHandle handle=(InternalFactHandle)leftTuple.getObject();
+    FactHandle _handle=ProtobufMessages.FactHandle.newBuilder().setId(handle.getId()).setRecency(handle.getRecency()).build();
+    ProtobufMessages.NodeMemory.QueryElementNodeMemory.QueryContext.Builder _context=ProtobufMessages.NodeMemory.QueryElementNodeMemory.QueryContext.newBuilder().setTuple(PersisterHelper.createTuple(leftTuple)).setHandle(_handle);
+    LeftTuple childLeftTuple=leftTuple.getFirstChild();
+    while (childLeftTuple != null) {
+      RightTuple rightParent=childLeftTuple.getRightParent();
+      _context.addResult(ProtobufMessages.FactHandle.newBuilder().setId(rightParent.getFactHandle().getId()).setRecency(rightParent.getFactHandle().getRecency()).build());
+      while (childLeftTuple != null && childLeftTuple.getRightParent() == rightParent) {
+        childLeftTuple=childLeftTuple.getLeftParentNext();
+      }
+    }
+    _query.addContext(_context.build());
+  }
+  return _query.getContextCount() > 0 ? ProtobufMessages.NodeMemory.newBuilder().setNodeId(nodeId).setNodeType(ProtobufMessages.NodeMemory.NodeType.QUERY_ELEMENT).setQueryElement(_query.build()).build() : null;
+}

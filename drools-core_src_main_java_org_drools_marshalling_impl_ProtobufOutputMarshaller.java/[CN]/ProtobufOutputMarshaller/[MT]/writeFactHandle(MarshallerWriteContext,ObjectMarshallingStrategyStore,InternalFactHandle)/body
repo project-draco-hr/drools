@@ -1,0 +1,26 @@
+{
+  ProtobufMessages.FactHandle.Builder _handle=ProtobufMessages.FactHandle.newBuilder();
+  _handle.setType(getHandleType(handle));
+  _handle.setId(handle.getId());
+  _handle.setRecency(handle.getRecency());
+  if (_handle.getType() == ProtobufMessages.FactHandle.HandleType.EVENT) {
+    EventFactHandle efh=(EventFactHandle)handle;
+    _handle.setTimestamp(efh.getStartTimestamp());
+    _handle.setDuration(efh.getDuration());
+    _handle.setIsExpired(efh.isExpired());
+    _handle.setActivationsCount(efh.getActivationsCount());
+  }
+  Object object=handle.getObject();
+  if (object != null) {
+    ObjectMarshallingStrategy strategy=objectMarshallingStrategyStore.getStrategyObject(object);
+    String strategyClassName=strategy.getClass().getName();
+    Integer index=context.usedStrategies.get(strategyClassName);
+    if (index == null) {
+      index=Integer.valueOf(context.usedStrategies.size());
+      context.usedStrategies.put(strategyClassName,index);
+    }
+    _handle.setStrategyIndex(index.intValue());
+    _handle.setObject(ByteString.copyFrom(strategy.marshal(object)));
+  }
+  return _handle.build();
+}

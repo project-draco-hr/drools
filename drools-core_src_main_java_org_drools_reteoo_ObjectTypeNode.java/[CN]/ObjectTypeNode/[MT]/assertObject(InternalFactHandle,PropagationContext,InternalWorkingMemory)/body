@@ -5,8 +5,8 @@
     dirty=false;
   }
   if (objectMemoryEnabled && !(queryNode && !((DroolsQuery)factHandle.getObject()).isOpen())) {
-    final ObjectHashSet memory=(ObjectHashSet)workingMemory.getNodeMemory(this);
-    memory.add(factHandle,false);
+    final ObjectTypeNodeMemory memory=(ObjectTypeNodeMemory)workingMemory.getNodeMemory(this);
+    memory.memory.add(factHandle,false);
   }
   if (compiledNetwork != null) {
     compiledNetwork.assertObject(factHandle,context,workingMemory);
@@ -15,7 +15,7 @@
     context.setCurrentPropagatingOTN(this);
     this.sink.propagateAssertObject(factHandle,context,workingMemory);
   }
-  if (this.objectType.isEvent() && this.expirationOffset >= 0 && this.expirationOffset != Long.MAX_VALUE) {
+  if (context.getReaderContext() == null && this.objectType.isEvent() && this.expirationOffset >= 0 && this.expirationOffset != Long.MAX_VALUE) {
     WorkingMemoryReteExpireAction expire=new WorkingMemoryReteExpireAction(factHandle,this);
     TimerService clock=workingMemory.getTimerService();
     long nextTimestamp=Math.max(clock.getCurrentTime() + this.expirationOffset,((EventFactHandle)factHandle).getStartTimestamp() + this.expirationOffset);

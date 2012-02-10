@@ -1,16 +1,16 @@
 {
-  Activation match=(Activation)leftTuple.getObject();
+  AgendaItem match=(AgendaItem)leftTuple.getObject();
   InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
   if (match != null && match.isActivated()) {
-    agenda.modifyActivation((AgendaItem)leftTuple.getObject(),true);
+    agenda.modifyActivation(match,true);
     return;
   }
   if (this.rule.isNoLoop() && this.rule.equals(context.getRuleOrigin())) {
     agenda.increaseDormantActivations();
     return;
   }
-  boolean fire=createActivations(leftTuple,context,workingMemory,true);
-  if (fire && !fireDirect) {
+  boolean fire=agenda.createActivation(leftTuple,context,workingMemory,this,true);
+  if (fire && !isFireDirect()) {
     agenda.decreaseDormantActivations();
     agenda.modifyActivation((AgendaItem)leftTuple.getObject(),false);
   }

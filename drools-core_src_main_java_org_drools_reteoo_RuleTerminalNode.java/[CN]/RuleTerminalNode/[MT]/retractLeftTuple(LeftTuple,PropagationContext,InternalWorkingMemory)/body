@@ -3,35 +3,6 @@
   if (activation == null) {
     return;
   }
-  final DefaultAgenda agenda=(DefaultAgenda)workingMemory.getAgenda();
-  AgendaItem item=(AgendaItem)activation;
-  item.removeAllBlockersAndBlocked(agenda);
-  if (agenda.isDeclarativeAgenda() && activation.getFactHandle() == null) {
-    agenda.decreaseDormantActivations();
-    return;
-  }
- else {
-    agenda.removeActivation((AgendaItem)activation);
-  }
-  if (activation.isActivated()) {
-    if (context.getType() == PropagationContext.EXPIRATION && context.getFactHandleOrigin() != null) {
-    }
- else {
-      activation.remove();
-      if (activation.getActivationGroupNode() != null) {
-        activation.getActivationGroupNode().getActivationGroup().removeActivation(activation);
-      }
-      if (activation.getActivationNode() != null) {
-        final InternalRuleFlowGroup ruleFlowGroup=(InternalRuleFlowGroup)activation.getActivationNode().getParentContainer();
-        ruleFlowGroup.removeActivation(activation);
-      }
-      leftTuple.decreaseActivationCountForEvents();
-      ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCancelled(activation,workingMemory,ActivationCancelledCause.WME_MODIFY);
-      agenda.decreaseActiveActivations();
-    }
-  }
- else {
-    agenda.decreaseDormantActivations();
-  }
-  workingMemory.getTruthMaintenanceSystem().removeLogicalDependencies(activation,context,this.rule);
+  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
+  agenda.cancelActivation(leftTuple,context,workingMemory,activation,this);
 }

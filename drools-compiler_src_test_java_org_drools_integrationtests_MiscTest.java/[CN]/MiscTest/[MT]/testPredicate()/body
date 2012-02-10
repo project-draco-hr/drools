@@ -1,23 +1,16 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("predicate_rule_test.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
-  session.setGlobal("two",new Integer(2));
+  KnowledgeBase kbase=loadKnowledgeBase("predicate_rule_test.drl");
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.setGlobal("two",new Integer(2));
   final List list=new ArrayList();
-  session.setGlobal("list",list);
+  ksession.setGlobal("list",list);
   final PersonInterface peter=new Person("peter",null,12);
-  session.insert(peter);
+  ksession.insert(peter);
   final PersonInterface jane=new Person("jane",null,10);
-  session.insert(jane);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
-  session.fireAllRules();
-  assertEquals(jane,((List)session.getGlobal("list")).get(0));
-  assertEquals(peter,((List)session.getGlobal("list")).get(1));
+  ksession.insert(jane);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  assertEquals(jane,((List)ksession.getGlobal("list")).get(0));
+  assertEquals(peter,((List)ksession.getGlobal("list")).get(1));
 }

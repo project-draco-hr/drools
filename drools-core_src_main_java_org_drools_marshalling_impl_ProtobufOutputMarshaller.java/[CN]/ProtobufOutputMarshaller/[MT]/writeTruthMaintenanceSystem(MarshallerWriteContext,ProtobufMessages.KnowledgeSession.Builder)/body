@@ -1,0 +1,41 @@
+{
+  ObjectHashMap assertMap=context.wm.getTruthMaintenanceSystem().getAssertMap();
+  ObjectHashMap justifiedMap=context.wm.getTruthMaintenanceSystem().getJustifiedMap();
+  if (!assertMap.isEmpty() || !justifiedMap.isEmpty()) {
+    EqualityKey[] keys=new EqualityKey[assertMap.size()];
+    org.drools.core.util.Iterator it=assertMap.iterator();
+    int i=0;
+    for (org.drools.core.util.ObjectHashMap.ObjectEntry entry=(org.drools.core.util.ObjectHashMap.ObjectEntry)it.next(); entry != null; entry=(org.drools.core.util.ObjectHashMap.ObjectEntry)it.next()) {
+      EqualityKey key=(EqualityKey)entry.getKey();
+      keys[i++]=key;
+    }
+    Arrays.sort(keys,EqualityKeySorter.instance);
+    ProtobufMessages.TruthMaintenanceSystem.Builder _tms=ProtobufMessages.TruthMaintenanceSystem.newBuilder();
+    for (    EqualityKey key : keys) {
+      ProtobufMessages.EqualityKey.Builder _key=ProtobufMessages.EqualityKey.newBuilder();
+      _key.setStatus(key.getStatus());
+      _key.setHandleId(key.getFactHandle().getId());
+      if (key.getOtherFactHandle() != null && !key.getOtherFactHandle().isEmpty()) {
+        for (        InternalFactHandle handle : key.getOtherFactHandle()) {
+          _key.addOtherHandle(handle.getId());
+        }
+      }
+      _tms.addKey(_key.build());
+    }
+    it=justifiedMap.iterator();
+    i=0;
+    for (org.drools.core.util.ObjectHashMap.ObjectEntry entry=(org.drools.core.util.ObjectHashMap.ObjectEntry)it.next(); entry != null; entry=(org.drools.core.util.ObjectHashMap.ObjectEntry)it.next()) {
+      ProtobufMessages.Justification.Builder _justification=ProtobufMessages.Justification.newBuilder();
+      _justification.setHandleId(((Integer)entry.getKey()).intValue());
+      org.drools.core.util.LinkedList list=(org.drools.core.util.LinkedList)entry.getValue();
+      for (LinkedListEntry node=(LinkedListEntry)list.getFirst(); node != null; node=(LinkedListEntry)node.getNext()) {
+        LogicalDependency dependency=(LogicalDependency)node.getObject();
+        org.drools.spi.Activation activation=dependency.getJustifier();
+        ProtobufMessages.Activation _activation=ProtobufMessages.Activation.newBuilder().setPackageName(activation.getRule().getPackage()).setRuleName(activation.getRule().getName()).setTuple(PersisterHelper.createTuple(activation.getTuple())).build();
+        _justification.addActivation(_activation);
+      }
+      _tms.addJustification(_justification.build());
+    }
+    _session.setTms(_tms.build());
+  }
+}

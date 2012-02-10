@@ -1,0 +1,75 @@
+{
+  if (rtn.isFireDirect()) {
+    AgendaItem item=null;
+    if (reuseActivation) {
+      item=(AgendaItem)tuple.getObject();
+      item.setPropagationContext(context);
+    }
+ else {
+      item=createAgendaItem(tuple,0,context,rtn);
+    }
+    tuple.setObject(item);
+    if (activationsFilter != null && !activationsFilter.accept(item,context,workingMemory,rtn)) {
+      return false;
+    }
+    item.setActivated(true);
+    tuple.increaseActivationCountForEvents();
+    increaseActiveActivations();
+    fireActivation(item);
+    return true;
+  }
+  final Rule rule=rtn.getRule();
+  AgendaItem item=null;
+  final Timer timer=rule.getTimer();
+  if (timer != null) {
+    if (reuseActivation) {
+      item=(AgendaItem)tuple.getObject();
+      item.setPropagationContext(context);
+    }
+ else {
+      item=createScheduledAgendaItem(tuple,context,rtn);
+    }
+  }
+ else {
+    if (rule.getCalendars() != null) {
+      long timestamp=workingMemory.getSessionClock().getCurrentTime();
+      for (      String cal : rule.getCalendars()) {
+        if (!workingMemory.getCalendars().get(cal).isTimeIncluded(timestamp)) {
+          return false;
+        }
+      }
+    }
+    InternalAgendaGroup agendaGroup=(InternalAgendaGroup)getAgendaGroup(rule.getAgendaGroup());
+    if (rule.getRuleFlowGroup() == null) {
+      if (rule.isLockOnActive() && agendaGroup.isActive() && agendaGroup.getAutoFocusActivator() != context) {
+        return false;
+      }
+    }
+ else {
+      InternalRuleFlowGroup rfg=(InternalRuleFlowGroup)getRuleFlowGroup(rule.getRuleFlowGroup());
+      if (rule.isLockOnActive() && rfg.isActive() && agendaGroup.getAutoFocusActivator() != context) {
+        return false;
+      }
+    }
+    if (reuseActivation) {
+      item=(AgendaItem)tuple.getObject();
+      item.setSalience(rule.getSalience().getValue(tuple,rule,workingMemory));
+      item.setPropagationContext(context);
+    }
+ else {
+      item=createAgendaItem(tuple,rule.getSalience().getValue(tuple,rule,workingMemory),context,rtn);
+    }
+    item.setAgendaGroup(agendaGroup);
+  }
+  tuple.setObject(item);
+  if (activationsFilter != null && !activationsFilter.accept(item,context,workingMemory,rtn)) {
+    increaseDormantActivations();
+    return false;
+  }
+  item.setActivated(true);
+  tuple.increaseActivationCountForEvents();
+  increaseActiveActivations();
+  item.setSequenence(rtn.getSequence());
+  ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCreated(item,workingMemory);
+  return true;
+}

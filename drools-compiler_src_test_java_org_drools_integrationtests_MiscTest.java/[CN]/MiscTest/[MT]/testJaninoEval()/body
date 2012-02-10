@@ -1,20 +1,15 @@
 {
-  final PackageBuilderConfiguration config=new PackageBuilderConfiguration();
-  JavaDialectConfiguration javaConf=(JavaDialectConfiguration)config.getDialectConfiguration("java");
-  javaConf.setCompiler(JavaDialectConfiguration.JANINO);
-  final PackageBuilder builder=new PackageBuilder(config);
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("eval_rule_test.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
-  session.setGlobal("five",new Integer(5));
+  KnowledgeBuilderConfiguration kbconf=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration();
+  kbconf.setProperty(JavaDialectConfiguration.JAVA_COMPILER_PROPERTY,"JANINO");
+  KnowledgeBase kbase=loadKnowledgeBase(kbconf,"eval_rule_test.drl");
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.setGlobal("five",new Integer(5));
   final List list=new ArrayList();
-  session.setGlobal("list",list);
+  ksession.setGlobal("list",list);
   final Cheese stilton=new Cheese("stilton",5);
-  session.insert(stilton);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
-  session.fireAllRules();
-  assertEquals(stilton,((List)session.getGlobal("list")).get(0));
+  ksession.insert(stilton);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  assertEquals(stilton,((List)ksession.getGlobal("list")).get(0));
 }

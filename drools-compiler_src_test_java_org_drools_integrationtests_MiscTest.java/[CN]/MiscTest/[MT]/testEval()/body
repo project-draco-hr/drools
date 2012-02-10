@@ -1,16 +1,12 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("eval_rule_test.drl")));
-  final Package pkg=builder.getPackage();
-  final RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  StatefulSession session=ruleBase.newStatefulSession();
-  session.setGlobal("five",new Integer(5));
+  KnowledgeBase kbase=loadKnowledgeBase("eval_rule_test.drl");
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.setGlobal("five",new Integer(5));
   final List list=new ArrayList();
-  session.setGlobal("list",list);
+  ksession.setGlobal("list",list);
   final Cheese stilton=new Cheese("stilton",5);
-  session.insert(stilton);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
-  session.fireAllRules();
-  assertEquals(stilton,((List)session.getGlobal("list")).get(0));
+  ksession.insert(stilton);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  assertEquals(stilton,((List)ksession.getGlobal("list")).get(0));
 }

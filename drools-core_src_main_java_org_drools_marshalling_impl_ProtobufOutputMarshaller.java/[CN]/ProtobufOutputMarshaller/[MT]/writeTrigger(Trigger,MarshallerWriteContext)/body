@@ -1,0 +1,39 @@
+{
+  if (trigger instanceof CronTrigger) {
+    CronTrigger cronTrigger=(CronTrigger)trigger;
+    ProtobufMessages.Trigger.CronTrigger.Builder _cron=ProtobufMessages.Trigger.CronTrigger.newBuilder().setStartTime(cronTrigger.getStartTime().getTime()).setRepeatLimit(cronTrigger.getRepeatLimit()).setRepeatCount(cronTrigger.getRepeatCount()).setCronExpression(cronTrigger.getCronEx().getCronExpression());
+    if (cronTrigger.getEndTime() != null) {
+      _cron.setEndTime(cronTrigger.getEndTime().getTime());
+    }
+    if (cronTrigger.getNextFireTime() != null) {
+      _cron.setNextFireTime(cronTrigger.getNextFireTime().getTime());
+    }
+    if (cronTrigger.getCalendarNames() != null) {
+      for (      String calendarName : cronTrigger.getCalendarNames()) {
+        _cron.addCalendarName(calendarName);
+      }
+    }
+    return ProtobufMessages.Trigger.newBuilder().setType(ProtobufMessages.Trigger.TriggerType.CRON).setCron(_cron.build()).build();
+  }
+ else   if (trigger instanceof IntervalTrigger) {
+    IntervalTrigger intTrigger=(IntervalTrigger)trigger;
+    ProtobufMessages.Trigger.IntervalTrigger.Builder _interval=ProtobufMessages.Trigger.IntervalTrigger.newBuilder().setStartTime(intTrigger.getStartTime().getTime()).setRepeatLimit(intTrigger.getRepeatLimit()).setRepeatCount(intTrigger.getRepeatCount()).setPeriod(intTrigger.getPeriod());
+    if (intTrigger.getEndTime() != null) {
+      _interval.setEndTime(intTrigger.getEndTime().getTime());
+    }
+    if (intTrigger.getNextFireTime() != null) {
+      _interval.setNextFireTime(intTrigger.getNextFireTime().getTime());
+    }
+    if (intTrigger.getCalendarNames() != null) {
+      for (      String calendarName : intTrigger.getCalendarNames()) {
+        _interval.addCalendarName(calendarName);
+      }
+    }
+    return ProtobufMessages.Trigger.newBuilder().setType(ProtobufMessages.Trigger.TriggerType.INTERVAL).setInterval(_interval.build()).build();
+  }
+ else   if (trigger instanceof PointInTimeTrigger) {
+    PointInTimeTrigger pinTrigger=(PointInTimeTrigger)trigger;
+    return ProtobufMessages.Trigger.newBuilder().setType(ProtobufMessages.Trigger.TriggerType.POINT_IN_TIME).setPit(ProtobufMessages.Trigger.PointInTimeTrigger.newBuilder().setNextFireTime(pinTrigger.hasNextFireTime().getTime()).build()).build();
+  }
+  throw new RuntimeException("Unable to serialize Trigger for type: " + trigger.getClass());
+}

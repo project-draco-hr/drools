@@ -1,0 +1,20 @@
+{
+  if (!timers.isEmpty()) {
+    List<TimerJobInstance> sortedTimers=new ArrayList<TimerJobInstance>(timers);
+    Collections.sort(sortedTimers,new Comparator<TimerJobInstance>(){
+      public int compare(      TimerJobInstance o1,      TimerJobInstance o2){
+        return (int)(o1.getJobHandle().getId() - o2.getJobHandle().getId());
+      }
+    }
+);
+    ProtobufMessages.Timers.Builder _timers=ProtobufMessages.Timers.newBuilder();
+    for (    TimerJobInstance timer : sortedTimers) {
+      JobContext jctx=((SelfRemovalJobContext)timer.getJobContext()).getJobContext();
+      TimersOutputMarshaller writer=outCtx.writersByClass.get(jctx.getClass());
+      Timer _timer=writer.serialize(jctx,outCtx);
+      _timers.addTimer(_timer);
+    }
+    return _timers.build();
+  }
+  return null;
+}

@@ -1,0 +1,32 @@
+{
+  GlobalResolver globalResolver=(GlobalResolver)context.env.get(EnvironmentName.GLOBALS);
+  if (globalResolver != null) {
+    session.setGlobalResolver(globalResolver);
+  }
+  if (session.getTimerService() instanceof PseudoClockScheduler) {
+    PseudoClockScheduler clock=(PseudoClockScheduler)session.getTimerService();
+    clock.advanceTime(_session.getTime(),TimeUnit.MILLISECONDS);
+  }
+  for (  RuleFlowGroup group : agenda.getRuleFlowGroupsMap().values()) {
+    ((RuleFlowGroupImpl)group).setWorkingMemory(session);
+  }
+  context.wm=session;
+  readNodeMemories(context,_session);
+  readInitialFactHandle(context,_session);
+  for (  ProtobufMessages.EntryPoint _ep : _session.getEntryPointList()) {
+    WorkingMemoryEntryPoint wmep=context.wm.getEntryPoints().get(_ep.getEntryPointId());
+    readFactHandles(context,_ep,((NamedEntryPoint)wmep).getObjectStore());
+  }
+  readActionQueue(context,_session);
+  readTruthMaintenanceSystem(context,_session);
+  if (_session.hasTimers()) {
+    for (    ProtobufMessages.Timers.Timer _timer : _session.getTimers().getTimerList()) {
+      readTimer(context,_timer);
+    }
+  }
+  agenda.setActivationsFilter(null);
+  if (_session.getMultithread()) {
+    session.startPartitionManagers();
+  }
+  return session;
+}

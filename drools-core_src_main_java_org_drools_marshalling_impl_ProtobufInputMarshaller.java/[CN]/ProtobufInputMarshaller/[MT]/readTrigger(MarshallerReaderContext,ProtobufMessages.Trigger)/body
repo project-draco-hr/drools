@@ -1,0 +1,52 @@
+{
+switch (_trigger.getType()) {
+case CRON:
+{
+      ProtobufMessages.Trigger.CronTrigger _cron=_trigger.getCron();
+      CronTrigger trigger=new CronTrigger();
+      trigger.setStartTime(new Date(_cron.getStartTime()));
+      if (_cron.hasEndTime()) {
+        trigger.setEndTime(new Date(_cron.getEndTime()));
+      }
+      trigger.setRepeatLimit(_cron.getRepeatLimit());
+      trigger.setRepeatCount(_cron.getRepeatCount());
+      trigger.setCronExpression(_cron.getCronExpression());
+      if (_cron.hasNextFireTime()) {
+        trigger.setNextFireTime(new Date(_cron.getNextFireTime()));
+      }
+      String[] calendarNames=new String[_cron.getCalendarNameCount()];
+      for (int i=0; i < calendarNames.length; i++) {
+        calendarNames[i]=_cron.getCalendarName(i);
+      }
+      trigger.setCalendarNames(calendarNames);
+      return trigger;
+    }
+case INTERVAL:
+{
+    ProtobufMessages.Trigger.IntervalTrigger _interval=_trigger.getInterval();
+    IntervalTrigger trigger=new IntervalTrigger();
+    trigger.setStartTime(new Date(_interval.getStartTime()));
+    if (_interval.hasEndTime()) {
+      trigger.setEndTime(new Date(_interval.getEndTime()));
+    }
+    trigger.setRepeatLimit(_interval.getRepeatLimit());
+    trigger.setRepeatCount(_interval.getRepeatCount());
+    if (_interval.hasNextFireTime()) {
+      trigger.setNextFireTime(new Date(_interval.getNextFireTime()));
+    }
+    trigger.setPeriod(_interval.getPeriod());
+    String[] calendarNames=new String[_interval.getCalendarNameCount()];
+    for (int i=0; i < calendarNames.length; i++) {
+      calendarNames[i]=_interval.getCalendarName(i);
+    }
+    trigger.setCalendarNames(calendarNames);
+    return trigger;
+  }
+case POINT_IN_TIME:
+{
+  PointInTimeTrigger trigger=new PointInTimeTrigger(_trigger.getPit().getNextFireTime(),null,null);
+  return trigger;
+}
+}
+throw new RuntimeException("Unable to deserialize Trigger for type: " + _trigger.getType());
+}
