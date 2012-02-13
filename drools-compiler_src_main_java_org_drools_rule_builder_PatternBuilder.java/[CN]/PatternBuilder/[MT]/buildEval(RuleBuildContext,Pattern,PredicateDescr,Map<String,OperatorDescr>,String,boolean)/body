@@ -49,13 +49,31 @@
   final String[] requiredOperators=usedIdentifiers.getOperators().keySet().toArray(new String[usedIdentifiers.getOperators().size()]);
   Arrays.sort(previousDeclarations,SortDeclarations.instance);
   Arrays.sort(localDeclarations,SortDeclarations.instance);
-  final PredicateConstraint predicateConstraint=new PredicateConstraint(null,previousDeclarations,localDeclarations,requiredGlobals,requiredOperators);
-  final PredicateBuilder builder=context.getDialect().getPredicateBuilder();
-  builder.build(context,usedIdentifiers,previousDeclarations,localDeclarations,predicateConstraint,predicateDescr,analysis);
-  if (ClassObjectType.Activation_ObjectType.isAssignableFrom(pattern.getObjectType())) {
+  boolean isJavaEval=isEvalExpression && context.getDialect() instanceof JavaDialect;
+  boolean usePredicateConstraint=!USE_MVEL_EXPRESSION || isJavaEval || requiredOperators.length > 0;
+  if (usePredicateConstraint) {
+    final PredicateConstraint predicateConstraint=new PredicateConstraint(null,previousDeclarations,localDeclarations,requiredGlobals,requiredOperators);
+    final PredicateBuilder builder=context.getDialect().getPredicateBuilder();
+    builder.build(context,usedIdentifiers,previousDeclarations,localDeclarations,predicateConstraint,predicateDescr,analysis);
     pattern.addConstraint(predicateConstraint);
   }
  else {
-    pattern.addConstraint(convertPredicateConstraint(context,predicateConstraint,expr,isEvalExpression));
+    MVELCompilationUnit compilationUnit=ConstraintBuilder.buildCompilationUnit(context,usedIdentifiers,previousDeclarations,localDeclarations,predicateDescr,analysis);
+    MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
+    ParserConfiguration configuration=data.getParserConfiguration();
+    Declaration[] mvelDeclarations=new Declaration[previousDeclarations.length + localDeclarations.length + requiredGlobals.length];
+    int i=0;
+    for (    Declaration d : previousDeclarations) {
+      mvelDeclarations[i++]=d;
+    }
+    for (    Declaration d : localDeclarations) {
+      mvelDeclarations[i++]=d;
+    }
+    for (    String global : requiredGlobals) {
+      mvelDeclarations[i++]=context.getDeclarationResolver().getDeclaration(context.getRule(),global);
+    }
+    boolean isDynamic=ClassObjectType.Activation_ObjectType.isAssignableFrom(pattern.getObjectType());
+    Constraint constraint=new MvelConstraint(context.getPkg().getName(),expr,mvelDeclarations,compilationUnit,isDynamic);
+    pattern.addConstraint(constraint);
   }
 }

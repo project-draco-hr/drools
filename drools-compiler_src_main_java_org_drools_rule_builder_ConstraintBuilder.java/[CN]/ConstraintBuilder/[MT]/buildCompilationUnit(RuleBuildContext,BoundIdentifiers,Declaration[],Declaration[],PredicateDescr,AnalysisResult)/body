@@ -1,0 +1,23 @@
+{
+  if (context.isTypesafe() && analysis instanceof MVELAnalysisResult) {
+    Class<?> returnClass=((MVELAnalysisResult)analysis).getReturnType();
+    if (returnClass != Boolean.class && returnClass != Boolean.TYPE) {
+      context.addError(new DescrBuildError(context.getParentDescr(),predicateDescr,null,"Predicate '" + predicateDescr.getContent() + "' must be a Boolean expression\n"+ predicateDescr.positionAsString()));
+    }
+  }
+  MVELDialect dialect=(MVELDialect)context.getDialect(context.getDialect().getId());
+  MVELCompilationUnit unit=null;
+  try {
+    Map<String,Class<?>> declIds=context.getDeclarationResolver().getDeclarationClasses(context.getRule());
+    Pattern p=(Pattern)context.getBuildStack().peek();
+    if (p.getObjectType() instanceof ClassObjectType) {
+      declIds.put("this",((ClassObjectType)p.getObjectType()).getClassType());
+    }
+    unit=dialect.getMVELCompilationUnit((String)predicateDescr.getContent(),analysis,previousDeclarations,localDeclarations,null,context,"drools",KnowledgeHelper.class);
+  }
+ catch (  final Exception e) {
+    copyErrorLocation(e,predicateDescr);
+    context.addError(new DescrBuildError(context.getParentDescr(),predicateDescr,e,"Unable to build expression for 'inline-eval' : " + e.getMessage() + "'"+ predicateDescr.getContent()+ "'\n"+ e.getMessage()));
+  }
+  return unit;
+}
