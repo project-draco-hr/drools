@@ -4,5 +4,20 @@
   if (this.outIdentifier != null) {
     ((ExecutionResultImpl)((KnowledgeCommandContext)context).getExecutionResults()).getResults().put(this.outIdentifier,kresults);
   }
+  if (disconnected) {
+    ExecutionResultImpl disconnectedResults=new ExecutionResultImpl();
+    HashMap<String,Object> disconnectedHandles=new HashMap<String,Object>();
+    for (    String key : kresults.getIdentifiers()) {
+      FactHandle handle=(FactHandle)kresults.getFactHandle(key);
+      if (handle != null) {
+        DefaultFactHandle disconnectedHandle=((DefaultFactHandle)handle).clone();
+        disconnectedHandle.disconnect();
+        disconnectedHandles.put(key,disconnectedHandle);
+      }
+    }
+    disconnectedResults.setFactHandles(disconnectedHandles);
+    disconnectedResults.setResults((HashMap)((ExecutionResultImpl)kresults).getResults());
+    return disconnectedResults;
+  }
   return kresults;
 }
