@@ -1,0 +1,20 @@
+{
+  String rule="package org.drools\n" + "declare A\n" + "    @propertySpecific\n"+ "    a : int\n"+ "    b : int\n"+ "    s : String\n"+ "    i : int\n"+ "end\n"+ "declare B\n"+ "    @propertySpecific\n"+ "    s : String\n"+ "    i : int\n"+ "end\n"+ "rule R1\n"+ "when\n"+ "    $a : A(a == 0) @watch( i )\n"+ "    $b : B(i == $a.i) @watch( s )\n"+ "then\n"+ "    modify($a) { setS(\"end\") }\n"+ "end\n"+ "rule R2\n"+ "when\n"+ "    $a : A(a == 0) @watch( b )\n"+ "then\n"+ "    modify($a) { setI(1) }\n"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(rule);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  FactType factTypeA=kbase.getFactType("org.drools","A");
+  Object factA=factTypeA.newInstance();
+  factTypeA.set(factA,"a",0);
+  factTypeA.set(factA,"b",0);
+  factTypeA.set(factA,"i",0);
+  factTypeA.set(factA,"s","start");
+  ksession.insert(factA);
+  FactType factTypeB=kbase.getFactType("org.drools","B");
+  Object factB=factTypeB.newInstance();
+  factTypeB.set(factB,"i",1);
+  factTypeB.set(factB,"s","start");
+  ksession.insert(factB);
+  int rules=ksession.fireAllRules();
+  assertEquals(2,rules);
+  assertEquals("end",factTypeA.get(factA,"s"));
+}

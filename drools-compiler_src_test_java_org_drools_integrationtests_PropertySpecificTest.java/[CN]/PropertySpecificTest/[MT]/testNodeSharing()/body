@@ -1,21 +1,8 @@
 {
-  String rule="package org.drools\n" + "import org.drools.integrationtests.PropertySpecificTest.Hero\n" + "import org.drools.integrationtests.PropertySpecificTest.Cell\n"+ "import org.drools.integrationtests.PropertySpecificTest.Init\n"+ "import org.drools.integrationtests.PropertySpecificTest.CompositeImageName\n"+ "declare CompositeImageName\n"+ "   @propertySpecific\n"+ "end\n"+ "rule \"Show First Cell\" when\n"+ "   Init()\n"+ "   $c : Cell( row == 0, col == 0 )\n"+ "then\n"+ "   modify( $c ) { hidden = false };\n"+ "end\n"+ "\n"+ "rule \"Paint Empty Hero\" when\n"+ "   $c : Cell()\n"+ "   $cin : CompositeImageName( cell == $c )\n"+ "   not Hero( row == $c.row, col == $c.col  )\n"+ "then\n"+ "   modify( $cin ) { hero = \"\" };\n"+ "   System.out.println( \"Empty Hero \" + $cin );\n"+ "end";
+  String rule="package org.drools\n" + "import org.drools.integrationtests.PropertySpecificTest.Cell\n" + "rule R1 when\n"+ "   $c : Cell()\n"+ "then\n"+ "   modify( $c ) { hidden = true };\n"+ "   System.out.println( \"R1\");\n"+ "end\n"+ "rule R2 when\n"+ "   $c : Cell(hidden == true)\n"+ "then\n"+ "   System.out.println( \"R2\");\n"+ "end\n"+ "rule R3 when\n"+ "   $c : Cell(hidden == true, row == 0)\n"+ "then\n"+ "   modify( $c ) { setCol(1) };\n"+ "   System.out.println( \"R3\");\n"+ "end\n"+ "rule R4 when\n"+ "   $c : Cell(hidden == true, col == 1)\n"+ "then\n"+ "   modify( $c ) { setRow(1) };\n"+ "   System.out.println( \"R4\");\n"+ "end\n";
   KnowledgeBase kbase=loadKnowledgeBaseFromString(rule);
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
-  ksession.insert(new Init());
-  Cell cell=new Cell();
-  cell.setRow(0);
-  cell.setCol(0);
-  cell.hidden=true;
-  ksession.insert(cell);
-  Hero hero=new Hero();
-  hero.setRow(1);
-  hero.setCol(1);
-  ksession.insert(hero);
-  CompositeImageName cin=new CompositeImageName();
-  cin.setHero("hero");
-  cin.setCell(cell);
-  ksession.insert(cin);
+  ksession.insert(new Cell());
   int rules=ksession.fireAllRules();
-  assertEquals(3,rules);
+  assertEquals(4,rules);
 }

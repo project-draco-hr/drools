@@ -1,19 +1,22 @@
 {
-  StringBuilder propertyNameBuilder=new StringBuilder();
-  int cursor=extractFirstIdentifier(expression,propertyNameBuilder,0);
-  String propertyName=propertyNameBuilder.toString();
-  if (propertyName.equals("this")) {
-    cursor=skipBlanks(expression,cursor);
-    if (expression.charAt(cursor) != '.') {
+  long mask=0;
+  String[] simpleExpressions=expression.split("\\Q&&\\E|\\Q||\\E");
+  for (  String simpleExpression : simpleExpressions) {
+    String propertyName=getPropertyNameFromSimpleExpression(simpleExpression);
+    if (propertyName.length() == 0) {
+      continue;
+    }
+    if (propertyName.equals("this")) {
       return Long.MAX_VALUE;
     }
-    propertyNameBuilder=new StringBuilder();
-    extractFirstIdentifier(expression,propertyNameBuilder,cursor);
-    propertyName=propertyNameBuilder.toString();
+    int pos=settableProperties.indexOf(propertyName);
+    if (pos < 0 && Character.isUpperCase(propertyName.charAt(0))) {
+      propertyName=propertyName.substring(0,1).toLowerCase() + propertyName.substring(1);
+      pos=settableProperties.indexOf(propertyName);
+    }
+    if (pos >= 0) {
+      mask=BitMaskUtil.set(mask,pos);
+    }
   }
-  int pos=settableProperties.indexOf(propertyName);
-  if (pos < 0) {
-    throw new RuntimeException("Unknown property: " + propertyName);
-  }
-  return 1L << pos;
+  return mask;
 }

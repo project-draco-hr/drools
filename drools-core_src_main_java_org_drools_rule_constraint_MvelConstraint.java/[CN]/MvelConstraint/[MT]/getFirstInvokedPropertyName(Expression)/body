@@ -1,0 +1,24 @@
+{
+  if (!(expression instanceof EvaluatedExpression)) {
+    return null;
+  }
+  List<Invocation> invocations=((EvaluatedExpression)expression).invocations;
+  Invocation invocation=invocations.get(0);
+  if (invocation instanceof MethodInvocation) {
+    Method method=((MethodInvocation)invocation).getMethod();
+    if (method == null && invocations.size() > 1) {
+      invocation=invocations.get(1);
+      if (invocation instanceof MethodInvocation) {
+        method=((MethodInvocation)invocation).getMethod();
+      }
+ else       if (invocation instanceof FieldAccessInvocation) {
+        return ((FieldAccessInvocation)invocation).getField().getName();
+      }
+    }
+    return getter2property(method.getName());
+  }
+  if (invocation instanceof FieldAccessInvocation) {
+    return ((FieldAccessInvocation)invocation).getField().getName();
+  }
+  return null;
+}
