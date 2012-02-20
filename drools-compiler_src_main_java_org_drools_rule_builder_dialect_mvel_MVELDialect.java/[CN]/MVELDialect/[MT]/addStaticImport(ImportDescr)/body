@@ -1,0 +1,30 @@
+{
+  String staticImportEntry=importDescr.getTarget();
+  if (staticImportEntry.endsWith("*")) {
+    addStaticPackageImport(importDescr);
+    return;
+  }
+  int index=staticImportEntry.lastIndexOf('.');
+  String className=staticImportEntry.substring(0,index);
+  String methodName=staticImportEntry.substring(index + 1);
+  try {
+    Class cls=this.pkgBuilder.getRootClassLoader().loadClass(className);
+    if (cls != null) {
+      for (      Method method : cls.getDeclaredMethods()) {
+        if (method.getName().equals(methodName)) {
+          this.data.addImport(methodName,method);
+          return;
+        }
+      }
+      for (      Field field : cls.getFields()) {
+        if (field.isAccessible() && field.getName().equals(methodName)) {
+          this.data.addImport(methodName,field);
+          return;
+        }
+      }
+    }
+  }
+ catch (  ClassNotFoundException e) {
+  }
+  this.results.add(new ImportError(importDescr,-1));
+}

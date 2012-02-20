@@ -1,0 +1,23 @@
+{
+  String staticImportEntry=importDescr.getTarget();
+  int index=staticImportEntry.lastIndexOf('.');
+  String className=staticImportEntry.substring(0,index);
+  Class cls=null;
+  try {
+    cls=pkgBuilder.getRootClassLoader().loadClass(className);
+  }
+ catch (  ClassNotFoundException e) {
+  }
+  if (cls == null)   results.add(new ImportError(importDescr,-1));
+  for (  Method method : cls.getDeclaredMethods()) {
+    if ((method.getModifiers() | Modifier.STATIC) > 0) {
+      this.data.addImport(method.getName(),method);
+    }
+  }
+  for (  Field field : cls.getFields()) {
+    if (field.isAccessible() && (field.getModifiers() | Modifier.STATIC) > 0) {
+      this.data.addImport(field.getName(),field);
+      return;
+    }
+  }
+}

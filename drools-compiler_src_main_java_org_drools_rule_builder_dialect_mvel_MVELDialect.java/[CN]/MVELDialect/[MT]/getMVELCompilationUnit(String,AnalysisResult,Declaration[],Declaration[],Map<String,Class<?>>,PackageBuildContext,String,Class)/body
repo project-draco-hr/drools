@@ -47,16 +47,14 @@
   }
   strList=new ArrayList<String>();
   if (otherInputVariables != null) {
-    int i=0;
     MVELAnalysisResult mvelAnalysis=(MVELAnalysisResult)analysis;
-    for (Iterator it=otherInputVariables.entrySet().iterator(); it.hasNext(); ) {
-      Entry entry=(Entry)it.next();
-      if ((!analysis.getNotBoundedIdentifiers().contains(entry.getKey()) && !mvelAnalysis.getMvelVariables().keySet().contains(entry.getKey())) || "rule".equals(entry.getKey())) {
+    for (    Entry<String,Class<?>> stringClassEntry : otherInputVariables.entrySet()) {
+      if ((!analysis.getNotBoundedIdentifiers().contains(stringClassEntry.getKey()) && !mvelAnalysis.getMvelVariables().keySet().contains(stringClassEntry.getKey())) || "rule".equals(stringClassEntry.getKey())) {
         continue;
       }
-      ids.add((String)entry.getKey());
-      strList.add((String)entry.getKey());
-      resolvedInputs.put((String)entry.getKey(),(Class)entry.getValue());
+      ids.add(stringClassEntry.getKey());
+      strList.add(stringClassEntry.getKey());
+      resolvedInputs.put(stringClassEntry.getKey(),stringClassEntry.getValue());
     }
   }
   String[] otherIdentifiers=strList.toArray(new String[strList.size()]);
@@ -79,6 +77,5 @@
  else {
     name="Unknown";
   }
-  MVELCompilationUnit compilationUnit=new MVELCompilationUnit(name,expression,globalIdentifiers,operators,previousDeclarations,localDeclarations,otherIdentifiers,inputIdentifiers,inputTypes,languageLevel,((MVELAnalysisResult)analysis).isTypesafe());
-  return compilationUnit;
+  return new MVELCompilationUnit(name,expression,globalIdentifiers,operators,previousDeclarations,localDeclarations,otherIdentifiers,inputIdentifiers,inputTypes,languageLevel,((MVELAnalysisResult)analysis).isTypesafe());
 }
