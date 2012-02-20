@@ -2,13 +2,16 @@
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
   ksession=kbase.newStatefulKnowledgeSession();
   ExecutionResultImpl localKresults=new ExecutionResultImpl();
-  FixedKnowledgeCommandContext kContext=new FixedKnowledgeCommandContext(new ContextImpl("ksession",null),null,null,this.ksession,localKresults);
+  ResolvingKnowledgeCommandContext kContext=new ResolvingKnowledgeCommandContext(new ContextImpl("ksession",null));
+  kContext.set("localResults",localKresults);
+  kContext.set("ksession",ksession);
   commandService=new DefaultCommandService(kContext);
   List cmds=new ArrayList();
   cmds.add(new InsertObjectCommand(new String("Hi!"),"handle"));
   BatchExecutionCommand batchCmd=CommandFactory.newBatchExecution(cmds,"kresults");
   ExecuteCommand execCmd=new ExecuteCommand(batchCmd,true);
-  ExecutionResults results=commandService.execute(execCmd);
+  KnowledgeContextResolveFromContextCommand resolveFromContextCommand=new KnowledgeContextResolveFromContextCommand(execCmd,null,null,"ksession","localResults");
+  ExecutionResults results=(ExecutionResults)commandService.execute(resolveFromContextCommand);
   Assert.assertNotNull(results);
   Assert.assertNotNull(results.getFactHandle("handle"));
   Assert.assertTrue(((DefaultFactHandle)results.getFactHandle("handle")).isDisconnected());
@@ -16,7 +19,8 @@
   cmds.add(new InsertObjectCommand(new String("Hi!"),"handle"));
   batchCmd=CommandFactory.newBatchExecution(cmds,"kresults");
   execCmd=new ExecuteCommand(batchCmd);
-  results=commandService.execute(execCmd);
+  resolveFromContextCommand=new KnowledgeContextResolveFromContextCommand(execCmd,null,null,"ksession","localResults");
+  results=(ExecutionResults)commandService.execute(resolveFromContextCommand);
   Assert.assertNotNull(results);
   Assert.assertNotNull(results.getFactHandle("handle"));
   Assert.assertFalse(((DefaultFactHandle)results.getFactHandle("handle")).isDisconnected());
