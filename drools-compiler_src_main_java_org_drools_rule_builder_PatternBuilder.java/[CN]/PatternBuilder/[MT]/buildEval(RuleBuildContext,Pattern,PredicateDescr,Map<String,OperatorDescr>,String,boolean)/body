@@ -1,38 +1,11 @@
 {
-  Map<String,Class<?>> declarations=getDeclarationsMap(predicateDescr,context,true);
-  Map<String,Class<?>> globals=context.getPackageBuilder().getGlobals();
-  Map<String,EvaluatorWrapper> operators=new HashMap<String,EvaluatorWrapper>();
-  for (  Map.Entry<String,OperatorDescr> entry : aliases.entrySet()) {
-    OperatorDescr op=entry.getValue();
-    String leftStr=op.getLeftString();
-    String rightStr=op.getRightString();
-    Declaration leftDecl=context.getDeclarationResolver().getDeclaration(context.getRule(),leftStr);
-    if (leftDecl == null && "this".equals(leftStr)) {
-      leftDecl=this.createDeclarationObject(context,"this",pattern);
-    }
-    Declaration rightDecl=context.getDeclarationResolver().getDeclaration(context.getRule(),rightStr);
-    if (rightDecl == null && "this".equals(rightStr)) {
-      rightDecl=this.createDeclarationObject(context,"this",pattern);
-    }
-    Target left=leftDecl != null && leftDecl.isPatternDeclaration() ? Target.HANDLE : Target.FACT;
-    Target right=rightDecl != null && rightDecl.isPatternDeclaration() ? Target.HANDLE : Target.FACT;
-    op.setLeftIsHandle(left == Target.HANDLE);
-    op.setRightIsHandle(right == Target.HANDLE);
-    Evaluator evaluator=getEvaluator(context,predicateDescr,ValueType.OBJECT_TYPE,op.getOperator(),false,op.getParametersText(),left,right);
-    EvaluatorWrapper wrapper=new EvaluatorWrapper(evaluator,left == Target.HANDLE ? leftDecl : null,right == Target.HANDLE ? rightDecl : null);
-    operators.put(entry.getKey(),wrapper);
-  }
-  Class<?> thisClass=null;
-  if (pattern.getObjectType() instanceof ClassObjectType) {
-    thisClass=((ClassObjectType)pattern.getObjectType()).getClassType();
-  }
-  final AnalysisResult analysis=context.getDialect().analyzeExpression(context,predicateDescr,predicateDescr.getContent(),new BoundIdentifiers(declarations,globals,operators,thisClass));
+  AnalysisResult analysis=buildAnalysis(context,pattern,predicateDescr,aliases);
   if (analysis == null) {
     return;
   }
   final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
-  final List tupleDeclarations=new ArrayList();
-  final List factDeclarations=new ArrayList();
+  final List<Declaration> tupleDeclarations=new ArrayList<Declaration>();
+  final List<Declaration> factDeclarations=new ArrayList<Declaration>();
   for (  String id : usedIdentifiers.getDeclrClasses().keySet()) {
     final Declaration decl=context.getDeclarationResolver().getDeclaration(context.getRule(),id);
     if (decl.getPattern() == pattern) {
@@ -58,9 +31,7 @@
     pattern.addConstraint(predicateConstraint);
   }
  else {
-    MVELCompilationUnit compilationUnit=ConstraintBuilder.buildCompilationUnit(context,usedIdentifiers,previousDeclarations,localDeclarations,predicateDescr,analysis);
-    MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
-    ParserConfiguration configuration=data.getParserConfiguration();
+    MVELCompilationUnit compilationUnit=ConstraintBuilder.buildCompilationUnit(context,previousDeclarations,localDeclarations,predicateDescr,analysis);
     Declaration[] mvelDeclarations=new Declaration[previousDeclarations.length + localDeclarations.length + requiredGlobals.length];
     int i=0;
     for (    Declaration d : previousDeclarations) {

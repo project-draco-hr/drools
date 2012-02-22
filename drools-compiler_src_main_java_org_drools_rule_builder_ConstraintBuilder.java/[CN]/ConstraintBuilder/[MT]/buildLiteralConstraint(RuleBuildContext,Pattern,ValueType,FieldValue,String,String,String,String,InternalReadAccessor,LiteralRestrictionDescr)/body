@@ -1,0 +1,16 @@
+{
+  if (USE_MVEL_EXPRESSION) {
+    if (!isMvelOperator(operator)) {
+      Evaluator evaluator=buildLiteralEvaluator(context,extractor,restrictionDescr,vtype);
+      return new EvaluatorConstraint(field,evaluator,extractor);
+    }
+    String mvelExpr=normalizeMVELLiteralExpression(vtype,field,expression,leftValue,operator,rightValue,restrictionDescr);
+    boolean isIndexable=operator.equals("==");
+    MVELCompilationUnit compilationUnit=null;
+    return new MvelConstraint(context.getPkg().getName(),mvelExpr,compilationUnit,isIndexable);
+  }
+ else {
+    LiteralRestriction restriction=buildLiteralRestriction(context,extractor,restrictionDescr,field,vtype);
+    return restriction != null ? new LiteralConstraint(extractor,restriction) : null;
+  }
+}

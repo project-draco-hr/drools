@@ -1,0 +1,24 @@
+{
+  Map<String,EvaluatorWrapper> operators=new HashMap<String,EvaluatorWrapper>();
+  for (  Map.Entry<String,OperatorDescr> entry : aliases.entrySet()) {
+    OperatorDescr op=entry.getValue();
+    String leftStr=op.getLeftString();
+    String rightStr=op.getRightString();
+    Declaration leftDecl=context.getDeclarationResolver().getDeclaration(context.getRule(),leftStr);
+    if (leftDecl == null && "this".equals(leftStr)) {
+      leftDecl=createDeclarationObject(context,"this",pattern);
+    }
+    Declaration rightDecl=context.getDeclarationResolver().getDeclaration(context.getRule(),rightStr);
+    if (rightDecl == null && "this".equals(rightStr)) {
+      rightDecl=createDeclarationObject(context,"this",pattern);
+    }
+    Target left=leftDecl != null && leftDecl.isPatternDeclaration() ? Target.HANDLE : Target.FACT;
+    Target right=rightDecl != null && rightDecl.isPatternDeclaration() ? Target.HANDLE : Target.FACT;
+    op.setLeftIsHandle(left == Target.HANDLE);
+    op.setRightIsHandle(right == Target.HANDLE);
+    Evaluator evaluator=getEvaluator(context,predicateDescr,ValueType.OBJECT_TYPE,op.getOperator(),false,op.getParametersText(),left,right);
+    EvaluatorWrapper wrapper=new EvaluatorWrapper(evaluator,left == Target.HANDLE ? leftDecl : null,right == Target.HANDLE ? rightDecl : null);
+    operators.put(entry.getKey(),wrapper);
+  }
+  return operators;
+}

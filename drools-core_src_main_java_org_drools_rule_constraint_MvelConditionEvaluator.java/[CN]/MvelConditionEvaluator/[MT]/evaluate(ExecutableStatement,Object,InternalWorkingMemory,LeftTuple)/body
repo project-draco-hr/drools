@@ -1,0 +1,14 @@
+{
+  if (compilationUnit == null) {
+    Map<String,Object> vars=valuesAsMap(object,workingMemory,leftTuple,declarations);
+    return evaluate(statement,object,vars);
+  }
+  VariableResolverFactory factory=compilationUnit.createFactory();
+  compilationUnit.updateFactory(null,null,object,leftTuple,null,workingMemory,workingMemory.getGlobalResolver(),factory);
+  org.drools.rule.Package pkg=workingMemory.getRuleBase().getPackage("MAIN");
+  if (pkg != null) {
+    MVELDialectRuntimeData data=(MVELDialectRuntimeData)pkg.getDialectRuntimeRegistry().getDialectData("mvel");
+    factory.setNextFactory(data.getFunctionFactory());
+  }
+  return (Boolean)MVEL.executeExpression(statement,object,factory);
+}

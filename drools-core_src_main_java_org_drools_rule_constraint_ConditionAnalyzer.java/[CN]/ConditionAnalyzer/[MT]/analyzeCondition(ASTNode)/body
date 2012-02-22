@@ -2,11 +2,15 @@
   boolean isNegated=false;
   if (node instanceof Negation) {
     isNegated=true;
-    node=((ExecutableAccessor)((Negation)node).getStatement()).getNode();
+    ExecutableStatement statement=((Negation)node).getStatement();
+    if (statement instanceof ExecutableLiteral) {
+      return new FixedValueCondition(!(Boolean)((ExecutableLiteral)statement).getLiteral());
+    }
+    node=((ExecutableAccessor)statement).getNode();
   }
   node=analyzeSubstatement(node);
   if (node instanceof LiteralNode && node.getEgressType() == Boolean.class) {
-    boolean literalValue=(Boolean)((LiteralNode)node).getLiteralValue();
+    boolean literalValue=(Boolean)node.getLiteralValue();
     return new FixedValueCondition(isNegated ? !literalValue : literalValue);
   }
   if (node instanceof And || node instanceof Or) {
