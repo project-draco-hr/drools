@@ -1,0 +1,39 @@
+{
+  List<MvelConstraint> combinableConstraints=pattern.getCombinableConstraints();
+  if (combinableConstraints.size() < 2) {
+    return;
+  }
+  List<Declaration> declarations=new ArrayList<Declaration>();
+  Set<String> declarationNames=new HashSet<String>();
+  boolean isFirst=true;
+  String packageName=null;
+  StringBuilder expressionBuilder=new StringBuilder(combinableConstraints.size() * 25);
+  for (  MvelConstraint constraint : combinableConstraints) {
+    pattern.removeConstraint(constraint);
+    if (isFirst) {
+      packageName=constraint.getPackageName();
+      isFirst=false;
+    }
+ else {
+      expressionBuilder.append(" && ");
+    }
+    String constraintExpression=constraint.getExpression();
+    boolean isComplex=constraintExpression.contains("&&") || constraintExpression.contains("||");
+    if (isComplex) {
+      expressionBuilder.append("( ");
+    }
+    expressionBuilder.append(constraintExpression);
+    if (isComplex) {
+      expressionBuilder.append(" )");
+    }
+    for (    Declaration declaration : constraint.getRequiredDeclarations()) {
+      if (declarationNames.add(declaration.getBindingName())) {
+        declarations.add(declaration);
+      }
+    }
+  }
+  String expression=expressionBuilder.toString();
+  MVELCompilationUnit compilationUnit=buildCompilationUnit(context,pattern,expression);
+  MvelConstraint combinedConstraint=new MvelConstraint(packageName,expression,declarations.toArray(new Declaration[declarations.size()]),compilationUnit,false,null,null,false);
+  pattern.addConstraint(combinedConstraint);
+}

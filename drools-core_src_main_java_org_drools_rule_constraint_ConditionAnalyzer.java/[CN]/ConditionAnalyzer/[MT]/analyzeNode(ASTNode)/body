@@ -6,16 +6,11 @@
   }
   if (node instanceof BinaryOperation) {
     BinaryOperation op=(BinaryOperation)node;
-    if (node.getClass() == BinaryOperation.class) {
-      return new AritmeticExpression(analyzeNode(op.getLeft()),AritmeticOperator.fromMvelOpCode(op.getOperation()),analyzeNode(op.getRight()));
-    }
- else {
-      return new FixedExpression(op.getEgressType(),op.getReducedValue(parserContext,null,new ImmutableDefaultFactory()));
-    }
+    return new AritmeticExpression(analyzeNode(op.getLeft()),AritmeticOperator.fromMvelOpCode(op.getOperation()),analyzeNode(op.getRight()));
   }
   if (node instanceof Union) {
-    ASTNode main=getFieldValue(Union.class,"main",(Union)node);
-    Accessor accessor=getFieldValue(Union.class,"accessor",(Union)node);
+    ASTNode main=((Union)node).getMain();
+    Accessor accessor=((Union)node).getAccessor();
     EvaluatedExpression expression=new EvaluatedExpression();
     expression.firstExpression=analyzeNode(main);
     if (accessor instanceof DynamicGetAccessor) {
@@ -32,10 +27,38 @@
   }
   Accessor accessor=node.getAccessor();
   if (accessor instanceof IndexedVariableAccessor) {
-    return new VariableExpression(node.getName(),analyzeExpressionNode(((IndexedVariableAccessor)accessor).getNextNode()),node.getEgressType());
+    String variableName=node.getName();
+    int dot=variableName.indexOf('.');
+    if (dot > 0) {
+      variableName=variableName.substring(0,dot);
+    }
+    return new VariableExpression(variableName,analyzeExpressionNode(((IndexedVariableAccessor)accessor).getNextNode()),node.getEgressType());
   }
   if (accessor == null && node instanceof NewObjectNode) {
     accessor=((NewObjectNode)node).getNewObjectOptimizer();
+  }
+  if (accessor instanceof VariableAccessor) {
+    VariableAccessor variableAccessor=(VariableAccessor)accessor;
+    AccessorNode accessorNode=variableAccessor.getNextNode();
+    if (accessorNode == null || !isStaticAccessor(accessorNode)) {
+      String variableName=(String)(variableAccessor.getProperty());
+      Class<?> variableType=getVariableType(variableName);
+      if (variableType != null) {
+        return new VariableExpression(variableName,analyzeExpressionNode(accessorNode),variableType);
+      }
+ else {
+        Class<?> thisClass=parserContext.getInputs().get("this");
+        try {
+          return new EvaluatedExpression(new MethodInvocation(thisClass.getMethod(variableName)));
+        }
+ catch (        NoSuchMethodException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    }
+  }
+  if (accessor == null) {
+    throw new RuntimeException("Null accessor on node: " + node);
   }
   return analyzeAccessor(accessor);
 }
