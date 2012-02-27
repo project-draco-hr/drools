@@ -4,33 +4,39 @@
     leftDeclaredMask=Long.MAX_VALUE;
     return;
   }
-  Pattern pattern=context.getLastBuiltPatterns()[0];
-  ObjectType objectType=pattern.getObjectType();
-  if (!(objectType instanceof ClassObjectType)) {
-    rightDeclaredMask=Long.MAX_VALUE;
-  }
-  Class objectClass=((ClassObjectType)objectType).getClassType();
-  TypeDeclaration typeDeclaration=context.getRuleBase().getTypeDeclaration(objectClass);
-  if (typeDeclaration == null || !typeDeclaration.isPropertySpecific()) {
-    rightDeclaredMask=Long.MAX_VALUE;
+  if (!(rightInput instanceof RightInputAdapterNode)) {
+    Pattern pattern=context.getLastBuiltPatterns()[0];
+    ObjectType objectType=pattern.getObjectType();
+    if (!(objectType instanceof ClassObjectType)) {
+      rightDeclaredMask=Long.MAX_VALUE;
+    }
+    Class objectClass=((ClassObjectType)objectType).getClassType();
+    TypeDeclaration typeDeclaration=context.getRuleBase().getTypeDeclaration(objectClass);
+    if (typeDeclaration == null || !typeDeclaration.isPropertySpecific()) {
+      rightDeclaredMask=Long.MAX_VALUE;
+    }
+ else {
+      List<String> settableProperties=getSettableProperties(context.getRuleBase(),objectClass);
+      rightDeclaredMask=calculateMaskFromPattern(pattern.getListenedProperties(),0L,settableProperties);
+      rightDeclaredMask=rightDeclaredMask | calculateDeclaredMask(settableProperties,pattern.getListenedProperties());
+    }
   }
  else {
-    List<String> settableProperties=getSettableProperties(context.getRuleBase(),objectClass);
-    rightDeclaredMask=calculateMaskFromPattern(pattern.getListenedProperties(),0L,settableProperties);
-    rightDeclaredMask=rightDeclaredMask | calculateDeclaredMask(settableProperties,pattern.getListenedProperties());
+    rightDeclaredMask=Long.MAX_VALUE;
+    context.setLastBuiltPattern(context.getLastBuiltPatterns()[0]);
   }
   if (!(leftInput instanceof LeftInputAdapterNode)) {
     leftDeclaredMask=Long.MAX_VALUE;
     return;
   }
-  pattern=context.getLastBuiltPatterns()[1];
-  objectType=pattern.getObjectType();
+  Pattern pattern=context.getLastBuiltPatterns()[1];
+  ObjectType objectType=pattern.getObjectType();
   if (!(objectType instanceof ClassObjectType)) {
     leftDeclaredMask=Long.MAX_VALUE;
     return;
   }
-  objectClass=((ClassObjectType)objectType).getClassType();
-  typeDeclaration=context.getRuleBase().getTypeDeclaration(objectClass);
+  Class objectClass=((ClassObjectType)objectType).getClassType();
+  TypeDeclaration typeDeclaration=context.getRuleBase().getTypeDeclaration(objectClass);
   if (typeDeclaration == null || !typeDeclaration.isPropertySpecific()) {
     leftDeclaredMask=Long.MAX_VALUE;
   }
