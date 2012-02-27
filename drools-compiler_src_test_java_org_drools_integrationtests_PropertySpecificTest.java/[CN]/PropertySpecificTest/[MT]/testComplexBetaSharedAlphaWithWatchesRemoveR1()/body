@@ -1,0 +1,38 @@
+{
+  String rule1="$b : B( b == 15) @watch(i) A( a == 10, b == 15 ) @watch(c)";
+  String rule2="$b : B( b == 15) @watch(j) A( a == 10, i == 20 ) @watch(s)";
+  String rule3="$b : B( c == 15) @watch(k) A( a == 10, i == 20, b == 10 ) @watch(j)";
+  KnowledgeBase kbase=getKnowledgeBase(rule1,rule2,rule3);
+  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession()).session;
+  kbase.removeRule("org.drools","r0");
+  ObjectTypeNode otn=getObjectTypeNode(kbase,"A");
+  assertNotNull(otn);
+  List<String> sp=getSettableProperties(wm,otn);
+  AlphaNode alphaNode1=(AlphaNode)otn.getSinkPropagator().getSinks()[0];
+  assertEquals(calculateMaskFromPattern(list("a"),0L,sp),alphaNode1.getDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("a","i","b","s","j"),0L,sp),alphaNode1.getInferredMask());
+  AlphaNode alphaNode1_1=(AlphaNode)alphaNode1.getSinkPropagator().getSinks()[0];
+  assertEquals(calculateMaskFromPattern(list("i"),0L,sp),alphaNode1_1.getDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("a","i","b","s","j"),0L,sp),alphaNode1_1.getInferredMask());
+  BetaNode betaNode1=(BetaNode)alphaNode1_1.getSinkPropagator().getSinks()[0];
+  assertEquals(calculateMaskFromPattern(list("s"),0L,sp),betaNode1.getRightDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("a","i","s"),0L,sp),betaNode1.getRightInferredMask());
+  assertEquals(calculateMaskFromPattern(list("j"),0L,sp),betaNode1.getLeftDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("b","j"),0L,sp),betaNode1.getLeftInferredMask());
+  AlphaNode alphaNode1_2=(AlphaNode)alphaNode1.getSinkPropagator().getSinks()[0];
+  assertEquals(calculateMaskFromPattern(list("i"),0L,sp),alphaNode1_2.getDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("a","b","i","s","j"),0L,sp),alphaNode1_2.getInferredMask());
+  BetaNode betaNode2=(BetaNode)alphaNode1_2.getSinkPropagator().getSinks()[0];
+  assertEquals(calculateMaskFromPattern(list("s"),0L,sp),betaNode2.getRightDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("a","i","s"),0L,sp),betaNode2.getRightInferredMask());
+  assertEquals(calculateMaskFromPattern(list("j"),0L,sp),betaNode2.getLeftDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("b","j"),0L,sp),betaNode2.getLeftInferredMask());
+  AlphaNode alphaNode1_3=(AlphaNode)alphaNode1_2.getSinkPropagator().getSinks()[1];
+  assertEquals(calculateMaskFromPattern(list("b"),0L,sp),alphaNode1_3.getDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("a","b","i","j"),0L,sp),alphaNode1_3.getInferredMask());
+  BetaNode betaNode3=(BetaNode)alphaNode1_3.getSinkPropagator().getSinks()[0];
+  assertEquals(calculateMaskFromPattern(list("j"),0L,sp),betaNode3.getRightDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("a","i","b","j"),0L,sp),betaNode3.getRightInferredMask());
+  assertEquals(calculateMaskFromPattern(list("k"),0L,sp),betaNode3.getLeftDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("c","k"),0L,sp),betaNode3.getLeftInferredMask());
+}

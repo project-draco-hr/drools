@@ -1,0 +1,20 @@
+{
+  String rule1="$b : B( a == 15) @watch(c) A( a == 10, b == $b.b ) @watch(s)";
+  KnowledgeBase kbase=getKnowledgeBase(rule1);
+  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession()).session;
+  ObjectTypeNode otn=getObjectTypeNode(kbase,"A");
+  assertNotNull(otn);
+  List<String> sp=getSettableProperties(wm,otn);
+  AlphaNode alphaNode=(AlphaNode)otn.getSinkPropagator().getSinks()[0];
+  assertEquals(calculateMaskFromPattern(list("a"),0L,sp),alphaNode.getDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("a","b","s"),0L,sp),alphaNode.getInferredMask());
+  BetaNode betaNode=(BetaNode)alphaNode.getSinkPropagator().getSinks()[0];
+  assertEquals(calculateMaskFromPattern(list("b","s"),0L,sp),betaNode.getRightDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("a","b","s"),0L,sp),betaNode.getRightInferredMask());
+  otn=getObjectTypeNode(kbase,"B");
+  alphaNode=(AlphaNode)otn.getSinkPropagator().getSinks()[0];
+  assertEquals(calculateMaskFromPattern(list("a"),0L,sp),alphaNode.getDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("a","c"),0L,sp),alphaNode.getInferredMask());
+  assertEquals(calculateMaskFromPattern(list("c"),0L,sp),betaNode.getLeftDeclaredMask());
+  assertEquals(calculateMaskFromPattern(list("a","c"),0L,sp),betaNode.getLeftInferredMask());
+}

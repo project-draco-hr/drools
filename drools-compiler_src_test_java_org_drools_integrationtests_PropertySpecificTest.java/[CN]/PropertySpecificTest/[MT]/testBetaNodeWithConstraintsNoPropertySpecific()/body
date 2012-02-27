@@ -1,0 +1,13 @@
+{
+  String rule="package org.drools\n" + "import " + Person.class.getCanonicalName() + "\n"+ "import "+ Cheese.class.getCanonicalName()+ "\n"+ "rule r1\n"+ "when\n"+ "   Person()\n"+ "   Cheese( type == 'brie' )\n"+ "then\n"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(rule);
+  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession()).session;
+  ObjectTypeNode otn=getObjectTypeNode(kbase,"Cheese");
+  assertNotNull(otn);
+  AlphaNode alphaNode=(AlphaNode)otn.getSinkPropagator().getSinks()[0];
+  assertEquals(Long.MAX_VALUE,alphaNode.getDeclaredMask());
+  assertEquals(Long.MAX_VALUE,alphaNode.getInferredMask());
+  BetaNode betaNode=(BetaNode)alphaNode.getSinkPropagator().getSinks()[0];
+  assertEquals(Long.MAX_VALUE,betaNode.getRightDeclaredMask());
+  assertEquals(Long.MAX_VALUE,betaNode.getRightInferredMask());
+}

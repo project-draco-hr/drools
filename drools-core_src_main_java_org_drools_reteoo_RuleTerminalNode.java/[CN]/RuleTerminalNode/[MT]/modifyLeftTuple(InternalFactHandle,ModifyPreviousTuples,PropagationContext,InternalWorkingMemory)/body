@@ -1,20 +1,6 @@
 {
   LeftTuple leftTuple=modifyPreviousTuples.removeLeftTuple(this);
-  boolean mustPropagate=context.getModificationMask() == Long.MAX_VALUE;
-  if (!mustPropagate) {
-    ObjectType objectType=context.getObjectType();
-    Class<?> objectClass=objectType != null && objectType instanceof ClassObjectType ? ((ClassObjectType)objectType).getClassType() : factHandle.getObject().getClass();
-    List<String> listenedPropertiesForClass=listenedProperties == null ? null : listenedProperties.get(objectClass);
-    if (listenedPropertiesForClass == null) {
-      mustPropagate=intersect(context.getModificationMask(),context.getPropagationMask());
-    }
- else {
-      List<String> settableProperties=getSettableProperties((InternalRuleBase)workingMemory.getRuleBase(),objectClass);
-      long propagationMask=calculateMaskFromPattern(listenedPropertiesForClass,context.getPropagationMask(),settableProperties);
-      mustPropagate=intersect(context.getModificationMask(),propagationMask);
-    }
-  }
-  if (mustPropagate) {
+  if (intersect(context.getModificationMask(),inferredMask)) {
     if (leftTuple != null) {
       leftTuple.reAdd();
       modifyLeftTuple(leftTuple,context,workingMemory);
