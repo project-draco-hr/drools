@@ -1,0 +1,32 @@
+{
+  if (baseNode instanceof AlphaNode) {
+    ((AlphaNode)baseNode).resetInferredMask();
+    for (    ObjectSink sink : ((AlphaNode)baseNode).getSinkPropagator().getSinks()) {
+      if (((BaseNode)sink).isInUse()) {
+        updateLeafSet((BaseNode)sink,leafSet);
+      }
+    }
+  }
+ else   if (baseNode instanceof LeftInputAdapterNode) {
+    for (    LeftTupleSink sink : ((LeftInputAdapterNode)baseNode).getSinkPropagator().getSinks()) {
+      if (sink instanceof RuleTerminalNode) {
+        leafSet.add((BaseNode)sink);
+      }
+ else       if (((BaseNode)sink).isInUse()) {
+        updateLeafSet((BaseNode)sink,leafSet);
+      }
+    }
+  }
+ else   if (baseNode instanceof EvalConditionNode) {
+    for (    LeftTupleSink sink : ((EvalConditionNode)baseNode).getSinkPropagator().getSinks()) {
+      if (((BaseNode)sink).isInUse()) {
+        updateLeafSet((BaseNode)sink,leafSet);
+      }
+    }
+  }
+ else   if (baseNode instanceof LeftTupleSink) {
+    if (((BaseNode)baseNode).isInUse()) {
+      leafSet.add((BaseNode)baseNode);
+    }
+  }
+}
