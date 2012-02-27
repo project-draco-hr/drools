@@ -10,7 +10,7 @@
   }
   if (node instanceof Union) {
     ASTNode main=((Union)node).getMain();
-    Accessor accessor=((Union)node).getAccessor();
+    Accessor accessor=node.getAccessor();
     EvaluatedExpression expression=new EvaluatedExpression();
     expression.firstExpression=analyzeNode(main);
     if (accessor instanceof DynamicGetAccessor) {
@@ -32,7 +32,8 @@
     if (dot > 0) {
       variableName=variableName.substring(0,dot);
     }
-    return new VariableExpression(variableName,analyzeExpressionNode(((IndexedVariableAccessor)accessor).getNextNode()),node.getEgressType());
+    Class<?> variableType=getVariableType(variableName);
+    return new VariableExpression(variableName,analyzeExpressionNode(((IndexedVariableAccessor)accessor).getNextNode()),variableType != null ? variableType : node.getEgressType());
   }
   if (accessor == null && node instanceof NewObjectNode) {
     accessor=((NewObjectNode)node).getNewObjectOptimizer();
