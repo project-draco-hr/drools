@@ -1,0 +1,21 @@
+{
+  ObjectType objectType=pattern.getObjectType();
+  if (!(objectType instanceof ClassObjectType)) {
+    return Long.MAX_VALUE;
+  }
+  Class objectClass=((ClassObjectType)objectType).getClassType();
+  TypeDeclaration typeDeclaration=context.getRuleBase().getTypeDeclaration(objectClass);
+  if (typeDeclaration == null || !typeDeclaration.isPropertySpecific()) {
+    return Long.MAX_VALUE;
+  }
+  List<String> settableProperties=getSettableProperties(context.getRuleBase(),objectClass);
+  long mask=calculatePositiveMask(pattern.getListenedProperties(),settableProperties);
+  if (isRight) {
+    mask|=constraints.getListenedPropertyMask(settableProperties);
+    rightNegativeMask=calculateNegativeMask(pattern.getListenedProperties(),settableProperties);
+  }
+ else {
+    leftNegativeMask=calculateNegativeMask(pattern.getListenedProperties(),settableProperties);
+  }
+  return mask;
+}
