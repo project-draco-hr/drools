@@ -1,0 +1,22 @@
+{
+  String rule="package org.drools\n" + "global java.util.concurrent.atomic.AtomicInteger counter\n" + "declare B\n"+ "    @classReactive\n"+ "    on : boolean\n"+ "    s : String\n"+ "end\n"+ "rule R1\n"+ "when\n"+ "    $b : B(s == \"test\")\n"+ "then\n"+ "    modify($b) { setOn(true) }\n"+ "    if (counter.incrementAndGet() > 10) throw new RuntimeException();\n"+ "end\n";
+  KnowledgeBuilderConfiguration config=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration();
+  config.setOption(PropertySpecificOption.ALWAYS);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(config,rule);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  AtomicInteger counter=new AtomicInteger(0);
+  ksession.setGlobal("counter",counter);
+  FactType factTypeB=kbase.getFactType("org.drools","B");
+  Object factB=factTypeB.newInstance();
+  factTypeB.set(factB,"s","test");
+  factTypeB.set(factB,"on",false);
+  ksession.insert(factB);
+  try {
+    ksession.fireAllRules();
+  }
+  finally {
+    assertTrue((Boolean)factTypeB.get(factB,"on"));
+    assertTrue(counter.get() >= 10);
+    ksession.dispose();
+  }
+}
