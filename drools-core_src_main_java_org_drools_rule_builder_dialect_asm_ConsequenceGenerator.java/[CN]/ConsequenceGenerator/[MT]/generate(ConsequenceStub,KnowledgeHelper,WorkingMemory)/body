@@ -2,7 +2,6 @@
   RuleTerminalNode rtn=(RuleTerminalNode)knowledgeHelper.getActivation().getTuple().getLeftTupleSink();
   final Declaration[] declarations=rtn.getDeclarations();
   final boolean isOrRule=rtn.getRule().getTransformedLhs().length > 1;
-  final String[] declarationTypes=stub.getDeclarationTypes();
   final LeftTuple tuple=(LeftTuple)knowledgeHelper.getTuple();
   final List<DeclarationMatcher> declarationMatchers=matchDeclarationsToTuple(declarations);
   final ClassGenerator generator=createInvokerClassGenerator(stub,workingMemory).setInterfaces(Consequence.class,CompiledInvoker.class);
@@ -42,6 +41,7 @@
         mv.visitVarInsn(ALOAD,3);
         invokeInterface(LeftTuple.class,"getHandle",InternalFactHandle.class);
         mv.visitVarInsn(ASTORE,handlePos);
+        String declarationType=declarations[i].getTypeName();
         if (stub.getNotPatterns()[i]) {
           mv.visitVarInsn(ALOAD,4);
           push(i);
@@ -50,7 +50,7 @@
           cast(InternalWorkingMemory.class);
           mv.visitVarInsn(ALOAD,handlePos);
           invokeInterface(InternalFactHandle.class,"getObject",Object.class);
-          storeObjectFromDeclaration(declarations[i],declarationTypes[i]);
+          storeObjectFromDeclaration(declarations[i],declarationType);
           mv.visitVarInsn(ALOAD,2);
           loadAsObject(objPos);
           invokeInterface(WorkingMemory.class,"getFactHandle",FactHandle.class,Object.class);
@@ -60,8 +60,8 @@
  else {
           mv.visitVarInsn(ALOAD,handlePos);
           invokeInterface(InternalFactHandle.class,"getObject",Object.class);
-          mv.visitTypeInsn(CHECKCAST,internalName(declarationTypes[i]));
-          objAstorePos+=store(objPos,declarationTypes[i]);
+          mv.visitTypeInsn(CHECKCAST,internalName(declarationType));
+          objAstorePos+=store(objPos,declarationType);
         }
       }
       StringBuilder consequenceMethodDescr=new StringBuilder("(Lorg/drools/spi/KnowledgeHelper;");
@@ -69,7 +69,7 @@
       for (int i=0; i < declarations.length; i++) {
         load(paramsPos[i] + 1);
         mv.visitVarInsn(ALOAD,paramsPos[i]);
-        consequenceMethodDescr.append(typeDescr(declarationTypes[i])).append("Lorg/drools/FactHandle;");
+        consequenceMethodDescr.append(typeDescr(declarations[i].getTypeName())).append("Lorg/drools/FactHandle;");
       }
       parseGlobals(stub.getGlobals(),stub.getGlobalTypes(),2,consequenceMethodDescr);
       consequenceMethodDescr.append(")V");
