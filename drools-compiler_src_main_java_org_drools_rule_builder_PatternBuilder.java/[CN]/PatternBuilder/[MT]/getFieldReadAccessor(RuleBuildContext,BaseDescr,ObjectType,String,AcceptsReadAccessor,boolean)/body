@@ -8,7 +8,10 @@
     }
   }
  else   if (fieldName.indexOf('.') > -1 || fieldName.indexOf('[') > -1 || fieldName.indexOf('(') > -1) {
+    Dialect dialect=context.getDialect();
     try {
+      MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
+      context.setDialect(mvelDialect);
       Map<String,Class<?>> declarations=getDeclarationsMap(descr,context,false);
       Map<String,Class<?>> globals=context.getPackageBuilder().getGlobals();
       final AnalysisResult analysis=context.getDialect().analyzeExpression(context,descr,fieldName,new BoundIdentifiers(declarations,globals,null,((ClassObjectType)objectType).getClassType()));
@@ -36,6 +39,9 @@
         context.addError(new DescrBuildError(context.getParentDescr(),descr,e,"Unable to create reader for '" + fieldName + "':"+ e.getMessage()));
       }
       reader=null;
+    }
+ finally {
+      context.setDialect(dialect);
     }
   }
  else {
