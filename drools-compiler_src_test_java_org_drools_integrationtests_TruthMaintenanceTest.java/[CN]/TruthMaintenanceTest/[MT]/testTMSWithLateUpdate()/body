@@ -1,0 +1,28 @@
+{
+  String str="" + "package org.drools.test;\n" + "\n"+ "import org.drools.Father;\n"+ "import org.drools.YoungestFather;\n"+ "\n"+ "rule \"findMarriedCouple\"\n"+ "when\n"+ "    $h: Father()\n"+ "    not Father(father == $h)\n"+ "then\n"+ "    insertLogical(new YoungestFather($h));\n"+ "end";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession kSession=createKnowledgeSession(kbase);
+  Father abraham=new Father("abraham");
+  Father bart=new Father("bart");
+  Collection<Object> youngestFathers;
+  bart.setFather(abraham);
+  FactHandle abrahamHandle=kSession.insert(abraham);
+  FactHandle bartHandle=kSession.insert(bart);
+  kSession.fireAllRules();
+  youngestFathers=kSession.getObjects(new ClassObjectFilter(YoungestFather.class));
+  assertEquals(1,youngestFathers.size());
+  assertEquals(bart,((YoungestFather)youngestFathers.iterator().next()).getMan());
+  Father homer=new Father("homer");
+  FactHandle homerHandle=kSession.insert(homer);
+  homer.setFather(abraham);
+  bart.setFather(homer);
+  kSession.update(homerHandle,homer);
+  kSession.update(bartHandle,bart);
+  kSession.fireAllRules();
+  youngestFathers=kSession.getObjects(new ClassObjectFilter(YoungestFather.class));
+  assertEquals(bart,((YoungestFather)youngestFathers.iterator().next()).getMan());
+  assertEquals(1,youngestFathers.size());
+}
