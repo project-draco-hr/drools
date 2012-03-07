@@ -1,0 +1,13 @@
+{
+  String readMethod=declaration.getNativeReadMethodName();
+  boolean isObject=readMethod.equals("getValue");
+  String returnedType=isObject ? "Ljava/lang/Object;" : typeDescr(declarationType);
+  mv.visitMethodInsn(INVOKEVIRTUAL,"org/drools/rule/Declaration",readMethod,"(Lorg/drools/common/InternalWorkingMemory;Ljava/lang/Object;)" + returnedType);
+  if (isObject) {
+    InternalReadAccessor extractor=declaration.getExtractor();
+    if (extractor != null) {
+      cast(extractor.getExtractToClass());
+    }
+  }
+  return store(registry,declarationType);
+}
