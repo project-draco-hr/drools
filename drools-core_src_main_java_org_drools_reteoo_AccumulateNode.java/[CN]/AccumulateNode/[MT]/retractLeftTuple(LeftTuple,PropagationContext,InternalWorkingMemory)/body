@@ -1,6 +1,12 @@
 {
   final AccumulateMemory memory=(AccumulateMemory)workingMemory.getNodeMemory(this);
-  memory.betaMemory.getLeftTupleMemory().remove(leftTuple);
+  if (leftTuple.getMemory().isStagingMemory()) {
+    leftTuple.getMemory().remove(leftTuple);
+  }
+ else {
+    ((BetaMemory)memory.getBetaMemory()).getLeftTupleMemory().remove(leftTuple);
+  }
+  leftTuple.setMemory(null);
   final AccumulateContext accctx=(AccumulateContext)leftTuple.getObject();
   if (accctx.getAction() != null) {
     context.removeInsertAction(accctx.getAction());

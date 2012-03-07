@@ -1,0 +1,52 @@
+{
+  String str="";
+  str+="package org.drools \n";
+  str+="import " + A.class.getCanonicalName() + "\n";
+  str+="import " + B.class.getCanonicalName() + "\n";
+  str+="import " + C.class.getCanonicalName() + "\n";
+  str+="import " + D.class.getCanonicalName() + "\n";
+  str+="import " + E.class.getCanonicalName() + "\n";
+  str+="import " + F.class.getCanonicalName() + "\n";
+  str+="import " + G.class.getCanonicalName() + "\n";
+  str+="global java.util.List list \n";
+  str+="rule rule1 when \n";
+  str+="   $a : A() \n";
+  str+="   exists B() \n";
+  str+="   $c : C() \n";
+  str+="then \n";
+  str+="  list.add( 'x' ); \n";
+  str+="end \n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(LRUnlinkingOption.ENABLED);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession()).session;
+  List list=new ArrayList();
+  wm.setGlobal("list",list);
+  for (int i=0; i < 3; i++) {
+    wm.insert(new A(i));
+  }
+  for (int i=0; i < 3; i++) {
+    wm.insert(new C(i));
+  }
+  wm.fireAllRules();
+  assertEquals(0,list.size());
+  wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession()).session;
+  list=new ArrayList();
+  wm.setGlobal("list",list);
+  for (int i=0; i < 3; i++) {
+    wm.insert(new A(i));
+  }
+  FactHandle fh=wm.insert(new B(1));
+  for (int i=0; i < 3; i++) {
+    wm.insert(new C(i));
+  }
+  wm.fireAllRules();
+  assertEquals(9,list.size());
+  wm.retract(fh);
+  wm.fireAllRules();
+  assertEquals(9,list.size());
+}

@@ -2,19 +2,23 @@
   LeftTuple leftTuple=modifyPreviousTuples.peekLeftTuple();
   while (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId() < leftInputOtnId) {
     modifyPreviousTuples.removeLeftTuple();
-    leftTuple.getLeftTupleSink().retractLeftTuple(leftTuple,context,workingMemory);
+    leftTuple.setPropagationContext(context);
+    ((LeftInputAdapterNode)leftTuple.getLeftTupleSink().getLeftTupleSource()).retractLeftTuple(leftTuple,context,workingMemory);
     leftTuple=modifyPreviousTuples.peekLeftTuple();
   }
   if (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId() == leftInputOtnId) {
     modifyPreviousTuples.removeLeftTuple();
     leftTuple.reAdd();
+    leftTuple.setPropagationContext(context);
     if (intersect(context.getModificationMask(),leftInferredMask)) {
       sink.modifyLeftTuple(leftTuple,context,workingMemory);
     }
   }
  else {
     if (intersect(context.getModificationMask(),leftInferredMask)) {
-      sink.assertLeftTuple(sink.createLeftTuple(factHandle,sink,true),context,workingMemory);
+      LeftTuple newLeftTuple=sink.createLeftTuple(factHandle,sink,true);
+      newLeftTuple.setPropagationContext(context);
+      sink.assertLeftTuple(newLeftTuple,context,workingMemory);
     }
   }
 }

@@ -1,0 +1,15 @@
+{
+  setUp(NOT_NODE);
+  assertEquals(NotNode.class,n3.getClass());
+  KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(LRUnlinkingOption.ENABLED);
+  ReteooWorkingMemory wm=new ReteooWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase((RuleBaseConfiguration)kconf));
+  BetaMemory bm=(BetaMemory)wm.getNodeMemory(n3);
+  createSegmentMemory(n3,wm);
+  assertTrue(bm.getSegmentMemory().isSegmentLinked());
+  DefaultFactHandle f1=(DefaultFactHandle)wm.insert("test1");
+  n3.assertObject(f1,context,wm);
+  assertFalse(bm.getSegmentMemory().isSegmentLinked());
+  n3.retractRightTuple(f1.getFirstRightTuple(),context,wm);
+  assertTrue(bm.getSegmentMemory().isSegmentLinked());
+}

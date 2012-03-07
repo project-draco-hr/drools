@@ -4,7 +4,17 @@
   if (context.getType() == PropagationContext.EXPIRATION) {
     ((PropagationContextImpl)context).setFactHandle(null);
   }
-  memory.betaMemory.getRightTupleMemory().remove(rightTuple);
+  BetaMemory bm=memory.betaMemory;
+  if (rightTuple.getMemory() == bm.getStagedAssertRightTupleList()) {
+    bm.getStagedAssertRightTupleList().remove(rightTuple);
+    rightTuple.setMemory(null);
+  }
+ else {
+    bm.getRightTupleMemory().remove(rightTuple);
+  }
+  if (isUnlinkingEnabled() && bm.getAndDecCounter() == 0 && !isRightInputIsRiaNode()) {
+    bm.unlinkNode(workingMemory);
+  }
   removePreviousMatchesForRightTuple(rightTuple,context,workingMemory,memory,rightTuple.firstChild);
   if (context.getType() == PropagationContext.EXPIRATION) {
     ((PropagationContextImpl)context).setFactHandle(origin);

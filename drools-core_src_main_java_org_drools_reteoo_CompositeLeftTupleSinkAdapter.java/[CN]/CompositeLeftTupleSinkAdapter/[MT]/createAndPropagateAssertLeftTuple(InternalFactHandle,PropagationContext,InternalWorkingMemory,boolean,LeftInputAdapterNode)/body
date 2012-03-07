@@ -1,5 +1,25 @@
 {
   for (LeftTupleSinkNode sink=this.sinks.getFirst(); sink != null; sink=sink.getNextLeftTupleSinkNode()) {
-    doPropagateAssertLeftTuple(context,workingMemory,sink,sink.createLeftTuple(factHandle,sink,leftTupleMemoryEnabled));
+    LeftTuple lt=sink.createLeftTuple(factHandle,sink,leftTupleMemoryEnabled);
+    lt.setPropagationContext(context);
+    if (liaNode.isUnlinkingEnabled()) {
+      LiaNodeMemory lm=(LiaNodeMemory)workingMemory.getNodeMemory(liaNode);
+      if (lm.getSegmentMemory() == null) {
+        BetaNode.createNodeSegmentMemory(liaNode,workingMemory);
+      }
+      if (lm.getStagedLeftTupleList().size() == 0) {
+        lm.linkNode(workingMemory);
+      }
+      if (context.getReaderContext() == null) {
+        lm.getStagedLeftTupleList().add(lt);
+        lm.setCounter(lm.getCounter() + 1);
+      }
+ else {
+        doPropagateAssertLeftTuple(context,workingMemory,sink,lt);
+      }
+    }
+ else {
+      doPropagateAssertLeftTuple(context,workingMemory,sink,lt);
+    }
   }
 }

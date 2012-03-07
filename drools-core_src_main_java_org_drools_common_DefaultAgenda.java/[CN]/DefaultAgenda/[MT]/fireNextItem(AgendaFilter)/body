@@ -1,9 +1,10 @@
 {
-  boolean tryagain, result;
+  boolean tryagain;
+  int result=-1;
   try {
     do {
       this.workingMemory.prepareToFireActivation();
-      tryagain=result=false;
+      tryagain=false;
       final InternalAgendaGroup group=(InternalAgendaGroup)getNextFocus();
       if (group != null) {
         final AgendaItem item=(AgendaItem)group.getNext();
@@ -13,23 +14,29 @@
             ruleFlowGroup=(InternalRuleFlowGroup)item.getActivationNode().getParentContainer();
             ruleFlowGroup.removeActivation(item);
           }
-          try {
-            if (filter == null || filter.accept(item)) {
-              fireActivation(item);
-              result=true;
+          if (filter == null || filter.accept(item)) {
+            if (this.unlinkingEnabled && item.isRuleNetworkEvaluatorActivation()) {
+              item.setActivated(false);
+              int count=((RuleNetworkEvaluatorActivation)item).evaluateNetwork(this.workingMemory);
+              if (count > 0) {
+                addActivation(item,true);
+              }
+              result=0;
             }
  else {
-              this.workingMemory.executeQueuedActions();
-              final EventSupport eventsupport=(EventSupport)this.workingMemory;
-              eventsupport.getAgendaEventSupport().fireActivationCancelled(item,this.workingMemory,ActivationCancelledCause.FILTER);
-              tryagain=true;
+              fireActivation(item);
+              result=1;
             }
           }
-  finally {
-            if (ruleFlowGroup != null) {
-              ruleFlowGroup.deactivateIfEmpty();
-              this.workingMemory.executeQueuedActions();
-            }
+ else {
+            this.workingMemory.executeQueuedActions();
+            final EventSupport eventsupport=(EventSupport)this.workingMemory;
+            eventsupport.getAgendaEventSupport().fireActivationCancelled(item,this.workingMemory,ActivationCancelledCause.FILTER);
+            tryagain=true;
+          }
+          if (ruleFlowGroup != null) {
+            ruleFlowGroup.deactivateIfEmpty();
+            this.workingMemory.executeQueuedActions();
           }
         }
       }

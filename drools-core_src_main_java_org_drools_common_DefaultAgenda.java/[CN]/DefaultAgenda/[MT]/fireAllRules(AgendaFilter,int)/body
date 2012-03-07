@@ -2,9 +2,13 @@
   unstageActivations();
   this.halt.set(false);
   int fireCount=0;
-  while (continueFiring(fireLimit) && fireNextItem(agendaFilter)) {
-    fireCount++;
-    fireLimit=updateFireLimit(fireLimit);
+  int fireResult=1;
+  while (continueFiring(fireLimit) && fireResult >= 0) {
+    fireResult=fireNextItem(agendaFilter);
+    if (fireResult == 1) {
+      fireCount++;
+      fireLimit=updateFireLimit(fireLimit);
+    }
     this.workingMemory.executeQueuedActions();
   }
   if (this.focusStack.size() == 1 && getMainAgendaGroup().isEmpty()) {

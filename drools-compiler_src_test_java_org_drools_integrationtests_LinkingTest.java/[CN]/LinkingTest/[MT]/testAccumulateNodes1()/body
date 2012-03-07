@@ -1,0 +1,38 @@
+{
+  String str="";
+  str+="package org.drools \n";
+  str+="import " + A.class.getCanonicalName() + "\n";
+  str+="import " + B.class.getCanonicalName() + "\n";
+  str+="import " + C.class.getCanonicalName() + "\n";
+  str+="import " + D.class.getCanonicalName() + "\n";
+  str+="import " + E.class.getCanonicalName() + "\n";
+  str+="import " + F.class.getCanonicalName() + "\n";
+  str+="import " + G.class.getCanonicalName() + "\n";
+  str+="global java.util.List list \n";
+  str+="rule rule1 when \n";
+  str+="   accumulate( $a : A(); $l : collectList( $a ) ) \n";
+  str+="then \n";
+  str+="  list.add( $l.size() ); \n";
+  str+="end \n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(LRUnlinkingOption.ENABLED);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession()).session;
+  List list=new ArrayList();
+  wm.setGlobal("list",list);
+  wm.fireAllRules();
+  assertEquals(1,list.size());
+  wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession()).session;
+  list=new ArrayList();
+  wm.setGlobal("list",list);
+  FactHandle fh1=wm.insert(new A(1));
+  FactHandle fh2=wm.insert(new A(2));
+  FactHandle fh3=wm.insert(new A(3));
+  FactHandle fh4=wm.insert(new A(4));
+  wm.fireAllRules();
+  assertEquals(4,list.get(0));
+}

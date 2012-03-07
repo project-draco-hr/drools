@@ -1,14 +1,18 @@
 {
   final AccumulateMemory memory=(AccumulateMemory)workingMemory.getNodeMemory(this);
-  memory.betaMemory.getRightTupleMemory().removeAdd(rightTuple);
-  if (memory.betaMemory.getLeftTupleMemory() == null || memory.betaMemory.getLeftTupleMemory().size() == 0) {
+  BetaMemory bm=memory.betaMemory;
+  if (isUnlinkingEnabled() && isStagedForModifyRight(rightTuple,bm,context,workingMemory)) {
+    return;
+  }
+  bm.getRightTupleMemory().removeAdd(rightTuple);
+  if (bm.getLeftTupleMemory() == null || bm.getLeftTupleMemory().size() == 0) {
     return;
   }
   LeftTuple childLeftTuple=rightTuple.firstChild;
-  LeftTupleMemory leftMemory=memory.betaMemory.getLeftTupleMemory();
+  LeftTupleMemory leftMemory=bm.getLeftTupleMemory();
   FastIterator leftIt=getLeftIterator(leftMemory);
   LeftTuple leftTuple=getFirstLeftTuple(rightTuple,leftMemory,context,leftIt);
-  this.constraints.updateFromFactHandle(memory.betaMemory.getContext(),workingMemory,rightTuple.getFactHandle());
+  this.constraints.updateFromFactHandle(bm.getContext(),workingMemory,rightTuple.getFactHandle());
   if (childLeftTuple != null && leftMemory.isIndexed() && !leftIt.isFullIterator() && (leftTuple == null || (leftTuple.getMemory() != childLeftTuple.getLeftParent().getMemory()))) {
     removePreviousMatchesForRightTuple(rightTuple,context,workingMemory,memory,childLeftTuple);
     childLeftTuple=null;
@@ -16,7 +20,7 @@
   if (leftTuple != null) {
     if (childLeftTuple == null) {
       for (; leftTuple != null; leftTuple=(LeftTuple)leftIt.next(leftTuple)) {
-        if (this.constraints.isAllowedCachedRight(memory.betaMemory.getContext(),leftTuple)) {
+        if (this.constraints.isAllowedCachedRight(bm.getContext(),leftTuple)) {
           final AccumulateContext accctx=(AccumulateContext)leftTuple.getObject();
           addMatch(leftTuple,rightTuple,null,null,workingMemory,memory,accctx,true);
           if (accctx.getAction() == null) {
@@ -29,7 +33,7 @@
     }
  else {
       for (; leftTuple != null; leftTuple=(LeftTuple)leftIt.next(leftTuple)) {
-        if (this.constraints.isAllowedCachedRight(memory.betaMemory.getContext(),leftTuple)) {
+        if (this.constraints.isAllowedCachedRight(bm.getContext(),leftTuple)) {
           final AccumulateContext accctx=(AccumulateContext)leftTuple.getObject();
           LeftTuple temp=null;
           if (childLeftTuple != null && childLeftTuple.getLeftParent() == leftTuple) {
@@ -62,5 +66,5 @@
       }
     }
   }
-  this.constraints.resetFactHandle(memory.betaMemory.getContext());
+  this.constraints.resetFactHandle(bm.getContext());
 }

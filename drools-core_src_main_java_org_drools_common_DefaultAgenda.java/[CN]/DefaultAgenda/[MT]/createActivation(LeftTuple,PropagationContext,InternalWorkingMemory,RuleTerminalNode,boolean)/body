@@ -39,21 +39,28 @@
         }
       }
     }
+    long handleRecency=this.unlinkingEnabled ? ((InternalFactHandle)context.getFactHandle()).getRecency() : 0;
     InternalAgendaGroup agendaGroup=(InternalAgendaGroup)getAgendaGroup(rule.getAgendaGroup());
     if (rule.getRuleFlowGroup() == null) {
-      if (rule.isLockOnActive() && agendaGroup.isActive() && agendaGroup.getAutoFocusActivator() != context) {
+      if (rule.isLockOnActive() && agendaGroup.isActive() && (!this.unlinkingEnabled || agendaGroup.getActivatedForRecency() < handleRecency)&& agendaGroup.getAutoFocusActivator() != context) {
         if (tuple.getObject() == null) {
           tuple.setObject(Boolean.TRUE);
         }
         return false;
       }
+ else       if (this.unlinkingEnabled && agendaGroup.getClearedForRecency() != -1 && agendaGroup.getClearedForRecency() >= handleRecency) {
+        return false;
+      }
     }
  else {
       InternalRuleFlowGroup rfg=(InternalRuleFlowGroup)getRuleFlowGroup(rule.getRuleFlowGroup());
-      if (rule.isLockOnActive() && rfg.isActive() && agendaGroup.getAutoFocusActivator() != context) {
+      if (rule.isLockOnActive() && rfg.isActive() && (!this.unlinkingEnabled || rfg.getActivatedForRecency() < handleRecency)&& agendaGroup.getAutoFocusActivator() != context) {
         if (tuple.getObject() == null) {
           tuple.setObject(Boolean.TRUE);
         }
+        return false;
+      }
+ else       if (this.unlinkingEnabled && rfg.getClearedForRecency() != -1 && rfg.getClearedForRecency() >= handleRecency) {
         return false;
       }
     }

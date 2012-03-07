@@ -1,11 +1,17 @@
 {
   RightTuple blocker=leftTuple.getBlocker();
-  final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  if (blocker != null) {
-    this.sink.propagateRetractLeftTuple(leftTuple,context,workingMemory);
-    blocker.removeBlocked(leftTuple);
+  if (blocker == null) {
+    final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+    if (leftTuple.getMemory().isStagingMemory()) {
+      leftTuple.getMemory().remove(leftTuple);
+    }
+ else {
+      memory.getLeftTupleMemory().remove(leftTuple);
+    }
+    leftTuple.setMemory(null);
   }
  else {
-    memory.getLeftTupleMemory().remove(leftTuple);
+    this.sink.propagateRetractLeftTuple(leftTuple,context,workingMemory);
+    blocker.removeBlocked(leftTuple);
   }
 }

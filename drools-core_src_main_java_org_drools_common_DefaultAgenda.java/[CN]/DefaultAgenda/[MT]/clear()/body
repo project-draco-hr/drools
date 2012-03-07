@@ -8,13 +8,44 @@
     }
   }
   getStageActivationsGroup().clear();
+  List<RuleNetworkEvaluatorActivation> lazyItems=null;
   for (  InternalAgendaGroup group : this.agendaGroups.values()) {
+    if (this.unlinkingEnabled) {
+      ((InternalAgendaGroup)group).setClearedForRecency(this.workingMemory.getFactHandleFactory().getRecency());
+      lazyItems=new ArrayList<RuleNetworkEvaluatorActivation>();
+      for (      org.drools.runtime.rule.Activation a : group.getActivations()) {
+        if (((Activation)a).isRuleNetworkEvaluatorActivation()) {
+          lazyItems.add((RuleNetworkEvaluatorActivation)a);
+        }
+      }
+    }
     group.clear();
+    if (this.unlinkingEnabled) {
+      for (      RuleNetworkEvaluatorActivation lazyItem : lazyItems) {
+        group.add(lazyItem);
+      }
+    }
   }
   for (  RuleFlowGroup group : this.ruleFlowGroups.values()) {
+    if (this.unlinkingEnabled) {
+      ((InternalRuleFlowGroup)group).setClearedForRecency(this.workingMemory.getFactHandleFactory().getRecency());
+      lazyItems=new ArrayList<RuleNetworkEvaluatorActivation>();
+      for (      org.drools.runtime.rule.Activation a : ((InternalRuleFlowGroup)group).getActivations()) {
+        if (((Activation)a).isRuleNetworkEvaluatorActivation()) {
+          lazyItems.add((RuleNetworkEvaluatorActivation)a);
+        }
+      }
+    }
     group.clear();
+    if (this.unlinkingEnabled) {
+      for (      RuleNetworkEvaluatorActivation lazyItem : lazyItems) {
+        lazyItem.setActivationNode(null);
+        ((InternalRuleFlowGroup)group).addActivation(lazyItem);
+      }
+    }
   }
   for (  ActivationGroup group : this.activationGroups.values()) {
+    group.setTriggeredForRecency(this.workingMemory.getFactHandleFactory().getRecency());
     group.clear();
   }
 }

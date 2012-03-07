@@ -2,7 +2,16 @@
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
   FastIterator it=memory.getRightTupleMemory().fastIterator();
   final RightTuple rootBlocker=(RightTuple)it.next(rightTuple);
-  memory.getRightTupleMemory().remove(rightTuple);
+  if (rightTuple.getMemory() == memory.getStagedAssertRightTupleList()) {
+    memory.getStagedAssertRightTupleList().remove(rightTuple);
+  }
+ else {
+    memory.getRightTupleMemory().remove(rightTuple);
+  }
+  rightTuple.setMemory(null);
+  if (isUnlinkingEnabled() && memory.getAndDecCounter() == 0 && !isRightInputIsRiaNode()) {
+    memory.unlinkNode(workingMemory);
+  }
   if (rightTuple.getBlocked() == null) {
     return;
   }

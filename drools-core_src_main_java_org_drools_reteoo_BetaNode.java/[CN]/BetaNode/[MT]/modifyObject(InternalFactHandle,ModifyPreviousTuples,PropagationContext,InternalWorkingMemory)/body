@@ -2,19 +2,21 @@
   RightTuple rightTuple=modifyPreviousTuples.peekRightTuple();
   while (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getRightInputOtnId() < getRightInputOtnId()) {
     modifyPreviousTuples.removeRightTuple();
-    rightTuple.getRightTupleSink().retractRightTuple(rightTuple,context,workingMemory);
+    rightTuple.setPropagationContext(context);
+    rightTuple.getRightTupleSink().retractRightTuple(rightTuple,context,wm);
     rightTuple=modifyPreviousTuples.peekRightTuple();
   }
   if (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getRightInputOtnId() == getRightInputOtnId()) {
     modifyPreviousTuples.removeRightTuple();
     rightTuple.reAdd();
+    rightTuple.setPropagationContext(context);
     if (intersect(context.getModificationMask(),rightInferredMask)) {
-      modifyRightTuple(rightTuple,context,workingMemory);
+      modifyRightTuple(rightTuple,context,wm);
     }
   }
  else {
     if (intersect(context.getModificationMask(),rightInferredMask)) {
-      assertObject(factHandle,context,workingMemory);
+      assertObject(factHandle,context,wm);
     }
   }
 }

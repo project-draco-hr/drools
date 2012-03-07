@@ -1,0 +1,29 @@
+{
+  setUp(JOIN_NODE);
+  KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(LRUnlinkingOption.ENABLED);
+  ReteooWorkingMemory wm=new ReteooWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase((RuleBaseConfiguration)kconf));
+  InternalFactHandle fh1=(InternalFactHandle)wm.insert("str1");
+  n1.assertObject(fh1,context,wm);
+  LiaNodeMemory liaMem=(LiaNodeMemory)wm.getNodeMemory(liaNode);
+  assertEquals(1,liaMem.getNodePosMaskBit());
+  assertEquals(3,liaMem.getSegmentMemory().getAllLinkedMaskTest());
+  BetaMemory bm1=(BetaMemory)wm.getNodeMemory(n1);
+  assertEquals(2,bm1.getNodePosMaskBit());
+  assertEquals(3,bm1.getSegmentMemory().getAllLinkedMaskTest());
+  assertFalse(liaMem.getSegmentMemory().isSegmentLinked());
+  InternalFactHandle fh2=(InternalFactHandle)wm.insert("str2");
+  liaNode.assertObject(fh2,context,wm);
+  assertTrue(liaMem.getSegmentMemory().isSegmentLinked());
+  liaNode.retractLeftTuple(fh2.getFirstLeftTuple(),context,wm);
+  assertFalse(liaMem.getSegmentMemory().isSegmentLinked());
+  InternalFactHandle fh3=(InternalFactHandle)wm.insert("str3");
+  InternalFactHandle fh4=(InternalFactHandle)wm.insert("str4");
+  liaNode.assertObject(fh3,context,wm);
+  liaNode.assertObject(fh4,context,wm);
+  assertTrue(liaMem.getSegmentMemory().isSegmentLinked());
+  liaNode.retractLeftTuple(fh3.getFirstLeftTuple(),context,wm);
+  assertTrue(liaMem.getSegmentMemory().isSegmentLinked());
+  liaNode.retractLeftTuple(fh4.getFirstLeftTuple(),context,wm);
+  assertFalse(liaMem.getSegmentMemory().isSegmentLinked());
+}

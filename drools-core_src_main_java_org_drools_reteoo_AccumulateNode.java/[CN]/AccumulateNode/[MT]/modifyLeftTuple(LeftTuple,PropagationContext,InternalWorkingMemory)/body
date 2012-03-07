@@ -1,10 +1,14 @@
 {
   final AccumulateMemory memory=(AccumulateMemory)workingMemory.getNodeMemory(this);
   final AccumulateContext accctx=(AccumulateContext)leftTuple.getObject();
-  memory.betaMemory.getLeftTupleMemory().removeAdd(leftTuple);
-  this.constraints.updateFromTuple(memory.betaMemory.getContext(),workingMemory,leftTuple);
+  BetaMemory bm=memory.betaMemory;
+  if (isUnlinkingEnabled() && isStagedForModifyLeft(leftTuple,bm,context,workingMemory)) {
+    return;
+  }
+  bm.getLeftTupleMemory().removeAdd(leftTuple);
+  this.constraints.updateFromTuple(bm.getContext(),workingMemory,leftTuple);
   LeftTuple childLeftTuple=getFirstMatch(leftTuple,accctx,false);
-  RightTupleMemory rightMemory=memory.betaMemory.getRightTupleMemory();
+  RightTupleMemory rightMemory=bm.getRightTupleMemory();
   FastIterator rightIt=getRightIterator(rightMemory);
   RightTuple rightTuple=getFirstRightTuple(leftTuple,rightMemory,context,rightIt);
   if (childLeftTuple != null && rightMemory.isIndexed() && !rightIt.isFullIterator() && (rightTuple == null || (rightTuple.getMemory() != childLeftTuple.getRightParent().getMemory()))) {
@@ -15,7 +19,7 @@
     if (childLeftTuple == null) {
       for (; rightTuple != null; rightTuple=(RightTuple)rightIt.next(rightTuple)) {
         final InternalFactHandle handle=rightTuple.getFactHandle();
-        if (this.constraints.isAllowedCachedLeft(memory.betaMemory.getContext(),handle)) {
+        if (this.constraints.isAllowedCachedLeft(bm.getContext(),handle)) {
           addMatch(leftTuple,rightTuple,null,null,workingMemory,memory,accctx,true);
         }
       }
@@ -24,7 +28,7 @@
       boolean isDirty=false;
       for (; rightTuple != null; rightTuple=(RightTuple)rightIt.next(rightTuple)) {
         final InternalFactHandle handle=rightTuple.getFactHandle();
-        if (this.constraints.isAllowedCachedLeft(memory.betaMemory.getContext(),handle)) {
+        if (this.constraints.isAllowedCachedLeft(bm.getContext(),handle)) {
           if (childLeftTuple == null || childLeftTuple.getRightParent() != rightTuple) {
             addMatch(leftTuple,rightTuple,childLeftTuple,null,workingMemory,memory,accctx,true);
           }
