@@ -1,0 +1,20 @@
+{
+  LeftTuple leftTuple=modifyPreviousTuples.peekLeftTuple();
+  while (leftTuple != null && ((LeftTupleSink)leftTuple.getLeftTupleSink()).getLeftInputOtnId() < leftInputOtnId) {
+    modifyPreviousTuples.removeLeftTuple();
+    leftTuple.getLeftTupleSink().retractLeftTuple(leftTuple,context,workingMemory);
+    leftTuple=modifyPreviousTuples.peekLeftTuple();
+  }
+  if (leftTuple != null && ((LeftTupleSink)leftTuple.getLeftTupleSink()).getLeftInputOtnId() == leftInputOtnId) {
+    modifyPreviousTuples.removeLeftTuple();
+    leftTuple.reAdd();
+    if (intersect(context.getModificationMask(),leftInferredMask)) {
+      sink.modifyLeftTuple(leftTuple,context,workingMemory);
+    }
+  }
+ else {
+    if (intersect(context.getModificationMask(),leftInferredMask)) {
+      sink.assertLeftTuple(sink.createLeftTuple(factHandle,sink,true),context,workingMemory);
+    }
+  }
+}

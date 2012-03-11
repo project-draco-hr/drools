@@ -1,13 +1,19 @@
 {
-  RightTuple rightTuple=modifyPreviousTuples.removeRightTuple(this);
-  if (rightTuple != null) {
-    rightTuple.reAdd();
+  RightTuple rightTuple=modifyPreviousTuples.peekRightTuple();
+  while (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getRightInputOtnId() < getRightInputOtnId()) {
+    modifyPreviousTuples.removeRightTuple();
+    rightTuple.getRightTupleSink().retractRightTuple(rightTuple,context,workingMemory);
+    rightTuple=modifyPreviousTuples.peekRightTuple();
   }
-  if (intersect(context.getModificationMask(),rightInferredMask)) {
-    if (rightTuple != null) {
+  if (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getRightInputOtnId() == getRightInputOtnId()) {
+    modifyPreviousTuples.removeRightTuple();
+    rightTuple.reAdd();
+    if (intersect(context.getModificationMask(),rightInferredMask)) {
       modifyRightTuple(rightTuple,context,workingMemory);
     }
+  }
  else {
+    if (intersect(context.getModificationMask(),rightInferredMask)) {
       assertObject(factHandle,context,workingMemory);
     }
   }

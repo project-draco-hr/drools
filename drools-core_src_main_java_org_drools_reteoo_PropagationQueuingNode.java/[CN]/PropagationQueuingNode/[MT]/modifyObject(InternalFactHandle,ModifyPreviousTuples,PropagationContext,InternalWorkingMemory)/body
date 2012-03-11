@@ -1,13 +1,24 @@
 {
   final PropagationQueueingNodeMemory memory=(PropagationQueueingNodeMemory)workingMemory.getNodeMemory(this);
   for (  ObjectSink s : this.sink.getSinks()) {
-    RightTuple rightTuple=modifyPreviousTuples.removeRightTuple((RightTupleSink)s);
-    if (rightTuple != null) {
+    BetaNode betaNode=(BetaNode)s;
+    RightTuple rightTuple=modifyPreviousTuples.peekRightTuple();
+    while (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getRightInputOtnId() < betaNode.getRightInputOtnId()) {
+      modifyPreviousTuples.removeRightTuple();
+      rightTuple.getRightTupleSink().retractRightTuple(rightTuple,context,workingMemory);
+      rightTuple=modifyPreviousTuples.peekRightTuple();
+    }
+    if (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getRightInputOtnId() == betaNode.getRightInputOtnId()) {
+      modifyPreviousTuples.removeRightTuple();
       rightTuple.reAdd();
-      memory.addAction(new ModifyToSinkAction(rightTuple,context,(RightTupleSink)s));
+      if (intersect(context.getModificationMask(),betaNode.getRightInferredMask())) {
+        memory.addAction(new ModifyToSinkAction(rightTuple,context,betaNode));
+      }
     }
  else {
-      memory.addAction(new AssertToSinkAction(factHandle,context,s));
+      if (intersect(context.getModificationMask(),betaNode.getRightInferredMask())) {
+        memory.addAction(new AssertToSinkAction(factHandle,context,betaNode));
+      }
     }
   }
   if (memory.isQueued().compareAndSet(false,true)) {

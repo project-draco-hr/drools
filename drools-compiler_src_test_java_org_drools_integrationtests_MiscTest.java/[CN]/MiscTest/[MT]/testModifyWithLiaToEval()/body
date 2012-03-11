@@ -1,0 +1,26 @@
+{
+  String str="";
+  str+="package org.simple \n";
+  str+="import " + Person.class.getCanonicalName() + "\n";
+  str+="global java.util.List list \n";
+  str+="rule xxx \n";
+  str+="when \n";
+  str+="    $p : Person() \n";
+  str+="    eval( $p.getAge() > 30 ) \n";
+  str+="then \n";
+  str+="  list.add($p); \n";
+  str+="end  \n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  Person p1=new Person("darth",25);
+  org.drools.runtime.rule.FactHandle fh=ksession.insert(p1);
+  ksession.fireAllRules();
+  assertEquals(0,list.size());
+  p1.setAge(35);
+  ksession.update(fh,p1);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  ksession.dispose();
+}

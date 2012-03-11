@@ -1,0 +1,22 @@
+{
+  if (!(tn.unwrapTupleSource() instanceof LeftInputAdapterNode)) {
+    tn.setDeclaredMask(Long.MAX_VALUE);
+    return;
+  }
+  Pattern pattern=context.getLastBuiltPatterns()[0];
+  ObjectType objectType=pattern.getObjectType();
+  if (!(objectType instanceof ClassObjectType)) {
+    tn.setDeclaredMask(Long.MAX_VALUE);
+    return;
+  }
+  Class objectClass=((ClassObjectType)objectType).getClassType();
+  TypeDeclaration typeDeclaration=context.getRuleBase().getTypeDeclaration(objectClass);
+  if (typeDeclaration == null || !typeDeclaration.isPropertySpecific()) {
+    tn.setDeclaredMask(Long.MAX_VALUE);
+  }
+ else {
+    List<String> settableProperties=getSettableProperties(context.getRuleBase(),objectClass);
+    tn.setDeclaredMask(calculatePositiveMask(pattern.getListenedProperties(),settableProperties));
+    tn.setNegativeMask(calculateNegativeMask(pattern.getListenedProperties(),settableProperties));
+  }
+}
