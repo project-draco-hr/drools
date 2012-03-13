@@ -1,0 +1,25 @@
+{
+  for (  PackageDescr packageDescr : packages) {
+    for (    TypeDeclarationDescr typeDeclarationDescr : packageDescr.getTypeDeclarations()) {
+      if (pkgBuilder.isEmpty(typeDeclarationDescr.getNamespace())) {
+        typeDeclarationDescr.setNamespace(packageDescr.getNamespace());
+      }
+      pkgBuilder.registerGeneratedType(typeDeclarationDescr);
+    }
+  }
+  Map<String,List<PackageBuilder.TypeDefinition>> unresolvedTypes=new HashMap<String,List<PackageBuilder.TypeDefinition>>();
+  for (  PackageDescr packageDescr : packages) {
+    List<PackageBuilder.TypeDefinition> unresolvedTypesForPkg=buildTypeDeclarations(packageDescr);
+    if (unresolvedTypesForPkg != null) {
+      unresolvedTypes.put(packageDescr.getNamespace(),unresolvedTypesForPkg);
+    }
+  }
+  for (  Map.Entry<String,List<PackageBuilder.TypeDefinition>> unresolvedType : unresolvedTypes.entrySet()) {
+    pkgBuilder.processUnresolvedTypes(pkgBuilder.getPackageRegistry(unresolvedType.getKey()),unresolvedType.getValue());
+  }
+  for (  PackageDescr packageDescr : packages) {
+    for (    ImportDescr importDescr : packageDescr.getImports()) {
+      pkgBuilder.getPackageRegistry(packageDescr.getNamespace()).addImport(importDescr);
+    }
+  }
+}
