@@ -15,12 +15,11 @@
   }
   if (!monitor && this.changeSetNotificationDetector != null) {
     this.changeSetNotificationDetector.stop();
-    this.thread.interrupt();
+    this.notificationDetectorExecutor.cancel(true);
     this.changeSetNotificationDetector=null;
   }
  else   if (monitor && this.changeSetNotificationDetector == null) {
     this.changeSetNotificationDetector=new ChangeSetNotificationDetector(this,this.queue,this.listener);
-    this.thread=new Thread(this.changeSetNotificationDetector);
-    this.thread.start();
+    this.notificationDetectorExecutor=ExecutorProviderFactory.getExecutorProvider().<Boolean>getCompletionService().submit(this.changeSetNotificationDetector,true);
   }
 }
