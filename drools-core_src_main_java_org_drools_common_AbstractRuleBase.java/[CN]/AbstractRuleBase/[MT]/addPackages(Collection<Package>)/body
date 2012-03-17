@@ -11,7 +11,41 @@
         pkg.setClassFieldAccessorCache(this.classFieldAccessorCache);
         pkgs.put(pkg.getName(),pkg);
       }
-      pkg.getDialectRuntimeRegistry().merge(newPkg.getDialectRuntimeRegistry(),this.rootClassLoader);
+      pkg.getDialectRuntimeRegistry().merge(newPkg.getDialectRuntimeRegistry(),this.rootClassLoader,true);
+    }
+    for (    Package newPkg : newPkgs) {
+      String lastType=null;
+      try {
+        if (newPkg.getTypeDeclarations() != null) {
+          for (          TypeDeclaration newDecl : newPkg.getTypeDeclarations().values()) {
+            lastType=newDecl.getTypeClassName();
+            TypeDeclaration typeDeclaration=this.classTypeDeclaration.get(newDecl.getTypeClassName());
+            if (typeDeclaration == null) {
+              String className=newDecl.getTypeClassName();
+              byte[] def=((JavaDialectRuntimeData)newPkg.getDialectRuntimeRegistry().getDialectData("java")).getClassDefinition(JavaDialectRuntimeData.convertClassToResourcePath(className));
+              Class<?> definedKlass=registerAndLoadTypeDefinition(className,def);
+              if (definedKlass == null && typeDeclaration.isNovel()) {
+                throw new RuntimeException("Registering nyll bytes for class " + className);
+              }
+              newDecl.getTypeClassDef().setDefinedClass(definedKlass);
+              newDecl.setTypeClass(definedKlass);
+              this.classTypeDeclaration.put(className,newDecl);
+              typeDeclaration=newDecl;
+            }
+ else {
+              Class<?> definedKlass=typeDeclaration.getTypeClass();
+              newDecl.getTypeClassDef().setDefinedClass(definedKlass);
+              newDecl.setTypeClass(definedKlass);
+              mergeTypeDeclarations(typeDeclaration,newDecl);
+            }
+            updateDependentTypes(newPkg,typeDeclaration);
+          }
+        }
+      }
+ catch (      ClassNotFoundException e) {
+        e.printStackTrace();
+        throw new RuntimeDroolsException("unable to resolve Type Declaration class '" + lastType + "'");
+      }
     }
     for (    Package newPkg : newPkgs) {
       Package pkg=this.pkgs.get(newPkg.getName());
@@ -22,30 +56,6 @@
       }
       pkg.getDialectRuntimeRegistry().onBeforeExecute();
       pkg.getClassFieldAccessorStore().merge(newPkg.getClassFieldAccessorStore());
-    }
-    for (    Package newPkg : newPkgs) {
-      Package pkg=this.pkgs.get(newPkg.getName());
-      TypeDeclaration lastType=null;
-      try {
-        if (newPkg.getTypeDeclarations() != null) {
-          for (          TypeDeclaration newDecl : newPkg.getTypeDeclarations().values()) {
-            lastType=newDecl;
-            newDecl.setTypeClass(this.rootClassLoader.loadClass(newDecl.getTypeClassName()));
-            TypeDeclaration typeDeclaration=this.classTypeDeclaration.get(newDecl.getTypeClass());
-            if (typeDeclaration == null) {
-              this.classTypeDeclaration.put(newDecl.getTypeClass(),newDecl);
-              typeDeclaration=newDecl;
-            }
- else {
-              mergeTypeDeclarations(typeDeclaration,newDecl);
-            }
-            updateDependentTypes(newPkg,typeDeclaration);
-          }
-        }
-      }
- catch (      ClassNotFoundException e) {
-        throw new RuntimeDroolsException("unable to resolve Type Declaration class '" + lastType.getTypeName() + "'");
-      }
     }
     for (    Package newPkg : newPkgs) {
       Package pkg=this.pkgs.get(newPkg.getName());
@@ -63,7 +73,7 @@
       if (newPkg.getRuleFlows() != null) {
         final Map<String,org.drools.definition.process.Process> flows=newPkg.getRuleFlows();
         for (        org.drools.definition.process.Process process : flows.values()) {
-          addProcess((Process)process);
+          addProcess(process);
         }
       }
       this.eventSupport.fireAfterPackageAdded(newPkg);

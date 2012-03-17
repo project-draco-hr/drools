@@ -62,5 +62,42 @@ def.addField(fld);
 }
 type.setNovel(isNovelClass(typeDescr));
 type.setTypeClassDef(def);
+if (!type.isNovel()) {
+TypeDeclaration previousTypeDeclaration=this.pkgRegistryMap.get(typeDescr.getNamespace()).getPackage().getTypeDeclaration(typeDescr.getTypeName());
+try {
+if (type.getTypeClassDef().getFields().size() > 0) {
+type.setNature(TypeDeclaration.Nature.DEFINITION);
+}
+ else {
+type.setNature(TypeDeclaration.Nature.DECLARATION);
+}
+if (previousTypeDeclaration == null) {
+if (type.getTypeClassDef().getFields().size() > 0) {
+type.setValid(false);
+this.results.add(new TypeDeclarationError(typeDescr,"New declaration of " + typeDescr.getType().getFullName() + " can't declare new fields"));
+}
+}
+ else {
+int typeComparisonResult=this.compareTypeDeclarations(previousTypeDeclaration,type);
+if (typeComparisonResult < 0) {
+this.results.add(new TypeDeclarationError(typeDescr,typeDescr.getType().getFullName() + " declares more fields than the already existing version"));
+type.setValid(false);
+}
+ else if (typeComparisonResult > 0 && !type.getTypeClassDef().getFields().isEmpty()) {
+this.results.add(new TypeDeclarationError(typeDescr,typeDescr.getType().getFullName() + " declares less fields than the already existing version"));
+type.setValid(false);
+}
+if (type.getNature() == TypeDeclaration.Nature.DECLARATION) {
+this.mergeTypeDeclarations(previousTypeDeclaration,type);
+}
+}
+}
+ catch (IncompatibleClassChangeError error) {
+this.results.add(new TypeDeclarationError(typeDescr,error.getMessage()));
+}
+}
+ else {
+type.setNature(TypeDeclaration.Nature.DEFINITION);
+}
 generateDeclaredBean(typeDescr,type,pkgRegistry,def);
 }

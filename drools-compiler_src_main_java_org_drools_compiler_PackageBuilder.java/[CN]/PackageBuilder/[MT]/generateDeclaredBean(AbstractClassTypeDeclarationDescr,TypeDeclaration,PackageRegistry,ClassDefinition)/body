@@ -41,8 +41,20 @@
           tempDef.setInterfaces(def.getInterfaces());
           tempDef.setSuperClass(def.getClassName());
           tempDef.setDefinedClass(resolvedType);
+          tempDef.setAbstrakt(true);
+          tempDeclr.setTypeClassDef(tempDef);
           type.setKind(TypeDeclaration.Kind.CLASS);
           generateDeclaredBean(tempDescr,tempDeclr,pkgRegistry,tempDef);
+          try {
+            Class<?> clazz=pkgRegistry.getTypeResolver().resolveType(tempDescr.getType().getFullName());
+            tempDeclr.setTypeClass(clazz);
+          }
+ catch (          ClassNotFoundException cnfe) {
+            this.results.add(new TypeDeclarationError(typeDescr,"Internal Trait extension Class '" + target + "' could not be generated correctly'"));
+          }
+ finally {
+            pkgRegistry.getPackage().addTypeDeclaration(tempDeclr);
+          }
         }
  else {
           updateTraitDefinition(type,resolvedType);
@@ -67,8 +79,11 @@
 switch (type.getKind()) {
 case TRAIT:
       try {
-        byte[] d=ClassBuilderFactory.getTraitBuilderService().buildClass(def);
-        dialect.write(JavaDialectRuntimeData.convertClassToResourcePath(fullName),d);
+        ClassBuilder tb=ClassBuilderFactory.getTraitBuilderService();
+        byte[] d=tb.buildClass(def);
+        String resourceName=JavaDialectRuntimeData.convertClassToResourcePath(fullName);
+        dialect.putClassDefinition(resourceName,d);
+        dialect.write(resourceName,d);
       }
  catch (      Exception e) {
         this.results.add(new TypeDeclarationError(typeDescr,"Unable to compile declared trait " + fullName + ": "+ e.getMessage()+ ";"));
@@ -76,8 +91,11 @@ case TRAIT:
     break;
 case ENUM:
   try {
-    byte[] d=ClassBuilderFactory.getEnumClassBuilderService().buildClass(def);
-    dialect.write(JavaDialectRuntimeData.convertClassToResourcePath(fullName),d);
+    ClassBuilder eb=ClassBuilderFactory.getEnumClassBuilderService();
+    byte[] d=eb.buildClass(def);
+    String resourceName=JavaDialectRuntimeData.convertClassToResourcePath(fullName);
+    dialect.putClassDefinition(resourceName,d);
+    dialect.write(resourceName,d);
   }
  catch (  Exception e) {
     e.printStackTrace();
@@ -87,8 +105,11 @@ break;
 case CLASS:
 default :
 try {
-byte[] d=ClassBuilderFactory.getBeanClassBuilderService().buildClass(def);
-dialect.write(JavaDialectRuntimeData.convertClassToResourcePath(fullName),d);
+ClassBuilder cb=ClassBuilderFactory.getBeanClassBuilderService();
+byte[] d=cb.buildClass(def);
+String resourceName=JavaDialectRuntimeData.convertClassToResourcePath(fullName);
+dialect.putClassDefinition(resourceName,d);
+dialect.write(resourceName,d);
 }
  catch (Exception e) {
 this.results.add(new TypeDeclarationError(typeDescr,"Unable to create a class for declared type " + fullName + ": "+ e.getMessage()+ ";"));

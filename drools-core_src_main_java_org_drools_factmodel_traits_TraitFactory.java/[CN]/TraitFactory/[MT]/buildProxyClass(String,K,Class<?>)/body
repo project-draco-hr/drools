@@ -4,12 +4,11 @@
   ClassDefinition cdef=TraitRegistry.getInstance().getTraitable(coreKlass.getName());
   String proxyName=getProxyName(tdef,cdef);
   String wrapperName=getPropertyWrapperName(tdef,cdef);
-  JavaDialectRuntimeData data=((JavaDialectRuntimeData)getPackage(tdef.getDefinedClass().getPackage().getName()).getDialectRuntimeRegistry().getDialectData("java"));
   TraitPropertyWrapperClassBuilder propWrapperBuilder=(TraitPropertyWrapperClassBuilder)ClassBuilderFactory.getPropertyWrapperBuilderService();
   propWrapperBuilder.init(tdef);
   try {
     byte[] propWrapper=propWrapperBuilder.buildClass(cdef);
-    data.write(JavaDialectRuntimeData.convertClassToResourcePath(wrapperName),propWrapper);
+    ruleBase.registerAndLoadTypeDefinition(wrapperName,propWrapper);
   }
  catch (  Exception e) {
     e.printStackTrace();
@@ -18,12 +17,11 @@
   proxyBuilder.init(tdef);
   try {
     byte[] proxy=proxyBuilder.buildClass(cdef);
-    data.write(JavaDialectRuntimeData.convertClassToResourcePath(proxyName),proxy);
+    ruleBase.registerAndLoadTypeDefinition(proxyName,proxy);
   }
  catch (  Exception e) {
     e.printStackTrace();
   }
-  data.onBeforeExecute();
   try {
     long mask=TraitRegistry.getInstance().getFieldMask(trait.getName(),cdef.getDefinedClass().getName());
     Class<T> proxyClass=(Class<T>)ruleBase.getRootClassLoader().loadClass(proxyName,true);

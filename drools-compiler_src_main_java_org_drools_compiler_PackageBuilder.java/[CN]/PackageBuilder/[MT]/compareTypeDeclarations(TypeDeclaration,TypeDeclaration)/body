@@ -1,0 +1,42 @@
+{
+  if (!oldDeclaration.getFormat().equals(newDeclaration.getFormat())) {
+    throw new IncompatibleClassChangeError("Type Declaration " + newDeclaration.getTypeName() + " has a different"+ " format that its previous definition: "+ newDeclaration.getFormat()+ "!="+ oldDeclaration.getFormat());
+  }
+  if (!oldDeclaration.getTypeClassDef().getSuperClass().equals(newDeclaration.getTypeClassDef().getSuperClass())) {
+    throw new IncompatibleClassChangeError("Type Declaration " + newDeclaration.getTypeName() + " has a different"+ " supperclass that its previous definition: "+ newDeclaration.getTypeClassDef().getSuperClass()+ " != "+ oldDeclaration.getTypeClassDef().getSuperClass());
+  }
+  if (!this.nullSafeEqualityComparison(oldDeclaration.getDurationAttribute(),newDeclaration.getDurationAttribute())) {
+    throw new IncompatibleClassChangeError("Type Declaration " + newDeclaration.getTypeName() + " has a different"+ " duration: "+ newDeclaration.getDurationAttribute()+ " != "+ oldDeclaration.getDurationAttribute());
+  }
+  if (oldDeclaration.getSetMask() != newDeclaration.getSetMask()) {
+    throw new IncompatibleClassChangeError("Type Declaration " + newDeclaration.getTypeName() + " is incompatible with"+ " the previous definition: "+ newDeclaration+ " != "+ oldDeclaration);
+  }
+  List<FactField> oldFields=oldDeclaration.getTypeClassDef().getFields();
+  Map<String,FactField> newFieldsMap=new HashMap<String,FactField>();
+  for (  FactField factField : newDeclaration.getTypeClassDef().getFields()) {
+    newFieldsMap.put(factField.getName(),factField);
+  }
+  boolean allFieldsInOldDeclarationAreStillPresent=true;
+  for (  FactField oldFactField : oldFields) {
+    FactField newFactField=newFieldsMap.get(oldFactField.getName());
+    if (newFactField != null) {
+      String newFactType=((FieldDefinition)newFactField).getTypeName();
+      if (!newFactType.equals(oldFactField.getType().getCanonicalName())) {
+        throw new IncompatibleClassChangeError("Type Declaration " + newDeclaration.getTypeName() + "."+ newFactField.getName()+ " has a different"+ " type that its previous definition: "+ newFactType+ " != "+ oldFactField.getType().getCanonicalName());
+      }
+    }
+ else {
+      allFieldsInOldDeclarationAreStillPresent=false;
+    }
+  }
+  if (oldFields.size() < newFieldsMap.size()) {
+    return -1;
+  }
+  if (oldFields.size() > newFieldsMap.size()) {
+    return 1;
+  }
+  if (allFieldsInOldDeclarationAreStillPresent) {
+    return 0;
+  }
+  throw new IncompatibleClassChangeError(newDeclaration.getTypeName() + " introduces" + " fields that are not present in its previous version.");
+}
