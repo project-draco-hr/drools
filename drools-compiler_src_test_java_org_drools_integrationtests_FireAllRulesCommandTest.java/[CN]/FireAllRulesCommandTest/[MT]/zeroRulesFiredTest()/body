@@ -1,0 +1,17 @@
+{
+  String str="";
+  str+="package org.drools \n";
+  str+="rule StringRule \n";
+  str+=" when \n";
+  str+=" $c : Cheese() \n";
+  str+=" then \n";
+  str+=" System.out.println($c); \n";
+  str+="end \n";
+  StatelessKnowledgeSession ksession=getSession(str);
+  List<Command<?>> commands=new ArrayList<Command<?>>();
+  commands.add(CommandFactory.newInsert("not cheese"));
+  commands.add(CommandFactory.newFireAllRules("num-rules-fired"));
+  ExecutionResults results=ksession.execute(CommandFactory.newBatchExecution(commands));
+  int fired=Integer.parseInt(results.getValue("num-rules-fired").toString());
+  assertEquals(0,fired);
+}
