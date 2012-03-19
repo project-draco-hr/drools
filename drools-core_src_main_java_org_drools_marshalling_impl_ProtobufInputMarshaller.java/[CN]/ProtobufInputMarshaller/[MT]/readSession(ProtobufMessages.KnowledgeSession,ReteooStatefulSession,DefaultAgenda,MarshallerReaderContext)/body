@@ -11,14 +11,29 @@
     ((RuleFlowGroupImpl)group).setWorkingMemory(session);
   }
   context.wm=session;
-  readNodeMemories(context,_session);
-  readInitialFactHandle(context,_session);
-  for (  ProtobufMessages.EntryPoint _ep : _session.getEntryPointList()) {
+  readNodeMemories(context,_session.getRuleData());
+  readInitialFactHandle(context,_session.getRuleData());
+  for (  ProtobufMessages.EntryPoint _ep : _session.getRuleData().getEntryPointList()) {
     WorkingMemoryEntryPoint wmep=context.wm.getEntryPoints().get(_ep.getEntryPointId());
     readFactHandles(context,_ep,((NamedEntryPoint)wmep).getObjectStore());
   }
-  readActionQueue(context,_session);
-  readTruthMaintenanceSystem(context,_session);
+  readActionQueue(context,_session.getRuleData());
+  readTruthMaintenanceSystem(context,_session.getRuleData());
+  if (processMarshaller != null) {
+    if (_session.hasProcessData()) {
+      context.parameterObject=_session.getProcessData();
+      processMarshaller.readProcessInstances(context);
+      context.parameterObject=_session.getProcessData();
+      processMarshaller.readWorkItems(context);
+      context.parameterObject=_session.getProcessData();
+      processMarshaller.readProcessTimers(context);
+    }
+  }
+ else {
+    if (_session.hasProcessData()) {
+      throw new IllegalStateException("No process marshaller, unable to unmarshall process data.");
+    }
+  }
   if (_session.hasTimers()) {
     for (    ProtobufMessages.Timers.Timer _timer : _session.getTimers().getTimerList()) {
       readTimer(context,_timer);
