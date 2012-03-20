@@ -16,14 +16,17 @@
   }
   List<String> errors=new ArrayList<String>();
   for (  String testMethodVer : testMarshalledDataSnapshotMap.keySet()) {
-    logger.info("Comparing marshalled info for " + testMethodVer);
+    logger.trace("Comparing marshalled info for " + testMethodVer);
     Object baseObject=null;
     MarshalledData baseMarshalledData=baseMarshalledDataSnapshotMap.get(testMethodVer);
     try {
       baseObject=unmarshallObject(baseMarshalledData);
     }
  catch (    Exception e) {
-      logger.info("Unable to unmarshall " + baseDbVersion + " data ["+ testMethodVer+ "]: "+ e.getClass().getSimpleName()+ ": "+ e.getMessage()+ "]");
+      String shortTestMethod=testMethodVer.substring(0,testMethodVer.indexOf(':'));
+      shortTestMethod=shortTestMethod.substring(shortTestMethod.substring(0,shortTestMethod.lastIndexOf('.')).lastIndexOf('.') + 1);
+      String shortTestMethodVer=shortTestMethod + testMethodVer.substring(testMethodVer.indexOf(':'));
+      logger.error("[" + e.getClass().getSimpleName() + ": "+ e.getMessage()+ "] "+ "when unmarshalling ["+ shortTestMethodVer+ "] in "+ baseDbVersion);
       continue;
     }
     Object testObject=null;
