@@ -8,6 +8,13 @@
   handle.clearRightTuples();
   for (int i=0, length=cachedNodes.length; i < length; i++) {
     cachedNodes[i].modifyObject(handle,modifyPreviousTuples,context,workingMemory);
+    if (i < cachedNodes.length - 1) {
+      RightTuple rightTuple=modifyPreviousTuples.peekRightTuple();
+      while (rightTuple != null && rightTuple.getRightTupleSink() instanceof BetaNode && ((BetaNode)rightTuple.getRightTupleSink()).getObjectTypeNode() == cachedNodes[i]) {
+        modifyPreviousTuples.removeRightTuple();
+        rightTuple=modifyPreviousTuples.peekRightTuple();
+      }
+    }
   }
   modifyPreviousTuples.retractTuples(context,workingMemory);
 }

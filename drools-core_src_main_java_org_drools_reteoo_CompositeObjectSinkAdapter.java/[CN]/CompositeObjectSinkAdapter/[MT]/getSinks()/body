@@ -1,10 +1,19 @@
 {
   ObjectSink[] sinks=new ObjectSink[size()];
   int at=0;
-  if (this.hashedSinkMap != null) {
-    final Iterator it=this.hashedSinkMap.newIterator();
-    for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
-      sinks[at++]=(ObjectSink)entry.getValue();
+  if (this.hashedFieldIndexes != null) {
+    for (FieldIndex fieldIndex=(FieldIndex)this.hashedFieldIndexes.getFirst(); fieldIndex != null; fieldIndex=(FieldIndex)fieldIndex.getNext()) {
+      if (!fieldIndex.isHashed()) {
+        continue;
+      }
+      final int index=fieldIndex.getIndex();
+      final Iterator it=this.hashedSinkMap.newIterator();
+      for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
+        HashKey hashKey=(HashKey)entry.getKey();
+        if (hashKey.getIndex() == index) {
+          sinks[at++]=(ObjectSink)entry.getValue();
+        }
+      }
     }
   }
   if (this.hashableSinks != null) {
