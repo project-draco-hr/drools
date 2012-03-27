@@ -3,13 +3,16 @@
   ScheduledAgendaItem item=((ActivationTimerJobContext)ctx).getScheduledAgendaItem();
   boolean wasFired=agenda.fireTimedActivation(item,false);
   if (((ActivationTimerJobContext)ctx).getTrigger().hasNextFireTime() == null) {
+    if (wasFired) {
+      agenda.getWorkingMemory().fireAllRules();
+    }
     agenda.getScheduledActivationsLinkedList().remove(item);
     item.setEnqueued(false);
   }
  else {
     item.setActivated(true);
-  }
-  if (wasFired) {
-    agenda.getWorkingMemory().fireAllRules();
+    if (wasFired) {
+      agenda.getWorkingMemory().fireAllRules();
+    }
   }
 }
