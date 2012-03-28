@@ -1,0 +1,24 @@
+{
+  if (scopeDelimiter == ScopeDelimiter.ALWAYS || children.isEmpty()) {
+    return Collections.EMPTY_MAP;
+  }
+ else   if (children.size() == 1) {
+    return children.get(0).getOuterDeclarations();
+  }
+ else {
+    Map<String,Declaration> declarations=new HashMap<String,Declaration>();
+    if (scopeDelimiter == ScopeDelimiter.NEVER) {
+      for (      RuleConditionElement re : children) {
+        declarations.putAll(re.getOuterDeclarations());
+      }
+    }
+ else     if (scopeDelimiter == ScopeDelimiter.CONSENSUS) {
+      Iterator<RuleConditionElement> i=children.iterator();
+      declarations.putAll(i.next().getOuterDeclarations());
+      while (i.hasNext()) {
+        declarations.keySet().retainAll(i.next().getOuterDeclarations().keySet());
+      }
+    }
+    return declarations;
+  }
+}
