@@ -9,11 +9,6 @@
     _agb.setName(group.getName());
     _agb.setIsActive(group.isActive());
     _ab.addAgendaGroup(_agb.build());
-    org.drools.spi.Activation[] activations=(org.drools.spi.Activation[])group.getActivations();
-    Arrays.sort(activations,ActivationsSorter.INSTANCE);
-    for (    Activation activation : activations) {
-      _ab.addActivation(writeActivation(context,(AgendaItem)activation));
-    }
   }
   org.drools.marshalling.impl.ProtobufMessages.Agenda.FocusStack.Builder _fsb=ProtobufMessages.Agenda.FocusStack.newBuilder();
   LinkedList<AgendaGroup> focusStack=agenda.getStackList();
@@ -29,10 +24,6 @@
     _rfgb.setName(group.getName());
     _rfgb.setIsActive(group.isActive());
     _rfgb.setIsAutoDeactivate(group.isAutoDeactivate());
-    for (    ActivationNode node : group) {
-      final Activation activation=node.getActivation();
-      _rfgb.addActivation(writeActivation(context,(AgendaItem)activation));
-    }
     Map<Long,String> nodeInstances=group.getNodeInstances();
     for (    Map.Entry<Long,String> entry : nodeInstances.entrySet()) {
       org.drools.marshalling.impl.ProtobufMessages.Agenda.RuleFlowGroup.NodeInstance.Builder _nib=ProtobufMessages.Agenda.RuleFlowGroup.NodeInstance.newBuilder();
@@ -41,6 +32,17 @@
       _rfgb.addNodeInstance(_nib.build());
     }
     _ab.addRuleFlowGroup(_rfgb.build());
+  }
+  ActivationIterator it=ActivationIterator.iterator(wm);
+  List<org.drools.spi.Activation> dormant=new ArrayList<org.drools.spi.Activation>();
+  for (org.drools.spi.Activation item=(org.drools.spi.Activation)it.next(); item != null; item=(org.drools.spi.Activation)it.next()) {
+    if (!item.isActive()) {
+      dormant.add(item);
+    }
+  }
+  Collections.sort(dormant,ActivationsSorter.INSTANCE);
+  for (  org.drools.spi.Activation activation : dormant) {
+    _ab.addActivation(writeActivation(context,(AgendaItem)activation));
   }
   _ksb.setAgenda(_ab.build());
 }
