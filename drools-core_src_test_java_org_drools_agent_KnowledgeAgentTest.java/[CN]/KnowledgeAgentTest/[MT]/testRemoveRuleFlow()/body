@@ -1,0 +1,31 @@
+{
+  File tempDir=RuleBaseAssemblerTest.getTempDirectory();
+  String location=tempDir.getAbsolutePath() + File.separator + "p1.pkg";
+  Package p1=new Package("dummy");
+  Process process1=new DummyProcess("1","name");
+  p1.addProcess(process1);
+  Process process2=new DummyProcess("2","name2");
+  p1.addProcess(process2);
+  RuleBaseAssemblerTest.writePackage(p1,new File(location));
+  String changeset=CHANGE_SET.replaceFirst("\\{0\\}","file:" + location);
+  ResourceChangeScannerConfiguration sconf=ResourceFactory.getResourceChangeScannerService().newResourceChangeScannerConfiguration();
+  sconf.setProperty("drools.resource.scanner.interval","1");
+  ResourceFactory.getResourceChangeScannerService().configure(sconf);
+  ResourceFactory.getResourceChangeNotifierService().start();
+  ResourceFactory.getResourceChangeScannerService().start();
+  KnowledgeAgentConfiguration aconf=KnowledgeAgentFactory.newKnowledgeAgentConfiguration();
+  aconf.setProperty("drools.agent.newInstance","false");
+  KnowledgeAgent agent=KnowledgeAgentFactory.newKnowledgeAgent("test",aconf);
+  SystemEventListenerFactory.setSystemEventListener(new PrintStreamSystemEventListener());
+  agent.applyChangeSet(ResourceFactory.newReaderResource(new StringReader(changeset)));
+  KnowledgeBase kbase=agent.getKnowledgeBase();
+  assertEquals(2,kbase.getProcesses().size());
+  assertEquals(2,kbase.getKnowledgePackage("dummy").getProcesses().size());
+  p1.getRuleFlows().remove("1");
+  assertEquals(1,p1.getRuleFlows().size());
+  RuleBaseAssemblerTest.writePackage(p1,new File(location));
+  Thread.sleep(1000);
+  kbase=agent.getKnowledgeBase();
+  assertEquals(1,kbase.getProcesses().size());
+  assertEquals(1,kbase.getKnowledgePackage("dummy").getProcesses().size());
+}
