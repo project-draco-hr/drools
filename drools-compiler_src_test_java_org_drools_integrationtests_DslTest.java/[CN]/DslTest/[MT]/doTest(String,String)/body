@@ -1,0 +1,15 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(dsl.getBytes()),ResourceType.DSL);
+  kbuilder.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DSLR);
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.insert(new Person("Mario",38));
+  ksession.fireAllRules();
+  ksession.dispose();
+  return list;
+}
