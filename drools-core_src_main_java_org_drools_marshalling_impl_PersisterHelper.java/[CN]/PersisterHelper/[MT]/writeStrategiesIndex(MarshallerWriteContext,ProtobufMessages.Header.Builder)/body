@@ -1,5 +1,13 @@
 {
-  for (  Entry<String,Integer> entry : context.usedStrategies.entrySet()) {
-    _header.addStrategy(ProtobufMessages.Header.StrategyIndex.newBuilder().setId(entry.getValue().intValue()).setName(entry.getKey()).build());
+  for (  Entry<ObjectMarshallingStrategy,Integer> entry : context.usedStrategies.entrySet()) {
+    Builder _strat=ProtobufMessages.Header.StrategyIndex.newBuilder().setId(entry.getValue().intValue()).setName(entry.getKey().getClass().getName());
+    Context ctx=context.strategyContext.get(entry.getKey());
+    if (ctx != null) {
+      Output os=ByteString.newOutput();
+      ctx.write(new DroolsObjectOutputStream(os));
+      _strat.setData(os.toByteString());
+      os.close();
+    }
+    _header.addStrategy(_strat.build());
   }
 }
