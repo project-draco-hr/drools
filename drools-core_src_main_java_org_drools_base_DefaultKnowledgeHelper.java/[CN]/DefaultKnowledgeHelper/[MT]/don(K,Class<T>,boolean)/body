@@ -1,5 +1,6 @@
 {
   TraitFactory builder=new TraitFactory(this.getKnowledgeRuntime().getKnowledgeBase());
+  boolean needsUpdate=false;
   TraitableBean inner;
   if (core instanceof TraitableBean) {
     inner=(TraitableBean)core;
@@ -11,7 +12,7 @@
     }
     wrapper.init(core);
     inner=wrapper;
-    this.update(getFactHandle(core),inner);
+    needsUpdate=true;
   }
   T thing;
   if (inner.hasTrait(trait.getName())) {
@@ -19,6 +20,9 @@
   }
  else {
     thing=(T)builder.getProxy(inner,trait);
+  }
+  if (needsUpdate) {
+    this.update(getFactHandle(core),inner);
   }
   if (!inner.hasTrait(Thing.class.getName())) {
     insert(don(inner,Thing.class,false));
