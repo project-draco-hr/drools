@@ -39,17 +39,34 @@
   assertTrue(list.contains(new Person(c2.getType())));
   assertTrue(list.contains(new Person(c3.getType())));
   ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
-  KnowledgePackage[] pkgs=(KnowledgePackage[])kbase.getKnowledgePackages().toArray(new KnowledgePackage[]{});
-  assertEquals("org.drools.test",pkgs[0].getName());
-  assertEquals("org.drools.test2",pkgs[1].getName());
-  assertEquals("rule1",pkgs[0].getRules().iterator().next().getName());
-  assertEquals("rule2",pkgs[1].getRules().iterator().next().getName());
-  kbase.removeRule(pkgs[0].getName(),pkgs[0].getRules().iterator().next().getName());
-  pkgs=(KnowledgePackage[])kbase.getKnowledgePackages().toArray(new KnowledgePackage[]{});
-  assertEquals(0,pkgs[0].getRules().size());
-  assertEquals(1,pkgs[1].getRules().size());
-  assertEquals("org.drools.test2",pkgs[1].getName());
-  assertEquals("rule2",pkgs[1].getRules().iterator().next().getName());
+  assertEquals(2,kbase.getKnowledgePackages().size());
+  KnowledgePackage test=null, test2=null;
+  for (  KnowledgePackage kpkg : kbase.getKnowledgePackages()) {
+    if (kpkg.getName().equals("org.drools.test")) {
+      test=kpkg;
+    }
+ else     if (kpkg.getName().equals("org.drools.test2")) {
+      test2=kpkg;
+    }
+  }
+  assertNotNull(test);
+  assertNotNull(test2);
+  assertEquals("rule1",test.getRules().iterator().next().getName());
+  assertEquals("rule2",test2.getRules().iterator().next().getName());
+  kbase.removeRule(test.getName(),test.getRules().iterator().next().getName());
+  for (  KnowledgePackage kpkg : kbase.getKnowledgePackages()) {
+    if (kpkg.getName().equals("org.drools.test")) {
+      test=kpkg;
+    }
+ else     if (kpkg.getName().equals("org.drools.test2")) {
+      test2=kpkg;
+    }
+  }
+  assertNotNull(test);
+  assertNotNull(test2);
+  assertEquals(0,test.getRules().size());
+  assertEquals(1,test2.getRules().size());
+  assertEquals("rule2",test2.getRules().iterator().next().getName());
   list=new ArrayList(ksession.getObjects(new ClassObjectFilter(Person.class)));
   assertEquals("removal of the rule should result in retraction of c3's logical assertion",2,list.size());
   assertTrue("c1's logical assertion should not be retracted",list.contains(new Person(c1.getType())));
@@ -63,12 +80,30 @@
   assertEquals("c2 now has a higher price, its logical assertion should  be cancelled",1,list.size());
   assertFalse("The logical assertion cor c2 should have been retracted",list.contains(new Person(c2.getType())));
   assertTrue("The logical assertion  for c1 should exist",list.contains(new Person(c1.getType())));
-  pkgs=(KnowledgePackage[])kbase.getKnowledgePackages().toArray(new KnowledgePackage[]{});
-  kbase.removeRule(pkgs[1].getName(),pkgs[1].getRules().iterator().next().getName());
+  for (  KnowledgePackage kpkg : kbase.getKnowledgePackages()) {
+    if (kpkg.getName().equals("org.drools.test")) {
+      test=kpkg;
+    }
+ else     if (kpkg.getName().equals("org.drools.test2")) {
+      test2=kpkg;
+    }
+  }
+  assertNotNull(test);
+  assertNotNull(test2);
+  kbase.removeRule(test2.getName(),test2.getRules().iterator().next().getName());
   kbase=SerializationHelper.serializeObject(kbase);
-  pkgs=(KnowledgePackage[])kbase.getKnowledgePackages().toArray(new KnowledgePackage[]{});
-  assertEquals(0,pkgs[0].getRules().size());
-  assertEquals(0,pkgs[1].getRules().size());
+  for (  KnowledgePackage kpkg : kbase.getKnowledgePackages()) {
+    if (kpkg.getName().equals("org.drools.test")) {
+      test=kpkg;
+    }
+ else     if (kpkg.getName().equals("org.drools.test2")) {
+      test2=kpkg;
+    }
+  }
+  assertNotNull(test);
+  assertNotNull(test2);
+  assertEquals(0,test.getRules().size());
+  assertEquals(0,test2.getRules().size());
   list=new ArrayList(ksession.getObjects(new ClassObjectFilter(Person.class)));
   assertEquals(0,list.size());
 }
