@@ -86,6 +86,17 @@
         if (is == null) {
           return null;
         }
+        if (ClassUtils.isWindows()) {
+          try {
+            pClassLoader.loadClass(pClazzName);
+          }
+ catch (          ClassNotFoundException e) {
+            return null;
+          }
+catch (          NoClassDefFoundError e) {
+            return null;
+          }
+        }
         final byte[] buffer=new byte[8192];
         baos=new ByteArrayOutputStream(buffer.length);
         int count;
@@ -126,14 +137,32 @@ catch (      final ClassFormatException e) {
       return new NameEnvironmentAnswer(classFileReader,null);
     }
     private boolean isSourceAvailable(    final String pClazzName,    final ResourceReader pReader){
-      final String source=pClazzName.replace('.','/') + ".java";
-      return pReader.isAvailable(source);
+      final String javaSource=pClazzName.replace('.','/') + ".java";
+      final String classSource=pClazzName.replace('.','/') + ".class";
+      return pReader.isAvailable(javaSource) || pReader.isAvailable(javaSource);
     }
     private boolean isPackage(    final String pClazzName){
       InputStream is=null;
       try {
         is=pClassLoader.getResourceAsStream(ClassUtils.convertClassToResourcePath(pClazzName));
-        return is == null && !isSourceAvailable(pClazzName,pReader);
+        if (ClassUtils.isWindows()) {
+          if (is != null) {
+            try {
+              Class cls=pClassLoader.loadClass(pClazzName);
+              if (cls != null) {
+                return true;
+              }
+            }
+ catch (            ClassNotFoundException e) {
+              return true;
+            }
+catch (            NoClassDefFoundError e) {
+              return true;
+            }
+          }
+        }
+        boolean result=is == null && !isSourceAvailable(pClazzName,pReader);
+        return result;
       }
   finally {
         if (is != null) {
