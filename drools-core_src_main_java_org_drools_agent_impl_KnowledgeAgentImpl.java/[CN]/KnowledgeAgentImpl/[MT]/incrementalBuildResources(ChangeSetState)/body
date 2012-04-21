@@ -15,16 +15,13 @@ synchronized (this.registeredResources) {
     }
     for (    Map.Entry<Resource,Set<KnowledgeDefinition>> entry : changeSetState.modifiedResourceMappings.entrySet()) {
       Collection<KnowledgePackage> newPackages=createPackageFromResource(entry.getKey());
-      if (newPackages == null || newPackages.size() == 0) {
-        this.listener.warning("KnowledgeAgent: The resource didn't create any package: " + entry.getKey() + ". Removing any existing knowledge definition of "+ entry.getKey());
-        for (        KnowledgeDefinition kd : entry.getValue()) {
-          this.listener.debug("KnowledgeAgent: Removing: " + kd);
-          removeKnowledgeDefinitionFromBase(kd);
-        }
+      removeDeletedPackages(entry,newPackages);
+      if (newPackages == null) {
         continue;
       }
       for (      KnowledgePackage pkage : newPackages) {
         KnowledgePackageImp newPackage=(KnowledgePackageImp)pkage;
+        Set<KnowledgeDefinition> kdefs=getKnowledgeDefinitions(entry,newPackage);
         KnowledgePackageImp oldPackage=(KnowledgePackageImp)this.kbase.getKnowledgePackage(newPackage.getName());
         AbstractRuleBase abstractRuleBase=(AbstractRuleBase)((KnowledgeBaseImpl)this.kbase).ruleBase;
         CompositeClassLoader rootClassLoader=abstractRuleBase.getRootClassLoader();
@@ -34,7 +31,7 @@ synchronized (this.registeredResources) {
         newPackage.pkg.getClassFieldAccessorStore().wire();
         this.listener.debug("KnowledgeAgent: Diffing: " + entry.getKey());
         ResourceDiffProducer rdp=new BinaryResourceDiffProducerImpl();
-        ResourceDiffResult diff=rdp.diff(entry.getValue(),newPackage,oldPackage);
+        ResourceDiffResult diff=rdp.diff(kdefs,newPackage,oldPackage);
         for (        KnowledgeDefinition kd : diff.getRemovedDefinitions()) {
           this.listener.debug("KnowledgeAgent: Removing: " + kd);
           removeKnowledgeDefinitionFromBase(kd);
@@ -42,9 +39,12 @@ synchronized (this.registeredResources) {
         for (        KnowledgeDefinition knowledgeDefinition : diff.getUnmodifiedDefinitions()) {
           this.addDefinitionMapping(entry.getKey(),knowledgeDefinition,false);
         }
-        Set<KnowledgePackage> set=new HashSet<KnowledgePackage>();
+        Set<KnowledgePackage> set=changeSetState.createdPackages.get(entry.getKey());
+        if (set == null) {
+          set=new HashSet<KnowledgePackage>();
+          changeSetState.createdPackages.put(entry.getKey(),set);
+        }
         set.add(diff.getPkg());
-        changeSetState.createdPackages.put(entry.getKey(),set);
       }
     }
     for (    Resource resource : changeSetState.addedResources) {
