@@ -15,21 +15,38 @@
   }
  else {
     InputStream is=null;
-    KnowledgePackageImp kpkg=null;
+    Collection<KnowledgePackage> kpkgs=null;
     try {
       is=resource.getInputStream();
       Object object=DroolsStreamUtils.streamIn(is);
-      if (object instanceof KnowledgePackageImp) {
-        kpkg=((KnowledgePackageImp)object);
+      if (object instanceof Collection) {
+        kpkgs=(Collection<KnowledgePackage>)object;
+      }
+ else       if (object instanceof KnowledgePackageImp) {
+        kpkgs=Collections.singletonList((KnowledgePackage)object);
+      }
+ else       if (object instanceof Package) {
+        kpkgs=Collections.singletonList((KnowledgePackage)new KnowledgePackageImp((Package)object));
+      }
+ else       if (object instanceof Package[]) {
+        kpkgs=new ArrayList<KnowledgePackage>();
+        for (        Package pkg : (Package[])object) {
+          kpkgs.add(new KnowledgePackageImp(pkg));
+        }
       }
  else {
-        kpkg=new KnowledgePackageImp((Package)object);
+        throw new RuntimeException("Unknown binary format trying to load resource " + resource.toString());
       }
-      for (      Rule rule : kpkg.pkg.getRules()) {
-        rule.setResource(resource);
-      }
-      for (      Process process : kpkg.pkg.getRuleFlows().values()) {
-        ((ResourcedObject)process).setResource(resource);
+      for (      KnowledgePackage kpkg : kpkgs) {
+        for (        Rule rule : ((KnowledgePackageImp)kpkg).pkg.getRules()) {
+          rule.setResource(resource);
+        }
+        for (        Process process : ((KnowledgePackageImp)kpkg).pkg.getRuleFlows().values()) {
+          ((ResourcedObject)process).setResource(resource);
+        }
+        for (        TypeDeclaration type : ((KnowledgePackageImp)kpkg).pkg.getTypeDeclarations().values()) {
+          type.setResource(resource);
+        }
       }
     }
  catch (    Exception ex) {
@@ -45,6 +62,6 @@
         this.listener.exception(new RuntimeException("KnowledgeAgent exception while trying to close KnowledgeDefinitionsPackage  ",e));
       }
     }
-    return Arrays.<KnowledgePackage>asList(kpkg);
+    return kpkgs;
   }
 }

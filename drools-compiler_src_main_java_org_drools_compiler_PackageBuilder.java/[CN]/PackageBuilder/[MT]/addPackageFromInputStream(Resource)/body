@@ -1,6 +1,36 @@
 {
   InputStream is=resource.getInputStream();
-  Package pkg=(Package)DroolsStreamUtils.streamIn(is,this.configuration.getClassLoader());
+  Object object=DroolsStreamUtils.streamIn(is,this.configuration.getClassLoader());
   is.close();
-  addPackage(pkg);
+  if (object instanceof Collection) {
+    @SuppressWarnings("unchecked") Collection<KnowledgePackage> pkgs=(Collection<KnowledgePackage>)object;
+    for (    KnowledgePackage kpkg : pkgs) {
+      addPackage(((KnowledgePackageImp)kpkg).pkg);
+    }
+  }
+ else   if (object instanceof KnowledgePackageImp) {
+    KnowledgePackageImp kpkg=(KnowledgePackageImp)object;
+    addPackage(kpkg.pkg);
+  }
+ else   if (object instanceof Package) {
+    Package pkg=(Package)object;
+    addPackage(pkg);
+  }
+ else   if (object instanceof Package[]) {
+    Package[] pkgs=(Package[])object;
+    for (    Package pkg : pkgs) {
+      addPackage(pkg);
+    }
+  }
+ else {
+    results.add(new DroolsError(resource){
+      @Override public String getMessage(){
+        return "Unknown binary format trying to load resource " + resource.toString();
+      }
+      @Override public int[] getLines(){
+        return new int[0];
+      }
+    }
+);
+  }
 }
