@@ -1,37 +1,4 @@
 {
-  TraitFactory builder=new TraitFactory(this.getKnowledgeRuntime().getKnowledgeBase());
-  boolean needsUpdate=false;
-  TraitableBean inner;
-  if (core instanceof TraitableBean) {
-    inner=(TraitableBean)core;
-  }
- else {
-    CoreWrapper<K> wrapper=builder.getCoreWrapper(core.getClass());
-    if (wrapper == null) {
-      throw new UnsupportedOperationException("Error: cannot apply a trait to non-traitable class " + core.getClass());
-    }
-    wrapper.init(core);
-    inner=wrapper;
-    needsUpdate=true;
-  }
-  T thing;
-  if (inner.hasTrait(trait.getName())) {
-    return (T)inner.getTrait(trait.getName());
-  }
- else {
-    thing=(T)builder.getProxy(inner,trait);
-  }
-  if (needsUpdate) {
-    this.update(getFactHandle(core),inner);
-  }
-  if (!inner.hasTrait(Thing.class.getName())) {
-    insert(don(inner,Thing.class,false));
-  }
-  if (logical) {
-    insertLogical(thing);
-  }
- else {
-    insert(thing);
-  }
-  return thing;
+  T thing=applyTrait(core,trait);
+  return doInsertTrait(thing,logical);
 }

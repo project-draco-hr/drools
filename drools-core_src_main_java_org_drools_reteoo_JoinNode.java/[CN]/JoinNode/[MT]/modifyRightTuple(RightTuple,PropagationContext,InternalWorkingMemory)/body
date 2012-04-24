@@ -16,24 +16,12 @@
   if (leftTuple != null) {
     if (childLeftTuple == null) {
       for (; leftTuple != null; leftTuple=(LeftTuple)it.next(leftTuple)) {
-        if (this.constraints.isAllowedCachedRight(memory.getContext(),leftTuple)) {
-          this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,null,null,context,workingMemory,true);
-        }
+        propagateFromRight(rightTuple,leftTuple,memory,context,workingMemory);
       }
     }
  else {
       for (; leftTuple != null; leftTuple=(LeftTuple)it.next(leftTuple)) {
-        if (this.constraints.isAllowedCachedRight(memory.getContext(),leftTuple)) {
-          if (childLeftTuple == null || childLeftTuple.getLeftParent() != leftTuple) {
-            this.sink.propagateAssertLeftTuple(leftTuple,rightTuple,null,childLeftTuple,context,workingMemory,true);
-          }
- else {
-            childLeftTuple=this.sink.propagateModifyChildLeftTuple(childLeftTuple,leftTuple,context,workingMemory,true);
-          }
-        }
- else         if (childLeftTuple != null && childLeftTuple.getLeftParent() == leftTuple) {
-          childLeftTuple=this.sink.propagateRetractChildLeftTuple(childLeftTuple,leftTuple,context,workingMemory);
-        }
+        childLeftTuple=propagateOrModifyFromRight(rightTuple,leftTuple,childLeftTuple,memory,context,workingMemory);
       }
     }
   }
