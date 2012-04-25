@@ -4,18 +4,18 @@
   }
   try {
     Object opkg=DroolsStreamUtils.streamIn(in,classLoader);
-    if (!(opkg instanceof Package)) {
+    if (opkg instanceof Package) {
+      Package pkg=(Package)opkg;
+      addPackage(pkg);
+    }
+ else     if (opkg instanceof Package[]) {
+      Package[] pkgs=(Package[])opkg;
+      for (      Package pkg : pkgs) {
+        addPackage(pkg);
+      }
+    }
+ else {
       throw new IllegalArgumentException("Can only add instances of org.drools.rule.Package to a rulebase instance.");
-    }
-    Package binPkg=(Package)opkg;
-    if (!binPkg.isValid()) {
-      throw new IllegalArgumentException("Can't add a non valid package to a rulebase.");
-    }
-    try {
-      this.ruleBase.addPackage(binPkg);
-    }
- catch (    Exception e) {
-      throw new RuntimeDroolsException("Unable to add package to the rulebase.",e);
     }
   }
  catch (  IOException e) {
