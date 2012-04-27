@@ -1,0 +1,40 @@
+{
+  int numEntries=3;
+  RightTupleList[] table=new RightTupleList[3];
+  RightTupleList rtList=new RightTupleList();
+  table[0]=rtList;
+  for (int i=0; i < numEntries; i++) {
+    RightTuple rightTuple=new RightTuple();
+    rightTuple.setMemory(rtList);
+    rtList.add(rightTuple);
+  }
+  rtList=new RightTupleList();
+  table[2]=rtList;
+  for (int i=0; i < numEntries; i++) {
+    RightTuple rightTuple=new RightTuple();
+    rightTuple.setMemory(rtList);
+    rtList.add(rightTuple);
+  }
+  rtList=new RightTupleList();
+  table[2].setNext(rtList);
+  for (int i=0; i < numEntries; i++) {
+    RightTuple rightTuple=new RightTuple();
+    rightTuple.setMemory(rtList);
+    rtList.add(rightTuple);
+  }
+  org.drools.core.util.RightTupleIndexHashTable.FullFastIterator iter=new RightTupleIndexHashTable.FullFastIterator(table);
+  List<RightTuple> list=new ArrayList<RightTuple>();
+  for (RightTuple rightTuple=(RightTuple)iter.next(null); rightTuple != null; rightTuple=(RightTuple)iter.next(rightTuple)) {
+    assertFalse(contains(list,rightTuple));
+    list.add(rightTuple);
+  }
+  RightTupleIndexHashTable rthTable=new RightTupleIndexHashTable();
+  rthTable.init(table,3,numEntries * 3);
+  org.drools.core.util.RightTupleIndexHashTable.FieldIndexHashTableFullIterator iter2=new org.drools.core.util.RightTupleIndexHashTable.FieldIndexHashTableFullIterator(rthTable);
+  list=new ArrayList<RightTuple>();
+  for (RightTuple rightTuple=(RightTuple)iter2.next(); rightTuple != null; rightTuple=(RightTuple)iter2.next()) {
+    assertFalse(contains(list,rightTuple));
+    list.add(rightTuple);
+  }
+  assertEquals(numEntries * 3,list.size());
+}

@@ -1,0 +1,41 @@
+{
+  int numEntries=3;
+  LeftTupleList[] table=new LeftTupleList[3];
+  LeftTupleList rtList=new LeftTupleList();
+  table[0]=rtList;
+  for (int i=0; i < numEntries; i++) {
+    LeftTupleImpl leftTuple=new LeftTupleImpl();
+    leftTuple.setMemory(rtList);
+    rtList.add(leftTuple);
+  }
+  rtList=new LeftTupleList();
+  table[2]=rtList;
+  for (int i=0; i < numEntries; i++) {
+    LeftTupleImpl leftTuple=new LeftTupleImpl();
+    leftTuple.setMemory(rtList);
+    rtList.add(leftTuple);
+  }
+  rtList=new LeftTupleList();
+  table[2].setNext(rtList);
+  for (int i=0; i < numEntries; i++) {
+    LeftTupleImpl leftTuple=new LeftTupleImpl();
+    leftTuple.setMemory(rtList);
+    rtList.add(leftTuple);
+  }
+  org.drools.core.util.LeftTupleIndexHashTable.FullFastIterator iter=new LeftTupleIndexHashTable.FullFastIterator(table);
+  List<LeftTupleImpl> list=new ArrayList<LeftTupleImpl>();
+  for (LeftTupleImpl leftTuple=(LeftTupleImpl)iter.next(null); leftTuple != null; leftTuple=(LeftTupleImpl)iter.next(leftTuple)) {
+    assertFalse(contains(list,leftTuple));
+    list.add(leftTuple);
+  }
+  assertEquals(numEntries * 3,list.size());
+  LeftTupleIndexHashTable lthTable=new LeftTupleIndexHashTable();
+  lthTable.init(table,3,numEntries * 3);
+  org.drools.core.util.LeftTupleIndexHashTable.FieldIndexHashTableFullIterator iter2=new org.drools.core.util.LeftTupleIndexHashTable.FieldIndexHashTableFullIterator(lthTable);
+  list=new ArrayList<LeftTupleImpl>();
+  for (LeftTupleImpl leftTuple=(LeftTupleImpl)iter2.next(); leftTuple != null; leftTuple=(LeftTupleImpl)iter2.next()) {
+    assertFalse(contains(list,leftTuple));
+    list.add(leftTuple);
+  }
+  assertEquals(numEntries * 3,list.size());
+}
