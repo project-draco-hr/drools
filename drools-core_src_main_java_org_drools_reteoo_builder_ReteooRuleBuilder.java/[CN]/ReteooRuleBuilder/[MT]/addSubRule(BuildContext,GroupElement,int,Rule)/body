@@ -1,18 +1,14 @@
 {
   final ReteooComponentBuilder builder=this.utils.getBuilderFor(subrule);
   if (builder.requiresLeftActivation(this.utils,subrule)) {
-    this.addInitialFactPattern(context,subrule,rule);
+    this.addInitialFactPattern(subrule);
   }
   builder.build(context,this.utils,subrule);
   ActivationListenerFactory factory=context.getRuleBase().getConfiguration().getActivationListenerFactory(rule.getActivationListener());
   TerminalNode terminal=factory.createActivationListener(context.getNextId(),context.getTupleSource(),rule,subrule,subruleIndex,context);
-  if (context.getWorkingMemories().length == 0) {
-    ((BaseNode)terminal).attach();
-  }
- else {
-    ((BaseNode)terminal).attach(context.getWorkingMemories());
-  }
-  ((BaseNode)terminal).networkUpdated(new UpdateContext());
-  context.getNodes().add((BaseNode)terminal);
+  BaseNode baseTerminalNode=(BaseNode)terminal;
+  baseTerminalNode.attach(context);
+  baseTerminalNode.networkUpdated(new UpdateContext());
+  context.getNodes().add(baseTerminalNode);
   return terminal;
 }

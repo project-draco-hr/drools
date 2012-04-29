@@ -11,15 +11,15 @@
       rightDeclaredMask=Long.MAX_VALUE;
     }
     Class objectClass=((ClassObjectType)objectType).getClassType();
-    TypeDeclaration typeDeclaration=context.getRuleBase().getTypeDeclaration(objectClass);
-    if (typeDeclaration == null || !typeDeclaration.isPropertySpecific()) {
-      rightDeclaredMask=Long.MAX_VALUE;
+    if (isPropertyReactive(context,objectClass)) {
+      rightListenedProperties=pattern.getListenedProperties();
+      List<String> settableProperties=getSettableProperties(context.getRuleBase(),objectClass);
+      rightDeclaredMask=calculatePositiveMask(rightListenedProperties,settableProperties);
+      rightDeclaredMask|=constraints.getListenedPropertyMask(settableProperties);
+      rightNegativeMask=calculateNegativeMask(rightListenedProperties,settableProperties);
     }
  else {
-      List<String> settableProperties=getSettableProperties(context.getRuleBase(),objectClass);
-      rightDeclaredMask=calculatePositiveMask(pattern.getListenedProperties(),settableProperties);
-      rightDeclaredMask|=constraints.getListenedPropertyMask(settableProperties);
-      rightNegativeMask=calculateNegativeMask(pattern.getListenedProperties(),settableProperties);
+      rightDeclaredMask=Long.MAX_VALUE;
     }
   }
  else {

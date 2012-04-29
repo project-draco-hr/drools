@@ -25,15 +25,16 @@
     return;
   }
   Class objectClass=((ClassObjectType)objectType).getClassType();
-  TypeDeclaration typeDeclaration=context.getRuleBase().getTypeDeclaration(objectClass);
-  if (typeDeclaration == null || !typeDeclaration.isPropertySpecific()) {
-    leftDeclaredMask=Long.MAX_VALUE;
+  if (isPropertyReactive(context,objectClass)) {
+    if (pattern != null) {
+      List<String> leftListenedProperties=pattern.getListenedProperties();
+      List<String> settableProperties=getSettableProperties(context.getRuleBase(),objectClass);
+      leftDeclaredMask=calculatePositiveMask(leftListenedProperties,settableProperties);
+      leftNegativeMask=calculateNegativeMask(leftListenedProperties,settableProperties);
+      setLeftListenedProperties(leftListenedProperties);
+    }
   }
  else {
-    if (pattern != null) {
-      List<String> settableProperties=getSettableProperties(context.getRuleBase(),objectClass);
-      leftDeclaredMask=calculatePositiveMask(pattern.getListenedProperties(),settableProperties);
-      leftNegativeMask=calculateNegativeMask(pattern.getListenedProperties(),settableProperties);
-    }
+    leftDeclaredMask=Long.MAX_VALUE;
   }
 }

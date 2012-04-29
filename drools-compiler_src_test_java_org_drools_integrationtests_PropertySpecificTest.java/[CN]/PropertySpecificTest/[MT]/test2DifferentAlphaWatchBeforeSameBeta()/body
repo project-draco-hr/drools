@@ -1,0 +1,34 @@
+{
+  String rule1="B(a == 15) @watch(b) C()";
+  String rule2="B(a == 15) @watch(c) C()";
+  KnowledgeBase kbase=getKnowledgeBase(rule1,rule2);
+  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession()).session;
+  ObjectTypeNode otnB=getObjectTypeNode(kbase,"B");
+  List<String> sp=getSettableProperties(wm,otnB);
+  AlphaNode alphaNode=(AlphaNode)otnB.getSinkPropagator().getSinks()[0];
+  assertEquals(calculatePositiveMask(list("a"),sp),alphaNode.getDeclaredMask());
+  assertEquals(calculatePositiveMask(list("a","b","c"),sp),alphaNode.getInferredMask());
+  ObjectTypeNode otnC=getObjectTypeNode(kbase,"C");
+  BetaNode betaNodeC1=(BetaNode)otnC.getSinkPropagator().getSinks()[0];
+  BetaNode betaNodeC2=(BetaNode)otnC.getSinkPropagator().getSinks()[1];
+  LeftInputAdapterNode lia=(LeftInputAdapterNode)alphaNode.getSinkPropagator().getSinks()[0];
+  assertSame(betaNodeC1,lia.getSinkPropagator().getSinks()[0]);
+  assertSame(betaNodeC2,lia.getSinkPropagator().getSinks()[1]);
+  assertEquals(0L,betaNodeC1.getRightDeclaredMask());
+  assertEquals(0L,betaNodeC1.getRightInferredMask());
+  assertEquals(calculatePositiveMask(list("b"),sp),betaNodeC1.getLeftDeclaredMask());
+  assertEquals(calculatePositiveMask(list("a","b"),sp),betaNodeC1.getLeftInferredMask());
+  assertEquals(0L,betaNodeC2.getRightDeclaredMask());
+  assertEquals(0L,betaNodeC2.getRightInferredMask());
+  assertEquals(calculatePositiveMask(list("c"),sp),betaNodeC2.getLeftDeclaredMask());
+  assertEquals(calculatePositiveMask(list("a","c"),sp),betaNodeC2.getLeftInferredMask());
+  kbase.removeRule("org.drools","r0");
+  assertEquals(calculatePositiveMask(list("a"),sp),alphaNode.getDeclaredMask());
+  assertEquals(calculatePositiveMask(list("a","c"),sp),alphaNode.getInferredMask());
+  assertEquals(1,lia.getSinkPropagator().getSinks().length);
+  BetaNode betaNodeC=(BetaNode)lia.getSinkPropagator().getSinks()[0];
+  assertEquals(0L,betaNodeC2.getRightDeclaredMask());
+  assertEquals(0L,betaNodeC2.getRightInferredMask());
+  assertEquals(calculatePositiveMask(list("c"),sp),betaNodeC2.getLeftDeclaredMask());
+  assertEquals(calculatePositiveMask(list("a","c"),sp),betaNodeC2.getLeftInferredMask());
+}
