@@ -1,0 +1,29 @@
+{
+  if (!(singleCondition.getRight() instanceof FixedExpression)) {
+    jitBinary(singleCondition);
+    return;
+  }
+  final String matchingString=((FixedExpression)singleCondition.getRight()).getValue().toString();
+  final String patternVariableName=getUniqueName("pattern");
+  getClassGenerator().addStaticField(ACC_PRIVATE | ACC_FINAL,patternVariableName,Pattern.class,null);
+  getClassGenerator().addStaticInitBlock(new ClassGenerator.MethodBody(){
+    @Override public void body(    MethodVisitor mv){
+      mv.visitLdcInsn(matchingString);
+      invokeStatic(Pattern.class,"compile",Pattern.class,String.class);
+      putStaticField(patternVariableName,Pattern.class);
+    }
+  }
+);
+  jitExpression(singleCondition.getLeft(),String.class);
+  store(LEFT_OPERAND,singleCondition.getLeft().getType());
+  Label notNullLabel=jitLeftIsNull(singleCondition.getLeft().getType() == String.class ? jitNullSafeOperationStart() : jitNullSafeCoercion(singleCondition.getLeft().getType(),String.class));
+  mv.visitInsn(ICONST_0);
+  Label nullEvaluation=new Label();
+  mv.visitJumpInsn(GOTO,nullEvaluation);
+  mv.visitLabel(notNullLabel);
+  getStaticField(patternVariableName,Pattern.class);
+  load(LEFT_OPERAND);
+  invokeVirtual(Pattern.class,"matcher",Matcher.class,CharSequence.class);
+  invokeVirtual(Matcher.class,"matches",boolean.class);
+  mv.visitLabel(nullEvaluation);
+}
