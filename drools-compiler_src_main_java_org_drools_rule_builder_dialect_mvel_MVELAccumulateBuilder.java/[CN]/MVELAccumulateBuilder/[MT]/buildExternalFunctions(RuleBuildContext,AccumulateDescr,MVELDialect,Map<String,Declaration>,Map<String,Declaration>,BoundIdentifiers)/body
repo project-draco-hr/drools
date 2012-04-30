@@ -4,6 +4,7 @@
   accumulators=new Accumulator[functions.size()];
   InternalReadAccessor arrayReader=new SelfReferenceClassFieldReader(Object[].class,"this");
   int index=0;
+  Pattern pattern=(Pattern)context.getBuildStack().peek();
   for (  AccumulateFunctionCallDescr func : functions) {
     AccumulateFunction function=context.getConfiguration().getAccumulateFunction(func.getFunction());
     if (function == null) {
@@ -11,7 +12,12 @@
       return null;
     }
     if (func.getBind() != null) {
-      createResultBind(context,index,arrayReader,func,function);
+      if (pattern.getDeclaration(func.getBind()) != null) {
+        context.addError(new DescrBuildError(context.getParentDescr(),accumDescr,null,"Duplicate declaration for variable '" + func.getBind() + "' in the rule '"+ context.getRule().getName()+ "'"));
+      }
+ else {
+        createResultBind(pattern,index,arrayReader,func,function);
+      }
     }
     final AnalysisResult analysis=dialect.analyzeExpression(context,accumDescr,func.getParams().length > 0 ? func.getParams()[0] : "\"\"",boundIds);
     MVELCompilationUnit unit=dialect.getMVELCompilationUnit(func.getParams().length > 0 ? func.getParams()[0] : "\"\"",analysis,getUsedDeclarations(decls,analysis),getUsedDeclarations(sourceOuterDeclr,analysis),null,context,"drools",KnowledgeHelper.class);

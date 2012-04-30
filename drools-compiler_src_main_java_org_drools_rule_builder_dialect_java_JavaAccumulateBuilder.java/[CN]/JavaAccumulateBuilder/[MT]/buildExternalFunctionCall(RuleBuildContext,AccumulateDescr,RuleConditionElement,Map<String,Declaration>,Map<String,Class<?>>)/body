@@ -6,6 +6,7 @@
   Set<Declaration> requiredDecl=new HashSet<Declaration>();
   InternalReadAccessor arrayReader=new SelfReferenceClassFieldReader(Object[].class,"this");
   int index=0;
+  Pattern pattern=(Pattern)context.getBuildStack().peek();
   for (  AccumulateFunctionCallDescr fc : funcCalls) {
     AccumulateFunction function=context.getConfiguration().getAccumulateFunction(fc.getFunction());
     if (function == null) {
@@ -13,7 +14,12 @@
       return null;
     }
     if (fc.getBind() != null) {
-      createResultBind(context,index,arrayReader,fc,function);
+      if (pattern.getDeclaration(fc.getBind()) != null) {
+        context.addError(new DescrBuildError(context.getParentDescr(),accumDescr,null,"Duplicate declaration for variable '" + fc.getBind() + "' in the rule '"+ context.getRule().getName()+ "'"));
+      }
+ else {
+        createResultBind(pattern,index,arrayReader,fc,function);
+      }
     }
     final JavaAnalysisResult analysis=(JavaAnalysisResult)context.getDialect().analyzeBlock(context,accumDescr,fc.getParams().length > 0 ? fc.getParams()[0] : "\"\"",new BoundIdentifiers(declCls,context.getPackageBuilder().getGlobals()));
     final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
