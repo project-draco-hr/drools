@@ -12,14 +12,15 @@
   if (source == null) {
     return null;
   }
+  final boolean readLocalsFromTuple=accumDescr.isMultiPattern() || accumDescr.getInputPattern().getSource() != null || source instanceof QueryElement || source.getNestedElements().size() > 1 || (source.getNestedElements().size() == 1 && source.getNestedElements().get(0) instanceof QueryElement);
   Map<String,Declaration> declsInScope=context.getDeclarationResolver().getDeclarations(context.getRule());
   Map<String,Class<?>> declCls=DeclarationScopeResolver.getDeclarationClasses(declsInScope);
   Accumulate accumulate=null;
   if (accumDescr.isExternalFunction()) {
-    accumulate=buildExternalFunctionCall(context,accumDescr,source,declsInScope,declCls);
+    accumulate=buildExternalFunctionCall(context,accumDescr,source,declsInScope,declCls,readLocalsFromTuple);
   }
  else {
-    accumulate=buildInlineAccumulate(context,accumDescr,source,declsInScope,declCls);
+    accumulate=buildInlineAccumulate(context,accumDescr,source,declsInScope,declCls,readLocalsFromTuple);
   }
   return accumulate;
 }

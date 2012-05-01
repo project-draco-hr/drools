@@ -20,11 +20,12 @@
     BoundIdentifiers boundIds=new BoundIdentifiers(declarationClasses,context.getPackageBuilder().getGlobals());
     boundIds.setDeclarations(mergedDecl);
     Accumulator[] accumulators=null;
+    final boolean readLocalsFromTuple=accumDescr.isMultiPattern() || accumDescr.getInputPattern().getSource() != null || source instanceof QueryElement || source.getNestedElements().size() > 1 || (source.getNestedElements().size() == 1 && source.getNestedElements().get(0) instanceof QueryElement);
     if (accumDescr.isExternalFunction()) {
-      accumulators=buildExternalFunctions(context,accumDescr,dialect,decls,sourceOuterDeclr,boundIds);
+      accumulators=buildExternalFunctions(context,accumDescr,dialect,decls,sourceOuterDeclr,boundIds,readLocalsFromTuple);
     }
  else {
-      accumulators=buildCustomAccumulate(context,accumDescr,source,dialect,decls,sourceOuterDeclr,boundIds);
+      accumulators=buildCustomAccumulate(context,accumDescr,source,dialect,decls,sourceOuterDeclr,boundIds,readLocalsFromTuple);
     }
     final Accumulate accumulate=new Accumulate(source,null,accumulators,accumDescr.isMultiFunction());
     MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
