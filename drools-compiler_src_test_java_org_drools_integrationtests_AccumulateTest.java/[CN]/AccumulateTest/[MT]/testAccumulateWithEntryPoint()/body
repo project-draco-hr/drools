@@ -1,0 +1,12 @@
+{
+  String str="global java.util.Map map;\n" + " \n" + "declare Double\n"+ "@role(event)\n"+ "end\n"+ " \n"+ "rule \"See\"\n"+ "when\n"+ "    $a : Double() from accumulate (\n"+ "        $d: Double()\n"+ "            from entry-point data,\n"+ "        sum( $d )\n"+ "    )\n"+ "then\n"+ "    System.out.println( \"We have a sum \" + $a );\n"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  Map res=new HashMap();
+  ksession.setGlobal("map",res);
+  ksession.fireAllRules();
+  for (int j=0; j < 33; j++) {
+    ksession.getWorkingMemoryEntryPoint("data").insert(1.0 * j);
+    ksession.fireAllRules();
+  }
+}
