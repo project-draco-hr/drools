@@ -4,8 +4,7 @@
     for (Iterator it=pattern.getNestedElements().iterator(); it.hasNext(); ) {
       processElement(resolver,contextStack,(RuleConditionElement)it.next());
     }
-    for (Iterator it=pattern.getConstraints().iterator(); it.hasNext(); ) {
-      Object next=it.next();
+    for (    Constraint next : pattern.getConstraints()) {
       if (next instanceof Declaration) {
         continue;
       }
@@ -48,10 +47,10 @@
   }
  else   if (element instanceof EvalCondition) {
     Declaration[] decl=((EvalCondition)element).getRequiredDeclarations();
-    for (int i=0; i < decl.length; i++) {
-      Declaration resolved=resolver.getDeclaration(null,decl[i].getIdentifier());
-      if (resolved != null && resolved != decl[i]) {
-        ((EvalCondition)element).replaceDeclaration(decl[i],resolved);
+    for (    Declaration aDecl : decl) {
+      Declaration resolved=resolver.getDeclaration(null,aDecl.getIdentifier());
+      if (resolved != null && resolved != aDecl) {
+        ((EvalCondition)element).replaceDeclaration(aDecl,resolved);
       }
     }
   }
@@ -64,17 +63,17 @@
  else   if (element instanceof From) {
     DataProvider provider=((From)element).getDataProvider();
     Declaration[] decl=provider.getRequiredDeclarations();
-    for (int i=0; i < decl.length; i++) {
-      Declaration resolved=resolver.getDeclaration(null,decl[i].getIdentifier());
-      if (resolved != null && resolved != decl[i]) {
-        provider.replaceDeclaration(decl[i],resolved);
+    for (    Declaration aDecl : decl) {
+      Declaration resolved=resolver.getDeclaration(null,aDecl.getIdentifier());
+      if (resolved != null && resolved != aDecl) {
+        provider.replaceDeclaration(aDecl,resolved);
       }
  else       if (resolved == null) {
-        Pattern old=decl[i].getPattern();
+        Pattern old=aDecl.getPattern();
         Pattern current=resolver.findPatternByIndex(old.getIndex());
         if (current != null && old != current) {
-          resolved=new Declaration(decl[i].getIdentifier(),decl[i].getExtractor(),current);
-          provider.replaceDeclaration(decl[i],resolved);
+          resolved=new Declaration(aDecl.getIdentifier(),aDecl.getExtractor(),current);
+          provider.replaceDeclaration(aDecl,resolved);
         }
       }
     }
@@ -106,8 +105,8 @@
   }
  else {
     contextStack.push(element);
-    for (Iterator it=element.getNestedElements().iterator(); it.hasNext(); ) {
-      processElement(resolver,contextStack,(RuleConditionElement)it.next());
+    for (    RuleConditionElement ruleConditionElement : element.getNestedElements()) {
+      processElement(resolver,contextStack,ruleConditionElement);
     }
     contextStack.pop();
   }
