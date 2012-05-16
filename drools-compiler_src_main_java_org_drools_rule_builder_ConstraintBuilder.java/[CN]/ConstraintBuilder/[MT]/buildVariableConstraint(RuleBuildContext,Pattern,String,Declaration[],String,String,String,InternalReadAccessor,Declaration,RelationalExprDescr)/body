@@ -1,0 +1,15 @@
+{
+  if (!isMvelOperator(operator)) {
+    Target right=getRightTarget(extractor);
+    Target left=(requiredDeclaration.isPatternDeclaration() && !(Date.class.isAssignableFrom(requiredDeclaration.getExtractor().getExtractToClass()) || Number.class.isAssignableFrom(requiredDeclaration.getExtractor().getExtractToClass()))) ? Target.HANDLE : Target.FACT;
+    final Evaluator evaluator=getEvaluator(context,relDescr,extractor.getValueType(),operator,relDescr.isNegated(),relDescr.getParametersText(),left,right);
+    return new EvaluatorConstraint(new Declaration[]{requiredDeclaration},evaluator,extractor);
+  }
+  boolean isUnification=requiredDeclaration != null && requiredDeclaration.getPattern().getObjectType().equals(new ClassObjectType(DroolsQuery.class)) && Operator.EQUAL.getOperatorString().equals(operator);
+  if (isUnification) {
+    expression=resolveUnificationAmbiguity(expression,declarations,leftValue,rightValue);
+  }
+  boolean isIndexable=operator.equals("==");
+  MVELCompilationUnit compilationUnit=isUnification ? null : buildCompilationUnit(context,pattern,expression);
+  return new MvelConstraint(context.getPkg().getName(),expression,declarations,compilationUnit,isIndexable,requiredDeclaration,extractor,isUnification);
+}

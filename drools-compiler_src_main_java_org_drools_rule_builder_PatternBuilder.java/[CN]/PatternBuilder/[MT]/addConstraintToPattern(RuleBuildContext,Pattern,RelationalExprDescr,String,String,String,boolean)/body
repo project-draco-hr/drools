@@ -27,7 +27,6 @@
       }
     }
   }
-  Restriction restriction=null;
   Declaration[] declarations=null;
   Declaration declr=null;
   if (value2.indexOf('(') < 0 && value2.indexOf('.') < 0 && value2.indexOf('[') < 0) {
@@ -41,7 +40,7 @@
     String[] parts=value2.split("\\.");
     if (parts.length == 2) {
       if ("this".equals(parts[0].trim())) {
-        declr=this.createDeclarationObject(context,parts[1].trim(),(Pattern)context.getBuildStack().peek());
+        declr=createDeclarationObject(context,parts[1].trim(),(Pattern)context.getBuildStack().peek());
         value2=parts[1].trim();
       }
  else {
@@ -49,7 +48,7 @@
         if (declr != null) {
           if (declr.isPatternDeclaration()) {
             declarations=new Declaration[]{declr};
-            declr=this.createDeclarationObject(context,parts[1].trim(),declr.getPattern());
+            declr=createDeclarationObject(context,parts[1].trim(),declr.getPattern());
             value2=parts[1].trim();
           }
  else {
@@ -59,48 +58,17 @@
       }
     }
   }
-  if (declr != null) {
-    Target right=getRightTarget(extractor);
-    Target left=(declr.isPatternDeclaration() && !(Date.class.isAssignableFrom(declr.getExtractor().getExtractToClass()) || Number.class.isAssignableFrom(declr.getExtractor().getExtractToClass()))) ? Target.HANDLE : Target.FACT;
-    final Evaluator evaluator=getEvaluator(context,relDescr,extractor.getValueType(),operator,relDescr.isNegated(),relDescr.getParametersText(),left,right);
-    if (evaluator == null) {
-      return false;
-    }
-    restriction=new VariableRestriction(extractor,declr,evaluator);
-    if (declr.getPattern().getObjectType().equals(new ClassObjectType(DroolsQuery.class)) && Operator.EQUAL.getOperatorString().equals(operator)) {
-      restriction=new UnificationRestriction((VariableRestriction)restriction);
-    }
-  }
-  if (restriction == null) {
-    Dialect dialect=context.getDialect();
-    if (!value2.startsWith("(")) {
-      MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
-      context.setDialect(mvelDialect);
-    }
-    restriction=buildRestriction(context,(Pattern)context.getBuildStack().peek(),extractor,new ReturnValueRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParametersText(),value2));
-    context.setDialect(dialect);
-  }
-  if (restriction == null) {
-    return false;
-  }
   if (declarations == null) {
-    if (declr == null) {
-      ReturnValueRestriction returnValueRestriction=(ReturnValueRestriction)restriction;
-      Declaration[] requiredDeclarations=restriction.getRequiredDeclarations();
-      String[] requiredGlobals=returnValueRestriction.getRequiredGlobals();
-      declarations=new Declaration[(requiredDeclarations != null ? requiredDeclarations.length : 0) + (requiredGlobals != null ? requiredGlobals.length : 0)];
-      int i=0;
-      if (requiredDeclarations != null) {
-        for (        Declaration requiredDeclaration : requiredDeclarations)         declarations[i++]=requiredDeclaration;
-      }
-      if (requiredGlobals != null) {
-        for (        String requiredGlobal : requiredGlobals)         declarations[i++]=context.getDeclarationResolver().getDeclaration(context.getRule(),requiredGlobal);
-      }
-    }
- else {
+    if (declr != null) {
       declarations=new Declaration[]{declr};
     }
+ else {
+      declarations=getDeclarationsForReturnValue(context,relDescr,operator,value2,extractor);
+      if (declarations == null) {
+        return false;
+      }
+    }
   }
-  pattern.addConstraint(buildVariableConstraint(context,pattern,expr,declarations,value1,operator,value2,extractor,restriction));
+  pattern.addConstraint(buildVariableConstraint(context,pattern,expr,declarations,value1,operator,value2,extractor,declr,relDescr));
   return true;
 }

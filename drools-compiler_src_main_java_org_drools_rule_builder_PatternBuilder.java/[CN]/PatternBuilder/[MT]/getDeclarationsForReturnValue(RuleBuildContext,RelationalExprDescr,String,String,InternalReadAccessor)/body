@@ -1,0 +1,49 @@
+{
+  Dialect dialect=context.getDialect();
+  if (!value2.startsWith("(")) {
+    MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
+    context.setDialect(mvelDialect);
+  }
+  Pattern pattern=(Pattern)context.getBuildStack().peek();
+  ReturnValueRestrictionDescr returnValueRestrictionDescr=new ReturnValueRestrictionDescr(operator,relDescr.isNegated(),relDescr.getParametersText(),value2);
+  Map<String,Class<?>> declarationsMap=getDeclarationsMap(returnValueRestrictionDescr,context,true);
+  Class<?> thisClass=null;
+  if (pattern.getObjectType() instanceof ClassObjectType) {
+    thisClass=((ClassObjectType)pattern.getObjectType()).getClassType();
+  }
+  Map<String,Class<?>> globals=context.getPackageBuilder().getGlobals();
+  AnalysisResult analysis=context.getDialect().analyzeExpression(context,returnValueRestrictionDescr,returnValueRestrictionDescr.getContent(),new BoundIdentifiers(declarationsMap,globals,null,thisClass));
+  if (analysis == null) {
+    return null;
+  }
+  final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
+  final List<Declaration> tupleDeclarations=new ArrayList<Declaration>();
+  final List<Declaration> factDeclarations=new ArrayList<Declaration>();
+  for (  String id : usedIdentifiers.getDeclrClasses().keySet()) {
+    final Declaration decl=context.getDeclarationResolver().getDeclaration(context.getRule(),id);
+    if (decl.getPattern() == pattern) {
+      factDeclarations.add(decl);
+    }
+ else {
+      tupleDeclarations.add(decl);
+    }
+  }
+  createImplicitBindings(context,pattern,analysis.getNotBoundedIdentifiers(),usedIdentifiers,factDeclarations);
+  final Declaration[] previousDeclarations=tupleDeclarations.toArray(new Declaration[tupleDeclarations.size()]);
+  final Declaration[] localDeclarations=factDeclarations.toArray(new Declaration[factDeclarations.size()]);
+  Arrays.sort(previousDeclarations,SortDeclarations.instance);
+  Arrays.sort(localDeclarations,SortDeclarations.instance);
+  final String[] requiredGlobals=usedIdentifiers.getGlobals().keySet().toArray(new String[usedIdentifiers.getGlobals().size()]);
+  Declaration[] requiredDeclarations=new Declaration[previousDeclarations.length + localDeclarations.length];
+  System.arraycopy(previousDeclarations,0,requiredDeclarations,0,previousDeclarations.length);
+  System.arraycopy(localDeclarations,0,requiredDeclarations,previousDeclarations.length,localDeclarations.length);
+  Declaration[] declarations=new Declaration[requiredDeclarations.length + requiredGlobals.length];
+  int i=0;
+  for (  Declaration requiredDeclaration : requiredDeclarations) {
+    declarations[i++]=requiredDeclaration;
+  }
+  for (  String requiredGlobal : requiredGlobals) {
+    declarations[i++]=context.getDeclarationResolver().getDeclaration(context.getRule(),requiredGlobal);
+  }
+  return declarations;
+}
