@@ -1,0 +1,34 @@
+{
+  int endMethodName=exprStr.indexOf('(');
+  if (endMethodName >= 0) {
+    String methodName=exprStr.substring(0,endMethodName).trim();
+    String propertyName=setter2property(methodName);
+    String methodParams=exprStr.substring(endMethodName + 1,exprStr.indexOf(')')).trim();
+    List<String> args=splitArgumentsList(methodParams);
+    int argsNr=args.size();
+    if (propertyName != null) {
+      modificationMask=updateModificationMask(settableProperties,propertyReactive,modificationMask,propertyName);
+      statement.addField(propertyName,argsNr > 0 ? args.get(0) : null);
+    }
+    String methodWithArgsNr=methodName + "_" + argsNr;
+    List<String> modifiedProps=typeDeclaration.getTypeClassDef().getModifiedPropsByMethod(methodWithArgsNr);
+    if (modifiedProps != null) {
+      for (      String modifiedProp : modifiedProps) {
+        modificationMask=updateModificationMask(settableProperties,propertyReactive,modificationMask,modifiedProp);
+        statement.addField(modifiedProp,argsNr > 0 ? args.get(0) : null);
+      }
+    }
+  }
+ else {
+    String propertyName=extractFirstIdentifier(exprStr,0);
+    if (propertyName != null) {
+      modificationMask=updateModificationMask(settableProperties,propertyReactive,modificationMask,propertyName);
+      int equalPos=exprStr.indexOf('=');
+      if (equalPos >= 0) {
+        String value=exprStr.substring(equalPos + 1).trim();
+        statement.addField(propertyName,value);
+      }
+    }
+  }
+  return modificationMask;
+}
