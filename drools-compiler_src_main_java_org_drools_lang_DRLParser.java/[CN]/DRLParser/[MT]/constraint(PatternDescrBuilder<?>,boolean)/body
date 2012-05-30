@@ -4,10 +4,29 @@
   }
   int first=input.index();
   exprParser.getHelper().setHasOperator(false);
-  exprParser.conditionalOrExpression();
-  if (state.backtracking == 0) {
-    if (input.LA(1) != DRLLexer.EOF || input.get(input.index() - 1).getType() == DRLLexer.WS) {
-      helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_END);
+  try {
+    exprParser.conditionalOrExpression();
+  }
+  finally {
+    if (state.backtracking == 0) {
+      if (input.LA(1) != DRLLexer.EOF) {
+        helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_END);
+      }
+ else       if (lastTokenWasWhiteSpace()) {
+        int location=getCurrentLocation();
+        if (location == Location.LOCATION_LHS_INSIDE_CONDITION_OPERATOR && exprParser.getHelper().getHasOperator()) {
+          helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_ARGUMENT);
+        }
+      }
+ else {
+        int location=getCurrentLocation();
+        if (location == Location.LOCATION_LHS_INSIDE_CONDITION_END) {
+          helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_ARGUMENT);
+        }
+ else {
+          helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_START);
+        }
+      }
     }
   }
   if (state.failed)   return;
