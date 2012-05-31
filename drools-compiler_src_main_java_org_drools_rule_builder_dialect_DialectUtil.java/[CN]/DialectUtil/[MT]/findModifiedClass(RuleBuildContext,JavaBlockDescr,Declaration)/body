@@ -1,50 +1,21 @@
 {
   if (declr != null) {
-    return ((ClassObjectType)declr.getPattern().getObjectType()).getClassType();
+    return ((ClassWireable)declr.getPattern().getObjectType()).getClassType();
   }
-  String targetId=d.getTargetExpression();
-  if (targetId.charAt(0) == '(') {
+  String targetId=d.getTargetExpression().trim();
+  while (targetId.charAt(0) == '(' && targetId.charAt(targetId.length() - 1) == ')') {
     targetId=targetId.substring(1,targetId.length() - 1).trim();
   }
-  List<JavaLocalDeclarationDescr> localDeclarationDescrs=d.getInScopeLocalVars();
-  if (localDeclarationDescrs == null) {
-    return null;
-  }
-  String className=null;
-  for (  JavaLocalDeclarationDescr localDeclr : localDeclarationDescrs) {
-    for (    IdentifierDescr idDescr : localDeclr.getIdentifiers()) {
-      if (targetId.equals(idDescr.getIdentifier())) {
-        className=localDeclr.getType();
-        break;
+  if (targetId.charAt(0) == '(') {
+    int endCast=targetId.indexOf(')');
+    if (endCast > 0) {
+      String castName=targetId.substring(1,endCast).trim();
+      Class<?> cast=findClassByName(context,castName);
+      if (cast != null) {
+        return cast;
       }
-    }
-    if (className != null) {
-      break;
+      targetId=targetId.substring(endCast + 1).trim();
     }
   }
-  if (className == null) {
-    return null;
-  }
-  String namespace=context.getRuleDescr().getNamespace();
-  PackageBuilder packageBuilder=context.getPackageBuilder();
-  Class<?> clazz=null;
-  try {
-    clazz=Class.forName(namespace + "." + className,false,packageBuilder.getRootClassLoader());
-  }
- catch (  ClassNotFoundException e) {
-  }
-  if (clazz != null) {
-    return clazz;
-  }
-  Set<String> imports=new HashSet<String>();
-  List<PackageDescr> pkgDescrs=packageBuilder.getPackageDescrs(namespace);
-  if (pkgDescrs == null) {
-    return null;
-  }
-  for (  PackageDescr pkgDescr : pkgDescrs) {
-    for (    ImportDescr importDescr : pkgDescr.getImports()) {
-      imports.add(importDescr.getTarget());
-    }
-  }
-  return findClass(className,imports,packageBuilder.getRootClassLoader());
+  return targetId.contains("(") ? findFunctionReturnedClass(context,targetId) : findDeclarationClass(context,d,targetId);
 }

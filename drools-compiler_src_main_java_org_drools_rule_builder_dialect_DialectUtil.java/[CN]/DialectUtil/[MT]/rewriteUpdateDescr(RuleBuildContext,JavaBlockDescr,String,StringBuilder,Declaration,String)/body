@@ -1,14 +1,23 @@
 {
+  long modificationMask=Long.MAX_VALUE;
   Class<?> typeClass=findModifiedClass(context,d,declr);
-  if (typeClass != null) {
+  TypeDeclaration typeDeclaration=typeClass == null ? null : context.getPackageBuilder().getTypeDeclaration(typeClass);
+  if (typeDeclaration != null) {
+    boolean isPropertyReactive=typeDeclaration != null && typeDeclaration.isPropertyReactive();
+    List<String> settableProperties=null;
+    if (isPropertyReactive) {
+      modificationMask=0;
+      typeDeclaration.setTypeClass(typeClass);
+      settableProperties=typeDeclaration.getSettableProperties();
+    }
     ConsequenceMetaData.Statement statement=new ConsequenceMetaData.Statement(ConsequenceMetaData.Statement.Type.MODIFY,typeClass);
     context.getRule().getConsequenceMetaData().addStatement(statement);
+    for (    String expr : splitStatements(consequence)) {
+      String updateExpr=expr.replaceFirst("^\\Q" + obj + "\\E\\s*\\.","");
+      if (!updateExpr.equals(expr)) {
+        modificationMask=parseModifiedProperties(statement,settableProperties,typeDeclaration,isPropertyReactive,modificationMask,updateExpr);
+      }
+    }
   }
-  if (declr != null && !declr.isInternalFact()) {
-    consequence.append("drools.update( " + obj + "__Handle__ ); }");
-  }
- else {
-    consequence.append("drools.update( " + obj + "__Handle2__ ); }");
-  }
-  return declr != null;
+  appendUpdateStatement(consequence,declr,obj,modificationMask);
 }

@@ -1,0 +1,27 @@
+{
+  if (className == null) {
+    return null;
+  }
+  String namespace=context.getRuleDescr().getNamespace();
+  PackageBuilder packageBuilder=context.getPackageBuilder();
+  Class<?> clazz=null;
+  try {
+    clazz=Class.forName(namespace + "." + className,false,packageBuilder.getRootClassLoader());
+  }
+ catch (  ClassNotFoundException e) {
+  }
+  if (clazz != null) {
+    return clazz;
+  }
+  Set<String> imports=new HashSet<String>();
+  List<PackageDescr> pkgDescrs=packageBuilder.getPackageDescrs(namespace);
+  if (pkgDescrs == null) {
+    return null;
+  }
+  for (  PackageDescr pkgDescr : pkgDescrs) {
+    for (    ImportDescr importDescr : pkgDescr.getImports()) {
+      imports.add(importDescr.getTarget());
+    }
+  }
+  return findClass(className,imports,packageBuilder.getRootClassLoader());
+}

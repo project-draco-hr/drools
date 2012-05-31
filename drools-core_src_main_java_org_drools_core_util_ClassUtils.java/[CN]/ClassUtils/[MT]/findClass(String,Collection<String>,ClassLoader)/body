@@ -1,12 +1,19 @@
 {
   Class<?> clazz=null;
   for (  String imp : availableImports) {
+    String className=imp.endsWith(name) ? imp : imp + "." + name;
     try {
-      String className=imp.endsWith(name) ? imp : imp + "." + name;
       clazz=Class.forName(className,false,cl);
     }
  catch (    ClassNotFoundException e) {
-      continue;
+      int lastDot=className.lastIndexOf('.');
+      className=className.substring(0,lastDot) + "$" + className.substring(lastDot + 1);
+      try {
+        clazz=Class.forName(className,false,cl);
+      }
+ catch (      ClassNotFoundException e1) {
+        continue;
+      }
     }
     break;
   }

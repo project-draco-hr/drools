@@ -1,0 +1,24 @@
+{
+  String expr=block.getTargetExpression();
+  if (expr.startsWith("new ")) {
+    int argsStart=expr.indexOf('(');
+    if (argsStart > 0) {
+      String className=expr.substring(4,argsStart).trim();
+      Class<?> typeClass=findClassByName(context,className);
+      TypeDeclaration typeDeclaration=typeClass == null ? null : context.getPackageBuilder().getTypeDeclaration(typeClass);
+      if (typeDeclaration != null) {
+        ConsequenceMetaData.Statement statement=new ConsequenceMetaData.Statement(ConsequenceMetaData.Statement.Type.INSERT,typeClass);
+        context.getRule().getConsequenceMetaData().addStatement(statement);
+        String constructorParams=expr.substring(argsStart + 1,expr.indexOf(')')).trim();
+        List<String> args=splitArgumentsList(constructorParams);
+        ClassDefinition classDefinition=typeDeclaration.getTypeClassDef();
+        List<FactField> fields=classDefinition.getFields();
+        if (args.size() == fields.size()) {
+          for (int i=0; i < args.size(); i++) {
+            statement.addField(fields.get(i).getName(),args.get(i));
+          }
+        }
+      }
+    }
+  }
+}

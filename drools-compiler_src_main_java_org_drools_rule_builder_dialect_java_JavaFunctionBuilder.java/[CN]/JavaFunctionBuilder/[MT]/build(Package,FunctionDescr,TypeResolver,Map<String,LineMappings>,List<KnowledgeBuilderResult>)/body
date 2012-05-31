@@ -15,12 +15,11 @@
   vars.put("parameterTypes",functionDescr.getParameterTypes());
   vars.put("parameterNames",functionDescr.getParameterNames());
   vars.put("hashCode",functionDescr.getText().hashCode());
-  final Map<String,Class<?>> params=new HashMap();
   final List<String> names=functionDescr.getParameterNames();
   final List<String> types=functionDescr.getParameterTypes();
   for (int i=0, size=names.size(); i < size; i++) {
     try {
-      params.put(names.get(i),typeResolver.resolveType((String)types.get(i)));
+      typeResolver.resolveType(types.get(i));
     }
  catch (    final ClassNotFoundException e) {
       errors.add(new FunctionError(functionDescr,e,"Unable to resolve type " + types.get(i) + " while building function."));
@@ -30,10 +29,10 @@
   vars.put("text",functionDescr.getText());
   final String text=String.valueOf(TemplateRuntime.eval(template,null,new MapVariableResolverFactory(vars)));
   final BufferedReader reader=new BufferedReader(new StringReader(text));
-  String line=null;
   final String lineStartsWith="    public static " + functionDescr.getReturnType() + " "+ functionDescr.getName();
-  int offset=0;
   try {
+    String line;
+    int offset=0;
     while ((line=reader.readLine()) != null) {
       offset++;
       if (line.startsWith(lineStartsWith)) {

@@ -14,43 +14,43 @@
  else {
         lastAdded=tryDescr.getCatches().get(tryDescr.getCatches().size() - 1).getEnd() - offset;
       }
-      stripTryDescr(context,originalCode,consequence,(JavaTryBlockDescr)block,offset);
+      stripTryDescr(originalCode,consequence,(JavaTryBlockDescr)block,offset);
     }
  else     if (block.getType() == JavaBlockDescr.BlockType.THROW) {
       consequence.append(originalCode.substring(lastAdded,block.getStart() - 1 - offset));
       JavaThrowBlockDescr throwBlock=(JavaThrowBlockDescr)block;
       addWhiteSpaces(originalCode,consequence,throwBlock.getStart() - offset,throwBlock.getTextStart() - offset);
-      consequence.append(originalCode.substring(throwBlock.getTextStart() - offset - 1,throwBlock.getEnd() - 1 - offset) + ";");
+      consequence.append(originalCode.substring(throwBlock.getTextStart() - offset - 1,throwBlock.getEnd() - 1 - offset)).append(";");
       lastAdded=throwBlock.getEnd() - offset;
     }
  else     if (block.getType() == JavaBlockDescr.BlockType.IF) {
       consequence.append(originalCode.substring(lastAdded,block.getStart() - 1 - offset));
       JavaIfBlockDescr ifDescr=(JavaIfBlockDescr)block;
       lastAdded=ifDescr.getEnd() - offset;
-      stripBlockDescr(context,originalCode,consequence,ifDescr,offset);
+      stripBlockDescr(originalCode,consequence,ifDescr,offset);
     }
  else     if (block.getType() == JavaBlockDescr.BlockType.ELSE) {
       consequence.append(originalCode.substring(lastAdded,block.getStart() - 1 - offset));
       JavaElseBlockDescr elseDescr=(JavaElseBlockDescr)block;
       lastAdded=elseDescr.getEnd() - offset;
-      stripBlockDescr(context,originalCode,consequence,elseDescr,offset);
+      stripBlockDescr(originalCode,consequence,elseDescr,offset);
     }
  else     if (block.getType() == JavaBlockDescr.BlockType.WHILE) {
       consequence.append(originalCode.substring(lastAdded,block.getStart() - 1 - offset));
       JavaWhileBlockDescr whileDescr=(JavaWhileBlockDescr)block;
       lastAdded=whileDescr.getEnd() - offset;
-      stripBlockDescr(context,originalCode,consequence,whileDescr,offset);
+      stripBlockDescr(originalCode,consequence,whileDescr,offset);
     }
  else     if (block.getType() == JavaBlockDescr.BlockType.FOR) {
       consequence.append(originalCode.substring(lastAdded,block.getStart() - 1 - offset));
       JavaForBlockDescr forDescr=(JavaForBlockDescr)block;
       lastAdded=forDescr.getEnd() - offset;
-      stripBlockDescr(context,originalCode,consequence,forDescr,offset);
+      stripBlockDescr(originalCode,consequence,forDescr,offset);
     }
   }
   consequence.append(originalCode.substring(lastAdded));
   MacroProcessor macroProcessor=new MacroProcessor();
-  Map macros=new HashMap(MVELConsequenceBuilder.macros);
+  Map<String,Macro> macros=new HashMap<String,Macro>(MVELConsequenceBuilder.macros);
   macros.put("modify",new Macro(){
     public String doMacro(){
       return "with  ";
@@ -59,7 +59,7 @@
 );
   macroProcessor.setMacros(macros);
   String mvelCode=macroProcessor.parse(consequence.toString());
-  Map<String,Class<?>> inputs=(Map<String,Class<?>>)(Map)getInputs(context,mvelCode,bindings,parentVars);
+  Map<String,Class<?>> inputs=(Map<String,Class<?>>)getInputs(context,mvelCode,bindings,parentVars);
   inputs.putAll(parentVars);
   parentBlock.setInputs(inputs);
   for (  JavaBlockDescr block : parentBlock.getJavaBlockDescrs()) {
@@ -70,7 +70,7 @@
         setContainerBlockInputs(context,descrs,catchBlock,catchBlock.getClause() + "=null;" + originalCode.substring(catchBlock.getTextStart() - offset,catchBlock.getEnd() - 1 - offset),bindings,inputs,tryBlock.getTextStart());
       }
       if (tryBlock.getFinal() != null) {
-        JavaFinalBlockDescr finalBlock=(JavaFinalBlockDescr)tryBlock.getFinal();
+        JavaFinalBlockDescr finalBlock=tryBlock.getFinal();
         setContainerBlockInputs(context,descrs,finalBlock,originalCode.substring(finalBlock.getTextStart() - offset,finalBlock.getEnd() - 1 - offset),bindings,inputs,tryBlock.getTextStart());
       }
     }
