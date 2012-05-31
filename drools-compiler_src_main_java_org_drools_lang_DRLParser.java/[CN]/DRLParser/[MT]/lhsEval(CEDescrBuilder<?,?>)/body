@@ -6,19 +6,28 @@
     if (state.failed)     return null;
     match(input,DRLLexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
     if (state.failed)     return null;
-    if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+    if (state.backtracking == 0) {
       helper.emit(Location.LOCATION_LHS_INSIDE_EVAL);
     }
     String expr=conditionalExpression();
-    if (state.backtracking == 0)     eval.constraint(expr);
+    if (state.backtracking == 0) {
+      eval.constraint(expr);
+      helper.emit(Location.LOCATION_LHS_INSIDE_EVAL);
+    }
     match(input,DRLLexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
     if (state.failed)     return null;
-  }
-  finally {
-    helper.end(EvalDescrBuilder.class,eval);
     if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
       helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
     }
+  }
+ catch (  RecognitionException e) {
+    if (state.backtracking == 0) {
+      helper.emit(Location.LOCATION_LHS_INSIDE_EVAL);
+    }
+    throw e;
+  }
+ finally {
+    helper.end(EvalDescrBuilder.class,eval);
   }
   return eval != null ? eval.getDescr() : null;
 }

@@ -11,16 +11,22 @@
     String name=stringId();
     if (state.backtracking == 0)     query.name(name);
     if (state.failed)     return null;
-    if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+    if (state.backtracking == 0) {
       helper.emit(Location.LOCATION_RULE_HEADER);
     }
     if (speculateParameters(true)) {
       parameters(query,true);
       if (state.failed)       return null;
+      if (state.backtracking == 0) {
+        helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
+      }
     }
  else     if (speculateParameters(false)) {
       parameters(query,false);
       if (state.failed)       return null;
+      if (state.backtracking == 0) {
+        helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
+      }
     }
     while (input.LA(1) == DRLLexer.AT) {
       annotation(query);
@@ -29,7 +35,9 @@
     if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
       helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
     }
-    lhsExpression(query != null ? query.lhs() : null);
+    if (input.LA(1) != DRLLexer.EOF) {
+      lhsExpression(query != null ? query.lhs() : null);
+    }
     match(input,DRLLexer.ID,DroolsSoftKeywords.END,null,DroolsEditorType.KEYWORD);
     if (state.failed)     return null;
   }
