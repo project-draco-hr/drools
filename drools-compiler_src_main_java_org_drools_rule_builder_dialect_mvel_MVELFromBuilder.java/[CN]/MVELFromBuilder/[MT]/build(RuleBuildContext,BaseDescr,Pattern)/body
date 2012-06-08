@@ -1,9 +1,13 @@
 {
+  MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
+  boolean typeSafe=context.isTypesafe();
+  if (!dialect.isStrictMode()) {
+    context.setTypesafe(false);
+  }
   final FromDescr fromDescr=(FromDescr)descr;
   final MVELExprDescr expr=(MVELExprDescr)fromDescr.getDataSource();
   From from=null;
   try {
-    MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
     Map<String,Declaration> decls=context.getDeclarationResolver().getDeclarations(context.getRule());
     String text=(String)expr.getText();
     AnalysisResult analysis=dialect.analyzeExpression(context,descr,text,new BoundIdentifiers(context.getDeclarationResolver().getDeclarationClasses(decls),context.getPackageBuilder().getGlobals()));
@@ -30,6 +34,9 @@
     copyErrorLocation(e,fromDescr);
     context.addError(new DescrBuildError(context.getParentDescr(),fromDescr,null,"Unable to build expression for 'from' : " + e.getMessage() + " '"+ expr.getText()+ "'"));
     return null;
+  }
+ finally {
+    context.setTypesafe(typeSafe);
   }
   return from;
 }
