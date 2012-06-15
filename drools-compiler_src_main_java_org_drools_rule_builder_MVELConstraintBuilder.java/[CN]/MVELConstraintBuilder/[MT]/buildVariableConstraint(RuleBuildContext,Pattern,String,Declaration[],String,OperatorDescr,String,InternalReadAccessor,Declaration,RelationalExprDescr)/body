@@ -1,15 +1,15 @@
 {
-  if (!isMvelOperator(operator.getOperator())) {
+  if (!isMvelOperator(operatorDescr.getOperator())) {
     EvaluatorDefinition.Target right=getRightTarget(extractor);
     EvaluatorDefinition.Target left=(requiredDeclaration.isPatternDeclaration() && !(Date.class.isAssignableFrom(requiredDeclaration.getExtractor().getExtractToClass()) || Number.class.isAssignableFrom(requiredDeclaration.getExtractor().getExtractToClass()))) ? EvaluatorDefinition.Target.HANDLE : EvaluatorDefinition.Target.FACT;
-    final Evaluator evaluator=getEvaluator(context,relDescr,extractor.getValueType(),operator.getOperator(),relDescr.isNegated(),relDescr.getParametersText(),left,right);
+    final Evaluator evaluator=getEvaluator(context,relDescr,extractor.getValueType(),operatorDescr.getOperator(),relDescr.isNegated(),relDescr.getParametersText(),left,right);
     return new EvaluatorConstraint(new Declaration[]{requiredDeclaration},evaluator,extractor);
   }
-  boolean isUnification=requiredDeclaration != null && requiredDeclaration.getPattern().getObjectType().equals(new ClassObjectType(DroolsQuery.class)) && Operator.EQUAL.getOperatorString().equals(operator);
+  boolean isUnification=requiredDeclaration != null && requiredDeclaration.getPattern().getObjectType().equals(new ClassObjectType(DroolsQuery.class)) && Operator.EQUAL.getOperatorString().equals(operatorDescr.getOperator());
   if (isUnification) {
     expression=resolveUnificationAmbiguity(expression,declarations,leftValue,rightValue);
   }
-  boolean isIndexable=operator.equals("==");
+  boolean isIndexable=operatorDescr.getOperator().equals("==");
   MVELCompilationUnit compilationUnit=isUnification ? null : buildCompilationUnit(context,pattern,expression);
   return new MvelConstraint(context.getPkg().getName(),expression,declarations,compilationUnit,isIndexable,requiredDeclaration,extractor,isUnification);
 }
