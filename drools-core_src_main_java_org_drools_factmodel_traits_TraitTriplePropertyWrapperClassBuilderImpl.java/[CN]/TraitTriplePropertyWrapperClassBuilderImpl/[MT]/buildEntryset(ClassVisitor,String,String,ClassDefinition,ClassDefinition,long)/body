@@ -1,9 +1,9 @@
 {
-  MethodVisitor mv=cw.visitMethod(ACC_PUBLIC,"entrySet","()Ljava/util/Set;","()Ljava/util/Set<Ljava/util/Map$Entry<Ljava/lang/String;Ljava/lang/Object;>;>;",null);
+  MethodVisitor mv=cw.visitMethod(ACC_PUBLIC,"entrySet","()" + Type.getDescriptor(Set.class),"()Ljava/util/Set<Ljava/util/Map$Entry<Ljava/lang/String;Ljava/lang/Object;>;>;",null);
   mv.visitCode();
-  mv.visitTypeInsn(NEW,"java/util/HashSet");
+  mv.visitTypeInsn(NEW,Type.getInternalName(HashSet.class));
   mv.visitInsn(DUP);
-  mv.visitMethodInsn(INVOKESPECIAL,"java/util/HashSet","<init>","()V");
+  mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(HashSet.class),"<init>","()V");
   mv.visitVarInsn(ASTORE,1);
   for (  FieldDefinition field : core.getFieldsDefinitions()) {
     mv.visitVarInsn(ALOAD,1);
@@ -12,14 +12,14 @@
     if (BuildUtils.isPrimitive(field.getTypeName())) {
       TraitFactory.valueOf(mv,field.getTypeName());
     }
-    mv.visitMethodInsn(INVOKESTATIC,"org/drools/factmodel/traits/TraitProxy","buildEntry","(Ljava/lang/String;Ljava/lang/Object;)Ljava/util/Map$Entry;");
-    mv.visitMethodInsn(INVOKEINTERFACE,"java/util/Set","add","(Ljava/lang/Object;)Z");
+    mv.visitMethodInsn(INVOKESTATIC,Type.getInternalName(TraitProxy.class),"buildEntry","(" + Type.getDescriptor(String.class) + Type.getDescriptor(Object.class)+ ")"+ Type.getDescriptor(Map.Entry.class));
+    mv.visitMethodInsn(INVOKEINTERFACE,Type.getInternalName(Set.class),"add","(" + Type.getDescriptor(Object.class) + ")Z");
     mv.visitInsn(POP);
   }
   mv.visitVarInsn(ALOAD,1);
   mv.visitVarInsn(ALOAD,0);
-  mv.visitMethodInsn(INVOKESPECIAL,"org/drools/factmodel/traits/TripleBasedStruct","entrySet","()Ljava/util/Set;");
-  mv.visitMethodInsn(INVOKEINTERFACE,"java/util/Set","addAll","(Ljava/util/Collection;)Z");
+  mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(TripleBasedStruct.class),"entrySet","()" + Type.getDescriptor(Set.class));
+  mv.visitMethodInsn(INVOKEINTERFACE,Type.getInternalName(Set.class),"addAll","(" + Type.getDescriptor(Collection.class) + ")Z");
   mv.visitInsn(POP);
   mv.visitVarInsn(ALOAD,1);
   mv.visitInsn(ARETURN);

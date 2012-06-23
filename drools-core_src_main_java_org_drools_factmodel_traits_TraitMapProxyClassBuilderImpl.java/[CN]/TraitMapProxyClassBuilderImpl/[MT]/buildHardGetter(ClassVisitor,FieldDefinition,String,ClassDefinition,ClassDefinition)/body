@@ -1,14 +1,14 @@
 {
   String fieldName=field.getName();
-  String fieldType=field.getTypeName();
-  String getter=BuildUtils.getterName(fieldName,fieldType);
-  MethodVisitor mv=cw.visitMethod(ACC_PUBLIC,getter,"()" + BuildUtils.getTypeDescriptor(fieldType),null,null);
+  Class fieldType=field.getType();
+  String getter=BuildUtils.getterName(fieldName,field.getTypeName());
+  MethodVisitor mv=cw.visitMethod(ACC_PUBLIC,getter,"()" + Type.getDescriptor(field.getType()),null,null);
   mv.visitCode();
   TraitFactory.invokeExtractor(mv,masterName,proxy,core,field);
-  if (!BuildUtils.isPrimitive(fieldType)) {
-    mv.visitTypeInsn(CHECKCAST,BuildUtils.getInternalType(fieldType));
+  if (!BuildUtils.isPrimitive(fieldType.getName())) {
+    mv.visitTypeInsn(CHECKCAST,Type.getInternalName(fieldType));
   }
-  mv.visitInsn(BuildUtils.returnType(fieldType));
+  mv.visitInsn(BuildUtils.returnType(field.getTypeName()));
   mv.visitMaxs(2,1);
   mv.visitEnd();
 }

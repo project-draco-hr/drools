@@ -1,0 +1,16 @@
+{
+  mv.visitLdcInsn(fieldName);
+  mv.visitVarInsn(ALOAD,1);
+  mv.visitMethodInsn(INVOKEVIRTUAL,Type.getInternalName(String.class),"equals","(" + Type.getDescriptor(Object.class) + ")Z");
+  Label l1=new Label();
+  mv.visitJumpInsn(IFEQ,l1);
+  TraitFactory.invokeExtractor(mv,wrapperName,trait,core,field);
+  if (BuildUtils.isPrimitive(field.getTypeName())) {
+    TraitFactory.valueOf(mv,field.getTypeName());
+  }
+  mv.visitVarInsn(ASTORE,2);
+  TraitFactory.invokeInjector(mv,wrapperName,trait,core,field,true,1);
+  mv.visitVarInsn(ALOAD,2);
+  mv.visitInsn(ARETURN);
+  mv.visitLabel(l1);
+}

@@ -1,24 +1,14 @@
 {
   String internalWrapper=BuildUtils.getInternalType(wrapperName);
-  MethodVisitor mv=cw.visitMethod(ACC_PUBLIC,"remove","(Ljava/lang/Object;)Ljava/lang/Object;",null,null);
+  MethodVisitor mv=cw.visitMethod(ACC_PUBLIC,"remove","(" + Type.getDescriptor(Object.class) + ")"+ Type.getDescriptor(Object.class),null,null);
   mv.visitCode();
   int stack=0;
   for (  FieldDefinition field : core.getFieldsDefinitions()) {
     stack=Math.max(stack,BuildUtils.sizeOf(field.getTypeName()));
-    mv.visitLdcInsn(field.getName());
-    mv.visitVarInsn(ALOAD,1);
-    mv.visitMethodInsn(INVOKEVIRTUAL,"java/lang/String","equals","(Ljava/lang/Object;)Z");
-    Label l1=new Label();
-    mv.visitJumpInsn(IFEQ,l1);
-    TraitFactory.invokeExtractor(mv,wrapperName,trait,core,field);
-    if (BuildUtils.isPrimitive(field.getTypeName())) {
-      TraitFactory.valueOf(mv,field.getTypeName());
-    }
-    mv.visitVarInsn(ASTORE,2);
-    TraitFactory.invokeInjector(mv,wrapperName,trait,core,field,true,1);
-    mv.visitVarInsn(ALOAD,2);
-    mv.visitInsn(ARETURN);
-    mv.visitLabel(l1);
+    invokeRemove(mv,wrapperName,core,field.getName(),field);
+  }
+  for (  String alias : aliases.keySet()) {
+    invokeRemove(mv,wrapperName,core,alias,aliases.get(alias));
   }
   int j=0;
   for (  FieldDefinition field : trait.getFieldsDefinitions()) {
@@ -27,15 +17,15 @@
       stack=Math.max(stack,BuildUtils.sizeOf(field.getTypeName()));
       mv.visitLdcInsn(field.getName());
       mv.visitVarInsn(ALOAD,1);
-      mv.visitMethodInsn(INVOKEVIRTUAL,"java/lang/String","equals","(Ljava/lang/Object;)Z");
+      mv.visitMethodInsn(INVOKEVIRTUAL,Type.getInternalName(String.class),"equals","(" + Type.getDescriptor(Object.class) + ")Z");
       Label l2=new Label();
       mv.visitJumpInsn(IFEQ,l2);
       mv.visitVarInsn(ALOAD,0);
-      mv.visitFieldInsn(GETFIELD,internalWrapper,"store","Lorg/drools/core/util/TripleStore;");
+      mv.visitFieldInsn(GETFIELD,internalWrapper,"store",Type.getDescriptor(TripleStore.class));
       mv.visitVarInsn(ALOAD,0);
       mv.visitLdcInsn(field.getName());
-      mv.visitMethodInsn(INVOKEVIRTUAL,internalWrapper,"propertyKey","(Ljava/lang/Object;)Lorg/drools/core/util/Triple;");
-      mv.visitMethodInsn(INVOKEVIRTUAL,"org/drools/core/util/TripleStore","get","(Lorg/drools/core/util/Triple;)Lorg/drools/core/util/Triple;");
+      mv.visitMethodInsn(INVOKEVIRTUAL,internalWrapper,"propertyKey","(" + Type.getDescriptor(Object.class) + ")"+ Type.getDescriptor(Triple.class));
+      mv.visitMethodInsn(INVOKEVIRTUAL,Type.getInternalName(TripleStore.class),"get","(" + Type.getDescriptor(Triple.class) + ")"+ Type.getDescriptor(Triple.class));
       mv.visitVarInsn(ASTORE,2);
       mv.visitVarInsn(ALOAD,0);
       mv.visitLdcInsn(field.getName());
@@ -43,7 +33,7 @@
       if (BuildUtils.isPrimitive(field.getTypeName())) {
         TraitFactory.valueOf(mv,field.getTypeName());
       }
-      mv.visitMethodInsn(INVOKESPECIAL,"org/drools/factmodel/traits/TripleBasedStruct","put","(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;");
+      mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(TripleBasedStruct.class),"put","(" + Type.getDescriptor(String.class) + Type.getDescriptor(Object.class)+ ")"+ Type.getDescriptor(Object.class));
       mv.visitInsn(POP);
       mv.visitVarInsn(ALOAD,2);
       mv.visitInsn(ARETURN);
@@ -52,7 +42,7 @@
   }
   mv.visitVarInsn(ALOAD,0);
   mv.visitVarInsn(ALOAD,1);
-  mv.visitMethodInsn(INVOKESPECIAL,"org/drools/factmodel/traits/TripleBasedStruct","remove","(Ljava/lang/Object;)Ljava/lang/Object;");
+  mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(TripleBasedStruct.class),"remove","(" + Type.getDescriptor(Object.class) + ")"+ Type.getDescriptor(Object.class));
   mv.visitVarInsn(ASTORE,2);
   mv.visitVarInsn(ALOAD,2);
   mv.visitInsn(ARETURN);
