@@ -1,0 +1,29 @@
+{
+  KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(EventProcessingOption.STREAM);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(kconf,drlContentString);
+  KnowledgeSessionConfiguration ksessionConfig=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  ksessionConfig.setOption(ClockTypeOption.get("pseudo"));
+  ksessionConfig.setProperty("keep.reference","true");
+  final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(ksessionConfig,null);
+  ksession.addEventListener(agendaEventListener);
+  PseudoClockScheduler clock=(PseudoClockScheduler)ksession.<SessionClock>getSessionClock();
+  Runnable fireUntilHaltRunnable=new Runnable(){
+    public void run(){
+      ksession.fireUntilHalt();
+    }
+  }
+;
+  Thread fireUntilHaltThread=new Thread(fireUntilHaltRunnable,"Engine's thread");
+  fireUntilHaltThread.start();
+  Thread.currentThread().setName("Feeding thread");
+  for (int stIndex=1; stIndex <= stockCount; stIndex++) {
+    clock.advanceTime(20,TimeUnit.SECONDS);
+    final StockTickInterface st=new StockTick(stIndex,"RHT",100 * stIndex,1000);
+    ksession.insert(st);
+    Thread.sleep(1);
+  }
+  Thread.sleep(2000);
+  ksession.halt();
+  return stockCount;
+}

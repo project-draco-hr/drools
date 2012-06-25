@@ -1,0 +1,25 @@
+{
+  long endTime=this.timer.get() + increase;
+  TimerJobInstance item=(TimerJobInstance)queue.peek();
+  long fireTime;
+  while (item != null && ((item.getTrigger().hasNextFireTime() != null && ((fireTime=item.getTrigger().hasNextFireTime().getTime()) <= endTime)))) {
+synchronized (queue) {
+      queue.remove(item);
+    }
+    if (item.getJobHandle().isCancel()) {
+      continue;
+    }
+    try {
+      this.timer.getAndSet(fireTime);
+      ((Callable<Void>)item).call();
+    }
+ catch (    Exception e) {
+      SystemEventListenerFactory.getSystemEventListener().exception(e);
+    }
+synchronized (queue) {
+      item=(TimerJobInstance)queue.peek();
+    }
+  }
+  this.timer.set(endTime);
+  return this.timer.get();
+}
