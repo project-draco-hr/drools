@@ -1,0 +1,22 @@
+{
+  if (exp instanceof FixedExpression) {
+    if (((FixedExpression)exp).canBeNull()) {
+      mv.visitJumpInsn(GOTO,nullArg);
+    }
+  }
+ else   if (exp instanceof EvaluatedExpression) {
+    if (!exp.getType().isPrimitive()) {
+      jitEvaluatedExpression((EvaluatedExpression)exp,true,Object.class);
+      mv.visitJumpInsn(IFNULL,nullArg);
+    }
+  }
+ else   if (exp instanceof VariableExpression) {
+    if (!exp.getType().isPrimitive()) {
+      jitVariableExpression((VariableExpression)exp);
+      mv.visitJumpInsn(IFNULL,nullArg);
+    }
+  }
+ else   if (exp instanceof AritmeticExpression) {
+    ensureNotNullInAritmeticExpression((AritmeticExpression)exp,nullArg);
+  }
+}

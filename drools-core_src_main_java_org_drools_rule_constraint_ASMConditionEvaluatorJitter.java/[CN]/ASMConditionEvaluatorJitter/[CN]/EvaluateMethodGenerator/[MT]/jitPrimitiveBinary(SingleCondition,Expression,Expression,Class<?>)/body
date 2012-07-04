@@ -3,9 +3,16 @@
     mv.visitInsn(singleCondition.getOperation() == BooleanOperator.NE ? ICONST_1 : ICONST_0);
     return;
   }
+  Label nullArg=new Label();
+  ensureNotNullArgs(left,right,nullArg);
   jitExpression(left,type);
   castExpressionResultToPrimitive(left,type);
   jitExpression(right,type);
   castExpressionResultToPrimitive(right,type);
   jitPrimitiveOperation(singleCondition.getOperation(),type);
+  Label nonNullArg=new Label();
+  mv.visitJumpInsn(GOTO,nonNullArg);
+  mv.visitLabel(nullArg);
+  mv.visitInsn(ICONST_0);
+  mv.visitLabel(nonNullArg);
 }
