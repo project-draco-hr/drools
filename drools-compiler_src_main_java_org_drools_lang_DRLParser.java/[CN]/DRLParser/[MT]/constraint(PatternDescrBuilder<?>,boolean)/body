@@ -1,5 +1,5 @@
 {
-  if (state.backtracking == 0 && !state.errorRecovery) {
+  if (state.backtracking == 0) {
     helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_START);
   }
   int first=input.index();
@@ -20,9 +20,12 @@
         if (location == Location.LOCATION_LHS_INSIDE_CONDITION_END) {
           helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_ARGUMENT);
         }
- else {
+ else         if (input.get(input.index()).getType() != DRLLexer.EOF) {
           helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_START);
         }
+      }
+ else       if (getCurrentLocation() == Location.LOCATION_LHS_INSIDE_CONDITION_START && !exprParser.getHelper().getHasOperator() && lastTokenWasWhiteSpace() && input.LA(1) == DRLLexer.EOF && input.LA(-1) == DRLLexer.ID) {
+        helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_OPERATOR);
       }
     }
   }

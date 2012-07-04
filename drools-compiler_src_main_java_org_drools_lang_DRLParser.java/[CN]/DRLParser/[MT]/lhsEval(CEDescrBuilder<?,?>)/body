@@ -9,21 +9,32 @@
     if (state.backtracking == 0) {
       helper.emit(Location.LOCATION_LHS_INSIDE_EVAL);
     }
-    String expr=conditionalExpression();
+    int idx=input.index();
+    final String expr;
+    try {
+      expr=conditionalExpression();
+    }
+ catch (    RecognitionException e) {
+      final Token tempToken=helper.getLastTokenOnList(helper.getEditorInterface().getLast().getContent());
+      if (tempToken != null) {
+        for (int i=tempToken.getTokenIndex() + 1; i < input.size(); i++) {
+          final Token token=input.get(i);
+          if (token.getType() == DRLLexer.EOF) {
+            break;
+          }
+          helper.emit(token,DroolsEditorType.CODE_CHUNK);
+        }
+      }
+      throw e;
+    }
     if (state.backtracking == 0) {
       eval.constraint(expr);
-      helper.emit(Location.LOCATION_LHS_INSIDE_EVAL);
     }
     match(input,DRLLexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
     if (state.failed)     return null;
-    if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
-      helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
-    }
+    helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
   }
  catch (  RecognitionException e) {
-    if (state.backtracking == 0) {
-      helper.emit(Location.LOCATION_LHS_INSIDE_EVAL);
-    }
     throw e;
   }
  finally {
