@@ -1,0 +1,76 @@
+{
+  String source="org/drools/factmodel/traits/testTraitDon.drl";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  Resource res=ResourceFactory.newClassPathResource(source);
+  assertNotNull(res);
+  kbuilder.add(res,ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kb=KnowledgeBaseFactory.newKnowledgeBase();
+  kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  TraitFactory.setMode(mode,kb);
+  TraitFactory tFactory=((AbstractRuleBase)((KnowledgeBaseImpl)kb).getRuleBase()).getConfiguration().getComponentFactory().getTraitFactory();
+  try {
+    FactType impClass=kb.getFactType("org.test","Imp");
+    TraitableBean imp=(TraitableBean)impClass.newInstance();
+    impClass.set(imp,"name","john");
+    FactType traitClass=kb.getFactType("org.test","Student");
+    Class trait=traitClass.getFactClass();
+    TraitProxy proxy=(TraitProxy)tFactory.getProxy(imp,trait);
+    Map<String,Object> virtualFields=imp.getDynamicProperties();
+    Map<String,Object> wrapper=proxy.getFields();
+    assertTrue(wrapper.containsKey("name"));
+    assertTrue(wrapper.containsKey("school"));
+    assertTrue(wrapper.containsKey("age"));
+    assertFalse(wrapper.containsKey("surname"));
+    proxy.getFields().put("school","skol");
+    proxy.getFields().put("surname","xxx");
+    assertTrue(wrapper.containsKey("surname"));
+    TraitableBean ind=new Entity();
+    TraitProxy proxy2=(TraitProxy)tFactory.getProxy(ind,trait);
+    Map virtualFields2=ind.getDynamicProperties();
+    Map wrapper2=proxy2.getFields();
+    assertTrue(wrapper2.containsKey("name"));
+    assertTrue(wrapper2.containsKey("school"));
+    assertTrue(wrapper2.containsKey("age"));
+    assertFalse(wrapper2.containsKey("surname"));
+    traitClass.set(proxy2,"name","john");
+    proxy2.getFields().put("school","skol");
+    proxy2.getFields().put("surname","xxx");
+    assertTrue(wrapper2.containsKey("surname"));
+    FactType traitClass2=kb.getFactType("org.test","Role");
+    Class trait2=traitClass2.getFactClass();
+    TraitableBean ind2=new Entity();
+    TraitProxy proxy99=(TraitProxy)tFactory.getProxy(ind2,trait2);
+    Map<String,Object> wrapper99=proxy99.getFields();
+    assertFalse(wrapper99.containsKey("name"));
+    assertFalse(wrapper99.containsKey("school"));
+    assertFalse(wrapper99.containsKey("age"));
+    assertFalse(wrapper99.containsKey("surname"));
+    proxy99.getFields().put("surname","xxx");
+    proxy99.getFields().put("name","xyz");
+    proxy99.getFields().put("school","skol");
+    assertTrue(wrapper99.containsKey("name"));
+    assertTrue(wrapper99.containsKey("school"));
+    assertFalse(wrapper99.containsKey("age"));
+    assertTrue(wrapper99.containsKey("surname"));
+    assertEquals(3,proxy99.getFields().size());
+    TraitableBean ind0=new Entity();
+    TraitProxy proxy100=(TraitProxy)tFactory.getProxy(ind0,trait2);
+    Map<String,Object> wrapper100=proxy100.getFields();
+    assertFalse(wrapper100.containsKey("name"));
+    assertFalse(wrapper100.containsKey("school"));
+    assertFalse(wrapper100.containsKey("age"));
+    assertFalse(wrapper100.containsKey("surname"));
+    TraitProxy proxy101=(TraitProxy)tFactory.getProxy(ind0,trait);
+    assertTrue(wrapper100.containsKey("name"));
+    assertTrue(wrapper100.containsKey("school"));
+    assertTrue(wrapper100.containsKey("age"));
+    assertFalse(wrapper100.containsKey("surname"));
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}

@@ -1,0 +1,46 @@
+{
+  String source="org/drools/factmodel/traits/testTraitDon.drl";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  Resource res=ResourceFactory.newClassPathResource(source);
+  assertNotNull(res);
+  kbuilder.add(res,ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kb=KnowledgeBaseFactory.newKnowledgeBase();
+  kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  TraitFactory.setMode(mode,kb);
+  TraitFactory tFactory=((AbstractRuleBase)((KnowledgeBaseImpl)kb).getRuleBase()).getConfiguration().getComponentFactory().getTraitFactory();
+  try {
+    FactType impClass=kb.getFactType("org.test","Imp");
+    TraitableBean imp=(TraitableBean)impClass.newInstance();
+    FactType studentClass=kb.getFactType("org.test","Student");
+    Class trait=studentClass.getFactClass();
+    TraitProxy proxy=(TraitProxy)tFactory.getProxy(imp,trait);
+    Map<String,Object> virtualFields=imp.getDynamicProperties();
+    Map<String,Object> wrapper=proxy.getFields();
+    assertFalse(wrapper.isEmpty());
+    studentClass.set(proxy,"name","john");
+    assertFalse(wrapper.isEmpty());
+    studentClass.set(proxy,"name",null);
+    assertFalse(wrapper.isEmpty());
+    studentClass.set(proxy,"age",32);
+    assertFalse(wrapper.isEmpty());
+    studentClass.set(proxy,"age",null);
+    assertFalse(wrapper.isEmpty());
+    TraitableBean ind=new Entity();
+    FactType RoleClass=kb.getFactType("org.test","Role");
+    Class trait2=RoleClass.getFactClass();
+    TraitProxy proxy2=(TraitProxy)tFactory.getProxy(ind,trait2);
+    Map<String,Object> wrapper2=proxy2.getFields();
+    assertTrue(wrapper2.isEmpty());
+    proxy2.getFields().put("name","john");
+    assertFalse(wrapper2.isEmpty());
+    proxy2.getFields().put("name",null);
+    assertFalse(wrapper2.isEmpty());
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}

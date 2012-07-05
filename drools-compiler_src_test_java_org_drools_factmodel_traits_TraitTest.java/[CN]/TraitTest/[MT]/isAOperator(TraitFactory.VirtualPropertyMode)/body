@@ -1,0 +1,16 @@
+{
+  String source="org/drools/factmodel/traits/testTraitIsA2.drl";
+  StatefulKnowledgeSession ksession=getSession(source);
+  TraitFactory.setMode(mode,ksession.getKnowledgeBase());
+  AgendaEventListener ael=mock(AgendaEventListener.class);
+  ksession.addEventListener(ael);
+  Person student=new Person("student",18);
+  ksession.insert(student);
+  ksession.fireAllRules();
+  ArgumentCaptor<AfterActivationFiredEvent> cap=ArgumentCaptor.forClass(AfterActivationFiredEvent.class);
+  verify(ael,times(3)).afterActivationFired(cap.capture());
+  List<AfterActivationFiredEvent> values=cap.getAllValues();
+  assertThat(values.get(0).getActivation().getRule().getName(),is("create student"));
+  assertThat(values.get(1).getActivation().getRule().getName(),is("print student"));
+  assertThat(values.get(2).getActivation().getRule().getName(),is("print school"));
+}

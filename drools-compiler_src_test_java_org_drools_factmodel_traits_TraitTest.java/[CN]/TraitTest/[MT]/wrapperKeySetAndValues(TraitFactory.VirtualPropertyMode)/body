@@ -1,0 +1,64 @@
+{
+  String source="org/drools/factmodel/traits/testTraitDon.drl";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  Resource res=ResourceFactory.newClassPathResource(source);
+  assertNotNull(res);
+  kbuilder.add(res,ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kb=KnowledgeBaseFactory.newKnowledgeBase();
+  kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  TraitFactory.setMode(mode,kb);
+  TraitFactory tFactory=((AbstractRuleBase)((KnowledgeBaseImpl)kb).getRuleBase()).getConfiguration().getComponentFactory().getTraitFactory();
+  try {
+    FactType impClass=kb.getFactType("org.test","Imp");
+    TraitableBean imp=(TraitableBean)impClass.newInstance();
+    FactType traitClass=kb.getFactType("org.test","Student");
+    Class trait=traitClass.getFactClass();
+    TraitProxy proxy=(TraitProxy)tFactory.getProxy(imp,trait);
+    impClass.set(imp,"name","john");
+    proxy.getFields().put("surname","xxx");
+    proxy.getFields().put("name2","john");
+    proxy.getFields().put("nfield",null);
+    Set set=new HashSet();
+    set.add("name");
+    set.add("surname");
+    set.add("age");
+    set.add("school");
+    set.add("name2");
+    set.add("nfield");
+    assertEquals(6,proxy.getFields().keySet().size());
+    assertEquals(set,proxy.getFields().keySet());
+    Collection col1=proxy.getFields().values();
+    Collection col2=Arrays.asList("john",null,0,"xxx","john",null);
+    Comparator comp=new Comparator(){
+      public int compare(      Object o1,      Object o2){
+        if (o1 == null && o2 != null) {
+          return 1;
+        }
+        if (o1 != null && o2 == null) {
+          return -1;
+        }
+        if (o1 == null && o2 == null) {
+          return 0;
+        }
+        return o1.toString().compareTo(o2.toString());
+      }
+    }
+;
+    Collections.sort((List)col1,comp);
+    Collections.sort((List)col2,comp);
+    assertEquals(col1,col2);
+    assertTrue(proxy.getFields().containsValue(null));
+    assertTrue(proxy.getFields().containsValue("john"));
+    assertTrue(proxy.getFields().containsValue(0));
+    assertTrue(proxy.getFields().containsValue("xxx"));
+    assertFalse(proxy.getFields().containsValue("randomString"));
+    assertFalse(proxy.getFields().containsValue(-96));
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}
