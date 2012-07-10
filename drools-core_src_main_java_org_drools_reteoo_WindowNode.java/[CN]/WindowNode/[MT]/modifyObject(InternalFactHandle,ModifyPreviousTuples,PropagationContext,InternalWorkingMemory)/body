@@ -1,29 +1,35 @@
 {
   final WindowMemory memory=(WindowMemory)workingMemory.getNodeMemory(this);
-  int index=0;
-  boolean isAllowed=true;
-  for (  AlphaNodeFieldConstraint constraint : constraints) {
-    if (!constraint.isAllowed(factHandle,workingMemory,memory.context[index++])) {
-      isAllowed=false;
-      break;
+  memory.gate.lock();
+  try {
+    int index=0;
+    boolean isAllowed=true;
+    for (    AlphaNodeFieldConstraint constraint : constraints) {
+      if (!constraint.isAllowed(factHandle,workingMemory,memory.context[index++])) {
+        isAllowed=false;
+        break;
+      }
     }
-  }
-  WindowTupleList list=(WindowTupleList)memory.events.get(factHandle);
-  if (isAllowed) {
-    if (list != null) {
-      context.setActiveWindowTupleList(list);
-      this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context,workingMemory);
-      context.setActiveWindowTupleList(null);
+    WindowTupleList list=(WindowTupleList)memory.events.get(factHandle);
+    if (isAllowed) {
+      if (list != null) {
+        context.setActiveWindowTupleList(list);
+        this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context,workingMemory);
+        context.setActiveWindowTupleList(null);
+      }
+ else {
+        list=new WindowTupleList((EventFactHandle)factHandle,this);
+        context.setActiveWindowTupleList(list);
+        memory.events.put(factHandle,list);
+        this.sink.propagateAssertObject(factHandle,context,workingMemory);
+        context.setActiveWindowTupleList(null);
+      }
     }
  else {
-      list=new WindowTupleList((EventFactHandle)factHandle,this);
-      context.setActiveWindowTupleList(list);
-      memory.events.put(factHandle,list);
-      this.sink.propagateAssertObject(factHandle,context,workingMemory);
-      context.setActiveWindowTupleList(null);
+      memory.events.remove(factHandle);
     }
   }
- else {
-    memory.events.remove(factHandle);
+  finally {
+    memory.gate.unlock();
   }
 }
