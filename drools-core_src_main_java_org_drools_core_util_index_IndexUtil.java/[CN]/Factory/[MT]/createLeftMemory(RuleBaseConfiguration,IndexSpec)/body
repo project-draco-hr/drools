@@ -1,0 +1,18 @@
+{
+  if (config.isSequential()) {
+    return null;
+  }
+  if (!config.isIndexLeftBetaMemory() || !indexSpec.constraintType.isIndexable()) {
+    return new LeftTupleList();
+  }
+  if (indexSpec.constraintType == ConstraintType.EQUAL) {
+    return new LeftTupleIndexHashTable(indexSpec.indexes);
+  }
+  if (indexSpec.constraintType.isComparison()) {
+    return new LeftTupleIndexRBTree(indexSpec.constraintType,indexSpec.indexes[0]);
+  }
+  if (indexSpec.constraintType == ConstraintType.RANGE) {
+    return new LeftTupleIndexRangeRBTree(indexSpec.ascendingConstraintType,indexSpec.indexes[0],indexSpec.descendingConstraintType,indexSpec.indexes[1]);
+  }
+  return new LeftTupleList();
+}

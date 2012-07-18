@@ -1,0 +1,40 @@
+{
+  FastIterator it=tree.fastIterator();
+  if (it == null) {
+    return new Entry[0];
+  }
+  List<Comparable> toBeRemoved=new ArrayList<Comparable>();
+  List<Comparable> nestedToBeRemoved=new ArrayList<Comparable>();
+  List<LeftTuple> result=new ArrayList<LeftTuple>();
+  RBTree.Node<Comparable<Comparable>,RBTree<Comparable<Comparable>,LeftTupleList>> node=null;
+  RBTree.Node<Comparable<Comparable>,LeftTupleList> nestedNode=null;
+  while ((node=(RBTree.Node<Comparable<Comparable>,RBTree<Comparable<Comparable>,LeftTupleList>>)it.next(node)) != null) {
+    nestedToBeRemoved.clear();
+    RBTree<Comparable<Comparable>,LeftTupleList> nestedTree=node.value;
+    FastIterator nestedIt=nestedTree.fastIterator();
+    while ((nestedNode=(RBTree.Node<Comparable<Comparable>,LeftTupleList>)nestedIt.next(nestedNode)) != null) {
+      LeftTupleList list=nestedNode.value;
+      int listSize=list.size();
+      if (listSize == 0) {
+        nestedToBeRemoved.add(nestedNode.key);
+      }
+ else {
+        LeftTuple entry=list.getFirst();
+        while (entry != null) {
+          result.add(entry);
+          entry=(LeftTuple)entry.getNext();
+        }
+      }
+    }
+    for (    Comparable key : nestedToBeRemoved) {
+      nestedTree.delete(key);
+    }
+    if (nestedTree.isEmpty()) {
+      toBeRemoved.add(node.key);
+    }
+  }
+  for (  Comparable key : toBeRemoved) {
+    tree.delete(key);
+  }
+  return result.toArray(new LeftTuple[result.size()]);
+}

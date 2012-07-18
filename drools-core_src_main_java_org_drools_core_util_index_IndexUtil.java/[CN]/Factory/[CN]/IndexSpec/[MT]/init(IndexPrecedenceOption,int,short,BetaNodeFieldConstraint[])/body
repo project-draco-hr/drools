@@ -1,0 +1,39 @@
+{
+  int firstIndexableConstraint=indexPrecedenceOption == IndexPrecedenceOption.EQUALITY_PRIORITY ? determineTypeWithEqualityPriority(nodeType,constraints) : determineTypeWithPatternOrder(nodeType,constraints);
+  if (constraintType == ConstraintType.EQUAL) {
+    List<FieldIndex> indexList=new ArrayList<FieldIndex>();
+    indexList.add(((IndexableConstraint)constraints[firstIndexableConstraint]).getFieldIndex());
+    for (int i=firstIndexableConstraint + 1; i < constraints.length && indexList.size() < keyDepth; i++) {
+      if (ConstraintType.getType(constraints[i]) == ConstraintType.EQUAL) {
+        indexList.add(((IndexableConstraint)constraints[i]).getFieldIndex());
+      }
+    }
+    indexes=indexList.toArray(new FieldIndex[indexList.size()]);
+  }
+ else   if (constraintType.isComparison()) {
+    if (USE_RANGE_INDEX && constraints[firstIndexableConstraint] instanceof MvelConstraint) {
+      MvelConstraint firstConstraint=(MvelConstraint)constraints[firstIndexableConstraint];
+      String leftValue=getLeftValueInExpression(firstConstraint.getExpression());
+      for (int i=firstIndexableConstraint + 1; i < constraints.length; i++) {
+        if (constraints[i] instanceof MvelConstraint) {
+          MvelConstraint dualConstraint=(MvelConstraint)constraints[i];
+          if (isDual(firstConstraint,leftValue,dualConstraint)) {
+            constraintType=ConstraintType.RANGE;
+            if (firstConstraint.getConstraintType().isAscending()) {
+              ascendingConstraintType=firstConstraint.getConstraintType();
+              descendingConstraintType=dualConstraint.getConstraintType();
+              indexes=new FieldIndex[]{firstConstraint.getFieldIndex(),dualConstraint.getFieldIndex()};
+            }
+ else {
+              ascendingConstraintType=dualConstraint.getConstraintType();
+              descendingConstraintType=firstConstraint.getConstraintType();
+              indexes=new FieldIndex[]{dualConstraint.getFieldIndex(),firstConstraint.getFieldIndex()};
+            }
+            return;
+          }
+        }
+      }
+    }
+    indexes=new FieldIndex[]{((IndexableConstraint)constraints[firstIndexableConstraint]).getFieldIndex()};
+  }
+}

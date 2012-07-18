@@ -1,0 +1,10 @@
+{
+  String str="import org.drools.*;\n" + "rule R1 salience 10 when\n" + "   Person( $age : age, $doubleAge : doubleAge )\n"+ "   not Cheese( this.price > $age && < $doubleAge )\n"+ "then\n"+ "   System.out.println( $age );\n"+ "end\n"+ "rule R3 salience 5 when\n"+ "   $c : Cheese( price == 15 )\n"+ "then\n"+ "   System.out.println( \"modify\" );\n"+ "   modify($c) { setPrice(8); }\n"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.insert(new Person("A",10));
+  ksession.insert(new Cheese("C1",30));
+  ksession.insert(new Cheese("C2",15));
+  assertEquals(2,ksession.fireAllRules());
+  ksession.dispose();
+}

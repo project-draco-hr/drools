@@ -1,0 +1,53 @@
+{
+  RBTree.Node<Comparable<Comparable>,RBTree<Comparable<Comparable>,LeftTupleList>> nestedNode=null;
+  RBTree.Node<Comparable<Comparable>,LeftTupleList> firstNode;
+  boolean findNextNestedNode=true;
+  while (true) {
+    if (findNextNestedNode) {
+switch (ascendingConstraintType) {
+case GREATER_THAN:
+        nestedNode=tree.findNearestNode(key,false,RBTree.Boundary.UPPER);
+      break;
+case GREATER_OR_EQUAL:
+    nestedNode=tree.findNearestNode(key,true,RBTree.Boundary.UPPER);
+  break;
+default :
+throw new UnsupportedOperationException("Cannot call getNext constraint of type: " + ascendingConstraintType);
+}
+}
+findNextNestedNode=true;
+if (nestedNode == null) {
+return null;
+}
+if (nestedNode.value.isEmpty()) {
+tree.delete(nestedNode.key);
+continue;
+}
+RBTree<Comparable<Comparable>,LeftTupleList> nestedTree=nestedNode.value;
+while (true) {
+switch (descendingConstraintType) {
+case LESS_THAN:
+firstNode=nestedTree.findNearestNode(key,false,RBTree.Boundary.LOWER);
+break;
+case LESS_OR_EQUAL:
+firstNode=nestedTree.findNearestNode(key,true,RBTree.Boundary.LOWER);
+break;
+default :
+throw new UnsupportedOperationException("Cannot call getNext constraint of type: " + descendingConstraintType);
+}
+if (firstNode != null && firstNode.value.size() == 0) {
+nestedTree.delete(firstNode.key);
+firstNode=null;
+}
+if (firstNode == null) {
+nestedNode=tree.findNearestNode(nestedNode.key,false,RBTree.Boundary.UPPER);
+if (nestedNode == null) {
+return null;
+}
+findNextNestedNode=false;
+break;
+}
+return firstNode.value.getFirst();
+}
+}
+}
