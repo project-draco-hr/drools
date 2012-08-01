@@ -20,35 +20,38 @@
   prepareRightOperand(right,type,rightType,shortcutEvaluation);
   load(LEFT_OPERAND);
   load(RIGHT_OPERAND);
-  if (operation == BooleanOperator.CONTAINS) {
+switch (operation) {
+case CONTAINS:
     invokeStatic(EvaluatorHelper.class,"contains",boolean.class,Object.class,rightType.isPrimitive() ? rightType : Object.class);
-  }
- else   if (operation == BooleanOperator.MATCHES) {
-    invokeVirtual(type,"matches",boolean.class,String.class);
-  }
- else   if (operation == BooleanOperator.SOUNDSLIKE) {
-    invokeStatic(EvaluatorHelper.class,"soundslike",boolean.class,String.class,String.class);
-  }
- else   if (operation.isEquality()) {
-    if (type.isInterface()) {
-      invokeInterface(type,"equals",boolean.class,Object.class);
-    }
+  break;
+case MATCHES:
+invokeVirtual(type,"matches",boolean.class,String.class);
+break;
+case SOUNDSLIKE:
+invokeStatic(EvaluatorHelper.class,"soundslike",boolean.class,String.class,String.class);
+break;
+default :
+if (operation.isEquality()) {
+if (type.isInterface()) {
+invokeInterface(type,"equals",boolean.class,Object.class);
+}
  else {
-      invokeVirtual(type,"equals",boolean.class,Object.class);
-    }
-    if (operation == BooleanOperator.NE) {
-      singleCondition.toggleNegation();
-    }
-  }
+invokeVirtual(type,"equals",boolean.class,Object.class);
+}
+if (operation == BooleanOperator.NE) {
+singleCondition.toggleNegation();
+}
+}
  else {
-    if (type.isInterface()) {
-      invokeInterface(type,"compareTo",int.class,type == Comparable.class ? Object.class : type);
-    }
+if (type.isInterface()) {
+invokeInterface(type,"compareTo",int.class,type == Comparable.class ? Object.class : type);
+}
  else {
-      invokeVirtual(type,"compareTo",int.class,type);
-    }
-    mv.visitInsn(ICONST_0);
-    jitPrimitiveOperation(operation,int.class);
-  }
-  mv.visitLabel(shortcutEvaluation);
+invokeVirtual(type,"compareTo",int.class,type);
+}
+mv.visitInsn(ICONST_0);
+jitPrimitiveOperation(operation,int.class);
+}
+}
+mv.visitLabel(shortcutEvaluation);
 }
