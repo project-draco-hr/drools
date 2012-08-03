@@ -6,12 +6,11 @@
     processConnectiveDescr(sbuilder,base,parentPriority,isInsideRelCons,context);
   }
  else   if (base instanceof AtomicExprDescr) {
-    AtomicExprDescr atom=(AtomicExprDescr)base;
-    String expr=atom.getExpression().trim();
-    Matcher m=evalRegexp.matcher(atom.getExpression());
-    if (m.find()) {
-      expr=expr.substring(expr.indexOf('(') + 1,expr.lastIndexOf(')'));
-    }
+    AtomicExprDescr atomicExpr=(AtomicExprDescr)base;
+    String expr=atomicExpr.getExpression().trim();
+    expr=processEval(expr);
+    String[] instanceofAndCastedExpr=processInlineCast(expr,atomicExpr,context);
+    expr=instanceofAndCastedExpr != null ? instanceofAndCastedExpr[0] + instanceofAndCastedExpr[1] : processInferredCast(expr,atomicExpr,context);
     sbuilder.append(expr);
   }
  else   if (base instanceof BindingDescr) {
@@ -24,9 +23,9 @@
   }
  else   if (base instanceof RelationalExprDescr) {
     RelationalExprDescr red=(RelationalExprDescr)base;
-    String left=dump(new StringBuilder(),red.getLeft(),Integer.MAX_VALUE,true,context).toString();
-    String right=dump(new StringBuilder(),red.getRight(),Integer.MAX_VALUE,true,context).toString();
-    processRestriction(context,sbuilder,left,red.getOperatorDescr(),right);
+    StringBuilder left=dump(new StringBuilder(),red.getLeft(),Integer.MAX_VALUE,true,context);
+    StringBuilder right=red.getRight() instanceof AtomicExprDescr ? processRightAtomicExpr(left,(AtomicExprDescr)red.getRight(),context) : dump(new StringBuilder(),red.getRight(),Integer.MAX_VALUE,true,context);
+    processRestriction(context,sbuilder,left.toString(),red.getOperatorDescr(),right.toString());
   }
  else   if (base instanceof ExprConstraintDescr) {
     DrlExprParser expr=new DrlExprParser();
