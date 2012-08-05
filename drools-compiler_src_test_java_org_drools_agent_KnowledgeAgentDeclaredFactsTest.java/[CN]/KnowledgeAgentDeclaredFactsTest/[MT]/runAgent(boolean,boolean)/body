@@ -1,12 +1,23 @@
 {
   String result;
-  kagent=createKAgent(kbase,newInstance);
-  kagent.applyChangeSet(ResourceFactory.newByteArrayResource(xml.getBytes()));
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kagent=createKAgent(kbase,newInstance,true);
+  createRuleResource();
+  ChangeSetHelperImpl cs=new ChangeSetHelperImpl();
+  FileSystemResource r=(FileSystemResource)ResourceFactory.newFileResource(res);
+  r.setResourceType(ResourceType.DRL);
+  cs.addNewResource(r);
+  kagent.applyChangeSet(cs.getChangeSet());
   result=insertMessageAndFire("test1",stateful);
   Assert.assertEquals("Echo:test1",result);
-  modifyRuleResource();
-  kbaseUpdated=false;
-  waitUntilKBaseUpdate();
+  if (newInstance) {
+    modifyRuleResourceBrandNew();
+  }
+ else {
+    modifyRuleResourceIncremental();
+  }
+  scan(kagent);
   result=insertMessageAndFire("test2",stateful);
   Assert.assertEquals("Echo:test2",result);
+  kagent.dispose();
 }
