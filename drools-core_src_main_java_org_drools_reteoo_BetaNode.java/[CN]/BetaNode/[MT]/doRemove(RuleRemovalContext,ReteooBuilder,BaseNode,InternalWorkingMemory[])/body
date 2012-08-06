@@ -13,13 +13,15 @@
         memory=(BetaMemory)object;
       }
       FastIterator it=memory.getLeftTupleMemory().fullFastIterator();
+      int x=memory.getLeftTupleMemory().size();
       for (LeftTuple leftTuple=getFirstLeftTuple(memory.getLeftTupleMemory(),it); leftTuple != null; ) {
         LeftTuple tmp=(LeftTuple)it.next(leftTuple);
         if (context.getCleanupAdapter() != null) {
-          for (LeftTuple child=leftTuple.getFirstChild(); child != null; child=child.getLeftParentNext()) {
+          LeftTuple child;
+          while ((child=leftTuple.getFirstChild()) != null) {
             if (child.getLeftTupleSink() == this) {
-              leftTuple.unlinkFromLeftParent();
-              leftTuple.unlinkFromRightParent();
+              child.unlinkFromLeftParent();
+              child.unlinkFromRightParent();
             }
  else {
               context.getCleanupAdapter().cleanUp(child,workingMemory);
