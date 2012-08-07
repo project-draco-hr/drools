@@ -9,7 +9,7 @@
     return new AritmeticExpression(analyzeNode(op.getLeft()),AritmeticOperator.fromMvelOpCode(op.getOperation()),analyzeNode(op.getRight()));
   }
   if (node instanceof TypeCast) {
-    ExecutableAccessor accessor=getFieldValue(TypeCast.class,"statement",(TypeCast)node);
+    ExecutableAccessor accessor=(ExecutableAccessor)((TypeCast)node).getStatement();
     return new CastExpression(node.getEgressType(),analyzeNode(accessor.getNode()));
   }
   if (node instanceof Union) {
@@ -41,7 +41,7 @@
       variableName=variableName.substring(0,dot);
     }
     Class<?> variableType=getVariableType(variableName);
-    return new VariableExpression(variableName,analyzeExpressionNode(((IndexedVariableAccessor)accessor).getNextNode()),variableType != null ? variableType : node.getEgressType());
+    return new VariableExpression(variableName,analyzeExpressionNode(((AccessorNode)accessor).getNextNode()),variableType != null ? variableType : node.getEgressType());
   }
   if (accessor == null && node instanceof NewObjectNode) {
     accessor=((NewObjectNode)node).getNewObjectOptimizer();
@@ -56,19 +56,21 @@
         return new VariableExpression(variableName,analyzeExpressionNode(accessorNode),variableType);
       }
  else {
-        Class<?> thisClass=parserContext.getInputs().get("this");
-        try {
-          return new EvaluatedExpression(new MethodInvocation(thisClass.getMethod(variableName)));
-        }
- catch (        NoSuchMethodException e) {
-          if (node.getEgressType() == Class.class) {
-            ParserConfiguration conf=parserContext.getParserConfiguration();
-            Class<?> classLiteral=conf.getImport(variableName);
-            if (classLiteral != null) {
-              return new FixedExpression(Class.class,classLiteral);
-            }
+        if (node.getLiteralValue() instanceof ParserContext) {
+          ParserContext pCtx=(ParserContext)node.getLiteralValue();
+          Class<?> thisClass=pCtx.getInputs().get("this");
+          try {
+            return new EvaluatedExpression(new MethodInvocation(thisClass.getMethod(variableName)));
           }
-          throw new RuntimeException(e);
+ catch (          NoSuchMethodException e) {
+            if (node.getEgressType() == Class.class) {
+              Class<?> classLiteral=pCtx.getParserConfiguration().getImport(variableName);
+              if (classLiteral != null) {
+                return new FixedExpression(Class.class,classLiteral);
+              }
+            }
+            throw new RuntimeException(e);
+          }
         }
       }
     }
