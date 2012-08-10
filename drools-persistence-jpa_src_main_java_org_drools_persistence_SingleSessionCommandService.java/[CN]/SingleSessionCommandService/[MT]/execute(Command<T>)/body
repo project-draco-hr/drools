@@ -1,4 +1,9 @@
 {
+  if (command instanceof DisposeCommand) {
+    T result=commandService.execute((GenericCommand<T>)command);
+    this.jpm.dispose();
+    return result;
+  }
   PersistenceContext persistenceContext=this.jpm.getApplicationScopedPersistenceContext();
   boolean transactionOwner=false;
   try {
@@ -8,13 +13,11 @@
     this.jpm.beginCommandScopedEntityManager();
     registerRollbackSync();
     T result=null;
-    if (!(command instanceof DisposeCommand)) {
-      if (command instanceof BatchExecutionCommand) {
-        result=ksession.execute(command);
-      }
+    if (command instanceof BatchExecutionCommand) {
+      result=ksession.execute(command);
+    }
  else {
-        result=commandService.execute((GenericCommand<T>)command);
-      }
+      result=commandService.execute((GenericCommand<T>)command);
     }
     txm.commit(transactionOwner);
     return result;
