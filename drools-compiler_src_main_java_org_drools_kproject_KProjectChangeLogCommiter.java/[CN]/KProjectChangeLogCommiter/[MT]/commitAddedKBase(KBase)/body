@@ -1,0 +1,46 @@
+{
+  Folder rootFld=fs.getFolder(kproject.getKBasesPath() + "/" + kbase.getQName());
+  rootFld.create();
+  Folder namespaceFld=fs.getFolder(rootFld.getPath().toPortableString() + "/" + kbase.getNamespace().replace('.','/'));
+  namespaceFld.create();
+  String filesStr=GenerateKBaseProjectFiles.generateKBaseFiles(kproject,kbase,fs);
+  File rootFile=rootFld.getFile(kbase.getQName() + ".files.dat");
+  try {
+    if (!rootFile.exists()) {
+      rootFile.create(new ByteArrayInputStream(filesStr.getBytes()));
+    }
+ else {
+      rootFile.setContents(new ByteArrayInputStream(filesStr.getBytes()));
+    }
+  }
+ catch (  IOException e) {
+    e.printStackTrace();
+  }
+  String qualifierStr=GenerateKBaseProjectFiles.generateQualifier(kbase);
+  File qualifieFile=namespaceFld.getFile(kbase.getName() + ".java");
+  try {
+    if (!qualifieFile.exists()) {
+      qualifieFile.create(new ByteArrayInputStream(qualifierStr.getBytes()));
+    }
+ else {
+      qualifieFile.setContents(new ByteArrayInputStream(qualifierStr.getBytes()));
+    }
+  }
+ catch (  IOException e) {
+    e.printStackTrace();
+  }
+  String producerStr=GenerateKBaseProjectFiles.generateProducer(kbase);
+  File producerFile=namespaceFld.getFile(kbase.getName() + "Producer.java");
+  try {
+    if (!producerFile.exists()) {
+      producerFile.create(new ByteArrayInputStream(producerStr.getBytes()));
+    }
+ else {
+      producerFile.setContents(new ByteArrayInputStream(producerStr.getBytes()));
+    }
+  }
+ catch (  IOException e) {
+    e.printStackTrace();
+  }
+  commitAddedKsessions(rootFld,kbase);
+}

@@ -1,0 +1,38 @@
+{
+  Folder folder=fs.getFolder(entry.getValue());
+  String kbaseQName=entry.getKey();
+  File file=folder.getFile(kbaseQName + ".properties");
+  Properties props=null;
+  try {
+    props=loadProperties(file);
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+  String namespace=props.getProperty("namespace");
+  String name=props.getProperty("name");
+  String filesStr=props.getProperty("files");
+  List<String> files=new ArrayList<String>();
+  for (  String str : filesStr.split(",")) {
+    if (StringUtils.isEmpty(str)) {
+      continue;
+    }
+    files.add(str.trim());
+  }
+  KBase kbase=new KBase(namespace,name,files);
+  kbase.setEventProcessingMode(EventProcessingOption.determineEventProcessingMode(props.getProperty("eventProcessingMode")));
+  kbase.setEqualsBehavior(AssertBehaviorOption.valueOf(props.getProperty("equalsBehavior")));
+  List<String> list=Arrays.asList(props.getProperty("annotations").split(","));
+  kbase.setAnnotations(list);
+  list=Arrays.asList(props.getProperty("ksessions").split(","));
+  for (  String ksessionQName : list) {
+    if (StringUtils.isEmpty(ksessionQName)) {
+      continue;
+    }
+    ksessionQName=ksessionQName.trim();
+    Map<String,String> map=new HashMap<String,String>();
+    mapStartsWith(map,props,ksessionQName);
+    readKSession(ksessionQName,map,kbase,kproject);
+  }
+  kproject.getKBases().put(kbaseQName,kbase);
+}

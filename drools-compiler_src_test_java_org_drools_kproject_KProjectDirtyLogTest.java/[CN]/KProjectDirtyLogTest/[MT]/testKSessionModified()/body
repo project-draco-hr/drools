@@ -1,0 +1,22 @@
+{
+  KProject kproj=new KProject();
+  KProjectChangeLog dirtyLog=new KProjectChangeLog();
+  kproj.setListener(dirtyLog);
+  assertFalse(dirtyLog.isKProjectDirty());
+  KBase kbase1=new KBase("org.test1","KBase1");
+  kproj.addKBase(kbase1);
+  KSession kSession=new KSession("org.test1","KSession1");
+  kSession.setClockType(ClockTypeOption.get("pseudo"));
+  kSession.setType("stateless");
+  kbase1.addKSession(kSession);
+  kSession.setClockType(ClockTypeOption.get("realtime"));
+  assertEquals("org.test1.KSession1",dirtyLog.getModifiedKSessions().get(kSession.getQName()));
+  assertTrue(dirtyLog.getAddedKSessions().containsKey(kSession.getQName()));
+  dirtyLog.reset();
+  kSession.setType("stateful");
+  assertEquals("org.test1.KSession1",dirtyLog.getModifiedKSessions().get(kSession.getQName()));
+  kbase1.removeKSession(kSession);
+  assertTrue(dirtyLog.getModifiedKSessions().containsKey(kSession.getQName()));
+  assertFalse(dirtyLog.getAddedKSessions().containsKey(kSession.getQName()));
+  assertTrue(dirtyLog.getRemovedKSessions().containsKey(kSession.getQName()));
+}

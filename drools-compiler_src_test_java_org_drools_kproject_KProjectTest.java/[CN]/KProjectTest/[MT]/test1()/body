@@ -1,0 +1,113 @@
+{
+  KProject kproj=new KProject();
+  KProjectChangeLog klog=new KProjectChangeLog();
+  kproj.setListener(klog);
+  kproj.setKProjectPath("src/main/resources/");
+  kproj.setKBasesPath("src/kbases");
+  List<String> files=asList(new String[]{"org/test1/rule1.drl","org/test1/rule2.drl"});
+  KBase kbase1=new KBase("org.test1","KBase1",files);
+  kbase1.setAnnotations(asList("@ApplicationScoped; @Inject"));
+  kbase1.setEqualsBehavior(AssertBehaviorOption.EQUALITY);
+  kbase1.setEventProcessingMode(EventProcessingOption.STREAM);
+  KSession ksession1=new KSession("org.test1","KSession1");
+  ksession1.setType("stateless");
+  ksession1.setAnnotations(asList("@ApplicationScoped; @Inject"));
+  ksession1.setClockType(ClockTypeOption.get("realtime"));
+  KSession ksession2=new KSession("org.test1","KSession2");
+  ksession2.setType("stateful");
+  ksession2.setAnnotations(asList("@ApplicationScoped; @Inject"));
+  ksession2.setClockType(ClockTypeOption.get("pseudo"));
+  kbase1.getKSessions().put(ksession1.getQName(),ksession1);
+  kbase1.getKSessions().put(ksession2.getQName(),ksession2);
+  files=asList(new String[]{"org/test2/rule1.drl","org/test2/rule2.drl"});
+  KBase kbase2=new KBase("org.test2","KBase2",files);
+  kbase2.setAnnotations(asList("@ApplicationScoped"));
+  kbase2.setEqualsBehavior(AssertBehaviorOption.IDENTITY);
+  kbase2.setEventProcessingMode(EventProcessingOption.CLOUD);
+  KSession ksession3=new KSession("org.test2","KSession3");
+  ksession3.setType("stateful");
+  ksession3.setAnnotations(asList("@ApplicationScoped"));
+  ksession3.setClockType(ClockTypeOption.get("pseudo"));
+  kbase2.getKSessions().put(ksession3.getQName(),ksession3);
+  kproj.addKBase(kbase1);
+  kproj.addKBase(kbase2);
+  MemoryFileSystem mfs=new MemoryFileSystem();
+  KProjectChangeLogCommiter.commit(kproj,klog,mfs);
+  String kbase1R1=getRule("org.test1","rule1");
+  String kbase1R2=getRule("org.test1","rule2");
+  String kbase2R1=getRule("org.test2","rule1");
+  String kbase2R2=getRule("org.test2","rule2");
+  String fldKB1=kproj.getKBasesPath() + "/" + kbase1.getQName()+ "/"+ kbase1.getNamespace().replace('.','/');
+  String fldKB2=kproj.getKBasesPath() + "/" + kbase2.getQName()+ "/"+ kbase2.getNamespace().replace('.','/');
+  mfs.getFolder(fldKB1).create();
+  mfs.getFolder(fldKB2).create();
+  mfs.getFile(fldKB1 + "/rule1.drl").create(new ByteArrayInputStream(kbase1R1.getBytes()));
+  mfs.getFile(fldKB1 + "/rule2.drl").create(new ByteArrayInputStream(kbase1R2.getBytes()));
+  mfs.getFile(fldKB2 + "/rule1.drl").create(new ByteArrayInputStream(kbase2R1.getBytes()));
+  mfs.getFile(fldKB2 + "/rule2.drl").create(new ByteArrayInputStream(kbase2R2.getBytes()));
+  MemoryFileSystem trgMfs=new MemoryFileSystem();
+  MemoryFileSystem srcgMfs=mfs;
+  for (  KBase kbase : kproj.getKBases().values()) {
+    Folder srcFolder=srcgMfs.getFolder(kproj.getKBasesPath() + "/" + kbase.getQName());
+    Folder trgFolder=trgMfs.getProjectFolder();
+    copyFolder(srcgMfs,srcFolder,trgMfs,trgFolder,kproj);
+  }
+  Folder fld1=trgMfs.getFolder("org/drools/cdi/test");
+  fld1.create();
+  File fle1=fld1.getFile("KProjectTestClassImpl.java");
+  fle1.create(new ByteArrayInputStream(generateKProjectTestClassImpl(kproj).getBytes()));
+  final List<String> classes=new ArrayList<String>();
+  classes.add("org/drools/cdi/test/KProjectTestClassImpl.java");
+  populateClasses(kproj,classes);
+  EclipseJavaCompilerSettings settings=new EclipseJavaCompilerSettings();
+  settings.setSourceVersion("1.5");
+  settings.setTargetVersion("1.5");
+  EclipseJavaCompiler compiler=new EclipseJavaCompiler(settings);
+  CompilationResult res=compiler.compile(classes.toArray(new String[classes.size()]),trgMfs,trgMfs);
+  if (res.getErrors().length > 0) {
+    fail("errors");
+  }
+  for (int i=0; i < classes.size(); i++) {
+    classes.set(i,filenameToClassname(classes.get(i)));
+  }
+  MemoryFileSystemClassLoader classLoader=new MemoryFileSystemClassLoader(trgMfs);
+  ClassLoader origCl=Thread.currentThread().getContextClassLoader();
+  try {
+    Thread.currentThread().setContextClassLoader(classLoader);
+    Weld weldContainer=new Weld(){
+      @Override protected Deployment createDeployment(      ResourceLoader resourceLoader,      Bootstrap bootstrap){
+        return new TestWeldSEDeployment(resourceLoader,bootstrap,classes);
+      }
+    }
+;
+    WeldContainer weld=weldContainer.initialize();
+    KProjectTestClass bean=weld.instance().select(KProjectTestClass.class).get();
+    assertNotNull(bean.getKBase1());
+    assertNotNull(bean.getKBase2());
+    List<String> list=new ArrayList<String>();
+    StatelessKnowledgeSession stlsKsession=bean.getKBase1Ksession1();
+    stlsKsession.setGlobal("list",list);
+    stlsKsession.execute("dummy");
+    assertEquals(2,list.size());
+    assertTrue(list.contains("org.test1:rule1"));
+    assertTrue(list.contains("org.test1:rule2"));
+    list.clear();
+    StatefulKnowledgeSession stflKsession=bean.getKBase1Ksession2();
+    stflKsession.setGlobal("list",list);
+    stflKsession.fireAllRules();
+    assertEquals(2,list.size());
+    assertTrue(list.contains("org.test1:rule1"));
+    assertTrue(list.contains("org.test1:rule2"));
+    list.clear();
+    stflKsession=bean.getKBase2Ksession3();
+    stflKsession.setGlobal("list",list);
+    stflKsession.fireAllRules();
+    assertEquals(2,list.size());
+    assertTrue(list.contains("org.test2:rule1"));
+    assertTrue(list.contains("org.test2:rule2"));
+    weldContainer.shutdown();
+  }
+  finally {
+    Thread.currentThread().setContextClassLoader(origCl);
+  }
+}

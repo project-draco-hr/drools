@@ -1,0 +1,166 @@
+{
+  if (evt.getSource() instanceof KProject) {
+    KProject kProject=(KProject)evt.getSource();
+    if ("kBases".equals(evt.getPropertyName())) {
+      Map<String,KBase> oldKBases=(Map<String,KBase>)evt.getOldValue();
+      Map<String,KBase> newKBases=(Map<String,KBase>)evt.getNewValue();
+      if (oldKBases.size() < newKBases.size()) {
+        for (        Entry<String,KBase> entry : newKBases.entrySet()) {
+          if (!oldKBases.containsKey(entry.getKey())) {
+            if (modifiedKBases.containsKey(entry.getKey())) {
+              if (removedKBases.remove(entry.getKey()) != null) {
+                return;
+              }
+              removedKBases.remove(modifiedKBases.get(entry.getKey()));
+              return;
+            }
+            if (removedKBases.remove(entry.getKey()) != null) {
+              return;
+            }
+            addedKBases.put(entry.getKey(),entry.getValue());
+            return;
+          }
+        }
+        throw new IllegalStateException("Maps are different sizes, yet we can't find the new KBase");
+      }
+ else       if (oldKBases.size() > newKBases.size()) {
+        for (        Entry<String,KBase> entry : oldKBases.entrySet()) {
+          if (!newKBases.containsKey(entry.getKey())) {
+            if (addedKBases.remove(entry.getKey()) != null) {
+              return;
+            }
+            removedKBases.put(entry.getKey(),entry.getValue());
+            return;
+          }
+        }
+        throw new IllegalStateException("Maps are different sizes, yet we can't find the removed KBase");
+      }
+    }
+ else {
+      kProjectDirty=true;
+    }
+  }
+ else   if (evt.getSource() instanceof KBase) {
+    KBase kBase=(KBase)evt.getSource();
+    if ("kSessions".equals(evt.getPropertyName())) {
+      Map<String,KSession> oldKBases=(Map<String,KSession>)evt.getOldValue();
+      Map<String,KSession> newKBases=(Map<String,KSession>)evt.getNewValue();
+      if (oldKBases.size() < newKBases.size()) {
+        for (        Entry<String,KSession> entry : newKBases.entrySet()) {
+          if (!oldKBases.containsKey(entry.getKey())) {
+            if (modifiedKSessions.containsKey(entry.getKey())) {
+              if (removedKSessions.remove(entry.getKey()) != null) {
+                return;
+              }
+              removedKSessions.remove(modifiedKSessions.get(entry.getKey()));
+              return;
+            }
+            if (removedKSessions.remove(entry.getKey()) != null) {
+              return;
+            }
+            addedKSessions.put(entry.getKey(),entry.getValue());
+            return;
+          }
+        }
+        throw new IllegalStateException("Maps are different sizes, yet we can't find the new KBase");
+      }
+ else       if (oldKBases.size() > newKBases.size()) {
+        for (        Entry<String,KSession> entry : oldKBases.entrySet()) {
+          if (!newKBases.containsKey(entry.getKey())) {
+            if (addedKSessions.remove(entry.getKey()) != null) {
+              return;
+            }
+            removedKSessions.put(entry.getKey(),entry.getValue());
+            return;
+          }
+        }
+        throw new IllegalStateException("Maps are different sizes, yet we can't find the removed KBase");
+      }
+    }
+ else     if ("namespace".equals(evt.getPropertyName())) {
+      String oldV=(String)evt.getOldValue();
+      String newV=(String)evt.getNewValue();
+      String oldQName=oldV + "." + kBase.getName();
+      String newQName=newV + "." + kBase.getName();
+      if (!removedKBases.containsKey(oldQName)) {
+        return;
+      }
+      String origQName=modifiedKBases.remove(oldQName);
+      if (origQName != null) {
+        modifiedKBases.put(newQName,origQName);
+      }
+ else {
+        modifiedKBases.put(newQName,oldV + "." + kBase.getName());
+      }
+    }
+ else     if ("name".equals(evt.getPropertyName())) {
+      String oldV=(String)evt.getOldValue();
+      String newV=(String)evt.getNewValue();
+      String oldQName=kBase.getNamespace() + "." + oldV;
+      String newQName=kBase.getNamespace() + "." + newV;
+      if (!removedKBases.containsKey(oldQName)) {
+        return;
+      }
+      String origQName=modifiedKBases.remove(oldQName);
+      if (origQName != null) {
+        modifiedKBases.put(newQName,origQName);
+      }
+ else {
+        modifiedKBases.put(newQName,kBase.getNamespace() + "." + oldV);
+      }
+    }
+ else {
+      String oldQName=modifiedKBases.remove(kBase.getQName());
+      if (oldQName != null) {
+        modifiedKBases.put(kBase.getQName(),oldQName);
+      }
+ else {
+        modifiedKBases.put(kBase.getQName(),kBase.getQName());
+      }
+    }
+  }
+ else   if (evt.getSource() instanceof KSession) {
+    KSession kSession=(KSession)evt.getSource();
+    if ("namespace".equals(evt.getPropertyName())) {
+      String oldV=(String)evt.getOldValue();
+      String newV=(String)evt.getNewValue();
+      String oldQName=oldV + "." + kSession.getName();
+      String newQName=newV + "." + kSession.getName();
+      if (!removedKSessions.containsKey(oldQName)) {
+        return;
+      }
+      String origQName=modifiedKBases.remove(oldQName);
+      if (origQName != null) {
+        modifiedKSessions.put(newQName,origQName);
+      }
+ else {
+        modifiedKSessions.put(newQName,oldV + "." + kSession.getName());
+      }
+    }
+ else     if ("name".equals(evt.getPropertyName())) {
+      String oldV=(String)evt.getOldValue();
+      String newV=(String)evt.getNewValue();
+      String oldQName=kSession.getNamespace() + "." + oldV;
+      String newQName=kSession.getNamespace() + "." + newV;
+      if (!removedKSessions.containsKey(oldQName)) {
+        return;
+      }
+      String origQName=modifiedKSessions.remove(oldQName);
+      if (origQName != null) {
+        modifiedKSessions.put(newQName,origQName);
+      }
+ else {
+        modifiedKSessions.put(newQName,kSession.getNamespace() + "." + oldV);
+      }
+    }
+ else {
+      String oldQName=modifiedKSessions.remove(kSession.getQName());
+      if (oldQName != null) {
+        modifiedKSessions.put(kSession.getQName(),oldQName);
+      }
+ else {
+        modifiedKSessions.put(kSession.getQName(),kSession.getQName());
+      }
+    }
+  }
+}

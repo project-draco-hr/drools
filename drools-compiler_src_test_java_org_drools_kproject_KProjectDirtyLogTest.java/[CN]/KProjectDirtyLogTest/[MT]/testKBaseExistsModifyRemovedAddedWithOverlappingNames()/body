@@ -1,0 +1,34 @@
+{
+  KProject kproj=new KProject();
+  KProjectChangeLog dirtyLog=new KProjectChangeLog();
+  kproj.setListener(dirtyLog);
+  KBase kbase1=new KBase("org.test1","KBase1");
+  kproj.addKBase(kbase1);
+  KBase kbase2=new KBase("org.test1","KBase2");
+  kproj.addKBase(kbase2);
+  dirtyLog.reset();
+  kproj.removeKBase(kbase1);
+  kbase1.setNamespace("org.test2");
+  kproj.addKBase(kbase1);
+  kproj.removeKBase(kbase2);
+  kbase2.setName("KBase1");
+  kproj.addKBase(kbase2);
+  assertEquals("org.test1.KBase1",dirtyLog.getModifiedKBases().get(kbase1.getQName()));
+  assertEquals("org.test1.KBase2",dirtyLog.getModifiedKBases().get(kbase2.getQName()));
+  assertFalse(dirtyLog.getRemovedKBases().containsKey(kbase1.getQName()));
+  assertFalse(dirtyLog.getAddedKBases().containsKey(kbase1.getQName()));
+  assertFalse(dirtyLog.getRemovedKBases().containsKey(kbase2.getQName()));
+  assertFalse(dirtyLog.getAddedKBases().containsKey(kbase2.getQName()));
+  kproj.removeKBase(kbase1);
+  assertEquals(kbase1,dirtyLog.getRemovedKBases().get(kbase1.getQName()));
+  assertEquals("org.test1.KBase1",dirtyLog.getModifiedKBases().get(kbase1.getQName()));
+  kproj.removeKBase(kbase2);
+  assertEquals(kbase2,dirtyLog.getRemovedKBases().get(kbase2.getQName()));
+  assertEquals("org.test1.KBase2",dirtyLog.getModifiedKBases().get(kbase2.getQName()));
+  kproj.addKBase(kbase1);
+  assertFalse(dirtyLog.getRemovedKBases().containsKey(kbase1.getQName()));
+  assertFalse(dirtyLog.getAddedKBases().containsKey(kbase1.getQName()));
+  kproj.addKBase(kbase2);
+  assertFalse(dirtyLog.getRemovedKBases().containsKey(kbase2.getQName()));
+  assertFalse(dirtyLog.getAddedKBases().containsKey(kbase2.getQName()));
+}

@@ -1,0 +1,21 @@
+{
+  KProject kproj=new KProject();
+  KProjectChangeLog dirtyLog=new KProjectChangeLog();
+  kproj.setListener(dirtyLog);
+  KBase kbase1=new KBase("org.test1","KBase1");
+  kbase1.setEqualsBehavior(AssertBehaviorOption.IDENTITY);
+  kbase1.setEventProcessingMode(EventProcessingOption.CLOUD);
+  kproj.addKBase(kbase1);
+  kbase1.setEqualsBehavior(AssertBehaviorOption.EQUALITY);
+  assertEquals("org.test1.KBase1",dirtyLog.getModifiedKBases().get(kbase1.getQName()));
+  dirtyLog.reset();
+  kbase1.setEventProcessingMode(EventProcessingOption.STREAM);
+  assertEquals("org.test1.KBase1",dirtyLog.getModifiedKBases().get(kbase1.getQName()));
+  dirtyLog.reset();
+  kbase1.setFiles(new ArrayList<String>());
+  assertEquals("org.test1.KBase1",dirtyLog.getModifiedKBases().get(kbase1.getQName()));
+  kproj.removeKBase(kbase1);
+  assertTrue(dirtyLog.getModifiedKBases().containsKey(kbase1.getQName()));
+  assertFalse(dirtyLog.getAddedKBases().containsKey(kbase1.getQName()));
+  assertTrue(dirtyLog.getRemovedKBases().containsKey(kbase1.getQName()));
+}
