@@ -7,16 +7,18 @@
   if (!(rightInput instanceof RightInputAdapterNode)) {
     Pattern pattern=context.getLastBuiltPatterns()[0];
     ObjectType objectType=pattern.getObjectType();
-    if (!(objectType instanceof ClassObjectType)) {
-      rightDeclaredMask=Long.MAX_VALUE;
-    }
-    Class objectClass=((ClassObjectType)objectType).getClassType();
-    if (isPropertyReactive(context,objectClass)) {
-      rightListenedProperties=pattern.getListenedProperties();
-      List<String> settableProperties=getSettableProperties(context.getRuleBase(),objectClass);
-      rightDeclaredMask=calculatePositiveMask(rightListenedProperties,settableProperties);
-      rightDeclaredMask|=constraints.getListenedPropertyMask(settableProperties);
-      rightNegativeMask=calculateNegativeMask(rightListenedProperties,settableProperties);
+    if (objectType instanceof ClassObjectType) {
+      Class objectClass=((ClassObjectType)objectType).getClassType();
+      if (isPropertyReactive(context,objectClass)) {
+        rightListenedProperties=pattern.getListenedProperties();
+        List<String> settableProperties=getSettableProperties(context.getRuleBase(),objectClass);
+        rightDeclaredMask=calculatePositiveMask(rightListenedProperties,settableProperties);
+        rightDeclaredMask|=constraints.getListenedPropertyMask(settableProperties);
+        rightNegativeMask=calculateNegativeMask(rightListenedProperties,settableProperties);
+      }
+ else {
+        rightDeclaredMask=Long.MAX_VALUE;
+      }
     }
  else {
       rightDeclaredMask=Long.MAX_VALUE;
