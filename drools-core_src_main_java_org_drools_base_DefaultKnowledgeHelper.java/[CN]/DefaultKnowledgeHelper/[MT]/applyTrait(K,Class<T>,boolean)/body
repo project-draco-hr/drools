@@ -3,5 +3,15 @@
   TraitFactory builder=arb.getConfiguration().getComponentFactory().getTraitFactory();
   boolean needsWrapping=!(core instanceof TraitableBean);
   TraitableBean inner=needsWrapping ? asTraitable(core,builder) : (TraitableBean)core;
+  if (needsWrapping) {
+    InternalFactHandle h=(InternalFactHandle)getFactHandle(core);
+    InternalWorkingMemoryEntryPoint ep=(InternalWorkingMemoryEntryPoint)h.getEntryPoint();
+    ObjectTypeConfigurationRegistry reg=ep.getObjectTypeConfigurationRegistry();
+    ObjectTypeConf coreConf=reg.getObjectTypeConf(ep.getEntryPoint(),core);
+    ObjectTypeConf innerConf=reg.getObjectTypeConf(ep.getEntryPoint(),inner);
+    if (coreConf.isTMSEnabled()) {
+      innerConf.enableTMS();
+    }
+  }
   return processTraits(core,trait,builder,needsWrapping,inner,logical);
 }
