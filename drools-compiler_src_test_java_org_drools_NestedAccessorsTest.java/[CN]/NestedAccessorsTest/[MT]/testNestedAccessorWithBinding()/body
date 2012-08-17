@@ -1,0 +1,13 @@
+{
+  String str="import org.drools.*;\n" + "global StringBuilder sb\n" + "rule R1 when\n"+ "   Person( name == \"mark\", cheese.(price == 10, $type : type) )\n"+ "then\n"+ "   sb.append( $type );\n"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  StringBuilder sb=new StringBuilder();
+  ksession.setGlobal("sb",sb);
+  Person mark1=new Person("mark");
+  mark1.setCheese(new Cheese("gorgonzola",10));
+  ksession.insert(mark1);
+  assertEquals(1,ksession.fireAllRules());
+  assertEquals("gorgonzola",sb.toString());
+  ksession.dispose();
+}
