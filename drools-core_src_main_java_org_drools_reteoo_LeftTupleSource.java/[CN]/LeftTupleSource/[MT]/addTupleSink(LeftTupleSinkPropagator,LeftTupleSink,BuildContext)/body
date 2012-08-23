@@ -1,0 +1,22 @@
+{
+  if (sinkPropagator instanceof EmptyLeftTupleSinkAdapter) {
+    if (this.partitionsEnabled && !this.partitionId.equals(tupleSink.getPartitionId())) {
+      return new AsyncSingleLeftTupleSinkAdapter(this.getPartitionId(),tupleSink);
+    }
+    return new SingleLeftTupleSinkAdapter(this.getPartitionId(),tupleSink);
+  }
+  if (sinkPropagator instanceof SingleLeftTupleSinkAdapter) {
+    final CompositeLeftTupleSinkAdapter sinkAdapter;
+    if (this.partitionsEnabled) {
+      sinkAdapter=new AsyncCompositeLeftTupleSinkAdapter(this.getPartitionId());
+    }
+ else {
+      sinkAdapter=new CompositeLeftTupleSinkAdapter(this.getPartitionId());
+    }
+    sinkAdapter.addTupleSink(sinkPropagator.getSinks()[0]);
+    sinkAdapter.addTupleSink(tupleSink);
+    return sinkAdapter;
+  }
+  ((CompositeLeftTupleSinkAdapter)sinkPropagator).addTupleSink(tupleSink);
+  return sinkPropagator;
+}

@@ -1,0 +1,37 @@
+{
+  if (scopeDelimiter == ScopeDelimiter.ALWAYS || children.isEmpty()) {
+    return Collections.EMPTY_MAP;
+  }
+ else   if (children.size() == 1) {
+    return getOuterDeclarations(children.get(0),consequenceName);
+  }
+ else {
+    Map<String,Declaration> declarations=new HashMap<String,Declaration>();
+    if (scopeDelimiter == ScopeDelimiter.NEVER) {
+      for (      RuleConditionElement rce : children) {
+        declarations.putAll(getOuterDeclarations(rce,consequenceName));
+        if (isConsequenceInvoker(rce,consequenceName)) {
+          break;
+        }
+      }
+    }
+ else     if (scopeDelimiter == ScopeDelimiter.CONSENSUS) {
+      Iterator<RuleConditionElement> i=children.iterator();
+      RuleConditionElement rce=i.next();
+      Map<String,Declaration> elementDeclarations=getOuterDeclarations(rce,consequenceName);
+      if (isConsequenceInvoker(rce,consequenceName)) {
+        return elementDeclarations;
+      }
+      declarations.putAll(elementDeclarations);
+      while (i.hasNext()) {
+        rce=i.next();
+        elementDeclarations=getOuterDeclarations(rce,consequenceName);
+        if (isConsequenceInvoker(rce,consequenceName)) {
+          return elementDeclarations;
+        }
+        declarations.keySet().retainAll(elementDeclarations.keySet());
+      }
+    }
+    return declarations;
+  }
+}

@@ -1,30 +1,6 @@
 {
-  String chunk="";
-  int first=-1;
-  Token last=null;
-  try {
-    first=input.index();
-    Token t=match(input,DRLLexer.ID,DroolsSoftKeywords.THEN,null,DroolsEditorType.KEYWORD);
-    if (state.failed)     return;
-    if (state.backtracking == 0) {
-      rule.getDescr().setConsequenceLocation(t.getLine(),t.getCharPositionInLine());
-      helper.emit(Location.LOCATION_RHS);
-    }
-    while (input.LA(1) != DRLLexer.EOF && !helper.validateIdentifierKey(DroolsSoftKeywords.END)) {
-      helper.emit(input.LT(1),DroolsEditorType.CODE_CHUNK);
-      input.consume();
-    }
-    last=input.LT(1);
-    if (last.getTokenIndex() > first) {
-      chunk=input.toString(first,last.getTokenIndex());
-      if (chunk.endsWith(DroolsSoftKeywords.END)) {
-        chunk=chunk.substring(0,chunk.length() - DroolsSoftKeywords.END.length());
-      }
-      chunk=chunk.replaceFirst("^then\\s*\\r?\\n?","");
-    }
-    rule.rhs(chunk);
-  }
- catch (  RecognitionException re) {
-    reportError(re);
+  defaultConsequence(rule);
+  while (input.LA(1) != DRLLexer.EOF && helper.validateIdentifierKey(DroolsSoftKeywords.THEN)) {
+    namedConsequence(rule);
   }
 }

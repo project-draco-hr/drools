@@ -1,0 +1,54 @@
+{
+  final ConditionalBranchMemory memory=(ConditionalBranchMemory)workingMemory.getNodeMemory(this);
+  boolean wasPropagated=leftTuple.getFirstChild() != null;
+  ConditionalExecution conditionalExecution=branchEvaluator.evaluate(leftTuple,workingMemory,memory.context);
+  if (wasPropagated) {
+    LeftTupleSink mainSink=this.sink.getSinks()[0];
+    LeftTupleSink oldSink=leftTuple.getFirstChild().getSink();
+    if (conditionalExecution != null) {
+      LeftTupleSink newSink=conditionalExecution.getSink().getSinks()[0];
+      if (oldSink.equals(newSink)) {
+        conditionalExecution.getSink().propagateModifyChildLeftTuple(leftTuple,context,workingMemory,this.tupleMemoryEnabled);
+        if (!conditionalExecution.isBreaking()) {
+          this.sink.propagateAssertLeftTuple(leftTuple,context,workingMemory,this.tupleMemoryEnabled);
+        }
+      }
+ else {
+        if (oldSink.equals(mainSink)) {
+          if (conditionalExecution.isBreaking()) {
+            this.sink.propagateRetractLeftTuple(leftTuple,context,workingMemory);
+          }
+ else {
+            this.sink.propagateModifyChildLeftTuple(leftTuple,context,workingMemory,this.tupleMemoryEnabled);
+          }
+        }
+ else {
+          conditionalExecution.getSink().propagateRetractLeftTuple(leftTuple,context,workingMemory);
+        }
+        conditionalExecution.getSink().propagateAssertLeftTuple(leftTuple,context,workingMemory,this.tupleMemoryEnabled);
+        if (!conditionalExecution.isBreaking() && !oldSink.equals(mainSink)) {
+          this.sink.propagateAssertLeftTuple(leftTuple,context,workingMemory,this.tupleMemoryEnabled);
+        }
+      }
+    }
+ else {
+      if (oldSink.equals(mainSink)) {
+        this.sink.propagateModifyChildLeftTuple(leftTuple,context,workingMemory,this.tupleMemoryEnabled);
+      }
+ else {
+        this.sink.propagateRetractLeftTuple(leftTuple,context,workingMemory);
+        this.sink.propagateAssertLeftTuple(leftTuple,context,workingMemory,this.tupleMemoryEnabled);
+      }
+    }
+  }
+ else {
+    boolean breaking=false;
+    if (conditionalExecution != null) {
+      conditionalExecution.getSink().propagateAssertLeftTuple(leftTuple,context,workingMemory,this.tupleMemoryEnabled);
+      breaking=conditionalExecution.isBreaking();
+    }
+    if (!breaking) {
+      this.sink.propagateAssertLeftTuple(leftTuple,context,workingMemory,this.tupleMemoryEnabled);
+    }
+  }
+}

@@ -4,35 +4,7 @@
     eval=helper.start(ce,EvalDescrBuilder.class,null);
     match(input,DRLLexer.ID,DroolsSoftKeywords.EVAL,null,DroolsEditorType.KEYWORD);
     if (state.failed)     return null;
-    match(input,DRLLexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
-    if (state.failed)     return null;
-    if (state.backtracking == 0) {
-      helper.emit(Location.LOCATION_LHS_INSIDE_EVAL);
-    }
-    int idx=input.index();
-    final String expr;
-    try {
-      expr=conditionalExpression();
-    }
- catch (    RecognitionException e) {
-      final Token tempToken=helper.getLastTokenOnList(helper.getEditorInterface().getLast().getContent());
-      if (tempToken != null) {
-        for (int i=tempToken.getTokenIndex() + 1; i < input.size(); i++) {
-          final Token token=input.get(i);
-          if (token.getType() == DRLLexer.EOF) {
-            break;
-          }
-          helper.emit(token,DroolsEditorType.CODE_CHUNK);
-        }
-      }
-      throw e;
-    }
-    if (state.backtracking == 0) {
-      eval.constraint(expr);
-    }
-    match(input,DRLLexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
-    if (state.failed)     return null;
-    helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
+    if (!parseEvalExpression(eval))     return null;
   }
  catch (  RecognitionException e) {
     throw e;
