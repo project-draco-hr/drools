@@ -1,13 +1,12 @@
 {
-  KProject kproj=new KProject();
+  KProject kproj=new KProjectImpl();
   KProjectChangeLog dirtyLog=new KProjectChangeLog();
   kproj.setListener(dirtyLog);
-  KBase kbase1=new KBase("org.test1","KBase1");
-  kproj.addKBase(kbase1);
+  KBase kbase1=kproj.newKBase("org.test1","KBase1");
   dirtyLog.reset();
-  kproj.removeKBase(kbase1);
-  assertEquals(kbase1,dirtyLog.getRemovedKBases().get(kbase1.getQName()));
-  kproj.addKBase(kbase1);
-  assertFalse(dirtyLog.getRemovedKBases().containsKey(kbase1.getQName()));
-  assertFalse(dirtyLog.getAddedKBases().containsKey(kbase1.getQName()));
+  kproj.removeKBase(kbase1.getQName());
+  assertTrue(dirtyLog.getRemovedKBases().contains(kbase1.getQName()));
+  kbase1=kproj.newKBase("org.test1","KBase1");
+  assertFalse(dirtyLog.getRemovedKBases().contains(kbase1.getQName()));
+  assertTrue(dirtyLog.getAddedKBases().contains(kbase1.getQName()));
 }

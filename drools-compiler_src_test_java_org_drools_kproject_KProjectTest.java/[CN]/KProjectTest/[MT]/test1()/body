@@ -1,36 +1,33 @@
 {
-  KProject kproj=new KProject();
+  KProject kproj=new KProjectImpl();
   KProjectChangeLog klog=new KProjectChangeLog();
   kproj.setListener(klog);
   kproj.setKProjectPath("src/main/resources/");
   kproj.setKBasesPath("src/kbases");
   List<String> files=asList(new String[]{"org/test1/rule1.drl","org/test1/rule2.drl"});
-  KBase kbase1=new KBase("org.test1","KBase1",files);
+  KBase kbase1=kproj.newKBase("org.test1","KBase1");
+  kbase1.setFiles(files);
   kbase1.setAnnotations(asList("@ApplicationScoped; @Inject"));
   kbase1.setEqualsBehavior(AssertBehaviorOption.EQUALITY);
   kbase1.setEventProcessingMode(EventProcessingOption.STREAM);
-  KSession ksession1=new KSession("org.test1","KSession1");
+  KSession ksession1=kbase1.newKSession("org.test1","KSession1");
   ksession1.setType("stateless");
   ksession1.setAnnotations(asList("@ApplicationScoped; @Inject"));
   ksession1.setClockType(ClockTypeOption.get("realtime"));
-  KSession ksession2=new KSession("org.test1","KSession2");
+  KSession ksession2=kbase1.newKSession("org.test1","KSession2");
   ksession2.setType("stateful");
   ksession2.setAnnotations(asList("@ApplicationScoped; @Inject"));
   ksession2.setClockType(ClockTypeOption.get("pseudo"));
-  kbase1.getKSessions().put(ksession1.getQName(),ksession1);
-  kbase1.getKSessions().put(ksession2.getQName(),ksession2);
   files=asList(new String[]{"org/test2/rule1.drl","org/test2/rule2.drl"});
-  KBase kbase2=new KBase("org.test2","KBase2",files);
+  KBase kbase2=kproj.newKBase("org.test2","KBase2");
+  kbase2.setFiles(files);
   kbase2.setAnnotations(asList("@ApplicationScoped"));
   kbase2.setEqualsBehavior(AssertBehaviorOption.IDENTITY);
   kbase2.setEventProcessingMode(EventProcessingOption.CLOUD);
-  KSession ksession3=new KSession("org.test2","KSession3");
+  KSession ksession3=kbase2.newKSession("org.test2","KSession3");
   ksession3.setType("stateful");
   ksession3.setAnnotations(asList("@ApplicationScoped"));
   ksession3.setClockType(ClockTypeOption.get("pseudo"));
-  kbase2.getKSessions().put(ksession3.getQName(),ksession3);
-  kproj.addKBase(kbase1);
-  kproj.addKBase(kbase2);
   MemoryFileSystem mfs=new MemoryFileSystem();
   KProjectChangeLogCommiter.commit(kproj,klog,mfs);
   String kbase1R1=getRule("org.test1","rule1");
@@ -46,30 +43,14 @@
   mfs.getFile(fldKB2 + "/rule1.drl").create(new ByteArrayInputStream(kbase2R1.getBytes()));
   mfs.getFile(fldKB2 + "/rule2.drl").create(new ByteArrayInputStream(kbase2R2.getBytes()));
   MemoryFileSystem trgMfs=new MemoryFileSystem();
-  MemoryFileSystem srcgMfs=mfs;
-  for (  KBase kbase : kproj.getKBases().values()) {
-    Folder srcFolder=srcgMfs.getFolder(kproj.getKBasesPath() + "/" + kbase.getQName());
-    Folder trgFolder=trgMfs.getProjectFolder();
-    copyFolder(srcgMfs,srcFolder,trgMfs,trgFolder,kproj);
-  }
+  MemoryFileSystem srcMfs=mfs;
   Folder fld1=trgMfs.getFolder("org/drools/cdi/test");
   fld1.create();
   File fle1=fld1.getFile("KProjectTestClassImpl.java");
   fle1.create(new ByteArrayInputStream(generateKProjectTestClassImpl(kproj).getBytes()));
-  final List<String> classes=new ArrayList<String>();
-  classes.add("org/drools/cdi/test/KProjectTestClassImpl.java");
-  populateClasses(kproj,classes);
-  EclipseJavaCompilerSettings settings=new EclipseJavaCompilerSettings();
-  settings.setSourceVersion("1.5");
-  settings.setTargetVersion("1.5");
-  EclipseJavaCompiler compiler=new EclipseJavaCompiler(settings);
-  CompilationResult res=compiler.compile(classes.toArray(new String[classes.size()]),trgMfs,trgMfs);
-  if (res.getErrors().length > 0) {
-    fail("errors");
-  }
-  for (int i=0; i < classes.size(); i++) {
-    classes.set(i,filenameToClassname(classes.get(i)));
-  }
+  List<String> inputClasses=new ArrayList<String>();
+  inputClasses.add("org/drools/cdi/test/KProjectTestClassImpl.java");
+  final List<String> classes=compile(kproj,srcMfs,trgMfs,inputClasses);
   MemoryFileSystemClassLoader classLoader=new MemoryFileSystemClassLoader(trgMfs);
   ClassLoader origCl=Thread.currentThread().getContextClassLoader();
   try {

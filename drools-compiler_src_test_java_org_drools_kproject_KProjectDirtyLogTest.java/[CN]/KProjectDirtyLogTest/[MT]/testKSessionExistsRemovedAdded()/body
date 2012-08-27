@@ -1,15 +1,13 @@
 {
-  KProject kproj=new KProject();
+  KProject kproj=new KProjectImpl();
   KProjectChangeLog dirtyLog=new KProjectChangeLog();
   kproj.setListener(dirtyLog);
-  KBase kbase1=new KBase("org.test1","KBase1");
-  kproj.addKBase(kbase1);
-  KSession kSession=new KSession("org.domain","KSession1");
-  kbase1.addKSession(kSession);
+  KBase kbase1=kproj.newKBase("org.test1","KBase1");
+  KSession kSession=kbase1.newKSession("org.domain","KSession1");
   dirtyLog.reset();
-  kbase1.removeKSession(kSession);
-  assertEquals(kSession,dirtyLog.getRemovedKSessions().get(kSession.getQName()));
-  kbase1.addKSession(kSession);
-  assertFalse(dirtyLog.getRemovedKSessions().containsKey(kbase1.getQName()));
-  assertFalse(dirtyLog.getAddedKSessions().containsKey(kbase1.getQName()));
+  kbase1.removeKSession(kSession.getQName());
+  assertTrue(dirtyLog.getRemovedKSessions().contains("org.domain.KSession1"));
+  kbase1.newKSession(kSession.getNamespace(),kSession.getName());
+  assertEquals(0,dirtyLog.getRemovedKSessions().size());
+  assertTrue(dirtyLog.getAddedKSessions().contains("org.domain.KSession1"));
 }
