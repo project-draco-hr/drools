@@ -8,11 +8,21 @@
   }
   kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
   StatefulKnowledgeSession ksession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
+  TraitFactory.setMode(mode,ksession.getKnowledgeBase());
   List<?> list=new ArrayList<Object>();
   ksession.setGlobal("list",list);
   ksession.fireAllRules();
   assertEquals(1,list.size());
   int id=ksession.getId();
+  Collection yOld=ksession.getObjects();
+  TraitableBean coreOld=null;
+  for (  Object o : yOld) {
+    if (o instanceof TraitableBean) {
+      coreOld=(TraitableBean)o;
+      break;
+    }
+  }
+  assertNotNull(coreOld);
   StatefulKnowledgeSession ksession2=JPAKnowledgeService.loadStatefulKnowledgeSession(id,kbase,null,env);
   ksession2.fireAllRules();
   Collection y=ksession2.getObjects();
