@@ -1,0 +1,20 @@
+{
+  KProject kproj=new KProjectImpl();
+  KProjectChangeLog klog=new KProjectChangeLog();
+  kproj.setListener(klog);
+  kproj.setKProjectPath("src/main/resources/");
+  kproj.setKBasesPath("src/kbases");
+  List<String> files=asList(new String[]{});
+  KBase kBase1=kproj.newKBase("org.test1","kBase1");
+  kBase1.setFiles(files);
+  kBase1.setEqualsBehavior(AssertBehaviorOption.EQUALITY);
+  kBase1.setEventProcessingMode(EventProcessingOption.STREAM);
+  MemoryFileSystem mfs=new MemoryFileSystem();
+  KProjectChangeLogCommiter.commit(kproj,klog,mfs);
+  Folder fld=mfs.getFolder("src/kbases/org.test1.kBase1");
+  assertTrue(fld.exists());
+  KSession kSession1=kBase1.newKSession("org.test1","KSession1");
+  kSession1.setType("stateful");
+  kSession1.setClockType(ClockTypeOption.get("realtime"));
+  KProjectChangeLogCommiter.commit(kproj,klog,mfs);
+}
