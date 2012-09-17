@@ -1,0 +1,33 @@
+{
+  Map<Class,List<String>> map=new HashMap<Class,List<String>>();
+  if (kBaseQualifiers != null && kBaseQualifiers.length > 0) {
+    for (    Class kBaseQualifier : kBaseQualifiers) {
+      List<String> list=new ArrayList<String>();
+      buildResourcesList(kBaseQualifier,kBaseQualifier.getName(),list);
+      map.put(kBaseQualifier,list);
+    }
+  }
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
+  for (  Map.Entry<Class,List<String>> entry : map.entrySet()) {
+    Class cls=entry.getKey();
+    List<String> files=entry.getValue();
+    if (!files.isEmpty()) {
+      for (      String file : files) {
+        if (file.endsWith(".drl")) {
+          ckbuilder.add(ResourceFactory.newUrlResource(cls.getResource("/" + file.trim())),ResourceType.DRL);
+        }
+      }
+    }
+  }
+  ckbuilder.build();
+  if (kbuilder.hasErrors()) {
+    throw new RuntimeException("Unable to compile " + kBaseQualifiers[0].getName() + ":\n"+ kbuilder.getErrors());
+  }
+  KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(eventProcessingMode);
+  kconf.setOption(equalsBehaviour);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  return kbase;
+}
