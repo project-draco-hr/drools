@@ -2,33 +2,30 @@
   if (ordered) {
     return;
   }
-  Map map=new HashMap();
-  for (Iterator it=this.rules.values().iterator(); it.hasNext(); ) {
-    BaseNode[] nodes=(BaseNode[])it.next();
-    for (int i=0; i < nodes.length; i++) {
-      if (nodes[i] instanceof RuleTerminalNode) {
-        RuleTerminalNode node=(RuleTerminalNode)nodes[i];
-        String agendaGroup=node.getRule().getAgendaGroup();
-        if (agendaGroup == null || agendaGroup.equals("")) {
+  Map<String,List<RuleTerminalNode>> map=new HashMap<String,List<RuleTerminalNode>>();
+  for (  BaseNode[] nodes : this.rules.values()) {
+    for (    BaseNode node : nodes) {
+      if (node instanceof RuleTerminalNode) {
+        RuleTerminalNode terminalNode=(RuleTerminalNode)node;
+        String agendaGroup=terminalNode.getRule().getAgendaGroup();
+        if ("".equals(agendaGroup)) {
           agendaGroup="MAIN";
         }
-        List rules=(List)map.get(agendaGroup);
+        List<RuleTerminalNode> rules=map.get(agendaGroup);
         if (rules == null) {
-          rules=new ArrayList();
+          rules=new ArrayList<RuleTerminalNode>();
           map.put(agendaGroup,rules);
         }
-        rules.add(node);
+        rules.add(terminalNode);
       }
     }
   }
-  for (Iterator it=map.entrySet().iterator(); it.hasNext(); ) {
-    Entry entry=(Entry)it.next();
-    String agendaGroup=(String)entry.getKey();
-    List rules=(List)entry.getValue();
+  for (  Map.Entry<String,List<RuleTerminalNode>> entry : map.entrySet()) {
+    String agendaGroup=entry.getKey();
+    List<RuleTerminalNode> rules=entry.getValue();
     Collections.sort(rules,RuleSequenceComparator.INSTANCE);
     int i=0;
-    for (Iterator listIter=rules.iterator(); listIter.hasNext(); ) {
-      RuleTerminalNode node=(RuleTerminalNode)listIter.next();
+    for (    RuleTerminalNode node : rules) {
       node.setSequence(i++);
     }
     ruleBase.getAgendaGroupRuleTotals().put(agendaGroup,i);
