@@ -1,0 +1,29 @@
+{
+  String urlPath=url.toExternalForm();
+  String urlType="file";
+  int colonIndex=urlPath.indexOf(":");
+  if (colonIndex != -1) {
+    urlType=urlPath.substring(0,colonIndex);
+  }
+  urlPath=url.getPath();
+  if ("jar".equals(urlType)) {
+    if (urlPath.indexOf('!') > 0) {
+      urlPath=urlPath.substring(0,urlPath.indexOf('!'));
+    }
+  }
+ else {
+    urlPath=urlPath.substring(0,urlPath.length() - "/META-INF/kproject.xml".length());
+  }
+  colonIndex=urlPath.lastIndexOf(":");
+  if (colonIndex >= 0) {
+    urlPath=urlPath.substring(colonIndex + 1);
+  }
+  try {
+    urlPath=URLDecoder.decode(urlPath,"UTF-8");
+  }
+ catch (  UnsupportedEncodingException ex) {
+    throw new ClasspathScanningException("Error decoding URL using UTF-8");
+  }
+  log.debug("KProject URL Type + URL: " + urlType + ":"+ urlPath);
+  return urlPath;
+}

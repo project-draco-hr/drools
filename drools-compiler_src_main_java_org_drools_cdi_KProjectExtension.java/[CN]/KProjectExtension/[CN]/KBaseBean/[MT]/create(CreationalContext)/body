@@ -1,0 +1,53 @@
+{
+  List<String> files=kBaseModel.getFiles();
+  String rootPath=urlPath;
+  if (rootPath.lastIndexOf(':') > 0) {
+    rootPath=urlPath.substring(rootPath.lastIndexOf(':') + 1);
+  }
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
+  if (urlPath.endsWith(".jar")) {
+    File actualZipFile=new File(rootPath);
+    if (!actualZipFile.exists()) {
+      log.error("Unable to build KBase:" + kBaseModel.getName() + " as jarPath cannot be found\n"+ rootPath);
+      return KnowledgeBaseFactory.newKnowledgeBase();
+    }
+    ZipFile zipFile=null;
+    try {
+      zipFile=new ZipFile(actualZipFile);
+    }
+ catch (    Exception e) {
+      log.error("Unable to build KBase:" + kBaseModel.getName() + " as jar cannot be opened\n"+ e.getMessage());
+      return KnowledgeBaseFactory.newKnowledgeBase();
+    }
+    try {
+      for (      String file : files) {
+        ZipEntry zipEntry=zipFile.getEntry(file);
+        ckbuilder.add(ResourceFactory.newInputStreamResource(zipFile.getInputStream(zipEntry)),ResourceType.DRL);
+      }
+    }
+ catch (    Exception e) {
+      try {
+        zipFile.close();
+      }
+ catch (      IOException e1) {
+      }
+      log.error("Unable to build KBase:" + kBaseModel.getName() + " as jar cannot be read\n"+ e.getMessage());
+      return KnowledgeBaseFactory.newKnowledgeBase();
+    }
+  }
+ else {
+    try {
+      for (      String file : files) {
+        ckbuilder.add(ResourceFactory.newFileResource(new File(rootPath,file)),ResourceType.DRL);
+      }
+    }
+ catch (    Exception e) {
+      log.error("Unable to build KBase:" + kBaseModel.getName() + "\n"+ e.getMessage());
+    }
+  }
+  ckbuilder.build();
+  this.kBase=KnowledgeBaseFactory.newKnowledgeBase();
+  this.kBase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  return this.kBase;
+}

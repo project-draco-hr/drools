@@ -1,0 +1,30 @@
+{
+  if (kProjects != null) {
+    Map<String,KBaseBean> kBaseBeans=new HashMap<String,KProjectExtension.KBaseBean>();
+    if (kBaseQNames != null) {
+      for (      String kBaseQName : kBaseQNames) {
+        KBaseBean bean=new KBaseBean(kBases.get(kBaseQName),kBaseURLs.get(kBaseQName));
+        kBaseBeans.put(kBaseQName,bean);
+        abd.addBean(bean);
+      }
+    }
+    kBaseQNames=null;
+    if (kSessionQNames != null) {
+      for (      String kSessionQName : kSessionQNames) {
+        org.drools.kproject.KSession kSession=kSessions.get(kSessionQName);
+        KBaseBean bean=kBaseBeans.get(((KSessionImpl)kSession).getKBase().getQName());
+        if ("stateless".equals(kSession.getType())) {
+          abd.addBean(new StatelessKSessionBean(kSession,bean));
+        }
+ else {
+          abd.addBean(new StatefulKSessionBean(kSession,bean));
+        }
+      }
+    }
+    kSessionQNames=null;
+    kBaseURLs=null;
+    kProjects=null;
+    kBases=null;
+    kSessions=null;
+  }
+}
