@@ -1,0 +1,14 @@
+{
+  String field1=expr.substring(0,sharpPos).trim();
+  int sharpPos2=expr.indexOf('#',sharpPos + 1);
+  String part2=sharpPos2 < 0 ? expr.substring(sharpPos + 1).trim() : expr.substring(sharpPos + 1,sharpPos2).trim();
+  String[] classAndField=splitInClassAndField(part2,context);
+  if (classAndField == null) {
+    return new String[]{"",expr};
+  }
+  String className=classAndField[0];
+  String field2=classAndField[1];
+  String castedExpression="((" + className + ")"+ field1+ ")."+ field2+ (sharpPos2 > 0 ? expr.substring(sharpPos2) : "");
+  atomicExpr.setRewrittenExpression(castedExpression);
+  return new String[]{field1 + " instanceof " + className+ " && ",castedExpression};
+}

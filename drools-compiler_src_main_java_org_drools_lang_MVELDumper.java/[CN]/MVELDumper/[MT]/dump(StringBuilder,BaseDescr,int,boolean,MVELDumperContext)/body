@@ -6,36 +6,16 @@
     processConnectiveDescr(sbuilder,base,parentPriority,isInsideRelCons,context);
   }
  else   if (base instanceof AtomicExprDescr) {
-    AtomicExprDescr atomicExpr=(AtomicExprDescr)base;
-    String expr=atomicExpr.getExpression().trim();
-    expr=processEval(expr);
-    String[] instanceofAndCastedExpr=processInlineCast(expr,atomicExpr,context);
-    expr=instanceofAndCastedExpr != null ? instanceofAndCastedExpr[0] + instanceofAndCastedExpr[1] : processInferredCast(expr,atomicExpr,context);
-    sbuilder.append(expr);
+    sbuilder.append(processAtomicExpression(context,(AtomicExprDescr)base));
   }
  else   if (base instanceof BindingDescr) {
-    context.addBinding((BindingDescr)base);
-    if (isInsideRelCons) {
-      BindingDescr bind=(BindingDescr)base;
-      String expr=bind.getExpression().trim();
-      sbuilder.append(expr);
-    }
+    processBinding(sbuilder,(BindingDescr)base,isInsideRelCons,context);
   }
  else   if (base instanceof RelationalExprDescr) {
-    RelationalExprDescr red=(RelationalExprDescr)base;
-    StringBuilder left=dump(new StringBuilder(),red.getLeft(),Integer.MAX_VALUE,true,context);
-    StringBuilder right=red.getRight() instanceof AtomicExprDescr ? processRightAtomicExpr(left,(AtomicExprDescr)red.getRight(),context) : dump(new StringBuilder(),red.getRight(),Integer.MAX_VALUE,true,context);
-    processRestriction(context,sbuilder,left.toString(),red.getOperatorDescr(),right.toString());
+    processRelationalExpression(sbuilder,(RelationalExprDescr)base,context);
   }
  else   if (base instanceof ExprConstraintDescr) {
-    DrlExprParser expr=new DrlExprParser();
-    ConstraintConnectiveDescr result=expr.parse(((ExprConstraintDescr)base).getExpression());
-    if (result.getDescrs().size() == 1) {
-      dump(sbuilder,result.getDescrs().get(0),0,isInsideRelCons,context);
-    }
- else {
-      dump(sbuilder,result,0,isInsideRelCons,context);
-    }
+    processConstraint(sbuilder,(ExprConstraintDescr)base,isInsideRelCons,context);
   }
   return sbuilder;
 }
