@@ -1,10 +1,44 @@
 {
+  URLConnection conn=null;
   try {
-    URLConnection conn=getURL().openConnection();
-    long date=conn.getLastModified();
-    return date;
+    conn=getURL().openConnection();
+    if (conn instanceof JarURLConnection) {
+      URL jarURL=((JarURLConnection)conn).getJarFileURL();
+      if (jarURL.getProtocol().equals("file")) {
+        return new File(jarURL.getFile()).lastModified();
+      }
+ else {
+        URLConnection jarConn=null;
+        try {
+          jarConn=jarURL.openConnection();
+          return jarConn.getLastModified();
+        }
+ catch (        IOException e) {
+          return -1;
+        }
+ finally {
+          try {
+            if (jarConn != null)             jarConn.getInputStream().close();
+          }
+ catch (          IOException e) {
+          }
+        }
+      }
+    }
+ else {
+      return conn.getLastModified();
+    }
   }
  catch (  IOException e) {
     throw new RuntimeException("Unable to get LastModified for ClasspathResource",e);
+  }
+ finally {
+    if (conn != null) {
+      try {
+        conn.getInputStream().close();
+      }
+ catch (      IOException e) {
+      }
+    }
   }
 }
