@@ -6,22 +6,31 @@
  else {
     reader.setClassLoader(this.configuration.getClassLoader(),null);
   }
-  ChangeSet changeSet=reader.read(resource.getReader());
-  if (changeSet == null) {
-  }
-  for (  Resource nestedResource : changeSet.getResourcesAdded()) {
-    InternalResource iNestedResourceResource=(InternalResource)nestedResource;
-    if (iNestedResourceResource.isDirectory()) {
-      for (      Resource childResource : iNestedResourceResource.listResources()) {
-        if (((InternalResource)childResource).isDirectory()) {
-          continue;
+  Reader resourceReader=null;
+  try {
+    resourceReader=resource.getReader();
+    ChangeSet changeSet=reader.read(resourceReader);
+    if (changeSet == null) {
+    }
+    for (    Resource nestedResource : changeSet.getResourcesAdded()) {
+      InternalResource iNestedResourceResource=(InternalResource)nestedResource;
+      if (iNestedResourceResource.isDirectory()) {
+        for (        Resource childResource : iNestedResourceResource.listResources()) {
+          if (((InternalResource)childResource).isDirectory()) {
+            continue;
+          }
+          ((InternalResource)childResource).setResourceType(iNestedResourceResource.getResourceType());
+          addKnowledgeResource(childResource,iNestedResourceResource.getResourceType(),iNestedResourceResource.getConfiguration());
         }
-        ((InternalResource)childResource).setResourceType(iNestedResourceResource.getResourceType());
-        addKnowledgeResource(childResource,iNestedResourceResource.getResourceType(),iNestedResourceResource.getConfiguration());
+      }
+ else {
+        addKnowledgeResource(iNestedResourceResource,iNestedResourceResource.getResourceType(),iNestedResourceResource.getConfiguration());
       }
     }
- else {
-      addKnowledgeResource(iNestedResourceResource,iNestedResourceResource.getResourceType(),iNestedResourceResource.getConfiguration());
+  }
+  finally {
+    if (resourceReader != null) {
+      resourceReader.close();
     }
   }
 }
