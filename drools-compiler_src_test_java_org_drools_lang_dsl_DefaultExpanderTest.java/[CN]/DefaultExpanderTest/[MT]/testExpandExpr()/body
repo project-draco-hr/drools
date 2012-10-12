@@ -1,0 +1,13 @@
+{
+  DSLTokenizedMappingFile file=new DSLTokenizedMappingFile();
+  String dsl="[when]Name of Applicant {nameVar:CF:Applicant.age}= System.out.println({nameVar})";
+  String source="rule \"test rule for custom form in DSL\"\n" + "     dialect \"mvel\"\n" + "     when\n"+ "         Name of Applicant Bojan Oklahoma and NJ,Andrew AMW Test\n"+ "     then\n"+ "end";
+  String expected="rule \"test rule for custom form in DSL\"\n" + "     dialect \"mvel\"\n" + "     when\n"+ "         System.out.println(Bojan Oklahoma and NJ,Andrew AMW Test)\n"+ "     then\n"+ "end";
+  file.parseAndLoad(new StringReader(dsl));
+  assertEquals(0,file.getErrors().size());
+  DefaultExpander ex=new DefaultExpander();
+  ex.addDSLMapping(file.getMapping());
+  String drl=ex.expand(source);
+  assertFalse(ex.hasErrors());
+  assertEquals(expected,drl);
+}
