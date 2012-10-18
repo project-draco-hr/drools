@@ -1,0 +1,17 @@
+{
+  String rule="package org.drools.test\n" + "rule R1 when\n" + "   $fieldA : FactA( $fieldB : fieldB )\n"+ "   FactB( this == $fieldB, fieldA == $fieldA )\n"+ "then\n"+ "end";
+  String declarationA="package org.drools.test\n" + "declare FactA\n" + "    fieldB: FactB\n"+ "end\n";
+  String declarationB="package org.drools.test\n" + "declare FactB\n" + "    fieldA: FactA\n"+ "end\n";
+  fileManager.write(fileManager.newFile("src/kbases/org.test.KBase1/org/test/rule.drl"),rule);
+  fileManager.write(fileManager.newFile("src/kbases/org.test.KBase1/org/test/decA.drl"),declarationA);
+  fileManager.write(fileManager.newFile("src/kbases/org.test.KBase1/org/test/decB.drl"),declarationB);
+  KProject kproj=new KProjectImpl();
+  KBase kBase1=kproj.newKBase("org.test","KBase1").setFiles(asList("org/test/rule.drl","org/test/decA.drl","org/test/decB.drl")).setEqualsBehavior(AssertBehaviorOption.EQUALITY).setEventProcessingMode(EventProcessingOption.STREAM);
+  KSession ksession1=kBase1.newKSession("org.test","KSession1").setType("stateful").setAnnotations(asList("@ApplicationScoped; @Inject")).setClockType(ClockTypeOption.get("realtime"));
+  XStream xstream=new XStream();
+  fileManager.write(fileManager.newFile(KnowledgeJarBuilderImpl.KPROJECT_RELATIVE_PATH),xstream.toXML(kproj));
+  KnowledgeJarBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeJarBuilder();
+  File kJar=kbuilder.buildKJar(fileManager.getRootDirectory(),fileManager.getRootDirectory(),"test.jar");
+  URLClassLoader urlClassLoader=new URLClassLoader(new URL[]{kJar.toURI().toURL()});
+  Thread.currentThread().setContextClassLoader(urlClassLoader);
+}

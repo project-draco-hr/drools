@@ -1,0 +1,32 @@
+{
+  MemoryFileSystem mfs=new MemoryFileSystem();
+  ZipFile zipFile=null;
+  try {
+    zipFile=new ZipFile(jarFile);
+    Enumeration<? extends ZipEntry> entries=zipFile.entries();
+    while (entries.hasMoreElements()) {
+      ZipEntry entry=entries.nextElement();
+      int separator=entry.getName().lastIndexOf('/');
+      String path=entry.getName().substring(0,separator);
+      String name=entry.getName().substring(separator + 1);
+      Folder folder=mfs.getFolder(path);
+      folder.create();
+      File file=folder.getFile(name);
+      file.create(zipFile.getInputStream(entry));
+    }
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+ finally {
+    if (zipFile != null) {
+      try {
+        zipFile.close();
+      }
+ catch (      IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+  return mfs;
+}
