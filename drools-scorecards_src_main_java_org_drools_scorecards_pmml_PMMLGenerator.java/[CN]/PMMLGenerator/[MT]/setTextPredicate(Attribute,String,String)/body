@@ -1,0 +1,43 @@
+{
+  String operator="";
+  if (predicateAsString.startsWith("=")) {
+    operator="=";
+    predicateAsString=predicateAsString.substring(1);
+  }
+ else   if (predicateAsString.startsWith("!=")) {
+    operator="!=";
+    predicateAsString=predicateAsString.substring(2);
+  }
+  if (predicateAsString.contains(",")) {
+    SimpleSetPredicate simpleSetPredicate=new SimpleSetPredicate();
+    if ("!=".equalsIgnoreCase(operator)) {
+      simpleSetPredicate.setBooleanOperator(PMMLOperators.IS_NOT_IN);
+    }
+ else {
+      simpleSetPredicate.setBooleanOperator(PMMLOperators.IS_IN);
+    }
+    simpleSetPredicate.setField(field);
+    predicateAsString=predicateAsString.trim();
+    if (predicateAsString.endsWith(",")) {
+      predicateAsString=predicateAsString.substring(0,predicateAsString.length() - 1);
+    }
+    Array array=new Array();
+    array.setContent(predicateAsString.replace(","," "));
+    array.setType("string");
+    array.setN(BigInteger.valueOf(predicateAsString.split(",").length));
+    simpleSetPredicate.setArray(array);
+    pmmlAttribute.setSimpleSetPredicate(simpleSetPredicate);
+  }
+ else {
+    SimplePredicate simplePredicate=new SimplePredicate();
+    simplePredicate.setField(field);
+    if ("!=".equalsIgnoreCase(operator)) {
+      simplePredicate.setOperator(PMMLOperators.NOT_EQUAL);
+    }
+ else {
+      simplePredicate.setOperator(PMMLOperators.EQUAL);
+    }
+    simplePredicate.setValue(predicateAsString);
+    pmmlAttribute.setSimplePredicate(simplePredicate);
+  }
+}

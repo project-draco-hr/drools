@@ -1,0 +1,25 @@
+{
+  for (  Object serializable : pmmlDocument.getAssociationModelsAndBaselineModelsAndClusteringModels()) {
+    if (serializable instanceof Scorecard) {
+      Scorecard scorecard=(Scorecard)serializable;
+      for (      Object obj : scorecard.getExtensionsAndCharacteristicsAndMiningSchemas()) {
+        if (obj instanceof Output) {
+          Output output=(Output)obj;
+          final List<OutputField> outputFields=output.getOutputFields();
+          assertEquals(1,outputFields.size());
+          final OutputField outputField=outputFields.get(0);
+          assertNotNull(outputField);
+          assertEquals("totalScore",outputField.getName());
+          assertEquals("Final Score",outputField.getDisplayName());
+          assertEquals("double",outputField.getDataType().value());
+          assertEquals("predictedValue",outputField.getFeature().value());
+          final Extension extension=ScorecardPMMLUtils.getExtension(outputField.getExtensions(),PMMLExtensionNames.SCORECARD_RESULTANT_SCORE_CLASS);
+          assertNotNull(extension);
+          assertEquals("org.drools.scorecards.example.Applicant",extension.getValue());
+          return;
+        }
+      }
+    }
+  }
+  fail();
+}

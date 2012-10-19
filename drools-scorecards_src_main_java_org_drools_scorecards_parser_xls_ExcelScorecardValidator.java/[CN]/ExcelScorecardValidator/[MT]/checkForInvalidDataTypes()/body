@@ -1,0 +1,34 @@
+{
+  for (  Object obj : scorecard.getExtensionsAndCharacteristicsAndMiningSchemas()) {
+    if (obj instanceof Characteristics) {
+      Characteristics characteristics=(Characteristics)obj;
+      for (      Characteristic characteristic : characteristics.getCharacteristics()) {
+        String dataType=ScorecardPMMLUtils.getExtensionValue(characteristic.getExtensions(),PMMLExtensionNames.CHARACTERTISTIC_DATATYPE);
+        String newCellRef=createDataTypeCellRef(ScorecardPMMLUtils.getExtensionValue(characteristic.getExtensions(),"cellRef"),1);
+        if (dataType == null || StringUtils.isEmpty(dataType)) {
+          parseErrors.add(new ScorecardError(newCellRef,"Missing Data Type!"));
+        }
+ else         if (!XLSKeywords.DATATYPE_TEXT.equalsIgnoreCase(dataType) && !XLSKeywords.DATATYPE_NUMBER.equalsIgnoreCase(dataType) && !XLSKeywords.DATATYPE_BOOLEAN.equalsIgnoreCase(dataType)) {
+          parseErrors.add(new ScorecardError(newCellRef,"Invalid Data Type!"));
+        }
+        if (XLSKeywords.DATATYPE_BOOLEAN.equalsIgnoreCase(dataType)) {
+          for (          Attribute attribute : characteristic.getAttributes()) {
+            String value=ScorecardPMMLUtils.getExtensionValue(attribute.getExtensions(),"predicateResolver");
+            if (!"TRUE".equalsIgnoreCase(value) && !"FALSE".equalsIgnoreCase(value)) {
+              parseErrors.add(new ScorecardError(newCellRef,"Characteristic '" + characteristic.getName() + "' is Boolean and can support TRUE|FALSE only"));
+              break;
+            }
+          }
+        }
+ else         if (XLSKeywords.DATATYPE_NUMBER.equalsIgnoreCase(dataType)) {
+          for (          Attribute attribute : characteristic.getAttributes()) {
+            String value=ScorecardPMMLUtils.getExtensionValue(attribute.getExtensions(),"predicateResolver");
+            if (!StringUtil.isNumericWithOperators(value)) {
+              parseErrors.add(new ScorecardError(newCellRef,"Characteristic '" + characteristic.getName() + "' is Number and can support numerics only"));
+            }
+          }
+        }
+      }
+    }
+  }
+}

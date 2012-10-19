@@ -1,0 +1,31 @@
+{
+  Extension classExtension=ScorecardPMMLUtils.getExtension(pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas(),PMMLExtensionNames.SCORECARD_RESULTANT_SCORE_CLASS);
+  Extension fieldExtension=ScorecardPMMLUtils.getExtension(pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas(),PMMLExtensionNames.SCORECARD_RESULTANT_SCORE_FIELD);
+  Extension reasonCodeExtension=ScorecardPMMLUtils.getExtension(pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas(),PMMLExtensionNames.SCORECARD_RESULTANT_REASONCODES_FIELD);
+  for (  Object obj : pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas()) {
+    if (obj instanceof Output) {
+      Output output=(Output)obj;
+      OutputField outputField=new OutputField();
+      outputField.setDataType(DATATYPE.DOUBLE);
+      outputField.setDisplayName("Final Score");
+      if (fieldExtension != null) {
+        pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas().remove(fieldExtension);
+        outputField.setName(fieldExtension.getValue());
+      }
+ else {
+        outputField.setName("calculatedScore");
+      }
+      if (classExtension != null) {
+        pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas().remove(classExtension);
+        outputField.getExtensions().add(classExtension);
+      }
+      output.getOutputFields().add(outputField);
+      outputField.setFeature(RESULTFEATURE.PREDICTED_VALUE);
+      if (reasonCodeExtension != null) {
+        pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas().remove(reasonCodeExtension);
+        outputField.getExtensions().add(reasonCodeExtension);
+      }
+      break;
+    }
+  }
+}

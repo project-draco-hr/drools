@@ -1,0 +1,27 @@
+{
+  String externalClassName=null;
+  String fieldName=null;
+  for (  Object obj : scorecard.getExtensionsAndCharacteristicsAndMiningSchemas()) {
+    if (obj instanceof Output) {
+      Output output=(Output)obj;
+      final List<OutputField> outputFields=output.getOutputFields();
+      final OutputField outputField=outputFields.get(0);
+      fieldName=outputField.getName();
+      externalClassName=ScorecardPMMLUtils.getExtension(outputField.getExtensions(),PMMLExtensionNames.SCORECARD_RESULTANT_SCORE_CLASS).getValue();
+      break;
+    }
+  }
+  if (fieldName != null && externalClassName != null) {
+    Consequence consequence=new Consequence();
+    StringBuilder stringBuilder=new StringBuilder("$");
+    stringBuilder.append(fieldName).append("Var").append(".set").append(Character.toUpperCase(fieldName.charAt(0))).append(fieldName.substring(1));
+    if (scorecard.getInitialScore() > 0) {
+      stringBuilder.append("($calculatedScore+$initialScore);");
+    }
+ else {
+      stringBuilder.append("($calculatedScore);");
+    }
+    consequence.setSnippet(stringBuilder.toString());
+    calcTotalRule.addConsequence(consequence);
+  }
+}

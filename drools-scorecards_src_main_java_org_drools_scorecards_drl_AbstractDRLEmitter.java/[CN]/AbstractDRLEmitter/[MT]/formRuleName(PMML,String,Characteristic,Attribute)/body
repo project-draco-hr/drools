@@ -1,0 +1,30 @@
+{
+  StringBuilder sb=new StringBuilder();
+  sb.append(modelName).append("_").append(c.getName()).append("_");
+  String dataType=ScorecardPMMLUtils.getDataType(pmmlDocument,ScorecardPMMLUtils.extractFieldNameFromCharacteristic(c));
+  if (XLSKeywords.DATATYPE_NUMBER.equalsIgnoreCase(dataType)) {
+    if (scoreAttribute.getSimplePredicate() != null) {
+      sb.append(scoreAttribute.getSimplePredicate().getOperator()).append("_").append(scoreAttribute.getSimplePredicate().getValue());
+    }
+ else     if (scoreAttribute.getCompoundPredicate() != null) {
+      sb.append("between");
+      for (      Object obj : scoreAttribute.getCompoundPredicate().getSimplePredicatesAndCompoundPredicatesAndSimpleSetPredicates()) {
+        if (obj instanceof SimplePredicate) {
+          sb.append("_").append(((SimplePredicate)obj).getValue());
+        }
+      }
+    }
+  }
+ else   if (XLSKeywords.DATATYPE_TEXT.equalsIgnoreCase(dataType) || XLSKeywords.DATATYPE_BOOLEAN.equalsIgnoreCase(dataType)) {
+    if (scoreAttribute.getSimplePredicate() != null) {
+      sb.append(scoreAttribute.getSimplePredicate().getOperator()).append("_").append(scoreAttribute.getSimplePredicate().getValue());
+    }
+ else     if (scoreAttribute.getSimpleSetPredicate() != null) {
+      SimpleSetPredicate predicate=scoreAttribute.getSimpleSetPredicate();
+      Array array=predicate.getArray();
+      String text=array.getContent().replace(" ","_");
+      sb.append(predicate.getBooleanOperator()).append("_").append(text);
+    }
+  }
+  return sb.toString();
+}

@@ -1,0 +1,37 @@
+{
+  List<DataExpectation> dataExpectations=resolveExpectations(currentRowCtr,currentColCtr);
+  CellReference cellRef=new CellReference(currentRowCtr,currentColCtr);
+  for (  DataExpectation dataExpectation : dataExpectations) {
+    try {
+      if (dataExpectation != null && dataExpectation.object != null) {
+        if (cellValue == null || StringUtils.isEmpty(cellValue.toString())) {
+          if (dataExpectation.errorMessage != null && !StringUtils.isEmpty(dataExpectation.errorMessage)) {
+            parseErrors.add(new ScorecardError(cellRef.formatAsString(),dataExpectation.errorMessage));
+            return;
+          }
+        }
+        String setter="set" + Character.toUpperCase(dataExpectation.property.charAt(0)) + dataExpectation.property.substring(1);
+        Method method=getSuitableMethod(cellValue,expectedClass,dataExpectation,setter);
+        if (method == null) {
+          if (cellValue != null && !StringUtils.isEmpty(cellValue.toString())) {
+            parseErrors.add(new ScorecardError(cellRef.formatAsString(),"Unexpected Value! Wrong Datatype?"));
+          }
+          return;
+        }
+        if (method.getParameterTypes()[0] == Double.class) {
+          cellValue=new Double(Double.parseDouble(cellValue.toString()));
+        }
+        if (method.getParameterTypes()[0] == Boolean.class) {
+          cellValue=Boolean.valueOf(cellValue.toString());
+        }
+        method.invoke(dataExpectation.object,cellValue);
+        if (dataExpectation.object instanceof Extension && ("cellRef".equals(((Extension)dataExpectation.object).getName()))) {
+          ((Extension)dataExpectation.object).setValue(cellRef.formatAsString());
+        }
+      }
+    }
+ catch (    Exception e) {
+      throw new ScorecardParseException(e);
+    }
+  }
+}

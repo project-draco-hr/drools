@@ -1,0 +1,24 @@
+{
+  try {
+    excelDataCollector=new XLSEventDataCollector();
+    excelDataCollector.setParser(this);
+    HSSFWorkbook workbook=new HSSFWorkbook(inStream);
+    HSSFSheet worksheet=workbook.getSheet(worksheetName);
+    if (worksheet != null) {
+      currentWorksheet=worksheet;
+      excelDataCollector.sheetStart(worksheetName);
+      excelDataCollector.setMergedRegionsInSheet(getMergedCellRangeList(worksheet));
+      processSheet(worksheet);
+      excelDataCollector.sheetComplete();
+      parseErrors=excelDataCollector.getParseErrors();
+      scorecard=excelDataCollector.getScorecard();
+    }
+ else {
+      throw new ScorecardParseException("No worksheet found with name '" + worksheetName + "'.");
+    }
+  }
+ catch (  IOException e) {
+    throw new ScorecardParseException(e);
+  }
+  return parseErrors;
+}
