@@ -1,0 +1,35 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  for (  KnowledgeBuilderError error : kbuilder.getErrors()) {
+    System.out.println(error.getMessage());
+  }
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  Applicant applicant=new Applicant();
+  applicant.setAge(10);
+  session.insert(applicant);
+  session.fireAllRules();
+  session.dispose();
+  assertEquals(29.0,applicant.getTotalScore());
+  session=kbase.newStatefulKnowledgeSession();
+  applicant=new Applicant();
+  applicant.setOccupation("SKYDIVER");
+  applicant.setAge(0);
+  session.insert(applicant);
+  session.fireAllRules();
+  session.dispose();
+  assertEquals(-1.0,applicant.getTotalScore());
+  session=kbase.newStatefulKnowledgeSession();
+  applicant=new Applicant();
+  applicant.setResidenceState("AP");
+  applicant.setOccupation("TEACHER");
+  applicant.setAge(20);
+  applicant.setValidLicense(true);
+  session.insert(applicant);
+  session.fireAllRules();
+  session.dispose();
+  assertEquals(41.0,applicant.getTotalScore());
+}

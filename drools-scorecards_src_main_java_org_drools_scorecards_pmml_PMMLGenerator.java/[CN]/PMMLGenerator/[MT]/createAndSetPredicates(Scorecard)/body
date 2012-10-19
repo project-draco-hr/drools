@@ -1,0 +1,24 @@
+{
+  for (  Object obj : pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas()) {
+    if (obj instanceof Characteristics) {
+      Characteristics characteristics=(Characteristics)obj;
+      for (      org.dmg.pmml.pmml_4_1.descr.Characteristic characteristic : characteristics.getCharacteristics()) {
+        String dataType=ScorecardPMMLUtils.getExtensionValue(characteristic.getExtensions(),PMMLExtensionNames.CHARACTERTISTIC_DATATYPE);
+        Extension predicateExtension=null;
+        for (        Attribute attribute : characteristic.getAttributes()) {
+          String predicateAsString="";
+          String field=ScorecardPMMLUtils.getExtensionValue(attribute.getExtensions(),PMMLExtensionNames.CHARACTERTISTIC_FIELD);
+          for (          Extension extension : attribute.getExtensions()) {
+            if ("predicateResolver".equalsIgnoreCase(extension.getName())) {
+              predicateAsString=extension.getValue();
+              predicateExtension=extension;
+              break;
+            }
+          }
+          setPredicatesForAttribute(attribute,dataType,field,predicateAsString);
+          attribute.getExtensions().remove(predicateExtension);
+        }
+      }
+    }
+  }
+}

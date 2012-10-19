@@ -1,0 +1,16 @@
+{
+  List<Rule> ruleList=createRuleList(pmml);
+  String pkgName=ScorecardPMMLUtils.getExtensionValue(pmml.getHeader().getExtensions(),PMMLExtensionNames.SCORECARD_PACKAGE);
+  org.drools.template.model.Package aPackage=new org.drools.template.model.Package(pkgName);
+  DRLOutput drlOutput=new DRLOutput();
+  for (  Rule rule : ruleList) {
+    aPackage.addRule(rule);
+  }
+  addDeclaredTypes(pmml,aPackage);
+  addImports(pmml,aPackage);
+  addGlobals(pmml,aPackage);
+  internalEmitDRL(pmml,ruleList,aPackage);
+  aPackage.renderDRL(drlOutput);
+  String drl=drlOutput.getDRL();
+  return drl;
+}

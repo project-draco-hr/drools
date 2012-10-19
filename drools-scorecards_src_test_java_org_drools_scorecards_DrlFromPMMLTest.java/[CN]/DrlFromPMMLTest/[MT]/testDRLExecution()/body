@@ -1,0 +1,36 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  for (  KnowledgeBuilderError error : kbuilder.getErrors()) {
+    System.out.println(error.getMessage());
+  }
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  FactType scorecardType=kbase.getFactType("org.drools.scorecards.example","SampleScore");
+  DroolsScorecard scorecard=(DroolsScorecard)scorecardType.newInstance();
+  scorecardType.set(scorecard,"age",10);
+  session.insert(scorecard);
+  session.fireAllRules();
+  session.dispose();
+  assertEquals(29.0,scorecard.getCalculatedScore());
+  session=kbase.newStatefulKnowledgeSession();
+  scorecard=(DroolsScorecard)scorecardType.newInstance();
+  scorecardType.set(scorecard,"occupation","SKYDIVER");
+  scorecardType.set(scorecard,"age",0);
+  session.insert(scorecard);
+  session.fireAllRules();
+  session.dispose();
+  assertTrue(-1 == scorecard.getCalculatedScore());
+  session=kbase.newStatefulKnowledgeSession();
+  scorecard=(DroolsScorecard)scorecardType.newInstance();
+  scorecardType.set(scorecard,"residenceState","AP");
+  scorecardType.set(scorecard,"occupation","TEACHER");
+  scorecardType.set(scorecard,"age",20);
+  scorecardType.set(scorecard,"validLicense",true);
+  session.insert(scorecard);
+  session.fireAllRules();
+  session.dispose();
+  assertEquals(41.0,scorecard.getCalculatedScore());
+}
