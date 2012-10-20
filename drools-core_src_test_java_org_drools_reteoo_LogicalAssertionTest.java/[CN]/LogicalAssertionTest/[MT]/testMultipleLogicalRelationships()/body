@@ -39,17 +39,17 @@
   final String logicalString2=new String("logical");
   final InternalFactHandle logicalHandle2=(InternalFactHandle)workingMemory.insert(logicalString2,"value2",false,true,rule2,(Activation)tuple2.getObject());
   assertSame(logicalHandle1,logicalHandle2);
-  TruthMaintenanceSystem tms=workingMemory.getTruthMaintenanceSystem();
-  assertEquals(1,tms.getJustifiedMap().size());
-  BeliefSet bs=(BeliefSet)tms.getJustifiedMap().get(logicalHandle2.getId());
+  TruthMaintenanceSystem tms=((NamedEntryPoint)workingMemory.getWorkingMemoryEntryPoint(EntryPoint.DEFAULT.getEntryPointId())).getTruthMaintenanceSystem();
+  assertEquals(1,getLogicalCount(tms));
+  BeliefSet bs=(BeliefSet)logicalHandle2.getEqualityKey().getBeliefSet();
   assertEquals("value1",((LogicalDependency)((LinkedListEntry)bs.getFirst()).getObject()).getValue());
   assertEquals("value2",((LogicalDependency)((LinkedListEntry)bs.getFirst().getNext()).getObject()).getValue());
   node2.retractLeftTuple(tuple2,context2,workingMemory);
   workingMemory.executeQueuedActions();
   assertLength(0,sink.getRetracted());
-  assertEquals(1,workingMemory.getTruthMaintenanceSystem().getJustifiedMap().size());
+  assertEquals(1,getLogicalCount((tms)));
   node.retractLeftTuple(tuple1,context1,workingMemory);
   workingMemory.executeQueuedActions();
   assertLength(1,sink.getRetracted());
-  assertEquals(0,workingMemory.getTruthMaintenanceSystem().getJustifiedMap().size());
+  assertEquals(0,getLogicalCount(tms));
 }

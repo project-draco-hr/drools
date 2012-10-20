@@ -1,0 +1,31 @@
+{
+  TruthMaintenanceSystem tms=((NamedEntryPoint)wmep).getTruthMaintenanceSystem();
+  ObjectHashMap justifiedMap=tms.getEqualityKeyMap();
+  if (!justifiedMap.isEmpty()) {
+    EqualityKey[] keys=new EqualityKey[justifiedMap.size()];
+    org.drools.core.util.Iterator it=justifiedMap.iterator();
+    int i=0;
+    for (org.drools.core.util.ObjectHashMap.ObjectEntry entry=(org.drools.core.util.ObjectHashMap.ObjectEntry)it.next(); entry != null; entry=(org.drools.core.util.ObjectHashMap.ObjectEntry)it.next()) {
+      EqualityKey key=(EqualityKey)entry.getKey();
+      keys[i++]=key;
+    }
+    Arrays.sort(keys,EqualityKeySorter.instance);
+    ProtobufMessages.TruthMaintenanceSystem.Builder _tms=ProtobufMessages.TruthMaintenanceSystem.newBuilder();
+    for (    EqualityKey key : keys) {
+      ProtobufMessages.EqualityKey.Builder _key=ProtobufMessages.EqualityKey.newBuilder();
+      _key.setStatus(key.getStatus());
+      _key.setHandleId(key.getFactHandle().getId());
+      if (key.size() > 1) {
+        FastIterator keyIter=key.fastIterator();
+        for (DefaultFactHandle handle=key.getFirst().getNext(); handle != null; handle=(DefaultFactHandle)keyIter.next(handle)) {
+          _key.addOtherHandle(handle.getId());
+        }
+      }
+      if (key.getBeliefSet() != null && !key.getBeliefSet().isEmpty()) {
+        writeBeliefSet(context,key.getBeliefSet(),_key);
+      }
+      _tms.addKey(_key.build());
+    }
+    _epb.setTms(_tms.build());
+  }
+}

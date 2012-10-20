@@ -19,71 +19,48 @@
       this.ruleBase.readLock();
       handle=this.objectStore.getHandleForObject(object);
       if (typeConf.isTMSEnabled()) {
-        EqualityKey key;
-        TruthMaintenanceSystem tms=wm.getTruthMaintenanceSystem();
-        if (handle == null) {
-          key=tms.get(object);
-        }
- else {
-          key=handle.getEqualityKey();
-          if (key.getStatus() == EqualityKey.STATED) {
-            return handle;
-          }
-          if (!logical) {
-            key.setStatus(EqualityKey.STATED);
-            tms.removeLogicalDependencies(handle);
-          }
- else {
-            tms.addLogicalDependency(handle,tmsValue,activation,activation.getPropagationContext(),rule,typeConf);
-          }
+        TruthMaintenanceSystem tms=getTruthMaintenanceSystem();
+        if (handle != null) {
+          insertWhenHandleExists(object,tmsValue,logical,rule,activation,typeConf,handle,tms);
           return handle;
         }
-        if (key == null) {
-          handle=createHandle(object,typeConf);
-          key=createEqualityKey(handle);
-          tms.put(key);
-          if (!logical) {
-            key.setStatus(EqualityKey.STATED);
+        EqualityKey key=tms.get(object);
+        if (logical) {
+          if (key != null && key.getStatus() == EqualityKey.STATED) {
+            return null;
           }
- else {
+          if (key == null) {
+            handle=createHandle(object,typeConf);
+            key=new EqualityKey(handle);
+            handle.setEqualityKey(key);
+            tms.put(key);
             key.setStatus(EqualityKey.JUSTIFIED);
-            tms.addLogicalDependency(handle,tmsValue,activation,activation.getPropagationContext(),rule,typeConf);
-            return handle;
           }
-        }
- else         if (!logical) {
-          if (key.getStatus() == EqualityKey.JUSTIFIED) {
-            final InternalFactHandle justifiedHandle=key.getFactHandle();
-            tms.removeLogicalDependencies(justifiedHandle);
-            if (this.wm.discardOnLogicalOverride) {
-              key.setStatus(EqualityKey.STATED);
-              handle=key.getFactHandle();
-              if (AssertBehaviour.IDENTITY.equals(this.ruleBase.getConfiguration().getAssertBehaviour())) {
-                this.objectStore.updateHandle(handle,object);
-              }
-              return handle;
-            }
  else {
-              key.setStatus(EqualityKey.STATED);
-              handle=createHandle(object,typeConf);
-              handle.setEqualityKey(key);
-              key.addFactHandle(handle);
-            }
+            handle=key.getFactHandle();
+          }
+          tms.addLogicalDependency(handle,object,tmsValue,activation,activation.getPropagationContext(),rule,typeConf);
+          return key.getFactHandle();
+        }
+ else {
+          if (key == null) {
+            handle=createHandle(object,typeConf);
+            key=new EqualityKey(handle);
+            handle.setEqualityKey(key);
+            tms.put(key);
+          }
+ else           if (key.getStatus() == EqualityKey.JUSTIFIED) {
+            key.setStatus(EqualityKey.STATED);
+            final InternalFactHandle justifiedHandle=key.getFactHandle();
+            TruthMaintenanceSystemHelper.removeLogicalDependencies(justifiedHandle);
+            return update(justifiedHandle,true,object,Long.MAX_VALUE,activation);
           }
  else {
             handle=createHandle(object,typeConf);
-            key.addFactHandle(handle);
             handle.setEqualityKey(key);
+            key.addFactHandle(handle);
           }
-        }
- else {
-          if (key.getStatus() == EqualityKey.JUSTIFIED) {
-            tms.addLogicalDependency(key.getFactHandle(),tmsValue,activation,activation.getPropagationContext(),rule,typeConf);
-            return key.getFactHandle();
-          }
- else {
-            return null;
-          }
+          key.setStatus(EqualityKey.STATED);
         }
       }
  else {

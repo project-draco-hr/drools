@@ -20,9 +20,15 @@
   h=getFactHandle(h,workingMemory);
   workingMemory.retract(h);
   workingMemory=getSerialisedStatefulSession(workingMemory);
-  assertEquals(0,IteratorToList.convert(workingMemory.iterateObjects()).size());
-  TruthMaintenanceSystem tms=((InternalWorkingMemory)workingMemory).getTruthMaintenanceSystem();
-  final java.lang.reflect.Field field=tms.getClass().getDeclaredField("assertMap");
+  List list=IteratorToList.convert(workingMemory.iterateObjects());
+  assertEquals(1,list.size());
+  assertEquals(new CheeseEqual("person",3),list.get(0));
+  FactHandle fh=workingMemory.getFactHandle(list.get(0));
+  workingMemory.retract(fh);
+  list=IteratorToList.convert(workingMemory.iterateObjects());
+  assertEquals(0,list.size());
+  TruthMaintenanceSystem tms=((NamedEntryPoint)workingMemory.getWorkingMemoryEntryPoint(EntryPoint.DEFAULT.getEntryPointId())).getTruthMaintenanceSystem();
+  final java.lang.reflect.Field field=tms.getClass().getDeclaredField("equalityKeyMap");
   field.setAccessible(true);
   final ObjectHashMap m=(ObjectHashMap)field.get(tms);
   field.setAccessible(false);

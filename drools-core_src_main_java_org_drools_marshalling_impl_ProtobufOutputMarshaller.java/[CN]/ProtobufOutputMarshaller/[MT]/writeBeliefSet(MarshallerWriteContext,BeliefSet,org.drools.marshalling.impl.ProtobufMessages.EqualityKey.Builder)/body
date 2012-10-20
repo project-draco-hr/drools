@@ -1,0 +1,27 @@
+{
+  ProtobufMessages.BeliefSet.Builder _beliefSet=ProtobufMessages.BeliefSet.newBuilder();
+  _beliefSet.setHandleId(beliefSet.getFactHandle().getId());
+  ObjectMarshallingStrategyStore objectMarshallingStrategyStore=context.objectMarshallingStrategyStore;
+  for (LinkedListEntry node=(LinkedListEntry)beliefSet.getFirst(); node != null; node=(LinkedListEntry)node.getNext()) {
+    LogicalDependency belief=(LogicalDependency)node.getObject();
+    ProtobufMessages.LogicalDependency.Builder _logicalDependency=ProtobufMessages.LogicalDependency.newBuilder();
+    LogicalDependency dependency=(LogicalDependency)node.getObject();
+    org.drools.spi.Activation activation=dependency.getJustifier();
+    ProtobufMessages.Activation _activation=ProtobufMessages.Activation.newBuilder().setPackageName(activation.getRule().getPackage()).setRuleName(activation.getRule().getName()).setTuple(PersisterHelper.createTuple(activation.getTuple())).build();
+    _logicalDependency.setActivation(_activation);
+    if (belief.getObject() != null) {
+      ObjectMarshallingStrategy strategy=objectMarshallingStrategyStore.getStrategyObject(belief.getObject());
+      Integer index=context.getStrategyIndex(strategy);
+      _logicalDependency.setObjectStrategyIndex(index.intValue());
+      _logicalDependency.setObject(ByteString.copyFrom(strategy.marshal(context.strategyContext.get(strategy),context,belief.getObject())));
+    }
+    if (belief.getValue() != null) {
+      ObjectMarshallingStrategy strategy=objectMarshallingStrategyStore.getStrategyObject(belief.getValue());
+      Integer index=context.getStrategyIndex(strategy);
+      _logicalDependency.setValueStrategyIndex(index.intValue());
+      _logicalDependency.setValue(ByteString.copyFrom(strategy.marshal(context.strategyContext.get(strategy),context,belief.getValue())));
+    }
+    _beliefSet.addLogicalDependency(_logicalDependency.build());
+  }
+  _key.setBeliefSet(_beliefSet);
+}
