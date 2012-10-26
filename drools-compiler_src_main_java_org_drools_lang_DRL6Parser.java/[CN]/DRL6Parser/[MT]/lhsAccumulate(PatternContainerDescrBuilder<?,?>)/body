@@ -1,0 +1,81 @@
+{
+  PatternDescrBuilder<?> pattern=null;
+  BaseDescr result=null;
+  pattern=helper.start((DescrBuilder<?,?>)ce,PatternDescrBuilder.class,null);
+  if (pattern != null) {
+    result=pattern.getDescr();
+  }
+  try {
+    if (state.backtracking == 0) {
+      pattern.type("Object[]");
+      pattern.isQuery(false);
+    }
+    AccumulateDescrBuilder<?> accumulate=helper.start(pattern,AccumulateDescrBuilder.class,null);
+    if (state.backtracking == 0) {
+      accumulate.multiFunction(true);
+    }
+    try {
+      match(input,DRLLexer.ID,DroolsSoftKeywords.ACCUMULATE,null,DroolsEditorType.KEYWORD);
+      if (state.failed)       return null;
+      if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+        helper.emit(Location.LOCATION_LHS_FROM_ACCUMULATE);
+      }
+      match(input,DRLLexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+      CEDescrBuilder<?,AndDescr> source=accumulate.source();
+      try {
+        helper.start(source,CEDescrBuilder.class,null);
+        lhsAnd(source,false);
+        if (state.failed)         return null;
+        if (source.getDescr() != null && source.getDescr() instanceof ConditionalElementDescr) {
+          ConditionalElementDescr root=(ConditionalElementDescr)source.getDescr();
+          BaseDescr[] descrs=root.getDescrs().toArray(new BaseDescr[root.getDescrs().size()]);
+          root.getDescrs().clear();
+          for (int i=0; i < descrs.length; i++) {
+            root.addOrMerge(descrs[i]);
+          }
+        }
+      }
+  finally {
+        helper.end(CEDescrBuilder.class,source);
+      }
+      if (input.LA(1) == DRLLexer.COMMA) {
+        match(input,DRLLexer.COMMA,null,null,DroolsEditorType.SYMBOL);
+        if (state.failed)         return null;
+      }
+ else       if (input.LA(-1) != DRLLexer.SEMICOLON) {
+        match(input,DRLLexer.SEMICOLON,null,null,DroolsEditorType.SYMBOL);
+        if (state.failed)         return null;
+      }
+      accumulateFunctionBinding(accumulate);
+      if (state.failed)       return null;
+      while (input.LA(1) == DRLLexer.COMMA) {
+        match(input,DRLLexer.COMMA,null,null,DroolsEditorType.SYMBOL);
+        if (state.failed)         return null;
+        accumulateFunctionBinding(accumulate);
+        if (state.failed)         return null;
+      }
+      if (input.LA(1) == DRLLexer.SEMICOLON) {
+        match(input,DRLLexer.SEMICOLON,null,null,DroolsEditorType.SYMBOL);
+        if (state.failed)         return null;
+        constraints(pattern);
+      }
+      match(input,DRLLexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+    }
+  finally {
+      helper.end(AccumulateDescrBuilder.class,accumulate);
+      if (state.backtracking == 0 && input.LA(1) != DRLLexer.EOF) {
+        helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
+      }
+    }
+  }
+  finally {
+    helper.end(PatternDescrBuilder.class,pattern);
+  }
+  if (input.LA(1) == DRLLexer.SEMICOLON) {
+    match(input,DRLLexer.SEMICOLON,null,null,DroolsEditorType.SYMBOL);
+    if (state.failed)     return null;
+  }
+  return result;
+}

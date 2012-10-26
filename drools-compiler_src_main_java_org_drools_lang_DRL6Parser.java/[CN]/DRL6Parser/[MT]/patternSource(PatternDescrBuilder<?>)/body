@@ -1,0 +1,32 @@
+{
+  match(input,DRLLexer.ID,DroolsSoftKeywords.FROM,null,DroolsEditorType.KEYWORD);
+  if (state.failed)   return;
+  if (state.backtracking == 0) {
+    helper.emit(Location.LOCATION_LHS_FROM);
+  }
+  if (helper.validateIdentifierKey(DroolsSoftKeywords.ACCUMULATE)) {
+    fromAccumulate(pattern);
+  }
+ else   if (helper.validateIdentifierKey(DroolsSoftKeywords.COLLECT)) {
+    fromCollect(pattern);
+  }
+ else   if (helper.validateIdentifierKey(DroolsSoftKeywords.ENTRY) && helper.validateLT(2,"-") && helper.validateLT(3,DroolsSoftKeywords.POINT)) {
+    fromEntryPoint(pattern);
+    if (state.failed)     return;
+  }
+ else   if (helper.validateIdentifierKey(DroolsSoftKeywords.WINDOW)) {
+    fromWindow(pattern);
+  }
+ else {
+    fromExpression(pattern);
+    if (!lastTokenWasWhiteSpace() && input.LA(1) == DRLLexer.EOF) {
+      helper.emit(Location.LOCATION_LHS_FROM);
+      throw new RecognitionException();
+    }
+    if (state.failed)     return;
+  }
+  if (input.LA(1) == DRLLexer.SEMICOLON) {
+    match(input,DRLLexer.SEMICOLON,null,null,DroolsEditorType.SYMBOL);
+    if (state.failed)     return;
+  }
+}

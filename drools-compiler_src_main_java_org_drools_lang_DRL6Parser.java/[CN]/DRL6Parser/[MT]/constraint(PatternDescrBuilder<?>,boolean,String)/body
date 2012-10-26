@@ -1,0 +1,47 @@
+{
+  if (speculateNestedConstraint()) {
+    nestedConstraint(pattern,prefix);
+    return;
+  }
+  if (state.backtracking == 0) {
+    helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_START);
+  }
+  int first=input.index();
+  exprParser.getHelper().setHasOperator(false);
+  try {
+    exprParser.conditionalOrExpression();
+  }
+  finally {
+    if (state.backtracking == 0) {
+      if (input.LA(1) == DRLLexer.ID && input.LA(2) == DRLLexer.EOF) {
+        helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_ARGUMENT);
+      }
+ else       if (input.LA(1) != DRLLexer.EOF) {
+        helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_END);
+      }
+ else       if (!lastTokenWasWhiteSpace()) {
+        int location=getCurrentLocation();
+        if (location == Location.LOCATION_LHS_INSIDE_CONDITION_END) {
+          helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_ARGUMENT);
+        }
+ else         if (input.get(input.index()).getType() != DRLLexer.EOF) {
+          helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_START);
+        }
+      }
+ else       if (getCurrentLocation() == Location.LOCATION_LHS_INSIDE_CONDITION_START && !exprParser.getHelper().getHasOperator() && lastTokenWasWhiteSpace() && input.LA(1) == DRLLexer.EOF && input.LA(-1) == DRLLexer.ID) {
+        helper.emit(Location.LOCATION_LHS_INSIDE_CONDITION_OPERATOR);
+      }
+    }
+  }
+  if (state.failed)   return;
+  if (state.backtracking == 0 && input.index() > first) {
+    int last=input.LT(-1).getTokenIndex();
+    String expr=toExpression(prefix,first,last);
+    pattern.constraint(expr,positional);
+    BaseDescr constrDescr=pattern.getDescr().getDescrs().get(pattern.getDescr().getDescrs().size() - 1);
+    constrDescr.setLocation(input.get(first).getLine(),input.get(first).getCharPositionInLine());
+    constrDescr.setEndLocation(input.get(last).getLine(),input.get(last).getCharPositionInLine());
+    constrDescr.setStartCharacter(((CommonToken)input.get(first)).getStartIndex());
+    constrDescr.setEndCharacter(((CommonToken)input.get(last)).getStopIndex());
+  }
+}

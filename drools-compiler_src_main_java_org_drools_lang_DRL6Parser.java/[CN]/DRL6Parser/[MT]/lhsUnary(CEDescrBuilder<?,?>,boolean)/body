@@ -1,0 +1,36 @@
+{
+  BaseDescr result=null;
+  if (helper.validateIdentifierKey(DroolsSoftKeywords.EXISTS)) {
+    result=lhsExists(ce,allowOr);
+  }
+ else   if (helper.validateIdentifierKey(DroolsSoftKeywords.NOT)) {
+    result=lhsNot(ce,allowOr);
+  }
+ else   if (helper.validateIdentifierKey(DroolsSoftKeywords.EVAL)) {
+    result=lhsEval(ce);
+  }
+ else   if (helper.validateIdentifierKey(DroolsSoftKeywords.FORALL)) {
+    result=lhsForall(ce);
+  }
+ else   if (helper.validateIdentifierKey(DroolsSoftKeywords.ACCUMULATE)) {
+    result=lhsAccumulate(ce);
+  }
+ else   if (input.LA(1) == DRLLexer.LEFT_PAREN) {
+    result=lhsParen(ce,allowOr);
+    if (helper.validateIdentifierKey(DroolsSoftKeywords.DO)) {
+      namedConsequence(ce,null);
+    }
+  }
+ else   if (input.LA(1) == DRLLexer.ID || input.LA(1) == DRLLexer.QUESTION) {
+    result=lhsPatternBind(ce,allowOr);
+    consequenceInvocation(ce);
+  }
+ else {
+    failMismatchedTokenException();
+  }
+  if (input.LA(1) == DRLLexer.SEMICOLON) {
+    match(input,DRLLexer.SEMICOLON,null,null,DroolsEditorType.SYMBOL);
+    if (state.failed)     return null;
+  }
+  return result;
+}
