@@ -1,0 +1,18 @@
+{
+  final String eventClassName=PositionAnnotatedEvent.class.getCanonicalName();
+  String str="package org.test \n" + "declare " + eventClassName + "\n"+ " @role(event)\n"+ "end \n"+ "rule 'sample rule' \n"+ "when \n"+ " "+ eventClassName+ "( 'value1', 'value2'; ) \n"+ "then \n"+ "end \n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  try {
+    kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  }
+ catch (  IndexOutOfBoundsException e) {
+    final String msg=e.getMessage();
+    if ("Error trying to access field at position 0".equals(msg)) {
+      fail("@Position declared in POJO was ignored.");
+    }
+ else {
+      fail("Check the test, unexpected error message: " + msg);
+    }
+  }
+  assertFalse("Check the test, unexpected error message: " + kbuilder.getErrors(),kbuilder.hasErrors());
+}
