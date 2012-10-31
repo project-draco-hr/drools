@@ -1,22 +1,17 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_NestedConditionalElements.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_NestedConditionalElements.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  ksession.setGlobal("results",list);
   final State state=new State("SP");
-  workingMemory.insert(state);
+  ksession.insert(state);
   final Person bob=new Person("Bob");
   bob.setStatus(state.getState());
   bob.setLikes("stilton");
-  workingMemory.insert(bob);
-  workingMemory.fireAllRules();
+  ksession.insert(bob);
+  ksession.fireAllRules();
   assertEquals(0,list.size());
-  workingMemory.insert(new Cheese(bob.getLikes(),10));
-  workingMemory.fireAllRules();
+  ksession.insert(new Cheese(bob.getLikes(),10));
+  ksession.fireAllRules();
   assertEquals(1,list.size());
 }

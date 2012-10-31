@@ -10,18 +10,7 @@
   drl+="then\n";
   drl+="    list.add( $p1 );\n";
   drl+="end\n";
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newReaderResource(new StringReader(drl)),ResourceType.DRL);
-  KnowledgeBuilderErrors errors=kbuilder.getErrors();
-  if (errors.size() > 0) {
-    for (    KnowledgeBuilderError error : errors) {
-      logger.warn(error.toString());
-    }
-    throw new IllegalArgumentException("Could not parse knowledge.");
-  }
-  assertFalse(kbuilder.hasErrors());
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  final KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(drl));
   StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   List list=new ArrayList();
   ksession.setGlobal("list",list);

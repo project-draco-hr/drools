@@ -1,18 +1,13 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_AlphaEvalWithOrCE.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_AlphaEvalWithOrCE.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  ksession.setGlobal("results",list);
   FactA a=new FactA();
   a.setField1("a value");
-  workingMemory.insert(a);
-  workingMemory.insert(new FactB());
-  workingMemory.insert(new FactC());
-  workingMemory.fireAllRules();
+  ksession.insert(a);
+  ksession.insert(new FactB());
+  ksession.insert(new FactC());
+  ksession.fireAllRules();
   assertEquals("should not have fired",0,list.size());
 }

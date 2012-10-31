@@ -1,23 +1,21 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RemovePackage.drl")));
-  RuleBase ruleBase=getRuleBase();
-  final String packageName=builder.getPackage().getName();
-  ruleBase.addPackage(SerializationHelper.serializeObject(builder.getPackage()));
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
+  Collection<KnowledgePackage> kpkgs=SerializationHelper.serializeObject(loadKnowledgePackages("test_RemovePackage.drl"));
+  final String packageName=kpkgs.iterator().next().getName();
+  KnowledgeBase kbase=loadKnowledgeBase();
+  kbase.addKnowledgePackages(kpkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   session.insert(new Precondition("genericcode","genericvalue"));
   session.fireAllRules();
-  RuleBase ruleBaseWM=session.getRuleBase();
-  ruleBaseWM.removePackage(packageName);
-  final PackageBuilder builder1=new PackageBuilder();
-  builder1.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RemovePackage.drl")));
-  ruleBaseWM.addPackage(SerializationHelper.serializeObject(builder1.getPackage()));
+  KnowledgeBase ruleBaseWM=session.getKnowledgeBase();
+  ruleBaseWM.removeKnowledgePackage(packageName);
+  kpkgs=SerializationHelper.serializeObject(loadKnowledgePackages("test_RemovePackage.drl"));
+  ruleBaseWM.addKnowledgePackages(kpkgs);
   ruleBaseWM=SerializationHelper.serializeObject(ruleBaseWM);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
   session.fireAllRules();
-  ruleBaseWM.removePackage(packageName);
-  ruleBaseWM.addPackage(SerializationHelper.serializeObject(builder1.getPackage()));
-  ruleBaseWM.removePackage(packageName);
-  ruleBaseWM.addPackage(SerializationHelper.serializeObject(builder1.getPackage()));
+  ruleBaseWM.removeKnowledgePackage(packageName);
+  ruleBaseWM.addKnowledgePackages(SerializationHelper.serializeObject(kpkgs));
+  ruleBaseWM.removeKnowledgePackage(packageName);
+  ruleBaseWM.addKnowledgePackages(SerializationHelper.serializeObject(kpkgs));
 }

@@ -1,21 +1,13 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_QualifiedFieldReference.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_QualifiedFieldReference.drl"));
+  final StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  ksession.setGlobal("results",list);
   final Person bob=new Person("bob","stilton");
   final Cheese stilton=new Cheese("stilton",12);
-  workingMemory.insert(bob);
-  workingMemory.insert(stilton);
-  workingMemory.fireAllRules();
+  ksession.insert(bob);
+  ksession.insert(stilton);
+  ksession.fireAllRules();
   assertEquals(1,list.size());
   assertEquals(bob,list.get(0));
 }

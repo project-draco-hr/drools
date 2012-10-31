@@ -7,59 +7,25 @@
     }
     fail(parser.getErrors().toString());
   }
-  PackageBuilder builder=new PackageBuilder();
-  builder.addPackage(pkg);
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(builder.getPackage());
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase(pkg));
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  ksession.setGlobal("list",list);
   final Cheese brie=new Cheese("brie",12);
-  workingMemory.insert(brie);
-  workingMemory.fireAllRules();
+  ksession.insert(brie);
+  ksession.fireAllRules();
   assertEquals(3,list.size());
   assertEquals("3 1",list.get(0));
   assertEquals("MAIN",list.get(1));
   assertEquals("1 1",list.get(2));
   final DrlDumper drlDumper=new DrlDumper();
   final String drlResult=drlDumper.dump(pkg);
-  builder=new PackageBuilder();
-  builder.addPackageFromDrl(new StringReader(drlResult));
-  if (builder.hasErrors()) {
-    for (    DroolsError error : builder.getErrors().getErrors()) {
-      logger.warn(error.toString());
-    }
-    fail(parser.getErrors().toString());
-  }
-  ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(builder.getPackage());
-  workingMemory=ruleBase.newStatefulSession();
+  kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(drlResult));
+  ksession=kbase.newStatefulKnowledgeSession();
   list=new ArrayList();
-  workingMemory.setGlobal("list",list);
-  workingMemory.insert(brie);
-  workingMemory.fireAllRules();
-  assertEquals(3,list.size());
-  assertEquals("3 1",list.get(0));
-  assertEquals("MAIN",list.get(1));
-  assertEquals("1 1",list.get(2));
-  final XmlDumper xmlDumper=new XmlDumper();
-  final String xmlResult=xmlDumper.dump(pkg);
-  builder=new PackageBuilder();
-  builder.addPackageFromXml(new StringReader(xmlResult));
-  if (builder.hasErrors()) {
-    for (    DroolsError error : builder.getErrors().getErrors()) {
-      logger.warn(error.toString());
-    }
-    fail(parser.getErrors().toString());
-  }
-  ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(builder.getPackage());
-  workingMemory=ruleBase.newStatefulSession();
-  list=new ArrayList();
-  workingMemory.setGlobal("list",list);
-  workingMemory.insert(brie);
-  workingMemory.fireAllRules();
+  ksession.setGlobal("list",list);
+  ksession.insert(brie);
+  ksession.fireAllRules();
   assertEquals(3,list.size());
   assertEquals("3 1",list.get(0));
   assertEquals("MAIN",list.get(1));

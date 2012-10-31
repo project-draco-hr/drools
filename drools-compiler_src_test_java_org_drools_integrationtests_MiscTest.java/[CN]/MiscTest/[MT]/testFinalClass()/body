@@ -1,16 +1,12 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_FinalClass.drl")));
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(builder.getPackage());
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_FinalClass.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  ksession.setGlobal("results",list);
   final PersonFinal bob=new PersonFinal();
   bob.setName("bob");
   bob.setStatus(null);
-  workingMemory.insert(bob);
-  workingMemory.fireAllRules();
+  ksession.insert(bob);
+  ksession.fireAllRules();
   assertEquals(1,list.size());
 }

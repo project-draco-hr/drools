@@ -1,19 +1,11 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("literal_rule_test.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("literal_rule_test.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   final List list=new ArrayList();
   session.setGlobal("list",list);
   final Cheese stilton=new Cheese("stilton",5);
   session.insert(stilton);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
   session.fireAllRules();
   assertEquals("stilton",((List)session.getGlobal("list")).get(0));
 }

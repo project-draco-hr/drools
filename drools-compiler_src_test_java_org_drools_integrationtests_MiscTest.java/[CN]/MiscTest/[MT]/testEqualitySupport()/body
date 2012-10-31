@@ -1,18 +1,11 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_equalitySupport.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBaseConfiguration conf=new RuleBaseConfiguration();
-  conf.setAssertBehaviour(RuleBaseConfiguration.AssertBehaviour.EQUALITY);
-  RuleBase ruleBase=getRuleBase(conf);
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_equalitySupport.drl"));
+  final StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List results=new ArrayList();
-  workingMemory.setGlobal("results",results);
+  ksession.setGlobal("results",results);
   PersonWithEquals person=new PersonWithEquals("bob",30);
-  workingMemory.insert(person);
-  workingMemory.fireAllRules();
+  ksession.insert(person);
+  ksession.fireAllRules();
   assertEquals(1,results.size());
   assertEquals("mark",results.get(0));
 }

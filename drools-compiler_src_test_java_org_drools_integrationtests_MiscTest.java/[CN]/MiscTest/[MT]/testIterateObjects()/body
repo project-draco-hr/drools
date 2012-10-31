@@ -1,16 +1,11 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_IterateObjects.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_IterateObjects.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List results=new ArrayList();
-  workingMemory.setGlobal("results",results);
-  workingMemory.insert(new Cheese("stilton",10));
-  workingMemory.fireAllRules();
-  Iterator events=workingMemory.iterateObjects(new ClassObjectFilter(PersonInterface.class));
+  ksession.setGlobal("results",results);
+  ksession.insert(new Cheese("stilton",10));
+  ksession.fireAllRules();
+  Iterator events=ksession.getObjects(new ClassObjectFilter(PersonInterface.class)).iterator();
   assertTrue(events.hasNext());
   assertEquals(1,results.size());
   assertEquals(results.get(0),events.next());

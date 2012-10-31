@@ -1,18 +1,13 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_multipleFroms.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_multipleFroms.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List results=new ArrayList();
-  workingMemory.setGlobal("results",results);
+  ksession.setGlobal("results",results);
   final Cheesery cheesery=new Cheesery();
   cheesery.addCheese(new Cheese("stilton",15));
   cheesery.addCheese(new Cheese("brie",10));
-  workingMemory.setGlobal("cheesery",cheesery);
-  workingMemory.fireAllRules();
+  ksession.setGlobal("cheesery",cheesery);
+  ksession.fireAllRules();
   assertEquals(2,results.size());
   assertEquals(2,((List)results.get(0)).size());
   assertEquals(2,((List)results.get(1)).size());

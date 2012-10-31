@@ -1,22 +1,17 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_charComparisons.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_charComparisons.drl"));
+  final StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List results=new ArrayList();
-  workingMemory.setGlobal("results",results);
+  ksession.setGlobal("results",results);
   Primitives p1=new Primitives();
   p1.setCharPrimitive('a');
   p1.setStringAttribute("b");
   Primitives p2=new Primitives();
   p2.setCharPrimitive('b');
   p2.setStringAttribute("a");
-  workingMemory.insert(p1);
-  workingMemory.insert(p2);
-  workingMemory.fireAllRules();
+  ksession.insert(p1);
+  ksession.insert(p2);
+  ksession.fireAllRules();
   assertEquals(3,results.size());
   assertEquals("1",results.get(0));
   assertEquals("2",results.get(1));

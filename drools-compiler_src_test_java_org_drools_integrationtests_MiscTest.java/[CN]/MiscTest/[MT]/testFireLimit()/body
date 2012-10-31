@@ -1,37 +1,32 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_fireLimit.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_fireLimit.drl"));
+  final StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List results=new ArrayList();
-  workingMemory.setGlobal("results",results);
-  workingMemory.insert(new Integer(0));
-  int count=workingMemory.fireAllRules();
+  ksession.setGlobal("results",results);
+  ksession.insert(new Integer(0));
+  int count=ksession.fireAllRules();
   assertEquals(21,count);
   assertEquals(20,results.size());
   for (int i=0; i < 20; i++) {
     assertEquals(new Integer(i),results.get(i));
   }
   results.clear();
-  workingMemory.insert(new Integer(0));
-  count=workingMemory.fireAllRules(10);
+  ksession.insert(new Integer(0));
+  count=ksession.fireAllRules(10);
   assertEquals(10,count);
   assertEquals(10,results.size());
   for (int i=0; i < 10; i++) {
     assertEquals(new Integer(i),results.get(i));
   }
-  count=workingMemory.fireAllRules();
+  count=ksession.fireAllRules();
   assertEquals(11,count);
   assertEquals(20,results.size());
   for (int i=0; i < 20; i++) {
     assertEquals(new Integer(i),results.get(i));
   }
   results.clear();
-  workingMemory.insert(new Integer(0));
-  count=workingMemory.fireAllRules();
+  ksession.insert(new Integer(0));
+  count=ksession.fireAllRules();
   assertEquals(21,count);
   assertEquals(20,results.size());
   for (int i=0; i < 20; i++) {

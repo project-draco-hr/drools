@@ -1,11 +1,6 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("big_decimal_and_comparable.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("big_decimal_and_comparable.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   final List list=new ArrayList();
   session.setGlobal("list",list);
   final PersonInterface bill=new Person("bill",null,42);
@@ -15,7 +10,7 @@
   session.insert(bill);
   session.insert(new Cheese("gorgonzola",43));
   session.insert(ben);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
   session.fireAllRules();
   assertEquals(1,((List)session.getGlobal("list")).size());
 }

@@ -1,18 +1,13 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_alphaNodeSharing.drl")));
-  final Package pkg=builder.getPackage();
-  final RuleBaseConfiguration conf=new RuleBaseConfiguration();
-  conf.setShareAlphaNodes(false);
-  RuleBase ruleBase=getRuleBase(conf);
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBaseConfiguration kbc=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kbc.setOption(ShareAlphaNodesOption.YES);
+  final KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase(kbc,"test_alphaNodeSharing.drl"));
+  final StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List results=new ArrayList();
-  workingMemory.setGlobal("results",results);
+  ksession.setGlobal("results",results);
   Person p1=new Person("bob",5);
-  workingMemory.insert(p1);
-  workingMemory.fireAllRules();
+  ksession.insert(p1);
+  ksession.fireAllRules();
   assertEquals(2,results.size());
   assertEquals("1",results.get(0));
   assertEquals("2",results.get(1));

@@ -14,15 +14,11 @@
   rule+="    System.out.println(((ArrayList)m[\"content\"])[0]);\n";
   rule+="    list.add(((ArrayList)m[\"content\"])[0]);\n";
   rule+="end";
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new StringReader(rule));
-  final Package pkg=builder.getPackage();
-  final RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(rule));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   List list=new ArrayList();
   session.setGlobal("list",list);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
   session.fireAllRules();
   assertEquals(1,((List)session.getGlobal("list")).size());
   assertEquals("first",((List)session.getGlobal("list")).get(0));

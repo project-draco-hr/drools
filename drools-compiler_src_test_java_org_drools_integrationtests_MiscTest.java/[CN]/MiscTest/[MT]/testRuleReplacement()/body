@@ -1,21 +1,18 @@
 {
-  final PackageBuilder builder1=new PackageBuilder();
-  builder1.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RuleNameClashes1.drl")));
-  builder1.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RuleNameClashes3.drl")));
-  final Package pkg1=builder1.getPackage();
-  assertEquals(1,pkg1.getRules().length);
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg1);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  Collection<KnowledgePackage> kpkgs=loadKnowledgePackages("test_RuleNameClashes1.drl","test_RuleNameClashes3.drl");
+  assertEquals(1,kpkgs.iterator().next().getRules().size());
+  KnowledgeBase kbase=loadKnowledgeBase();
+  kbase.addKnowledgePackages(kpkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List results=new ArrayList();
-  workingMemory.setGlobal("results",results);
-  workingMemory.insert(new Cheese("stilton",10));
-  workingMemory.insert(new Cheese("brie",5));
-  workingMemory.fireAllRules();
+  ksession.setGlobal("results",results);
+  ksession.insert(new Cheese("stilton",10));
+  ksession.insert(new Cheese("brie",5));
+  ksession.fireAllRules();
   assertEquals(results.toString(),0,results.size());
-  workingMemory.insert(new Cheese("muzzarella",7));
-  workingMemory.fireAllRules();
+  ksession.insert(new Cheese("muzzarella",7));
+  ksession.fireAllRules();
   assertEquals(results.toString(),1,results.size());
   assertTrue(results.contains("p1.r3"));
 }

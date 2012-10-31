@@ -1,23 +1,19 @@
 {
   try {
-    final PackageBuilder builder1=new PackageBuilder();
-    builder1.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RuleNameClashes1.drl")));
-    final Package pkg1=builder1.getPackage();
-    assertEquals(1,pkg1.getRules().length);
-    final PackageBuilder builder2=new PackageBuilder();
-    builder2.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RuleNameClashes2.drl")));
-    final Package pkg2=builder2.getPackage();
-    assertEquals(1,pkg2.getRules().length);
-    RuleBase ruleBase=getSinglethreadRuleBase();
-    ruleBase.addPackage(pkg1);
-    ruleBase.addPackage(pkg2);
-    ruleBase=SerializationHelper.serializeObject(ruleBase);
-    final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+    Collection<KnowledgePackage> kpkgs1=loadKnowledgePackages("test_RuleNameClashes1.drl");
+    assertEquals(1,kpkgs1.iterator().next().getRules().size());
+    Collection<KnowledgePackage> kpkgs2=loadKnowledgePackages("test_RuleNameClashes2.drl");
+    assertEquals(1,kpkgs2.iterator().next().getRules().size());
+    KnowledgeBase kbase=loadKnowledgeBase();
+    kbase.addKnowledgePackages(kpkgs1);
+    kbase.addKnowledgePackages(kpkgs2);
+    kbase=SerializationHelper.serializeObject(kbase);
+    StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
     final List results=new ArrayList();
-    workingMemory.setGlobal("results",results);
-    workingMemory.insert(new Cheese("stilton",10));
-    workingMemory.insert(new Cheese("brie",5));
-    workingMemory.fireAllRules();
+    ksession.setGlobal("results",results);
+    ksession.insert(new Cheese("stilton",10));
+    ksession.insert(new Cheese("brie",5));
+    ksession.fireAllRules();
     assertEquals(results.toString(),2,results.size());
     assertTrue(results.contains("p1.r1"));
     assertTrue(results.contains("p2.r1"));

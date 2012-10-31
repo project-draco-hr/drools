@@ -1,26 +1,21 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RuntimeTypeCoercion.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_RuntimeTypeCoercion.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  ksession.setGlobal("results",list);
   final PolymorphicFact fact=new PolymorphicFact(new Integer(10));
-  final FactHandle handle=workingMemory.insert(fact);
-  workingMemory.fireAllRules();
+  final org.drools.runtime.rule.FactHandle handle=ksession.insert(fact);
+  ksession.fireAllRules();
   assertEquals(1,list.size());
   assertEquals(fact.getData(),list.get(0));
   fact.setData("10");
-  workingMemory.update(handle,fact);
-  workingMemory.fireAllRules();
+  ksession.update(handle,fact);
+  ksession.fireAllRules();
   assertEquals(2,list.size());
   assertEquals(fact.getData(),list.get(1));
   try {
     fact.setData(new Boolean(true));
-    workingMemory.update(handle,fact);
+    ksession.update(handle,fact);
     assertEquals(2,list.size());
   }
  catch (  ClassCastException cce) {

@@ -1,11 +1,8 @@
 {
   try {
-    RuleBase ruleBase=RuleBaseFactory.newRuleBase();
-    PackageBuilder tomBuilder=new PackageBuilder();
-    tomBuilder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicRulesTom.drl")));
-    ruleBase.addPackage(tomBuilder.getPackage());
-    StatefulSession session=ruleBase.newStatefulSession();
-    List results=new ArrayList();
+    KnowledgeBase kbase=loadKnowledgeBase("test_DynamicRulesTom.drl");
+    StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+    List<?> results=new ArrayList<Object>();
     session.setGlobal("results",results);
     InternalFactHandle h1=(InternalFactHandle)session.insert(new Person("tom",1));
     InternalFactHandle h2=(InternalFactHandle)session.insert(new Person("fred",2));
@@ -23,18 +20,14 @@
     assertTrue(results.contains(h6.getObject()));
     assertTrue(results.contains(h10.getObject()));
     results.clear();
-    PackageBuilder fredBuilder=new PackageBuilder();
-    fredBuilder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicRulesFred.drl")));
-    ruleBase.addPackage(fredBuilder.getPackage());
+    kbase.addKnowledgePackages(loadKnowledgePackages("test_DynamicRulesFred.drl"));
     session.fireAllRules();
     assertEquals(2,results.size());
     assertTrue(results.contains(h2.getObject()));
     assertTrue(results.contains(h4.getObject()));
     results.clear();
-    ruleBase.removePackage("tom");
-    PackageBuilder edBuilder=new PackageBuilder();
-    edBuilder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicRulesEd.drl")));
-    ruleBase.addPackage(edBuilder.getPackage());
+    kbase.removeKnowledgePackage("tom");
+    kbase.addKnowledgePackages(loadKnowledgePackages("test_DynamicRulesEd.drl"));
     session.fireAllRules();
     assertEquals(2,results.size());
     assertTrue(results.contains(h5.getObject()));

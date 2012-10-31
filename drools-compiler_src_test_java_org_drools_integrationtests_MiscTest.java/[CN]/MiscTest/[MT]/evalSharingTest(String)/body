@@ -1,20 +1,12 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream(drl)));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=loadKnowledgeBase(drl);
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   List list=new ArrayList();
-  session.setGlobal("list",list);
+  ksession.setGlobal("list",list);
   final TestParam tp1=new TestParam();
   tp1.setValue2("boo");
-  session.insert(tp1);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
-  session.fireAllRules();
-  assertEquals(1,((List)session.getGlobal("list")).size());
+  ksession.insert(tp1);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  assertEquals(1,((List)ksession.getGlobal("list")).size());
 }

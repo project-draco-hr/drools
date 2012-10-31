@@ -1,18 +1,13 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_nodeSharingNotExists.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_nodeSharingNotExists.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
-  workingMemory.fireAllRules();
+  ksession.setGlobal("results",list);
+  ksession.fireAllRules();
   assertEquals(1,list.size());
   assertEquals("rule1",list.get(0));
-  workingMemory.insert(new Cheese("stilton",10));
-  workingMemory.fireAllRules();
+  ksession.insert(new Cheese("stilton",10));
+  ksession.fireAllRules();
   assertEquals(2,list.size());
   assertEquals("rule2",list.get(1));
 }

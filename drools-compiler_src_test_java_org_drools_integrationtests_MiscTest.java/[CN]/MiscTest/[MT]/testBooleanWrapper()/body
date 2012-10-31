@@ -1,25 +1,20 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_BooleanWrapper.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_BooleanWrapper.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List results=new ArrayList();
-  workingMemory.setGlobal("results",results);
+  ksession.setGlobal("results",results);
   Primitives p1=new Primitives();
-  workingMemory.insert(p1);
-  workingMemory.fireAllRules();
+  ksession.insert(p1);
+  ksession.fireAllRules();
   assertEquals(0,results.size());
   Primitives p2=new Primitives();
   p2.setBooleanWrapper(Boolean.FALSE);
-  workingMemory.insert(p2);
-  workingMemory.fireAllRules();
+  ksession.insert(p2);
+  ksession.fireAllRules();
   assertEquals(0,results.size());
   Primitives p3=new Primitives();
   p3.setBooleanWrapper(Boolean.TRUE);
-  workingMemory.insert(p3);
-  workingMemory.fireAllRules();
+  ksession.insert(p3);
+  ksession.fireAllRules();
   assertEquals(1,results.size());
 }

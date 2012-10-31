@@ -1,22 +1,11 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicRulesWithSubnetwork1.drl")));
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicRulesWithSubnetwork2.drl")));
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DynamicRulesWithSubnetwork.drl")));
-  final Package pkg=builder.getPackage();
-  org.drools.reteoo.ReteooRuleBase reteooRuleBase=null;
-  final RuleBase ruleBase=getRuleBase();
-  reteooRuleBase=(org.drools.reteoo.ReteooRuleBase)ruleBase;
-  ruleBase.addPackage(pkg);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
-  if (reteooRuleBase != null) {
-    assertEquals(1,reteooRuleBase.getPackages().length);
-    assertEquals(4,reteooRuleBase.getPackages()[0].getRules().length);
-    reteooRuleBase.removeRule("org.drools","Apply Discount on all books");
-    assertEquals(3,reteooRuleBase.getPackages()[0].getRules().length);
-    reteooRuleBase.removeRule("org.drools","like book");
-    assertEquals(2,reteooRuleBase.getPackages()[0].getRules().length);
-    reteooRuleBase.removePackage("org.drools");
-    assertEquals(0,reteooRuleBase.getPackages().length);
-  }
+  KnowledgeBase kbase=loadKnowledgeBase("test_DynamicRulesWithSubnetwork1.drl","test_DynamicRulesWithSubnetwork2.drl","test_DynamicRulesWithSubnetwork.drl");
+  assertEquals(1,kbase.getKnowledgePackages().size());
+  assertEquals(4,kbase.getKnowledgePackages().iterator().next().getRules().size());
+  kbase.removeRule("org.drools","Apply Discount on all books");
+  assertEquals(3,kbase.getKnowledgePackages().iterator().next().getRules().size());
+  kbase.removeRule("org.drools","like book");
+  assertEquals(2,kbase.getKnowledgePackages().iterator().next().getRules().size());
+  kbase.removeKnowledgePackage("org.drools");
+  assertEquals(0,kbase.getKnowledgePackages().size());
 }

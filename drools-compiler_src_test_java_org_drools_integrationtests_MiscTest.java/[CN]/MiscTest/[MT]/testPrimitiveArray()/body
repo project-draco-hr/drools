@@ -1,18 +1,13 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_primitiveArray.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_primitiveArray.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   List result=new ArrayList();
   session.setGlobal("result",result);
   final Primitives p1=new Primitives();
   p1.setPrimitiveIntArray(new int[]{1,2,3});
   p1.setArrayAttribute(new String[]{"a","b"});
   session.insert(p1);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
   result=(List)session.getGlobal("result");
   session.fireAllRules();
   assertEquals(3,result.size());

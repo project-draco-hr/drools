@@ -1,16 +1,11 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_nullBindings.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_nullBindings.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
-  workingMemory.insert(new Person("bob"));
-  workingMemory.insert(new Person(null));
-  workingMemory.fireAllRules();
+  ksession.setGlobal("results",list);
+  ksession.insert(new Person("bob"));
+  ksession.insert(new Person(null));
+  ksession.fireAllRules();
   assertEquals(1,list.size());
   assertEquals("OK",list.get(0));
 }

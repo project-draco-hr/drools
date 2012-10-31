@@ -1,30 +1,21 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_FactBindings.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
-  final List events=new ArrayList();
-  final WorkingMemoryEventListener listener=new DefaultWorkingMemoryEventListener(){
-    public void objectUpdated(    ObjectUpdatedEvent event){
-      events.add(event);
-    }
-  }
-;
-  workingMemory.addEventListener(listener);
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_FactBindings.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  org.drools.event.rule.WorkingMemoryEventListener wmel=mock(org.drools.event.rule.WorkingMemoryEventListener.class);
+  ksession.addEventListener(wmel);
   final Person bigCheese=new Person("big cheese");
   final Cheese cheddar=new Cheese("cheddar",15);
   bigCheese.setCheese(cheddar);
-  final FactHandle bigCheeseHandle=workingMemory.insert(bigCheese);
-  final FactHandle cheddarHandle=workingMemory.insert(cheddar);
-  workingMemory.fireAllRules();
-  ObjectUpdatedEvent event=(ObjectUpdatedEvent)events.get(0);
+  final org.drools.runtime.rule.FactHandle bigCheeseHandle=ksession.insert(bigCheese);
+  final org.drools.runtime.rule.FactHandle cheddarHandle=ksession.insert(cheddar);
+  ksession.fireAllRules();
+  ArgumentCaptor<org.drools.event.rule.ObjectUpdatedEvent> arg=ArgumentCaptor.forClass(org.drools.event.rule.ObjectUpdatedEvent.class);
+  verify(wmel,times(2)).objectUpdated(arg.capture());
+  org.drools.event.rule.ObjectUpdatedEvent event=arg.getAllValues().get(0);
   assertSame(cheddarHandle,event.getFactHandle());
   assertSame(cheddar,event.getOldObject());
   assertSame(cheddar,event.getObject());
-  event=(ObjectUpdatedEvent)events.get(1);
+  event=arg.getAllValues().get(1);
   assertSame(bigCheeseHandle,event.getFactHandle());
   assertSame(bigCheese,event.getOldObject());
   assertSame(bigCheese,event.getObject());

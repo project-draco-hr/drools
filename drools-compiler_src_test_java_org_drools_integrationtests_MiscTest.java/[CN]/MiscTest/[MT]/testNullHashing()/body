@@ -1,16 +1,11 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_NullHashing.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_NullHashing.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List results=new ArrayList();
-  workingMemory.setGlobal("results",results);
-  workingMemory.insert(new Cheese("stilton",15));
-  workingMemory.insert(new Cheese("",10));
-  workingMemory.insert(new Cheese(null,8));
-  workingMemory.fireAllRules();
+  ksession.setGlobal("results",results);
+  ksession.insert(new Cheese("stilton",15));
+  ksession.insert(new Cheese("",10));
+  ksession.insert(new Cheese(null,8));
+  ksession.fireAllRules();
   assertEquals(3,results.size());
 }

@@ -1,17 +1,12 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_contains_in_array.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_contains_in_array.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  ksession.setGlobal("list",list);
   final Primitives p=new Primitives();
   p.setStringArray(new String[]{"test1","test3"});
-  workingMemory.insert(p);
-  workingMemory.fireAllRules();
+  ksession.insert(p);
+  ksession.fireAllRules();
   assertEquals(2,list.size());
   assertEquals("ok1",list.get(0));
   assertEquals("ok2",list.get(1));

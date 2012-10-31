@@ -1,17 +1,12 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_emptyIdentifier.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_emptyIdentifier.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List result=new ArrayList();
-  workingMemory.setGlobal("results",result);
+  ksession.setGlobal("results",result);
   final Person person=new Person("bob");
   final Cheese cheese=new Cheese("brie",10);
-  workingMemory.insert(person);
-  workingMemory.insert(cheese);
-  workingMemory.fireAllRules();
+  ksession.insert(person);
+  ksession.insert(cheese);
+  ksession.fireAllRules();
   assertEquals(4,result.size());
 }

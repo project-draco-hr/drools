@@ -1,17 +1,6 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("null_constraint.drl")));
-  if (builder.hasErrors()) {
-    for (    DroolsError error : builder.getErrors().getErrors()) {
-      logger.warn(error.toString());
-    }
-  }
-  assertFalse(builder.getErrors().toString(),builder.hasErrors());
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=loadKnowledgeBase("null_constraint.drl");
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
   final List foo=new ArrayList();
   session.setGlobal("messages",foo);
   final PersonInterface p1=new Person(null,"food",40);
@@ -19,7 +8,7 @@
   p2.setArrayAttribute(null);
   session.insert(p1);
   session.insert(p2);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
   session.fireAllRules();
   assertEquals(2,((List)session.getGlobal("messages")).size());
 }

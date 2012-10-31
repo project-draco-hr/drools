@@ -1,15 +1,10 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_halt.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_halt.drl"));
+  final StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List results=new ArrayList();
-  workingMemory.setGlobal("results",results);
-  workingMemory.insert(new Integer(0));
-  workingMemory.fireAllRules();
+  ksession.setGlobal("results",results);
+  ksession.insert(new Integer(0));
+  ksession.fireAllRules();
   assertEquals(10,results.size());
   for (int i=0; i < 10; i++) {
     assertEquals(new Integer(i),results.get(i));

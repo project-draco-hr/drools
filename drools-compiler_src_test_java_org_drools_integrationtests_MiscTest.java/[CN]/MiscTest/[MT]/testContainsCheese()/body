@@ -1,24 +1,16 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_ContainsCheese.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_ContainsCheese.drl"));
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  ksession.setGlobal("list",list);
   final Cheese stilton=new Cheese("stilton",12);
-  workingMemory.insert(stilton);
+  ksession.insert(stilton);
   final Cheese brie=new Cheese("brie",10);
-  workingMemory.insert(brie);
+  ksession.insert(brie);
   final Cheesery cheesery=new Cheesery();
   cheesery.getCheeses().add(stilton);
-  workingMemory.insert(cheesery);
-  workingMemory.fireAllRules();
+  ksession.insert(cheesery);
+  ksession.fireAllRules();
   assertEquals(2,list.size());
   assertEquals(stilton,list.get(0));
   assertEquals(brie,list.get(1));

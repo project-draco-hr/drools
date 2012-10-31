@@ -1,23 +1,7 @@
 {
-  final PackageBuilderConfiguration conf=new PackageBuilderConfiguration();
-  final JavaDialectConfiguration jconf=(JavaDialectConfiguration)conf.getDialectConfiguration("java");
-  jconf.setCompiler(JavaDialectConfiguration.ECLIPSE);
-  final PackageBuilder builder=new PackageBuilder(conf);
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("invalid_rule.drl")));
-  final Package pkg=builder.getPackage();
-  RuntimeException runtime=null;
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  try {
-    ruleBase.addPackage(pkg);
-    fail("Should have thrown an exception as the rule is NOT VALID.");
-  }
- catch (  final RuntimeException e) {
-    assertNotNull(e.getMessage());
-    runtime=e;
-  }
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  assertTrue(builder.getErrors().getErrors().length > 0);
-  final String pretty=builder.getErrors().toString();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newClassPathResource("invalid_rule.drl",getClass()),ResourceType.DRL);
+  assertTrue(kbuilder.hasErrors());
+  final String pretty=kbuilder.getErrors().toString();
   assertFalse(pretty.equals(""));
-  assertEquals(pretty,runtime.getMessage());
 }

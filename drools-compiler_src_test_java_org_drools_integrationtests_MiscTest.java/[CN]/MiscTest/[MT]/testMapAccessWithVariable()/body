@@ -1,20 +1,15 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_MapAccessWithVariable.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_MapAccessWithVariable.drl"));
+  final StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  ksession.setGlobal("results",list);
   Map map=new HashMap();
   map.put("name","Edson");
   map.put("surname","Tirelli");
   map.put("age","28");
-  workingMemory.insert(map);
-  workingMemory.insert("name");
-  workingMemory.fireAllRules();
+  ksession.insert(map);
+  ksession.insert("name");
+  ksession.fireAllRules();
   assertEquals(1,list.size());
   assertTrue(list.contains(map));
 }

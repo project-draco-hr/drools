@@ -1,16 +1,8 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_EvalRewrite.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_EvalRewrite.drl"));
+  final StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  ksession.setGlobal("results",list);
   final Order order1=new Order(10,"Bob");
   final OrderItem item11=new OrderItem(order1,1);
   final OrderItem item12=new OrderItem(order1,2);
@@ -31,19 +23,19 @@
   final OrderItem item42=new OrderItem(order4,2);
   order4.addItem(item41);
   order4.addItem(item42);
-  workingMemory.insert(order1);
-  workingMemory.insert(item11);
-  workingMemory.insert(item12);
-  workingMemory.insert(order2);
-  workingMemory.insert(item21);
-  workingMemory.insert(item22);
-  workingMemory.insert(order3);
-  workingMemory.insert(item31);
-  workingMemory.insert(item32);
-  workingMemory.insert(order4);
-  workingMemory.insert(item41);
-  workingMemory.insert(item42);
-  workingMemory.fireAllRules();
+  ksession.insert(order1);
+  ksession.insert(item11);
+  ksession.insert(item12);
+  ksession.insert(order2);
+  ksession.insert(item21);
+  ksession.insert(item22);
+  ksession.insert(order3);
+  ksession.insert(item31);
+  ksession.insert(item32);
+  ksession.insert(order4);
+  ksession.insert(item41);
+  ksession.insert(item42);
+  ksession.fireAllRules();
   assertEquals(5,list.size());
   assertTrue(list.contains(item11));
   assertTrue(list.contains(item12));

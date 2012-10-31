@@ -1,11 +1,6 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_ModifyWithLockOnActive.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_ModifyWithLockOnActive.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   final List results=new ArrayList();
   session.setGlobal("results",results);
   final Person bob=new Person("Bob",15);
@@ -13,8 +8,8 @@
   final Person michael=new Person("Michael",14);
   session.insert(bob);
   session.insert(mark);
-  InternalFactHandle fh=(InternalFactHandle)session.insert(michael);
-  session.setFocus("feeding");
+  session.insert(michael);
+  session.getAgenda().getAgendaGroup("feeding").setFocus();
   session.fireAllRules(5);
   assertEquals(2,((List)session.getGlobal("results")).size());
 }

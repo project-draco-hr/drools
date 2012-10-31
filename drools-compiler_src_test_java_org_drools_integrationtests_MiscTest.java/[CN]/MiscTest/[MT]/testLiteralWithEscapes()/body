@@ -1,20 +1,12 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_literal_with_escapes.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_literal_with_escapes.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   final List list=new ArrayList();
   session.setGlobal("list",list);
   String expected="s\tti\"lto\nn";
   final Cheese stilton=new Cheese(expected,5);
   session.insert(stilton);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
   int fired=session.fireAllRules();
   assertEquals(1,fired);
   assertEquals(expected,((List)session.getGlobal("list")).get(0));

@@ -1,11 +1,10 @@
 {
-  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_CEP_SimpleLengthWindow.drl"));
-  final RuleBaseConfiguration rbconf=new RuleBaseConfiguration();
-  rbconf.setEventProcessingMode(EventProcessingOption.STREAM);
-  final RuleBase ruleBase=loadRuleBase(reader,rbconf);
-  SessionConfiguration conf=new SessionConfiguration();
-  conf.setClockType(ClockType.REALTIME_CLOCK);
-  StatefulSession wm=ruleBase.newStatefulSession(conf,null);
+  KnowledgeBaseConfiguration conf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  conf.setOption(EventProcessingOption.STREAM);
+  final KnowledgeBase kbase=loadKnowledgeBase(conf,"test_CEP_SimpleLengthWindow.drl");
+  KnowledgeSessionConfiguration sconf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  sconf.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  StatefulKnowledgeSession wm=createKnowledgeSession(kbase,sconf);
   final List results=new ArrayList();
   wm.setGlobal("results",results);
   EventFactHandle handle1=(EventFactHandle)wm.insert(new OrderEvent("1","customer A",70));

@@ -1,18 +1,13 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("assert_retract.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=loadKnowledgeBase("assert_retract.drl");
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  ksession.setGlobal("list",list);
   final PersonInterface person=new Person("michael","cheese");
   person.setStatus("start");
-  workingMemory.insert(person);
-  workingMemory.fireAllRules();
-  List<String> results=(List<String>)workingMemory.getGlobal("list");
+  ksession.insert(person);
+  ksession.fireAllRules();
+  List<String> results=(List<String>)ksession.getGlobal("list");
   for (  String result : results) {
     logger.info(result);
   }

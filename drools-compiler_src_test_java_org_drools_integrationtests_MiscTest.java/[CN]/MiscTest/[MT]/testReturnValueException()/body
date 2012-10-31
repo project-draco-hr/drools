@@ -1,15 +1,10 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_ReturnValueException.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_ReturnValueException.drl"));
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   final Cheese brie=new Cheese("brie",12);
   try {
-    workingMemory.insert(brie);
-    workingMemory.fireAllRules();
+    ksession.insert(brie);
+    ksession.fireAllRules();
     fail("Should throw an Exception from the ReturnValue");
   }
  catch (  final Exception e) {

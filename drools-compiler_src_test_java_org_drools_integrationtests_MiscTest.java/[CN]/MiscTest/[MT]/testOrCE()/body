@@ -1,19 +1,10 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_OrCE.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  Package pkg=builder.getPackage();
-  pkg=SerializationHelper.serializeObject(pkg);
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_OrCE.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
-  workingMemory.insert(new Cheese("brie",10));
-  workingMemory.insert(new Person("bob"));
-  workingMemory.fireAllRules();
+  ksession.setGlobal("results",list);
+  ksession.insert(new Cheese("brie",10));
+  ksession.insert(new Person("bob"));
+  ksession.fireAllRules();
   assertEquals("should have fired once",1,list.size());
 }

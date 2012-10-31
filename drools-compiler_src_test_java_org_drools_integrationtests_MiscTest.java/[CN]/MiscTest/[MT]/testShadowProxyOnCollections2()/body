@@ -1,12 +1,8 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_ShadowProxyOnCollections2.drl")));
-  final Package pkg=builder.getPackage();
-  final RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  final StatefulSession workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_ShadowProxyOnCollections2.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List results=new ArrayList();
-  workingMemory.setGlobal("results",results);
+  ksession.setGlobal("results",results);
   List list=new ArrayList();
   list.add("example1");
   list.add("example2");
@@ -14,8 +10,8 @@
   mockPersistentSet.addAll(list);
   org.drools.ObjectWithSet objectWithSet=new ObjectWithSet();
   objectWithSet.setSet(mockPersistentSet);
-  workingMemory.insert(objectWithSet);
-  workingMemory.fireAllRules();
+  ksession.insert(objectWithSet);
+  ksession.fireAllRules();
   assertEquals(1,results.size());
   assertEquals("show",objectWithSet.getMessage());
 }

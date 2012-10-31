@@ -1,20 +1,15 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_OrWithBindings.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_OrWithBindings.drl"));
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  ksession.setGlobal("results",list);
   final Person hola=new Person("hola");
-  workingMemory.insert(hola);
-  workingMemory.fireAllRules();
+  ksession.insert(hola);
+  ksession.fireAllRules();
   assertEquals(0,list.size());
   Cheese brie=new Cheese("brie");
-  workingMemory.insert(brie);
-  workingMemory.fireAllRules();
+  ksession.insert(brie);
+  ksession.fireAllRules();
   assertEquals(2,list.size());
   assertTrue(list.contains(hola));
   assertTrue(list.contains(brie));

@@ -1,21 +1,13 @@
 {
-  final Cell cell1=new Cell(9);
-  final Cell cell=new Cell(0);
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("evalmodify.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  Package pkg=builder.getPackage();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("evalmodify.drl"));
   Environment env=EnvironmentFactory.newEnvironment();
   env.set(EnvironmentName.OBJECT_MARSHALLING_STRATEGIES,new ObjectMarshallingStrategy[]{new IdentityPlaceholderResolverStrategy(ClassObjectMarshallingStrategyAcceptor.DEFAULT)});
-  StatefulSession session=ruleBase.newStatefulSession(null,env);
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase,null,env);
+  final Cell cell1=new Cell(9);
+  final Cell cell=new Cell(0);
   session.insert(cell1);
-  FactHandle cellHandle=session.insert(cell);
-  StatefulKnowledgeSession ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(new StatefulKnowledgeSessionImpl((ReteooWorkingMemory)session),false);
+  org.drools.runtime.rule.FactHandle cellHandle=session.insert(cell);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
   session.fireAllRules();
   assertEquals(9,cell.getValue());
 }

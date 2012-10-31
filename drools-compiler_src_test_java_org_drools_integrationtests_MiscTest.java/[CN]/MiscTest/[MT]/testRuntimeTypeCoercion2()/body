@@ -1,20 +1,15 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RuntimeTypeCoercion2.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_RuntimeTypeCoercion2.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  ksession.setGlobal("results",list);
   final Primitives fact=new Primitives();
   fact.setBooleanPrimitive(true);
   fact.setBooleanWrapper(new Boolean(true));
   fact.setObject(new Boolean(true));
   fact.setCharPrimitive('X');
-  final FactHandle handle=workingMemory.insert(fact);
-  workingMemory.fireAllRules();
+  final org.drools.runtime.rule.FactHandle handle=ksession.insert(fact);
+  ksession.fireAllRules();
   int index=0;
   assertEquals(list.toString(),4,list.size());
   assertEquals("boolean",list.get(index++));
@@ -25,13 +20,13 @@
   fact.setBooleanWrapper(null);
   fact.setCharPrimitive('\0');
   fact.setObject(new Character('X'));
-  workingMemory.update(handle,fact);
-  workingMemory.fireAllRules();
+  ksession.update(handle,fact);
+  ksession.fireAllRules();
   assertEquals(5,list.size());
   assertEquals("char object",list.get(index++));
   fact.setObject(null);
-  workingMemory.update(handle,fact);
-  workingMemory.fireAllRules();
+  ksession.update(handle,fact);
+  ksession.fireAllRules();
   assertEquals(6,list.size());
   assertEquals("null object",list.get(index++));
 }

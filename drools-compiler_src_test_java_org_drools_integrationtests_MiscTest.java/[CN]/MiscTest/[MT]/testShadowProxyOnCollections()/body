@@ -1,16 +1,11 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_ShadowProxyOnCollections.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_ShadowProxyOnCollections.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List results=new ArrayList();
-  workingMemory.setGlobal("results",results);
+  ksession.setGlobal("results",results);
   final Cheesery cheesery=new Cheesery();
-  workingMemory.insert(cheesery);
-  workingMemory.fireAllRules();
+  ksession.insert(cheesery);
+  ksession.fireAllRules();
   assertEquals(1,results.size());
   assertEquals(1,cheesery.getCheeses().size());
   assertEquals(results.get(0),cheesery.getCheeses().get(0));

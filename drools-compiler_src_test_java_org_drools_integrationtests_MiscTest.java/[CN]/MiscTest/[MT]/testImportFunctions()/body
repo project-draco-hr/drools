@@ -1,19 +1,11 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_ImportFunctions.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_ImportFunctions.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   final Cheese cheese=new Cheese("stilton",15);
   session.insert(cheese);
   List list=new ArrayList();
   session.setGlobal("list",list);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
   int fired=session.fireAllRules();
   list=(List)session.getGlobal("list");
   assertEquals(4,fired);

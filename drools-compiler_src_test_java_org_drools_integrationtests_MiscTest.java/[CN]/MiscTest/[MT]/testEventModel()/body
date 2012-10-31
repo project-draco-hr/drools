@@ -1,65 +1,19 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_EventModel.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory wm=ruleBase.newStatefulSession();
-  final List agendaList=new ArrayList();
-  final AgendaEventListener agendaEventListener=new AgendaEventListener(){
-    public void activationCancelled(    ActivationCancelledEvent event,    WorkingMemory workingMemory){
-      agendaList.add(event);
-    }
-    public void activationCreated(    ActivationCreatedEvent event,    WorkingMemory workingMemory){
-      agendaList.add(event);
-    }
-    public void afterActivationFired(    AfterActivationFiredEvent event,    WorkingMemory workingMemory){
-      agendaList.add(event);
-    }
-    public void agendaGroupPopped(    AgendaGroupPoppedEvent event,    WorkingMemory workingMemory){
-      agendaList.add(event);
-    }
-    public void agendaGroupPushed(    AgendaGroupPushedEvent event,    WorkingMemory workingMemory){
-      agendaList.add(event);
-    }
-    public void beforeActivationFired(    BeforeActivationFiredEvent event,    WorkingMemory workingMemory){
-      agendaList.add(event);
-    }
-    public void afterRuleFlowGroupActivated(    RuleFlowGroupActivatedEvent event,    WorkingMemory workingMemory){
-    }
-    public void afterRuleFlowGroupDeactivated(    RuleFlowGroupDeactivatedEvent event,    WorkingMemory workingMemory){
-    }
-    public void beforeRuleFlowGroupActivated(    RuleFlowGroupActivatedEvent event,    WorkingMemory workingMemory){
-    }
-    public void beforeRuleFlowGroupDeactivated(    RuleFlowGroupDeactivatedEvent event,    WorkingMemory workingMemory){
-    }
-  }
-;
-  final List wmList=new ArrayList();
-  final WorkingMemoryEventListener workingMemoryListener=new WorkingMemoryEventListener(){
-    public void objectInserted(    ObjectInsertedEvent event){
-      wmList.add(event);
-    }
-    public void objectUpdated(    ObjectUpdatedEvent event){
-      wmList.add(event);
-    }
-    public void objectRetracted(    ObjectRetractedEvent event){
-      wmList.add(event);
-    }
-  }
-;
-  wm.addEventListener(workingMemoryListener);
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_EventModel.drl"));
+  StatefulKnowledgeSession wm=createKnowledgeSession(kbase);
+  org.drools.event.rule.WorkingMemoryEventListener wmel=mock(org.drools.event.rule.WorkingMemoryEventListener.class);
+  wm.addEventListener(wmel);
   final Cheese stilton=new Cheese("stilton",15);
-  final Cheese cheddar=new Cheese("cheddar",17);
-  final FactHandle stiltonHandle=wm.insert(stilton);
-  final ObjectInsertedEvent oae=(ObjectInsertedEvent)wmList.get(0);
-  assertSame(stiltonHandle,oae.getFactHandle());
+  final org.drools.runtime.rule.FactHandle stiltonHandle=wm.insert(stilton);
+  ArgumentCaptor<org.drools.event.rule.ObjectInsertedEvent> oic=ArgumentCaptor.forClass(org.drools.event.rule.ObjectInsertedEvent.class);
+  verify(wmel).objectInserted(oic.capture());
+  assertSame(stiltonHandle,oic.getValue().getFactHandle());
   wm.update(stiltonHandle,stilton);
-  final ObjectUpdatedEvent ome=(ObjectUpdatedEvent)wmList.get(1);
-  assertSame(stiltonHandle,ome.getFactHandle());
+  ArgumentCaptor<org.drools.event.rule.ObjectUpdatedEvent> ouc=ArgumentCaptor.forClass(org.drools.event.rule.ObjectUpdatedEvent.class);
+  verify(wmel).objectUpdated(ouc.capture());
+  assertSame(stiltonHandle,ouc.getValue().getFactHandle());
   wm.retract(stiltonHandle);
-  final ObjectRetractedEvent ore=(ObjectRetractedEvent)wmList.get(2);
-  assertSame(stiltonHandle,ore.getFactHandle());
-  wm.insert(cheddar);
+  ArgumentCaptor<org.drools.event.rule.ObjectRetractedEvent> orc=ArgumentCaptor.forClass(org.drools.event.rule.ObjectRetractedEvent.class);
+  verify(wmel).objectRetracted(orc.capture());
+  assertSame(stiltonHandle,orc.getValue().getFactHandle());
 }

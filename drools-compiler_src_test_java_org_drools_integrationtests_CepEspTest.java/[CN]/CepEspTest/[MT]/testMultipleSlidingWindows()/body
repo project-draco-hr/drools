@@ -2,7 +2,7 @@
   String str="declare A\n" + "    @role( event )\n" + "    id : int\n"+ "end\n"+ "declare B\n"+ "    @role( event )\n"+ "    id : int\n"+ "end\n"+ "rule launch\n"+ "when\n"+ "then\n"+ "    insert( new A( 1 ) );\n"+ "    insert( new A( 2 ) );\n"+ "    insert( new B( 1 ) );\n"+ "    insert( new A( 3 ) );\n"+ "    insert( new B( 2 ) );\n"+ "end\n"+ "rule \"ab\"\n"+ "when\n"+ "    A( $a : id ) over window:length( 1 )\n"+ "    B( $b : id ) over window:length( 1 )\n"+ "then\n"+ "    //System.out.println(\"AB: ( \"+$a+\", \"+$b+\" )\");\n"+ "end\n"+ "rule \"ba\"\n"+ "when\n"+ "    B( $b : id ) over window:length( 1 )\n"+ "    A( $a : id ) over window:length( 1 )\n"+ "then\n"+ "    //System.out.println(\"BA: ( \"+$b+\", \"+$a+\" )\");\n"+ "end";
   KnowledgeBaseConfiguration config=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
   config.setOption(EventProcessingOption.STREAM);
-  KnowledgeBase kbase=loadKnowledgeBase(new StringReader(str),config);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(config,str);
   StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   AgendaEventListener ael=mock(AgendaEventListener.class);
   ksession.addEventListener(ael);

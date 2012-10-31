@@ -13,15 +13,11 @@
   rule+="then\n";
   rule+="    list.add(\"r1\");\n";
   rule+="end\n";
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new StringReader(rule));
-  final Package pkg=builder.getPackage();
-  final RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(rule);
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   List list=new ArrayList();
   session.setGlobal("list",list);
-  FactType addressFact=ruleBase.getFactType("com.jboss.qa.Address");
+  FactType addressFact=kbase.getFactType("com.jboss.qa","Address");
   Object address=addressFact.newInstance();
   session.insert(address);
   session.fireAllRules();

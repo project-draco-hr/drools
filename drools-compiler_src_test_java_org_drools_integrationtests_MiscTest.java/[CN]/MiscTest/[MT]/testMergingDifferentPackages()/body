@@ -1,13 +1,10 @@
 {
   try {
-    final PackageBuilder builder=new PackageBuilder();
-    builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RuleNameClashes1.drl")));
-    builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_RuleNameClashes2.drl")));
-    assertEquals(2,builder.getPackages().length);
-    Package pkg1=builder.getPackageRegistry("org.drools.package1").getPackage();
-    assertEquals("rule 1",pkg1.getRules()[0].getName());
-    Package pkg2=builder.getPackageRegistry("org.drools.package2").getPackage();
-    assertEquals("rule 1",pkg2.getRules()[0].getName());
+    Collection<KnowledgePackage> kpkgs=loadKnowledgePackages("test_RuleNameClashes1.drl","test_RuleNameClashes2.drl");
+    assertEquals(2,kpkgs.size());
+    for (    KnowledgePackage kpkg : kpkgs) {
+      assertEquals("rule 1",kpkg.getRules().iterator().next().getName());
+    }
   }
  catch (  PackageMergeException e) {
     fail("unexpected exception: " + e.getMessage());

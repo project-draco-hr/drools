@@ -1,21 +1,14 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream(drlResource)));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  final Package pkg=builder.getPackage();
-  final RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase(drlResource));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  ksession.setGlobal("results",list);
   Person bob=new Person("Bob");
   bob.setStatus("hungry");
   Cheese c=new Cheese();
-  workingMemory.insert(bob);
-  workingMemory.insert(c);
-  workingMemory.fireAllRules();
+  ksession.insert(bob);
+  ksession.insert(c);
+  ksession.fireAllRules();
   assertEquals(10,c.getPrice());
   assertEquals("fine",bob.getStatus());
 }

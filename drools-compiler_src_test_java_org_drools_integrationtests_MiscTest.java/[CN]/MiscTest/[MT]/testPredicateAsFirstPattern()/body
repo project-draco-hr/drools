@@ -1,19 +1,11 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("predicate_as_first_pattern.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=loadKnowledgeBase("predicate_as_first_pattern.drl");
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   final Cheese mussarela=new Cheese("Mussarela",35);
-  workingMemory.insert(mussarela);
+  ksession.insert(mussarela);
   final Cheese provolone=new Cheese("Provolone",20);
-  workingMemory.insert(provolone);
-  workingMemory.fireAllRules();
+  ksession.insert(provolone);
+  ksession.fireAllRules();
   assertEquals("The rule is being incorrectly fired",35,mussarela.getPrice());
   assertEquals("Rule is incorrectly being fired",20,provolone.getPrice());
 }

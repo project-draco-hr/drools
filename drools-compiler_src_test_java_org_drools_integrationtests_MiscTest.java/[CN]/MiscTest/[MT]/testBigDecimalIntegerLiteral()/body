@@ -1,17 +1,13 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("big_decimal_and_literal.drl")));
-  final Package pkg=builder.getPackage();
-  final RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("big_decimal_and_literal.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   final List list=new ArrayList();
   session.setGlobal("list",list);
   final PersonInterface bill=new Person("bill",null,12);
   bill.setBigDecimal(new BigDecimal("42"));
   bill.setBigInteger(new BigInteger("42"));
   session.insert(bill);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
   session.fireAllRules();
   assertEquals(6,((List)session.getGlobal("list")).size());
 }

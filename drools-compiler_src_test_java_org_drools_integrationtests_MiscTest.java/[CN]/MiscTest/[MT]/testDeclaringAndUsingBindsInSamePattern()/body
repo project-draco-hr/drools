@@ -1,24 +1,16 @@
 {
-  final RuleBaseConfiguration config=new RuleBaseConfiguration();
-  config.setRemoveIdentities(true);
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DeclaringAndUsingBindsInSamePattern.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getRuleBase(config);
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBaseConfiguration kbc=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kbc.setOption(RemoveIdentitiesOption.YES);
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase(kbc,"test_DeclaringAndUsingBindsInSamePattern.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List sensors=new ArrayList();
-  workingMemory.setGlobal("sensors",sensors);
+  ksession.setGlobal("sensors",sensors);
   final Sensor sensor1=new Sensor(100,150);
-  workingMemory.insert(sensor1);
-  workingMemory.fireAllRules();
+  ksession.insert(sensor1);
+  ksession.fireAllRules();
   assertEquals(0,sensors.size());
   final Sensor sensor2=new Sensor(200,150);
-  workingMemory.insert(sensor2);
-  workingMemory.fireAllRules();
+  ksession.insert(sensor2);
+  ksession.fireAllRules();
   assertEquals(3,sensors.size());
 }

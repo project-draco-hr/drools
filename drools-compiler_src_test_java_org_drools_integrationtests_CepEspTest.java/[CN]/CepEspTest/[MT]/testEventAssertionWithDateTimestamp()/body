@@ -1,19 +1,18 @@
 {
-  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_CEP_SimpleEventAssertionWithDateTimestamp.drl"));
-  final RuleBase ruleBase=loadRuleBase(reader);
-  SessionConfiguration conf=new SessionConfiguration();
-  conf.setClockType(ClockType.PSEUDO_CLOCK);
-  StatefulSession wm=ruleBase.newStatefulSession(conf,null);
+  KnowledgeBase kbase=loadKnowledgeBase("test_CEP_SimpleEventAssertionWithDateTimestamp.drl");
+  KnowledgeSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  conf.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase,conf);
   final List results=new ArrayList();
-  wm.setGlobal("results",results);
+  session.setGlobal("results",results);
   StockTickInterface tick1=new StockTick(1,"DROO",50,10000,5);
   StockTickInterface tick2=new StockTick(2,"ACME",10,11000,10);
   StockTickInterface tick3=new StockTick(3,"ACME",10,12000,8);
   StockTickInterface tick4=new StockTick(4,"DROO",50,13000,7);
-  InternalFactHandle handle1=(InternalFactHandle)wm.insert(tick1);
-  InternalFactHandle handle2=(InternalFactHandle)wm.insert(tick2);
-  InternalFactHandle handle3=(InternalFactHandle)wm.insert(tick3);
-  InternalFactHandle handle4=(InternalFactHandle)wm.insert(tick4);
+  InternalFactHandle handle1=(InternalFactHandle)session.insert(tick1);
+  InternalFactHandle handle2=(InternalFactHandle)session.insert(tick2);
+  InternalFactHandle handle3=(InternalFactHandle)session.insert(tick3);
+  InternalFactHandle handle4=(InternalFactHandle)session.insert(tick4);
   assertNotNull(handle1);
   assertNotNull(handle2);
   assertNotNull(handle3);
@@ -30,6 +29,6 @@
   assertEquals(tick2.getTime(),eh2.getStartTimestamp());
   assertEquals(tick3.getTime(),eh3.getStartTimestamp());
   assertEquals(tick4.getTime(),eh4.getStartTimestamp());
-  wm.fireAllRules();
+  session.fireAllRules();
   assertEquals(2,results.size());
 }

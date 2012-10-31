@@ -1,20 +1,15 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_JavaModifyBlock.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_JavaModifyBlock.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  ksession.setGlobal("results",list);
   Person bob=new Person("Bob",30);
   bob.setStatus("hungry");
-  workingMemory.insert(bob);
-  workingMemory.insert(new Cheese());
-  workingMemory.insert(new Cheese());
-  workingMemory.insert(new OuterClass.InnerClass(1));
-  workingMemory.fireAllRules();
+  ksession.insert(bob);
+  ksession.insert(new Cheese());
+  ksession.insert(new Cheese());
+  ksession.insert(new OuterClass.InnerClass(1));
+  ksession.fireAllRules();
   assertEquals(2,list.size());
   assertEquals("full",bob.getStatus());
   assertEquals(31,bob.getAge());

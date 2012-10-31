@@ -1,21 +1,17 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_FromNestedAccessors.drl")));
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(builder.getPackage());
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_FromNestedAccessors.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  ksession.setGlobal("results",list);
   final Order order1=new Order(11,"Bob");
   final OrderItem item11=new OrderItem(order1,1);
   final OrderItem item12=new OrderItem(order1,2);
   order1.addItem(item11);
   order1.addItem(item12);
-  workingMemory.insert(order1);
-  workingMemory.insert(item11);
-  workingMemory.insert(item12);
-  workingMemory.fireAllRules();
+  ksession.insert(order1);
+  ksession.insert(item11);
+  ksession.insert(item12);
+  ksession.fireAllRules();
   assertEquals(1,list.size());
   assertSame(order1.getStatus(),list.get(0));
 }

@@ -1,24 +1,12 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic1.drl")));
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic2.drl")));
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic3.drl")));
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic4.drl")));
-  final Package pkg=builder.getPackage();
-  org.drools.reteoo.ReteooRuleBase reteooRuleBase=null;
-  RuleBase ruleBase=getRuleBase();
-  reteooRuleBase=(org.drools.reteoo.ReteooRuleBase)ruleBase;
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
-  if (reteooRuleBase != null) {
-    assertEquals(1,reteooRuleBase.getPackages().length);
-    assertEquals(5,reteooRuleBase.getPackages()[0].getRules().length);
-    reteooRuleBase.removeRule("org.drools.test","Who likes Stilton");
-    assertEquals(4,reteooRuleBase.getPackages()[0].getRules().length);
-    reteooRuleBase.removeRule("org.drools.test","like cheese");
-    assertEquals(3,reteooRuleBase.getPackages()[0].getRules().length);
-    reteooRuleBase.removePackage("org.drools.test");
-    assertEquals(0,reteooRuleBase.getPackages().length);
-  }
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_Dynamic1.drl","test_Dynamic2.drl","test_Dynamic3.drl","test_Dynamic4.drl"));
+  StatefulKnowledgeSession workingMemory=createKnowledgeSession(kbase);
+  assertEquals(1,kbase.getKnowledgePackages().size());
+  assertEquals(5,kbase.getKnowledgePackages().iterator().next().getRules().size());
+  kbase.removeRule("org.drools.test","Who likes Stilton");
+  assertEquals(4,kbase.getKnowledgePackages().iterator().next().getRules().size());
+  kbase.removeRule("org.drools.test","like cheese");
+  assertEquals(3,kbase.getKnowledgePackages().iterator().next().getRules().size());
+  kbase.removeKnowledgePackage("org.drools.test");
+  assertEquals(0,kbase.getKnowledgePackages().size());
 }

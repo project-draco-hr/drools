@@ -1,11 +1,6 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_NPEOnMVELPredicate.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_NPEOnMVELPredicate.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   final List list=new ArrayList();
   session.setGlobal("results",list);
   Cheese cheese=new Cheese("stilton",10);
@@ -14,8 +9,8 @@
   Person bob=new Person("bob","stilton");
   Cheese cheese2=new Cheese();
   bob.setCheese(cheese2);
-  FactHandle p=session.insert(bob);
-  FactHandle c=session.insert(cheesery);
+  org.drools.runtime.rule.FactHandle p=session.insert(bob);
+  org.drools.runtime.rule.FactHandle c=session.insert(cheesery);
   session.fireAllRules();
   assertEquals("should not have fired",0,list.size());
   cheese2.setType("stilton");

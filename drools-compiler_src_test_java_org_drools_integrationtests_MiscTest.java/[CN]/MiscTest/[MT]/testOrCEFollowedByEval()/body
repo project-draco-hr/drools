@@ -1,16 +1,11 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_OrCEFollowedByEval.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_OrCEFollowedByEval.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
-  workingMemory.insert(new FactA("X"));
-  InternalFactHandle b=(InternalFactHandle)workingMemory.insert(new FactB("X"));
-  workingMemory.fireAllRules();
+  ksession.setGlobal("results",list);
+  ksession.insert(new FactA("X"));
+  InternalFactHandle b=(InternalFactHandle)ksession.insert(new FactB("X"));
+  ksession.fireAllRules();
   assertEquals("should have fired",2,list.size());
   assertTrue(list.contains(b.getObject()));
 }

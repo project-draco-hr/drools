@@ -9,9 +9,6 @@
   l.add(add1);
   l.add(add2);
   p.setAddresses(l);
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("nested_fields.drl")));
-  assertFalse(builder.getErrors().toString(),builder.hasErrors());
   DrlParser parser=new DrlParser(LanguageLevelOption.DRL5);
   PackageDescr desc=parser.parse(new InputStreamReader(getClass().getResourceAsStream("nested_fields.drl")));
   List packageAttrs=desc.getAttributes();
@@ -22,11 +19,9 @@
   assertEquals(1,ruleAttrs.size());
   assertEquals("mvel",((AttributeDescr)ruleAttrs.get("dialect")).getValue());
   assertEquals("dialect",((AttributeDescr)ruleAttrs.get("dialect")).getName());
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(builder.getPackage());
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase(desc));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   session.insert(p);
-  session=SerializationHelper.getSerialisedStatefulSession(session,ruleBase);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
   session.fireAllRules();
 }

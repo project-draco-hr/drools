@@ -1,16 +1,11 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_DeepNestedConstraints.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_DeepNestedConstraints.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
-  workingMemory.insert(new Person("bob","muzzarela"));
-  workingMemory.insert(new Cheese("brie",10));
-  workingMemory.insert(new Cheese("muzzarela",80));
-  workingMemory.fireAllRules();
+  ksession.setGlobal("results",list);
+  ksession.insert(new Person("bob","muzzarela"));
+  ksession.insert(new Cheese("brie",10));
+  ksession.insert(new Cheese("muzzarela",80));
+  ksession.fireAllRules();
   assertEquals("should have fired twice",2,list.size());
 }
