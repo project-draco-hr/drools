@@ -1,0 +1,25 @@
+{
+  InputStream kProjectStream=null;
+  URLClassLoader urlClassLoader=null;
+  try {
+    urlClassLoader=new URLClassLoader(new URL[]{kJar.toURI().toURL()});
+  }
+ catch (  MalformedURLException e) {
+    return false;
+  }
+  kProjectStream=urlClassLoader.getResourceAsStream(KPROJECT_JAR_PATH);
+  KProject kProject=fromXML(kProjectStream);
+  try {
+    kProjectStream.close();
+  }
+ catch (  IOException e) {
+  }
+  ClassLoader originalClassLoader=Thread.currentThread().getContextClassLoader();
+  try {
+    Thread.currentThread().setContextClassLoader(urlClassLoader);
+    return build(kProject);
+  }
+  finally {
+    Thread.currentThread().setContextClassLoader(originalClassLoader);
+  }
+}
