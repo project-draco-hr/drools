@@ -13,19 +13,23 @@
             ruleFlowGroup=(InternalRuleFlowGroup)item.getActivationNode().getParentContainer();
             ruleFlowGroup.removeActivation(item);
           }
-          if (filter == null || filter.accept(item)) {
-            fireActivation(item);
-            result=true;
-          }
+          try {
+            if (filter == null || filter.accept(item)) {
+              fireActivation(item);
+              result=true;
+            }
  else {
-            this.workingMemory.executeQueuedActions();
-            final EventSupport eventsupport=(EventSupport)this.workingMemory;
-            eventsupport.getAgendaEventSupport().fireActivationCancelled(item,this.workingMemory,ActivationCancelledCause.FILTER);
-            tryagain=true;
+              this.workingMemory.executeQueuedActions();
+              final EventSupport eventsupport=(EventSupport)this.workingMemory;
+              eventsupport.getAgendaEventSupport().fireActivationCancelled(item,this.workingMemory,ActivationCancelledCause.FILTER);
+              tryagain=true;
+            }
           }
-          if (ruleFlowGroup != null) {
-            ruleFlowGroup.deactivateIfEmpty();
-            this.workingMemory.executeQueuedActions();
+  finally {
+            if (ruleFlowGroup != null) {
+              ruleFlowGroup.deactivateIfEmpty();
+              this.workingMemory.executeQueuedActions();
+            }
           }
         }
       }
