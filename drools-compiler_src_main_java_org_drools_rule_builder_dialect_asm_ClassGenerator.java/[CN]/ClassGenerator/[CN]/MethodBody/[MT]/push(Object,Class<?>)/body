@@ -1,0 +1,30 @@
+{
+  if (obj == null) {
+    mv.visitInsn(ACONST_NULL);
+    return;
+  }
+  if (type == String.class || type == Object.class) {
+    mv.visitLdcInsn(obj);
+  }
+ else   if (type == char.class) {
+    mv.visitIntInsn(BIPUSH,(int)((Character)obj).charValue());
+  }
+ else   if (type.isPrimitive()) {
+    if (obj instanceof String) {
+      obj=coerceStringToPrimitive(type,(String)obj);
+    }
+ else {
+      obj=coercePrimitiveToPrimitive(type,obj);
+    }
+    mv.visitLdcInsn(obj);
+  }
+ else   if (type == Class.class) {
+    mv.visitLdcInsn(classGenerator.toType((Class<?>)obj));
+  }
+ else   if (type == Character.class) {
+    invokeConstructor(Character.class,new Object[]{obj.toString().charAt(0)},char.class);
+  }
+ else {
+    invokeConstructor(type,new Object[]{obj.toString()},String.class);
+  }
+}
