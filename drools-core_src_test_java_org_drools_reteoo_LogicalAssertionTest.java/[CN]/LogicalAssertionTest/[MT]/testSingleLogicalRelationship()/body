@@ -10,6 +10,12 @@
   final Consequence consequence=new Consequence(){
     private static final long serialVersionUID=510l;
     public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory){
+      LinkedList<LogicalDependency> list=((DefaultKnowledgeHelper)knowledgeHelper).getpreviousJustified();
+      if (list != null) {
+        for (SimpleLogicalDependency dep=(SimpleLogicalDependency)list.getFirst(); dep != null; dep=(SimpleLogicalDependency)dep.getNext()) {
+          knowledgeHelper.insertLogical(dep.getObject(),dep.getValue());
+        }
+      }
     }
     public void readExternal(    ObjectInput in) throws IOException, ClassNotFoundException {
     }
@@ -23,11 +29,12 @@
   rule1.setConsequence(consequence);
   final DefaultFactHandle handle1=(DefaultFactHandle)workingMemory.insert("o1");
   final LeftTupleImpl tuple1=new LeftTupleImpl(handle1,null,true);
-  final PropagationContext context1=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null,null);
+  final PropagationContextImpl context1=new PropagationContextImpl(0,PropagationContext.ASSERTION,null,null,null);
   node.assertLeftTuple(tuple1,context1,workingMemory);
   final String logicalString=new String("logical");
   InternalFactHandle logicalHandle=(InternalFactHandle)workingMemory.insert(logicalString,null,false,true,rule1,(Activation)tuple1.getObject());
   new RightTuple(logicalHandle,sink);
+  context1.setFactHandle(handle1);
   node.retractLeftTuple(tuple1,context1,workingMemory);
   workingMemory.executeQueuedActions();
   assertLength(1,sink.getRetracted());

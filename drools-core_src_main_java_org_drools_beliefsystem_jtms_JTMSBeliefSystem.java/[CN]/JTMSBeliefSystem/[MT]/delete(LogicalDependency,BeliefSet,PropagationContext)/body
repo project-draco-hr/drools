@@ -1,0 +1,49 @@
+{
+  JTMSBeliefSet jtmsBeliefSet=(JTMSBeliefSet)beliefSet;
+  boolean wasConflicting=jtmsBeliefSet.isConflicting();
+  boolean wasNegated=jtmsBeliefSet.isNegated();
+  boolean primeChanged=false;
+  if ((jtmsBeliefSet.getPositiveFactHandle() != null && jtmsBeliefSet.getPositiveFactHandle().getObject() == node.getObject()) || (jtmsBeliefSet.getNegativeFactHandle() != null && jtmsBeliefSet.getNegativeFactHandle().getObject() == node.getObject())) {
+    primeChanged=true;
+  }
+  beliefSet.remove(node.getJustifierEntry());
+  if (beliefSet.isEmpty()) {
+    if (wasNegated) {
+      defEP.getObjectStore().addHandle(beliefSet.getFactHandle(),beliefSet.getFactHandle().getObject());
+      retractOrUpdateBelief(node,context,jtmsBeliefSet.getNegativeFactHandle(),false,true);
+    }
+    if (!(context.getType() == PropagationContext.RETRACTION && context.getFactHandle() == beliefSet.getFactHandle())) {
+      retractOrUpdateBelief(node,context,(InternalFactHandle)jtmsBeliefSet.getFactHandle(),false,true);
+    }
+  }
+ else   if (wasConflicting && !jtmsBeliefSet.isConflicting()) {
+    insertBelief(node,defEP.getObjectTypeConfigurationRegistry().getObjectTypeConf(defEP.getEntryPoint(),node.getObject()),jtmsBeliefSet,wasNegated,wasConflicting);
+  }
+ else   if (primeChanged) {
+    String value;
+    InternalFactHandle handle;
+    Object object=null;
+    if (jtmsBeliefSet.isNegated()) {
+      value=MODE.NEGATIVE.getId();
+      handle=jtmsBeliefSet.getNegativeFactHandle();
+      for (LinkedListEntry<LogicalDependency> entry=(LinkedListEntry<LogicalDependency>)jtmsBeliefSet.getLast(); entry != null; entry=(LinkedListEntry<LogicalDependency>)entry.getPrevious()) {
+        if (entry.getObject().getValue().equals(value)) {
+          object=entry.getObject().getObject();
+          break;
+        }
+      }
+    }
+ else {
+      value=MODE.POSITIVE.getId();
+      handle=jtmsBeliefSet.getPositiveFactHandle();
+      for (LinkedListEntry<LogicalDependency> entry=(LinkedListEntry<LogicalDependency>)jtmsBeliefSet.getFirst(); entry != null; entry=(LinkedListEntry<LogicalDependency>)entry.getNext()) {
+        if (entry.getObject().getValue().equals(value)) {
+          object=entry.getObject().getObject();
+          break;
+        }
+      }
+    }
+    ((NamedEntryPoint)handle.getEntryPoint()).getObjectStore().updateHandle(handle,object);
+    retractOrUpdateBelief(node,context,handle,true,false);
+  }
+}

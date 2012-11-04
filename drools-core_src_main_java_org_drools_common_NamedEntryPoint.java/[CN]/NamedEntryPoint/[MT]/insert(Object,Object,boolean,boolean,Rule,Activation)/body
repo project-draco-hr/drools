@@ -14,6 +14,7 @@
       insert(handle,object,rule,activation,typeConf);
       return handle;
     }
+    final PropagationContext propagationContext=new PropagationContextImpl(this.wm.getNextPropagationIdCounter(),PropagationContext.ASSERTION,rule,(activation == null) ? null : activation.getTuple(),handle,this.wm.agenda.getActiveActivations(),this.wm.agenda.getDormantActivations(),entryPoint);
     try {
       this.lock.lock();
       this.ruleBase.readLock();
@@ -21,7 +22,7 @@
       if (typeConf.isTMSEnabled()) {
         TruthMaintenanceSystem tms=getTruthMaintenanceSystem();
         if (handle != null) {
-          insertWhenHandleExists(object,tmsValue,logical,rule,activation,typeConf,handle,tms);
+          insertWhenHandleExists(object,tmsValue,logical,rule,activation,typeConf,handle,tms,propagationContext);
           return handle;
         }
         EqualityKey key=tms.get(object);
@@ -52,7 +53,8 @@
  else           if (key.getStatus() == EqualityKey.JUSTIFIED) {
             key.setStatus(EqualityKey.STATED);
             final InternalFactHandle justifiedHandle=key.getFactHandle();
-            TruthMaintenanceSystemHelper.removeLogicalDependencies(justifiedHandle);
+            ((PropagationContextImpl)propagationContext).setFactHandle(justifiedHandle);
+            TruthMaintenanceSystemHelper.clearLogicalDependencies(justifiedHandle,propagationContext);
             return update(justifiedHandle,true,object,Long.MAX_VALUE,activation);
           }
  else {

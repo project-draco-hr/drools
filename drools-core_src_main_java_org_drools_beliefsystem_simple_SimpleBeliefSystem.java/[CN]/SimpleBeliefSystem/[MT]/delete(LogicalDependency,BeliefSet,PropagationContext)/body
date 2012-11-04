@@ -1,0 +1,25 @@
+{
+  SimpleBeliefSet sBeliefSet=(SimpleBeliefSet)beliefSet;
+  beliefSet.remove(node.getJustifierEntry());
+  InternalFactHandle bfh=beliefSet.getFactHandle();
+  if (beliefSet.isEmpty() && !((context.getType() == PropagationContext.RETRACTION || context.getType() == PropagationContext.MODIFICATION) && context.getFactHandle() == bfh)) {
+    if (sBeliefSet.getWorkingMemoryAction() == null) {
+      WorkingMemoryAction action=new LogicalCallback(bfh,context,node.getJustifier(),false,true);
+      ep.enQueueWorkingMemoryAction(action);
+      sBeliefSet.setWorkingMemoryAction(action);
+    }
+ else {
+      LogicalCallback callback=(LogicalCallback)sBeliefSet.getWorkingMemoryAction();
+      callback.setUpdate(false);
+      callback.setFullyRetract(true);
+    }
+  }
+ else   if (!beliefSet.isEmpty() && beliefSet.getFactHandle().getObject() == node.getObject()) {
+    ((NamedEntryPoint)bfh.getEntryPoint()).getObjectStore().updateHandle(bfh,((LinkedListEntry<LogicalDependency>)beliefSet.getFirst()).getObject().getObject());
+    if (sBeliefSet.getWorkingMemoryAction() == null) {
+      WorkingMemoryAction action=new LogicalCallback(bfh,context,node.getJustifier(),true,false);
+      ep.enQueueWorkingMemoryAction(action);
+      sBeliefSet.setWorkingMemoryAction(action);
+    }
+  }
+}

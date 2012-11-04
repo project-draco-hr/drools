@@ -1,0 +1,29 @@
+{
+  String s="package org.drools.beliefsystem.jtms;\n" + "\n" + "import org.drools.event.rule.ActivationUnMatchListener;\n"+ "import java.util.List \n"+ "import org.drools.common.AgendaItem;"+ "global java.util.List list;\n"+ "\n"+ "rule \"go1\"\n"+ "when\n"+ "    String( this == 'go1' )\n"+ "then\n"+ "    insertLogical( 'neg', 'neg' );\n"+ "end\n"+ "\n"+ "rule \"go2\"\n"+ "when\n"+ "    String( this == 'go2' )\n"+ "then\n"+ "    insertLogical( 'pos' );\n"+ "end\n"+ "\n"+ "rule \"Positive\"\n"+ "when\n"+ "    $n : String( this != 'go1' || == 'go2' ) \n"+ "then\n"+ "    final String s = '+' + $n;"+ "    final List l = list;"+ "    l.add( s );\n"+ "    AgendaItem item = ( AgendaItem ) kcontext.getActivation();"+ "    item.setActivationUnMatchListener( new ActivationUnMatchListener() {\n"+ "        \n"+ "        public void unMatch(org.drools.runtime.rule.WorkingMemory wm,\n"+ "                            org.drools.runtime.rule.Activation activation) {\n"+ "            l.remove( s );\n"+ "        }\n"+ "    } );"+ "end\n"+ "rule \"Negative\"\n"+ "when\n"+ "    $n : String(  this != 'go1' || == 'go2' ) from entry-point 'neg' \n"+ "then\n"+ "    final String s = '-' + $n; \n"+ "    final List l = list; \n"+ "    l.add( s ); \n"+ "    AgendaItem item = ( AgendaItem ) kcontext.getActivation(); \n"+ "    item.setActivationUnMatchListener( new ActivationUnMatchListener() { \n"+ "        \n"+ "        public void unMatch(org.drools.runtime.rule.WorkingMemory wm, \n"+ "                            org.drools.runtime.rule.Activation activation) { \n"+ "            l.remove( s ); \n"+ "        }\n"+ "    } );"+ "end\n";
+  StatefulKnowledgeSession kSession=getSessionFromString(s);
+  List list=new ArrayList();
+  kSession.setGlobal("list",list);
+  FactHandle fhGo1=kSession.insert("go1");
+  kSession.fireAllRules();
+  assertTrue(list.contains("-neg"));
+  assertEquals(1,kSession.getWorkingMemoryEntryPoint("DEFAULT").getObjects().size());
+  assertEquals(1,kSession.getWorkingMemoryEntryPoint("neg").getObjects().size());
+  FactHandle fhGo2=kSession.insert("go2");
+  kSession.fireAllRules();
+  assertTrue(list.contains("-neg"));
+  assertTrue(list.contains("+pos"));
+  assertEquals(3,kSession.getWorkingMemoryEntryPoint("DEFAULT").getObjects().size());
+  assertEquals(1,kSession.getWorkingMemoryEntryPoint("neg").getObjects().size());
+  kSession.retract(fhGo1);
+  kSession.fireAllRules();
+  assertFalse(list.contains("-neg"));
+  assertTrue(list.contains("+pos"));
+  assertEquals(2,kSession.getWorkingMemoryEntryPoint("DEFAULT").getObjects().size());
+  assertEquals(0,kSession.getWorkingMemoryEntryPoint("neg").getObjects().size());
+  kSession.retract(fhGo2);
+  kSession.fireAllRules();
+  assertFalse(list.contains("-neg"));
+  assertFalse(list.contains("+pos"));
+  assertEquals(0,kSession.getWorkingMemoryEntryPoint("DEFAULT").getObjects().size());
+  assertEquals(0,kSession.getWorkingMemoryEntryPoint("neg").getObjects().size());
+}

@@ -31,7 +31,7 @@
       TruthMaintenanceSystem tms=getTruthMaintenanceSystem();
       final EqualityKey key=handle.getEqualityKey();
       if (key.getStatus() == EqualityKey.JUSTIFIED) {
-        TruthMaintenanceSystemHelper.removeLogicalDependencies(handle);
+        TruthMaintenanceSystemHelper.removeLogicalDependencies(handle,propagationContext);
       }
       key.removeFactHandle(handle);
       handle.setEqualityKey(null);
@@ -41,9 +41,9 @@
     }
     propagationContext.evaluateActionQueue(this.wm);
     this.wm.workingMemoryEventSupport.fireObjectRetracted(propagationContext,handle,object,this.wm);
+    this.wm.executeQueuedActions();
     this.objectStore.removeHandle(handle);
     this.handleFactory.destroyFactHandle(handle);
-    this.wm.executeQueuedActions();
     if (rule == null) {
       this.wm.getAgenda().unstageActivations();
     }

@@ -1,0 +1,54 @@
+{
+  StatefulKnowledgeSession kSession=getSessionFromFile("org/drools/beliefsystem/jtms/posNegTMS.drl");
+  ArrayList list=new ArrayList();
+  kSession.setGlobal("list",list);
+  FactHandle a=kSession.insert("a");
+  FactHandle b=kSession.insert("b");
+  FactHandle c=kSession.insert("c");
+  FactHandle d=kSession.insert("d");
+  try {
+    kSession.fireAllRules();
+    assertEquals(4,kSession.getFactCount());
+    assertEquals(0,kSession.getWorkingMemoryEntryPoint("neg").getFactCount());
+    assertEquals(0,list.size());
+    kSession.retract(a);
+    kSession.fireAllRules();
+    assertEquals(3,kSession.getFactCount());
+    assertEquals(0,kSession.getWorkingMemoryEntryPoint("neg").getFactCount());
+    assertEquals(0,list.size());
+    kSession.retract(b);
+    kSession.fireAllRules();
+    assertEquals(2,kSession.getFactCount());
+    assertEquals(1,kSession.getWorkingMemoryEntryPoint("neg").getFactCount());
+    assertEquals(1,list.size());
+    a=kSession.insert("a");
+    kSession.fireAllRules();
+    assertEquals(3,kSession.getFactCount());
+    assertEquals(0,kSession.getWorkingMemoryEntryPoint("neg").getFactCount());
+    assertEquals(1,list.size());
+    kSession.retract(c);
+    kSession.fireAllRules();
+    assertEquals(2,kSession.getFactCount());
+    assertEquals(0,kSession.getWorkingMemoryEntryPoint("neg").getFactCount());
+    assertEquals(1,list.size());
+    kSession.retract(d);
+    kSession.fireAllRules();
+    assertEquals(2,kSession.getFactCount());
+    assertEquals(0,kSession.getWorkingMemoryEntryPoint("neg").getFactCount());
+    assertEquals(2,list.size());
+    kSession.retract(a);
+    kSession.fireAllRules();
+    assertEquals(0,kSession.getFactCount());
+    assertEquals(0,kSession.getWorkingMemoryEntryPoint("neg").getFactCount());
+    assertEquals(2,list.size());
+    c=kSession.insert("c");
+    kSession.fireAllRules();
+    assertEquals(1,kSession.getFactCount());
+    assertEquals(1,kSession.getWorkingMemoryEntryPoint("neg").getFactCount());
+    assertEquals(3,list.size());
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail("No exception should have been thrown");
+  }
+}
