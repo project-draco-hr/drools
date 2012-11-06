@@ -1,5 +1,13 @@
 {
-  KnowledgeJarBuilderImpl kbuilder=(KnowledgeJarBuilderImpl)KnowledgeBuilderFactory.newKnowledgeJarBuilder();
+  URLClassLoader projectClassLoader=null;
+  try {
+    projectClassLoader=new URLClassLoader(new URL[]{outputDirectory.toURI().toURL()});
+  }
+ catch (  MalformedURLException e) {
+    throw new RuntimeException(e);
+  }
+  KnowledgeBuilderConfiguration kConf=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,projectClassLoader);
+  KnowledgeJarBuilderImpl kbuilder=(KnowledgeJarBuilderImpl)KnowledgeBuilderFactory.newKnowledgeJarBuilder(kConf);
   for (  KBaseUnit kBaseUnit : kbuilder.getKBaseUnits(rootFolder,sourceFolder)) {
     if (kBaseUnit.hasErrors()) {
       getLog().error(kBaseUnit.getErrors().toString());
@@ -7,4 +15,5 @@
     }
     getLog().info(kBaseUnit.getKBaseName() + " correctly built!");
   }
+  kbuilder.copyKBasesToOutput(rootFolder,outputDirectory);
 }

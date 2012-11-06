@@ -7,19 +7,9 @@
  catch (  MalformedURLException e) {
     return false;
   }
-  kProjectStream=urlClassLoader.getResourceAsStream(KPROJECT_JAR_PATH);
-  KProject kProject=fromXML(kProjectStream);
-  try {
-    kProjectStream.close();
+  KProject kProject=loadKProject(urlClassLoader);
+  if (kProject == null) {
+    return false;
   }
- catch (  IOException e) {
-  }
-  ClassLoader originalClassLoader=Thread.currentThread().getContextClassLoader();
-  try {
-    Thread.currentThread().setContextClassLoader(urlClassLoader);
-    return build(kProject);
-  }
-  finally {
-    Thread.currentThread().setContextClassLoader(originalClassLoader);
-  }
+  return build(urlClassLoader,kProject);
 }

@@ -1,0 +1,34 @@
+{
+  File file=new File(rootFolder,KnowledgeJarBuilderImpl.KPROJECT_RELATIVE_PATH);
+  if (!recreate && file.exists()) {
+    return;
+  }
+  KProjectImpl kproj=new KProjectImpl();
+  for (  File kBaseFolder : sourceFolder.listFiles()) {
+    String qName=kBaseFolder.getName();
+    int dotPos=qName.lastIndexOf('.');
+    String namespace=dotPos > 0 ? qName.substring(0,dotPos) : "";
+    String kBaseName=dotPos > 0 ? qName.substring(dotPos + 1) : qName;
+    KBase kBase=kproj.newKBase(namespace,kBaseName).setFiles(recursiveListFile(kBaseFolder));
+    KSession ksession1=kBase.newKSession(namespace,kBaseName + ".session").setType("stateful");
+  }
+  BufferedWriter output=null;
+  try {
+    file.getParentFile().mkdirs();
+    output=new BufferedWriter(new FileWriter(file));
+    output.write(kproj.toXML());
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+ finally {
+    if (output != null) {
+      try {
+        output.close();
+      }
+ catch (      IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+}
