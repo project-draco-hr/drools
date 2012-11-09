@@ -2,10 +2,19 @@
   if (kbuilder != null) {
     return kbuilder;
   }
-  kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(kConf);
+  if (classLoader != null) {
+    KnowledgeBuilderConfiguration kConf=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,classLoader);
+    kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(kConf);
+  }
+ else {
+    kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  }
   CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
-  for (  String kBaseFile : kBase.getFiles()) {
-    buildKBaseFile(ckbuilder,kBase,kBaseFile);
+  buildKBaseFiles(ckbuilder,kBase);
+  if (includes != null) {
+    for (    KBase include : includes) {
+      buildKBaseFiles(ckbuilder,include);
+    }
   }
   ckbuilder.build();
   return kbuilder;

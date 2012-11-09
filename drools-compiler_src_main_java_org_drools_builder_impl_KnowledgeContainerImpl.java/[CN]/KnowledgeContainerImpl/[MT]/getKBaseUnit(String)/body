@@ -1,3 +1,13 @@
 {
-  return getOrCreateKBaseUnit(getKConf(kBaseName),kBases.get(kBaseName));
+  KBase kBase=kBases.get(kBaseName);
+  if (kBase == null) {
+    throw new RuntimeException("Unknown KnowledgeBase: " + kBaseName);
+  }
+  KBaseUnitImpl unit=getOrCreateKBaseUnit(urls.get(kBaseName),kBase);
+  if (!unit.hasIncludes() && kBase.getIncludes() != null) {
+    for (    String include : kBase.getIncludes()) {
+      unit.addInclude(kBases.get(include));
+    }
+  }
+  return unit;
 }
