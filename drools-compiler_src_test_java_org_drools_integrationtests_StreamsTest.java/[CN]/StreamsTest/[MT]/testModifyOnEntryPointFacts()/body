@@ -1,8 +1,8 @@
 {
-  String str="package org.drools\n" + "declare StockTick\n" + "        @role ( event )\n"+ "end\n"+ "rule R1 salience 100\n"+ "    when\n"+ "        $s1 : StockTick( company == 'RHT', price == 10 ) from entry-point ep1\n"+ "    then\n"+ "        StockTick s = $s1;\n"+ "        modify( s ) { setPrice( 50 ) };\n"+ "end\n"+ "rule R2 salience 90\n"+ "    when\n"+ "        $s1 : StockTick( company == 'RHT', price == 10 ) from entry-point ep2\n"+ "    then\n"+ "        StockTick s = $s1;\n"+ "        modify( s ) { setPrice( 50 ) };\n"+ "end\n"+ "rule R3 salience 80\n"+ "    when\n"+ "        $s1 : StockTick( company == 'RHT', price == 10 ) from entry-point ep3\n"+ "    then\n"+ "        StockTick s = $s1;\n"+ "        modify( s ) { setPrice( 50 ) };\n"+ "end\n";
+  String str="package org.kie\n" + "declare StockTick\n" + "        @role ( event )\n"+ "end\n"+ "rule R1 salience 100\n"+ "    when\n"+ "        $s1 : StockTick( company == 'RHT', price == 10 ) from entry-point ep1\n"+ "    then\n"+ "        StockTick s = $s1;\n"+ "        modify( s ) { setPrice( 50 ) };\n"+ "end\n"+ "rule R2 salience 90\n"+ "    when\n"+ "        $s1 : StockTick( company == 'RHT', price == 10 ) from entry-point ep2\n"+ "    then\n"+ "        StockTick s = $s1;\n"+ "        modify( s ) { setPrice( 50 ) };\n"+ "end\n"+ "rule R3 salience 80\n"+ "    when\n"+ "        $s1 : StockTick( company == 'RHT', price == 10 ) from entry-point ep3\n"+ "    then\n"+ "        StockTick s = $s1;\n"+ "        modify( s ) { setPrice( 50 ) };\n"+ "end\n";
   KnowledgeBase kbase=loadKnowledgeBaseFromString((KnowledgeBaseConfiguration)null,str);
   StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
-  org.drools.event.rule.AgendaEventListener ael=mock(org.drools.event.rule.AgendaEventListener.class);
+  org.kie.event.rule.AgendaEventListener ael=mock(org.kie.event.rule.AgendaEventListener.class);
   ksession.addEventListener(ael);
   WorkingMemoryEntryPoint ep1=ksession.getWorkingMemoryEntryPoint("ep1");
   WorkingMemoryEntryPoint ep2=ksession.getWorkingMemoryEntryPoint("ep2");
@@ -12,9 +12,9 @@
   ep3.insert(new StockTick(1,"RHT",10,1000));
   int rulesFired=ksession.fireAllRules();
   assertEquals(3,rulesFired);
-  ArgumentCaptor<org.drools.event.rule.AfterActivationFiredEvent> captor=ArgumentCaptor.forClass(org.drools.event.rule.AfterActivationFiredEvent.class);
+  ArgumentCaptor<org.kie.event.rule.AfterActivationFiredEvent> captor=ArgumentCaptor.forClass(org.kie.event.rule.AfterActivationFiredEvent.class);
   verify(ael,times(3)).afterActivationFired(captor.capture());
-  List<org.drools.event.rule.AfterActivationFiredEvent> aafe=captor.getAllValues();
+  List<org.kie.event.rule.AfterActivationFiredEvent> aafe=captor.getAllValues();
   Assert.assertThat(aafe.get(0).getActivation().getRule().getName(),is("R1"));
   Assert.assertThat(aafe.get(1).getActivation().getRule().getName(),is("R2"));
   Assert.assertThat(aafe.get(2).getActivation().getRule().getName(),is("R3"));

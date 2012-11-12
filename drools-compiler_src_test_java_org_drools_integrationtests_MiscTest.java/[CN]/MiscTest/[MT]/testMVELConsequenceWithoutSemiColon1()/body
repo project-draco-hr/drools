@@ -1,8 +1,8 @@
 {
   String drl="";
   drl+="package test\n";
-  drl+="import org.drools.Person\n";
-  drl+="import org.drools.Pet\n";
+  drl+="import org.kie.Person\n";
+  drl+="import org.kie.Pet\n";
   drl+="rule test dialect 'mvel'\n";
   drl+="when\n";
   drl+="$person:Person()\n";
@@ -24,15 +24,15 @@
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
   kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
   StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
-  org.drools.event.rule.WorkingMemoryEventListener wml=Mockito.mock(org.drools.event.rule.WorkingMemoryEventListener.class);
+  org.kie.event.rule.WorkingMemoryEventListener wml=Mockito.mock(org.kie.event.rule.WorkingMemoryEventListener.class);
   ksession.addEventListener(wml);
-  org.drools.runtime.rule.FactHandle personFH=ksession.insert(new Person("Toni"));
-  org.drools.runtime.rule.FactHandle petFH=ksession.insert(new Pet("Toni"));
+  org.kie.runtime.rule.FactHandle personFH=ksession.insert(new Person("Toni"));
+  org.kie.runtime.rule.FactHandle petFH=ksession.insert(new Pet("Toni"));
   int fired=ksession.fireAllRules();
   assertEquals(1,fired);
-  ArgumentCaptor<org.drools.event.rule.ObjectRetractedEvent> retracts=ArgumentCaptor.forClass(org.drools.event.rule.ObjectRetractedEvent.class);
+  ArgumentCaptor<org.kie.event.rule.ObjectRetractedEvent> retracts=ArgumentCaptor.forClass(org.kie.event.rule.ObjectRetractedEvent.class);
   verify(wml,times(2)).objectRetracted(retracts.capture());
-  List<org.drools.event.rule.ObjectRetractedEvent> values=retracts.getAllValues();
+  List<org.kie.event.rule.ObjectRetractedEvent> values=retracts.getAllValues();
   assertThat(values.get(0).getFactHandle(),is(personFH));
   assertThat(values.get(1).getFactHandle(),is(petFH));
 }

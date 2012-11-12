@@ -12,19 +12,19 @@
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
   kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
   StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
-  org.drools.event.rule.WorkingMemoryEventListener wml=Mockito.mock(org.drools.event.rule.WorkingMemoryEventListener.class);
-  org.drools.event.rule.AgendaEventListener ael=Mockito.mock(org.drools.event.rule.AgendaEventListener.class);
+  org.kie.event.rule.WorkingMemoryEventListener wml=Mockito.mock(org.kie.event.rule.WorkingMemoryEventListener.class);
+  org.kie.event.rule.AgendaEventListener ael=Mockito.mock(org.kie.event.rule.AgendaEventListener.class);
   ksession.addEventListener(wml);
   ksession.addEventListener(ael);
   int fired=ksession.fireAllRules();
   assertEquals(3,fired);
-  ArgumentCaptor<org.drools.event.rule.AfterActivationFiredEvent> actvs=ArgumentCaptor.forClass(org.drools.event.rule.AfterActivationFiredEvent.class);
+  ArgumentCaptor<org.kie.event.rule.AfterActivationFiredEvent> actvs=ArgumentCaptor.forClass(org.kie.event.rule.AfterActivationFiredEvent.class);
   verify(ael,times(3)).afterActivationFired(actvs.capture());
-  List<org.drools.event.rule.AfterActivationFiredEvent> values=actvs.getAllValues();
+  List<org.kie.event.rule.AfterActivationFiredEvent> values=actvs.getAllValues();
   assertThat(values.get(0).getActivation().getRule().getName(),is("init"));
   assertThat(values.get(1).getActivation().getRule().getName(),is("r1"));
   assertThat(values.get(2).getActivation().getRule().getName(),is("r2"));
-  verify(ael,never()).activationCancelled(any(org.drools.event.rule.ActivationCancelledEvent.class));
-  verify(wml,times(2)).objectInserted(any(org.drools.event.rule.ObjectInsertedEvent.class));
-  verify(wml,never()).objectRetracted(any(org.drools.event.rule.ObjectRetractedEvent.class));
+  verify(ael,never()).activationCancelled(any(org.kie.event.rule.ActivationCancelledEvent.class));
+  verify(wml,times(2)).objectInserted(any(org.kie.event.rule.ObjectInsertedEvent.class));
+  verify(wml,never()).objectRetracted(any(org.kie.event.rule.ObjectRetractedEvent.class));
 }

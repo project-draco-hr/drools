@@ -1,5 +1,5 @@
 {
-  String drl="package org.drools\n" + "declare StockTick\n" + "    @role(event)\n"+ "end\n"+ "rule FaultsCoincide\n"+ "when\n"+ "   f1 : StockTick( company == \"RHT\" ) over window:length( 1 )\n"+ "   f2 : StockTick( company == \"JBW\" ) over window:length( 1 )\n"+ "then\n"+ "end";
+  String drl="package org.kie\n" + "declare StockTick\n" + "    @role(event)\n"+ "end\n"+ "rule FaultsCoincide\n"+ "when\n"+ "   f1 : StockTick( company == \"RHT\" ) over window:length( 1 )\n"+ "   f2 : StockTick( company == \"JBW\" ) over window:length( 1 )\n"+ "then\n"+ "end";
   KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
   kconf.setOption(EventProcessingOption.STREAM);
   KnowledgeBase kbase=loadKnowledgeBaseFromString(kconf,drl);
@@ -11,7 +11,7 @@
   StockTick st2=new StockTick(2,"JBW",10,1000);
   ksession.insert(st2);
   ksession.fireAllRules();
-  ArgumentCaptor<org.drools.event.rule.AfterActivationFiredEvent> captor=ArgumentCaptor.forClass(org.drools.event.rule.AfterActivationFiredEvent.class);
+  ArgumentCaptor<org.kie.event.rule.AfterActivationFiredEvent> captor=ArgumentCaptor.forClass(org.kie.event.rule.AfterActivationFiredEvent.class);
   verify(ael,times(1)).afterActivationFired(captor.capture());
   AfterActivationFiredEvent aafe=captor.getValue();
   Assert.assertThat((StockTick)aafe.getActivation().getDeclarationValue("f1"),is(st1));

@@ -1,5 +1,5 @@
 {
-  String drl="package org.drools\n" + "declare StockTick\n" + "    @role(event)\n"+ "end\n"+ "declare window RedHatTicks\n"+ "    StockTick( company == 'RHT' )\n"+ "               over window:length(5)\n"+ "               from entry-point ticks\n"+ "end\n"+ "rule X\n"+ "when\n"+ "    accumulate( $s : StockTick( price > 20 ) from window RedHatTicks,\n"+ "                $sum : sum( $s.getPrice() ),\n"+ "                $cnt : count( $s ) )\n"+ "then\n"+ "end\n";
+  String drl="package org.kie\n" + "declare StockTick\n" + "    @role(event)\n"+ "end\n"+ "declare window RedHatTicks\n"+ "    StockTick( company == 'RHT' )\n"+ "               over window:length(5)\n"+ "               from entry-point ticks\n"+ "end\n"+ "rule X\n"+ "when\n"+ "    accumulate( $s : StockTick( price > 20 ) from window RedHatTicks,\n"+ "                $sum : sum( $s.getPrice() ),\n"+ "                $cnt : count( $s ) )\n"+ "then\n"+ "end\n";
   KnowledgeBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
   kconf.setOption(EventProcessingOption.STREAM);
   KnowledgeBase kbase=loadKnowledgeBaseFromString(kconf,drl);
@@ -16,7 +16,7 @@
   ep.insert(new StockTick(7,"RHT",10,1000));
   ep.insert(new StockTick(8,"RHT",40,1000));
   ksession.fireAllRules();
-  ArgumentCaptor<org.drools.event.rule.AfterActivationFiredEvent> captor=ArgumentCaptor.forClass(org.drools.event.rule.AfterActivationFiredEvent.class);
+  ArgumentCaptor<org.kie.event.rule.AfterActivationFiredEvent> captor=ArgumentCaptor.forClass(org.kie.event.rule.AfterActivationFiredEvent.class);
   verify(ael,times(1)).afterActivationFired(captor.capture());
   AfterActivationFiredEvent aafe=captor.getValue();
   Assert.assertThat(((Number)aafe.getActivation().getDeclarationValue("$sum")).intValue(),is(95));

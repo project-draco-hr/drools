@@ -1,17 +1,17 @@
 {
   KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_FactBindings.drl"));
   StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
-  org.drools.event.rule.WorkingMemoryEventListener wmel=mock(org.drools.event.rule.WorkingMemoryEventListener.class);
+  org.kie.event.rule.WorkingMemoryEventListener wmel=mock(org.kie.event.rule.WorkingMemoryEventListener.class);
   ksession.addEventListener(wmel);
   final Person bigCheese=new Person("big cheese");
   final Cheese cheddar=new Cheese("cheddar",15);
   bigCheese.setCheese(cheddar);
-  final org.drools.runtime.rule.FactHandle bigCheeseHandle=ksession.insert(bigCheese);
-  final org.drools.runtime.rule.FactHandle cheddarHandle=ksession.insert(cheddar);
+  final org.kie.runtime.rule.FactHandle bigCheeseHandle=ksession.insert(bigCheese);
+  final org.kie.runtime.rule.FactHandle cheddarHandle=ksession.insert(cheddar);
   ksession.fireAllRules();
-  ArgumentCaptor<org.drools.event.rule.ObjectUpdatedEvent> arg=ArgumentCaptor.forClass(org.drools.event.rule.ObjectUpdatedEvent.class);
+  ArgumentCaptor<org.kie.event.rule.ObjectUpdatedEvent> arg=ArgumentCaptor.forClass(org.kie.event.rule.ObjectUpdatedEvent.class);
   verify(wmel,times(2)).objectUpdated(arg.capture());
-  org.drools.event.rule.ObjectUpdatedEvent event=arg.getAllValues().get(0);
+  org.kie.event.rule.ObjectUpdatedEvent event=arg.getAllValues().get(0);
   assertSame(cheddarHandle,event.getFactHandle());
   assertSame(cheddar,event.getOldObject());
   assertSame(cheddar,event.getObject());

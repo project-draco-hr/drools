@@ -1,14 +1,14 @@
 {
-  String str="package org.drools\n" + "declare Bool123\n" + "    bool1 : boolean\n"+ "    bool2 : boolean\n"+ "    bool3 : boolean\n"+ "end\n"+ "declare Thing\n"+ "    name : String\n"+ "    bool123 : Bool123\n"+ "end\n"+ "rule kickOff\n"+ "when\n"+ "then\n"+ "    insert( new Thing( \"one\", new Bool123( true, false, false ) ) );\n"+ "    insert( new Thing( \"two\", new Bool123( false, false, false ) ) );\n"+ "    insert( new Thing( \"three\", new Bool123( false, false, false ) ) );\n"+ "end\n"+ "rule r1\n"+ "when\n"+ "    $t: Thing( bool123.bool1 == true )\n"+ "then\n"+ "end\n"+ "rule r2\n"+ "when\n"+ "    $t: Thing( bool123.bool2 == true )\n"+ "then\n"+ "end\n"+ "rule r3\n"+ "when\n"+ "    $t: Thing( bool123.bool3 == true )\n"+ "then\n"+ "end";
+  String str="package org.kie\n" + "declare Bool123\n" + "    bool1 : boolean\n"+ "    bool2 : boolean\n"+ "    bool3 : boolean\n"+ "end\n"+ "declare Thing\n"+ "    name : String\n"+ "    bool123 : Bool123\n"+ "end\n"+ "rule kickOff\n"+ "when\n"+ "then\n"+ "    insert( new Thing( \"one\", new Bool123( true, false, false ) ) );\n"+ "    insert( new Thing( \"two\", new Bool123( false, false, false ) ) );\n"+ "    insert( new Thing( \"three\", new Bool123( false, false, false ) ) );\n"+ "end\n"+ "rule r1\n"+ "when\n"+ "    $t: Thing( bool123.bool1 == true )\n"+ "then\n"+ "end\n"+ "rule r2\n"+ "when\n"+ "    $t: Thing( bool123.bool2 == true )\n"+ "then\n"+ "end\n"+ "rule r3\n"+ "when\n"+ "    $t: Thing( bool123.bool3 == true )\n"+ "then\n"+ "end";
   KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
   StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
-  org.drools.event.rule.AgendaEventListener ael=mock(org.drools.event.rule.AgendaEventListener.class);
+  org.kie.event.rule.AgendaEventListener ael=mock(org.kie.event.rule.AgendaEventListener.class);
   ksession.addEventListener(ael);
   int rulesFired=ksession.fireAllRules();
   assertEquals(2,rulesFired);
-  ArgumentCaptor<org.drools.event.rule.AfterActivationFiredEvent> captor=ArgumentCaptor.forClass(org.drools.event.rule.AfterActivationFiredEvent.class);
+  ArgumentCaptor<org.kie.event.rule.AfterActivationFiredEvent> captor=ArgumentCaptor.forClass(org.kie.event.rule.AfterActivationFiredEvent.class);
   verify(ael,times(2)).afterActivationFired(captor.capture());
-  List<org.drools.event.rule.AfterActivationFiredEvent> aafe=captor.getAllValues();
+  List<org.kie.event.rule.AfterActivationFiredEvent> aafe=captor.getAllValues();
   Assert.assertThat(aafe.get(0).getActivation().getRule().getName(),is("kickOff"));
   Assert.assertThat(aafe.get(1).getActivation().getRule().getName(),is("r1"));
   Object value=aafe.get(1).getActivation().getDeclarationValue("$t");
