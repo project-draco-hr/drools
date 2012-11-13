@@ -2,11 +2,23 @@
   for (  EntryPointNode epn : kbase.getRete().getEntryPointNodes().values()) {
     for (    ObjectTypeNode otn : epn.getObjectTypeNodes().values()) {
       ObjectTypeNodeMonitor otnm=new ObjectTypeNodeMonitor(otn);
-      ObjectName name=DroolsManagementAgent.createObjectName(this.name.getCanonicalName() + ",group=EntryPoints,EntryPoint=" + otnm.getNameSufix()+ ",ObjectType="+ ((ClassObjectType)otn.getObjectType()).getClassName());
-      DroolsManagementAgent.getInstance().registerMBean(kbase,otnm,name);
+      try {
+        final StandardMBean adapter=new StandardMBean(otnm,ObjectTypeNodeMonitorMBean.class);
+        ObjectName name=DroolsManagementAgent.createObjectName(this.name.getCanonicalName() + ",group=EntryPoints,EntryPoint=" + otnm.getNameSufix()+ ",ObjectType="+ ((ClassObjectType)otn.getObjectType()).getClassName());
+        DroolsManagementAgent.getInstance().registerMBean(kbase,adapter,name);
+      }
+ catch (      NotCompliantMBeanException e) {
+        logger.error("Unable to register ObjectTypeNodeMonitor mbean for OTN " + otn.getObjectType() + " into the platform MBean Server",e);
+      }
     }
   }
-  KBaseConfigurationMonitor kbcm=new KBaseConfigurationMonitor(kbase.getConfiguration());
-  ObjectName name=DroolsManagementAgent.createObjectName(this.name.getCanonicalName() + ",group=Configuration");
-  DroolsManagementAgent.getInstance().registerMBean(kbase,kbcm,name);
+  final KBaseConfigurationMonitor kbcm=new KBaseConfigurationMonitor(kbase.getConfiguration());
+  try {
+    final StandardMBean adapter=new StandardMBean(kbcm,KBaseConfigurationMonitorMBean.class);
+    ObjectName name=DroolsManagementAgent.createObjectName(this.name.getCanonicalName() + ",group=Configuration");
+    DroolsManagementAgent.getInstance().registerMBean(kbase,adapter,name);
+  }
+ catch (  NotCompliantMBeanException e) {
+    logger.error("Unable to register KBaseConfigurationMonitor mbean into the platform MBean Server",e);
+  }
 }
