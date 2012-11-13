@@ -1,21 +1,21 @@
 {
-  String rule="package org.kie\n" + "global java.util.concurrent.atomic.AtomicInteger counter\n" + "declare A\n"+ "   @propertyReactive\n"+ "   x : int\n"+ "end\n"+ "declare B\n"+ "   @propertyReactive\n"+ "end\n"+ "declare C\n"+ "   @propertyReactive\n"+ "   y : int\n"+ "end\n"+ "declare D\n"+ "   @propertyReactive\n"+ "end\n"+ "rule R1 when\n"+ "   A ( x == 1 )\n" + (addInfiniteLoopWatch ? "   $c : C ( ) @watch(y)\n" : "   $c : C ( )\n") + "   B ( )\n"+ "then "+ "   modify( $c ) { setY( 2 ) };\n"+ "   if (counter.incrementAndGet() > 10) throw new RuntimeException();\n"+ "end;\n"+ "rule R2 when\n"+ "   A ( x == 1 )\n"+ "   C ( ) @watch(y)\n"+ "   D ( )\n"+ "then end;\n"+ "rule InitA when\n"+ "   $a : A ( x == 0 )\n"+ "then\n"+ "   modify( $a ) { setX( 1 ) };\n"+ "end;\t\n"+ "rule InitC salience 1 when\n"+ "   $c : C ( y == 0 )\n"+ "then\n"+ "   modify( $c ) { setY( 1 ) };\n"+ "end;\n";
+  String rule="package org.drools\n" + "global java.util.concurrent.atomic.AtomicInteger counter\n" + "declare A\n"+ "   @propertyReactive\n"+ "   x : int\n"+ "end\n"+ "declare B\n"+ "   @propertyReactive\n"+ "end\n"+ "declare C\n"+ "   @propertyReactive\n"+ "   y : int\n"+ "end\n"+ "declare D\n"+ "   @propertyReactive\n"+ "end\n"+ "rule R1 when\n"+ "   A ( x == 1 )\n" + (addInfiniteLoopWatch ? "   $c : C ( ) @watch(y)\n" : "   $c : C ( )\n") + "   B ( )\n"+ "then "+ "   modify( $c ) { setY( 2 ) };\n"+ "   if (counter.incrementAndGet() > 10) throw new RuntimeException();\n"+ "end;\n"+ "rule R2 when\n"+ "   A ( x == 1 )\n"+ "   C ( ) @watch(y)\n"+ "   D ( )\n"+ "then end;\n"+ "rule InitA when\n"+ "   $a : A ( x == 0 )\n"+ "then\n"+ "   modify( $a ) { setX( 1 ) };\n"+ "end;\t\n"+ "rule InitC salience 1 when\n"+ "   $c : C ( y == 0 )\n"+ "then\n"+ "   modify( $c ) { setY( 1 ) };\n"+ "end;\n";
   KnowledgeBase kbase=loadKnowledgeBaseFromString(rule);
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   AtomicInteger counter=new AtomicInteger(0);
   ksession.setGlobal("counter",counter);
-  FactType factTypeA=kbase.getFactType("org.kie","A");
+  FactType factTypeA=kbase.getFactType("org.drools","A");
   Object factA=factTypeA.newInstance();
   factTypeA.set(factA,"x",0);
   ksession.insert(factA);
-  FactType factTypeB=kbase.getFactType("org.kie","B");
+  FactType factTypeB=kbase.getFactType("org.drools","B");
   Object factB=factTypeB.newInstance();
   ksession.insert(factB);
-  FactType factTypeC=kbase.getFactType("org.kie","C");
+  FactType factTypeC=kbase.getFactType("org.drools","C");
   Object factC=factTypeC.newInstance();
   factTypeC.set(factC,"y",0);
   ksession.insert(factC);
-  FactType factTypeD=kbase.getFactType("org.kie","D");
+  FactType factTypeD=kbase.getFactType("org.drools","D");
   Object factD=factTypeD.newInstance();
   ksession.insert(factD);
   try {
