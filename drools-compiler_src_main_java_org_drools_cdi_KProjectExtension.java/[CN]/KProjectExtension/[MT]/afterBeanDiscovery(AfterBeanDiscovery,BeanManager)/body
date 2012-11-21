@@ -1,18 +1,21 @@
 {
   if (kProjects != null) {
     Map<String,KBaseBean> kBaseBeans=new HashMap<String,KProjectExtension.KBaseBean>();
-    if (kBaseQNames != null) {
-      for (      String kBaseQName : kBaseQNames) {
+    if (kBaseNames != null) {
+      for (      String kBaseQName : kBaseNames) {
         KBaseBean bean=new KBaseBean(kBases.get(kBaseQName),kBaseURLs.get(kBaseQName),kBaseBeans);
         kBaseBeans.put(kBaseQName,bean);
         abd.addBean(bean);
       }
     }
-    kBaseQNames=null;
-    if (kSessionQNames != null) {
-      for (      String kSessionQName : kSessionQNames) {
-        org.drools.kproject.KSession kSession=kSessions.get(kSessionQName);
-        KBaseBean bean=kBaseBeans.get(((KSessionImpl)kSession).getKBase().getQName());
+    kBaseNames=null;
+    if (kSessionNames != null) {
+      for (      String kSessionName : kSessionNames) {
+        org.drools.kproject.KSession kSession=kSessions.get(kSessionName);
+        if (kSession == null) {
+          throw new RuntimeException("Unknown KnowledgeSession: " + kSessionName);
+        }
+        KBaseBean bean=kBaseBeans.get(((KSessionImpl)kSession).getKBase().getName());
         if ("stateless".equals(kSession.getType())) {
           abd.addBean(new StatelessKSessionBean(kSession,bean));
         }
@@ -21,7 +24,7 @@
         }
       }
     }
-    kSessionQNames=null;
+    kSessionNames=null;
     kBaseURLs=null;
     kProjects=null;
     kBases=null;

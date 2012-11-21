@@ -1,12 +1,22 @@
 {
+  String prefix="";
   java.io.File kBaseRoot=null;
-  for (  java.io.File child : root.listFiles()) {
-    if (child.getName().equals(kBaseQName)) {
-      kBaseRoot=child;
-      break;
-    }
+  if (root.getName().equals(kBaseName)) {
+    kBaseRoot=root;
   }
-  return recursiveListFile(kBaseRoot,kBaseQName + "/",new Predicate<java.io.File>(){
+ else {
+    for (    java.io.File child : root.listFiles()) {
+      if (child.getName().equals(kBaseName)) {
+        kBaseRoot=child;
+        break;
+      }
+    }
+    prefix=kBaseName + "/";
+  }
+  if (kBaseRoot == null) {
+    throw new RuntimeException("Unable to find KBase " + kBaseName + " in "+ root);
+  }
+  return recursiveListFile(kBaseRoot,prefix,new Predicate<java.io.File>(){
     public boolean apply(    java.io.File file){
       String fileName=file.getName();
       return fileName.endsWith(".drl") || fileName.endsWith(".bpm2");
