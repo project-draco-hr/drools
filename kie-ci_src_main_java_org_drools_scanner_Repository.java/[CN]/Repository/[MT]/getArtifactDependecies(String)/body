@@ -1,0 +1,22 @@
+{
+  Artifact artifact=new DefaultArtifact(artifactName);
+  CollectRequest collectRequest=new CollectRequest();
+  collectRequest.setRoot(new Dependency(artifact,""));
+  for (  RemoteRepository repo : aether.getRepositories()) {
+    collectRequest.addRepository(repo);
+  }
+  CollectResult collectResult;
+  try {
+    collectResult=aether.getSystem().collectDependencies(aether.getSession(),collectRequest);
+  }
+ catch (  DependencyCollectionException e) {
+    throw new RuntimeException(e);
+  }
+  CollectDependencyVisitor visitor=new CollectDependencyVisitor();
+  collectResult.getRoot().accept(visitor);
+  List<DependencyDescriptor> descriptors=new ArrayList<DependencyDescriptor>();
+  for (  DependencyNode node : visitor.getDependencies()) {
+    descriptors.add(new DependencyDescriptor(node.getDependency().getArtifact()));
+  }
+  return descriptors;
+}
