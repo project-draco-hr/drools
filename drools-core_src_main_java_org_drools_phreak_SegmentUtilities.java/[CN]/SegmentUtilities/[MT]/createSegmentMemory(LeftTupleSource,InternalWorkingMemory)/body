@@ -1,0 +1,84 @@
+{
+  while (BetaNode.parentInSameSegment(tupleSource)) {
+    tupleSource=tupleSource.getLeftTupleSource();
+  }
+  LeftTupleSource segmentRoot=tupleSource;
+  SegmentMemory smem=new SegmentMemory(segmentRoot);
+  long nodePosMask=1;
+  long allLinkedTestMask=0;
+  while (true) {
+    if (NodeTypeEnums.isBetaNode(tupleSource)) {
+      BetaMemory betaMemory;
+      BetaNode betaNode=(BetaNode)tupleSource;
+      if (NodeTypeEnums.AccumulateNode == tupleSource.getType()) {
+        betaMemory=((AccumulateMemory)smem.createNodeMemory((AccumulateNode)tupleSource,wm)).getBetaMemory();
+      }
+ else {
+        betaMemory=(BetaMemory)smem.createNodeMemory(betaNode,wm);
+      }
+      if (betaNode.isRightInputIsRiaNode()) {
+        LeftTupleSinkNode sinkNode=betaNode.getLeftTupleSource().getSinkPropagator().getFirstLeftTupleSink();
+        while (sinkNode.getNextLeftTupleSinkNode() != betaNode) {
+          sinkNode=sinkNode.getNextLeftTupleSinkNode();
+        }
+        SegmentMemory subNetworkSegmentMemory=createSegmentMemory((LeftTupleSource)sinkNode,wm);
+        betaMemory.setSubnetworkSegmentMemor(subNetworkSegmentMemory);
+      }
+      betaMemory.setSegmentMemory(smem);
+      betaMemory.setNodePosMaskBit(nodePosMask);
+      allLinkedTestMask=allLinkedTestMask | nodePosMask;
+      if (NodeTypeEnums.NotNode == tupleSource.getType() || NodeTypeEnums.AccumulateNode == tupleSource.getType()) {
+        smem.linkNode(nodePosMask,wm);
+      }
+      nodePosMask=nodePosMask << 1;
+    }
+ else     if (tupleSource.getType() == NodeTypeEnums.LeftInputAdapterNode) {
+      LiaNodeMemory liaMemory=(LiaNodeMemory)smem.createNodeMemory((LeftInputAdapterNode)tupleSource,wm);
+      liaMemory.setSegmentMemory(smem);
+      liaMemory.setNodePosMaskBit(nodePosMask);
+      allLinkedTestMask=allLinkedTestMask | nodePosMask;
+      nodePosMask=nodePosMask << 1;
+    }
+ else     if (tupleSource.getType() == NodeTypeEnums.EvalConditionNode) {
+      EvalMemory evalMemory=(EvalMemory)smem.createNodeMemory((EvalConditionNode)tupleSource,wm);
+      evalMemory.setSegmentMemory(smem);
+    }
+ else     if (tupleSource.getType() == NodeTypeEnums.FromNode) {
+      FromMemory fromMemory=(FromMemory)smem.createNodeMemory((FromNode)tupleSource,wm);
+      fromMemory.getBetaMemory().setSegmentMemory(smem);
+    }
+    LeftTupleSinkPropagator sink=tupleSource.getSinkPropagator();
+    LeftTupleSinkNode firstSink=(LeftTupleSinkNode)sink.getFirstLeftTupleSink();
+    LeftTupleSinkNode secondSink=firstSink.getNextLeftTupleSinkNode();
+    if (secondSink == null) {
+      if (NodeTypeEnums.isLeftTupleSource(firstSink)) {
+        tupleSource=(LeftTupleSource)firstSink;
+      }
+ else {
+        break;
+      }
+    }
+ else     if (sink.size() == 2 && NodeTypeEnums.isBetaNode(secondSink) && ((BetaNode)secondSink).isRightInputIsRiaNode()) {
+      tupleSource=(LeftTupleSource)secondSink;
+    }
+ else {
+      break;
+    }
+  }
+  smem.setAllLinkedMaskTest(allLinkedTestMask);
+  smem.setTipNode(tupleSource);
+  LeftTupleSource parent=segmentRoot;
+  int ruleSegmentPosMask=1;
+  int counter=0;
+  while (parent.getLeftTupleSource() != null) {
+    if (!BetaNode.parentInSameSegment(parent)) {
+      ruleSegmentPosMask=ruleSegmentPosMask << 1;
+      counter++;
+    }
+    parent=parent.getLeftTupleSource();
+  }
+  smem.setSegmentPosMaskBit(ruleSegmentPosMask);
+  smem.setPos(counter);
+  SegmentUtilities.updateRiaAndTerminalMemory(0,tupleSource,tupleSource,smem,wm);
+  return smem;
+}

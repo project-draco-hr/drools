@@ -1,0 +1,25 @@
+{
+  SegmentMemory[] smems=rmem.getSegmentMemories();
+  int smemIndex=0;
+  SegmentMemory smem=smems[smemIndex];
+  LeftInputAdapterNode liaNode=(LeftInputAdapterNode)smem.getRootNode();
+  LinkedList<Memory> nodeMemories=smem.getNodeMemories();
+  LiaNodeMemory liaNodeMemory=(LiaNodeMemory)nodeMemories.getFirst();
+  StagedLeftTuples trgTuples=new StagedLeftTuples();
+  StagedLeftTuples srcTuples=smem.getStagedLeftTuples();
+  pLiaNode.doNode(liaNode,liaNodeMemory,wm,srcTuples,trgTuples);
+  LeftTupleSource node=null;
+  Memory nodeMem=null;
+  if (liaNode == smem.getTipNode()) {
+    SegmentPropagator.propagate(smem,trgTuples,wm);
+    smem=smems[smemIndex];
+    nodeMem=smem.getNodeMemories().getFirst();
+    node=smem.getRootNode();
+  }
+ else {
+    node=(LeftTupleSource)liaNode.getSinkPropagator().getFirstLeftTupleSink();
+    nodeMem=liaNodeMemory.getNext();
+  }
+  eval(node,nodeMem,smems,smemIndex,trgTuples,null,wm);
+  return 0;
+}

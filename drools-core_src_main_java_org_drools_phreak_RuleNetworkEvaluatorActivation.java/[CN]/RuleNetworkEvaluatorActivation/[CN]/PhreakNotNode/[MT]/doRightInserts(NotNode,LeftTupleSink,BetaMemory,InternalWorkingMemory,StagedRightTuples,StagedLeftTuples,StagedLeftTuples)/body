@@ -1,0 +1,35 @@
+{
+  boolean tupleMemory=true;
+  boolean tupleMemoryEnabled=true;
+  LeftTupleMemory ltm=bm.getLeftTupleMemory();
+  RightTupleMemory rtm=bm.getRightTupleMemory();
+  ContextEntry[] contextEntry=bm.getContext();
+  BetaConstraints constraints=notNode.getRawConstraints();
+  FastIterator it=notNode.getLeftIterator(ltm);
+  StagedLeftTuples stagedLeftTuples=null;
+  if (!bm.getSegmentMemory().isEmpty()) {
+    stagedLeftTuples=bm.getSegmentMemory().getFirst().getStagedLeftTuples();
+  }
+  if (bm.getSegmentMemory().isSegmentLinked() && !notNode.isRightInputIsRiaNode() && notNode.isEmptyBetaConstraints()) {
+    bm.unlinkNode(wm);
+  }
+  for (RightTuple rightTuple=srcRightTuples.getInsertFirst(); rightTuple != null; ) {
+    RightTuple next=rightTuple.getStagedNext();
+    rtm.add(rightTuple);
+    PropagationContext context=rightTuple.getPropagationContext();
+    constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
+    for (LeftTuple leftTuple=notNode.getFirstLeftTuple(rightTuple,ltm,context,it); leftTuple != null; ) {
+      LeftTuple temp=(LeftTuple)it.next(leftTuple);
+      if (constraints.isAllowedCachedRight(contextEntry,leftTuple)) {
+        leftTuple.setBlocker(rightTuple);
+        rightTuple.addBlocked(leftTuple);
+        ltm.remove(leftTuple);
+        deleteLeftChild(trgLeftTuples,leftTuple,stagedLeftTuples);
+      }
+      leftTuple=temp;
+    }
+    rightTuple.clearStaged();
+    rightTuple=next;
+  }
+  constraints.resetFactHandle(contextEntry);
+}

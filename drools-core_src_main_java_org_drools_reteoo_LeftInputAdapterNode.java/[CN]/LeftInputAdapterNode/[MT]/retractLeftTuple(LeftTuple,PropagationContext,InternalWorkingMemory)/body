@@ -1,17 +1,21 @@
 {
-  boolean retractFromSinks=true;
   if (isUnlinkingEnabled()) {
     LiaNodeMemory lm=(LiaNodeMemory)workingMemory.getNodeMemory(this);
-    if (leftTuple.getMemory() == lm.getStagedLeftTupleList()) {
-      retractFromSinks=false;
-      lm.removeAssertLeftTuple(leftTuple,workingMemory);
-    }
-    lm.setCounter(lm.getCounter() - 1);
-    if (lm.getCounter() == 0) {
-      lm.unlinkNode(workingMemory);
-    }
-  }
-  if (retractFromSinks) {
-    leftTuple.getLeftTupleSink().retractLeftTuple(leftTuple,context,workingMemory);
-  }
+    SegmentMemory smem=lm.getSegmentMemory();
+    StagedLeftTuples leftTuples=smem.getStagedLeftTuples();
+switch (leftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+      leftTuples.removeInsert(leftTuple);
+    break;
+case LeftTuple.UPDATE:
+  leftTuples.removeUpdate(leftTuple);
+break;
+}
+lm.setCounter(lm.getCounter() - 1);
+if (lm.getCounter() == 0) {
+lm.unlinkNode(workingMemory);
+}
+return;
+}
+leftTuple.getLeftTupleSink().retractLeftTuple(leftTuple,context,workingMemory);
 }

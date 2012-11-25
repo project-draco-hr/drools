@@ -1,0 +1,39 @@
+{
+  StagedLeftTuples previousResultTuples=actualResultLeftTuples;
+  actualResultLeftTuples=new StagedLeftTuples();
+  if (phreakNode == PhreakJoinNode.class) {
+    new PhreakJoinNode().doNode((JoinNode)betaNode,sinkNode,bm,wm,leftTuples,actualResultLeftTuples,previousResultTuples);
+  }
+ else   if (phreakNode == PhreakNotNode.class) {
+    new PhreakNotNode().doNode((NotNode)betaNode,sinkNode,bm,wm,leftTuples,actualResultLeftTuples,previousResultTuples);
+  }
+ else   if (phreakNode == PhreakExistsNode.class) {
+    new PhreakExistsNode().doNode((ExistsNode)betaNode,sinkNode,bm,wm,leftTuples,actualResultLeftTuples,previousResultTuples);
+  }
+  if (expectedResultBuilder != null) {
+    assertEquals(expectedResultBuilder.get(),actualResultLeftTuples,expectedResultBuilder.isTestStagedInsert(),expectedResultBuilder.isTestStagedDelete(),expectedResultBuilder.isTestStagedUpdate());
+  }
+  if (!preStagedBuilders.isEmpty()) {
+    for (    StagedBuilder stagedBuilder : preStagedBuilders) {
+      StagedLeftTuples expected=stagedBuilder.get();
+      StagedLeftTuples actual=stagedBuilder.getSegmentMemory().getStagedLeftTuples();
+      assertEquals(expected,actual,stagedBuilder.isTestStagedInsert(),stagedBuilder.isTestStagedDelete(),stagedBuilder.isTestStagedUpdate());
+    }
+  }
+  SegmentMemory smem=bm.getSegmentMemory();
+  SegmentPropagator.propagate(smem,actualResultLeftTuples,wm);
+  if (testLeftMemory) {
+    equalsLeftMemory(leftMemory);
+  }
+  if (testRightMemory) {
+    equalsRightMemory(rightMemory);
+  }
+  if (!postStagedBuilders.isEmpty()) {
+    for (    StagedBuilder stagedBuilder : postStagedBuilders) {
+      StagedLeftTuples expected=stagedBuilder.get();
+      StagedLeftTuples actual=stagedBuilder.getSegmentMemory().getStagedLeftTuples();
+      assertEquals(expected,actual,stagedBuilder.isTestStagedInsert(),stagedBuilder.isTestStagedDelete(),stagedBuilder.isTestStagedUpdate());
+    }
+  }
+  return this;
+}

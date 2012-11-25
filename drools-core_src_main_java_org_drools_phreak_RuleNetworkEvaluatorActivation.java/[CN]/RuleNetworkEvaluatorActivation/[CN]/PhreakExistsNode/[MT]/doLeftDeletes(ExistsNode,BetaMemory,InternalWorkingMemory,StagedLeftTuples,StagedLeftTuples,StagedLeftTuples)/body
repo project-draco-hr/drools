@@ -1,0 +1,22 @@
+{
+  LeftTupleMemory ltm=bm.getLeftTupleMemory();
+  for (LeftTuple leftTuple=srcLeftTuples.getDeleteFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    RightTuple blocker=leftTuple.getBlocker();
+    if (blocker == null) {
+      ltm.remove(leftTuple);
+    }
+ else {
+      if (leftTuple.getFirstChild() != null) {
+        LeftTuple childLeftTuple=leftTuple.getFirstChild();
+        while (childLeftTuple != null) {
+          childLeftTuple=deleteLeftChild(trgLeftTuples,childLeftTuple,stagedLeftTuples);
+        }
+      }
+      blocker.removeBlocked(leftTuple);
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+  srcLeftTuples.setDelete(null);
+}

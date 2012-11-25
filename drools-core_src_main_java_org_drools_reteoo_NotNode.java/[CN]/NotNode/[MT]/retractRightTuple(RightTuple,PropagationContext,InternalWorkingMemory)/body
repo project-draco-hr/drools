@@ -1,33 +1,46 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  FastIterator it=memory.getRightTupleMemory().fastIterator();
-  final RightTuple rootBlocker=(RightTuple)it.next(rightTuple);
-  memory.getRightTupleMemory().remove(rightTuple);
-  if (isUnlinkingEnabled() && memory.getAndDecCounter() == 0 && !isRightInputIsRiaNode() && isEmptyBetaConstraints()) {
-    memory.linkNode(workingMemory);
-  }
-  if (rightTuple.getBlocked() == null) {
-    return;
-  }
-  for (LeftTuple leftTuple=(LeftTuple)rightTuple.getBlocked(); leftTuple != null; ) {
-    LeftTuple temp=leftTuple.getBlockedNext();
-    leftTuple.setBlocker(null);
-    leftTuple.setBlockedPrevious(null);
-    leftTuple.setBlockedNext(null);
-    this.constraints.updateFromTuple(memory.getContext(),workingMemory,leftTuple);
-    for (RightTuple newBlocker=rootBlocker; newBlocker != null; newBlocker=(RightTuple)it.next(newBlocker)) {
-      if (this.constraints.isAllowedCachedLeft(memory.getContext(),newBlocker.getFactHandle())) {
-        leftTuple.setBlocker(newBlocker);
-        newBlocker.addBlocked(leftTuple);
-        break;
-      }
-    }
-    if (leftTuple.getBlocker() == null) {
-      memory.getLeftTupleMemory().add(leftTuple);
-      propagateAssertLeftTuple(context,workingMemory,leftTuple);
-    }
-    leftTuple=temp;
-  }
-  rightTuple.nullBlocked();
-  this.constraints.resetTuple(memory.getContext());
+  if (isUnlinkingEnabled()) {
+    StagedRightTuples stagedRightTuples=memory.getStagedRightTuples();
+switch (rightTuple.getStagedType()) {
+case LeftTuple.INSERT:
+      stagedRightTuples.removeInsert(rightTuple);
+    break;
+case LeftTuple.UPDATE:
+  stagedRightTuples.removeUpdate(rightTuple);
+break;
+}
+stagedRightTuples.addDelete(rightTuple);
+if (memory.getDecAndGetCounter() == 0 && !isRightInputIsRiaNode() && isEmptyBetaConstraints()) {
+memory.linkNode(workingMemory);
+}
+return;
+}
+FastIterator it=memory.getRightTupleMemory().fastIterator();
+final RightTuple rootBlocker=(RightTuple)it.next(rightTuple);
+memory.getRightTupleMemory().remove(rightTuple);
+if (rightTuple.getBlocked() == null) {
+return;
+}
+for (LeftTuple leftTuple=(LeftTuple)rightTuple.getBlocked(); leftTuple != null; ) {
+LeftTuple temp=leftTuple.getBlockedNext();
+leftTuple.setBlocker(null);
+leftTuple.setBlockedPrevious(null);
+leftTuple.setBlockedNext(null);
+this.constraints.updateFromTuple(memory.getContext(),workingMemory,leftTuple);
+for (RightTuple newBlocker=rootBlocker; newBlocker != null; newBlocker=(RightTuple)it.next(newBlocker)) {
+if (this.constraints.isAllowedCachedLeft(memory.getContext(),newBlocker.getFactHandle())) {
+leftTuple.setBlocker(newBlocker);
+newBlocker.addBlocked(leftTuple);
+break;
+}
+}
+if (leftTuple.getBlocker() == null) {
+memory.getLeftTupleMemory().add(leftTuple);
+propagateAssertLeftTuple(context,workingMemory,leftTuple);
+}
+leftTuple=temp;
+}
+rightTuple.nullBlocked();
+this.constraints.resetTuple(memory.getContext());
 }

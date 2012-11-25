@@ -1,0 +1,16 @@
+{
+  buildContext=createContext();
+  notNode=(NotNode)BetaNodeBuilder.create(NodeTypeEnums.NotNode,buildContext).setLeftType(A.class).setBinding("object","$object").setRightType(B.class).setConstraint("object","!=","$object").build();
+  sinkNode=new JoinNode();
+  sinkNode.setId(1);
+  sinkNode.setConstraints(new EmptyBetaConstraints());
+  notNode.addTupleSink(sinkNode);
+  wm=(InternalWorkingMemory)buildContext.getRuleBase().newStatefulSession(true);
+  bm=(BetaMemory)wm.getNodeMemory(notNode);
+  BetaMemory bm1=(BetaMemory)wm.getNodeMemory(sinkNode);
+  SegmentMemory smem=new SegmentMemory(notNode);
+  bm.setSegmentMemory(smem);
+  SegmentMemory childSmem=new SegmentMemory(sinkNode);
+  bm1.setSegmentMemory(childSmem);
+  smem.add(childSmem);
+}

@@ -1,0 +1,65 @@
+{
+  boolean tupleMemory=true;
+  boolean tupleMemoryEnabled=true;
+  LeftTupleMemory ltm=bm.getLeftTupleMemory();
+  RightTupleMemory rtm=bm.getRightTupleMemory();
+  ContextEntry[] contextEntry=bm.getContext();
+  BetaConstraints constraints=notNode.getRawConstraints();
+  FastIterator rightIt=notNode.getRightIterator(rtm);
+  for (LeftTuple leftTuple=srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    PropagationContext context=leftTuple.getPropagationContext();
+    RightTuple firstRightTuple=notNode.getFirstRightTuple(leftTuple,rtm,context,rightIt);
+    RightTuple blocker=leftTuple.getBlocker();
+    if (blocker == null) {
+      ltm.remove(leftTuple);
+    }
+ else {
+      if (rtm.isIndexed() && !rightIt.isFullIterator()) {
+        if (firstRightTuple == null || firstRightTuple.getMemory() != blocker.getMemory()) {
+          removeBlocker(leftTuple,blocker);
+          blocker=null;
+        }
+      }
+    }
+    constraints.updateFromTuple(contextEntry,wm,leftTuple);
+    if (blocker == null || !constraints.isAllowedCachedLeft(contextEntry,blocker.getFactHandle())) {
+      if (blocker != null) {
+        removeBlocker(leftTuple,blocker);
+      }
+      for (RightTuple newBlocker=firstRightTuple; newBlocker != null; newBlocker=(RightTuple)rightIt.next(newBlocker)) {
+        if (constraints.isAllowedCachedLeft(contextEntry,newBlocker.getFactHandle())) {
+          leftTuple.setBlocker(newBlocker);
+          newBlocker.addBlocked(leftTuple);
+          break;
+        }
+      }
+      LeftTuple childLeftTuple=leftTuple.getFirstChild();
+      if (leftTuple.getBlocker() != null) {
+        if (leftTuple.getFirstChild() != null) {
+          deleteRightChild(childLeftTuple,trgLeftTuples,stagedLeftTuples);
+        }
+      }
+ else       if (childLeftTuple == null) {
+        ltm.add(leftTuple);
+        trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,sink,tupleMemory));
+      }
+ else {
+switch (childLeftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+          stagedLeftTuples.removeInsert(childLeftTuple);
+        break;
+case LeftTuple.UPDATE:
+      stagedLeftTuples.removeUpdate(childLeftTuple);
+    break;
+}
+ltm.add(leftTuple);
+trgLeftTuples.addUpdate(childLeftTuple);
+childLeftTuple.reAddLeft();
+}
+}
+leftTuple.clearStaged();
+leftTuple=next;
+}
+constraints.resetTuple(contextEntry);
+}

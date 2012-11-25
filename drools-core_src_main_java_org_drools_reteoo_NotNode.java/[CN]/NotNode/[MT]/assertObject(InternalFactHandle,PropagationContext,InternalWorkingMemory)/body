@@ -1,9 +1,13 @@
 {
   final BetaMemory memory=(BetaMemory)getBetaMemoryFromRightInput(this,workingMemory);
-  if (isUnlinkingEnabled() && memory.getAndIncCounter() == 0 && !isRightInputIsRiaNode() && isEmptyBetaConstraints()) {
-    memory.unlinkNode(workingMemory);
-  }
   RightTuple rightTuple=createRightTuple(factHandle,this,context);
   rightTuple.setPropagationContext(context);
+  if (isUnlinkingEnabled()) {
+    if (memory.getAndIncCounter() == 0 && !isRightInputIsRiaNode() && isEmptyBetaConstraints()) {
+      memory.linkNode(workingMemory);
+    }
+    memory.getStagedRightTuples().addInsert(rightTuple);
+    return;
+  }
   assertRightTuple(rightTuple,context,workingMemory);
 }

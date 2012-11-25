@@ -1,4 +1,19 @@
 {
+  if (unlinkingEnabled) {
+    LiaNodeMemory lm=(LiaNodeMemory)workingMemory.getNodeMemory(this);
+    if (lm.getSegmentMemory() == null) {
+      SegmentUtilities.createSegmentMemory(this,workingMemory);
+    }
+    LeftTupleSink sink=getSinkPropagator().getFirstLeftTupleSink();
+    LeftTuple leftTuple=sink.createLeftTuple(factHandle,sink,leftTupleMemoryEnabled);
+    leftTuple.setPropagationContext(context);
+    if (lm.getSegmentMemory().getStagedLeftTuples().insertSize() == 0) {
+      lm.linkNode(workingMemory);
+    }
+    lm.setCounter(lm.getCounter() + 1);
+    lm.getSegmentMemory().getStagedLeftTuples().addInsert(leftTuple);
+    return;
+  }
   boolean useLeftMemory=true;
   if (!this.leftTupleMemoryEnabled) {
     Object object=((InternalFactHandle)context.getFactHandle()).getObject();

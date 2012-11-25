@@ -4,19 +4,26 @@
   if (context.getType() == PropagationContext.EXPIRATION) {
     ((PropagationContextImpl)context).setFactHandle(null);
   }
-  BetaMemory bm=memory.betaMemory;
-  if (rightTuple.getMemory() == bm.getStagedAssertRightTupleList()) {
-    bm.getStagedAssertRightTupleList().remove(rightTuple);
-    rightTuple.setMemory(null);
-  }
- else {
-    bm.getRightTupleMemory().remove(rightTuple);
-  }
-  if (isUnlinkingEnabled() && bm.getAndDecCounter() == 0 && !isRightInputIsRiaNode()) {
-    bm.unlinkNode(workingMemory);
-  }
-  removePreviousMatchesForRightTuple(rightTuple,context,workingMemory,memory,rightTuple.firstChild);
-  if (context.getType() == PropagationContext.EXPIRATION) {
-    ((PropagationContextImpl)context).setFactHandle(origin);
-  }
+  BetaMemory bm=memory.getBetaMemory();
+  if (isUnlinkingEnabled()) {
+    StagedRightTuples stagedRightTuples=bm.getStagedRightTuples();
+switch (rightTuple.getStagedType()) {
+case LeftTuple.INSERT:
+      stagedRightTuples.removeInsert(rightTuple);
+    break;
+case LeftTuple.UPDATE:
+  stagedRightTuples.removeUpdate(rightTuple);
+break;
+}
+stagedRightTuples.addDelete(rightTuple);
+if (bm.getDecAndGetCounter() == 0 && !isRightInputIsRiaNode()) {
+bm.unlinkNode(workingMemory);
+}
+return;
+}
+bm.getRightTupleMemory().remove(rightTuple);
+removePreviousMatchesForRightTuple(rightTuple,context,workingMemory,memory,rightTuple.firstChild);
+if (context.getType() == PropagationContext.EXPIRATION) {
+((PropagationContextImpl)context).setFactHandle(origin);
+}
 }

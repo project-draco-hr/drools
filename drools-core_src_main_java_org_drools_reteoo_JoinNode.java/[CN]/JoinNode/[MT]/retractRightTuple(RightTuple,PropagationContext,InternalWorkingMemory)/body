@@ -1,20 +1,24 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
-  if (rightTuple.getMemory().isStagingMemory()) {
-    rightTuple.getMemory().remove(rightTuple);
-  }
- else {
-    memory.getRightTupleMemory().remove(rightTuple);
-  }
-  if (rightTuple.firstChild != null) {
-    if (isUnlinkingEnabled()) {
-      memory.addStagedRetractRightTuple(rightTuple,workingMemory);
-    }
- else {
-      this.sink.propagateRetractRightTuple(rightTuple,context,workingMemory);
-    }
-  }
-  if (isUnlinkingEnabled() && memory.getAndDecCounter() == 0 && !isRightInputIsRiaNode()) {
-    memory.unlinkNode(workingMemory);
-  }
+  if (isUnlinkingEnabled()) {
+    StagedRightTuples stagedRightTuples=memory.getStagedRightTuples();
+switch (rightTuple.getStagedType()) {
+case LeftTuple.INSERT:
+      stagedRightTuples.removeInsert(rightTuple);
+    break;
+case LeftTuple.UPDATE:
+  stagedRightTuples.removeUpdate(rightTuple);
+break;
+}
+stagedRightTuples.addDelete(rightTuple);
+if (memory.getDecAndGetCounter() == 0 && !isRightInputIsRiaNode()) {
+memory.unlinkNode(workingMemory);
+}
+return;
+}
+memory.getRightTupleMemory().remove(rightTuple);
+this.sink.propagateRetractRightTuple(rightTuple,context,workingMemory);
+if (isUnlinkingEnabled() && memory.getDecAndGetCounter() == 0 && !isRightInputIsRiaNode()) {
+memory.unlinkNode(workingMemory);
+}
 }
