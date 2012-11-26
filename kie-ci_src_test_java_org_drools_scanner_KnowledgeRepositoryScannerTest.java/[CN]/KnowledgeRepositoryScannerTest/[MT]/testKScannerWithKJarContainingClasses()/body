@@ -1,0 +1,30 @@
+{
+  File kJar1=createKJarWithClass("test1",2,7);
+  KnowledgeContainer kContainer=KnowledgeContainerFactory.newKnowledgeContainer();
+  kContainer.deploy(kJar1);
+  if (kContainer.getKBaseUnit("KBase1").hasErrors()) {
+    fail(kContainer.getKBaseUnit("KBase1").getErrors().toString());
+  }
+  Repository repository=new Repository();
+  repository.deployArtifact("org.drools","scanner-test","1.0-SNAPSHOT",kJar1,createKPom());
+  KnowledgeRepositoryScanner scanner=KnowledgeContainerFactory.newKnowledgeScanner(kContainer,-1);
+  ((KnowledgeRepositoryScannerImpl)scanner).setPomParser(new PomParser(){
+    public List<DependencyDescriptor> getPomDirectDependencies(){
+      return new ArrayList<DependencyDescriptor>(){
+{
+          add(new DependencyDescriptor("org.drools","scanner-test","1.0-SNAPSHOT","jar"));
+        }
+      }
+;
+    }
+  }
+);
+  StatefulKnowledgeSession ksession=kContainer.getStatefulKnowlegeSession("KSession1");
+  checkKSession(ksession,14);
+  resetFileManager();
+  File kJar2=createKJarWithClass("test1",3,5);
+  repository.deployArtifact("org.drools","scanner-test","1.0-SNAPSHOT",kJar2,createKPom());
+  scanner.scanNow();
+  StatefulKnowledgeSession ksession2=kContainer.getStatefulKnowlegeSession("KSession1");
+  checkKSession(ksession2,15);
+}

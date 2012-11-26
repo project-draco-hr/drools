@@ -1,16 +1,18 @@
 {
-  if (latestDependencies == null) {
+  if (usedDependencies == null) {
     return;
   }
-  Collection<Artifact> updatedArtifacts=scanForUpdates(latestDependencies);
-  if (latestDependencies == updatedArtifacts) {
+  Collection<Artifact> updatedArtifacts=scanForUpdates(usedDependencies);
+  if (updatedArtifacts.isEmpty()) {
     return;
   }
   File[] kJars=new File[updatedArtifacts.size()];
   int i=0;
   for (  Artifact artifact : updatedArtifacts) {
     kJars[i++]=artifact.getFile();
-    indexArtifact(latestDependencies,artifact);
+    DependencyDescriptor depDescr=new DependencyDescriptor(artifact);
+    usedDependencies.remove(depDescr);
+    usedDependencies.add(depDescr);
   }
   knowledgeContainer.deploy(kJars);
   log.info("The following artifacts have been updated: " + updatedArtifacts);
