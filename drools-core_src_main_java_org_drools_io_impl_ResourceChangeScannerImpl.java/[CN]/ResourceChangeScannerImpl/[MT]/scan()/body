@@ -1,16 +1,16 @@
 {
-  this.listener.debug("ResourceChangeScanner attempt to scan " + this.resources.size() + " resources");
+  logger.debug("ResourceChangeScanner attempt to scan " + this.resources.size() + " resources");
 synchronized (this.resources) {
     Map<ResourceChangeNotifier,ChangeSet> notifications=new HashMap<ResourceChangeNotifier,ChangeSet>();
     List<Resource> removed=new ArrayList<Resource>();
     for (    Resource resource : this.directories) {
-      this.listener.debug("ResourceChangeScanner scanning directory=" + resource);
+      logger.debug("ResourceChangeScanner scanning directory=" + resource);
       for (      Resource child : ((InternalResource)resource).listResources()) {
         if (((InternalResource)child).isDirectory()) {
           continue;
         }
         if (!this.resources.containsKey(child)) {
-          this.listener.debug("ResourceChangeScanner new resource=" + child);
+          logger.debug("ResourceChangeScanner new resource=" + child);
           ((InternalResource)child).setResourceType(((InternalResource)resource).getResourceType());
           Set<ResourceChangeNotifier> notifiers=this.resources.get(resource);
           for (          ResourceChangeNotifier notifier : notifiers) {
@@ -35,7 +35,7 @@ synchronized (this.resources) {
         long lastModified=((InternalResource)resource).getLastModified();
         long lastRead=((InternalResource)resource).getLastRead();
         if (lastModified == 0) {
-          this.listener.debug("ResourceChangeScanner removed resource=" + resource);
+          logger.debug("ResourceChangeScanner removed resource=" + resource);
           removed.add(resource);
           for (          ResourceChangeNotifier notifier : notifiers) {
             ChangeSetImpl changeSet=(ChangeSetImpl)notifications.get(notifier);
@@ -50,7 +50,7 @@ synchronized (this.resources) {
           }
         }
  else         if (lastRead < lastModified && lastRead >= 0) {
-          this.listener.debug("ResourceChangeScanner modified resource=" + resource + " : "+ lastRead+ " : "+ lastModified);
+          logger.debug("ResourceChangeScanner modified resource=" + resource + " : "+ lastRead+ " : "+ lastModified);
           for (          ResourceChangeNotifier notifier : notifiers) {
             ChangeSetImpl changeSet=(ChangeSetImpl)notifications.get(notifier);
             if (changeSet == null) {

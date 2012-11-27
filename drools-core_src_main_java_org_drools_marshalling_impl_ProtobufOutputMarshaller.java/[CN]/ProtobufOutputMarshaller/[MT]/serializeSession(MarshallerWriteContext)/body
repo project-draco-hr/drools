@@ -2,10 +2,6 @@
   ReteooWorkingMemory wm=(ReteooWorkingMemory)context.wm;
   wm.getAgenda().unstageActivations();
   ProtobufMessages.RuleData.Builder _ruleData=ProtobufMessages.RuleData.newBuilder();
-  final boolean multithread=wm.isPartitionManagersActive();
-  if (multithread) {
-    wm.stopPartitionManagers();
-  }
   long time=0;
   if (context.wm.getTimerService() instanceof PseudoClockScheduler) {
     time=context.clockTime;
@@ -25,7 +21,7 @@
     _ruleData.addEntryPoint(_epb.build());
   }
   writeActionQueue(context,_ruleData);
-  ProtobufMessages.KnowledgeSession.Builder _session=ProtobufMessages.KnowledgeSession.newBuilder().setMultithread(multithread).setTime(time).setRuleData(_ruleData.build());
+  ProtobufMessages.KnowledgeSession.Builder _session=ProtobufMessages.KnowledgeSession.newBuilder().setMultithread(false).setTime(time).setRuleData(_ruleData.build());
   if (processMarshaller != null) {
     Builder _pdata=ProtobufMessages.ProcessData.newBuilder();
     if (context.marshalProcessInstances) {
@@ -43,9 +39,6 @@
   Timers _timers=writeTimers(context.wm.getTimerService().getTimerJobInstances(),context);
   if (_timers != null) {
     _session.setTimers(_timers);
-  }
-  if (multithread) {
-    wm.startPartitionManagers();
   }
   return _session.build();
 }
