@@ -1,0 +1,20 @@
+{
+  ClassLoader originalCl=Thread.currentThread().getContextClassLoader();
+  try {
+    Thread.currentThread().setContextClassLoader(this.plexusContainer.getContainerRealm());
+    ProjectBuilder projectBuilder=lookup(ProjectBuilder.class);
+    ProjectBuildingRequest projectBuildingRequest=this.mavenExecutionRequest.getProjectBuildingRequest();
+    projectBuildingRequest.setValidationLevel(this.mavenRequest.getValidationLevel());
+    RepositorySystemSession repositorySystemSession=buildRepositorySystemSession();
+    projectBuildingRequest.setRepositorySession(repositorySystemSession);
+    projectBuildingRequest.setProcessPlugins(this.mavenRequest.isProcessPlugins());
+    projectBuildingRequest.setResolveDependencies(this.mavenRequest.isResolveDependencies());
+    return projectBuilder.build(Arrays.asList(mavenProject),recursive,projectBuildingRequest);
+  }
+ catch (  ComponentLookupException e) {
+    throw new MavenEmbedderException(e.getMessage(),e);
+  }
+ finally {
+    Thread.currentThread().setContextClassLoader(originalCl);
+  }
+}

@@ -1,0 +1,52 @@
+{
+  MavenExecutionRequest mavenExecutionRequest=new DefaultMavenExecutionRequest();
+  if (mavenRequest.getGlobalSettingsFile() != null) {
+    mavenExecutionRequest.setGlobalSettingsFile(new File(mavenRequest.getGlobalSettingsFile()));
+  }
+  if (mavenExecutionRequest.getUserSettingsFile() != null) {
+    mavenExecutionRequest.setUserSettingsFile(new File(mavenRequest.getUserSettingsFile()));
+  }
+  try {
+    lookup(MavenExecutionRequestPopulator.class).populateFromSettings(mavenExecutionRequest,getSettings());
+    lookup(MavenExecutionRequestPopulator.class).populateDefaults(mavenExecutionRequest);
+  }
+ catch (  MavenExecutionRequestPopulationException e) {
+    throw new MavenEmbedderException(e.getMessage(),e);
+  }
+  ArtifactRepository localRepository=getLocalRepository();
+  mavenExecutionRequest.setLocalRepository(localRepository);
+  mavenExecutionRequest.setLocalRepositoryPath(localRepository.getBasedir());
+  mavenExecutionRequest.setOffline(mavenRequest.isOffline());
+  mavenExecutionRequest.setUpdateSnapshots(mavenRequest.isUpdateSnapshots());
+  mavenExecutionRequest.setTransferListener(mavenRequest.getTransferListener());
+  mavenExecutionRequest.setCacheNotFound(mavenRequest.isCacheNotFound());
+  mavenExecutionRequest.setCacheTransferError(true);
+  mavenExecutionRequest.setUserProperties(mavenRequest.getUserProperties());
+  mavenExecutionRequest.getSystemProperties().putAll(System.getProperties());
+  if (mavenRequest.getSystemProperties() != null) {
+    mavenExecutionRequest.getSystemProperties().putAll(mavenRequest.getSystemProperties());
+  }
+  mavenExecutionRequest.getSystemProperties().putAll(getEnvVars());
+  if (this.mavenHome != null) {
+    mavenExecutionRequest.getSystemProperties().put("maven.home",this.mavenHome.getAbsolutePath());
+  }
+  if (mavenRequest.getProfiles() != null && !mavenRequest.getProfiles().isEmpty()) {
+    for (    String id : mavenRequest.getProfiles()) {
+      Profile p=new Profile();
+      p.setId(id);
+      p.setSource("cli");
+      mavenExecutionRequest.addProfile(p);
+      mavenExecutionRequest.addActiveProfile(id);
+    }
+  }
+  mavenExecutionRequest.setLoggingLevel(mavenRequest.getLoggingLevel());
+  lookup(Logger.class).setThreshold(mavenRequest.getLoggingLevel());
+  mavenExecutionRequest.setExecutionListener(mavenRequest.getExecutionListener()).setInteractiveMode(mavenRequest.isInteractive()).setGlobalChecksumPolicy(mavenRequest.getGlobalChecksumPolicy()).setGoals(mavenRequest.getGoals());
+  if (mavenRequest.getPom() != null) {
+    mavenExecutionRequest.setPom(new File(mavenRequest.getPom()));
+  }
+  if (mavenRequest.getWorkspaceReader() != null) {
+    mavenExecutionRequest.setWorkspaceReader(mavenRequest.getWorkspaceReader());
+  }
+  return mavenExecutionRequest;
+}

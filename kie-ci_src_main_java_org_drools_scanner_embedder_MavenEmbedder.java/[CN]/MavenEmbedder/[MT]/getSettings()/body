@@ -1,0 +1,25 @@
+{
+  SettingsBuildingRequest settingsBuildingRequest=new DefaultSettingsBuildingRequest();
+  if (this.mavenRequest.getGlobalSettingsFile() != null) {
+    settingsBuildingRequest.setGlobalSettingsFile(new File(this.mavenRequest.getGlobalSettingsFile()));
+  }
+ else {
+    settingsBuildingRequest.setGlobalSettingsFile(DEFAULT_GLOBAL_SETTINGS_FILE);
+  }
+  if (this.mavenRequest.getUserSettingsFile() != null) {
+    settingsBuildingRequest.setUserSettingsFile(new File(this.mavenRequest.getUserSettingsFile()));
+  }
+ else {
+    settingsBuildingRequest.setUserSettingsFile(DEFAULT_USER_SETTINGS_FILE);
+  }
+  settingsBuildingRequest.setUserProperties(this.mavenRequest.getUserProperties());
+  settingsBuildingRequest.getSystemProperties().putAll(System.getProperties());
+  settingsBuildingRequest.getSystemProperties().putAll(this.mavenRequest.getSystemProperties());
+  settingsBuildingRequest.getSystemProperties().putAll(getEnvVars());
+  try {
+    return lookup(SettingsBuilder.class).build(settingsBuildingRequest).getEffectiveSettings();
+  }
+ catch (  SettingsBuildingException e) {
+    throw new MavenEmbedderException(e.getMessage(),e);
+  }
+}

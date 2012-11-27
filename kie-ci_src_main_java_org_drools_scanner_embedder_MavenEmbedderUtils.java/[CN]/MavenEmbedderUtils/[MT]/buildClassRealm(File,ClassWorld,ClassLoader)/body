@@ -1,0 +1,35 @@
+{
+  if (mavenHome == null) {
+    throw new IllegalArgumentException("mavenHome cannot be null");
+  }
+  if (!mavenHome.exists()) {
+    throw new IllegalArgumentException("mavenHome '" + mavenHome.getPath() + "' doesn't seem to exist on this node (or you don't have sufficient rights to access it)");
+  }
+  File libDirectory=new File(mavenHome,"lib");
+  if (!libDirectory.exists()) {
+    throw new IllegalArgumentException(mavenHome.getPath() + " doesn't have a 'lib' subdirectory - thus cannot be a valid maven installation!");
+  }
+  File[] jarFiles=libDirectory.listFiles(new FilenameFilter(){
+    public boolean accept(    File dir,    String name){
+      return name.endsWith(".jar");
+    }
+  }
+);
+  AntClassLoader antClassLoader=new AntClassLoader(Thread.currentThread().getContextClassLoader(),false);
+  for (  File jarFile : jarFiles) {
+    antClassLoader.addPathComponent(jarFile);
+  }
+  if (world == null) {
+    world=new ClassWorld();
+  }
+  ClassRealm classRealm=new ClassRealm(world,"plexus.core",parentClassLoader == null ? antClassLoader : parentClassLoader);
+  for (  File jarFile : jarFiles) {
+    try {
+      classRealm.addURL(jarFile.toURI().toURL());
+    }
+ catch (    MalformedURLException e) {
+      throw new MavenEmbedderException(e.getMessage(),e);
+    }
+  }
+  return classRealm;
+}
