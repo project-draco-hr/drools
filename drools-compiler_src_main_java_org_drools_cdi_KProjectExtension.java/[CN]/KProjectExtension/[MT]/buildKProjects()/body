@@ -13,24 +13,24 @@
     URL url=e.nextElement();
     ;
     try {
-      KProject kProject=KProjectImpl.fromXML(url);
-      String kProjectId=kProject.getGroupArtifactVersion().getGroupId() + ":" + kProject.getGroupArtifactVersion().getArtifactId();
+      KieProject kieProject=KieProjectImpl.fromXML(url);
+      String kProjectId=kieProject.getGroupArtifactVersion().getGroupId() + ":" + kieProject.getGroupArtifactVersion().getArtifactId();
       urls.put(kProjectId,fixURL(url));
-      kProjects.put(kProjectId,kProject);
+      kProjects.put(kProjectId,kieProject);
     }
  catch (    Exception exc) {
       log.error("Unable to build and build index of kproject.xml url=" + url.toExternalForm() + "\n"+ exc.getMessage());
     }
   }
-  for (  KProject kProject : kProjects.values()) {
-    for (    org.drools.kproject.KBase kBase : kProject.getKBases().values()) {
-      kBases.put(kBase.getName(),kBase);
-      ((KBaseImpl)kBase).setKProject(kProject);
-      String kProjectId=kProject.getGroupArtifactVersion().getGroupId() + ":" + kProject.getGroupArtifactVersion().getArtifactId();
-      kBaseURLs.put(kBase.getName(),urls.get(kProjectId));
-      for (      org.drools.kproject.KSession kSession : kBase.getKSessions().values()) {
-        ((KSessionImpl)kSession).setKBase(kBase);
-        kSessions.put(kSession.getName(),kSession);
+  for (  KieProject kieProject : kProjects.values()) {
+    for (    KieBaseDescr kieBaseDescr : kieProject.getKieBaseDescrs().values()) {
+      kBases.put(kieBaseDescr.getName(),kieBaseDescr);
+      ((KieBaseDescrImpl)kieBaseDescr).setKProject(kieProject);
+      String kProjectId=kieProject.getGroupArtifactVersion().getGroupId() + ":" + kieProject.getGroupArtifactVersion().getArtifactId();
+      kBaseURLs.put(kieBaseDescr.getName(),urls.get(kProjectId));
+      for (      KieSessionDescr kieSessionDescr : kieBaseDescr.getKieSessionDescrs().values()) {
+        ((KieSessionDescrImpl)kieSessionDescr).setKBase(kieBaseDescr);
+        kSessions.put(kieSessionDescr.getName(),kieSessionDescr);
       }
     }
   }

@@ -1,0 +1,14 @@
+{
+  KieFileSystem kfs=ks.newKieFileSystem();
+  for (  String rule : rules) {
+    String file="org/test/" + rule + ".drl";
+    kfs.write("src/kbases/KBase1/" + file,createDRL(rule));
+  }
+  KieProject kproj=ks.newKieProject();
+  KieBaseDescr kieBaseDescr1=kproj.newKieBaseDescr("KBase1").setEqualsBehavior(AssertBehaviorOption.EQUALITY).setEventProcessingMode(EventProcessingOption.STREAM);
+  KieSessionDescr ksession1=kieBaseDescr1.newKieSessionDescr("KSession1").setType("stateful").setAnnotations(asList("@ApplicationScoped; @Inject")).setClockType(ClockTypeOption.get("realtime"));
+  kfs.write(KieContainer.KPROJECT_RELATIVE_PATH,kproj.toXML());
+  KieBuilder kieBuilder=ks.newKieBuilder();
+  assertTrue(kieBuilder.build().isEmpty());
+  return kieBuilder.getKieJar();
+}
