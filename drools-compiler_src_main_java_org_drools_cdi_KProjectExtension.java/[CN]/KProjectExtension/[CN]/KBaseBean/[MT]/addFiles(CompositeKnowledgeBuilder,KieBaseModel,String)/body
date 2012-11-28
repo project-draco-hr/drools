@@ -1,0 +1,43 @@
+{
+  String rootPath=urlPathToAdd;
+  if (rootPath.lastIndexOf(':') > 0) {
+    rootPath=urlPathToAdd.substring(rootPath.lastIndexOf(':') + 1);
+  }
+  if (urlPathToAdd.endsWith(".jar")) {
+    File actualZipFile=new File(rootPath);
+    if (!actualZipFile.exists()) {
+      log.error("Unable to build KieBaseModel:" + kieBaseModel.getName() + " as jarPath cannot be found\n"+ rootPath);
+    }
+    ZipFile zipFile=null;
+    try {
+      zipFile=new ZipFile(actualZipFile);
+    }
+ catch (    Exception e) {
+      log.error("Unable to build KieBaseModel:" + kieBaseModel.getName() + " as jar cannot be opened\n"+ e.getMessage());
+    }
+    try {
+      for (      String file : getFiles(kieBaseModel.getName(),zipFile)) {
+        ZipEntry zipEntry=zipFile.getEntry(file);
+        ckbuilder.add(ResourceFactory.newInputStreamResource(zipFile.getInputStream(zipEntry)),ResourceType.DRL);
+      }
+    }
+ catch (    Exception e) {
+      try {
+        zipFile.close();
+      }
+ catch (      IOException e1) {
+      }
+      log.error("Unable to build KieBaseModel:" + kieBaseModel.getName() + " as jar cannot be read\n"+ e.getMessage());
+    }
+  }
+ else {
+    try {
+      for (      String file : getFiles(kieBaseModel.getName(),new File(rootPath))) {
+        ckbuilder.add(ResourceFactory.newFileResource(new File(rootPath,file)),ResourceType.DRL);
+      }
+    }
+ catch (    Exception e) {
+      log.error("Unable to build KieBaseModel:" + kieBaseModel.getName() + "\n"+ e.getMessage());
+    }
+  }
+}
