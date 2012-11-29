@@ -1,0 +1,19 @@
+{
+  if (usedDependencies == null) {
+    return;
+  }
+  Collection<Artifact> updatedArtifacts=scanForUpdates(usedDependencies);
+  if (updatedArtifacts.isEmpty()) {
+    return;
+  }
+  for (  Artifact artifact : updatedArtifacts) {
+    File kJar=artifact.getFile();
+    DependencyDescriptor depDescr=new DependencyDescriptor(artifact);
+    usedDependencies.remove(depDescr);
+    usedDependencies.add(depDescr);
+    if (kieContainer.getGAV().equals(depDescr.getGav())) {
+      ((InternalKieContainer)kieContainer).updateKieJar(new FileKieJar(kJar));
+    }
+  }
+  log.info("The following artifacts have been updated: " + updatedArtifacts);
+}
