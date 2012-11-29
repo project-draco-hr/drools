@@ -1,0 +1,21 @@
+{
+  KnowledgeBuilderConfiguration kConf=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,getClass().getClassLoader());
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(kConf);
+  CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
+  addKBaseFileToBuilder(ckbuilder,kieBase);
+  if (kieBase.getIncludes() != null) {
+    for (    String include : kieBase.getIncludes()) {
+      addKBaseFileToBuilder(ckbuilder,kieProject.getKieBaseModels().get(include));
+    }
+  }
+  ckbuilder.build();
+  if (kbuilder.hasErrors()) {
+    for (    KnowledgeBuilderError error : kbuilder.getErrors()) {
+      messages.add(new MessageImpl(idGenerator++,error));
+    }
+    return null;
+  }
+  KnowledgeBase knowledgeBase=KnowledgeBaseFactory.newKnowledgeBase(getKnowledgeBaseConfiguration(kieBase,null,getClass().getClassLoader()));
+  knowledgeBase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  return (KieBase)knowledgeBase;
+}
