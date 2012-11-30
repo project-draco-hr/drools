@@ -1,12 +1,19 @@
 {
+  List<String> classFiles=new ArrayList<String>();
+  for (  String fileName : srcMfs.getFileNames()) {
+    if (fileName.endsWith(".class")) {
+      trgMfs.write(fileName,srcMfs.getBytes(fileName),true);
+      classFiles.add(fileName.substring(0,fileName.length() - ".class".length()));
+    }
+  }
   List<String> javaFiles=new ArrayList<String>();
   for (  String fileName : srcMfs.getFileNames()) {
-    if (fileName.endsWith(".java")) {
+    if (fileName.endsWith(".java") && !classFiles.contains(fileName.substring(0,fileName.length() - ".java".length()))) {
       javaFiles.add(fileName);
     }
   }
   if (javaFiles.isEmpty()) {
-    return getClass().getClassLoader();
+    return getCompositeClassLoader();
   }
   String[] sourceFiles=javaFiles.toArray(new String[javaFiles.size()]);
   EclipseJavaCompiler compiler=createCompiler("src/main/java/");
@@ -17,10 +24,5 @@
   for (  CompilationProblem problem : res.getWarnings()) {
     messages.add(new MessageImpl(idGenerator++,problem));
   }
-  if (res.getErrors().length == 0) {
-    CompositeClassLoader ccl=ClassLoaderUtil.getClassLoader(null,getClass(),true);
-    ccl.addClassLoader(new ClassUtils.MapClassLoader(trgMfs.getMap(),ccl));
-    return ccl;
-  }
-  return getClass().getClassLoader();
+  return res.getErrors().length == 0 ? getCompositeClassLoader() : getClass().getClassLoader();
 }
