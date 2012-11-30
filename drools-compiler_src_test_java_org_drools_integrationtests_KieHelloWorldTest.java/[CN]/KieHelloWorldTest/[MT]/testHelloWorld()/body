@@ -1,13 +1,11 @@
 {
-  String drl="package org.drools\n" + "rule R1 when\n" + "   $m : Message( )\n"+ "then\n"+ "end\n";
+  String drl="package org.drools\n" + "rule R1 when\n" + "   $m : Message( message == \"Hello World\" )\n"+ "then\n"+ "end\n";
   KieServices ks=KieServices.Factory.get();
   KieFactory kf=KieFactory.Factory.get();
-  KieFileSystem kfs=kf.newKieFileSystem().write("src/main/resources/org/domain/r1.drl",drl);
-  KieBuilder kb=ks.newKieBuilder(kfs);
-  kb.build();
-  KieContainer kc=ks.getKieContainer();
-  KieBase kieBase=kc.getKieBase();
-  KieSession ksession=kieBase.newKieSession();
+  KieFileSystem kfs=kf.newKieFileSystem().write("r1.drl",drl);
+  ks.newKieBuilder(kfs).build();
+  KieSession ksession=ks.getKieContainer().getKieSession();
+  ksession.insert(new Message("Hello World"));
   int count=ksession.fireAllRules();
   assertEquals(1,count);
 }
