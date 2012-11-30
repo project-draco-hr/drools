@@ -1,8 +1,17 @@
 {
-  if (((KieBaseModelImpl)kieBase).isDefault()) {
-    return isKieExtension(fileName);
+  if (!isKieExtension(fileName)) {
+    return false;
   }
-  String kBaseName=kieBase.getName();
-  String pathName=kBaseName.replace('.','/');
-  return (fileName.startsWith("src/main/resoureces/" + pathName + "/") || fileName.contains("/" + pathName + "/")) && isKieExtension(fileName);
+  if (((KieBaseModelImpl)kieBase).isDefault()) {
+    return true;
+  }
+  if (kieBase.getPackages().isEmpty()) {
+    return isFileInKiePackage(fileName,kieBase.getName());
+  }
+  for (  String pkg : kieBase.getPackages()) {
+    if (isFileInKiePackage(fileName,pkg)) {
+      return true;
+    }
+  }
+  return false;
 }
