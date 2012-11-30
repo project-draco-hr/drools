@@ -1,6 +1,6 @@
 {
   List<String> javaFiles=new ArrayList<String>();
-  for (  String fileName : mfs.getFileNames()) {
+  for (  String fileName : srcMfs.getFileNames()) {
     if (fileName.endsWith(".java")) {
       javaFiles.add(fileName);
     }
@@ -9,12 +9,17 @@
     return;
   }
   String[] sourceFiles=javaFiles.toArray(new String[javaFiles.size()]);
-  EclipseJavaCompiler compiler=createCompiler();
-  CompilationResult res=compiler.compile(sourceFiles,mfs,mfs);
+  EclipseJavaCompiler compiler=createCompiler("src/main/java/");
+  CompilationResult res=compiler.compile(sourceFiles,srcMfs,trgMfs);
   for (  CompilationProblem problem : res.getErrors()) {
     messages.add(new MessageImpl(idGenerator++,problem));
   }
   for (  CompilationProblem problem : res.getWarnings()) {
     messages.add(new MessageImpl(idGenerator++,problem));
+  }
+  if (res.getErrors().length == 0) {
+    CompositeClassLoader ccl=ClassLoaderUtil.getClassLoader(null,getClass(),true);
+    ccl.addClassLoader(new ClassUtils.MapClassLoader(trgMfs.getMap(),ccl));
+    this.classLoader=ccl;
   }
 }

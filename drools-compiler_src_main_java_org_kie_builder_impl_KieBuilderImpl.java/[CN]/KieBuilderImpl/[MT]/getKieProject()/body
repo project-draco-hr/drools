@@ -1,12 +1,16 @@
 {
-  byte[] bytes=kieFileSystem.read(KieContainer.KPROJECT_RELATIVE_PATH);
+  byte[] bytes=srcMfs.getBytes(KieContainer.KPROJECT_RELATIVE_PATH);
   if (bytes == null) {
-    bytes=kieFileSystem.read(KieContainer.KPROJECT_JAR_PATH);
+    bytes=srcMfs.getBytes(KieContainer.KPROJECT_JAR_PATH);
   }
-  if (bytes == null) {
-    return KieFactory.Factory.get().newKieProject();
+  if (bytes != null) {
+    try {
+      return KieProjectImpl.fromXML(new ByteArrayInputStream(bytes));
+    }
+ catch (    Exception e) {
+      invalidKieProject=true;
+      messages.add(new MessageImpl(idGenerator++,Level.ERROR,"kproject.xml","kproject.xml found, but unable to read\n" + e.getMessage()));
+    }
   }
- else {
-    return KieProjectImpl.fromXML(new ByteArrayInputStream(bytes));
-  }
+  return null;
 }

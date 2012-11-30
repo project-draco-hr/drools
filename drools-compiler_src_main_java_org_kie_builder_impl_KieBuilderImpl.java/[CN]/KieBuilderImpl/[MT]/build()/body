@@ -1,9 +1,13 @@
 {
   if (!isBuilt()) {
-    kieJar=new MemoryKieJar(kieProject,mfs);
+    trgMfs=new MemoryFileSystem();
+    kieJar=new MemoryKieJar(kieProject,trgMfs);
+    writePomAndKProject();
     compileJavaClasses();
     compileKieFiles();
-    KieServices.Factory.get().getKieRepository().addKieJar(kieJar);
+    if (!hasMessages(Level.ERROR)) {
+      KieServices.Factory.get().getKieRepository().addKieJar(kieJar);
+    }
   }
-  return messages;
+  return new MessagesImpl(messages,null);
 }

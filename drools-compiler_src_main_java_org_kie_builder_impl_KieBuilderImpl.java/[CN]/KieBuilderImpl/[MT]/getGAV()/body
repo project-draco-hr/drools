@@ -1,0 +1,18 @@
+{
+  try {
+    PomModel pomModel=getPomModel();
+    if (pomModel == null) {
+      return null;
+    }
+    if (StringUtils.isEmpty(pomModel.getGroupId()) || StringUtils.isEmpty(pomModel.getArtifactId()) || StringUtils.isEmpty(pomModel.getVersion())) {
+      throw new MalformedInputException("Maven pom.properties exists but content malformed");
+    }
+    KieFactory kf=KieFactory.Factory.get();
+    return kf.newGav(pomModel.getGroupId(),pomModel.getArtifactId(),pomModel.getVersion());
+  }
+ catch (  Exception e) {
+    invalidPomXml=true;
+    messages.add(new MessageImpl(idGenerator++,Level.ERROR,"pom.xml","maven pom.xml found, but unable to read\n" + e.getMessage()));
+  }
+  return null;
+}

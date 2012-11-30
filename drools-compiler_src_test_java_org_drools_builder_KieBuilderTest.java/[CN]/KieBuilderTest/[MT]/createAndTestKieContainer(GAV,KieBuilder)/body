@@ -1,0 +1,17 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  kb.build();
+  if (kb.hasMessages(Level.ERROR)) {
+    fail("Unable to build KieJar\n" + kb.getMessages().toString());
+  }
+  KieRepository kr=ks.getKieRepository();
+  KieJar kJar=kr.getKieJar(gav);
+  assertNotNull(kJar);
+  KieContainer kContainer=ks.getKieContainer(gav);
+  KieBase kBase=kContainer.getKieBase(gav.getGroupId());
+  KieSession kSession=kBase.newKieSession();
+  List list=new ArrayList();
+  kSession.setGlobal("list",list);
+  kSession.fireAllRules();
+  assertEquals("org.kie.test.Message",list.get(0).getClass().getName());
+}
