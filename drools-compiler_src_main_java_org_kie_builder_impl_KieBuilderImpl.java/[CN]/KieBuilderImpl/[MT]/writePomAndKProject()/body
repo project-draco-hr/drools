@@ -1,7 +1,9 @@
 {
   KieFactory kf=KieFactory.Factory.get();
   KieRepository kr=KieServices.Factory.get().getKieRepository();
-  gav=kr.getDefaultGAV();
+  if (gav == null) {
+    gav=kr.getDefaultGAV();
+  }
   if (!invalidPomXml) {
     if (pomXml == null) {
       String xml=generatePomXml(gav);
@@ -16,7 +18,7 @@
   if (!invalidKieProject) {
     if (kieProject == null) {
       kieProject=kf.newKieProject();
-      kieProject.newKieBaseModel(gav.getGroupId() + "." + gav.getArtifactId());
+      kieProject.newKieBaseModel(gav.toExternalForm());
     }
     trgMfs.write("META-INF/kproject.xml",kieProject.toXML().getBytes(),true);
   }
