@@ -1,0 +1,25 @@
+{
+  KieJarChangeSet result=new KieJarChangeSet();
+  Collection<String> originalFiles=original.getFiles();
+  Collection<String> currentFiles=currentJar.getFiles();
+  ArrayList<String> removedFiles=new ArrayList<String>(originalFiles);
+  removedFiles.removeAll(currentFiles);
+  if (!removedFiles.isEmpty()) {
+    for (    String file : removedFiles) {
+      result.getChanges().put(file,new ResourceChangeSet(file,ChangeType.REMOVED));
+    }
+  }
+  for (  String file : currentFiles) {
+    if (originalFiles.contains(file)) {
+      byte[] ob=original.getBytes(file);
+      byte[] cb=currentJar.getBytes(file);
+      if (!Arrays.equals(ob,cb)) {
+        result.getChanges().put(file,diffResource(file,ob,cb));
+      }
+    }
+ else {
+      result.getChanges().put(file,new ResourceChangeSet(file,ChangeType.ADDED));
+    }
+  }
+  return result;
+}

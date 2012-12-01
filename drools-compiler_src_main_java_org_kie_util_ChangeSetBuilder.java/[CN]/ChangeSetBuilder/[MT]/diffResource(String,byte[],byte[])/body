@@ -1,0 +1,42 @@
+{
+  ResourceChangeSet pkgcs=new ResourceChangeSet(file,ChangeType.UPDATED);
+  ResourceType type=ResourceType.determineResourceType(file);
+  if (ResourceType.DRL.equals(type)) {
+    try {
+      PackageDescr opkg=new DrlParser().parse(new ByteArrayResource(ob));
+      PackageDescr cpkg=new DrlParser().parse(new ByteArrayResource(cb));
+      List<RuleDescr> orules=new ArrayList<RuleDescr>(opkg.getRules());
+      List<RuleDescr> crules=cpkg.getRules();
+      for (      RuleDescr crd : crules) {
+        boolean found=false;
+        for (Iterator<RuleDescr> it=orules.iterator(); it.hasNext(); ) {
+          RuleDescr ord=it.next();
+          if (ord.getName().equals(crd)) {
+            found=true;
+            it.remove();
+            if (!ord.equals(crd)) {
+              pkgcs.getChanges().add(new ResourceChange(ChangeType.UPDATED,ResourceChange.Type.RULE,crd.getName()));
+            }
+            break;
+          }
+        }
+        if (!found) {
+          pkgcs.getChanges().add(new ResourceChange(ChangeType.ADDED,ResourceChange.Type.RULE,crd.getName()));
+        }
+      }
+      for (      RuleDescr ord : orules) {
+        pkgcs.getChanges().add(new ResourceChange(ChangeType.REMOVED,ResourceChange.Type.RULE,ord.getName()));
+      }
+    }
+ catch (    Exception e) {
+      logger.error("Error analyzing the contents of " + file + ". Skipping.",e);
+    }
+  }
+  Collections.sort(pkgcs.getChanges(),new Comparator<ResourceChange>(){
+    public int compare(    ResourceChange o1,    ResourceChange o2){
+      return o1.getChangeType().ordinal() - o2.getChangeType().ordinal();
+    }
+  }
+);
+  return pkgcs;
+}

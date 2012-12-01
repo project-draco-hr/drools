@@ -1,0 +1,12 @@
+{
+  String drl1="package org.drools\n" + "rule R1 when\n" + "   $m : Message( message == \"Hello World\" )\n"+ "then\n"+ "end\n";
+  String drl2="package org.drools\n" + "rule R2 when\n" + "   $m : Message( message == \"Hello World\" )\n"+ "then\n"+ "end\n";
+  KieJar kieJar1=createKieJar(drl1,drl2);
+  KieJar kieJar2=createKieJar(drl1);
+  KieJarChangeSet changes=new ChangeSetBuilder().build(kieJar1,kieJar2);
+  String removedFile=(String)kieJar1.getFiles().toArray()[1];
+  assertThat(changes.getChanges().size(),is(1));
+  ResourceChangeSet cs=changes.getChanges().get(removedFile);
+  assertThat(cs,not(nullValue()));
+  assertThat(cs.getChangeType(),is(ChangeType.REMOVED));
+}
