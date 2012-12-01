@@ -1,0 +1,20 @@
+{
+  if (!changeSetState.addedResources.isEmpty()) {
+    KnowledgeBuilder builder=createKBuilder();
+    for (    Resource resource : changeSetState.addedResources) {
+      Collection<KnowledgePackage> createdPackages=this.createPackageFromResource(resource,builder);
+      Set<KnowledgePackage> packs=changeSetState.createdPackages.get(resource);
+      if (packs == null) {
+        packs=new HashSet<KnowledgePackage>();
+        changeSetState.createdPackages.put(resource,packs);
+      }
+      packs.addAll(createdPackages);
+    }
+  }
+  Set<KnowledgePackage> createdDistinctPackages=new LinkedHashSet<KnowledgePackage>();
+  for (  Resource resource : changeSetState.createdPackages.keySet()) {
+    createdDistinctPackages.addAll(changeSetState.createdPackages.get(resource));
+  }
+  this.kbase.addKnowledgePackages(createdDistinctPackages);
+  autoBuildResourceMapping();
+}
