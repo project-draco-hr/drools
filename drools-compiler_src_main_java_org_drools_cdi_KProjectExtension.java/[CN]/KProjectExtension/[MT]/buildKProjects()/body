@@ -8,26 +8,26 @@
     log.error("Unable to find and build index of kproject.xml \n" + exc.getMessage());
     return;
   }
-  Map<String,String> urls=new HashMap<String,String>();
+  List<KieProject> kProjects=new ArrayList<KieProject>();
+  Map<KieProject,String> urls=new IdentityHashMap<KieProject,String>();
   while (e.hasMoreElements()) {
     URL url=e.nextElement();
     ;
     try {
       KieProject kieProject=KieProjectImpl.fromXML(url);
-      String kProjectId=kieProject.getGroupArtifactVersion().getGroupId() + ":" + kieProject.getGroupArtifactVersion().getArtifactId();
-      urls.put(kProjectId,fixURL(url));
-      kProjects.put(kProjectId,kieProject);
+      kProjects.add(kieProject);
+      String fixedURL=fixURL(url);
+      urls.put(kieProject,fixedURL);
     }
  catch (    Exception exc) {
       log.error("Unable to build and build index of kproject.xml url=" + url.toExternalForm() + "\n"+ exc.getMessage());
     }
   }
-  for (  KieProject kieProject : kProjects.values()) {
+  for (  KieProject kieProject : kProjects) {
     for (    KieBaseModel kieBaseModel : kieProject.getKieBaseModels().values()) {
       kBases.put(kieBaseModel.getName(),kieBaseModel);
       ((KieBaseModelImpl)kieBaseModel).setKProject(kieProject);
-      String kProjectId=kieProject.getGroupArtifactVersion().getGroupId() + ":" + kieProject.getGroupArtifactVersion().getArtifactId();
-      kBaseURLs.put(kieBaseModel.getName(),urls.get(kProjectId));
+      kBaseURLs.put(kieBaseModel.getName(),urls.get(kieProject));
       for (      KieSessionModel kieSessionModel : kieBaseModel.getKieSessionModels().values()) {
         ((KieSessionModelImpl)kieSessionModel).setKBase(kieBaseModel);
         kSessions.put(kieSessionModel.getName(),kieSessionModel);
