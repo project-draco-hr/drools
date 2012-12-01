@@ -1,0 +1,16 @@
+{
+  MavenProject mavenProject=getMavenProjectForGAV(gav);
+  if (mavenProject == null) {
+    return null;
+  }
+  mavenRepository=MavenRepository.getMavenRepository(mavenProject);
+  PomParser pomParser=new EmbeddedPomParser(mavenProject);
+  CompositeKieJar compositeKieJar=new CompositeKieJar(gav);
+  for (  DependencyDescriptor dep : pomParser.getPomDirectDependencies()) {
+    Artifact depArtifact=mavenRepository.resolveArtifact(dep.toString());
+    if (isKJar(depArtifact.getFile())) {
+      compositeKieJar.addKieJar(buildArtifact(depArtifact));
+    }
+  }
+  return compositeKieJar;
+}
