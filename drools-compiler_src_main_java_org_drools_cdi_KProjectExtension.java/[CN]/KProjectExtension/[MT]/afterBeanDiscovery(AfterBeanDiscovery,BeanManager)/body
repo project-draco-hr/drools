@@ -1,17 +1,32 @@
 {
   if (kBaseNames != null) {
-    Map<String,KBaseBean> kBaseBeans=new HashMap<String,KProjectExtension.KBaseBean>();
     if (kBaseNames != null) {
       for (      String kBaseQName : kBaseNames) {
-        if (kieContainer.kieBaseExists(kBaseQName)) {
+        KieBaseModel kBaseModel=kieContainer.getKieBaseModel(kBaseQName);
+        if (kBaseModel == null) {
           log.error("Annotation @KBase(\"" + kBaseQName + "\") found, but no KieBaseModel exist.\nEither the required kproject.xml does not exist, was corrupted, or mising the KieBase entry");
           continue;
         }
-        KBaseBean bean=new KBaseBean(kBaseQName,kieContainer);
-        kBaseBeans.put(kBaseQName,bean);
+        KBaseBean bean=new KBaseBean(kBaseModel,kieContainer);
         abd.addBean(bean);
       }
     }
     kBaseNames=null;
+    if (kSessionNames != null) {
+      for (      String kSessionName : kSessionNames) {
+        KieSessionModel kieSessionModel=kieContainer.getKieSessionModel(kSessionName);
+        if (kieSessionModel == null) {
+          log.error("Annotation @KSession(\"" + kSessionName + "\") found, but no KieSessioneModel exist.\nEither the required kproject.xml does not exist, was corrupted, or mising the KieBase entry");
+          continue;
+        }
+        if ("stateless".equals(kieSessionModel.getType())) {
+          abd.addBean(new StatelessKSessionBean(kieSessionModel,kieContainer));
+        }
+ else {
+          abd.addBean(new StatefulKSessionBean(kieSessionModel,kieContainer));
+        }
+      }
+    }
+    kSessionNames=null;
   }
 }
