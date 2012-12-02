@@ -1,0 +1,24 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
+  Set<String> includes=kBaseModel.getIncludes();
+  if (includes != null && !includes.isEmpty()) {
+    for (    String include : includes) {
+      InternalKieJar includeJar=kJarFromKBaseName.get(include);
+      if (includeJar == null) {
+        log.error("Unable to build KieBase, could not find include: " + include);
+        return null;
+      }
+      addFiles(ckbuilder,kBaseModels.get(include),includeJar);
+    }
+  }
+  InternalKieJar includeJar=kJarFromKBaseName.get(kBaseModel.getName());
+  addFiles(ckbuilder,kBaseModel,includeJar);
+  ckbuilder.build();
+  if (kbuilder.hasErrors()) {
+    log.error("Unable to build KieBaseModel:" + kBaseModel.getName() + "\n"+ kbuilder.getErrors().toString());
+  }
+  InternalKnowledgeBase kBase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase();
+  kBase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  return kBase;
+}
