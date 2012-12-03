@@ -1,20 +1,20 @@
 {
-  if (!isBuilt() && gav != null && kieProject != null) {
+  if (!isBuilt() && gav != null && kModuleModel != null) {
     trgMfs=new MemoryFileSystem();
-    writePomAndKProject();
+    writePomAndKModule();
     compileJavaClasses();
     addKBasesFilesToTrg();
-    kieModule=new MemoryKieModules(gav,kieProject,trgMfs);
+    kModule=new MemoryKieModules(gav,kModuleModel,trgMfs);
     if (dependencies != null && !dependencies.isEmpty()) {
       Map<GAV,InternalKieModule> modules=new HashMap<GAV,InternalKieModule>();
       for (      KieModule kieModule : dependencies) {
         modules.put(kieModule.getGAV(),(InternalKieModule)kieModule);
       }
-      kieModule.setDependencies(modules);
+      kModule.setDependencies(modules);
     }
-    kieModule.verify(messages);
+    kModule.verify(messages);
     if (!hasResults(Level.ERROR)) {
-      KieServices.Factory.get().getKieRepository().addKieModule(kieModule);
+      KieServices.Factory.get().getKieRepository().addKieModule(kModule);
     }
   }
   return new ResultsImpl(messages.getMessages(),null);
