@@ -1,0 +1,22 @@
+{
+  Map<String,byte[]> classes=new HashMap<String,byte[]>();
+  for (  Entry<GAV,InternalKieModule> entry : kieModules.entrySet()) {
+    GAV gav=entry.getKey();
+    InternalKieModule kModule=entry.getValue();
+    List<String> fileNames=new ArrayList<String>();
+    for (    String fileName : kModule.getFileNames()) {
+      if (fileName.endsWith(".class")) {
+        classes.put(fileName,kModule.getBytes(fileName));
+      }
+    }
+  }
+  CompositeClassLoader cl;
+  if (!classes.isEmpty()) {
+    cl=ClassLoaderUtil.getClassLoader(null,null,true);
+    cl.addClassLoader(new ClassUtils.MapClassLoader(classes,cl));
+  }
+ else {
+    cl=ClassLoaderUtil.getClassLoader(null,null,true);
+  }
+  return cl;
+}
