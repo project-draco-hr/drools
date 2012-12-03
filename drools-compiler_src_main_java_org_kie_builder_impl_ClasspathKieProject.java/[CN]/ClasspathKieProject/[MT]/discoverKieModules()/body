@@ -1,0 +1,45 @@
+{
+  ClassLoader classLoader=Thread.currentThread().getContextClassLoader();
+  final Enumeration<URL> e;
+  try {
+    e=classLoader.getResources("META-INF/kproject.xml");
+  }
+ catch (  IOException exc) {
+    log.error("Unable to find and build index of kproject.xml \n" + exc.getMessage());
+    return;
+  }
+  List<KieModuleModel> kProjects=new ArrayList<KieModuleModel>();
+  Map<KieModuleModel,String> urls=new IdentityHashMap<KieModuleModel,String>();
+  while (e.hasMoreElements()) {
+    URL url=e.nextElement();
+    try {
+      KieModuleModel kieProject=KieModuleModelImpl.fromXML(url);
+      kProjects.add(kieProject);
+      String fixedURL=fixURL(url);
+      urls.put(kieProject,fixedURL);
+      String pomProperties=getPomProperties(fixedURL);
+      GAV gav=GAVImpl.fromPropertiesString(pomProperties);
+      String rootPath=fixedURL;
+      if (rootPath.lastIndexOf(':') > 0) {
+        rootPath=fixedURL.substring(rootPath.lastIndexOf(':') + 1);
+      }
+      InternalKieModule kJar=null;
+      File file=new File(rootPath);
+      if (fixedURL.endsWith(".jar")) {
+        kJar=new ZipKieModule(gav,kieProject,file);
+      }
+ else       if (file.isDirectory()) {
+        kJar=new FileKieModule(gav,kieProject,file);
+      }
+ else {
+        log.error("Unable to build index of kproject.xml url=" + url.toExternalForm() + "\n");
+        continue;
+      }
+      kJars.put(gav,kJar);
+      kr.addKieModule(kJar);
+    }
+ catch (    Exception exc) {
+      log.error("Unable to build index of kproject.xml url=" + url.toExternalForm() + "\n"+ exc.getMessage());
+    }
+  }
+}
