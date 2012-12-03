@@ -7,24 +7,26 @@
  catch (    Exception e) {
       throw new RuntimeException("Cannot instance listener " + listenerModel.getType(),e);
     }
-    if (listener instanceof WorkingMemoryEventListener) {
-      kSession.addEventListener((WorkingMemoryEventListener)listener);
-    }
- else     if (listener instanceof AgendaEventListener) {
+switch (listenerModel.getKind()) {
+case AGENDA_EVENT_LISTENER:
       kSession.addEventListener((AgendaEventListener)listener);
-    }
- else     if (listener instanceof ProcessEventListener) {
-      kSession.addEventListener((ProcessEventListener)listener);
-    }
-  }
-  for (  WorkItemHandlerModel wihModel : model.getWorkItemHandelerModels()) {
-    WorkItemHandler wih;
-    try {
-      wih=beanCreator.createBean(wihModel.getType(),wihModel.getQualifierModel());
-    }
- catch (    Exception e) {
-      throw new RuntimeException("Cannot instance WorkItemHandler " + wihModel.getType(),e);
-    }
-    kSession.getWorkItemManager().registerWorkItemHandler("???",wih);
-  }
+    break;
+case WORKING_MEMORY_EVENT_LISTENER:
+  kSession.addEventListener((WorkingMemoryEventListener)listener);
+break;
+case PROCESS_EVENT_LISTENER:
+kSession.addEventListener((ProcessEventListener)listener);
+break;
+}
+}
+for (WorkItemHandlerModel wihModel : model.getWorkItemHandelerModels()) {
+WorkItemHandler wih;
+try {
+wih=beanCreator.createBean(wihModel.getType(),wihModel.getQualifierModel());
+}
+ catch (Exception e) {
+throw new RuntimeException("Cannot instance WorkItemHandler " + wihModel.getType(),e);
+}
+kSession.getWorkItemManager().registerWorkItemHandler("???",wih);
+}
 }
