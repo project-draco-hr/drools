@@ -1,29 +1,40 @@
 {
-  if (kBaseNames != null) {
+  if (kProject != null) {
+    KieContainerImpl kContainer=new KieContainerImpl(kProject,null);
     if (kBaseNames != null) {
       for (      String kBaseQName : kBaseNames) {
-        KieBaseModel kBaseModel=kieContainer.getKieBaseModel(kBaseQName);
+        KieBaseModel kBaseModel=kProject.getKieBaseModel(kBaseQName);
         if (kBaseModel == null) {
-          log.error("Annotation @KBase(\"" + kBaseQName + "\") found, but no KieBaseModel exist.\nEither the required kproject.xml does not exist, was corrupted, or mising the KieBase entry");
+          log.error("Annotation @KBase({}) found, but no KieBaseModel exist.\nEither the required kproject.xml does not exist, was corrupted, or mising the KieBase entry",kBaseQName);
           continue;
         }
-        KBaseBean bean=new KBaseBean(kBaseModel,kieContainer);
+        KBaseBean bean=new KBaseBean(kBaseModel,kContainer);
+        if (log.isDebugEnabled()) {
+          InternalKieModule kModule=(InternalKieModule)kProject.getKieModuleForKBase(kBaseQName);
+          log.debug("Added Bean for @KBase({})",kBaseQName,kModule.getFile());
+        }
         abd.addBean(bean);
       }
     }
     kBaseNames=null;
     if (kSessionNames != null) {
       for (      String kSessionName : kSessionNames) {
-        KieSessionModel kieSessionModel=kieContainer.getKieSessionModel(kSessionName);
-        if (kieSessionModel == null) {
-          log.error("Annotation @KSession(\"" + kSessionName + "\") found, but no KieSessioneModel exist.\nEither the required kproject.xml does not exist, was corrupted, or mising the KieBase entry");
+        KieSessionModel kSessionModel=kProject.getKieSessionModel(kSessionName);
+        if (kSessionModel == null) {
+          log.error("Annotation @KSession({}) found, but no KieSessioneModel exist.\nEither the required kproject.xml does not exist, was corrupted, or mising the KieBase entry",kSessionName);
           continue;
         }
-        if ("stateless".equals(kieSessionModel.getType())) {
-          abd.addBean(new StatelessKSessionBean(kieSessionModel,kieContainer));
+        if ("stateless".equals(kSessionModel.getType())) {
+          if (log.isDebugEnabled()) {
+            InternalKieModule kModule=(InternalKieModule)kProject.getKieModuleForKBase(((KieSessionModelImpl)kSessionModel).getKieBaseModel().getName());
+            log.debug("Added Bean for Stateless @Session({}) from: {}",kSessionName,kModule.getFile());
+          }
+          abd.addBean(new StatelessKSessionBean(kSessionModel,kContainer));
         }
  else {
-          abd.addBean(new StatefulKSessionBean(kieSessionModel,kieContainer));
+          InternalKieModule kModule=(InternalKieModule)kProject.getKieModuleForKBase(((KieSessionModelImpl)kSessionModel).getKieBaseModel().getName());
+          log.debug("Added Bean for Stateful @Session({})  from: {}",kSessionName,kModule.getFile());
+          abd.addBean(new StatefulKSessionBean(kSessionModel,kContainer));
         }
       }
     }
