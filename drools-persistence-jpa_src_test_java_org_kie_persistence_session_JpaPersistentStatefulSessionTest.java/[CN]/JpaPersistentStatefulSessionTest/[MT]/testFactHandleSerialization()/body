@@ -1,0 +1,37 @@
+{
+  String str="";
+  str+="package org.kie.test\n";
+  str+="import java.util.concurrent.atomic.AtomicInteger\n";
+  str+="global java.util.List list\n";
+  str+="rule rule1\n";
+  str+="when\n";
+  str+=" $i: AtomicInteger(intValue > 0)\n";
+  str+="then\n";
+  str+=" list.add( $i );\n";
+  str+="end\n";
+  str+="\n";
+  KieServices ks=KieServices.Factory.get();
+  KieFactory kf=KieFactory.Factory.get();
+  KieFileSystem kfs=kf.newKieFileSystem().write("src/main/resources/r1.drl",str);
+  ks.newKieBuilder(kfs).build();
+  KieBase kbase=ks.getKieContainer().getKieBase();
+  KieSession ksession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
+  List<?> list=new ArrayList<Object>();
+  ksession.setGlobal("list",list);
+  AtomicInteger value=new AtomicInteger(4);
+  FactHandle atomicFH=ksession.insert(value);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  value.addAndGet(1);
+  ksession.update(atomicFH,value);
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+  String externalForm=atomicFH.toExternalForm();
+  ksession=JPAKnowledgeService.loadStatefulKnowledgeSession(ksession.getId(),kbase,null,env);
+  atomicFH=ksession.execute(CommandFactory.fromExternalFactHandleCommand(externalForm));
+  value.addAndGet(1);
+  ksession.update(atomicFH,value);
+  ksession.fireAllRules();
+  list=(List<?>)ksession.getGlobal("list");
+  assertEquals(3,list.size());
+}

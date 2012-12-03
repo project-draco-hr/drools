@@ -1,0 +1,25 @@
+{
+  String str="";
+  str+="package org.kie.test\n";
+  str+="global java.util.List list\n";
+  str+="rule rule1\n";
+  str+="when\n";
+  str+="  Integer(intValue > 0)\n";
+  str+="then\n";
+  str+="  list.add( 1 );\n";
+  str+="end\n";
+  str+="\n";
+  KieServices ks=KieServices.Factory.get();
+  KieFactory kf=KieFactory.Factory.get();
+  KieFileSystem kfs=kf.newKieFileSystem().write("src/main/resources/r1.drl",str);
+  ks.newKieBuilder(kfs).build();
+  KieBase kbase=ks.getKieContainer().getKieBase();
+  KieSession ksession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
+  List<?> list=new ArrayList<Object>();
+  ksession.setGlobal("list",list);
+  ksession.insert(1);
+  ksession.insert(2);
+  ksession.insert(3);
+  ksession.fireAllRules();
+  assertEquals(3,list.size());
+}
