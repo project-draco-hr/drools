@@ -13,31 +13,15 @@
   while (e.hasMoreElements()) {
     URL url=e.nextElement();
     try {
-      KieModuleModel kieProject=KieModuleModelImpl.fromXML(url);
-      kModules.add(kieProject);
-      String fixedURL=fixURL(url);
-      urls.put(kieProject,fixedURL);
-      String pomProperties=getPomProperties(fixedURL);
-      GAV gav=GAVImpl.fromPropertiesString(pomProperties);
-      String rootPath=fixedURL;
-      if (rootPath.lastIndexOf(':') > 0) {
-        rootPath=fixedURL.substring(rootPath.lastIndexOf(':') + 1);
-      }
-      InternalKieModule kJar=null;
-      File file=new File(rootPath);
-      if (fixedURL.endsWith(".jar")) {
-        kJar=new ZipKieModule(gav,kieProject,file);
-      }
- else       if (file.isDirectory()) {
-        kJar=new FileKieModule(gav,kieProject,file);
-      }
- else {
-        log.error("Unable to build index of kmodule.xml url=" + url.toExternalForm() + "\n");
-        continue;
-      }
-      kJars.put(gav,kJar);
+      String fixedURL=fixURLFromKProjectPath(url);
+      InternalKieModule kModule=fetchKModule(url,fixedURL);
+      KieModuleModel kModuleModel=kModule.getKieModuleModel();
+      kModules.add(kModuleModel);
+      urls.put(kModuleModel,fixedURL);
+      GAV gav=kModule.getGAV();
+      kJars.put(gav,kModule);
       log.debug("Discovered classpath module " + gav.toExternalForm());
-      kr.addKieModule(kJar);
+      kr.addKieModule(kModule);
     }
  catch (    Exception exc) {
       log.error("Unable to build index of kmodule.xml url=" + url.toExternalForm() + "\n"+ exc.getMessage());
