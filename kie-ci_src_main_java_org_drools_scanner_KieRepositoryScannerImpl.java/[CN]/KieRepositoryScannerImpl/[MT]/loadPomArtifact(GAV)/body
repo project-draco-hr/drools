@@ -3,5 +3,14 @@
   if (mavenProject == null) {
     return null;
   }
-  return null;
+  mavenRepository=MavenRepository.getMavenRepository(mavenProject);
+  PomParser pomParser=new EmbeddedPomParser(mavenProject);
+  CompositeKieModule compositeKieModule=new CompositeKieModule(gav);
+  for (  DependencyDescriptor dep : pomParser.getPomDirectDependencies()) {
+    Artifact depArtifact=mavenRepository.resolveArtifact(dep.toString());
+    if (isKJar(depArtifact.getFile())) {
+      compositeKieModule.addKieModule(buildArtifact(gav,depArtifact));
+    }
+  }
+  return compositeKieModule;
 }
