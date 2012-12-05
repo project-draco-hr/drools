@@ -1,2 +1,30 @@
 {
+  URLClassLoader projectClassLoader=null;
+  try {
+    projectClassLoader=new URLClassLoader(new URL[]{outputDirectory.toURI().toURL()});
+  }
+ catch (  MalformedURLException e) {
+    throw new RuntimeException(e);
+  }
+  ClassLoader contextClassLoader=Thread.currentThread().getContextClassLoader();
+  Thread.currentThread().setContextClassLoader(projectClassLoader);
+  KieServices ks=KieServices.Factory.get();
+  try {
+    KieRepository kr=ks.getKieRepository();
+    KieModule kModule=kr.addKieModule(ks.getResources().newFileSystemResource(sourceFolder));
+    KieContainerImpl kContainer=(KieContainerImpl)ks.getKieContainer(kModule.getGAV());
+    KieProject kieProject=kContainer.getKieProject();
+    Messages messages=kieProject.verify();
+    List<Message> errors=messages.filterMessages(Message.Level.ERROR);
+    if (!errors.isEmpty()) {
+      for (      Message error : errors) {
+        getLog().error(error.toString());
+      }
+      throw new MojoFailureException("Build failed!");
+    }
+  }
+  finally {
+    Thread.currentThread().setContextClassLoader(contextClassLoader);
+  }
+  getLog().info("KieModule successfully built!");
 }
