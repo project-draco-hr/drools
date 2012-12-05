@@ -1,18 +1,14 @@
 {
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   DecisionTableConfiguration dtconf=KnowledgeBuilderFactory.newDecisionTableConfiguration();
   dtconf.setInputType(DecisionTableInputType.XLS);
   dtconf.setWorksheetName("Tables_2");
-  kbuilder.add(ResourceFactory.newClassPathResource("/data/IntegrationExampleTest.xls",getClass()),ResourceType.DTABLE,dtconf);
-  assertFalse(kbuilder.hasErrors());
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  final StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
-  session.insert(new Cheese("cheddar",42));
-  session.insert(new Person("michael","stilton",25));
+  Resource dt=ResourceFactory.newClassPathResource("/data/IntegrationExampleTest.xls",getClass()).setConfiguration(dtconf);
+  KieSession ksession=getKieSession(dt);
+  ksession.insert(new Cheese("cheddar",42));
+  ksession.insert(new Person("michael","stilton",25));
   final List<String> list=new ArrayList<String>();
-  session.setGlobal("list",list);
-  session.fireAllRules();
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
   assertEquals(1,list.size());
   assertEquals("Young man cheddar",list.get(0));
 }
