@@ -5,12 +5,14 @@
   }
   mavenRepository=MavenRepository.getMavenRepository(mavenProject);
   PomParser pomParser=new EmbeddedPomParser(mavenProject);
-  CompositeKieModule compositeKieModule=new CompositeKieModule(gav);
+  MemoryKieModule kieModule=new MemoryKieModule(gav);
   for (  DependencyDescriptor dep : pomParser.getPomDirectDependencies()) {
     Artifact depArtifact=mavenRepository.resolveArtifact(dep.toString());
     if (isKJar(depArtifact.getFile())) {
-      compositeKieModule.addKieModule(buildArtifact(gav,depArtifact));
+      GAV depGav=new DependencyDescriptor(depArtifact).getGav();
+      kieModule.addDependency(new ZipKieModule(depGav,depArtifact.getFile()));
     }
   }
-  return compositeKieModule;
+  build(kieModule);
+  return kieModule;
 }
