@@ -1,13 +1,11 @@
 {
-  MavenProject mavenProject=getMavenProjectForGAV(gav);
-  if (mavenProject == null) {
+  ArtifactResolver resolver=getResolverFor(gav,false);
+  if (resolver == null) {
     return null;
   }
-  mavenRepository=MavenRepository.getMavenRepository(mavenProject);
-  PomParser pomParser=new EmbeddedPomParser(mavenProject);
   MemoryKieModule kieModule=new MemoryKieModule(gav);
-  for (  DependencyDescriptor dep : pomParser.getPomDirectDependencies()) {
-    Artifact depArtifact=mavenRepository.resolveArtifact(dep.toString());
+  for (  DependencyDescriptor dep : resolver.getPomDirectDependencies()) {
+    Artifact depArtifact=resolver.resolveArtifact(dep.toString());
     if (isKJar(depArtifact.getFile())) {
       GAV depGav=new DependencyDescriptor(depArtifact).getGav();
       kieModule.addDependency(new ZipKieModule(depGav,depArtifact.getFile()));
