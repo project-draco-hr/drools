@@ -1,0 +1,71 @@
+{
+  if (kProject != null) {
+    KieContainerImpl kContainer=new KieContainerImpl(kProject,null);
+    if (kBaseNames != null) {
+      for (      KieCDIEntry entry : kBaseNames) {
+        String kBaseQName=entry.getName();
+        KieBaseModel kBaseModel=kProject.getKieBaseModel(kBaseQName);
+        if (kBaseModel == null) {
+          log.error("Annotation @KBase({}) found, but no KieBaseModel exist.\nEither the required kproject.xml does not exist, was corrupted, or mising the KieBase entry",kBaseQName);
+          continue;
+        }
+        if (!kBaseModel.getScope().trim().equals(entry.getScope().getClass().getName())) {
+          try {
+            if (kBaseModel.getScope().indexOf('.') >= 0) {
+              entry.setScope((Class<? extends Annotation>)Class.forName(kBaseModel.getScope()));
+            }
+ else {
+              entry.setScope((Class<? extends Annotation>)Class.forName("javax.enterprise.context." + kBaseModel.getScope()));
+            }
+          }
+ catch (          ClassNotFoundException e) {
+            log.error("KieBaseModule {} overrides default annotation, but it was not able to find it {}\n{}",new String[]{kBaseQName,kBaseModel.getScope(),e.getMessage()});
+          }
+        }
+        KBaseBean bean=new KBaseBean(kBaseModel,kContainer,entry.getScope());
+        if (log.isDebugEnabled()) {
+          InternalKieModule kModule=(InternalKieModule)kProject.getKieModuleForKBase(kBaseQName);
+          log.debug("Added Bean for @KBase({})",kBaseQName,kModule.getFile());
+        }
+        abd.addBean(bean);
+      }
+    }
+    kBaseNames=null;
+    if (kSessionNames != null) {
+      for (      KieCDIEntry entry : kSessionNames) {
+        String kSessionName=entry.getName();
+        KieSessionModel kSessionModel=kProject.getKieSessionModel(kSessionName);
+        if (kSessionModel == null) {
+          log.error("Annotation @KSession({}) found, but no KieSessioneModel exist.\nEither the required kproject.xml does not exist, was corrupted, or mising the KieBase entry",kSessionName);
+          continue;
+        }
+        if (!kSessionModel.getScope().trim().equals(entry.getScope().getClass().getName())) {
+          try {
+            if (kSessionModel.getScope().indexOf('.') >= 0) {
+              entry.setScope((Class<? extends Annotation>)Class.forName(kSessionModel.getScope()));
+            }
+ else {
+              entry.setScope((Class<? extends Annotation>)Class.forName("javax.enterprise.context." + kSessionModel.getScope()));
+            }
+          }
+ catch (          ClassNotFoundException e) {
+            log.error("KieBaseModule {} overrides default annotation, but it was not able to find it {}\n{}",new String[]{kSessionName,kSessionModel.getScope(),e.getMessage()});
+          }
+        }
+        if ("stateless".equals(kSessionModel.getType())) {
+          if (log.isDebugEnabled()) {
+            InternalKieModule kModule=(InternalKieModule)kProject.getKieModuleForKBase(((KieSessionModelImpl)kSessionModel).getKieBaseModel().getName());
+            log.debug("Added Bean for Stateless @Session({}) from: {}",kSessionName,kModule.getFile());
+          }
+          abd.addBean(new StatelessKSessionBean(kSessionModel,kContainer,entry.getScope()));
+        }
+ else {
+          InternalKieModule kModule=(InternalKieModule)kProject.getKieModuleForKBase(((KieSessionModelImpl)kSessionModel).getKieBaseModel().getName());
+          log.debug("Added Bean for Stateful @Session({})  from: {}",kSessionName,kModule.getFile());
+          abd.addBean(new StatefulKSessionBean(kSessionModel,kContainer,entry.getScope()));
+        }
+      }
+    }
+    kSessionNames=null;
+  }
+}
