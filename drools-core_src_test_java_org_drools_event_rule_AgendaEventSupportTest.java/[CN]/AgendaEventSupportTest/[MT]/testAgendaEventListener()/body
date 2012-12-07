@@ -31,15 +31,15 @@
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   final List agendaList=new ArrayList();
   final AgendaEventListener agendaEventListener=new AgendaEventListener(){
-    public void activationCancelled(    ActivationCancelledEvent event){
+    public void activationCancelled(    MatchCancelledEvent event){
       assertNotNull(event.getKnowledgeRuntime());
       agendaList.add(event);
     }
-    public void activationCreated(    ActivationCreatedEvent event){
+    public void activationCreated(    MatchCreatedEvent event){
       assertNotNull(event.getKnowledgeRuntime());
       agendaList.add(event);
     }
-    public void afterActivationFired(    AfterActivationFiredEvent event){
+    public void afterActivationFired(    AfterMatchFiredEvent event){
       assertNotNull(event.getKnowledgeRuntime());
       agendaList.add(event);
     }
@@ -51,7 +51,7 @@
       assertNotNull(event.getKnowledgeRuntime());
       agendaList.add(event);
     }
-    public void beforeActivationFired(    BeforeActivationFiredEvent event){
+    public void beforeActivationFired(    BeforeMatchFiredEvent event){
       assertNotNull(event.getKnowledgeRuntime());
       agendaList.add(event);
     }
@@ -78,25 +78,25 @@
   final Cheese cheddar=new Cheese("cheddar",15);
   FactHandle cheddarHandle=ksession.insert(cheddar);
   assertEquals(1,agendaList.size());
-  ActivationCreatedEvent createdEvent=(ActivationCreatedEvent)agendaList.get(0);
-  assertSame(cheddarHandle,createdEvent.getActivation().getFactHandles().toArray()[0]);
+  MatchCreatedEvent createdEvent=(MatchCreatedEvent)agendaList.get(0);
+  assertSame(cheddarHandle,createdEvent.getMatch().getFactHandles().toArray()[0]);
   ksession.getAgenda().clear();
-  ActivationCancelledEvent cancelledEvent=(ActivationCancelledEvent)agendaList.get(1);
-  assertEquals(ActivationCancelledCause.CLEAR,cancelledEvent.getCause());
+  MatchCancelledEvent cancelledEvent=(MatchCancelledEvent)agendaList.get(1);
+  assertEquals(MatchCancelledCause.CLEAR,cancelledEvent.getCause());
   agendaList.clear();
   cheddar.setPrice(14);
   ksession.update(cheddarHandle,cheddar);
   assertEquals(1,agendaList.size());
-  createdEvent=(ActivationCreatedEvent)agendaList.get(0);
-  assertSame(cheddarHandle,createdEvent.getActivation().getFactHandles().toArray()[0]);
+  createdEvent=(MatchCreatedEvent)agendaList.get(0);
+  assertSame(cheddarHandle,createdEvent.getMatch().getFactHandles().toArray()[0]);
   agendaList.clear();
   cheddar.setPrice(14);
   ksession.update(cheddarHandle,cheddar);
   assertEquals(0,agendaList.size());
   ksession.retract(cheddarHandle);
   assertEquals(1,agendaList.size());
-  cancelledEvent=(ActivationCancelledEvent)agendaList.get(0);
-  assertNull(((InternalFactHandle)cancelledEvent.getActivation().getFactHandles().toArray()[0]).getObject());
+  cancelledEvent=(MatchCancelledEvent)agendaList.get(0);
+  assertNull(((InternalFactHandle)cancelledEvent.getMatch().getFactHandles().toArray()[0]).getObject());
   cheddarHandle=ksession.insert(cheddar);
   agendaList.clear();
   ksession.getAgenda().getAgendaGroup("test group").setFocus();
@@ -106,10 +106,10 @@
   agendaList.clear();
   ksession.fireAllRules();
   assertEquals(3,agendaList.size());
-  final BeforeActivationFiredEvent beforeEvent=(BeforeActivationFiredEvent)agendaList.get(0);
-  assertSame(cheddarHandle,beforeEvent.getActivation().getFactHandles().toArray()[0]);
-  final AfterActivationFiredEvent afterEvent=(AfterActivationFiredEvent)agendaList.get(1);
-  assertSame(cheddarHandle,afterEvent.getActivation().getFactHandles().toArray()[0]);
+  final BeforeMatchFiredEvent beforeEvent=(BeforeMatchFiredEvent)agendaList.get(0);
+  assertSame(cheddarHandle,beforeEvent.getMatch().getFactHandles().toArray()[0]);
+  final AfterMatchFiredEvent afterEvent=(AfterMatchFiredEvent)agendaList.get(1);
+  assertSame(cheddarHandle,afterEvent.getMatch().getFactHandles().toArray()[0]);
   final AgendaGroupPoppedEvent poppedEvent=(AgendaGroupPoppedEvent)agendaList.get(2);
   assertEquals("test group",poppedEvent.getAgendaGroup().getName());
 }
