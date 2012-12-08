@@ -1,0 +1,21 @@
+{
+  try {
+    if (resource.getName() != null) {
+      write(RESOURCE_PATH_PREFIX + resource.getName(),readBytesFromInputStream(resource.getInputStream()));
+      ResourceConfiguration conf=resource.getConfiguration();
+      if (conf != null) {
+        Properties prop=ResourceType.toProperties(conf);
+        ByteArrayOutputStream buff=new ByteArrayOutputStream();
+        prop.store(buff,"Configuration properties for resource: " + resource.getName());
+        write(RESOURCE_PATH_PREFIX + resource.getName() + ".properties",buff.toByteArray());
+      }
+      return this;
+    }
+ else {
+      throw new RuntimeException("Resource does not have a name. Impossible to add it to the bundle. Please set the name of the resource before adding it." + resource.toString());
+    }
+  }
+ catch (  IOException e) {
+    throw new RuntimeException("Unable to write Resource: " + resource.toString(),e);
+  }
+}
