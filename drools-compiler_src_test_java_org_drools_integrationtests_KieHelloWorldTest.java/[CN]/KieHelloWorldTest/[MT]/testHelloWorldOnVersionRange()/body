@@ -1,0 +1,28 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  KieFactory kf=KieFactory.Factory.get();
+  buildVersion(ks,kf,"Hello World","1.0");
+  buildVersion(ks,kf,"Aloha Earth","1.1");
+  buildVersion(ks,kf,"Hi Universe","1.2");
+  GAV latestGav=kf.newGav("org.kie","hello-world","LATEST");
+  KieSession ksession=ks.getKieContainer(latestGav).getKieSession("KSession1");
+  ksession.insert(new Message("Hello World"));
+  assertEquals(0,ksession.fireAllRules());
+  ksession=ks.getKieContainer(latestGav).getKieSession("KSession1");
+  ksession.insert(new Message("Hi Universe"));
+  assertEquals(1,ksession.fireAllRules());
+  GAV gav1=kf.newGav("org.kie","hello-world","1.0");
+  ksession=ks.getKieContainer(gav1).getKieSession("KSession1");
+  ksession.insert(new Message("Hello World"));
+  assertEquals(1,ksession.fireAllRules());
+  ksession=ks.getKieContainer(gav1).getKieSession("KSession1");
+  ksession.insert(new Message("Hi Universe"));
+  assertEquals(0,ksession.fireAllRules());
+  GAV gav2=kf.newGav("org.kie","hello-world","[1.0,1.2)");
+  ksession=ks.getKieContainer(gav2).getKieSession("KSession1");
+  ksession.insert(new Message("Aloha Earth"));
+  assertEquals(1,ksession.fireAllRules());
+  ksession=ks.getKieContainer(gav2).getKieSession("KSession1");
+  ksession.insert(new Message("Hi Universe"));
+  assertEquals(0,ksession.fireAllRules());
+}
