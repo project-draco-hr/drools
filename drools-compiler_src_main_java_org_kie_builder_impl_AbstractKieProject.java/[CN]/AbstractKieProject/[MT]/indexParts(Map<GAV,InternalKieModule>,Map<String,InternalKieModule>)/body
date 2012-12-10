@@ -1,11 +1,22 @@
 {
-  for (  InternalKieModule kJar : kJars.values()) {
+  for (  InternalKieModule kJar : kieModules.values()) {
     KieModuleModel kieProject=kJar.getKieModuleModel();
     for (    KieBaseModel kieBaseModel : kieProject.getKieBaseModels().values()) {
+      if (kieBaseModel.isDefault()) {
+        defaultKieBase=kieBaseModel;
+      }
       kBaseModels.put(kieBaseModel.getName(),kieBaseModel);
       ((KieBaseModelImpl)kieBaseModel).setKModule(kieProject);
       kJarFromKBaseName.put(kieBaseModel.getName(),kJar);
       for (      KieSessionModel kieSessionModel : kieBaseModel.getKieSessionModels().values()) {
+        if (kieSessionModel.isDefault()) {
+          if (kieSessionModel.getType() == KieSessionModel.KieSessionType.STATEFUL) {
+            defaultKieSession=kieSessionModel;
+          }
+ else {
+            defaultStatelessKieSession=kieSessionModel;
+          }
+        }
         ((KieSessionModelImpl)kieSessionModel).setKBase(kieBaseModel);
         kSessionModels.put(kieSessionModel.getName(),kieSessionModel);
       }
