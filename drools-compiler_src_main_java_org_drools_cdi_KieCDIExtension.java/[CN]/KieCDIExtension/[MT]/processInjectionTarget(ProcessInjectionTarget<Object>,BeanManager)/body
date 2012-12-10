@@ -1,16 +1,24 @@
 {
-  if (kProject == null) {
+  if (classpathKContainer == null) {
     init();
   }
+  KieFactory kf=KieFactory.Factory.get();
   if (!pit.getInjectionTarget().getInjectionPoints().isEmpty()) {
     for (    InjectionPoint ip : pit.getInjectionTarget().getInjectionPoints()) {
+      KGAV kGAV=ip.getAnnotated().getAnnotation(KGAV.class);
+      GAV gav=null;
+      if (kGAV != null) {
+        gav=kf.newGav(kGAV.groupId(),kGAV.artifactId(),kGAV.version());
+        gavs.put(gav,null);
+      }
       KBase kBase=ip.getAnnotated().getAnnotation(KBase.class);
       if (kBase != null) {
         Class<? extends Annotation> scope=ApplicationScoped.class;
         if (kBaseNames == null) {
           kBaseNames=new HashSet<KieCDIEntry>();
         }
-        kBaseNames.add(new KieCDIEntry(kBase.value(),scope));
+        kBaseNames.add(new KieCDIEntry(kBase.value(),scope,gav));
+        continue;
       }
       KSession kSession=ip.getAnnotated().getAnnotation(KSession.class);
       if (kSession != null) {
@@ -18,7 +26,8 @@
         if (kSessionNames == null) {
           kSessionNames=new HashSet<KieCDIEntry>();
         }
-        kSessionNames.add(new KieCDIEntry(kSession.value(),scope));
+        kSessionNames.add(new KieCDIEntry(kSession.value(),scope,gav));
+        continue;
       }
     }
   }

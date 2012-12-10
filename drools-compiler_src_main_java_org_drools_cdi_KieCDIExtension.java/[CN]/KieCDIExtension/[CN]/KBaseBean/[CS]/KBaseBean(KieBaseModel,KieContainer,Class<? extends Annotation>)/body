@@ -1,12 +1,11 @@
 {
   this.kBaseModel=kBaseModel;
-  this.kieContainer=kieContainer;
+  this.kContainer=kContainer;
   this.scope=scope;
-  this.qualifiers=Collections.unmodifiableSet(new HashSet<Annotation>(Arrays.asList(new AnnotationLiteral<Default>(){
-  }
-,new AnnotationLiteral<Any>(){
-  }
-,new KBase(){
+  Set<Annotation> set=new HashSet<Annotation>();
+  set.add(defaultAnnLit);
+  set.add(anyAnnLit);
+  set.add(new KBase(){
     public Class<? extends Annotation> annotationType(){
       return KBase.class;
     }
@@ -14,5 +13,29 @@
       return kBaseModel.getName();
     }
   }
-)));
+);
+  if (kContainer.getGAV() != null) {
+    final String groupId=kContainer.getGAV().getGroupId();
+    final String artifactId=kContainer.getGAV().getArtifactId();
+    final String version=kContainer.getGAV().getVersion();
+    set.add(new KGAV(){
+      public Class<? extends Annotation> annotationType(){
+        return KGAV.class;
+      }
+      @Override public String groupId(){
+        return groupId;
+      }
+      @Override public String artifactId(){
+        return artifactId;
+      }
+      @Override public String version(){
+        return version;
+      }
+      public String toString(){
+        return "KGAV[groupId=" + groupId + " artifactId"+ artifactId+ " version="+ version+ "]";
+      }
+    }
+);
+  }
+  this.qualifiers=Collections.unmodifiableSet(set);
 }

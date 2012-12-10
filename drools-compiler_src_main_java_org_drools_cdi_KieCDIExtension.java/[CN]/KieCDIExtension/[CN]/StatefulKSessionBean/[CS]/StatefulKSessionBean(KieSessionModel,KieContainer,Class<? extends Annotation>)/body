@@ -2,17 +2,40 @@
   this.kSessionModel=kieSessionModelModel;
   this.kContainer=kContainer;
   this.scope=scope;
-  this.qualifiers=Collections.unmodifiableSet(new HashSet<Annotation>(Arrays.asList(new AnnotationLiteral<Default>(){
-  }
-,new AnnotationLiteral<Any>(){
-  }
-,new KSession(){
+  Set<Annotation> set=new HashSet<Annotation>();
+  set.add(defaultAnnLit);
+  set.add(anyAnnLit);
+  set.add(new KSession(){
     public Class<? extends Annotation> annotationType(){
       return KSession.class;
     }
     public String value(){
-      return kieSessionModelModel.getName();
+      return kSessionModel.getName();
     }
   }
-)));
+);
+  if (kContainer.getGAV() != null) {
+    final String groupId=kContainer.getGAV().getGroupId();
+    final String artifactId=kContainer.getGAV().getArtifactId();
+    final String version=kContainer.getGAV().getVersion();
+    set.add(new KGAV(){
+      public Class<? extends Annotation> annotationType(){
+        return KGAV.class;
+      }
+      @Override public String groupId(){
+        return groupId;
+      }
+      @Override public String artifactId(){
+        return artifactId;
+      }
+      @Override public String version(){
+        return version;
+      }
+      public String toString(){
+        return "KGAV[groupId=" + groupId + " artifactId"+ artifactId+ " version="+ version+ "]";
+      }
+    }
+);
+  }
+  this.qualifiers=Collections.unmodifiableSet(set);
 }

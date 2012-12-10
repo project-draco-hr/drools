@@ -1,8 +1,30 @@
 {
-  if (kProject != null) {
-    KieContainerImpl kContainer=new KieContainerImpl(kProject,null);
+  if (classpathKContainer != null) {
+    KieServices ks=KieServices.Factory.get();
+    if (!gavs.isEmpty()) {
+      for (      GAV gav : gavs.keySet().toArray(new GAV[gavs.size()])) {
+        KieContainer kContainer=ks.getKieContainer(gav);
+        if (kContainer == null) {
+          log.error("Unable to retrieve KieContainer for GAV {}",gav.toString());
+        }
+ else {
+          log.debug("KieContainer retrieved for GAV {}",gav.toString());
+        }
+        gavs.put(gav,kContainer);
+      }
+    }
     if (kBaseNames != null) {
       for (      KieCDIEntry entry : kBaseNames) {
+        GAV gav=entry.getkGAV();
+        KieContainerImpl kieContainer=classpathKContainer;
+        if (gav != null) {
+          kieContainer=(KieContainerImpl)gavs.get(gav);
+          if (kieContainer == null) {
+            log.error("Unable to create KBase({}), could not retrieve KieContainer for GAV {}",entry.getName(),gav.toString());
+            continue;
+          }
+        }
+        KieProject kProject=kieContainer.getKieProject();
         String kBaseQName=entry.getName();
         KieBaseModel kBaseModel=kProject.getKieBaseModel(kBaseQName);
         if (kBaseModel == null) {
@@ -22,10 +44,10 @@
             log.error("KieBaseModule {} overrides default annotation, but it was not able to find it {}\n{}",new String[]{kBaseQName,kBaseModel.getScope(),e.getMessage()});
           }
         }
-        KBaseBean bean=new KBaseBean(kBaseModel,kContainer,entry.getScope());
+        KBaseBean bean=new KBaseBean(kBaseModel,kieContainer,entry.getScope());
         if (log.isDebugEnabled()) {
           InternalKieModule kModule=(InternalKieModule)kProject.getKieModuleForKBase(kBaseQName);
-          log.debug("Added Bean for @KBase({})",kBaseQName,kModule.getFile());
+          log.debug("Added Bean for @KBase({})",kBaseQName,kModule);
         }
         abd.addBean(bean);
       }
@@ -33,6 +55,16 @@
     kBaseNames=null;
     if (kSessionNames != null) {
       for (      KieCDIEntry entry : kSessionNames) {
+        GAV gav=entry.getkGAV();
+        KieContainerImpl kieContainer=classpathKContainer;
+        if (gav != null) {
+          kieContainer=(KieContainerImpl)gavs.get(gav);
+          if (kieContainer == null) {
+            log.error("Unable to create KSession({}), could not retrieve KieContainer for GAV {}",entry.getName(),gav.toString());
+            continue;
+          }
+        }
+        KieProject kProject=kieContainer.getKieProject();
         String kSessionName=entry.getName();
         KieSessionModel kSessionModel=kProject.getKieSessionModel(kSessionName);
         if (kSessionModel == null) {
@@ -55,14 +87,14 @@
         if (KieSessionType.STATELESS.equals(kSessionModel.getType())) {
           if (log.isDebugEnabled()) {
             InternalKieModule kModule=(InternalKieModule)kProject.getKieModuleForKBase(((KieSessionModelImpl)kSessionModel).getKieBaseModel().getName());
-            log.debug("Added Bean for Stateless @KSession({}) from: {}",kSessionName,kModule.getFile());
+            log.debug("Added Bean for Stateless @KSession({}) from: {}",kSessionName,kModule);
           }
-          abd.addBean(new StatelessKSessionBean(kSessionModel,kContainer,entry.getScope()));
+          abd.addBean(new StatelessKSessionBean(kSessionModel,kieContainer,entry.getScope()));
         }
  else {
           InternalKieModule kModule=(InternalKieModule)kProject.getKieModuleForKBase(((KieSessionModelImpl)kSessionModel).getKieBaseModel().getName());
-          log.debug("Added Bean for Stateful @KSession({})  from: {}",kSessionName,kModule.getFile());
-          abd.addBean(new StatefulKSessionBean(kSessionModel,kContainer,entry.getScope()));
+          log.debug("Added Bean for Stateful @KSession({})  from: {}",kSessionName,kModule);
+          abd.addBean(new StatefulKSessionBean(kSessionModel,kieContainer,entry.getScope()));
         }
       }
     }
