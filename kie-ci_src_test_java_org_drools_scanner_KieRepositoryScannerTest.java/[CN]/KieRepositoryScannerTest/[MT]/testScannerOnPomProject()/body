@@ -1,20 +1,19 @@
 {
   KieServices ks=KieServices.Factory.get();
-  KieFactory kf=KieFactory.Factory.get();
-  GAV gav1=kf.newGav("org.kie","scanner-test","1.0");
-  GAV gav2=kf.newGav("org.kie","scanner-test","2.0");
+  GAV gav1=ks.newGav("org.kie","scanner-test","1.0");
+  GAV gav2=ks.newGav("org.kie","scanner-test","2.0");
   MavenRepository repository=getMavenRepository();
   repository.deployPomArtifact("org.kie","scanner-master-test","1.0",createMasterKPom());
   resetFileManager();
-  InternalKieModule kJar1=createKieJarWithClass(ks,kf,gav1,2,7);
+  InternalKieModule kJar1=createKieJarWithClass(ks,gav1,2,7);
   repository.deployArtifact(gav1,kJar1,createKPom(gav1));
-  KieContainer kieContainer=ks.getKieContainer(kf.newGav("org.kie","scanner-master-test","LATEST"));
-  KieSession ksession=kieContainer.getKieSession("KSession1");
+  KieContainer kieContainer=ks.newKieContainer(ks.newGav("org.kie","scanner-master-test","LATEST"));
+  KieSession ksession=kieContainer.newKieSession("KSession1");
   checkKSession(ksession,14);
   KieScanner scanner=ks.newKieScanner(kieContainer);
-  InternalKieModule kJar2=createKieJarWithClass(ks,kf,gav2,3,5);
+  InternalKieModule kJar2=createKieJarWithClass(ks,gav2,3,5);
   repository.deployArtifact(gav2,kJar2,createKPom(gav1));
   scanner.scanNow();
-  KieSession ksession2=kieContainer.getKieSession("KSession1");
+  KieSession ksession2=kieContainer.newKieSession("KSession1");
   checkKSession(ksession2,15);
 }

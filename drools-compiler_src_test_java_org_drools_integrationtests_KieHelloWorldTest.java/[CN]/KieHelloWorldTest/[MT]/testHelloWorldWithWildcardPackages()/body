@@ -2,11 +2,10 @@
   String drl1="package org.drools\n" + "rule R1 when\n" + "   $m : Message( message == \"Hello World\" )\n"+ "then\n"+ "end\n";
   String drl2="package org.drools\n" + "rule R2 when\n" + "   $m : Message( message == \"Hello World\" )\n"+ "then\n"+ "end\n";
   KieServices ks=KieServices.Factory.get();
-  KieFactory kf=KieFactory.Factory.get();
-  GAV gav=kf.newGav("org.kie","hello-world","1.0-SNAPSHOT");
-  KieFileSystem kfs=kf.newKieFileSystem().generateAndWritePomXML(gav).write("src/main/resources/KBase1/org/pkg1/test/r1.drl",drl1).write("src/main/resources/KBase1/org/pkg2/test/r2.drl",drl2).writeKModuleXML(createKieProjectWithPackages(kf,"org.pkg1.*").toXML());
+  GAV gav=ks.newGav("org.kie","hello-world","1.0-SNAPSHOT");
+  KieFileSystem kfs=ks.newKieFileSystem().generateAndWritePomXML(gav).write("src/main/resources/KBase1/org/pkg1/test/r1.drl",drl1).write("src/main/resources/KBase1/org/pkg2/test/r2.drl",drl2).writeKModuleXML(createKieProjectWithPackages(ks,"org.pkg1.*").toXML());
   ks.newKieBuilder(kfs).buildAll();
-  KieSession ksession=ks.getKieContainer(gav).getKieSession("KSession1");
+  KieSession ksession=ks.newKieContainer(gav).newKieSession("KSession1");
   ksession.insert(new Message("Hello World"));
   int count=ksession.fireAllRules();
   assertEquals(1,count);

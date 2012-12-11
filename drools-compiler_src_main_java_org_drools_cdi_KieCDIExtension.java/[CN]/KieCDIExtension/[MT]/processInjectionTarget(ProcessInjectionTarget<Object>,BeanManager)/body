@@ -2,7 +2,7 @@
   if (classpathKContainer == null) {
     init();
   }
-  KieFactory kf=KieFactory.Factory.get();
+  KieServices ks=KieServices.Factory.get();
   if (!pit.getInjectionTarget().getInjectionPoints().isEmpty()) {
     for (    InjectionPoint ip : pit.getInjectionTarget().getInjectionPoints()) {
       KBase kBase=ip.getAnnotated().getAnnotation(KBase.class);
@@ -13,16 +13,16 @@
       KGAV kGAV=ip.getAnnotated().getAnnotation(KGAV.class);
       GAV gav=null;
       if (kGAV != null) {
-        gav=kf.newGav(kGAV.groupId(),kGAV.artifactId(),kGAV.version());
+        gav=ks.newGav(kGAV.groupId(),kGAV.artifactId(),kGAV.version());
         gavs.put(gav,null);
       }
       Named namedAnn=ip.getAnnotated().getAnnotation(Named.class);
       String namedStr=null;
-      KieCDIEntry existingEntry=null;
       if (namedAnn != null) {
         namedStr=namedAnn.value();
       }
       Class<? extends Annotation> scope=ApplicationScoped.class;
+      KieCDIEntry existingEntry=null;
       if (kBase != null) {
         addKBaseInjectionPoint(ip,kBase,namedStr,scope,gav,existingEntry);
         continue;
