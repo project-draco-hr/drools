@@ -1,0 +1,24 @@
+{
+  if (kSessionNames == null) {
+    kSessionNames=new HashMap<KieCDIEntry,KieCDIEntry>();
+  }
+  KieCDIEntry newEntry=new KieCDIEntry(kSession.value(),scope,gav,namedStr);
+  existingEntry=kSessionNames.remove(newEntry);
+  if (existingEntry != null) {
+    existingEntry.addInjectionPoint(ip);
+    kSessionNames.put(existingEntry,existingEntry);
+  }
+  if (namedStr != null) {
+    existingEntry=named.get(namedStr);
+    if (existingEntry == null) {
+      named.put(namedStr,newEntry);
+      kSessionNames.put(newEntry,newEntry);
+    }
+ else {
+      log.error("@Named({}) declaration used ambiguiously existing: {} new: {}",new String[]{namedStr,existingEntry.toString(),newEntry.toString()});
+    }
+  }
+ else {
+    kSessionNames.put(newEntry,newEntry);
+  }
+}

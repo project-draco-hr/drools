@@ -1,0 +1,37 @@
+{
+  GAV gav=entry.getkGAV();
+  KieContainerImpl kieContainer=classpathKContainer;
+  if (gav != null) {
+    kieContainer=(KieContainerImpl)gavs.get(gav);
+    if (kieContainer == null) {
+      log.error("Unable to create KBase({}), could not retrieve KieContainer for GAV {}",entry.getKieTypeName(),gav.toString());
+      return;
+    }
+  }
+  KieProject kProject=kieContainer.getKieProject();
+  String kBaseQName=entry.getKieTypeName();
+  KieBaseModel kBaseModel=kProject.getKieBaseModel(kBaseQName);
+  if (kBaseModel == null) {
+    log.error("Annotation @KBase({}) found, but no KieBaseModel exist.\nEither the required kproject.xml does not exist, was corrupted, or mising the KieBase entry",kBaseQName);
+    return;
+  }
+  if (!kBaseModel.getScope().trim().equals(entry.getScope().getClass().getName())) {
+    try {
+      if (kBaseModel.getScope().indexOf('.') >= 0) {
+        entry.setScope((Class<? extends Annotation>)Class.forName(kBaseModel.getScope()));
+      }
+ else {
+        entry.setScope((Class<? extends Annotation>)Class.forName("javax.enterprise.context." + kBaseModel.getScope()));
+      }
+    }
+ catch (    ClassNotFoundException e) {
+      log.error("KieBaseModule {} overrides default annotation, but it was not able to find it {}\n{}",new String[]{kBaseQName,kBaseModel.getScope(),e.getMessage()});
+    }
+  }
+  KBaseBean bean=new KBaseBean(kBaseModel,kieContainer,entry.getScope(),entry.getNamed(),entry.getInjectionPoints());
+  if (log.isDebugEnabled()) {
+    InternalKieModule kModule=(InternalKieModule)kProject.getKieModuleForKBase(kBaseQName);
+    log.debug("Added Bean for @KBase({})",kBaseQName,kModule);
+  }
+  abd.addBean(bean);
+}

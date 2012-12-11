@@ -5,29 +5,30 @@
   KieFactory kf=KieFactory.Factory.get();
   if (!pit.getInjectionTarget().getInjectionPoints().isEmpty()) {
     for (    InjectionPoint ip : pit.getInjectionTarget().getInjectionPoints()) {
+      KBase kBase=ip.getAnnotated().getAnnotation(KBase.class);
+      KSession kSession=ip.getAnnotated().getAnnotation(KSession.class);
+      if (kBase == null && kSession == null) {
+        continue;
+      }
       KGAV kGAV=ip.getAnnotated().getAnnotation(KGAV.class);
       GAV gav=null;
       if (kGAV != null) {
         gav=kf.newGav(kGAV.groupId(),kGAV.artifactId(),kGAV.version());
         gavs.put(gav,null);
       }
-      KBase kBase=ip.getAnnotated().getAnnotation(KBase.class);
+      Named namedAnn=ip.getAnnotated().getAnnotation(Named.class);
+      String namedStr=null;
+      KieCDIEntry existingEntry=null;
+      if (namedAnn != null) {
+        namedStr=namedAnn.value();
+      }
+      Class<? extends Annotation> scope=ApplicationScoped.class;
       if (kBase != null) {
-        Class<? extends Annotation> scope=ApplicationScoped.class;
-        if (kBaseNames == null) {
-          kBaseNames=new HashSet<KieCDIEntry>();
-        }
-        kBaseNames.add(new KieCDIEntry(kBase.value(),scope,gav));
+        addKBaseInjectionPoint(ip,kBase,namedStr,scope,gav,existingEntry);
         continue;
       }
-      KSession kSession=ip.getAnnotated().getAnnotation(KSession.class);
-      if (kSession != null) {
-        Class<? extends Annotation> scope=ApplicationScoped.class;
-        if (kSessionNames == null) {
-          kSessionNames=new HashSet<KieCDIEntry>();
-        }
-        kSessionNames.add(new KieCDIEntry(kSession.value(),scope,gav));
-        continue;
+ else       if (kSession != null) {
+        addKSessionInjectionPoint(ip,kSession,namedStr,scope,gav,existingEntry);
       }
     }
   }

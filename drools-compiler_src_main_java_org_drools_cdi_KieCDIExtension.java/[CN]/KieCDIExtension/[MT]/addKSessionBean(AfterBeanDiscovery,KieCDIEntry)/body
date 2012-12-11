@@ -1,0 +1,43 @@
+{
+  GAV gav=entry.getkGAV();
+  KieContainerImpl kieContainer=classpathKContainer;
+  if (gav != null) {
+    kieContainer=(KieContainerImpl)gavs.get(gav);
+    if (kieContainer == null) {
+      log.error("Unable to create KSession({}), could not retrieve KieContainer for GAV {}",entry.getKieTypeName(),gav.toString());
+      return;
+    }
+  }
+  KieProject kProject=kieContainer.getKieProject();
+  String kSessionName=entry.getKieTypeName();
+  KieSessionModel kSessionModel=kProject.getKieSessionModel(kSessionName);
+  if (kSessionModel == null) {
+    log.error("Annotation @KSession({}) found, but no KieSessioneModel exist.\nEither the required kproject.xml does not exist, was corrupted, or mising the KieBase entry",kSessionName);
+    return;
+  }
+  if (!kSessionModel.getScope().trim().equals(entry.getScope().getClass().getName())) {
+    try {
+      if (kSessionModel.getScope().indexOf('.') >= 0) {
+        entry.setScope((Class<? extends Annotation>)Class.forName(kSessionModel.getScope()));
+      }
+ else {
+        entry.setScope((Class<? extends Annotation>)Class.forName("javax.enterprise.context." + kSessionModel.getScope()));
+      }
+    }
+ catch (    ClassNotFoundException e) {
+      log.error("KieBaseModule {} overrides default annotation, but it was not able to find it {}\n{}",new String[]{kSessionName,kSessionModel.getScope(),e.getMessage()});
+    }
+  }
+  if (KieSessionType.STATELESS.equals(kSessionModel.getType())) {
+    if (log.isDebugEnabled()) {
+      InternalKieModule kModule=(InternalKieModule)kProject.getKieModuleForKBase(((KieSessionModelImpl)kSessionModel).getKieBaseModel().getName());
+      log.debug("Added Bean for Stateless @KSession({}) from: {}",kSessionName,kModule);
+    }
+    abd.addBean(new StatelessKSessionBean(kSessionModel,kieContainer,entry.getScope(),entry.getNamed(),entry.getInjectionPoints()));
+  }
+ else {
+    InternalKieModule kModule=(InternalKieModule)kProject.getKieModuleForKBase(((KieSessionModelImpl)kSessionModel).getKieBaseModel().getName());
+    log.debug("Added Bean for Stateful @KSession({})  from: {}",kSessionName,kModule);
+    abd.addBean(new StatefulKSessionBean(kSessionModel,kieContainer,entry.getScope(),entry.getNamed(),entry.getInjectionPoints()));
+  }
+}

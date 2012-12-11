@@ -1,0 +1,58 @@
+{
+  this.kSessionModel=kieSessionModelModel;
+  this.kContainer=kContainer;
+  this.scope=scope;
+  this.named=named;
+  this.injectionPoints=injectionPoints;
+  Set<Annotation> set=new HashSet<Annotation>();
+  set.add(defaultAnnLit);
+  set.add(anyAnnLit);
+  set.add(new KSession(){
+    public Class<? extends Annotation> annotationType(){
+      return KSession.class;
+    }
+    public String value(){
+      return kSessionModel.getName();
+    }
+  }
+);
+  if (named != null) {
+    set.add(new Named(){
+      public Class<? extends Annotation> annotationType(){
+        return Named.class;
+      }
+      public String value(){
+        return named;
+      }
+      public String toString(){
+        return "Named[" + named + "]";
+      }
+    }
+);
+  }
+  ;
+  if (kContainer.getGAV() != null) {
+    final String groupId=kContainer.getGAV().getGroupId();
+    final String artifactId=kContainer.getGAV().getArtifactId();
+    final String version=kContainer.getGAV().getVersion();
+    set.add(new KGAV(){
+      public Class<? extends Annotation> annotationType(){
+        return KGAV.class;
+      }
+      @Override public String groupId(){
+        return groupId;
+      }
+      @Override public String artifactId(){
+        return artifactId;
+      }
+      @Override public String version(){
+        return version;
+      }
+      public String toString(){
+        return "KGAV[groupId=" + groupId + " artifactId"+ artifactId+ " version="+ version+ "]";
+      }
+    }
+);
+  }
+  this.qualifiers=Collections.unmodifiableSet(set);
+}
