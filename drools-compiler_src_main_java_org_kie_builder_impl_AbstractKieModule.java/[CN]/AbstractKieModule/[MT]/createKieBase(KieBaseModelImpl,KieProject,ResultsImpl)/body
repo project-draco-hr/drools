@@ -1,0 +1,15 @@
+{
+  CompositeClassLoader cl=indexedParts.getClassLoader();
+  InternalKieModule kModule=indexedParts.getKieModuleForKBase(kBaseModel.getName());
+  Collection<KnowledgePackage> pkgs=kModule.getKnowledgePackageCache().get(kBaseModel.getName());
+  if (pkgs == null) {
+    KnowledgeBuilder kbuilder=buildKnowledgePackages(kBaseModel,indexedParts,messages);
+    if (kbuilder.hasErrors()) {
+      return null;
+    }
+  }
+  pkgs=kModule.getKnowledgePackageCache().get(kBaseModel.getName());
+  InternalKnowledgeBase kBase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase(getKnowledgeBaseConfiguration(kBaseModel,cl));
+  kBase.addKnowledgePackages(pkgs);
+  return kBase;
+}
