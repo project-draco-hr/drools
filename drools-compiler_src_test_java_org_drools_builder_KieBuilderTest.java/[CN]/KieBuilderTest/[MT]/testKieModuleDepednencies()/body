@@ -1,34 +1,34 @@
 {
   KieServices ks=KieServices.Factory.get();
   String namespace1="org.kie.test1";
-  GAV gav1=KieServices.Factory.get().newGav(namespace1,"memory","1.0-SNAPSHOT");
+  ReleaseId releaseId1=KieServices.Factory.get().newReleaseId(namespace1,"memory","1.0-SNAPSHOT");
   KieModuleModel kProj1=createKieProject(namespace1);
   KieFileSystem kfs1=KieServices.Factory.get().newKieFileSystem();
-  generateAll(kfs1,namespace1,gav1,kProj1);
+  generateAll(kfs1,namespace1,releaseId1,kProj1);
   KieBuilder kb1=createKieBuilder(kfs1);
   kb1.buildAll();
   if (kb1.getResults().hasMessages(Level.ERROR)) {
     fail("Unable to build KieJar\n" + kb1.getResults().toString());
   }
   KieRepository kr=ks.getRepository();
-  KieModule kModule1=kr.getKieModule(gav1);
+  KieModule kModule1=kr.getKieModule(releaseId1);
   assertNotNull(kModule1);
   String namespace2="org.kie.test2";
-  GAV gav2=KieServices.Factory.get().newGav(namespace2,"memory","1.0-SNAPSHOT");
+  ReleaseId releaseId2=KieServices.Factory.get().newReleaseId(namespace2,"memory","1.0-SNAPSHOT");
   KieModuleModel kProj2=createKieProject(namespace2);
   KieBaseModelImpl kieBase2=(KieBaseModelImpl)kProj2.getKieBaseModels().get(namespace2);
   kieBase2.addInclude(namespace1);
   KieFileSystem kfs2=KieServices.Factory.get().newKieFileSystem();
-  generateAll(kfs2,namespace2,gav2,kProj2);
+  generateAll(kfs2,namespace2,releaseId2,kProj2);
   KieBuilder kb2=createKieBuilder(kfs2);
   kb2.setDependencies(kModule1);
   kb2.buildAll();
   if (kb2.getResults().hasMessages(Level.ERROR)) {
     fail("Unable to build KieJar\n" + kb2.getResults().toString());
   }
-  KieModule kModule2=kr.getKieModule(gav2);
+  KieModule kModule2=kr.getKieModule(releaseId2);
   assertNotNull(kModule2);
-  KieContainer kContainer=ks.newKieContainer(gav2);
+  KieContainer kContainer=ks.newKieContainer(releaseId2);
   KieBase kBase=kContainer.getKieBase(namespace2);
   KieSession kSession=kBase.newKieSession();
   List list=new ArrayList();
