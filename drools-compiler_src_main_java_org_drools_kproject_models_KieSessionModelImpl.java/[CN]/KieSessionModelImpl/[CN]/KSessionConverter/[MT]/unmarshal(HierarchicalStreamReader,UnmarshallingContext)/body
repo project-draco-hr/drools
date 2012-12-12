@@ -14,16 +14,23 @@
   }
   readNodes(reader,new AbstractXStreamConverter.NodeReader(){
     public void onNode(    HierarchicalStreamReader reader,    String name,    String value){
-      if ("agendaEventListener".equals(name) || "workingMemoryEventListener".equals(name) || "processEventListener".equals(name)) {
-        ListenerModelImpl listener=readObject(reader,context,ListenerModelImpl.class);
-        listener.setKSession(kSession);
-        listener.setKind(ListenerModel.Kind.fromString(name));
-        kSession.addListenerModel(listener);
+      if ("listeners".equals(name)) {
+        while (reader.hasMoreChildren()) {
+          reader.moveDown();
+          String nodeName=reader.getNodeName();
+          ListenerModelImpl listener=readObject(reader,context,ListenerModelImpl.class);
+          listener.setKSession(kSession);
+          listener.setKind(ListenerModel.Kind.fromString(nodeName));
+          kSession.addListenerModel(listener);
+          reader.moveUp();
+        }
       }
- else       if ("workItemHandler".equals(name)) {
-        WorkItemHandlerModelImpl wih=readObject(reader,context,WorkItemHandlerModelImpl.class);
-        wih.setKSession(kSession);
-        kSession.addWorkItemHandelerModel(wih);
+ else       if ("workItemHandlers".equals(name)) {
+        List<WorkItemHandlerModelImpl> wihs=readObjectList(reader,context,WorkItemHandlerModelImpl.class);
+        for (        WorkItemHandlerModelImpl wih : wihs) {
+          wih.setKSession(kSession);
+          kSession.addWorkItemHandelerModel(wih);
+        }
       }
     }
   }
