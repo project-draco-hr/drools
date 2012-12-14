@@ -1,0 +1,17 @@
+{
+  fileManager=new FileManager();
+  fileManager.setUp();
+  origCl=Thread.currentThread().getContextClassLoader();
+  MemoryFileSystem mfs=new MemoryFileSystem();
+  mfs.write("META-INF/beans.xml",AbstractKnowledgeTest.generateBeansXML().getBytes());
+  mfs.writeAsJar(CDITestRunner.fileManager.getRootDirectory(),"jar1");
+  java.io.File file1=CDITestRunner.fileManager.newFile("jar1.jar");
+  URLClassLoader urlClassLoader;
+  try {
+    urlClassLoader=new URLClassLoader(new URL[]{file1.toURI().toURL()},Thread.currentThread().getContextClassLoader());
+    Thread.currentThread().setContextClassLoader(urlClassLoader);
+  }
+ catch (  MalformedURLException e) {
+    fail(e.getMessage());
+  }
+}
