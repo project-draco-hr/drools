@@ -1,0 +1,17 @@
+{
+  String drl1="package org.drools\n" + "rule R1 when\n" + "   $m : Message()\n"+ "then\n"+ "end\n";
+  String drl2="package org.drools\n" + "rule R2_2 when\n" + "   $m : Message( message == \"Hello World\" )\n"+ "then\n"+ "end\n";
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem().write("src/main/resources/r1.drl",drl1).write("src/main/resources/r2.drl",drl2);
+  KieBuilder kieBuilder=ks.newKieBuilder(kfs).buildAll();
+  KieContainer kieContainer=ks.newKieContainer(ks.getRepository().getDefaultReleaseId());
+  KieSession ksession=kieContainer.newKieSession();
+  ksession.insert(new Message("Hello World"));
+  assertEquals(2,ksession.fireAllRules());
+  kfs.delete("src/main/resources/r1.drl");
+  ((InternalKieBuilder)kieBuilder).createFileSet("src/main/resources/r1.drl").build();
+  kieContainer.updateToVersion(ks.getRepository().getDefaultReleaseId());
+  ksession=kieContainer.newKieSession();
+  ksession.insert(new Message("Hello World"));
+  assertEquals(1,ksession.fireAllRules());
+}

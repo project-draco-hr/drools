@@ -1,5 +1,5 @@
 {
-  CompositeClassLoader cl=indexedParts.getClassLoader();
+  CompositeClassLoader cl=kieProject.getClassLoader();
   PackageBuilderConfiguration pconf=new PackageBuilderConfiguration(null,cl.clone());
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(pconf);
   CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
@@ -9,15 +9,15 @@
       if (StringUtils.isEmpty(include)) {
         continue;
       }
-      InternalKieModule includeModule=indexedParts.getKieModuleForKBase(include);
+      InternalKieModule includeModule=kieProject.getKieModuleForKBase(include);
       if (includeModule == null) {
         log.error("Unable to build KieBase, could not find include: " + include);
         return null;
       }
-      addFiles(ckbuilder,indexedParts.getKieBaseModel(include),includeModule);
+      addFiles(ckbuilder,kieProject.getKieBaseModel(include),includeModule);
     }
   }
-  InternalKieModule kModule=indexedParts.getKieModuleForKBase(kBaseModel.getName());
+  InternalKieModule kModule=kieProject.getKieModuleForKBase(kBaseModel.getName());
   addFiles(ckbuilder,kBaseModel,kModule);
   ckbuilder.build();
   if (kbuilder.hasErrors()) {
@@ -26,9 +26,7 @@
     }
     log.error("Unable to build KieBaseModel:" + kBaseModel.getName() + "\n"+ kbuilder.getErrors().toString());
   }
- else {
-    kModule.getKnowledgePackageCache().put(kBaseModel.getName(),kbuilder.getKnowledgePackages());
-  }
-  kModule.getKnowledgeResultsCache().put(kBaseModel.getName(),messages);
+  kModule.cacheKnowledgeBuilderForKieBase(kBaseModel.getName(),kbuilder);
+  kModule.cacheResultsForKieBase(kBaseModel.getName(),messages);
   return kbuilder;
 }

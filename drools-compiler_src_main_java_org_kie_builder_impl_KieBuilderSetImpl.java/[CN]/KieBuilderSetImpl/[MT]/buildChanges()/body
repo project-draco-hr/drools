@@ -1,0 +1,31 @@
+{
+  IncrementalResultsImpl results=new IncrementalResultsImpl();
+  InternalKieModule kieModule=(InternalKieModule)kieBuilder.getKieModuleIgnoringErrors();
+  for (  KieBaseModel kBaseModel : kieModule.getKieModuleModel().getKieBaseModels().values()) {
+    KnowledgeBuilder kBuilder=kieModule.getKnowledgeBuilderForKieBase(kBaseModel.getName());
+    for (    KnowledgeBuilderError error : kBuilder.getErrors()) {
+      results.removeMessage(error);
+    }
+    CompositeKnowledgeBuilder ckbuilder=kBuilder.batch();
+    PackageBuilder pkgBuilder=((KnowledgeBuilderImpl)kBuilder).getPackageBuilder();
+    boolean modified=false;
+    for (    String file : files) {
+      String resourceName=file.startsWith(KieBuilderImpl.RESOURCES_ROOT) ? file.substring(KieBuilderImpl.RESOURCES_ROOT.length()) : file;
+      modified=pkgBuilder.removeObjectsGeneratedFromResource(new DummyResource(resourceName)) || modified;
+      modified=addResource(ckbuilder,kBaseModel,kieModule,resourceName) || modified;
+    }
+    if (modified) {
+      ckbuilder.build();
+      if (kBuilder.hasErrors()) {
+        for (        KnowledgeBuilderError error : kBuilder.getErrors()) {
+          results.addMessage(error);
+        }
+        kBuilder.undo();
+      }
+ else {
+        KieServices.Factory.get().getRepository().addKieModule(kieModule);
+      }
+    }
+  }
+  return results;
+}
