@@ -1,0 +1,13 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId dependency=ks.newReleaseId("org.drools","drools-core","5.5.0.Final");
+  ReleaseId releaseId=ks.newReleaseId("org.kie","metadata-test","1.0-SNAPSHOT");
+  InternalKieModule kieModule=createKieJarWithClass(ks,releaseId,2,7,dependency);
+  KieModuleMetaData kieModuleMetaData=KieModuleMetaData.Factory.newKieModuleMetaData(kieModule);
+  checkDroolsCoreDep(kieModuleMetaData);
+  Collection<String> testClasses=kieModuleMetaData.getClasses("org.kie.test");
+  assertEquals(1,testClasses.size());
+  assertEquals("Bean",testClasses.iterator().next());
+  Class<?> beanClass=kieModuleMetaData.getClass("org.kie.test","Bean");
+  assertNotNull(beanClass.getMethod("getValue"));
+}

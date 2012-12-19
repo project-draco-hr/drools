@@ -1,14 +1,28 @@
 {
+  ModelSource modelSource=new ModelSource(){
+    @Override public InputStream getInputStream() throws IOException {
+      return mavenProjectStream;
+    }
+    @Override public String getLocation(){
+      return "";
+    }
+  }
+;
   ClassLoader originalCl=Thread.currentThread().getContextClassLoader();
   try {
     Thread.currentThread().setContextClassLoader(this.plexusContainer.getContainerRealm());
     ProjectBuilder projectBuilder=lookup(ProjectBuilder.class);
-    return projectBuilder.build(Arrays.asList(mavenProject),recursive,getProjectBuildingRequest());
+    return projectBuilder.build(modelSource,getProjectBuildingRequest()).getProject();
   }
  catch (  ComponentLookupException e) {
     throw new MavenEmbedderException(e.getMessage(),e);
   }
  finally {
     Thread.currentThread().setContextClassLoader(originalCl);
+    try {
+      mavenProjectStream.close();
+    }
+ catch (    IOException e) {
+    }
   }
 }

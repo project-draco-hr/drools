@@ -1,5 +1,6 @@
 {
   if (classLoader == null) {
+    classLoader=new CompositeClassLoader();
     URL[] urls=new URL[jars.size()];
     int i=0;
     for (    File jar : jars.values()) {
@@ -10,7 +11,13 @@
         throw new RuntimeException(e);
       }
     }
-    classLoader=new URLClassLoader(urls);
+    classLoader.addClassLoader(new URLClassLoader(urls));
+    if (kieModule != null) {
+      Map<String,byte[]> classes=kieModule.getClassesMap();
+      if (!classes.isEmpty()) {
+        classLoader.addClassLoaderToEnd(new ClassUtils.MapClassLoader(classes,classLoader));
+      }
+    }
   }
   return classLoader;
 }
