@@ -1,0 +1,17 @@
+{
+  KieModuleModel kieModuleModel=kModule.getKieModuleModel();
+  for (  String kieBaseNames : kieModuleModel.getKieBaseModels().keySet()) {
+    KnowledgeBuilderImpl kBuilder=(KnowledgeBuilderImpl)kModule.getKnowledgeBuilderForKieBase(kieBaseNames);
+    Map<String,PackageRegistry> pkgRegistryMap=kBuilder.getPackageBuilder().getPackageRegistry();
+    for (    KiePackage kPkg : kBuilder.getKnowledgePackages()) {
+      PackageRegistry pkgRegistry=pkgRegistryMap.get(kPkg.getName());
+      JavaDialectRuntimeData runtimeData=(JavaDialectRuntimeData)pkgRegistry.getDialectRuntimeRegistry().getDialectData("java");
+      for (      FactType factType : kPkg.getFactTypes()) {
+        String className=factType.getName();
+        String internalName=className.replace('.','/') + ".class";
+        byte[] bytes=runtimeData.getStore().get(internalName);
+        trgMfs.write(internalName,bytes,true);
+      }
+    }
+  }
+}

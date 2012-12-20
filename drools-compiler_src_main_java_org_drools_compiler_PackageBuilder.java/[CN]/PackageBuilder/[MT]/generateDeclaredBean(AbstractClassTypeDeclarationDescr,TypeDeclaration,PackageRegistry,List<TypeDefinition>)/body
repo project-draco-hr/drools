@@ -68,7 +68,8 @@ break;
 def.addField(fld);
 }
 }
-type.setNovel(isNovelClass(typeDescr));
+Class<?> existingDeclarationClass=getExistingDeclarationClass(typeDescr);
+type.setNovel(existingDeclarationClass == null);
 type.setTypeClassDef(def);
 if (!type.isNovel()) {
 TypeDeclaration previousTypeDeclaration=this.pkgRegistryMap.get(typeDescr.getNamespace()).getPackage().getTypeDeclaration(typeDescr.getTypeName());
@@ -80,7 +81,7 @@ type.setNature(TypeDeclaration.Nature.DEFINITION);
 type.setNature(TypeDeclaration.Nature.DECLARATION);
 }
 if (previousTypeDeclaration == null) {
-if (!type.getTypeClassDef().getFields().isEmpty()) {
+if (!GeneratedFact.class.isAssignableFrom(existingDeclarationClass) && !type.getTypeClassDef().getFields().isEmpty()) {
 type.setValid(false);
 this.results.add(new TypeDeclarationError(typeDescr,"New declaration of " + typeDescr.getType().getFullName() + " can't declare new fields"));
 }
