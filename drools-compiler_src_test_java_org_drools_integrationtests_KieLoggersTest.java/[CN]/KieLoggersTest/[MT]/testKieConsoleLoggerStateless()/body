@@ -1,0 +1,11 @@
+{
+  String drl="package org.drools.integrationtests\n" + "import org.drools.Message;\n" + "rule \"Hello World\"\n"+ "    when\n"+ "        m : Message( myMessage : message )\n"+ "    then\n"+ "end";
+  Resource dt=ResourceFactory.newByteArrayResource(drl.getBytes()).setTargetPath("org/drools/integrationtests/hello.drl");
+  StatelessKieSession ksession=getStatelessKieSession(dt);
+  KieRuntimeLogger logger=KieServices.Factory.get().getLoggers().newConsoleLogger(ksession);
+  AgendaEventListener ael=mock(AgendaEventListener.class);
+  ksession.addEventListener(ael);
+  ksession.execute(new Message("Hello World"));
+  verify(ael).afterMatchFired(any(AfterMatchFiredEvent.class));
+  logger.close();
+}
