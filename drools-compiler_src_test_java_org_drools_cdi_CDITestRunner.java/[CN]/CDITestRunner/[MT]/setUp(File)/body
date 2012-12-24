@@ -1,0 +1,24 @@
+{
+  fileManager=new FileManager();
+  fileManager.setUp();
+  origCl=Thread.currentThread().getContextClassLoader();
+  MemoryFileSystem mfs=new MemoryFileSystem();
+  mfs.write("META-INF/beans.xml",AbstractKnowledgeTest.generateBeansXML().getBytes());
+  mfs.writeAsJar(CDITestRunner.fileManager.getRootDirectory(),"emptyCDIJar");
+  File file1=CDITestRunner.fileManager.newFile("emptyCDIJar.jar");
+  URLClassLoader urlClassLoader;
+  try {
+    List<URL> urls=new ArrayList<URL>();
+    urls.add(file1.toURI().toURL());
+    if (files != null && files.length > 0) {
+      for (      File file : files) {
+        urls.add(file.toURI().toURL());
+      }
+    }
+    urlClassLoader=new URLClassLoader(urls.toArray(new URL[urls.size()]),Thread.currentThread().getContextClassLoader());
+    Thread.currentThread().setContextClassLoader(urlClassLoader);
+  }
+ catch (  MalformedURLException e) {
+    fail(e.getMessage());
+  }
+}

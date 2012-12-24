@@ -1,16 +1,22 @@
 {
-  ReleaseId releaseId=entry.getkGAV();
+  ReleaseId releaseId=entry.getReleaseId();
   KieContainerImpl kieContainer=classpathKContainer;
   if (releaseId != null) {
     kieContainer=(KieContainerImpl)gavs.get(releaseId);
     if (kieContainer == null) {
-      log.error("Unable to create KSession({}), could not retrieve KieContainer for ReleaseId {}",entry.getKieTypeName(),releaseId.toString());
+      log.error("Unable to create KSession({}), could not retrieve KieContainer for ReleaseId {}",entry.getValue(),releaseId.toString());
       return;
     }
   }
   KieProject kProject=kieContainer.getKieProject();
-  String kSessionName=entry.getKieTypeName();
-  KieSessionModel kSessionModel=kProject.getKieSessionModel(kSessionName);
+  String kSessionName=entry.getValue();
+  KieSessionModel kSessionModel=null;
+  if (StringUtils.isEmpty(kSessionName)) {
+    kSessionModel=(entry.getType() == KieSession.class) ? kProject.getDefaultKieSession() : kProject.getDefaultStatelessKieSession();
+  }
+ else {
+    kSessionModel=kProject.getKieSessionModel(kSessionName);
+  }
   if (kSessionModel == null) {
     log.error("Annotation @KSession({}) found, but no KieSessioneModel exist.\nEither the required kproject.xml does not exist, was corrupted, or mising the KieBase entry",kSessionName);
     return;
@@ -33,11 +39,11 @@
       InternalKieModule kModule=kProject.getKieModuleForKBase(((KieSessionModelImpl)kSessionModel).getKieBaseModel().getName());
       log.debug("Added Bean for Stateless @KSession({}) from: {}",kSessionName,kModule);
     }
-    abd.addBean(new StatelessKSessionBean(kSessionModel,kieContainer,entry.getScope(),entry.getNamed(),entry.getInjectionPoints()));
+    abd.addBean(new StatelessKSessionBean(kSessionModel,kieContainer,entry.getKReleaseId(),entry.getScope(),entry.getName(),entry.getInjectionPoints()));
   }
  else {
     InternalKieModule kModule=kProject.getKieModuleForKBase(((KieSessionModelImpl)kSessionModel).getKieBaseModel().getName());
     log.debug("Added Bean for Stateful @KSession({})  from: {}",kSessionName,kModule);
-    abd.addBean(new StatefulKSessionBean(kSessionModel,kieContainer,entry.getScope(),entry.getNamed(),entry.getInjectionPoints()));
+    abd.addBean(new StatefulKSessionBean(kSessionModel,kieContainer,entry.getKReleaseId(),entry.getScope(),entry.getName(),entry.getInjectionPoints()));
   }
 }

@@ -5,28 +5,40 @@
   KieServices ks=KieServices.Factory.get();
   if (!pit.getInjectionTarget().getInjectionPoints().isEmpty()) {
     for (    InjectionPoint ip : pit.getInjectionTarget().getInjectionPoints()) {
-      KBase kBase=ip.getAnnotated().getAnnotation(KBase.class);
-      KSession kSession=ip.getAnnotated().getAnnotation(KSession.class);
-      if (kBase == null && kSession == null) {
+      boolean kBaseExists=false;
+      boolean kSessionExists=false;
+      boolean kContainerExists=false;
+      KBase kBase=null;
+      KSession kSession=null;
+      if (ip.getType() instanceof Class && (KieSession.class.isAssignableFrom((Class)ip.getType()) || StatelessKieSession.class.isAssignableFrom((Class)ip.getType()))) {
+        kSession=ip.getAnnotated().getAnnotation(KSession.class);
+        kSessionExists=true;
+      }
+ else       if (ip.getType() instanceof Class && KieBase.class.isAssignableFrom((Class)ip.getType())) {
+        kBaseExists=true;
+        kBase=ip.getAnnotated().getAnnotation(KBase.class);
+      }
+ else       if (ip.getType() instanceof Class && KieContainer.class.isAssignableFrom((Class)ip.getType())) {
+        kContainerExists=true;
+      }
+      if (!kSessionExists && !kBaseExists && !kContainerExists) {
         continue;
       }
-      KReleaseId KReleaseId=ip.getAnnotated().getAnnotation(KReleaseId.class);
+      KReleaseId kReleaseId=ip.getAnnotated().getAnnotation(KReleaseId.class);
       ReleaseId releaseId=null;
-      if (KReleaseId != null) {
-        releaseId=ks.newReleaseId(KReleaseId.groupId(),KReleaseId.artifactId(),KReleaseId.version());
+      if (kReleaseId != null) {
+        releaseId=ks.newReleaseId(kReleaseId.groupId(),kReleaseId.artifactId(),kReleaseId.version());
         gavs.put(releaseId,null);
       }
-      Named namedAnn=ip.getAnnotated().getAnnotation(Named.class);
-      String namedStr=null;
-      if (namedAnn != null) {
-        namedStr=namedAnn.value();
-      }
       Class<? extends Annotation> scope=ApplicationScoped.class;
-      if (kBase != null) {
-        addKBaseInjectionPoint(ip,kBase,namedStr,scope,releaseId);
+      if (kBaseExists) {
+        addKBaseInjectionPoint(ip,kBase,scope,releaseId,kReleaseId);
       }
- else       if (kSession != null) {
-        addKSessionInjectionPoint(ip,kSession,namedStr,scope,releaseId);
+ else       if (kSessionExists) {
+        addKSessionInjectionPoint(ip,kSession,scope,releaseId,kReleaseId);
+      }
+ else       if (kContainerExists) {
+        addKContainerInjectionPoint(ip,null,scope,releaseId,kReleaseId);
       }
     }
   }

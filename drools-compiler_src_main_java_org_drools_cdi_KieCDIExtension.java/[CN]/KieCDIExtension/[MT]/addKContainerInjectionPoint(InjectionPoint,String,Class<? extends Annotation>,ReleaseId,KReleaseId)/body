@@ -1,0 +1,24 @@
+{
+  if (kContainerNames == null) {
+    kContainerNames=new HashMap<KieCDIEntry,KieCDIEntry>();
+  }
+  KieCDIEntry newEntry=new KieCDIEntry(null,KieContainer.class,scope,releaseId,kReleaseId,namedStr);
+  KieCDIEntry existingEntry=kContainerNames.remove(newEntry);
+  if (existingEntry != null) {
+    existingEntry.addInjectionPoint(ip);
+    kContainerNames.put(existingEntry,existingEntry);
+  }
+  if (!StringUtils.isEmpty(namedStr)) {
+    existingEntry=named.get(namedStr);
+    if (existingEntry == null) {
+      named.put(namedStr,newEntry);
+      kContainerNames.put(newEntry,newEntry);
+    }
+ else {
+      log.error("name={} declaration used ambiguiously existing: {} new: {}",new String[]{namedStr,existingEntry.toString(),newEntry.toString()});
+    }
+  }
+ else {
+    kContainerNames.put(newEntry,newEntry);
+  }
+}

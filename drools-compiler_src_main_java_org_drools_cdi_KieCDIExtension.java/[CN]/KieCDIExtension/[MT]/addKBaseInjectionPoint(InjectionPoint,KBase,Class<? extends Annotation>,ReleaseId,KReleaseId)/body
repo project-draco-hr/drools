@@ -1,0 +1,25 @@
+{
+  if (kBaseNames == null) {
+    kBaseNames=new HashMap<KieCDIEntry,KieCDIEntry>();
+  }
+  String namedStr=(kBase == null) ? null : kBase.name();
+  KieCDIEntry newEntry=new KieCDIEntry((kBase == null) ? null : kBase.value(),KieBase.class,scope,releaseId,kReleaseId,namedStr);
+  KieCDIEntry existingEntry=kBaseNames.remove(newEntry);
+  if (existingEntry != null) {
+    existingEntry.addInjectionPoint(ip);
+    kBaseNames.put(existingEntry,existingEntry);
+  }
+  if (!StringUtils.isEmpty(namedStr)) {
+    existingEntry=named.get(namedStr);
+    if (existingEntry == null) {
+      named.put(namedStr,newEntry);
+      kBaseNames.put(newEntry,newEntry);
+    }
+ else {
+      log.error("name={} declaration used ambiguiously existing: {} new: {}",new String[]{namedStr,existingEntry.toString(),newEntry.toString()});
+    }
+  }
+ else {
+    kBaseNames.put(newEntry,newEntry);
+  }
+}
