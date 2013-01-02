@@ -1,0 +1,26 @@
+{
+  boolean tupleMemory=true;
+  RightTupleMemory rtm=bm.getRightTupleMemory();
+  ContextEntry[] contextEntry=bm.getContext();
+  BetaConstraints constraints=accNode.getRawConstraints();
+  FastIterator it=accNode.getRightIterator(rtm);
+  for (LeftTuple leftTuple=srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    PropagationContext context=leftTuple.getPropagationContext();
+    constraints.updateFromTuple(contextEntry,wm,leftTuple);
+    RightTuple rightTuple=accNode.getFirstRightTuple(leftTuple,rtm,context,it);
+    LeftTuple childLeftTuple=leftTuple.getFirstChild();
+    if (childLeftTuple != null && rtm.isIndexed() && !it.isFullIterator() && (rightTuple == null || (rightTuple.getMemory() != childLeftTuple.getRightParent().getMemory()))) {
+      while (childLeftTuple != null) {
+        childLeftTuple=deleteLeftChild(trgLeftTuples,childLeftTuple,stagedLeftTuples);
+      }
+    }
+    if (rightTuple != null) {
+      doLeftUpdatesProcessChildren(childLeftTuple,leftTuple,rightTuple,stagedLeftTuples,tupleMemory,contextEntry,constraints,sink,it,trgLeftTuples);
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+  srcLeftTuples.setUpdate(null);
+  constraints.resetTuple(contextEntry);
+}

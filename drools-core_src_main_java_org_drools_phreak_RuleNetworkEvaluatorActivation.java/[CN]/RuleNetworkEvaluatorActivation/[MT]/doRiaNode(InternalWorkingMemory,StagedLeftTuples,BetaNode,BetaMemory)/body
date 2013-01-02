@@ -1,0 +1,28 @@
+{
+  SegmentMemory subSmem=bm.getSubnetworkSegmentMemory();
+  if (betaNode.getLeftTupleSource().getSinkPropagator().size() == 2) {
+    StagedLeftTuples peerTuples=new StagedLeftTuples();
+    SegmentPropagator.processPeers(srcTuples,peerTuples,betaNode);
+    StagedLeftTuples subnetworkStaged=subSmem.getStagedLeftTuples();
+    subnetworkStaged.addAllDeletes(srcTuples.getDeleteFirst());
+    subnetworkStaged.addAllUpdates(srcTuples.getUpdateFirst());
+    subnetworkStaged.addAllInserts(srcTuples.getInsertFirst());
+    srcTuples=peerTuples;
+  }
+  RightInputAdapterNode riaNode=(RightInputAdapterNode)betaNode.getRightInput();
+  RiaNodeMemory riaNodeMemory=(RiaNodeMemory)wm.getNodeMemory((MemoryFactory)betaNode.getRightInput());
+  StagedLeftTuples riaStagedTuples=eval((LeftTupleSink)subSmem.getRootNode(),subSmem.getNodeMemories().getFirst(),riaNodeMemory.getRiaRuleMemory().getSegmentMemories(),subSmem.getPos(),subSmem.getStagedLeftTuples(),null,wm);
+  for (LeftTuple leftTuple=riaStagedTuples.getInsertFirst(); leftTuple != null; leftTuple=leftTuple.getStagedNext()) {
+    InternalFactHandle handle=riaNode.createFactHandle(leftTuple,leftTuple.getPropagationContext(),wm);
+    RightTuple rightTuple=new RightTuple(handle,betaNode);
+    leftTuple.setObject(rightTuple);
+    bm.getStagedRightTuples().addInsert(rightTuple);
+  }
+  for (LeftTuple leftTuple=riaStagedTuples.getDeleteFirst(); leftTuple != null; leftTuple=leftTuple.getStagedNext()) {
+    bm.getStagedRightTuples().addDelete((RightTuple)leftTuple.getObject());
+  }
+  for (LeftTuple leftTuple=riaStagedTuples.getUpdateFirst(); leftTuple != null; leftTuple=leftTuple.getStagedNext()) {
+    bm.getStagedRightTuples().addUpdate((RightTuple)leftTuple.getObject());
+  }
+  return srcTuples;
+}

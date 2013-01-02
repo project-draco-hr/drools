@@ -21,8 +21,12 @@
         while (sinkNode.getNextLeftTupleSinkNode() != betaNode) {
           sinkNode=sinkNode.getNextLeftTupleSinkNode();
         }
-        SegmentMemory subNetworkSegmentMemory=createSegmentMemory((LeftTupleSource)sinkNode,wm);
-        betaMemory.setSubnetworkSegmentMemor(subNetworkSegmentMemory);
+        Memory mem=wm.getNodeMemory((MemoryFactory)sinkNode);
+        SegmentMemory subNetworkSegmentMemory=mem.getSegmentMemory();
+        if (subNetworkSegmentMemory == null) {
+          subNetworkSegmentMemory=createSegmentMemory((LeftTupleSource)sinkNode,wm);
+        }
+        betaMemory.setSubnetworkSegmentMemory(subNetworkSegmentMemory);
       }
       betaMemory.setSegmentMemory(smem);
       betaMemory.setNodePosMaskBit(nodePosMask);
@@ -55,6 +59,15 @@
         tupleSource=(LeftTupleSource)firstSink;
       }
  else {
+        if (firstSink.getType() == NodeTypeEnums.RightInputAdaterNode) {
+          RiaNodeMemory memory=(RiaNodeMemory)wm.getNodeMemory((MemoryFactory)firstSink);
+          smem.getNodeMemories().add(memory.getRiaRuleMemory());
+        }
+ else         if (NodeTypeEnums.isTerminalNode(firstSink)) {
+          RuleMemory rmem=(RuleMemory)wm.getNodeMemory((MemoryFactory)firstSink);
+          smem.getNodeMemories().add(rmem);
+        }
+        smem.setTipNode(firstSink);
         break;
       }
     }
@@ -62,11 +75,11 @@
       tupleSource=(LeftTupleSource)secondSink;
     }
  else {
+      smem.setTipNode(tupleSource);
       break;
     }
   }
   smem.setAllLinkedMaskTest(allLinkedTestMask);
-  smem.setTipNode(tupleSource);
   LeftTupleSource parent=segmentRoot;
   int ruleSegmentPosMask=1;
   int counter=0;

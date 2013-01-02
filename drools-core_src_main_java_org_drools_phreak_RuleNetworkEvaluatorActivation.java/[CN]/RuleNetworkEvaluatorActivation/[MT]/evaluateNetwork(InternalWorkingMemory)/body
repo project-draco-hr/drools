@@ -17,9 +17,17 @@
     node=smem.getRootNode();
   }
  else {
-    node=(LeftTupleSource)liaNode.getSinkPropagator().getFirstLeftTupleSink();
+    LeftTupleSinkPropagator sink=liaNode.getSinkPropagator();
+    LeftTupleSinkNode firstSink=(LeftTupleSinkNode)sink.getFirstLeftTupleSink();
+    LeftTupleSinkNode secondSink=firstSink.getNextLeftTupleSinkNode();
+    if (sink.size() == 2 && NodeTypeEnums.isBetaNode(secondSink) && ((BetaNode)secondSink).isRightInputIsRiaNode()) {
+      node=(LeftTupleSource)secondSink;
+    }
+ else {
+      node=(LeftTupleSource)firstSink;
+    }
     nodeMem=liaNodeMemory.getNext();
   }
-  eval(node,nodeMem,smems,smemIndex,trgTuples,null,wm);
+  eval((LeftTupleSink)node,nodeMem,smems,smemIndex,trgTuples,null,wm);
   return 0;
 }
