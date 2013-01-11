@@ -1,0 +1,63 @@
+{
+  if (!this.isInUse() || context.getCleanupAdapter() != null) {
+    for (    InternalWorkingMemory workingMemory : workingMemories) {
+      BetaMemory memory;
+      Object object=workingMemory.getNodeMemory(this);
+      if (object instanceof AccumulateMemory) {
+        memory=((AccumulateMemory)object).betaMemory;
+      }
+ else {
+        memory=(BetaMemory)object;
+      }
+      FastIterator it=memory.getLeftTupleMemory().fullFastIterator();
+      for (LeftTuple leftTuple=getFirstLeftTuple(memory.getLeftTupleMemory(),it); leftTuple != null; ) {
+        LeftTuple tmp=(LeftTuple)it.next(leftTuple);
+        if (context.getCleanupAdapter() != null) {
+          LeftTuple child;
+          while ((child=leftTuple.getFirstChild()) != null) {
+            if (child.getLeftTupleSink() == this) {
+              child.unlinkFromLeftParent();
+              child.unlinkFromRightParent();
+            }
+ else {
+              context.getCleanupAdapter().cleanUp(child,workingMemory);
+            }
+          }
+        }
+        memory.getLeftTupleMemory().remove(leftTuple);
+        leftTuple.unlinkFromLeftParent();
+        leftTuple.unlinkFromRightParent();
+        leftTuple=tmp;
+      }
+      if (object instanceof AccumulateMemory) {
+        ((AccumulateNode)this).doRemove(workingMemory,(AccumulateMemory)object);
+      }
+      if (!this.isInUse()) {
+        it=memory.getRightTupleMemory().fullFastIterator();
+        for (RightTuple rightTuple=getFirstRightTuple(memory.getRightTupleMemory(),it); rightTuple != null; ) {
+          RightTuple tmp=(RightTuple)it.next(rightTuple);
+          if (rightTuple.getBlocked() != null) {
+            for (LeftTuple leftTuple=rightTuple.getBlocked(); leftTuple != null; ) {
+              LeftTuple temp=leftTuple.getBlockedNext();
+              leftTuple.setBlocker(null);
+              leftTuple.setBlockedPrevious(null);
+              leftTuple.setBlockedNext(null);
+              leftTuple.unlinkFromLeftParent();
+              leftTuple=temp;
+            }
+          }
+          memory.getRightTupleMemory().remove(rightTuple);
+          rightTuple.unlinkFromRightParent();
+          rightTuple=tmp;
+        }
+        workingMemory.clearNodeMemory(this);
+      }
+    }
+    context.setCleanupAdapter(null);
+  }
+  handleUnlinking(context);
+  if (!isInUse()) {
+    leftInput.removeTupleSink(this);
+    rightInput.removeObjectSink(this);
+  }
+}
