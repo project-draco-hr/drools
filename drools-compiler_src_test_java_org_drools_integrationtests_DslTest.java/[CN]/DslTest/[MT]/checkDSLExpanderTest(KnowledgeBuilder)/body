@@ -1,0 +1,18 @@
+{
+  assertFalse(kbuilder.hasErrors());
+  final String err=kbuilder.getErrors().toString();
+  assertEquals("",err);
+  assertEquals(0,kbuilder.getErrors().size());
+  final Collection<KnowledgePackage> pkgs=kbuilder.getKnowledgePackages();
+  assertEquals(1,pkgs.size());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(pkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+  session.insert(new Person("Bob","http://foo.bar"));
+  session.insert(new Cheese("stilton",42));
+  final List messages=new ArrayList();
+  session.setGlobal("messages",messages);
+  session.fireAllRules();
+  assertEquals(1,messages.size());
+}

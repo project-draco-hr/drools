@@ -2,20 +2,5 @@
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   kbuilder.add(ResourceFactory.newClassPathResource("test_expander.dsl",getClass()),ResourceType.DSL);
   kbuilder.add(ResourceFactory.newClassPathResource("rule_with_expander_dsl.dslr",getClass()),ResourceType.DSLR);
-  assertFalse(kbuilder.hasErrors());
-  final String err=kbuilder.getErrors().toString();
-  assertEquals("",err);
-  assertEquals(0,kbuilder.getErrors().size());
-  final Collection<KnowledgePackage> pkgs=kbuilder.getKnowledgePackages();
-  assertEquals(1,pkgs.size());
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(pkgs);
-  kbase=SerializationHelper.serializeObject(kbase);
-  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
-  session.insert(new Person("Bob","http://foo.bar"));
-  session.insert(new Cheese("stilton",42));
-  final List messages=new ArrayList();
-  session.setGlobal("messages",messages);
-  session.fireAllRules();
-  assertEquals(1,messages.size());
+  checkDSLExpanderTest(kbuilder);
 }
