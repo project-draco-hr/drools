@@ -1,33 +1,31 @@
 {
+  if (log.isTraceEnabled()) {
+    log.trace("Start Evaluating Rule[name={}]",getRule().getName());
+  }
   SegmentMemory[] smems=rmem.getSegmentMemories();
   int smemIndex=0;
   SegmentMemory smem=smems[smemIndex];
   LeftInputAdapterNode liaNode=(LeftInputAdapterNode)smem.getRootNode();
-  LinkedList<Memory> nodeMemories=smem.getNodeMemories();
-  LiaNodeMemory liaNodeMemory=(LiaNodeMemory)nodeMemories.getFirst();
-  StagedLeftTuples trgTuples=new StagedLeftTuples();
-  StagedLeftTuples srcTuples=smem.getStagedLeftTuples();
-  pLiaNode.doNode(liaNode,liaNodeMemory,wm,srcTuples,trgTuples);
-  LeftTupleSource node=null;
-  Memory nodeMem=null;
+  NetworkNode node;
+  Memory nodeMem;
   if (liaNode == smem.getTipNode()) {
-    SegmentPropagator.propagate(smem,trgTuples,wm);
-    smem=smems[smemIndex];
-    nodeMem=smem.getNodeMemories().getFirst();
+    smem=smems[++smemIndex];
     node=smem.getRootNode();
+    nodeMem=smem.getNodeMemories().getFirst();
   }
  else {
     LeftTupleSinkPropagator sink=liaNode.getSinkPropagator();
     LeftTupleSinkNode firstSink=(LeftTupleSinkNode)sink.getFirstLeftTupleSink();
     LeftTupleSinkNode secondSink=firstSink.getNextLeftTupleSinkNode();
-    if (sink.size() == 2 && NodeTypeEnums.isBetaNode(secondSink) && ((BetaNode)secondSink).isRightInputIsRiaNode()) {
+    if (sink.size() == 2) {
       node=(LeftTupleSource)secondSink;
     }
  else {
       node=(LeftTupleSource)firstSink;
     }
-    nodeMem=liaNodeMemory.getNext();
+    nodeMem=smem.getNodeMemories().getFirst().getNext();
   }
-  eval((LeftTupleSink)node,nodeMem,smems,smemIndex,trgTuples,null,wm);
+  StagedLeftTuples srcTuples=smem.getStagedLeftTuples();
+  eval((LeftTupleSink)node,nodeMem,smems,smemIndex,srcTuples,null,wm);
   return 0;
 }

@@ -3,7 +3,19 @@
   while (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getRightInputOtnId() < getRightInputOtnId()) {
     modifyPreviousTuples.removeRightTuple();
     rightTuple.setPropagationContext(context);
-    rightTuple.getRightTupleSink().retractRightTuple(rightTuple,context,wm);
+    if (isUnlinkingEnabled()) {
+      BetaMemory bm=null;
+      if (getType() == NodeTypeEnums.AccumulateNode) {
+        bm=((AccumulateMemory)wm.getNodeMemory(this)).getBetaMemory();
+      }
+ else {
+        bm=((BetaMemory)wm.getNodeMemory(this));
+      }
+      bm.getStagedRightTuples().addDelete(rightTuple);
+    }
+ else {
+      rightTuple.getRightTupleSink().retractRightTuple(rightTuple,context,wm);
+    }
     rightTuple=modifyPreviousTuples.peekRightTuple();
   }
   if (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getRightInputOtnId() == getRightInputOtnId()) {
@@ -11,7 +23,20 @@
     rightTuple.reAdd();
     rightTuple.setPropagationContext(context);
     if (intersect(context.getModificationMask(),rightInferredMask)) {
-      modifyRightTuple(rightTuple,context,wm);
+      if (isUnlinkingEnabled()) {
+        BetaMemory bm=null;
+        if (getType() == NodeTypeEnums.AccumulateNode) {
+          bm=((AccumulateMemory)wm.getNodeMemory(this)).getBetaMemory();
+        }
+ else {
+          bm=((BetaMemory)wm.getNodeMemory(this));
+        }
+        rightTuple.setPropagationContext(context);
+        bm.getStagedRightTuples().addUpdate(rightTuple);
+      }
+ else {
+        modifyRightTuple(rightTuple,context,wm);
+      }
     }
   }
  else {

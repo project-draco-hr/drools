@@ -1,0 +1,53 @@
+{
+  final Object[] resultArray=accumulate.getResult(memory.workingMemoryContext,accctx.context,leftTuple,workingMemory);
+  Object result=accumulate.isMultiFunction() ? resultArray : resultArray[0];
+  if (result == null) {
+    return;
+  }
+  if (accctx.getResultFactHandle() == null) {
+    final InternalFactHandle handle=accNode.createResultFactHandle(context,workingMemory,leftTuple,result);
+    accctx.setResultFactHandle(handle);
+    accctx.setResultLeftTuple(accNode.createLeftTuple(handle,leftTuple,sink));
+  }
+ else {
+    accctx.getResultFactHandle().setObject(result);
+  }
+  AlphaNodeFieldConstraint[] resultConstraints=accNode.getResultConstraints();
+  BetaConstraints resultBinder=accNode.getResultBinder();
+  boolean isAllowed=result != null;
+  for (int i=0, length=resultConstraints.length; isAllowed && i < length; i++) {
+    if (!resultConstraints[i].isAllowed(accctx.resultFactHandle,workingMemory,memory.alphaContexts[i])) {
+      isAllowed=false;
+    }
+  }
+  if (isAllowed) {
+    resultBinder.updateFromTuple(memory.resultsContext,workingMemory,leftTuple);
+    if (!resultBinder.isAllowedCachedLeft(memory.resultsContext,accctx.getResultFactHandle())) {
+      isAllowed=false;
+    }
+    resultBinder.resetTuple(memory.resultsContext);
+  }
+  LeftTuple childLeftTuple=(LeftTuple)accctx.getResultLeftTuple();
+  childLeftTuple.setPropagationContext(leftTuple.getPropagationContext());
+  if (accctx.propagated == true) {
+switch (childLeftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+      stagedLeftTuples.removeInsert(childLeftTuple);
+    break;
+case LeftTuple.UPDATE:
+  stagedLeftTuples.removeUpdate(childLeftTuple);
+break;
+}
+if (isAllowed) {
+trgLeftTuples.addUpdate(childLeftTuple);
+}
+ else {
+trgLeftTuples.addDelete(childLeftTuple);
+accctx.propagated=false;
+}
+}
+ else if (isAllowed) {
+trgLeftTuples.addInsert(childLeftTuple);
+accctx.propagated=true;
+}
+}

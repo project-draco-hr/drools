@@ -2,20 +2,11 @@
   if (isUnlinkingEnabled()) {
     LiaNodeMemory lm=(LiaNodeMemory)workingMemory.getNodeMemory(this);
     SegmentMemory smem=lm.getSegmentMemory();
-    StagedLeftTuples leftTuples=smem.getStagedLeftTuples();
-switch (leftTuple.getStagedType()) {
-case LeftTuple.INSERT:
-      leftTuples.removeInsert(leftTuple);
-    break;
-case LeftTuple.UPDATE:
-  leftTuples.removeUpdate(leftTuple);
-break;
-}
-lm.setCounter(lm.getCounter() - 1);
-if (lm.getCounter() == 0) {
-lm.unlinkNode(workingMemory);
-}
-return;
-}
-leftTuple.getLeftTupleSink().retractLeftTuple(leftTuple,context,workingMemory);
+    if (smem.getTipNode() == this) {
+      smem=smem.getFirst();
+    }
+    doDeleteObject(leftTuple,context,smem,workingMemory,lm);
+    return;
+  }
+  leftTuple.getLeftTupleSink().retractLeftTuple(leftTuple,context,workingMemory);
 }

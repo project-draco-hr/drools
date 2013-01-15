@@ -1,0 +1,30 @@
+{
+  StagedLeftTuples leftTuples=smem.getStagedLeftTuples();
+switch (leftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+    leftTuples.removeInsert(leftTuple);
+  break;
+case LeftTuple.UPDATE:
+leftTuples.removeUpdate(leftTuple);
+break;
+}
+leftTuple.setPropagationContext(context);
+smem.getStagedLeftTuples().addDelete(leftTuple);
+for (smem=smem.getNext(); smem != null; smem=smem.getNext()) {
+leftTuple=leftTuple.getPeer();
+leftTuples=smem.getStagedLeftTuples();
+switch (leftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+leftTuples.removeInsert(leftTuple);
+break;
+case LeftTuple.UPDATE:
+leftTuples.removeUpdate(leftTuple);
+break;
+}
+leftTuple.setPropagationContext(context);
+leftTuples.addDelete(leftTuple);
+}
+if (lm.getAndDecreaseCounter() == 1) {
+lm.unlinkNode(wm);
+}
+}

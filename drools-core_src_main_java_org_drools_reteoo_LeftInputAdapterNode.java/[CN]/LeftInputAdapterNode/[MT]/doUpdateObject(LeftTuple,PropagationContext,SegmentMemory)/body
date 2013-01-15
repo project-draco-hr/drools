@@ -1,0 +1,21 @@
+{
+  StagedLeftTuples leftTuples=smem.getStagedLeftTuples();
+  leftTuple.setPropagationContext(context);
+  if (leftTuple.getStagedType() == LeftTuple.NONE) {
+    long mask=((LeftTupleSink)smem.getRootNode()).getLeftInferredMask();
+    if (mask == Long.MAX_VALUE || intersect(context.getModificationMask(),mask)) {
+      leftTuples.addUpdate(leftTuple);
+    }
+  }
+  for (smem=smem.getNext(); smem != null; smem=smem.getNext()) {
+    leftTuple=leftTuple.getPeer();
+    leftTuples=smem.getStagedLeftTuples();
+    leftTuple.setPropagationContext(context);
+    if (leftTuple.getStagedType() == LeftTuple.NONE) {
+      long mask=((LeftTupleSink)smem.getRootNode()).getLeftInferredMask();
+      if (mask == Long.MAX_VALUE || intersect(context.getModificationMask(),mask)) {
+        leftTuples.addUpdate(leftTuple);
+      }
+    }
+  }
+}
