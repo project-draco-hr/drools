@@ -1,11 +1,18 @@
 {
   KieSessionModelImpl kSessionModel=(KieSessionModelImpl)kProject.getKieSessionModel(kSessionName);
   if (kSessionName == null) {
+    log.error("Unknown KieSession name: " + kSessionName);
     return null;
+  }
+  if (kSessionModel.getType() == KieSessionModel.KieSessionType.STATEFUL) {
+    throw new RuntimeException("Trying to create a stateless KieSession from a stateful KieSessionModel: " + kSessionName);
   }
   KieBase kBase=getKieBase(kSessionModel.getKieBaseModel().getName());
   if (kBase == null) {
+    log.error("Unknown KieBase name: " + kSessionModel.getKieBaseModel().getName());
     return null;
   }
-  return kBase.newStatelessKieSession(getKnowledgeSessionConfiguration(kSessionModel));
+  StatelessKieSession statelessKieSession=kBase.newStatelessKieSession(getKnowledgeSessionConfiguration(kSessionModel));
+  statelessKSessions.put(kSessionName,statelessKieSession);
+  return statelessKieSession;
 }
