@@ -3,10 +3,12 @@
   RightTuple rightTuple=createRightTuple(factHandle,this,context);
   rightTuple.setPropagationContext(context);
   if (isUnlinkingEnabled()) {
-    if (memory.getStagedRightTuples().insertSize() == 0 && !isRightInputIsRiaNode()) {
+    if (memory.getAndIncCounter() == 0) {
       memory.linkNode(wm);
     }
-    memory.getAndIncCounter();
+ else     if (memory.getStagedRightTuples().insertSize() == 0) {
+      memory.getSegmentMemory().notifyRuleLinkSegment(wm);
+    }
     memory.getStagedRightTuples().addInsert(rightTuple);
     return;
   }

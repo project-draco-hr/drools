@@ -1,20 +1,21 @@
 {
   PackageBuilder builder=new PackageBuilder();
   builder.addPackageFromDrl(new InputStreamReader(MannersBenchmark.class.getResourceAsStream("manners.drl")));
-  Package pkg=builder.getPackage();
-  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
-  ruleBase.addPackage(pkg);
-  for (  ObjectTypeNode node : ((InternalRuleBase)ruleBase).getRete().getObjectTypeNodes()) {
-    CompiledNetwork compiledNetwork=ObjectTypeNodeCompiler.compile(builder,node);
-    node.setCompiledNetwork(compiledNetwork);
+  if (builder.hasErrors()) {
+    throw new RuntimeException(builder.getErrors().toString());
   }
+  Package pkg=builder.getPackage();
+  RuleBaseConfiguration conf=new RuleBaseConfiguration();
+  conf.setUnlinkingEnabled(true);
+  final RuleBase ruleBase=RuleBaseFactory.newRuleBase(conf);
+  ruleBase.addPackage(pkg);
   String filename;
   if (args.length != 0) {
     String arg=args[0];
     filename=arg;
   }
  else {
-    filename="manners128.dat";
+    filename="manners5.dat";
   }
   for (int i=0; i < 3; ++i) {
     InputStream is=MannersBenchmark.class.getResourceAsStream(filename);

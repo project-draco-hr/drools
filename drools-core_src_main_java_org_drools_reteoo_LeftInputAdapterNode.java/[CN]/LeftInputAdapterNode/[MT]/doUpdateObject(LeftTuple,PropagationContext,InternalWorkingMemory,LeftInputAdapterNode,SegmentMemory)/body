@@ -1,0 +1,35 @@
+{
+  if (sm.getTipNode() == liaNode) {
+    if (sm.isEmpty()) {
+      SegmentUtilities.createChildSegments(wm,sm,liaNode.getSinkPropagator());
+    }
+    sm=sm.getFirst();
+  }
+  LeftTupleSets leftTuples=sm.getStagedLeftTuples();
+  leftTuple.setPropagationContext(context);
+  if (leftTuple.getStagedType() == LeftTuple.NONE) {
+    long mask=((LeftTupleSink)sm.getRootNode()).getLeftInferredMask();
+    if (mask == Long.MAX_VALUE || intersect(context.getModificationMask(),mask)) {
+      if (sm.getStagedLeftTuples().updateSize() == 0) {
+        sm.notifyRuleLinkSegment(wm);
+      }
+      leftTuples.addUpdate(leftTuple);
+    }
+  }
+  if (sm.getRootNode() != liaNode) {
+    for (sm=sm.getNext(); sm != null; sm=sm.getNext()) {
+      leftTuple=leftTuple.getPeer();
+      leftTuples=sm.getStagedLeftTuples();
+      leftTuple.setPropagationContext(context);
+      if (leftTuple.getStagedType() == LeftTuple.NONE) {
+        long mask=((LeftTupleSink)sm.getRootNode()).getLeftInferredMask();
+        if (mask == Long.MAX_VALUE || intersect(context.getModificationMask(),mask)) {
+          if (sm.getStagedLeftTuples().updateSize() == 0) {
+            sm.notifyRuleLinkSegment(wm);
+          }
+          leftTuples.addUpdate(leftTuple);
+        }
+      }
+    }
+  }
+}

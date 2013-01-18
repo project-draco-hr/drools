@@ -4,14 +4,8 @@
     modifyPreviousTuples.removeRightTuple();
     rightTuple.setPropagationContext(context);
     if (isUnlinkingEnabled()) {
-      BetaMemory bm=null;
-      if (getType() == NodeTypeEnums.AccumulateNode) {
-        bm=((AccumulateMemory)wm.getNodeMemory(this)).getBetaMemory();
-      }
- else {
-        bm=((BetaMemory)wm.getNodeMemory(this));
-      }
-      bm.getStagedRightTuples().addDelete(rightTuple);
+      BetaMemory bm=getBetaMemory((BetaNode)rightTuple.getRightTupleSink(),wm);
+      doDeleteRightTuple(rightTuple,wm,bm);
     }
  else {
       rightTuple.getRightTupleSink().retractRightTuple(rightTuple,context,wm);
@@ -24,15 +18,9 @@
     rightTuple.setPropagationContext(context);
     if (intersect(context.getModificationMask(),rightInferredMask)) {
       if (isUnlinkingEnabled()) {
-        BetaMemory bm=null;
-        if (getType() == NodeTypeEnums.AccumulateNode) {
-          bm=((AccumulateMemory)wm.getNodeMemory(this)).getBetaMemory();
-        }
- else {
-          bm=((BetaMemory)wm.getNodeMemory(this));
-        }
+        BetaMemory bm=getBetaMemory(this,wm);
         rightTuple.setPropagationContext(context);
-        bm.getStagedRightTuples().addUpdate(rightTuple);
+        doUpdateRightTuple(rightTuple,wm,bm);
       }
  else {
         modifyRightTuple(rightTuple,context,wm);

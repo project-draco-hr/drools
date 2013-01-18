@@ -1,13 +1,16 @@
 {
-  final BetaMemory memory=(BetaMemory)getBetaMemoryFromRightInput(this,workingMemory);
+  final BetaMemory memory=(BetaMemory)getBetaMemoryFromRightInput(this,wm);
   RightTuple rightTuple=createRightTuple(factHandle,this,context);
   rightTuple.setPropagationContext(context);
   if (isUnlinkingEnabled()) {
-    if (memory.getAndIncCounter() == 0 && !isRightInputIsRiaNode() && isEmptyBetaConstraints()) {
-      memory.linkNode(workingMemory);
+    if (memory.getAndIncCounter() == 0 && isEmptyBetaConstraints()) {
+      memory.linkNode(wm);
+    }
+ else     if (memory.getStagedRightTuples().deleteSize() == 0) {
+      memory.getSegmentMemory().notifyRuleLinkSegment(wm);
     }
     memory.getStagedRightTuples().addInsert(rightTuple);
     return;
   }
-  assertRightTuple(rightTuple,context,workingMemory);
+  assertRightTuple(rightTuple,context,wm);
 }

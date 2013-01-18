@@ -1,7 +1,9 @@
 {
   SegmentMemory sm=lm.getSegmentMemory();
-  if (sm.getTipNode() == liaNode && sm.isEmpty()) {
-    SegmentUtilities.createChildSegments(workingMemory,sm,liaNode.getSinkPropagator());
+  if (sm.getTipNode() == liaNode) {
+    if (sm.isEmpty()) {
+      SegmentUtilities.createChildSegments(wm,sm,liaNode.getSinkPropagator());
+    }
     sm=sm.getFirst();
   }
   LeftTupleSink sink=liaNode.getSinkPropagator().getFirstLeftTupleSink();
@@ -9,21 +11,27 @@
   leftTuple.setPropagationContext(context);
   long mask=sink.getLeftInferredMask();
   if (mask == Long.MAX_VALUE || intersect(context.getModificationMask(),mask)) {
+    if (sm.getStagedLeftTuples().insertSize() == 0) {
+      sm.notifyRuleLinkSegment(wm);
+    }
     sm.getStagedLeftTuples().addInsert(leftTuple);
   }
   if (sm.getRootNode() != liaNode) {
-    for (SegmentMemory childSm=sm.getNext(); childSm != null; childSm=childSm.getNext()) {
-      sink=childSm.getSinkFactory();
+    for (sm=sm.getNext(); sm != null; sm=sm.getNext()) {
+      sink=sm.getSinkFactory();
       leftTuple=sink.createPeer(leftTuple);
       leftTuple.setPropagationContext(context);
-      mask=((LeftTupleSink)childSm.getRootNode()).getLeftInferredMask();
+      mask=((LeftTupleSink)sm.getRootNode()).getLeftInferredMask();
       if (mask == Long.MAX_VALUE || intersect(context.getModificationMask(),mask)) {
-        childSm.getStagedLeftTuples().addInsert(leftTuple);
+        if (sm.getStagedLeftTuples().insertSize() == 0) {
+          sm.notifyRuleLinkSegment(wm);
+        }
+        sm.getStagedLeftTuples().addInsert(leftTuple);
       }
     }
   }
   if (lm.getAndIncreaseCounter() == 0) {
-    lm.linkNode(workingMemory);
+    lm.linkNode(wm);
   }
   ;
 }

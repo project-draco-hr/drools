@@ -1,0 +1,32 @@
+{
+  boolean tupleMemory=true;
+  boolean tupleMemoryEnabled=true;
+  LeftTupleMemory ltm=bm.getLeftTupleMemory();
+  RightTupleMemory rtm=bm.getRightTupleMemory();
+  ContextEntry[] contextEntry=bm.getContext();
+  BetaConstraints constraints=joinNode.getRawConstraints();
+  FastIterator it=joinNode.getRightIterator(rtm);
+  for (LeftTuple leftTuple=srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    PropagationContext context=leftTuple.getPropagationContext();
+    boolean useLeftMemory=true;
+    if (!tupleMemoryEnabled) {
+      Object object=leftTuple.get(0).getObject();
+      if (!(object instanceof DroolsQuery) || !((DroolsQuery)object).isOpen()) {
+        useLeftMemory=false;
+      }
+    }
+    if (useLeftMemory) {
+      ltm.add(leftTuple);
+    }
+    constraints.updateFromTuple(contextEntry,wm,leftTuple);
+    for (RightTuple rightTuple=joinNode.getFirstRightTuple(leftTuple,rtm,context,it); rightTuple != null; rightTuple=(RightTuple)it.next(rightTuple)) {
+      if (constraints.isAllowedCachedLeft(contextEntry,rightTuple.getFactHandle())) {
+        trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,rightTuple,null,null,sink,tupleMemory));
+      }
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+  constraints.resetTuple(contextEntry);
+}

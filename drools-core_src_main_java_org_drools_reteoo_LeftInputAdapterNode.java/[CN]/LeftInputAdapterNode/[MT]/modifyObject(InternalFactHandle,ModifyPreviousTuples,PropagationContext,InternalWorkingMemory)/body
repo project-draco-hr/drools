@@ -5,15 +5,16 @@
       SegmentUtilities.createSegmentMemory(this,workingMemory);
     }
     SegmentMemory smem=lm.getSegmentMemory();
-    if (smem.getTipNode() == this) {
-      smem=smem.getFirst();
-    }
     LeftTuple leftTuple=modifyPreviousTuples.peekLeftTuple();
-    while (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId() < getLeftInputOtnId()) {
-      doDeleteObject(leftTuple,context,smem,workingMemory,lm);
+    int otnId=this.sink.getFirstLeftTupleSink().getLeftInputOtnId();
+    while (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId() < otnId) {
+      modifyPreviousTuples.removeLeftTuple();
+      doDeleteObject(leftTuple,context,smem,workingMemory,(LeftInputAdapterNode)leftTuple.getLeftTupleSink().getLeftTupleSource(),lm);
+      leftTuple=modifyPreviousTuples.peekLeftTuple();
     }
-    if (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId() == getLeftInputOtnId()) {
-      doUpdateObject(leftTuple,context,smem);
+    if (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId() == otnId) {
+      modifyPreviousTuples.removeLeftTuple();
+      doUpdateObject(leftTuple,context,workingMemory,(LeftInputAdapterNode)leftTuple.getLeftTupleSink().getLeftTupleSource(),smem);
     }
  else {
       doInsertObject(factHandle,context,this,leftTupleMemoryEnabled,workingMemory,lm);
