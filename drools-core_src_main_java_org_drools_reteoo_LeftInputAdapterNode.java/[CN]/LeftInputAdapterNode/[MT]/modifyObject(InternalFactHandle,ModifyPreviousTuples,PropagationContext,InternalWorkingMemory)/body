@@ -6,13 +6,13 @@
     }
     SegmentMemory smem=lm.getSegmentMemory();
     LeftTuple leftTuple=modifyPreviousTuples.peekLeftTuple();
-    int otnId=this.sink.getFirstLeftTupleSink().getLeftInputOtnId();
-    while (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId() < otnId) {
+    ObjectTypeNode.Id otnId=this.sink.getFirstLeftTupleSink().getLeftInputOtnId();
+    while (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId().before(otnId)) {
       modifyPreviousTuples.removeLeftTuple();
       doDeleteObject(leftTuple,context,smem,workingMemory,(LeftInputAdapterNode)leftTuple.getLeftTupleSink().getLeftTupleSource(),lm);
       leftTuple=modifyPreviousTuples.peekLeftTuple();
     }
-    if (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId() == otnId) {
+    if (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId().equals(otnId)) {
       modifyPreviousTuples.removeLeftTuple();
       doUpdateObject(leftTuple,context,workingMemory,(LeftInputAdapterNode)leftTuple.getLeftTupleSink().getLeftTupleSource(),smem);
     }
