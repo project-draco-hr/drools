@@ -8,7 +8,8 @@
   FastIterator it=notNode.getRightIterator(rtm);
   for (RightTuple rightTuple=srcRightTuples.getDeleteFirst(); rightTuple != null; ) {
     RightTuple next=rightTuple.getStagedNext();
-    final RightTuple rootBlocker=(RightTuple)it.next(rightTuple);
+    boolean useComparisonIndex=rtm.getIndexType().isComparison();
+    RightTuple rootBlocker=useComparisonIndex ? null : (RightTuple)it.next(rightTuple);
     if (rightTuple.getMemory() != null) {
       rtm.remove(rightTuple);
     }
@@ -22,6 +23,9 @@
           continue;
         }
         constraints.updateFromTuple(contextEntry,wm,leftTuple);
+        if (useComparisonIndex) {
+          rootBlocker=rtm.getFirst(leftTuple,(InternalFactHandle)context.getFactHandle(),it);
+        }
         for (RightTuple newBlocker=rootBlocker; newBlocker != null; newBlocker=(RightTuple)it.next(newBlocker)) {
           if (constraints.isAllowedCachedLeft(contextEntry,newBlocker.getFactHandle())) {
             leftTuple.setBlocker(newBlocker);
