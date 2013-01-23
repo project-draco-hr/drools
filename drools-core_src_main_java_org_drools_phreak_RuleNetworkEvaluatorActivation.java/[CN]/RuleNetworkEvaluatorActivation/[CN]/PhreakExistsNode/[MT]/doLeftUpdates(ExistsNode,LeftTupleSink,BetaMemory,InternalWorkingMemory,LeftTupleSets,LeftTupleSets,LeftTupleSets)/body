@@ -11,18 +11,12 @@
     RightTuple firstRightTuple=existsNode.getFirstRightTuple(leftTuple,rtm,context,rightIt);
     RightTuple blocker=leftTuple.getBlocker();
     if (blocker == null) {
-      if (leftTuple.getMemory().isStagingMemory()) {
-        leftTuple.getMemory().remove(leftTuple);
-      }
- else {
-        ltm.remove(leftTuple);
-      }
-      leftTuple.setMemory(null);
+      ltm.remove(leftTuple);
     }
  else {
       if (rtm.isIndexed() && !rightIt.isFullIterator()) {
         if (firstRightTuple == null || firstRightTuple.getMemory() != blocker.getMemory()) {
-          removeBlocker(leftTuple,blocker);
+          blocker.removeBlocked(leftTuple);
           blocker=null;
         }
       }
@@ -30,7 +24,7 @@
     constraints.updateFromTuple(contextEntry,wm,leftTuple);
     if (blocker == null || !constraints.isAllowedCachedLeft(contextEntry,blocker.getFactHandle())) {
       if (blocker != null) {
-        removeBlocker(leftTuple,blocker);
+        blocker.removeBlocked(leftTuple);
       }
       for (RightTuple newBlocker=firstRightTuple; newBlocker != null; newBlocker=(RightTuple)rightIt.next(newBlocker)) {
         if (constraints.isAllowedCachedLeft(contextEntry,newBlocker.getFactHandle())) {
@@ -45,8 +39,8 @@
       if (leftTuple.getFirstChild() != null) {
         if (leftTuple.getFirstChild() != null) {
           LeftTuple childLeftTuple=leftTuple.getFirstChild();
-          while (childLeftTuple != null) {
-            childLeftTuple=deleteLeftChild(trgLeftTuples,childLeftTuple,stagedLeftTuples);
+          if (childLeftTuple != null) {
+            childLeftTuple=deleteLeftChild(childLeftTuple,trgLeftTuples,stagedLeftTuples);
           }
         }
       }

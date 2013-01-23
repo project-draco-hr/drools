@@ -25,6 +25,7 @@
       AccumulateMemory am=null;
       if (NodeTypeEnums.AccumulateNode == node.getType()) {
         am=(AccumulateMemory)nodeMem;
+        bm=am.getBetaMemory();
       }
  else {
         bm=(BetaMemory)nodeMem;
@@ -47,6 +48,12 @@ pAccNode.doNode((AccumulateNode)node,sink,am,wm,srcTuples,trgTuples,stagedLeftTu
 break;
 }
 }
+ else if (node.getType() == NodeTypeEnums.EvalConditionNode) {
+pEvalNode.doNode((EvalConditionNode)node,(EvalMemory)nodeMem,sink,wm,srcTuples,trgTuples,stagedLeftTuples);
+}
+ else if (node.getType() == NodeTypeEnums.FromNode) {
+pFromNode.doNode((FromNode)node,(FromMemory)nodeMem,sink,wm,srcTuples,trgTuples,stagedLeftTuples);
+}
 if (node != smem.getTipNode()) {
 LeftTupleSink nextSink=sink.getNextLeftTupleSinkNode();
 if (nextSink == null) {
@@ -59,7 +66,7 @@ nodeMem=nodeMem.getNext();
 }
  else {
 SegmentPropagator.propagate(smem,trgTuples,wm);
-smem=smems[smemIndex++];
+smem=smems[++smemIndex];
 trgTuples=smem.getStagedLeftTuples();
 node=(LeftTupleSink)smem.getRootNode();
 nodeMem=smem.getNodeMemories().getFirst();

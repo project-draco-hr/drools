@@ -1,0 +1,46 @@
+{
+  boolean isAllowed=true;
+  if (alphaConstraints != null) {
+    for (int i=0, length=alphaConstraints.length; i < length; i++) {
+      if (!alphaConstraints[i].isAllowed(rightTuple.getFactHandle(),wm,fm.alphaContexts[i])) {
+        isAllowed=false;
+        break;
+      }
+    }
+  }
+  if (isAllowed && betaConstraints.isAllowedCachedLeft(context,rightTuple.getFactHandle())) {
+    if (rightTuple.firstChild == null) {
+      LeftTuple childLeftTuple=sink.createLeftTuple(leftTuple,rightTuple,null,null,sink,useLeftMemory);
+      childLeftTuple.setPropagationContext(propagationContext);
+      trgLeftTuples.addInsert(childLeftTuple);
+    }
+ else {
+      LeftTuple childLeftTuple=rightTuple.firstChild;
+switch (childLeftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+        stagedLeftTuples.removeInsert(childLeftTuple);
+      break;
+case LeftTuple.UPDATE:
+    stagedLeftTuples.removeUpdate(childLeftTuple);
+  break;
+}
+childLeftTuple.setPropagationContext(propagationContext);
+trgLeftTuples.addUpdate(childLeftTuple);
+}
+}
+ else {
+LeftTuple childLeftTuple=rightTuple.firstChild;
+if (childLeftTuple != null) {
+switch (childLeftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+stagedLeftTuples.removeInsert(childLeftTuple);
+break;
+case LeftTuple.UPDATE:
+stagedLeftTuples.removeUpdate(childLeftTuple);
+break;
+}
+childLeftTuple.setPropagationContext(propagationContext);
+trgLeftTuples.addDelete(childLeftTuple);
+}
+}
+}

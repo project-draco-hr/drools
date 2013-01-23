@@ -1,0 +1,60 @@
+{
+  boolean tupleMemoryEnabled=true;
+  BetaMemory bm=fm.getBetaMemory();
+  LeftTupleMemory ltm=bm.getLeftTupleMemory();
+  ContextEntry[] context=bm.getContext();
+  BetaConstraints betaConstraints=fromNode.getBetaConstraints();
+  AlphaNodeFieldConstraint[] alphaConstraints=fromNode.getAlphaConstraints();
+  DataProvider dataProvider=fromNode.getDataProvider();
+  Class resultClass=fromNode.getResultClass();
+  for (LeftTuple leftTuple=srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    PropagationContext propagationContext=leftTuple.getPropagationContext();
+    ltm.removeAdd(leftTuple);
+    final Map<Object,RightTuple> previousMatches=(Map<Object,RightTuple>)leftTuple.getObject();
+    final Map<Object,RightTuple> newMatches=new HashMap<Object,RightTuple>();
+    leftTuple.setObject(newMatches);
+    betaConstraints.updateFromTuple(context,wm,leftTuple);
+    FastIterator rightIt=LinkedList.fastIterator;
+    for (final java.util.Iterator<?> it=dataProvider.getResults(leftTuple,wm,propagationContext,fm.providerContext); it.hasNext(); ) {
+      final Object object=it.next();
+      if (!resultClass.isAssignableFrom(object.getClass())) {
+        continue;
+      }
+      RightTuple rightTuple=previousMatches.remove(object);
+      if (rightTuple == null) {
+        rightTuple=fromNode.createRightTuple(leftTuple,propagationContext,wm,object);
+      }
+ else {
+        if (rightIt.next(rightTuple) != null) {
+          previousMatches.put(object,(RightTuple)rightIt.next(rightTuple));
+          rightTuple.setNext(null);
+        }
+      }
+      checkConstraintsAndPropagate(sink,leftTuple,rightTuple,alphaConstraints,betaConstraints,propagationContext,wm,fm,bm,context,tupleMemoryEnabled,trgLeftTuples,null);
+      if (tupleMemoryEnabled) {
+        fromNode.addToCreatedHandlesMap(newMatches,rightTuple);
+      }
+    }
+    for (    RightTuple rightTuple : previousMatches.values()) {
+      for (RightTuple current=rightTuple; current != null; current=(RightTuple)rightIt.next(current)) {
+        LeftTuple childLeftTuple=current.getFirstChild();
+        childLeftTuple.unlinkFromLeftParent();
+        childLeftTuple.unlinkFromRightParent();
+switch (childLeftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+          stagedLeftTuples.removeInsert(childLeftTuple);
+        break;
+case LeftTuple.UPDATE:
+      stagedLeftTuples.removeUpdate(childLeftTuple);
+    break;
+}
+childLeftTuple.setPropagationContext(propagationContext);
+trgLeftTuples.addDelete(childLeftTuple);
+}
+}
+leftTuple.clearStaged();
+leftTuple=next;
+}
+betaConstraints.resetTuple(context);
+}

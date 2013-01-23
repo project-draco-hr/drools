@@ -5,21 +5,12 @@
   RightTuple firstRightTuple=getFirstRightTuple(leftTuple,rightMemory,context,rightIt);
   RightTuple blocker=leftTuple.getBlocker();
   if (blocker == null) {
-    if (leftTuple.getMemory().isStagingMemory()) {
-      leftTuple.getMemory().remove(leftTuple);
-    }
- else {
-      memory.getLeftTupleMemory().remove(leftTuple);
-    }
-    leftTuple.setMemory(null);
+    memory.getLeftTupleMemory().remove(leftTuple);
   }
  else {
     if (rightMemory.isIndexed() && !rightIt.isFullIterator()) {
       if (firstRightTuple == null || firstRightTuple.getMemory() != blocker.getMemory()) {
         blocker.removeBlocked(leftTuple);
-        leftTuple.setBlocker(null);
-        leftTuple.setBlockedPrevious(null);
-        leftTuple.setBlockedNext(null);
         blocker=null;
       }
     }
@@ -28,9 +19,6 @@
   if (blocker == null || !this.constraints.isAllowedCachedLeft(memory.getContext(),blocker.getFactHandle())) {
     if (blocker != null) {
       blocker.removeBlocked(leftTuple);
-      leftTuple.setBlocker(null);
-      leftTuple.setBlockedPrevious(null);
-      leftTuple.setBlockedNext(null);
     }
     FastIterator it=memory.getRightTupleMemory().fastIterator();
     for (RightTuple newBlocker=firstRightTuple; newBlocker != null; newBlocker=(RightTuple)rightIt.next(newBlocker)) {

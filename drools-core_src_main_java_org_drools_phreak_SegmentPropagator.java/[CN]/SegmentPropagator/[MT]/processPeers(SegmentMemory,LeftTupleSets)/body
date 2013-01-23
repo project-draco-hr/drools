@@ -27,14 +27,11 @@ for (LeftTuple leftTuple=leftTuples.getUpdateFirst(); leftTuple != null; leftTup
 SegmentMemory smem=firstSmem.getNext();
 if (smem != null) {
 for (LeftTuple peer=leftTuple.getPeer(); peer != null; peer=peer.getPeer()) {
-  LeftTupleSets stagedLeftTuples=smem.getStagedLeftTuples();
-switch (peer.getStagedType()) {
-case LeftTuple.INSERT:
-    stagedLeftTuples.removeInsert(peer);
-  break;
-}
-stagedLeftTuples.addUpdate(peer);
-smem=smem.getNext();
+  if (peer.getStagedType() == LeftTuple.NONE) {
+    LeftTupleSets stagedLeftTuples=smem.getStagedLeftTuples();
+    stagedLeftTuples.addUpdate(peer);
+  }
+  smem=smem.getNext();
 }
 }
 }
@@ -47,8 +44,8 @@ SegmentMemory smem=firstSmem.getNext();
 if (smem != null) {
 LeftTuple peer=leftTuple;
 for (; smem != null; smem=smem.getNext()) {
-peer=((LeftTupleSink)smem.getRootNode()).createPeer(peer);
-smem.getStagedLeftTuples().addInsert(peer);
+  peer=((LeftTupleSink)smem.getRootNode()).createPeer(peer);
+  smem.getStagedLeftTuples().addInsert(peer);
 }
 }
 }

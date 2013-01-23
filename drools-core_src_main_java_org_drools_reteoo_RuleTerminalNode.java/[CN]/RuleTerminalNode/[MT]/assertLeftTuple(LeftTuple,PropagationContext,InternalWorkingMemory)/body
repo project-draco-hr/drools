@@ -1,18 +1,12 @@
 {
+  if (unlinkingEnabled) {
+    context=findMostRecentPropagationContext(leftTuple,context);
+  }
   if ((!this.rule.isEffective(leftTuple,this,workingMemory)) || (this.rule.isNoLoop() && this.rule.equals(context.getRuleOrigin()))) {
     leftTuple.setObject(Boolean.TRUE);
     return;
   }
   final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
-  if (unlinkingEnabled) {
-    LeftTuple lt=leftTuple;
-    while (lt != null) {
-      if (lt.getPropagationContext() != null && lt.getPropagationContext().getPropagationNumber() > context.getPropagationNumber()) {
-        context=lt.getPropagationContext();
-      }
-      lt=lt.getParent();
-    }
-  }
   boolean fire=agenda.createActivation(leftTuple,context,workingMemory,this,false);
   if (fire && !fireDirect) {
     agenda.addActivation((AgendaItem)leftTuple.getObject());
