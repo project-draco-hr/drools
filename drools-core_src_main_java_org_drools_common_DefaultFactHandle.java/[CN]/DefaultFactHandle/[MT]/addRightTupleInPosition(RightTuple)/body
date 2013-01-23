@@ -1,0 +1,37 @@
+{
+  ObjectTypeNode.Id otnId=rightTuple.getRightTupleSink() == null ? null : rightTuple.getRightTupleSink().getRightInputOtnId();
+  if (otnId == null) {
+    addLastRightTuple(rightTuple);
+    return;
+  }
+  RightTuple previous=getLastRightTuple();
+  if (previous == null) {
+    rightTuple.setHandlePrevious(null);
+    rightTuple.setHandleNext(null);
+    setFirstRightTuple(rightTuple);
+    setLastRightTuple(rightTuple);
+    return;
+  }
+ else   if (previous.getRightTupleSink() == null || !otnId.before(previous.getRightTupleSink().getRightInputOtnId())) {
+    rightTuple.setHandlePrevious(previous);
+    rightTuple.setHandleNext(null);
+    previous.setHandleNext(rightTuple);
+    setLastRightTuple(rightTuple);
+    return;
+  }
+  RightTuple next=previous;
+  previous=previous.getHandlePrevious();
+  while (previous != null && otnId.before(previous.getRightTupleSink().getRightInputOtnId())) {
+    next=previous;
+    previous=previous.getHandlePrevious();
+  }
+  rightTuple.setHandleNext(next);
+  next.setHandlePrevious(rightTuple);
+  rightTuple.setHandlePrevious(previous);
+  if (previous != null) {
+    previous.setHandleNext(rightTuple);
+  }
+ else {
+    setFirstRightTuple(rightTuple);
+  }
+}

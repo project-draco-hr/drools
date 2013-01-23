@@ -1,0 +1,30 @@
+{
+  String str="import org.drools.integrationtests.MiscTest2.A\n" + "rule r1 when\n" + "    $a : A( f1 == 1 )\n"+ "then\n"+ "end\n"+ "\n"+ "rule r2 when\n"+ "    $a : A( f2 == 1 )\n"+ "then\n"+ "end\n"+ "\n"+ "rule r3 when\n"+ "    $a : A( f3 == 1 )"+ "then\n"+ "end";
+  String str2="import org.drools.integrationtests.MiscTest2.A\n" + "rule r4 when\n" + "    $a : A( f2 == 1, f4 == 1 )"+ "then\n"+ "end";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  FactHandle fh=ksession.insert(new A(1,1,1,1));
+  ksession.fireAllRules();
+  kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str2.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  ksession.fireAllRules();
+  ksession.insert(new A(2,2,2,2));
+  LeftTuple leftTuple=((DefaultFactHandle)fh).getFirstLeftTuple();
+  ObjectTypeNode.Id letTupleOtnId=leftTuple.getLeftTupleSink().getLeftInputOtnId();
+  leftTuple=leftTuple.getLeftParentNext();
+  while (leftTuple != null) {
+    assertTrue(letTupleOtnId.before(leftTuple.getLeftTupleSink().getLeftInputOtnId()));
+    letTupleOtnId=leftTuple.getLeftTupleSink().getLeftInputOtnId();
+    leftTuple=leftTuple.getLeftParentNext();
+  }
+}
