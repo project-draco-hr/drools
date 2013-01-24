@@ -1,0 +1,53 @@
+{
+  if ("project".equals(qname)) {
+    ReleaseId parentReleaseId=model.getParentReleaseId();
+    model.setReleaseId(new ReleaseIdImpl(pomGroupId != null ? pomGroupId : parentReleaseId.getGroupId(),pomArtifactId,pomVersion != null ? pomVersion : parentReleaseId.getVersion()));
+  }
+ else   if ("parent".equals(qname)) {
+    if (currentGroupId != null && currentArtifactId != null && currentVersion != null) {
+      model.setParentReleaseId(new ReleaseIdImpl(currentGroupId,currentArtifactId,currentVersion));
+    }
+    currentGroupId=null;
+    currentArtifactId=null;
+    currentVersion=null;
+  }
+ else   if ("dependency".equals(qname)) {
+    if (currentGroupId != null && currentArtifactId != null && currentVersion != null) {
+      model.addDependency(new ReleaseIdImpl(currentGroupId,currentArtifactId,currentVersion));
+    }
+    currentGroupId=null;
+    currentArtifactId=null;
+    currentVersion=null;
+  }
+ else {
+    String text=(this.characters != null) ? this.characters.toString() : null;
+    if (text != null) {
+      if ("groupId".equals(qname)) {
+        if (depth == 2) {
+          pomGroupId=text;
+        }
+ else {
+          currentGroupId=text;
+        }
+      }
+ else       if ("artifactId".equals(qname)) {
+        if (depth == 2) {
+          pomArtifactId=text;
+        }
+ else {
+          currentArtifactId=text;
+        }
+      }
+ else       if ("version".equals(qname)) {
+        if (depth == 2) {
+          pomVersion=text;
+        }
+ else {
+          currentVersion=text;
+        }
+      }
+    }
+  }
+  this.characters=null;
+  depth--;
+}
