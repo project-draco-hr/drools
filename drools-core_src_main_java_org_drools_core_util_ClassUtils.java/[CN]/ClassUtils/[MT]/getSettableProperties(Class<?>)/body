@@ -1,19 +1,23 @@
 {
-  List<String> settableProperties=new ArrayList<String>();
+  Set<String> props=new HashSet<String>();
   for (  Method m : clazz.getMethods()) {
     if (m.getParameterTypes().length == 1) {
       String propName=setter2property(m.getName());
       if (propName != null) {
-        settableProperties.add(propName);
+        props.add(propName);
+      }
+    }
+    Modifies modifies=m.getAnnotation(Modifies.class);
+    if (modifies != null) {
+      for (      String prop : modifies.value()) {
+        props.add(prop.trim());
       }
     }
   }
   for (  Field f : clazz.getFields()) {
-    String fieldName=f.getName();
-    if (!settableProperties.contains(fieldName)) {
-      settableProperties.add(fieldName);
-    }
+    props.add(f.getName());
   }
+  List<String> settableProperties=new ArrayList<String>(props);
   Collections.sort(settableProperties);
   return settableProperties;
 }
