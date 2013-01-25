@@ -4,18 +4,8 @@
   }
   this.env=env;
   checkEnvironment(this.env);
-  this.sessionInfo=new SessionInfo();
   initTransactionManager(this.env);
-  this.ksession=kbase.newKieSession(conf,this.env);
-  this.kContext=new FixedKnowledgeCommandContext(null,null,null,this.ksession,null);
-  this.commandService=new DefaultCommandService(kContext);
-  ((AcceptsTimerJobFactoryManager)((InternalKnowledgeRuntime)ksession).getTimerService()).getTimerJobFactoryManager().setCommandService(this);
-  this.marshallingHelper=new SessionMarshallingHelper(this.ksession,conf);
-  MarshallingConfigurationImpl config=(MarshallingConfigurationImpl)this.marshallingHelper.getMarshaller().getMarshallingConfiguration();
-  config.setMarshallProcessInstances(false);
-  config.setMarshallWorkItems(false);
-  this.sessionInfo.setJPASessionMashallingHelper(this.marshallingHelper);
-  ((InternalKnowledgeRuntime)this.ksession).setEndOperationListener(new EndOperationListenerImpl(this.sessionInfo));
+  initNewKnowledgeSession(kbase,conf);
   PersistenceContext persistenceContext=jpm.getApplicationScopedPersistenceContext();
   boolean transactionOwner=false;
   try {
