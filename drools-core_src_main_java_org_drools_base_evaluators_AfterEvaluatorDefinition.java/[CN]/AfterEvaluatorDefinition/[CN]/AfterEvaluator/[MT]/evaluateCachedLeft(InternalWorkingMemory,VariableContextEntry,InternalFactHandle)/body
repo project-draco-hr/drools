@@ -1,0 +1,15 @@
+{
+  if (context.extractor.isNullValue(workingMemory,right)) {
+    return false;
+  }
+  long leftTS=((TemperalVariableContextEntry)context).left;
+  long rightTS;
+  if (context.getFieldExtractor().isSelfReference()) {
+    rightTS=((EventFactHandle)right).getEndTimestamp();
+  }
+ else {
+    rightTS=context.getFieldExtractor().getLongValue(workingMemory,right.getObject());
+  }
+  long dist=rightTS - leftTS;
+  return this.getOperator().isNegated() ^ (dist >= this.initRange && dist <= this.finalRange);
+}

@@ -1,0 +1,21 @@
+{
+  final Object objectValue=extractor.getValue(workingMemory,handle.getObject());
+  Object typeName=value.getValue();
+  if (typeName instanceof Class) {
+    typeName=((Class)typeName).getName();
+  }
+  TraitableBean core=null;
+  if (objectValue instanceof Thing) {
+    Thing thing=(Thing)objectValue;
+    core=(TraitableBean)thing.getCore();
+    return this.getOperator().isNegated() ^ core.hasTrait(typeName.toString());
+  }
+ else   if (objectValue instanceof TraitableBean) {
+    core=(TraitableBean)objectValue;
+    return this.getOperator().isNegated() ^ core.hasTrait(typeName.toString());
+  }
+ else {
+    core=lookForWrapper(objectValue,workingMemory);
+    return (core == null && this.getOperator().isNegated()) || (core != null && this.getOperator().isNegated() ^ core.hasTrait(typeName.toString()));
+  }
+}
