@@ -2,24 +2,14 @@
   if (context.rightNull) {
     return false;
   }
-  long rightTS;
-  if (this.unwrapRight) {
-    if (context instanceof ObjectVariableContextEntry) {
-      if (((ObjectVariableContextEntry)context).right instanceof Date) {
-        rightTS=((Date)((ObjectVariableContextEntry)context).right).getTime();
-      }
- else {
-        rightTS=((Number)((ObjectVariableContextEntry)context).right).longValue();
-      }
-    }
- else {
-      rightTS=((LongVariableContextEntry)context).right;
-    }
+  long rightTS=((TemporalVariableContextEntry)context).right;
+  long leftTS;
+  if (context.declaration.getExtractor().isSelfReference()) {
+    leftTS=((EventFactHandle)left).getStartTimestamp();
   }
  else {
-    rightTS=((EventFactHandle)((ObjectVariableContextEntry)context).right).getEndTimestamp();
+    leftTS=context.declaration.getExtractor().getLongValue(workingMemory,left.getObject());
   }
-  long leftTS=this.unwrapLeft ? context.declaration.getExtractor().getLongValue(workingMemory,left) : ((EventFactHandle)left).getStartTimestamp();
   long dist=leftTS - rightTS;
   return this.getOperator().isNegated() ^ (dist >= this.initRange && dist <= this.finalRange);
 }
