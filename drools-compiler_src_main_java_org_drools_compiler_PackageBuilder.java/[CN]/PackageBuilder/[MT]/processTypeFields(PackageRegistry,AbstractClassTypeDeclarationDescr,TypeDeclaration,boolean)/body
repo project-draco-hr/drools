@@ -15,7 +15,14 @@
   if (timestamp != null) {
     type.setTimestampAttribute(timestamp);
     Package pkg=pkgRegistry.getPackage();
-    InternalReadAccessor reader=pkg.getClassFieldAccessorStore().getMVELReader(ClassUtils.getPackage(type.getTypeClass()),type.getTypeClass().getName(),timestamp,type.isTypesafe(),Date.class);
+    MVELDialect dialect=(MVELDialect)pkgRegistry.getDialectCompiletimeRegistry().getDialect("mvel");
+    PackageBuildContext context=new PackageBuildContext();
+    context.init(this,pkg,typeDescr,pkgRegistry.getDialectCompiletimeRegistry(),dialect,null);
+    if (!type.isTypesafe()) {
+      context.setTypesafe(false);
+    }
+    MVELAnalysisResult results=(MVELAnalysisResult)context.getDialect().analyzeExpression(context,typeDescr,timestamp,new BoundIdentifiers(Collections.EMPTY_MAP,Collections.EMPTY_MAP,Collections.EMPTY_MAP,type.getTypeClass()));
+    InternalReadAccessor reader=pkg.getClassFieldAccessorStore().getMVELReader(ClassUtils.getPackage(type.getTypeClass()),type.getTypeClass().getName(),timestamp,type.isTypesafe(),results.getReturnType());
     MVELDialectRuntimeData data=(MVELDialectRuntimeData)pkg.getDialectRuntimeRegistry().getDialectData("mvel");
     data.addCompileable((MVELCompileable)reader);
     ((MVELCompileable)reader).compile(data);
@@ -26,7 +33,14 @@
   if (duration != null) {
     type.setDurationAttribute(duration);
     Package pkg=pkgRegistry.getPackage();
-    InternalReadAccessor reader=pkg.getClassFieldAccessorStore().getMVELReader(ClassUtils.getPackage(type.getTypeClass()),type.getTypeClass().getName(),duration,type.isTypesafe(),Number.class);
+    MVELDialect dialect=(MVELDialect)pkgRegistry.getDialectCompiletimeRegistry().getDialect("mvel");
+    PackageBuildContext context=new PackageBuildContext();
+    context.init(this,pkg,typeDescr,pkgRegistry.getDialectCompiletimeRegistry(),dialect,null);
+    if (!type.isTypesafe()) {
+      context.setTypesafe(false);
+    }
+    MVELAnalysisResult results=(MVELAnalysisResult)context.getDialect().analyzeExpression(context,typeDescr,timestamp,new BoundIdentifiers(Collections.EMPTY_MAP,Collections.EMPTY_MAP,Collections.EMPTY_MAP,type.getTypeClass()));
+    InternalReadAccessor reader=pkg.getClassFieldAccessorStore().getMVELReader(ClassUtils.getPackage(type.getTypeClass()),type.getTypeClass().getName(),duration,type.isTypesafe(),results.getReturnType());
     MVELDialectRuntimeData data=(MVELDialectRuntimeData)pkg.getDialectRuntimeRegistry().getDialectData("mvel");
     data.addCompileable((MVELCompileable)reader);
     ((MVELCompileable)reader).compile(data);
