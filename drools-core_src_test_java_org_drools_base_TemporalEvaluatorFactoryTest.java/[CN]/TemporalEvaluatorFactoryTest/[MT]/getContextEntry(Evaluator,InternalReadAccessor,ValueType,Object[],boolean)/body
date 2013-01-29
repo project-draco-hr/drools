@@ -1,6 +1,38 @@
 {
   final Declaration declaration=new Declaration("test",extractor,null);
   final ValueType coerced=evaluator.getCoercedValueType();
+  if (evaluator.isTemporal()) {
+    if (evaluator instanceof BeforeEvaluatorDefinition.BeforeEvaluator || evaluator instanceof MeetsEvaluatorDefinition.MeetsEvaluator) {
+      LeftStartRightEndContextEntry context=new LeftStartRightEndContextEntry(extractor,declaration,evaluator);
+      if (left) {
+        context.timestamp=((EventFactHandle)row[2]).getStartTimestamp();
+      }
+ else {
+        context.timestamp=((EventFactHandle)row[0]).getEndTimestamp();
+      }
+      return context;
+    }
+    if (evaluator instanceof AfterEvaluatorDefinition.AfterEvaluator || evaluator instanceof MetByEvaluatorDefinition.MetByEvaluator) {
+      LeftEndRightStartContextEntry context=new LeftEndRightStartContextEntry(extractor,declaration,evaluator);
+      if (left) {
+        context.timestamp=((EventFactHandle)row[2]).getEndTimestamp();
+      }
+ else {
+        context.timestamp=((EventFactHandle)row[0]).getStartTimestamp();
+      }
+      return context;
+    }
+    TemporalVariableContextEntry context=new TemporalVariableContextEntry(extractor,declaration,evaluator);
+    if (left) {
+      context.startTS=((EventFactHandle)row[2]).getStartTimestamp();
+      context.endTS=((EventFactHandle)row[2]).getEndTimestamp();
+    }
+ else {
+      context.startTS=((EventFactHandle)row[0]).getStartTimestamp();
+      context.endTS=((EventFactHandle)row[0]).getEndTimestamp();
+    }
+    return context;
+  }
   if (coerced.isIntegerNumber()) {
     final LongVariableContextEntry context=new LongVariableContextEntry(extractor,declaration,evaluator);
     if (row[2] == null) {
