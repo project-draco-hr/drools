@@ -1,9 +1,9 @@
 {
-  if (context.rightNull) {
+  if (context.rightNull || context.declaration.getExtractor().isNullValue(workingMemory,left.getObject())) {
     return false;
   }
   long leftStartTS=((EventFactHandle)left).getStartTimestamp();
-  long rightEndTS=((EventFactHandle)((ObjectVariableContextEntry)context).right).getEndTimestamp();
+  long rightEndTS=((TemporalVariableContextEntry)context).endTS;
   long dist=rightEndTS - leftStartTS;
-  return this.getOperator().isNegated() ^ (((EventFactHandle)((ObjectVariableContextEntry)context).right).getStartTimestamp() < leftStartTS && rightEndTS < ((EventFactHandle)left).getEndTimestamp() && dist >= this.minDev && dist <= this.maxDev);
+  return this.getOperator().isNegated() ^ (((TemporalVariableContextEntry)context).startTS < leftStartTS && rightEndTS < ((EventFactHandle)left).getEndTimestamp() && dist >= this.minDev && dist <= this.maxDev);
 }

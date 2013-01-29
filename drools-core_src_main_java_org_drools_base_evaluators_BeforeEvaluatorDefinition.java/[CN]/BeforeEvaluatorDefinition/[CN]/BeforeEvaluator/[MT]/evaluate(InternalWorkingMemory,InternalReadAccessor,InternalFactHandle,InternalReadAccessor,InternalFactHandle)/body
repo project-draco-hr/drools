@@ -1,9 +1,21 @@
 {
-  if (extractor1.isNullValue(workingMemory,object1)) {
+  if (extractor1.isNullValue(workingMemory,handle1.getObject()) || extractor2.isNullValue(workingMemory,handle2.getObject())) {
     return false;
   }
-  long rightTS=this.unwrapRight ? extractor1.getLongValue(workingMemory,object1) : ((EventFactHandle)object1).getEndTimestamp();
-  long leftTS=this.unwrapLeft ? extractor2.getLongValue(workingMemory,object2) : ((EventFactHandle)object2).getStartTimestamp();
+  long rightTS;
+  if (extractor1.isSelfReference()) {
+    rightTS=((EventFactHandle)handle1).getEndTimestamp();
+  }
+ else {
+    rightTS=extractor1.getLongValue(workingMemory,handle1.getObject());
+  }
+  long leftTS;
+  if (extractor2.isSelfReference()) {
+    leftTS=((EventFactHandle)handle2).getStartTimestamp();
+  }
+ else {
+    leftTS=extractor2.getLongValue(workingMemory,handle2.getObject());
+  }
   long dist=leftTS - rightTS;
   return this.getOperator().isNegated() ^ (dist >= this.initRange && dist <= this.finalRange);
 }

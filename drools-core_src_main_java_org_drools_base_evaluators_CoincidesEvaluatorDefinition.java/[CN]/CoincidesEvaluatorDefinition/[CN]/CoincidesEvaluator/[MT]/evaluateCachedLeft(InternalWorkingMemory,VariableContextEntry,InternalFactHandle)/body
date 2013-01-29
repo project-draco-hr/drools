@@ -1,29 +1,19 @@
 {
-  if (context.extractor.isNullValue(workingMemory,right)) {
+  if (context.leftNull || context.extractor.isNullValue(workingMemory,right.getObject())) {
     return false;
   }
   long rightStartTS, rightEndTS;
   long leftStartTS, leftEndTS;
-  rightStartTS=this.unwrapRight ? context.extractor.getLongValue(workingMemory,right) : ((EventFactHandle)right).getStartTimestamp();
-  rightEndTS=this.unwrapRight ? rightStartTS : ((EventFactHandle)right).getEndTimestamp();
-  if (this.unwrapLeft) {
-    if (context instanceof ObjectVariableContextEntry) {
-      if (((ObjectVariableContextEntry)context).left instanceof Date) {
-        leftStartTS=((Date)((ObjectVariableContextEntry)context).left).getTime();
-      }
- else {
-        leftStartTS=((Number)((ObjectVariableContextEntry)context).left).longValue();
-      }
-    }
- else {
-      leftStartTS=((LongVariableContextEntry)context).left;
-    }
-    leftEndTS=leftStartTS;
+  if (context.extractor.isSelfReference()) {
+    rightStartTS=((EventFactHandle)right).getStartTimestamp();
+    rightEndTS=((EventFactHandle)right).getEndTimestamp();
   }
  else {
-    leftStartTS=((EventFactHandle)((ObjectVariableContextEntry)context).left).getStartTimestamp();
-    leftEndTS=((EventFactHandle)((ObjectVariableContextEntry)context).left).getEndTimestamp();
+    rightStartTS=context.extractor.getLongValue(workingMemory,right.getObject());
+    rightEndTS=rightStartTS;
   }
+  leftStartTS=((TemporalVariableContextEntry)context).startTS;
+  leftEndTS=((TemporalVariableContextEntry)context).endTS;
   long distStart=Math.abs(rightStartTS - leftStartTS);
   long distEnd=Math.abs(rightEndTS - leftEndTS);
   return this.getOperator().isNegated() ^ (distStart <= this.startDev && distEnd <= this.endDev);

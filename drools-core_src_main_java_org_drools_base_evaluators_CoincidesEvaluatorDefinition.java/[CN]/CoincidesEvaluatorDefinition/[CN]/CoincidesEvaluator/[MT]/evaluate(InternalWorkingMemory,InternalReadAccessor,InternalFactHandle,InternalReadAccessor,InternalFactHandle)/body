@@ -1,13 +1,25 @@
 {
-  if (extractor1.isNullValue(workingMemory,object1)) {
+  if (extractor1.isNullValue(workingMemory,handle1.getObject()) || extractor2.isNullValue(workingMemory,handle2.getObject())) {
     return false;
   }
   long rightStartTS, rightEndTS;
   long leftStartTS, leftEndTS;
-  rightStartTS=this.unwrapRight ? extractor1.getLongValue(workingMemory,object1) : ((EventFactHandle)object1).getStartTimestamp();
-  rightEndTS=this.unwrapRight ? rightStartTS : ((EventFactHandle)object1).getEndTimestamp();
-  leftStartTS=this.unwrapLeft ? extractor2.getLongValue(workingMemory,object2) : ((EventFactHandle)object2).getStartTimestamp();
-  leftEndTS=this.unwrapLeft ? leftStartTS : ((EventFactHandle)object2).getEndTimestamp();
+  if (extractor1.isSelfReference()) {
+    rightStartTS=((EventFactHandle)handle1).getStartTimestamp();
+    rightEndTS=((EventFactHandle)handle1).getEndTimestamp();
+  }
+ else {
+    rightStartTS=extractor1.getLongValue(workingMemory,handle1.getObject());
+    rightEndTS=rightStartTS;
+  }
+  if (extractor2.isSelfReference()) {
+    leftStartTS=((EventFactHandle)handle2).getStartTimestamp();
+    leftEndTS=((EventFactHandle)handle2).getEndTimestamp();
+  }
+ else {
+    leftStartTS=extractor2.getLongValue(workingMemory,handle2.getObject());
+    leftEndTS=leftStartTS;
+  }
   long distStart=Math.abs(rightStartTS - leftStartTS);
   long distEnd=Math.abs(rightEndTS - leftEndTS);
   return this.getOperator().isNegated() ^ (distStart <= this.startDev && distEnd <= this.endDev);

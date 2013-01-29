@@ -1,10 +1,13 @@
 {
   ValueType coerced=evaluator.getCoercedValueType();
-  if (evaluator instanceof AfterEvaluator || evaluator instanceof BeforeEvaluator) {
+  if (evaluator.isTemporal()) {
+    if (evaluator instanceof BeforeEvaluator || evaluator instanceof MeetsEvaluator) {
+      return new LeftStartRightEndContextEntry(fieldExtractor,declaration,evaluator);
+    }
+    if (evaluator instanceof AfterEvaluator || evaluator instanceof MetByEvaluator) {
+      return new LeftEndRightStartContextEntry(fieldExtractor,declaration,evaluator);
+    }
     return new TemporalVariableContextEntry(fieldExtractor,declaration,evaluator);
-  }
-  if (evaluator instanceof CoincidesEvaluator || evaluator instanceof MetByEvaluator) {
-    return new DurationVariableContextEntry(fieldExtractor,declaration,evaluator);
   }
   if (coerced.isBoolean()) {
     return new BooleanVariableContextEntry(fieldExtractor,declaration,evaluator);
