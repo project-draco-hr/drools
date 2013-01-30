@@ -60,8 +60,22 @@
   boolean propertyReactive=propertySpecificOption.isPropSpecific(typeDescr.getAnnotationNames().contains(TypeDeclaration.ATTR_PROP_SPECIFIC),typeDescr.getAnnotationNames().contains(TypeDeclaration.ATTR_NOT_PROP_SPECIFIC));
   setPropertyReactive(typeDescr.getResource(),type,propertyReactive);
   if (type.isValid()) {
-    if (type.getNature() == TypeDeclaration.Nature.DEFINITION || pkgRegistry.getPackage().getTypeDeclaration(type.getTypeName()) == null) {
+    if (type.getNature() == TypeDeclaration.Nature.DEFINITION) {
       pkgRegistry.getPackage().addTypeDeclaration(type);
+    }
+ else {
+      TypeDeclaration oldType=pkgRegistry.getPackage().getTypeDeclaration(type.getTypeName());
+      if (oldType == null) {
+        pkgRegistry.getPackage().addTypeDeclaration(type);
+      }
+ else {
+        if (type.getRole() == TypeDeclaration.Role.EVENT) {
+          oldType.setRole(TypeDeclaration.Role.EVENT);
+        }
+        if (type.isPropertyReactive()) {
+          oldType.setPropertyReactive(true);
+        }
+      }
     }
   }
   return true;
