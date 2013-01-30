@@ -12,32 +12,11 @@
       factory.getIndexedVariableResolver(i++).setValue(globals.resolveGlobal(globalIdentifier));
     }
   }
-  InternalFactHandle[] handles;
-  if (tuples != null) {
-    handles=tuples.toFactHandles();
-  }
- else {
-    handles=new InternalFactHandle[0];
-  }
+  InternalFactHandle[] handles=tuples != null ? tuples.toFactHandles() : new InternalFactHandle[0];
   if (operators != null) {
     for (    EvaluatorWrapper operator : operators) {
-      factory.getIndexedVariableResolver(i++).setValue(operator.setWorkingMemory(workingMemory));
-      if (operator.getLeftBinding() != null) {
-        if (operator.getLeftBinding().getIdentifier().equals("this")) {
-          operator.setLeftHandle((InternalFactHandle)workingMemory.getFactHandle(rightObject));
-        }
- else {
-          operator.setLeftHandle(getFactHandle(operator.getLeftBinding(),handles));
-        }
-      }
-      if (operator.getRightBinding() != null) {
-        if (operator.getRightBinding().getIdentifier().equals("this")) {
-          operator.setRightHandle((InternalFactHandle)workingMemory.getFactHandle(rightObject));
-        }
- else {
-          operator.setRightHandle(getFactHandle(operator.getRightBinding(),handles));
-        }
-      }
+      factory.getIndexedVariableResolver(i++).setValue(operator);
+      operator.loadHandles(workingMemory,handles,rightObject);
     }
   }
   IdentityHashMap<Object,FactHandle> identityMap=null;

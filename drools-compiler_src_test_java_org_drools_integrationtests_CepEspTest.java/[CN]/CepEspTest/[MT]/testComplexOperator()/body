@@ -1,0 +1,33 @@
+{
+  KieBaseConfiguration conf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  conf.setOption(EventProcessingOption.STREAM);
+  final KnowledgeBase kbase=loadKnowledgeBase(conf,"test_CEP_ComplexOperator.drl");
+  KieSessionConfiguration sconf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  sconf.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase,sconf);
+  final PseudoClockScheduler clock=(PseudoClockScheduler)ksession.<SessionClock>getSessionClock();
+  clock.setStartupTime(1000);
+  AgendaEventListener ael=mock(AgendaEventListener.class);
+  ksession.addEventListener(ael);
+  StockTickInterface tick1=new StockTick(1,"DROO",50,0,3);
+  StockTickInterface tick2=new StockTick(2,"ACME",10,4,3);
+  StockTickInterface tick3=new StockTick(3,"ACME",10,8,3);
+  StockTickInterface tick4=new StockTick(4,"DROO",50,12,5);
+  StockTickInterface tick5=new StockTick(5,"ACME",10,12,5);
+  StockTickInterface tick6=new StockTick(6,"ACME",10,13,3);
+  StockTickInterface tick7=new StockTick(7,"ACME",10,13,5);
+  StockTickInterface tick8=new StockTick(8,"ACME",10,15,3);
+  ksession.insert(tick1);
+  ksession.insert(tick2);
+  ksession.insert(tick3);
+  ksession.insert(tick4);
+  ksession.insert(tick5);
+  ksession.insert(tick6);
+  ksession.insert(tick7);
+  ksession.insert(tick8);
+  ArgumentCaptor<MatchCreatedEvent> arg=ArgumentCaptor.forClass(MatchCreatedEvent.class);
+  verify(ael).matchCreated(arg.capture());
+  assertThat(arg.getValue().getMatch().getRule().getName(),is("before"));
+  ksession.fireAllRules();
+  verify(ael).afterMatchFired(any(AfterMatchFiredEvent.class));
+}
