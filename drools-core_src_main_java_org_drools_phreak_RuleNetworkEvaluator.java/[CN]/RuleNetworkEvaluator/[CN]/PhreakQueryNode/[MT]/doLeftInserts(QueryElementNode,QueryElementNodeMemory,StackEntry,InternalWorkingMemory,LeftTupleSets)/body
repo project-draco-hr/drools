@@ -1,0 +1,13 @@
+{
+  for (LeftTuple leftTuple=srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    PropagationContext pCtx=(PropagationContext)leftTuple.getPropagationContext();
+    InternalFactHandle handle=queryNode.createFactHandle(pCtx,wm,leftTuple);
+    DroolsQuery dquery=queryNode.createDroolsQuery(leftTuple,handle,stackEntry,qmem.getSegmentMemory().getPathMemories(),qmem.getResultLeftTuples(),stackEntry.getSink(),wm);
+    LeftInputAdapterNode lian=(LeftInputAdapterNode)qmem.getQuerySegmentMemory().getRootNode();
+    LiaNodeMemory lm=(LiaNodeMemory)qmem.getQuerySegmentMemory().getNodeMemories().get(0);
+    LeftInputAdapterNode.doInsertObject(handle,pCtx,lian,wm,lm,false,dquery.isOpen());
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+}

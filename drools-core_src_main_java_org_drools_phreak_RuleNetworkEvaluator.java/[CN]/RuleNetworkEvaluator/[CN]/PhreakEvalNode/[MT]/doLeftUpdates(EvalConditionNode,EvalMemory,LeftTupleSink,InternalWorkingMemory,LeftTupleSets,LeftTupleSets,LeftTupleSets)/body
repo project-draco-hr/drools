@@ -1,0 +1,41 @@
+{
+  EvalCondition condition=evalNode.getCondition();
+  for (LeftTuple leftTuple=srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    boolean wasPropagated=leftTuple.getFirstChild() != null;
+    boolean allowed=condition.isAllowed(leftTuple,wm,em.context);
+    if (allowed) {
+      if (wasPropagated) {
+        LeftTuple childLeftTuple=leftTuple.getFirstChild();
+switch (childLeftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+          stagedLeftTuples.removeInsert(childLeftTuple);
+        break;
+case LeftTuple.UPDATE:
+      stagedLeftTuples.removeUpdate(childLeftTuple);
+    break;
+}
+trgLeftTuples.addUpdate(childLeftTuple);
+}
+ else {
+trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,sink,true));
+}
+}
+ else {
+if (wasPropagated) {
+LeftTuple childLeftTuple=leftTuple.getFirstChild();
+switch (childLeftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+  stagedLeftTuples.removeInsert(childLeftTuple);
+break;
+case LeftTuple.UPDATE:
+stagedLeftTuples.removeUpdate(childLeftTuple);
+break;
+}
+trgLeftTuples.addDelete(childLeftTuple);
+}
+}
+leftTuple.clearStaged();
+leftTuple=next;
+}
+}

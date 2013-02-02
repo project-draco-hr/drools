@@ -1,0 +1,37 @@
+{
+  if (conf == null) {
+    conf=new SessionConfiguration();
+  }
+  this.env=env;
+  checkEnvironment(this.env);
+  this.sessionInfo=new SessionInfo();
+  initTransactionManager(this.env);
+  this.ksession=kbase.newStatefulKnowledgeSession(conf,this.env);
+  this.kContext=new FixedKnowledgeCommandContext(null,null,null,this.ksession,null);
+  this.commandService=new DefaultCommandService(kContext);
+  ((AcceptsTimerJobFactoryManager)((InternalKnowledgeRuntime)ksession).getTimerService()).getTimerJobFactoryManager().setCommandService(this);
+  this.marshallingHelper=new SessionMarshallingHelper(this.ksession,conf);
+  MarshallingConfigurationImpl config=(MarshallingConfigurationImpl)this.marshallingHelper.getMarshaller().getMarshallingConfiguration();
+  config.setMarshallProcessInstances(false);
+  config.setMarshallWorkItems(false);
+  this.sessionInfo.setJPASessionMashallingHelper(this.marshallingHelper);
+  ((InternalKnowledgeRuntime)this.ksession).setEndOperationListener(new EndOperationListenerImpl(this.sessionInfo));
+  PersistenceContext persistenceContext=jpm.getApplicationScopedPersistenceContext();
+  boolean transactionOwner=false;
+  try {
+    transactionOwner=txm.begin();
+    registerRollbackSync();
+    persistenceContext.joinTransaction();
+    persistenceContext.persist(this.sessionInfo);
+    txm.commit(transactionOwner);
+  }
+ catch (  RuntimeException re) {
+    rollbackTransaction(re,transactionOwner);
+    throw re;
+  }
+catch (  Exception t1) {
+    rollbackTransaction(t1,transactionOwner);
+    throw new RuntimeException("Wrapped exception see cause",t1);
+  }
+  ((InternalKnowledgeRuntime)ksession).setId(this.sessionInfo.getId());
+}

@@ -1,0 +1,35 @@
+{
+  if (childLeftTuple == null) {
+    for (; rightTuple != null; rightTuple=(RightTuple)it.next(rightTuple)) {
+      if (constraints.isAllowedCachedLeft(contextEntry,rightTuple.getFactHandle())) {
+        trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,rightTuple,null,null,sink,true));
+      }
+    }
+  }
+ else {
+    for (; rightTuple != null; rightTuple=(RightTuple)it.next(rightTuple)) {
+      if (constraints.isAllowedCachedLeft(contextEntry,rightTuple.getFactHandle())) {
+        if (childLeftTuple == null || childLeftTuple.getRightParent() != rightTuple) {
+          trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,rightTuple,null,null,sink,true));
+        }
+ else {
+switch (childLeftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+            stagedLeftTuples.removeInsert(childLeftTuple);
+          break;
+case LeftTuple.UPDATE:
+        stagedLeftTuples.removeUpdate(childLeftTuple);
+      break;
+  }
+  trgLeftTuples.addUpdate(childLeftTuple);
+  childLeftTuple.reAddRight();
+  childLeftTuple=childLeftTuple.getLeftParentNext();
+}
+}
+ else if (childLeftTuple != null && childLeftTuple.getRightParent() == rightTuple) {
+childLeftTuple=deleteLeftChild(childLeftTuple,trgLeftTuples,stagedLeftTuples);
+}
+}
+}
+return childLeftTuple;
+}

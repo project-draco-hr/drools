@@ -1,15 +1,6 @@
 {
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newClassPathResource("test_QueryMemoryLeak.drl",getClass()),ResourceType.DRL);
-  KnowledgeBuilderErrors errors=kbuilder.getErrors();
-  if (errors.size() > 0) {
-    for (    KnowledgeBuilderError error : errors) {
-      System.err.println(error);
-    }
-    throw new IllegalArgumentException("Could not parse knowledge.");
-  }
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_QueryMemoryLeak.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   String workerId="B1234";
   Worker worker=new Worker();
@@ -29,7 +20,7 @@
   Collection<EntryPointNode> entryPointNodes=ruleBase.getRete().getEntryPointNodes().values();
   EntryPointNode defaultEntryPointNode=null;
   for (  EntryPointNode epNode : entryPointNodes) {
-    if (epNode.getEntryPoint().getEntryPointId() == "DEFAULT") {
+    if (epNode.getEntryPoint().getEntryPointId().equals("DEFAULT")) {
       defaultEntryPointNode=epNode;
       break;
     }

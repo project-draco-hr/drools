@@ -1,14 +1,10 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Query.drl")));
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(builder.getPackage());
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
-  workingMemory.fireAllRules();
-  final QueryResults results=workingMemory.getQueryResults("collect objects");
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_Query.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+  session.fireAllRules();
+  org.kie.runtime.rule.QueryResults results=session.getQueryResults("collect objects");
   assertEquals(1,results.size());
-  final QueryResult result=results.get(0);
-  final List list=(List)result.get("$list");
+  final QueryResultsRow row=results.iterator().next();
+  final List list=(List)row.get("$list");
   assertEquals(2,list.size());
 }

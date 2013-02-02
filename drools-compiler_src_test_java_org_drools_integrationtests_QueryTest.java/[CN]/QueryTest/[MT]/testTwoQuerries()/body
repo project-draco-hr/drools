@@ -1,19 +1,14 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_TwoQuerries.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_TwoQuerries.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   final Cheese stilton=new Cheese("stinky",5);
-  workingMemory.insert(stilton);
+  session.insert(stilton);
   final Person per1=new Person("stinker","smelly feet",70);
   final Person per2=new Person("skunky","smelly armpits",40);
-  workingMemory.insert(per1);
-  workingMemory.insert(per2);
-  QueryResults results=workingMemory.getQueryResults("find stinky cheeses");
+  session.insert(per1);
+  session.insert(per2);
+  org.kie.runtime.rule.QueryResults results=session.getQueryResults("find stinky cheeses");
   assertEquals(1,results.size());
-  results=workingMemory.getQueryResults("find pensioners");
+  results=session.getQueryResults("find pensioners");
   assertEquals(1,results.size());
 }

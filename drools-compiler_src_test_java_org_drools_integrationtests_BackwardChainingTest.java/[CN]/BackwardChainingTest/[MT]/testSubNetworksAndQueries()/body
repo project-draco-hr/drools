@@ -1,14 +1,7 @@
 {
   String str="" + "package org.drools.test  \n" + "import java.util.List\n"+ "import java.util.ArrayList\n"+ "import java.util.Map\n"+ "import java.util.HashMap\n"+ "global List list\n"+ "dialect \"mvel\"\n"+ "\n"+ "declare Location\n"+ "    thing : String \n"+ "    location : String \n"+ "end"+ "\n"+ "declare Edible\n"+ "   thing : String\n"+ "end"+ "\n"+ "query whereFood( String x, String y ) \n"+ "    Location(x, y;) Edible(x;) \n"+ "end\n"+ "\n"+ "query look(String place, List food ) \n"+ "    $s : String() // just here to give a OTN lookup point\n"+ "    food := List() from accumulate( whereFood(thing, place;) ,"+ "                                    collectList( thing ) )\n"+ "    exists( whereFood(thing, place;) )\n"+ "    not( whereFood(thing, place;) and\n "+ "         String( this == $s ) from thing )\n"+ "end\n"+ "\n"+ "rule init when\n"+ "then\n"+ "        \n"+ "        insert( new Location(\"apple\", \"kitchen\") );\n"+ "        insert( new Location(\"crackers\", \"kitchen\") );\n"+ "        insert( new Location(\"broccoli\", \"kitchen\") );\n"+ "        insert( new Location(\"computer\", \"office\") );\n"+ "        insert( new Edible(\"apple\") );\n"+ "        insert( new Edible(\"crackers\") );\n"+ "end\n"+ "";
   logger.debug(str);
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    fail(kbuilder.getErrors().toString());
-  }
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  kbase=SerializationHelper.serializeObject(kbase);
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(str));
   List<ObjectTypeNode> nodes=((InternalRuleBase)((KnowledgeBaseImpl)kbase).ruleBase).getRete().getObjectTypeNodes();
   ObjectTypeNode node=null;
   for (  ObjectTypeNode n : nodes) {
@@ -84,12 +77,22 @@
   assertEquals(2,existsMemory.getRightTupleMemory().size());
   assertEquals(2,fromMemory.betaMemory.getLeftTupleMemory().size());
   assertEquals(0,notMemory.getRightTupleMemory().size());
+  food.clear();
   ksession.update(fh,"crackers");
+  ksession.fireAllRules();
   assertEquals(2,accMemory.betaMemory.getRightTupleMemory().size());
   assertEquals(2,existsMemory.getRightTupleMemory().size());
   assertEquals(2,fromMemory.betaMemory.getLeftTupleMemory().size());
   assertEquals(1,notMemory.getRightTupleMemory().size());
-  assertContains(new String[]{"crackers","apple"},foodUpdated);
+  assertEquals(0,foodUpdated.size());
+  ksession.update(fh,"oranges");
+  ksession.fireAllRules();
+  assertEquals(2,accMemory.betaMemory.getRightTupleMemory().size());
+  assertEquals(2,existsMemory.getRightTupleMemory().size());
+  assertEquals(2,fromMemory.betaMemory.getLeftTupleMemory().size());
+  assertEquals(0,notMemory.getRightTupleMemory().size());
+  assertEquals(2,food.size());
+  assertContains(new String[]{"crackers","apple"},food);
   query.close();
   assertEquals(0,accMemory.betaMemory.getRightTupleMemory().size());
   assertEquals(0,existsMemory.getRightTupleMemory().size());

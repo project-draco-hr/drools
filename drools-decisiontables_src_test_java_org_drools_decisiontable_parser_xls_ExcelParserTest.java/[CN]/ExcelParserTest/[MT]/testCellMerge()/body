@@ -1,17 +1,24 @@
 {
   ExcelParser parser=new ExcelParser((Map<String,List<DataListener>>)null);
-  CellRangeAddress[] ranges=new CellRangeAddress[1];
-  Workbook workbook=new XSSFWorkbook();
-  Sheet sheet=workbook.createSheet();
-  Cell cell=sheet.createRow(2).createCell(2);
-  ranges[0]=new CellRangeAddress(2,7,2,5);
-  cell.setCellValue(FIRST_CELL_CONTENT);
-  cell=sheet.createRow(7).createCell(5);
-  cell.setCellValue(LAST_CELL_VALUE);
-  cell=sheet.createRow(1).createCell(1);
+  Range[] ranges=new Range[1];
+  MockRange r1=new MockRange();
+  ranges[0]=r1;
+  r1.topLeft=new MockCell();
+  r1.topLeft.row=2;
+  r1.topLeft.column=2;
+  r1.topLeft.contents="first";
+  r1.bottomRight=new MockCell();
+  r1.bottomRight.column=5;
+  r1.bottomRight.row=7;
+  r1.bottomRight.contents="last";
+  MockCell cell=new MockCell();
+  cell.contents="test";
+  cell.row=1;
+  cell.column=1;
   assertNull(parser.getRangeIfMerged(cell,ranges));
-  cell=sheet.getRow(2).createCell(5);
-  cell.setCellValue("wrong");
-  CellRangeAddress rangeIfMerged=parser.getRangeIfMerged(cell,ranges);
-  assertEquals(FIRST_CELL_CONTENT,sheet.getRow(rangeIfMerged.getFirstRow()).getCell(rangeIfMerged.getFirstColumn()).getStringCellValue());
+  cell=new MockCell();
+  cell.contents="wrong";
+  cell.row=2;
+  cell.column=5;
+  assertEquals("first",parser.getRangeIfMerged(cell,ranges).getTopLeft().getContents());
 }

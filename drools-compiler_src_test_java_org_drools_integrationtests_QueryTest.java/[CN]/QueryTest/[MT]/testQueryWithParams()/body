@@ -1,23 +1,16 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_QueryWithParams.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(builder.getPackage());
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
-  workingMemory.fireAllRules();
-  QueryResults results=workingMemory.getQueryResults("assertedobjquery",new String[]{"value1"});
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_QueryWithParams.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+  session.fireAllRules();
+  org.kie.runtime.rule.QueryResults results=session.getQueryResults("assertedobjquery",new String[]{"value1"});
   assertEquals(1,results.size());
-  assertEquals(new InsertedObject("value1"),results.get(0).get(0));
-  results=workingMemory.getQueryResults("assertedobjquery",new String[]{"value3"});
+  assertEquals(new InsertedObject("value1"),((InternalFactHandle)results.iterator().next().getFactHandle("assertedobj")).getObject());
+  results=session.getQueryResults("assertedobjquery",new String[]{"value3"});
   assertEquals(0,results.size());
-  results=workingMemory.getQueryResults("assertedobjquery2",new String[]{null,"value2"});
+  results=session.getQueryResults("assertedobjquery2",new String[]{null,"value2"});
   assertEquals(1,results.size());
-  assertEquals(new InsertedObject("value2"),results.get(0).get(0));
-  results=workingMemory.getQueryResults("assertedobjquery2",new String[]{"value3","value2"});
+  assertEquals(new InsertedObject("value2"),((InternalFactHandle)results.iterator().next().getFactHandle("assertedobj")).getObject());
+  results=session.getQueryResults("assertedobjquery2",new String[]{"value3","value2"});
   assertEquals(1,results.size());
-  assertEquals(new InsertedObject("value2"),results.get(0).get(0));
+  assertEquals(new InsertedObject("value2"),((InternalFactHandle)results.iterator().next().getFactHandle("assertedobj")).getObject());
 }

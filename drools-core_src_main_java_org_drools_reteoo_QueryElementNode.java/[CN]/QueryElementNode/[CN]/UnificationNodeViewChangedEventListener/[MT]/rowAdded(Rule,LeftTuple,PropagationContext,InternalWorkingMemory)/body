@@ -1,22 +1,29 @@
 {
   QueryTerminalNode node=(QueryTerminalNode)resultLeftTuple.getLeftTupleSink();
   Declaration[] decls=node.getDeclarations();
-  DroolsQuery query=(DroolsQuery)this.factHandle.getObject();
-  Object[] objects=new Object[query.getElements().length];
+  DroolsQuery dquery=(DroolsQuery)this.factHandle.getObject();
+  Object[] objects=new Object[dquery.getElements().length];
   Declaration decl;
   for (int i=0, length=this.variables.length; i < length; i++) {
     decl=decls[this.variables[i]];
     objects[this.variables[i]]=decl.getValue(workingMemory,resultLeftTuple.get(decl).getObject());
   }
   QueryElementFactHandle resultHandle=createQueryResultHandle(context,workingMemory,objects);
-  RightTuple rightTuple=createResultRightTuple(resultHandle,resultLeftTuple,query.isOpen());
-  this.node.getSinkPropagator().createChildLeftTuplesforQuery(this.leftTuple,rightTuple,true,query.isOpen());
-  RightTupleList rightTuples=query.getResultInsertRightTupleList();
-  if (rightTuples == null) {
-    rightTuples=new RightTupleList();
-    query.setResultInsertRightTupleList(rightTuples);
-    QueryResultInsertAction evalAction=new QueryResultInsertAction(context,this.factHandle,leftTuple,this.node);
-    context.getQueue2().addFirst(evalAction);
+  RightTuple rightTuple=createResultRightTuple(resultHandle,resultLeftTuple,dquery.isOpen());
+  if (unlinkedEnabled) {
+    LeftTupleSink sink=dquery.getLeftTupleSink();
+    LeftTuple childLeftTuple=sink.createLeftTuple(this.leftTuple,rightTuple,sink);
+    dquery.getResultLeftTupleSets().addInsert(childLeftTuple);
   }
-  rightTuples.add(rightTuple);
+ else {
+    this.node.getSinkPropagator().createChildLeftTuplesforQuery(this.leftTuple,rightTuple,true,dquery.isOpen());
+    RightTupleList rightTuples=dquery.getResultInsertRightTupleList();
+    if (rightTuples == null) {
+      rightTuples=new RightTupleList();
+      dquery.setResultInsertRightTupleList(rightTuples);
+      QueryResultInsertAction evalAction=new QueryResultInsertAction(context,this.factHandle,leftTuple,this.node);
+      context.getQueue2().addFirst(evalAction);
+    }
+    rightTuples.add(rightTuple);
+  }
 }

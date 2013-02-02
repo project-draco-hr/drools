@@ -5,11 +5,10 @@
     this.lock.lock();
     this.ruleBase.executeQueuedActions();
     executeQueuedActions();
-    DroolsQuery queryObject=new DroolsQuery(query,arguments,new OpenQueryViewChangedEventListenerAdapter(listener),true);
+    DroolsQuery queryObject=new DroolsQuery(query,arguments,new OpenQueryViewChangedEventListenerAdapter(listener),true,null,null,null,null);
     InternalFactHandle handle=this.handleFactory.newFactHandle(queryObject,null,this,this);
-    final PropagationContext propagationContext=new PropagationContextImpl(getNextPropagationIdCounter(),PropagationContext.INSERTION,null,null,handle,agenda.getActiveActivations(),agenda.getDormantActivations(),getEntryPoint());
-    getEntryPointNode().assertQuery(handle,propagationContext,this);
-    propagationContext.evaluateActionQueue(this);
+    final PropagationContext pCtx=new PropagationContextImpl(getNextPropagationIdCounter(),PropagationContext.INSERTION,null,null,handle,agenda.getActiveActivations(),agenda.getDormantActivations(),getEntryPoint());
+    BaseNode[] tnodes=evalQuery(queryObject.getName(),queryObject,handle,pCtx);
     executeQueuedActions();
     return new LiveQueryImpl(this,handle);
   }

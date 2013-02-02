@@ -1,0 +1,31 @@
+{
+  BaseNode[] tnodes=(BaseNode[])ruleBase.getReteooBuilder().getTerminalNodes(queryName);
+  if (this.ruleBase.getConfiguration().isUnlinkingEnabled()) {
+    if (tnodes == null) {
+      throw new RuntimeException("Query '" + queryName + "' does not exist");
+    }
+    QueryTerminalNode tnode=(QueryTerminalNode)tnodes[0];
+    LeftTupleSource lts=tnode.getLeftTupleSource();
+    while (lts.getType() != NodeTypeEnums.LeftInputAdapterNode) {
+      lts=lts.getLeftTupleSource();
+    }
+    LeftInputAdapterNode lian=(LeftInputAdapterNode)lts;
+    LiaNodeMemory lmem=(LiaNodeMemory)getNodeMemory((MemoryFactory)lts);
+    SegmentMemory lsmem=lmem.getSegmentMemory();
+    if (lsmem == null) {
+      lsmem=SegmentUtilities.createSegmentMemory(lts,this);
+    }
+    LeftInputAdapterNode.doInsertObject(handle,pCtx,lian,this,lmem,false,queryObject.isOpen());
+    List<PathMemory> rmems=lmem.getSegmentMemory().getPathMemories();
+    for (int i=0, length=rmems.size(); i < length; i++) {
+      PathMemory rm=rmems.get(i);
+      RuleNetworkEvaluatorActivation evaluator=agenda.createRuleNetworkEvaluatorActivation(Integer.MAX_VALUE,rm,rm.getRuleTerminalNode());
+      evaluator.evaluateNetwork(this);
+    }
+  }
+ else {
+    getEntryPointNode().assertQuery(handle,pCtx,this);
+    pCtx.evaluateActionQueue(this);
+  }
+  return tnodes;
+}

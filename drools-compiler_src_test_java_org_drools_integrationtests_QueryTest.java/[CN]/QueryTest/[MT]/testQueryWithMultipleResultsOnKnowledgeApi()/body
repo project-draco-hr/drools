@@ -6,15 +6,8 @@
   str+="    stilton : Cheese(type == 'stilton') \n";
   str+="    cheddar : Cheese(type == 'cheddar', price == stilton.price) \n";
   str+="end\n";
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    fail(kbuilder.getErrors().toString());
-  }
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  kbase=SerializationHelper.serializeObject(kbase);
-  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(str));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   Cheese stilton1=new Cheese("stilton",1);
   Cheese cheddar1=new Cheese("cheddar",1);
   Cheese stilton2=new Cheese("stilton",2);
@@ -34,13 +27,13 @@
   list.add(stilton3);
   list.add(cheddar3);
   set.add(list);
-  ksession.insert(stilton1);
-  ksession.insert(stilton2);
-  ksession.insert(stilton3);
-  ksession.insert(cheddar1);
-  ksession.insert(cheddar2);
-  ksession.insert(cheddar3);
-  org.kie.runtime.rule.QueryResults results=ksession.getQueryResults("cheeses");
+  session.insert(stilton1);
+  session.insert(stilton2);
+  session.insert(stilton3);
+  session.insert(cheddar1);
+  session.insert(cheddar2);
+  session.insert(cheddar3);
+  org.kie.runtime.rule.QueryResults results=session.getQueryResults("cheeses");
   assertEquals(3,results.size());
   assertEquals(2,results.getIdentifiers().length);
   Set newSet=new HashSet();
@@ -51,7 +44,7 @@
     newSet.add(list);
   }
   assertEquals(set,newSet);
-  FlatQueryResults flatResults=new FlatQueryResults(((StatefulKnowledgeSessionImpl)ksession).session.getQueryResults("cheeses"));
+  FlatQueryResults flatResults=new FlatQueryResults(((StatefulKnowledgeSessionImpl)session).session.getQueryResults("cheeses"));
   assertEquals(3,flatResults.size());
   assertEquals(2,flatResults.getIdentifiers().length);
   newSet=new HashSet();

@@ -1,0 +1,21 @@
+{
+  ConditionalBranchEvaluator branchEvaluator=branchNode.getBranchEvaluator();
+  for (LeftTuple leftTuple=srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    boolean breaking=false;
+    ConditionalExecution conditionalExecution=branchEvaluator.evaluate(leftTuple,wm,cbm.context);
+    boolean useLeftMemory=useLeftMemory(branchNode,leftTuple);
+    if (conditionalExecution != null) {
+      RuleTerminalNode rtn=(RuleTerminalNode)conditionalExecution.getSink().getFirstLeftTupleSink();
+      LeftTuple branchedLeftTuple=rtn.createLeftTuple(leftTuple,rtn,useLeftMemory);
+      leftTuple.setObject(branchedLeftTuple);
+      rtn.assertLeftTuple(branchedLeftTuple,leftTuple.getPropagationContext(),wm);
+      breaking=conditionalExecution.isBreaking();
+    }
+    if (!breaking) {
+      trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,sink,useLeftMemory));
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+}

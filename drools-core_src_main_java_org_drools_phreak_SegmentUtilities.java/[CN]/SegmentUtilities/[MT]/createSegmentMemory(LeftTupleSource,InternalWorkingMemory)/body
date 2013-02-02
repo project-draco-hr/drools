@@ -17,16 +17,18 @@
         betaMemory=(BetaMemory)smem.createNodeMemory(betaNode,wm);
       }
       if (betaNode.isRightInputIsRiaNode()) {
-        LeftTupleSinkNode sinkNode=betaNode.getLeftTupleSource().getSinkPropagator().getFirstLeftTupleSink();
-        while (sinkNode.getNextLeftTupleSinkNode() != betaNode) {
-          sinkNode=sinkNode.getNextLeftTupleSinkNode();
+        RightInputAdapterNode riaNode=(RightInputAdapterNode)betaNode.getRightInput();
+        LeftTupleSource subnetworkLts=riaNode.getLeftTupleSource();
+        while (subnetworkLts.getLeftTupleSource() != riaNode.getStartTupleSource()) {
+          subnetworkLts=subnetworkLts.getLeftTupleSource();
         }
-        Memory mem=wm.getNodeMemory((MemoryFactory)sinkNode);
-        SegmentMemory subNetworkSegmentMemory=mem.getSegmentMemory();
+        Memory rootSubNetwokrMem=wm.getNodeMemory((MemoryFactory)subnetworkLts);
+        SegmentMemory subNetworkSegmentMemory=rootSubNetwokrMem.getSegmentMemory();
         if (subNetworkSegmentMemory == null) {
-          subNetworkSegmentMemory=createSegmentMemory((LeftTupleSource)sinkNode,wm);
+          subNetworkSegmentMemory=createSegmentMemory((LeftTupleSource)subnetworkLts,wm);
         }
-        betaMemory.setSubnetworkSegmentMemory(subNetworkSegmentMemory);
+        RiaNodeMemory riaMem=(RiaNodeMemory)wm.getNodeMemory((MemoryFactory)riaNode);
+        betaMemory.setRiaRuleMemory(riaMem.getRiaPathMemory());
       }
       betaMemory.setSegmentMemory(smem);
       betaMemory.setNodePosMaskBit(nodePosMask);
@@ -55,6 +57,18 @@
       FromMemory fromMemory=(FromMemory)smem.createNodeMemory((FromNode)tupleSource,wm);
       fromMemory.getBetaMemory().setSegmentMemory(smem);
     }
+ else     if (tupleSource.getType() == NodeTypeEnums.QueryElementNode) {
+      QueryElementNode queryNode=(QueryElementNode)tupleSource;
+      LeftInputAdapterNode liaNode=getQueryLiaNode(queryNode.getQueryElement().getQueryName(),getQueryOtn(segmentRoot));
+      LiaNodeMemory liam=(LiaNodeMemory)wm.getNodeMemory((MemoryFactory)liaNode);
+      SegmentMemory querySmem=liam.getSegmentMemory();
+      if (querySmem == null) {
+        querySmem=createSegmentMemory(liaNode,wm);
+      }
+      QueryElementNodeMemory queryNodeMem=(QueryElementNodeMemory)smem.createNodeMemory(queryNode,wm);
+      queryNodeMem.setQuerySegmentMemory(querySmem);
+      queryNodeMem.setSegmentMemory(smem);
+    }
     LeftTupleSinkPropagator sink=tupleSource.getSinkPropagator();
     LeftTupleSinkNode firstSink=(LeftTupleSinkNode)sink.getFirstLeftTupleSink();
     LeftTupleSinkNode secondSink=firstSink.getNextLeftTupleSinkNode();
@@ -65,11 +79,11 @@
  else {
         if (firstSink.getType() == NodeTypeEnums.RightInputAdaterNode) {
           RiaNodeMemory memory=(RiaNodeMemory)wm.getNodeMemory((MemoryFactory)firstSink);
-          smem.getNodeMemories().add(memory.getRiaRuleMemory());
-          memory.getRiaRuleMemory().setSegmentMemory(smem);
+          smem.getNodeMemories().add(memory.getRiaPathMemory());
+          memory.getRiaPathMemory().setSegmentMemory(smem);
         }
  else         if (NodeTypeEnums.isTerminalNode(firstSink)) {
-          RuleMemory rmem=(RuleMemory)wm.getNodeMemory((MemoryFactory)firstSink);
+          PathMemory rmem=(PathMemory)wm.getNodeMemory((MemoryFactory)firstSink);
           smem.getNodeMemories().add(rmem);
           rmem.setSegmentMemory(smem);
         }

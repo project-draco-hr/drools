@@ -3,9 +3,24 @@
     startOperation();
     this.ruleBase.readLock();
     this.lock.lock();
-    final PropagationContext propagationContext=new PropagationContextImpl(getNextPropagationIdCounter(),PropagationContext.INSERTION,null,null,factHandle,agenda.getActiveActivations(),agenda.getDormantActivations(),getEntryPoint());
-    getEntryPointNode().retractQuery(factHandle,propagationContext,this);
-    propagationContext.evaluateActionQueue(this);
+    final PropagationContext pCtx=new PropagationContextImpl(getNextPropagationIdCounter(),PropagationContext.INSERTION,null,null,factHandle,agenda.getActiveActivations(),agenda.getDormantActivations(),getEntryPoint());
+    if (this.ruleBase.getConfiguration().isUnlinkingEnabled()) {
+      LeftInputAdapterNode lian=(LeftInputAdapterNode)factHandle.getFirstLeftTuple().getLeftTupleSink().getLeftTupleSource();
+      LiaNodeMemory lmem=(LiaNodeMemory)getNodeMemory((MemoryFactory)lian);
+      SegmentMemory lsmem=lmem.getSegmentMemory();
+      LeftTuple childLeftTuple=factHandle.getFirstLeftTuple();
+      LeftInputAdapterNode.doDeleteObject(childLeftTuple,childLeftTuple.getPropagationContext(),lsmem,this,lian,false,lmem);
+      List<PathMemory> rmems=lmem.getSegmentMemory().getPathMemories();
+      for (int i=0, length=rmems.size(); i < length; i++) {
+        PathMemory rm=rmems.get(i);
+        RuleNetworkEvaluatorActivation evaluator=agenda.createRuleNetworkEvaluatorActivation(Integer.MAX_VALUE,rm,rm.getRuleTerminalNode());
+        evaluator.evaluateNetwork(this);
+      }
+    }
+ else {
+      getEntryPointNode().retractQuery(factHandle,pCtx,this);
+      pCtx.evaluateActionQueue(this);
+    }
     getFactHandleFactory().destroyFactHandle(factHandle);
   }
   finally {

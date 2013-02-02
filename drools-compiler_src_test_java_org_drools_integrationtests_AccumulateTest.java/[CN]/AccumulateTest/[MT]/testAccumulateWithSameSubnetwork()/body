@@ -1,0 +1,22 @@
+{
+  String rule="package org.drools.test;\n" + "import org.drools.Cheese;\n" + "import org.drools.Person;\n"+ "global java.util.List list; \n"+ "rule r1 salience 100 \n"+ "    when\n"+ "        $person      : Person( name == 'Alice', $likes : likes )\n"+ "        $total       : Number() from accumulate( $p : Person(likes != $likes, $l : likes) and $c : Cheese( type == $l ),\n"+ "                                                min($c.getPrice()) )\n"+ "    then\n"+ "        list.add( 'r1' + ':' + $total);\n"+ "end\n"+ "rule r2 \n"+ "    when\n"+ "        $person      : Person( name == 'Alice', $likes : likes )\n"+ "        $total       : Number() from accumulate( $p : Person(likes != $likes, $l : likes) and $c : Cheese( type == $l ),\n"+ "                                                max($c.getPrice()) )\n"+ "    then\n"+ "        list.add( 'r2' + ':' + $total);\n"+ "end\n"+ "";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(rule);
+  StatefulKnowledgeSession wm=createKnowledgeSession(kbase);
+  List list=new ArrayList();
+  wm.setGlobal("list",list);
+  ObjectTypeNode cheeseOtn=LinkingTest.getObjectTypeNode(kbase,Cheese.class);
+  ObjectSink[] oSinks=cheeseOtn.getSinkPropagator().getSinks();
+  assertEquals(1,oSinks.length);
+  JoinNode cheeseJoin=(JoinNode)oSinks[0];
+  LeftTupleSink[] ltSinks=cheeseJoin.getSinkPropagator().getSinks();
+  assertEquals(1,ltSinks.length);
+  RightInputAdapterNode rian=(RightInputAdapterNode)ltSinks[0];
+  assertEquals(2,rian.getSinkPropagator().size());
+  wm.insert(new Cheese("stilton",10));
+  wm.insert(new Person("Alice","brie"));
+  wm.insert(new Person("Bob","stilton"));
+  wm.fireAllRules();
+  assertEquals(2,list.size());
+  assertEquals("r1:10.0",list.get(0));
+  assertEquals("r2:10.0",list.get(1));
+}

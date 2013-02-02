@@ -1,0 +1,49 @@
+{
+  if (sm.getTipNode() == liaNode) {
+    if (sm.isEmpty()) {
+      SegmentUtilities.createChildSegments(wm,sm,liaNode.getSinkPropagator());
+    }
+    sm=sm.getFirst();
+  }
+  LeftTupleSets leftTuples=sm.getStagedLeftTuples();
+switch (leftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+    leftTuples.removeInsert(leftTuple);
+  break;
+case LeftTuple.UPDATE:
+leftTuples.removeUpdate(leftTuple);
+break;
+}
+if (linkOrNotify && sm.getStagedLeftTuples().deleteSize() == 0) {
+sm.notifyRuleLinkSegment(wm);
+}
+leftTuple.setPropagationContext(context);
+sm.getStagedLeftTuples().addDelete(leftTuple);
+if (sm.getNext() != null) {
+for (sm=sm.getNext(); sm != null; sm=sm.getNext()) {
+leftTuple=leftTuple.getPeer();
+leftTuples=sm.getStagedLeftTuples();
+switch (leftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+leftTuples.removeInsert(leftTuple);
+break;
+case LeftTuple.UPDATE:
+leftTuples.removeUpdate(leftTuple);
+break;
+}
+if (sm.getStagedLeftTuples().deleteSize() == 0) {
+sm.notifyRuleLinkSegment(wm);
+}
+leftTuple.setPropagationContext(context);
+leftTuples.addDelete(leftTuple);
+}
+}
+if (lm.getAndDecreaseCounter() == 1) {
+if (linkOrNotify) {
+lm.unlinkNode(wm);
+}
+ else {
+lm.unlinkNodeWithoutRuleNotify();
+}
+}
+}

@@ -1,20 +1,22 @@
 {
+  boolean useLeftMemory=true;
   if (unlinkingEnabled) {
     LiaNodeMemory lm=(LiaNodeMemory)workingMemory.getNodeMemory(this);
     if (lm.getSegmentMemory() == null) {
       SegmentUtilities.createSegmentMemory(this,workingMemory);
     }
-    doInsertObject(factHandle,context,this,leftTupleMemoryEnabled,workingMemory,lm);
+    doInsertObject(factHandle,context,this,workingMemory,lm,true,useLeftMemory);
     return;
   }
-  boolean useLeftMemory=true;
-  if (!this.leftTupleMemoryEnabled) {
-    Object object=((InternalFactHandle)context.getFactHandle()).getObject();
-    if (object instanceof DroolsQuery && !((DroolsQuery)object).isOpen()) {
-      useLeftMemory=false;
-    }
-  }
   if (!workingMemory.isSequential()) {
+    if (!this.leftTupleMemoryEnabled) {
+      Object object=factHandle.getObject();
+      if (object instanceof DroolsQuery) {
+        if (!((DroolsQuery)object).isOpen()) {
+          useLeftMemory=false;
+        }
+      }
+    }
     this.sink.createAndPropagateAssertLeftTuple(factHandle,context,workingMemory,useLeftMemory,this);
   }
  else {

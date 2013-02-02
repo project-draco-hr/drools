@@ -1,0 +1,30 @@
+{
+  if (queryOtn.getSinkPropagator() instanceof CompositeObjectSinkAdapter) {
+    CompositeObjectSinkAdapter sink=(CompositeObjectSinkAdapter)queryOtn.getSinkPropagator();
+    if (sink.getHashableSinks() != null) {
+      for (AlphaNode alphaNode=(AlphaNode)sink.getHashableSinks().getFirst(); alphaNode != null; alphaNode=(AlphaNode)alphaNode.getNextObjectSinkNode()) {
+        QueryNameConstraint nameConstraint=(QueryNameConstraint)alphaNode.getConstraint();
+        if (queryName.equals(nameConstraint.getQueryName())) {
+          return (LeftInputAdapterNode)alphaNode.getSinkPropagator().getSinks()[0];
+        }
+      }
+    }
+    Iterator it=sink.getHashedSinkMap().iterator();
+    for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
+      AlphaNode alphaNode=(AlphaNode)entry.getValue();
+      QueryNameConstraint nameConstraint=(QueryNameConstraint)alphaNode.getConstraint();
+      if (queryName.equals(nameConstraint.getQueryName())) {
+        return (LeftInputAdapterNode)alphaNode.getSinkPropagator().getSinks()[0];
+      }
+    }
+  }
+ else {
+    AlphaNode alphaNode=(AlphaNode)queryOtn.getSinkPropagator().getSinks()[0];
+    QueryNameConstraint nameConstraint=(QueryNameConstraint)alphaNode.getConstraint();
+    if (queryName.equals(nameConstraint.getQueryName())) {
+      return (LeftInputAdapterNode)alphaNode.getSinkPropagator().getSinks()[0];
+    }
+    return (LeftInputAdapterNode)queryOtn.getSinkPropagator().getSinks()[0];
+  }
+  throw new RuntimeException("Unable to find query '" + queryName + "'");
+}

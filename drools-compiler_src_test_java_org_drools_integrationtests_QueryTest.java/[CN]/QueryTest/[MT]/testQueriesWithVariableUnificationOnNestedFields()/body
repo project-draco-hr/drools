@@ -5,15 +5,8 @@
   str+="query peeps( String $name, String $likes, String $street) \n";
   str+="    $p : Person( $name := name, $likes := likes, $street := address.street ) \n";
   str+="end\n";
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    fail(kbuilder.getErrors().toString());
-  }
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  kbase=SerializationHelper.serializeObject(kbase);
-  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(str));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   Person p1=new Person("darth","stilton",100);
   p1.setAddress(new Address("s1"));
   Person p2=new Person("yoda","stilton",300);

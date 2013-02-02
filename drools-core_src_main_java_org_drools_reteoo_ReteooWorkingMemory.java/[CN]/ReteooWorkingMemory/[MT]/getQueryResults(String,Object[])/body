@@ -5,20 +5,16 @@
     this.lock.lock();
     this.ruleBase.executeQueuedActions();
     executeQueuedActions();
-    DroolsQuery queryObject=new DroolsQuery(queryName,arguments,getQueryListenerInstance(),false);
+    DroolsQuery queryObject=new DroolsQuery(queryName,arguments,getQueryListenerInstance(),false,null,null,null,null);
     InternalFactHandle handle=this.handleFactory.newFactHandle(queryObject,null,this,this);
-    final PropagationContext propagationContext=new PropagationContextImpl(getNextPropagationIdCounter(),PropagationContext.INSERTION,null,null,handle,agenda.getActiveActivations(),agenda.getDormantActivations(),getEntryPoint());
-    getEntryPointNode().assertQuery(handle,propagationContext,this);
-    propagationContext.evaluateActionQueue(this);
-    this.handleFactory.destroyFactHandle(handle);
-    BaseNode[] nodes=this.ruleBase.getReteooBuilder().getTerminalNodes(queryObject.getQuery());
+    final PropagationContext pCtx=new PropagationContextImpl(getNextPropagationIdCounter(),PropagationContext.INSERTION,null,null,handle,agenda.getActiveActivations(),agenda.getDormantActivations(),getEntryPoint());
+    BaseNode[] tnodes=evalQuery(queryName,queryObject,handle,pCtx);
     List<Map<String,Declaration>> decls=new ArrayList<Map<String,Declaration>>();
-    if (nodes != null) {
-      for (      BaseNode node : nodes) {
-        decls.add(((QueryTerminalNode)node).getSubrule().getOuterDeclarations());
-      }
+    for (    BaseNode node : tnodes) {
+      decls.add(((QueryTerminalNode)node).getSubRule().getOuterDeclarations());
     }
     executeQueuedActions();
+    this.handleFactory.destroyFactHandle(handle);
     return new QueryResults((List<QueryRowWithSubruleIndex>)queryObject.getQueryResultCollector().getResults(),decls.toArray(new Map[decls.size()]),this,(queryObject.getQuery() != null) ? queryObject.getQuery().getParameters() : new Declaration[0]);
   }
   finally {

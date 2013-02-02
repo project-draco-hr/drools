@@ -4,16 +4,8 @@
   str+="query cheeses(String $type) \n";
   str+="    $cheese : Cheese(type == $type) \n";
   str+="end\n";
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    fail(kbuilder.getErrors().toString());
-  }
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
-  conf.setOption(option);
-  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(conf,null);
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(str));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase,option);
   for (int i=0; i < 10000; i++) {
     ksession.insert(new Cheese(i % 2 == 0 ? "stilton" : "brie"));
   }
