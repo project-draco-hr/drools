@@ -3,7 +3,14 @@
   boolean breaking=false;
   ConditionalExecution conditionalExecution=branchEvaluator.evaluate(leftTuple,workingMemory,memory.context);
   if (conditionalExecution != null) {
-    conditionalExecution.getSink().propagateAssertLeftTuple(leftTuple,context,workingMemory,this.tupleMemoryEnabled);
+    boolean useLeftMemory=true;
+    if (!this.tupleMemoryEnabled) {
+      Object object=leftTuple.get(0).getObject();
+      if (!(object instanceof DroolsQuery) || !((DroolsQuery)object).isOpen()) {
+        useLeftMemory=false;
+      }
+    }
+    conditionalExecution.getSink().propagateAssertLeftTuple(leftTuple,context,workingMemory,useLeftMemory);
     breaking=conditionalExecution.isBreaking();
   }
   if (!breaking) {
