@@ -1,0 +1,30 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  Resource ex1Res=ks.getResources().newFileSystemResource(getFile("kie-api-example1"));
+  Resource ex2Res=ks.getResources().newFileSystemResource(getFile("kie-api-example2"));
+  ReleaseId rid=ks.newReleaseId("org.drools","kiemodulemodel-example","6.0.0-SNAPSHOT");
+  kfs.generateAndWritePomXML(rid);
+  KieModuleModel kModuleModel=ks.newKieModuleModel();
+  kModuleModel.newKieBaseModel("kiemodulemodel").addInclude("kiebaseinclusion").addInclude("kiebaseinclusion").newKieSessionModel("ksession6");
+  kfs.writeKModuleXML(kModuleModel.toXML());
+  kfs.write("src/main/resources/kiemodulemodel/HAL6.drl",getRule());
+  KieBuilder kb=ks.newKieBuilder(kfs);
+  kb.setDependencies(ex1Res,ex2Res);
+  kb.buildAll();
+  if (kb.getResults().hasMessages(Level.ERROR)) {
+    throw new RuntimeException("Build Errors:\n" + kb.getResults().toString());
+  }
+  KieContainer kContainer=ks.newKieContainer(rid);
+  KieSession kSession=kContainer.newKieSession("ksession6");
+  kSession.setGlobal("out",out);
+  Object msg1=createMessage(kContainer,"Dave","Hello, HAL. Do you read me, HAL?");
+  kSession.insert(msg1);
+  kSession.fireAllRules();
+  Object msg2=createMessage(kContainer,"Dave","Open the pod bay doors, HAL.");
+  kSession.insert(msg2);
+  kSession.fireAllRules();
+  Object msg3=createMessage(kContainer,"Dave","What's the problem?");
+  kSession.insert(msg3);
+  kSession.fireAllRules();
+}
