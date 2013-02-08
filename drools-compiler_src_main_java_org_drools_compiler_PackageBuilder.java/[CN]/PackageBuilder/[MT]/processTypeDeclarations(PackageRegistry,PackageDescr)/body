@@ -13,33 +13,10 @@
     String qName=typeDescr.getType().getFullName();
     int dotPos=qName.lastIndexOf('.');
     if (dotPos >= 0) {
-      Class cls=null;
-      try {
-        cls=Class.forName(typeDescr.getTypeName(),true,this.rootClassLoader);
-      }
- catch (      ClassNotFoundException e) {
-      }
-      String qualifiedClass=qName;
-      int lastIndex;
-      while (cls == null && (lastIndex=qualifiedClass.lastIndexOf('.')) != -1) {
-        try {
-          qualifiedClass=qualifiedClass.substring(0,lastIndex) + "$" + qualifiedClass.substring(lastIndex + 1);
-          cls=Class.forName(qualifiedClass,true,this.rootClassLoader);
-        }
- catch (        final ClassNotFoundException e) {
-          cls=null;
-        }
-      }
-      if (cls != null) {
-        String str=ClassUtils.getPackage(cls);
-        typeDescr.setNamespace(str);
-        dotPos=cls.getName().lastIndexOf('.');
-        typeDescr.setTypeName(cls.getName().substring(dotPos + 1));
-      }
- else {
-        typeDescr.setNamespace(qName.substring(0,dotPos));
-        typeDescr.setTypeName(qName.substring(dotPos + 1));
-      }
+      String className=typeName2ClassName(qName);
+      dotPos=className.lastIndexOf('.');
+      typeDescr.setNamespace(className.substring(0,dotPos));
+      typeDescr.setTypeName(className.substring(dotPos + 1));
     }
     if (isEmpty(typeDescr.getNamespace()) && typeDescr.getFields().isEmpty()) {
       PackageRegistry pkgReg=this.pkgRegistryMap.get(packageDescr.getName());
