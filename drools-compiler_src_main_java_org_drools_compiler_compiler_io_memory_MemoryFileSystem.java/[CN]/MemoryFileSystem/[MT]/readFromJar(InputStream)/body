@@ -1,0 +1,29 @@
+{
+  MemoryFileSystem mfs=new MemoryFileSystem();
+  JarInputStream zipFile=null;
+  try {
+    zipFile=new JarInputStream(jarFile);
+    ZipEntry entry=null;
+    while ((entry=zipFile.getNextEntry()) != null) {
+      ByteArrayOutputStream content=new ByteArrayOutputStream();
+      int b=-1;
+      while ((b=zipFile.read()) != -1) {
+        content.write(b);
+      }
+      mfs.write(entry.getName(),content.toByteArray(),true);
+    }
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+ finally {
+    if (zipFile != null) {
+      try {
+        zipFile.close();
+      }
+ catch (      IOException e) {
+      }
+    }
+  }
+  return mfs;
+}

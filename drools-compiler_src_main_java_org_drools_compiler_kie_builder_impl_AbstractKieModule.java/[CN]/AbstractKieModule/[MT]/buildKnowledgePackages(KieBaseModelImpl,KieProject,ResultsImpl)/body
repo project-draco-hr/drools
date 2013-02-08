@@ -1,6 +1,8 @@
 {
   CompositeClassLoader cl=kieProject.getClassLoader();
   PackageBuilderConfiguration pconf=new PackageBuilderConfiguration(null,cl.clone());
+  AbstractKieModule kModule=(AbstractKieModule)kieProject.getKieModuleForKBase(kBaseModel.getName());
+  pconf.setCompilationCache(kModule.getCompilationCache(kBaseModel.getName()));
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(pconf);
   CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
   Set<String> includes=kBaseModel.getIncludes();
@@ -17,7 +19,6 @@
       addFiles(ckbuilder,kieProject.getKieBaseModel(include),includeModule);
     }
   }
-  InternalKieModule kModule=kieProject.getKieModuleForKBase(kBaseModel.getName());
   addFiles(ckbuilder,kBaseModel,kModule);
   ckbuilder.build();
   if (kbuilder.hasErrors()) {

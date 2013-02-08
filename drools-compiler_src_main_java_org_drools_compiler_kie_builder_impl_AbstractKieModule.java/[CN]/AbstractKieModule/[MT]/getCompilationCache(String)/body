@@ -1,0 +1,26 @@
+{
+  Map<String,Map<String,byte[]>> cache=compilationCache.get(kbaseName);
+  if (cache == null) {
+    byte[] fileContents=getBytes(KieBuilderImpl.getCompilationCachePath(releaseId,kbaseName));
+    if (fileContents != null) {
+      ExtensionRegistry registry=KieModuleCacheHelper.buildRegistry();
+      try {
+        Header _header=KieModuleCacheHelper.readFromStreamWithHeaderPreloaded(new ByteArrayInputStream(fileContents),registry);
+        KModuleCache _cache=KModuleCache.parseFrom(_header.getPayload());
+        cache=new HashMap<String,Map<String,byte[]>>();
+        for (        CompilationData _data : _cache.getCompilationDataList()) {
+          Map<String,byte[]> bytecode=new HashMap<String,byte[]>();
+          cache.put(_data.getDialect(),bytecode);
+          for (          CompDataEntry _entry : _data.getEntryList()) {
+            bytecode.put(_entry.getId(),_entry.getData().toByteArray());
+          }
+        }
+        compilationCache.put(kbaseName,cache);
+      }
+ catch (      Exception e) {
+        log.error("Unable to load compilation cache... ",e);
+      }
+    }
+  }
+  return cache;
+}

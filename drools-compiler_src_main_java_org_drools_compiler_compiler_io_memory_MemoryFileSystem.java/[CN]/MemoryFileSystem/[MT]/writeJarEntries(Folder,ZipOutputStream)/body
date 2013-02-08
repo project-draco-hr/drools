@@ -1,18 +1,13 @@
 {
-  byte[] buf=new byte[1024];
   for (  Resource rs : f.getMembers()) {
     if (rs instanceof Folder) {
       writeJarEntries((Folder)rs,out);
     }
  else {
-      out.putNextEntry(new ZipEntry(rs.getPath().toPortableString()));
+      ZipEntry entry=new ZipEntry(rs.getPath().toPortableString());
+      out.putNextEntry(entry);
       byte[] contents=getFileContents((MemoryFile)rs);
-      ByteArrayInputStream bais=new ByteArrayInputStream(contents);
-      int len;
-      while ((len=bais.read(buf)) > 0) {
-        out.write(buf,0,len);
-      }
-      bais.close();
+      out.write(contents);
       out.closeEntry();
     }
   }

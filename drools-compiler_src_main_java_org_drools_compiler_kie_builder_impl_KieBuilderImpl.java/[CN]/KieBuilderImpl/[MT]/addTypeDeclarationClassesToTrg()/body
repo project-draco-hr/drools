@@ -4,9 +4,12 @@
   for (  String kieBaseNames : kieModuleModel.getKieBaseModels().keySet()) {
     KnowledgeBuilderImpl kBuilder=(KnowledgeBuilderImpl)kModule.getKnowledgeBuilderForKieBase(kieBaseNames);
     Map<String,PackageRegistry> pkgRegistryMap=kBuilder.getPackageBuilder().getPackageRegistry();
+    KModuleCache.Builder _kmoduleCacheBuilder=createCacheBuilder();
+    CompilationData.Builder _compData=createCompilationData();
     for (    KiePackage kPkg : kBuilder.getKnowledgePackages()) {
       PackageRegistry pkgRegistry=pkgRegistryMap.get(kPkg.getName());
       JavaDialectRuntimeData runtimeData=(JavaDialectRuntimeData)pkgRegistry.getDialectRuntimeRegistry().getDialectData("java");
+      List<String> types=new ArrayList<String>();
       for (      FactType factType : kPkg.getFactTypes()) {
         Class<?> typeClass=((ClassDefinition)factType).getDefinedClass();
         TypeDeclaration typeDeclaration=pkgRegistry.getPackage().getTypeDeclaration(typeClass);
@@ -17,8 +20,12 @@
         String internalName=className.replace('.','/') + ".class";
         byte[] bytes=runtimeData.getStore().get(internalName);
         trgMfs.write(internalName,bytes,true);
+        types.add(internalName);
       }
+      addToCompilationData(_compData,runtimeData,types);
     }
+    _kmoduleCacheBuilder.addCompilationData(_compData.build());
+    writeCompilationDataToTrg(_kmoduleCacheBuilder.build(),kieBaseNames);
   }
   return typeDeclarations;
 }

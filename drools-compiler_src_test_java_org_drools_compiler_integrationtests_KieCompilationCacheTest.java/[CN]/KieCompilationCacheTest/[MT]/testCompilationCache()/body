@@ -1,0 +1,24 @@
+{
+  String drl="package org.drools.compiler\n" + "declare type X\n" + "    foo : String\n"+ "end\n"+ "rule R1 when\n"+ "   $m : X( foo == \"Hello World\" )\n"+ "then\n"+ "end\n";
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem().write("src/main/resources/r1.drl",drl);
+  ks.newKieBuilder(kfs).buildAll();
+  ReleaseId releaseId=ks.getRepository().getDefaultReleaseId();
+  InternalKieModule kieModule=(InternalKieModule)ks.getRepository().getKieModule(releaseId);
+  byte[] jar=kieModule.getBytes();
+  MemoryFileSystem mfs=MemoryFileSystem.readFromJar(jar);
+  File file=mfs.getFile(KieBuilderImpl.getCompilationCachePath(releaseId,"KBase1"));
+  assertNotNull(file);
+  Resource jarRes=ks.getResources().newByteArrayResource(jar);
+  KieModule km=ks.getRepository().addKieModule(jarRes);
+  KieContainer kc=ks.newKieContainer(km.getReleaseId());
+  KieBase kbase=kc.getKieBase();
+  FactType type=kbase.getFactType("org.drools.compiler","X");
+  FactField foo=type.getField("foo");
+  Object x=type.newInstance();
+  foo.set(x,"Hello World");
+  KieSession ksession=kc.newKieSession();
+  ksession.insert(x);
+  int count=ksession.fireAllRules();
+  assertEquals(1,count);
+}

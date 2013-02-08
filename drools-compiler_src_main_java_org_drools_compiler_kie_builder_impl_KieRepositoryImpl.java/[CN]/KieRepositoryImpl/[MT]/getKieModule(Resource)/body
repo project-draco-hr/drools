@@ -1,18 +1,29 @@
 {
   InternalResource res=(InternalResource)resource;
   try {
-    String urlPath=res.getURL().toExternalForm();
-    if (res.isDirectory()) {
-      if (!urlPath.endsWith("/")) {
-        urlPath=urlPath + "/";
+    KieModule kModule=null;
+    if (res.hasURL()) {
+      String urlPath=res.getURL().toExternalForm();
+      if (res.isDirectory()) {
+        if (!urlPath.endsWith("/")) {
+          urlPath=urlPath + "/";
+        }
+        urlPath=urlPath + KieModuleModelImpl.KMODULE_JAR_PATH;
       }
-      urlPath=urlPath + KieModuleModelImpl.KMODULE_JAR_PATH;
+ else {
+        urlPath="jar:" + urlPath + "!/"+ KieModuleModelImpl.KMODULE_JAR_PATH;
+      }
+      kModule=ClasspathKieProject.fetchKModule(new URL(urlPath));
+      log.debug("fetched KieModule from resource :" + resource);
     }
  else {
-      urlPath="jar:" + urlPath + "!/"+ KieModuleModelImpl.KMODULE_JAR_PATH;
+      MemoryFileSystem mfs=MemoryFileSystem.readFromJar(res.getInputStream());
+      byte[] bytes=mfs.getBytes(KieModuleModelImpl.KMODULE_JAR_PATH);
+      KieModuleModel kieProject=KieModuleModelImpl.fromXML(new ByteArrayInputStream(bytes));
+      String pomProperties=mfs.findPomProperties();
+      ReleaseId releaseId=ReleaseIdImpl.fromPropertiesString(pomProperties);
+      kModule=new MemoryKieModule(releaseId,kieProject,mfs);
     }
-    KieModule kModule=ClasspathKieProject.fetchKModule(new URL(urlPath));
-    log.debug("fetched KieModule from resource :" + resource);
     return kModule;
   }
  catch (  Exception e) {

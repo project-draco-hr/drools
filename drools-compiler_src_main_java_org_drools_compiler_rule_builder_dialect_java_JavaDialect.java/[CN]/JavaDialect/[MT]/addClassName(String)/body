@@ -1,3 +1,17 @@
 {
-  this.generatedClassList.add(className);
+  boolean found=false;
+  if (packageBuilder.getPackageBuilderConfiguration().isPreCompiled()) {
+    Map<String,byte[]> cache=packageBuilder.getPackageBuilderConfiguration().getCompilationCache().get(ID);
+    if (cache != null) {
+      String resourceName=className.replace(".java",".class");
+      byte[] bytecode=cache.get(resourceName);
+      if (bytecode != null) {
+        this.packageStoreWrapper.write(resourceName,bytecode);
+        found=true;
+      }
+    }
+  }
+  if (!found) {
+    this.generatedClassList.add(className);
+  }
 }
