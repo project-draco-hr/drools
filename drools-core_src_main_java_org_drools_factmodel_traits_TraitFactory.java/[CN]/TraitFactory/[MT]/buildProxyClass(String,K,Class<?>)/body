@@ -1,12 +1,12 @@
 {
   Class coreKlass=core.getClass();
-  ClassDefinition tdef=TraitRegistry.getInstance().getTrait(trait.getName());
-  ClassDefinition cdef=TraitRegistry.getInstance().getTraitable(coreKlass.getName());
+  ClassDefinition tdef=ruleBase.getTraitRegistry().getTrait(trait.getName());
+  ClassDefinition cdef=ruleBase.getTraitRegistry().getTraitable(coreKlass.getName());
   String proxyName=getProxyName(tdef,cdef);
   String wrapperName=getPropertyWrapperName(tdef,cdef);
   ReteooComponentFactory rcf=ruleBase.getConfiguration().getComponentFactory();
   TraitPropertyWrapperClassBuilder propWrapperBuilder=(TraitPropertyWrapperClassBuilder)rcf.getClassBuilderFactory().getPropertyWrapperBuilder();
-  propWrapperBuilder.init(tdef);
+  propWrapperBuilder.init(tdef,ruleBase.getTraitRegistry());
   try {
     byte[] propWrapper=propWrapperBuilder.buildClass(cdef);
     ruleBase.registerAndLoadTypeDefinition(wrapperName,propWrapper);
@@ -15,7 +15,7 @@
     e.printStackTrace();
   }
   TraitProxyClassBuilder proxyBuilder=(TraitProxyClassBuilder)rcf.getClassBuilderFactory().getTraitProxyBuilder();
-  proxyBuilder.init(tdef,rcf.getBaseTraitProxyClass());
+  proxyBuilder.init(tdef,rcf.getBaseTraitProxyClass(),ruleBase.getTraitRegistry());
   try {
     byte[] proxy=proxyBuilder.buildClass(cdef);
     ruleBase.registerAndLoadTypeDefinition(proxyName,proxy);
@@ -24,7 +24,7 @@
     e.printStackTrace();
   }
   try {
-    long mask=TraitRegistry.getInstance().getFieldMask(trait.getName(),cdef.getDefinedClass().getName());
+    long mask=ruleBase.getTraitRegistry().getFieldMask(trait.getName(),cdef.getDefinedClass().getName());
     Class<T> proxyClass=(Class<T>)ruleBase.getRootClassLoader().loadClass(proxyName,true);
     bindAccessors(proxyClass,tdef,cdef,mask);
     Class<T> wrapperClass=(Class<T>)ruleBase.getRootClassLoader().loadClass(wrapperName,true);
