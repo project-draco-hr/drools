@@ -1,9 +1,18 @@
 {
   MethodVisitor mv=cw.visitMethod(ACC_PUBLIC,"containsValue","(" + Type.getDescriptor(Object.class) + ")Z",null,null);
   mv.visitCode();
-  mv.visitVarInsn(ALOAD,1);
-  Label l99=new Label();
-  mv.visitJumpInsn(IFNONNULL,l99);
+  boolean hasNillable=false;
+  for (  FieldDefinition field : core.getFieldsDefinitions()) {
+    if (!BuildUtils.isPrimitive(field.getTypeName())) {
+      hasNillable=true;
+    }
+  }
+  Label l99=null;
+  if (hasNillable) {
+    mv.visitVarInsn(ALOAD,1);
+    l99=new Label();
+    mv.visitJumpInsn(IFNONNULL,l99);
+  }
   int j=0;
   int N=core.getFieldsDefinitions().size();
   for (  FieldDefinition field : core.getFieldsDefinitions()) {
@@ -29,6 +38,6 @@
   mv.visitVarInsn(ALOAD,1);
   mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(TripleBasedStruct.class),"containsValue","(" + Type.getDescriptor(Object.class) + ")Z");
   mv.visitInsn(IRETURN);
-  mv.visitMaxs(core.getFieldsDefinitions().size() > 0 ? 3 : 2,2);
+  mv.visitMaxs(0,0);
   mv.visitEnd();
 }
