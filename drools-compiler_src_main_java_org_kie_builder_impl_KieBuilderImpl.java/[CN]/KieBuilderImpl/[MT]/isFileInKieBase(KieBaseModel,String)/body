@@ -1,0 +1,21 @@
+{
+  if (kieBase.getPackages().isEmpty()) {
+    String pathName=kieBase.getName().replace('.','/');
+    return fileName.startsWith(RESOURCES_ROOT + pathName + "/") || fileName.startsWith(pathName + "/");
+  }
+ else {
+    int lastSep=fileName.lastIndexOf("/");
+    String pkgNameForFile=lastSep > 0 ? fileName.substring(0,lastSep) : fileName;
+    pkgNameForFile=pkgNameForFile.replace('/','.');
+    for (    String pkgName : kieBase.getPackages()) {
+      boolean isNegative=pkgName.startsWith("!");
+      if (isNegative) {
+        pkgName=pkgName.substring(1);
+      }
+      if (pkgName.equals("*") || pkgNameForFile.endsWith(pkgName) || (pkgName.endsWith(".*") && pkgNameForFile.contains(pkgName.substring(0,pkgName.length() - 2)))) {
+        return !isNegative;
+      }
+    }
+    return false;
+  }
+}
