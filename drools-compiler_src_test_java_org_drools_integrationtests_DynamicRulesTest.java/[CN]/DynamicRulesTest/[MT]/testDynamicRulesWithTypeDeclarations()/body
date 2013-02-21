@@ -1,0 +1,29 @@
+{
+  String type="package com.sample\n" + "declare type Foo\n" + "  id : int\n"+ "end\n";
+  String r1="package com.sample\n" + "rule R1 when\n" + "  not Foo()\n"+ "then\n"+ "  insert( new Foo(1) );\n"+ "end\n";
+  String r2="package com.sample\n" + "rule R2 when\n" + "  $f : Foo()\n"+ "then\n"+ "  $f.setId( 2 );\n"+ "end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(type.getBytes()),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  AgendaEventListener ael=mock(AgendaEventListener.class);
+  ksession.addEventListener(ael);
+  ksession.fireAllRules();
+  verify(ael,never()).afterMatchFired(any(AfterMatchFiredEvent.class));
+  kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(kbase);
+  kbuilder.add(ResourceFactory.newByteArrayResource(r1.getBytes()),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  ksession.fireAllRules();
+  ArgumentCaptor<AfterMatchFiredEvent> capt=ArgumentCaptor.forClass(AfterMatchFiredEvent.class);
+  verify(ael,times(1)).afterMatchFired(capt.capture());
+  assertThat("R1",is(capt.getValue().getMatch().getRule().getName()));
+  kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(kbase);
+  kbuilder.add(ResourceFactory.newByteArrayResource(r2.getBytes()),ResourceType.DRL);
+  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
+  ksession.fireAllRules();
+  verify(ael,times(2)).afterMatchFired(capt.capture());
+  assertThat("R2",is(capt.getAllValues().get(2).getMatch().getRule().getName()));
+  ksession.dispose();
+}
