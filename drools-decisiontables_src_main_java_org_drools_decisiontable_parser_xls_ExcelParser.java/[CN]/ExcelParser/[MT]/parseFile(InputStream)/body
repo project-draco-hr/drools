@@ -1,22 +1,21 @@
 {
   try {
-    WorkbookSettings ws=new WorkbookSettings();
-    Workbook workbook=Workbook.getWorkbook(inStream,ws);
+    Workbook workbook=WorkbookFactory.create(inStream);
     if (_useFirstSheet) {
-      Sheet sheet=workbook.getSheet(0);
+      Sheet sheet=workbook.getSheetAt(0);
       processSheet(sheet,_listeners.get(DEFAULT_RULESHEET_NAME));
     }
  else {
       for (      String sheetName : _listeners.keySet()) {
         Sheet sheet=workbook.getSheet(sheetName);
         if (sheet == null) {
-          throw new IllegalStateException("Could not find the sheetName (" + sheetName + ") in the workbook sheetNames ("+ Arrays.toString(workbook.getSheetNames())+ ").");
+          throw new IllegalStateException("Could not find the sheetName (" + sheetName + ") in the workbook sheetNames.");
         }
         processSheet(sheet,_listeners.get(sheetName));
       }
     }
   }
- catch (  BiffException e) {
+ catch (  InvalidFormatException e) {
     throw new DecisionTableParseException("An error occurred opening the workbook. It is possible that the encoding of the document did not match the encoding of the reader.",e);
   }
 catch (  IOException e) {

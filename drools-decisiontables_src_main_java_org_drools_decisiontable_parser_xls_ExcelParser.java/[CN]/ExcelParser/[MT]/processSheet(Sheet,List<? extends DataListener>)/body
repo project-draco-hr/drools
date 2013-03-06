@@ -1,27 +1,29 @@
 {
-  int maxRows=sheet.getRows();
-  Range[] mergedRanges=sheet.getMergedCells();
-  for (int i=0; i < maxRows; i++) {
-    Cell[] row=sheet.getRow(i);
-    newRow(listeners,i,row.length);
-    for (int cellNum=0; cellNum < row.length; cellNum++) {
-      Cell cell=row[cellNum];
+  int maxRows=sheet.getLastRowNum();
+  CellRangeAddress[] mergedRanges=getMergedCells(sheet);
+  DataFormatter formatter=new DataFormatter();
+  for (int i=0; i <= maxRows; i++) {
+    Row row=sheet.getRow(i);
+    int lastCellNum=row != null ? row.getLastCellNum() : 0;
+    newRow(listeners,i,lastCellNum);
+    for (int cellNum=0; cellNum < lastCellNum; cellNum++) {
+      Cell cell=row.getCell(cellNum);
+      if (cell == null)       continue;
       double num=0;
-      Range merged=getRangeIfMerged(cell,mergedRanges);
+      CellRangeAddress merged=getRangeIfMerged(cell,mergedRanges);
       if (merged != null) {
-        Cell topLeft=merged.getTopLeft();
-        newCell(listeners,i,cellNum,topLeft.getContents(),topLeft.getColumn());
+        Cell topLeft=sheet.getRow(merged.getFirstRow()).getCell(merged.getFirstColumn());
+        newCell(listeners,i,cellNum,formatter.formatCellValue(topLeft),topLeft.getColumnIndex());
       }
  else {
-        if (cell.getType() == CellType.NUMBER) {
-          NumberCell nc=(NumberCell)cell;
-          num=nc.getValue();
+        if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
+          num=cell.getNumericCellValue();
         }
         if (Math.abs(num) - Math.ceil(num) != 0) {
           newCell(listeners,i,cellNum,String.valueOf(num),DataListener.NON_MERGED);
         }
  else {
-          newCell(listeners,i,cellNum,cell.getContents(),DataListener.NON_MERGED);
+          newCell(listeners,i,cellNum,formatter.formatCellValue(cell),DataListener.NON_MERGED);
         }
       }
     }
