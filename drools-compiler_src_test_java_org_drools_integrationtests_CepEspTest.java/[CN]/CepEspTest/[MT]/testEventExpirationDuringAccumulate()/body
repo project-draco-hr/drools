@@ -1,0 +1,27 @@
+{
+  String str="package org.drools.integrationtests\n" + "\n" + "import java.util.List;\n"+ "\n"+ "declare Stock\n"+ "    @role( event )\n"+ "    @expires( 1s ) // setting to a large value causes the test to pass\n"+ "    name : String\n"+ "    value : Double\n"+ "end\n"+ "\n"+ "rule \"collect events\"\n"+ "when\n"+ "    stocks := List()\n"+ "        from accumulate( $zeroStock : Stock( value == 0.0 )\n"+ "                         collectList( $zeroStock ) )\n"+ "then\n"+ "    // empty consequence\n"+ "end";
+  KieBaseConfiguration config=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  config.setOption(EventProcessingOption.STREAM);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(config,str);
+  KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  conf.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(conf,null);
+  final StockFactory stockFactory=new StockFactory(kbase);
+  final ExecutorService executor=Executors.newSingleThreadExecutor();
+  final Future sessionFuture=executor.submit(new Runnable(){
+    @Override public void run(){
+      ksession.fireUntilHalt();
+    }
+  }
+);
+  try {
+    for (int iteration=0; iteration < 100; iteration++) {
+      this.populateSessionWithStocks(ksession,stockFactory);
+    }
+    Thread.sleep(2000);
+  }
+  finally {
+    ksession.halt();
+    sessionFuture.get();
+  }
+}
