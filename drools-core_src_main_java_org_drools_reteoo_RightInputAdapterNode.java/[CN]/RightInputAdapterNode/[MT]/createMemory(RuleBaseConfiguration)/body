@@ -1,32 +1,9 @@
 {
   RiaNodeMemory rianMem=new RiaNodeMemory();
   if (this.unlinkingEnabled) {
-    int segmentCount=1;
-    if (getLeftTupleSource().getSinkPropagator().size() > 1) {
-      segmentCount++;
-    }
-    int segmentPosMask=1;
-    long allLinkedTestMask=1;
-    RiaPathMemory rmem=new RiaPathMemory(this);
-    LeftTupleSource tupleSource=getLeftTupleSource();
-    while (tupleSource != null && tupleSource != getStartTupleSource()) {
-      if (tupleSource.getLeftTupleSource() != getStartTupleSource() && !SegmentUtilities.parentInSameSegment(tupleSource)) {
-        segmentPosMask=segmentPosMask << 1;
-        allLinkedTestMask=allLinkedTestMask | segmentPosMask;
-        segmentCount++;
-      }
-      tupleSource=tupleSource.getLeftTupleSource();
-    }
-    while (tupleSource != null) {
-      if (!SegmentUtilities.parentInSameSegment(tupleSource)) {
-        allLinkedTestMask=allLinkedTestMask << 1;
-        segmentCount++;
-      }
-      tupleSource=tupleSource.getLeftTupleSource();
-    }
-    rmem.setAllLinkedMaskTest(allLinkedTestMask);
-    rianMem.setRiaRuleMemory(rmem);
-    rmem.setSegmentMemories(new SegmentMemory[segmentCount]);
+    RiaPathMemory pmem=new RiaPathMemory(this);
+    AbstractTerminalNode.initPathMemory(pmem,getLeftTupleSource(),getStartTupleSource());
+    rianMem.setRiaPathMemory(pmem);
   }
   return rianMem;
 }

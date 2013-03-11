@@ -1,5 +1,5 @@
 {
-  while (SegmentUtilities.parentInSameSegment(tupleSource)) {
+  while (tupleSource.getType() != NodeTypeEnums.LeftInputAdapterNode && SegmentUtilities.parentInSameSegment(tupleSource)) {
     tupleSource=tupleSource.getLeftTupleSource();
   }
   LeftTupleSource segmentRoot=tupleSource;
@@ -16,6 +16,7 @@
  else {
         betaMemory=(BetaMemory)smem.createNodeMemory(betaNode,wm);
       }
+      betaMemory.setSegmentMemory(smem);
       if (betaNode.isRightInputIsRiaNode()) {
         RightInputAdapterNode riaNode=(RightInputAdapterNode)betaNode.getRightInput();
         LeftTupleSource subnetworkLts=riaNode.getLeftTupleSource();
@@ -25,12 +26,14 @@
         Memory rootSubNetwokrMem=wm.getNodeMemory((MemoryFactory)subnetworkLts);
         SegmentMemory subNetworkSegmentMemory=rootSubNetwokrMem.getSegmentMemory();
         if (subNetworkSegmentMemory == null) {
-          subNetworkSegmentMemory=createSegmentMemory((LeftTupleSource)subnetworkLts,wm);
+          createSegmentMemory((LeftTupleSource)subnetworkLts,wm);
         }
         RiaNodeMemory riaMem=(RiaNodeMemory)wm.getNodeMemory((MemoryFactory)riaNode);
         betaMemory.setRiaRuleMemory(riaMem.getRiaPathMemory());
+        if (riaMem.getRiaPathMemory().getAllLinkedMaskTest() == 0) {
+          smem.linkNode(nodePosMask,wm);
+        }
       }
-      betaMemory.setSegmentMemory(smem);
       betaMemory.setNodePosMaskBit(nodePosMask);
       allLinkedTestMask=allLinkedTestMask | nodePosMask;
       if (NodeTypeEnums.NotNode == tupleSource.getType() || NodeTypeEnums.AccumulateNode == tupleSource.getType()) {
@@ -69,30 +72,25 @@
       queryNodeMem.setQuerySegmentMemory(querySmem);
       queryNodeMem.setSegmentMemory(smem);
     }
-    LeftTupleSinkPropagator sink=tupleSource.getSinkPropagator();
-    LeftTupleSinkNode firstSink=(LeftTupleSinkNode)sink.getFirstLeftTupleSink();
-    LeftTupleSinkNode secondSink=firstSink.getNextLeftTupleSinkNode();
-    if (secondSink == null) {
-      if (NodeTypeEnums.isLeftTupleSource(firstSink)) {
-        tupleSource=(LeftTupleSource)firstSink;
+    if (tupleSource.getSinkPropagator().size() == 1) {
+      LeftTupleSinkNode sink=(LeftTupleSinkNode)tupleSource.getSinkPropagator().getFirstLeftTupleSink();
+      if (NodeTypeEnums.isLeftTupleSource(sink)) {
+        tupleSource=(LeftTupleSource)sink;
       }
  else {
-        if (firstSink.getType() == NodeTypeEnums.RightInputAdaterNode) {
-          RiaNodeMemory memory=(RiaNodeMemory)wm.getNodeMemory((MemoryFactory)firstSink);
+        if (sink.getType() == NodeTypeEnums.RightInputAdaterNode) {
+          RiaNodeMemory memory=(RiaNodeMemory)wm.getNodeMemory((MemoryFactory)sink);
           smem.getNodeMemories().add(memory.getRiaPathMemory());
           memory.getRiaPathMemory().setSegmentMemory(smem);
         }
- else         if (NodeTypeEnums.isTerminalNode(firstSink)) {
-          PathMemory rmem=(PathMemory)wm.getNodeMemory((MemoryFactory)firstSink);
+ else         if (NodeTypeEnums.isTerminalNode(sink)) {
+          PathMemory rmem=(PathMemory)wm.getNodeMemory((MemoryFactory)sink);
           smem.getNodeMemories().add(rmem);
           rmem.setSegmentMemory(smem);
         }
-        smem.setTipNode(firstSink);
+        smem.setTipNode(sink);
         break;
       }
-    }
- else     if (sink.size() == 2 && NodeTypeEnums.isBetaNode(secondSink) && ((BetaNode)secondSink).isRightInputIsRiaNode()) {
-      tupleSource=(LeftTupleSource)secondSink;
     }
  else {
       smem.setTipNode(tupleSource);
@@ -100,15 +98,15 @@
     }
   }
   smem.setAllLinkedMaskTest(allLinkedTestMask);
-  LeftTupleSource parent=segmentRoot;
+  LeftTupleSource pathRoot=segmentRoot;
   int ruleSegmentPosMask=1;
   int counter=0;
-  while (parent.getLeftTupleSource() != null) {
-    if (!SegmentUtilities.parentInSameSegment(parent)) {
+  while (pathRoot.getType() != NodeTypeEnums.LeftInputAdapterNode) {
+    if (!SegmentUtilities.parentInSameSegment(pathRoot)) {
       ruleSegmentPosMask=ruleSegmentPosMask << 1;
       counter++;
     }
-    parent=parent.getLeftTupleSource();
+    pathRoot=pathRoot.getLeftTupleSource();
   }
   smem.setSegmentPosMaskBit(ruleSegmentPosMask);
   smem.setPos(counter);

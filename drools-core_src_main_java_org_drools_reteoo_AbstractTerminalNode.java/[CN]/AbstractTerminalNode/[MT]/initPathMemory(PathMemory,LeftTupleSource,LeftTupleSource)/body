@@ -1,0 +1,29 @@
+{
+  int counter=0;
+  long allLinkedTestMask=0;
+  if (tupleSource.getSinkPropagator().size() > 1) {
+    counter++;
+  }
+  boolean updateBitInNewSegment=true;
+  boolean updateAllLinkedTest=true;
+  while (tupleSource.getType() != NodeTypeEnums.LeftInputAdapterNode) {
+    if (updateAllLinkedTest && updateBitInNewSegment && NodeTypeEnums.isBetaNode(tupleSource)) {
+      updateBitInNewSegment=false;
+      allLinkedTestMask=allLinkedTestMask | 1;
+    }
+    if (!SegmentUtilities.parentInSameSegment(tupleSource)) {
+      updateBitInNewSegment=true;
+      allLinkedTestMask=allLinkedTestMask << 1;
+      counter++;
+    }
+    tupleSource=tupleSource.getLeftTupleSource();
+    if (tupleSource == startTupleSource) {
+      updateAllLinkedTest=false;
+    }
+  }
+  if (updateAllLinkedTest && tupleSource.getSinkPropagator().size() > 1) {
+    allLinkedTestMask=allLinkedTestMask | 1;
+  }
+  pmem.setAllLinkedMaskTest(allLinkedTestMask);
+  pmem.setSegmentMemories(new SegmentMemory[counter + 1]);
+}
