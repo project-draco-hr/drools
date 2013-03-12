@@ -1,0 +1,21 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  InputStream in1=null;
+  InputStream in2=null;
+  try {
+    in1=this.getClass().getResourceAsStream("incrementalBuild.dtable.xls");
+    kfs.write("src/main/resources/incrementalBuild1.dtable.xls",KieServices.Factory.get().getResources().newInputStreamResource(in1));
+    in2=this.getClass().getResourceAsStream("incrementalBuild.dtable.xls");
+    kfs.write("src/main/resources/incrementalBuild2.dtable.xls",KieServices.Factory.get().getResources().newInputStreamResource(in2));
+    assertEquals(1,ks.newKieBuilder(kfs).buildAll().getResults().getMessages().size());
+  }
+  finally {
+    if (in1 != null) {
+      in1.close();
+    }
+    if (in2 != null) {
+      in2.close();
+    }
+  }
+}
