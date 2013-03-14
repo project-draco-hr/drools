@@ -1,22 +1,29 @@
 {
+  boolean initRtn=false;
+  if (tupleSource.getType() == NodeTypeEnums.LeftInputAdapterNode) {
+    initRtn=true;
+  }
   while (tupleSource.getType() != NodeTypeEnums.LeftInputAdapterNode && SegmentUtilities.parentInSameSegment(tupleSource)) {
     tupleSource=tupleSource.getLeftTupleSource();
   }
   LeftTupleSource segmentRoot=tupleSource;
+  if (initRtn) {
+    initialiseRtnMemory(segmentRoot,wm);
+  }
   SegmentMemory smem=new SegmentMemory(segmentRoot);
   long nodePosMask=1;
   long allLinkedTestMask=0;
   while (true) {
     if (NodeTypeEnums.isBetaNode(tupleSource)) {
-      BetaMemory betaMemory;
+      BetaMemory bm;
       BetaNode betaNode=(BetaNode)tupleSource;
       if (NodeTypeEnums.AccumulateNode == tupleSource.getType()) {
-        betaMemory=((AccumulateMemory)smem.createNodeMemory((AccumulateNode)tupleSource,wm)).getBetaMemory();
+        bm=((AccumulateMemory)smem.createNodeMemory((AccumulateNode)tupleSource,wm)).getBetaMemory();
       }
  else {
-        betaMemory=(BetaMemory)smem.createNodeMemory(betaNode,wm);
+        bm=(BetaMemory)smem.createNodeMemory(betaNode,wm);
       }
-      betaMemory.setSegmentMemory(smem);
+      bm.setSegmentMemory(smem);
       if (betaNode.isRightInputIsRiaNode()) {
         RightInputAdapterNode riaNode=(RightInputAdapterNode)betaNode.getRightInput();
         LeftTupleSource subnetworkLts=riaNode.getLeftTupleSource();
@@ -29,15 +36,17 @@
           createSegmentMemory((LeftTupleSource)subnetworkLts,wm);
         }
         RiaNodeMemory riaMem=(RiaNodeMemory)wm.getNodeMemory((MemoryFactory)riaNode);
-        betaMemory.setRiaRuleMemory(riaMem.getRiaPathMemory());
-        if (riaMem.getRiaPathMemory().getAllLinkedMaskTest() == 0) {
-          smem.linkNode(nodePosMask,wm);
+        bm.setRiaRuleMemory(riaMem.getRiaPathMemory());
+        if (riaMem.getRiaPathMemory().getAllLinkedMaskTest() > 0) {
+          allLinkedTestMask=allLinkedTestMask | nodePosMask;
         }
       }
-      betaMemory.setNodePosMaskBit(nodePosMask);
-      allLinkedTestMask=allLinkedTestMask | nodePosMask;
-      if (NodeTypeEnums.NotNode == tupleSource.getType() || NodeTypeEnums.AccumulateNode == tupleSource.getType()) {
-        smem.linkNode(nodePosMask,wm);
+ else       if ((!(NodeTypeEnums.NotNode == tupleSource.getType() && !((NotNode)tupleSource).isEmptyBetaConstraints()) && NodeTypeEnums.AccumulateNode != tupleSource.getType())) {
+        allLinkedTestMask=allLinkedTestMask | nodePosMask;
+      }
+      bm.setNodePosMaskBit(nodePosMask);
+      if (NodeTypeEnums.NotNode == tupleSource.getType()) {
+        smem.linkNodeWithoutRuleNotify(bm.getNodePosMaskBit());
       }
       nodePosMask=nodePosMask << 1;
     }
@@ -110,6 +119,6 @@
   }
   smem.setSegmentPosMaskBit(ruleSegmentPosMask);
   smem.setPos(counter);
-  SegmentUtilities.updateRiaAndTerminalMemory(0,tupleSource,tupleSource,smem,wm);
+  updateRiaAndTerminalMemory(tupleSource,tupleSource,smem,wm);
   return smem;
 }

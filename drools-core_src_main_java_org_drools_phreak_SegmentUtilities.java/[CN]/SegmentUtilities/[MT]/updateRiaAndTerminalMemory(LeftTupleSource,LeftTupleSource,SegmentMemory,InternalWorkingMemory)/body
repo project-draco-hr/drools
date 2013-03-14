@@ -1,0 +1,29 @@
+{
+  for (  LeftTupleSink sink : lt.getSinkPropagator().getSinks()) {
+    if (NodeTypeEnums.isLeftTupleSource(sink)) {
+      if (NodeTypeEnums.NotNode == sink.getType() && ((NotNode)sink).isEmptyBetaConstraints()) {
+        BetaMemory bm=(BetaMemory)wm.getNodeMemory((MemoryFactory)sink);
+        if (bm.getSegmentMemory() == null) {
+          createSegmentMemory((NotNode)sink,wm);
+        }
+      }
+      updateRiaAndTerminalMemory((LeftTupleSource)sink,originalLt,smem,wm);
+    }
+ else     if (sink.getType() == NodeTypeEnums.RightInputAdaterNode) {
+      if (inSubNetwork((RightInputAdapterNode)sink,originalLt)) {
+        RiaNodeMemory riaMem=(RiaNodeMemory)wm.getNodeMemory((MemoryFactory)sink);
+        PathMemory rmem=(PathMemory)riaMem.getRiaPathMemory();
+        smem.getPathMemories().add(rmem);
+        rmem.getSegmentMemories()[smem.getPos()]=smem;
+      }
+    }
+ else     if (NodeTypeEnums.isTerminalNode(sink)) {
+      PathMemory rmem=(PathMemory)wm.getNodeMemory((MemoryFactory)sink);
+      smem.getPathMemories().add(rmem);
+      rmem.getSegmentMemories()[smem.getPos()]=smem;
+      if (smem.isSegmentLinked()) {
+        smem.notifyRuleLinkSegment(wm);
+      }
+    }
+  }
+}
