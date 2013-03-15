@@ -1,0 +1,136 @@
+{
+  String str="" + "package org.test \n" + "import java.util.List \n"+ "global List list \n"+ "declare Thing \n"+ "    thing : String @key \n"+ "end \n"+ "declare Edible extends Thing \n"+ "end \n"+ "declare Location extends Thing \n"+ "    location : String  @key \n"+ "end \n"+ "declare Here \n"+ "    place : String \n"+ "end \n"+ "rule kickOff \n"+ "when \n"+ "    Integer( $i: intValue ) \n"+ "then \n"+ "    switch( $i ){ \n";
+  String[] facts=new String[]{"new Edible( 'peach' )","new Location( 'peach', 'table' )","new Here( 'table' )"};
+  int f=0;
+  for (int i=0; i < facts.length; i++) {
+    for (int j=0; j < facts.length; j++) {
+      for (int k=0; k < facts.length; k++) {
+        Set<String> set=new HashSet<String>();
+        set.add(facts[i]);
+        set.add(facts[j]);
+        set.add(facts[k]);
+        if (set.size() == 3) {
+          str+="    case " + f++ + ": \n"+ "        insert( "+ facts[i]+ " ); \n"+ "        insert( "+ facts[j]+ " ); \n"+ "        insert( "+ facts[k]+ " ); \n"+ "        break; \n";
+        }
+      }
+    }
+  }
+  facts=new String[]{"new Edible( 'peach' )","new Location( 'table', 'office' )","new Location( 'peach', 'table' )","new Here( 'office' )"};
+  int h=f;
+  for (int i=0; i < facts.length; i++) {
+    for (int j=0; j < facts.length; j++) {
+      for (int k=0; k < facts.length; k++) {
+        for (int l=0; l < facts.length; l++) {
+          Set<String> set=new HashSet<String>();
+          set.add(facts[i]);
+          set.add(facts[j]);
+          set.add(facts[k]);
+          set.add(facts[l]);
+          if (set.size() == 4) {
+            str+="    case " + h++ + ": \n"+ "        insert( "+ facts[i]+ " ); \n"+ "        insert( "+ facts[j]+ " ); \n"+ "        insert( "+ facts[k]+ " ); \n"+ "        insert( "+ facts[l]+ " ); \n"+ "        break; \n";
+          }
+        }
+      }
+    }
+  }
+  str+="    } \n" + "end \n" + "\n"+ "query whereFood( String x, String y ) \n"+ "    ( Location(x, y;) and \n"+ "    Edible(x;) ) \n "+ "    or  \n"+ "    ( Location(z, y;) and whereFood(x, z;) ) \n"+ "end "+ "query look(String place, List things, List food)  \n"+ "    Here(place;) \n"+ "    things := List() from accumulate( Location(thing, place;), \n"+ "                                      collectList( thing ) ) \n"+ "    food := List() from accumulate( whereFood(thing, place;), \n"+ "                                    collectList( thing ) ) \n"+ "end \n"+ "rule reactiveLook \n"+ "when \n"+ "    Here( $place : place)  \n"+ "    look($place, $things; $food := food) \n"+ "then \n"+ "    list.addAll( $things ); \n"+ "    list.addAll( $food   ); \n"+ "end \n"+ "";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  kbase=SerializationHelper.serializeObject(kbase);
+  for (int i=0; i < f; i++) {
+    StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+    List<String> list=new ArrayList<String>();
+    ksession.setGlobal("list",list);
+    ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+    ksession.fireAllRules();
+    list.clear();
+    InternalFactHandle fh=(InternalFactHandle)ksession.insert(Integer.valueOf(i));
+    ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+    ksession.fireAllRules();
+    ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true,false);
+    assertEquals(2,list.size());
+    assertEquals("peach",list.get(0));
+    assertEquals("peach",list.get(1));
+    list.clear();
+    InternalFactHandle[] handles=ksession.getFactHandles().toArray(new InternalFactHandle[0]);
+    for (int j=0; j < handles.length; j++) {
+      if (handles[j].getObject() instanceof InitialFact || handles[j].getObject() instanceof Integer) {
+        continue;
+      }
+      ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true,false);
+      handles[j]=getFactHandle(handles[j],ksession);
+      Object o=handles[j].getObject();
+      ksession.retract(handles[j]);
+      ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true,false);
+      handles[j]=(InternalFactHandle)ksession.insert(o);
+      ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true,false);
+      ksession.fireAllRules();
+      assertEquals(2,list.size());
+      assertEquals("peach",list.get(0));
+      assertEquals("peach",list.get(1));
+      list.clear();
+      handles[j]=getFactHandle(handles[j],ksession);
+      ksession.update(handles[j],handles[j].getObject());
+      ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true,false);
+      ksession.fireAllRules();
+      assertEquals(2,list.size());
+      assertEquals("peach",list.get(0));
+      assertEquals("peach",list.get(1));
+      list.clear();
+    }
+    fh=getFactHandle(fh,ksession);
+    ksession.retract(fh);
+    ksession.dispose();
+  }
+  for (int i=f; i < h; i++) {
+    StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+    List<String> list=new ArrayList<String>();
+    ksession.setGlobal("list",list);
+    ksession.fireAllRules();
+    list.clear();
+    ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+    InternalFactHandle fh=(InternalFactHandle)ksession.insert(Integer.valueOf(i));
+    ksession.fireAllRules();
+    assertEquals(2,list.size());
+    assertEquals("table",list.get(0));
+    assertEquals("peach",list.get(1));
+    list.clear();
+    ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true,false);
+    InternalFactHandle[] handles=ksession.getFactHandles().toArray(new InternalFactHandle[0]);
+    for (int j=0; j < handles.length; j++) {
+      if (handles[j].getObject() instanceof InitialFact || handles[j].getObject() instanceof Integer) {
+        continue;
+      }
+      ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true,false);
+      handles[j]=getFactHandle(handles[j],ksession);
+      Object o=handles[j].getObject();
+      ksession.retract(handles[j]);
+      ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true,false);
+      handles[j]=(InternalFactHandle)ksession.insert(o);
+      ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true,false);
+      ksession.fireAllRules();
+      assertEquals(2,list.size());
+      assertEquals("table",list.get(0));
+      assertEquals("peach",list.get(1));
+      list.clear();
+      ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true,false);
+      handles[j]=getFactHandle(handles[j],ksession);
+      ksession.update(handles[j],handles[j].getObject());
+      ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true,false);
+      ksession.fireAllRules();
+      assertEquals(2,list.size());
+      assertEquals("table",list.get(0));
+      assertEquals("peach",list.get(1));
+      list.clear();
+    }
+    ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true,false);
+    fh=getFactHandle(fh,ksession);
+    ksession.retract(fh);
+    ksession.dispose();
+  }
+}

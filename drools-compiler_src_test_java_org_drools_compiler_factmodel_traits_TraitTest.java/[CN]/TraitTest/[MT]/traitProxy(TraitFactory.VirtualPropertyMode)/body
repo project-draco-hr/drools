@@ -1,0 +1,48 @@
+{
+  String source="org/drools/compiler/factmodel/traits/testTraitDon.drl";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  Resource res=ResourceFactory.newClassPathResource(source);
+  assertNotNull(res);
+  kbuilder.add(res,ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kb=KnowledgeBaseFactory.newKnowledgeBase();
+  kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  TraitFactory.setMode(mode,kb);
+  TraitFactory tFactory=((AbstractRuleBase)((KnowledgeBaseImpl)kb).getRuleBase()).getConfiguration().getComponentFactory().getTraitFactory();
+  try {
+    FactType impClass=kb.getFactType("org.test","Imp");
+    TraitableBean imp=(TraitableBean)impClass.newInstance();
+    impClass.set(imp,"name","aaa");
+    Class trait=kb.getFactType("org.test","Student").getFactClass();
+    Class trait2=kb.getFactType("org.test","Role").getFactClass();
+    assertNotNull(trait);
+    TraitProxy proxy=(TraitProxy)tFactory.getProxy(imp,trait);
+    proxy.getFields().put("field","xyz");
+    assertNotNull(proxy);
+    TraitProxy proxy2=(TraitProxy)tFactory.getProxy(imp,trait);
+    assertSame(proxy2,proxy);
+    TraitProxy proxy3=(TraitProxy)tFactory.getProxy(imp,trait2);
+    assertNotNull(proxy3);
+    assertEquals("xyz",proxy3.getFields().get("field"));
+    assertEquals("aaa",proxy3.getFields().get("name"));
+    TraitableBean imp2=(TraitableBean)impClass.newInstance();
+    impClass.set(imp2,"name","aaa");
+    TraitProxy proxy4=(TraitProxy)tFactory.getProxy(imp2,trait);
+    proxy4.getFields().put("field","xyz");
+    Assert.assertEquals(proxy2,proxy4);
+  }
+ catch (  InstantiationException e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+catch (  IllegalAccessException e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+catch (  LogicalTypeInconsistencyException e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}

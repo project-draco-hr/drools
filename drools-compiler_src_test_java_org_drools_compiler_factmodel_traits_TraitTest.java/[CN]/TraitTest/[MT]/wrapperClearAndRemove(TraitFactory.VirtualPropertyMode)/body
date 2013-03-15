@@ -1,0 +1,72 @@
+{
+  String source="org/drools/compiler/factmodel/traits/testTraitDon.drl";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  Resource res=ResourceFactory.newClassPathResource(source);
+  assertNotNull(res);
+  kbuilder.add(res,ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kb=KnowledgeBaseFactory.newKnowledgeBase();
+  kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  TraitFactory.setMode(mode,kb);
+  TraitFactory tFactory=((AbstractRuleBase)((KnowledgeBaseImpl)kb).getRuleBase()).getConfiguration().getComponentFactory().getTraitFactory();
+  try {
+    FactType impClass=kb.getFactType("org.test","Imp");
+    TraitableBean imp=(TraitableBean)impClass.newInstance();
+    impClass.set(imp,"name","john");
+    FactType traitClass=kb.getFactType("org.test","Student");
+    Class trait=traitClass.getFactClass();
+    TraitProxy proxy=(TraitProxy)tFactory.getProxy(imp,trait);
+    proxy.getFields().put("surname","xxx");
+    proxy.getFields().put("name2","john");
+    proxy.getFields().put("nfield",null);
+    Set set=new HashSet();
+    set.add("name");
+    set.add("surname");
+    set.add("age");
+    set.add("school");
+    set.add("name2");
+    set.add("nfield");
+    assertEquals(6,proxy.getFields().keySet().size());
+    assertEquals(set,proxy.getFields().keySet());
+    proxy.getFields().clear();
+    Map<String,Object> fields=proxy.getFields();
+    assertEquals(3,fields.size());
+    assertTrue(fields.containsKey("age"));
+    assertTrue(fields.containsKey("school"));
+    assertTrue(fields.containsKey("name"));
+    assertEquals(0,fields.get("age"));
+    assertNull(fields.get("school"));
+    assertNotNull(fields.get("name"));
+    proxy.getFields().put("surname","xxx");
+    proxy.getFields().put("name2","john");
+    proxy.getFields().put("nfield",null);
+    proxy.getFields().put("age",24);
+    assertEquals("john",proxy.getFields().get("name"));
+    assertEquals("xxx",proxy.getFields().get("surname"));
+    assertEquals("john",proxy.getFields().get("name2"));
+    assertEquals(null,proxy.getFields().get("nfield"));
+    assertEquals(24,proxy.getFields().get("age"));
+    assertEquals(null,proxy.getFields().get("school"));
+    proxy.getFields().remove("surname");
+    proxy.getFields().remove("name2");
+    proxy.getFields().remove("age");
+    proxy.getFields().remove("school");
+    proxy.getFields().remove("nfield");
+    assertEquals(3,proxy.getFields().size());
+    assertEquals(0,proxy.getFields().get("age"));
+    assertEquals(null,proxy.getFields().get("school"));
+    assertEquals("john",proxy.getFields().get("name"));
+    assertEquals(null,proxy.getFields().get("nfield"));
+    assertFalse(proxy.getFields().containsKey("nfield"));
+    assertEquals(null,proxy.getFields().get("name2"));
+    assertFalse(proxy.getFields().containsKey("name2"));
+    assertEquals(null,proxy.getFields().get("surname"));
+    assertFalse(proxy.getFields().containsKey("surname"));
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}

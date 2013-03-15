@@ -1,0 +1,7 @@
+{
+  String rule="package org.drools\n" + "import java.util.Map;\n" + "import java.util.EnumMap;\n"+ "import PropertySpecificTest.DataSample;\n"+ "import PropertySpecificTest.Model;\n"+ "import PropertySpecificTest.Parameter;\n"+ "\n"+ "rule 'Init'\n"+ "when\n"+ "    $m: Model()\n"+ "then\n"+ "    insert(new DataSample($m));\n"+ "end\n"+ "\n"+ "rule \"Rule 1\"\n"+ "when\n"+ "    $m: Model()\n"+ "    $d: DataSample(model == $m)\n"+ "then\n"+ "    modify($d){\n"+ "        addValue(Parameter.PARAM_A, 10.0)\n"+ "    }\n"+ "end\n"+ "\n"+ "rule \"Rule 2\"\n"+ "when\n"+ "    $m: Model()\n"+ "    $d: DataSample(model == $m, $v: values[Parameter.PARAM_A] > 9.0)\n"+ "then\n"+ "    modify($d){\n"+ "        addMessage(\"Hello\")\n"+ "    }\n"+ "end\n"+ "\n"+ "rule \"Data without messages\"\n"+ "salience -100\n"+ "when\n"+ "    $m: Model()\n"+ "    $d: DataSample(model == $m, messaged == false)\n"+ "then\n"+ "end";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(rule);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.insert(new Model());
+  ksession.fireAllRules();
+}

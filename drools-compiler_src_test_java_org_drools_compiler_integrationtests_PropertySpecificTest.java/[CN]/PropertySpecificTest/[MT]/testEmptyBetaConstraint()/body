@@ -1,0 +1,21 @@
+{
+  String rule="package org.drools\n" + "import PropertySpecificTest.Hero\n" + "import PropertySpecificTest.Cell\n"+ "import PropertySpecificTest.Init\n"+ "import PropertySpecificTest.CompositeImageName\n"+ "declare CompositeImageName\n"+ "   @propertyReactive\n"+ "end\n"+ "rule \"Show First Cell\" when\n"+ "   Init()\n"+ "   $c : Cell( row == 0, col == 0 )\n"+ "then\n"+ "   modify( $c ) { hidden = false };\n"+ "end\n"+ "\n"+ "rule \"Paint Empty Hero\" when\n"+ "   $c : Cell()\n"+ "   $cin : CompositeImageName( cell == $c )\n"+ "   not Hero( row == $c.row, col == $c.col  )\n"+ "then\n"+ "   modify( $cin ) { hero = \"\" };\n"+ "end";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(rule);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.insert(new Init());
+  Cell cell=new Cell();
+  cell.setRow(0);
+  cell.setCol(0);
+  cell.hidden=true;
+  ksession.insert(cell);
+  Hero hero=new Hero();
+  hero.setRow(1);
+  hero.setCol(1);
+  ksession.insert(hero);
+  CompositeImageName cin=new CompositeImageName();
+  cin.setHero("hero");
+  cin.setCell(cell);
+  ksession.insert(cin);
+  int rules=ksession.fireAllRules();
+  assertEquals(2,rules);
+}

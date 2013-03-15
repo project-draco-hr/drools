@@ -1,0 +1,33 @@
+{
+  KnowledgeBase kbase=buildKnowledgeBase("   A() \n","   A() B() \n","   A() B() C() \n");
+  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession()).session;
+  ObjectTypeNode aotn=getObjectTypeNode(kbase,LinkingTest.A.class);
+  LeftInputAdapterNode liaNode=(LeftInputAdapterNode)aotn.getSinkPropagator().getSinks()[0];
+  RuleTerminalNode rtn1=(RuleTerminalNode)liaNode.getSinkPropagator().getSinks()[0];
+  JoinNode bNode=(JoinNode)liaNode.getSinkPropagator().getSinks()[1];
+  RuleTerminalNode rtn2=(RuleTerminalNode)bNode.getSinkPropagator().getSinks()[0];
+  JoinNode cNode=(JoinNode)bNode.getSinkPropagator().getSinks()[1];
+  RuleTerminalNode rtn3=(RuleTerminalNode)cNode.getSinkPropagator().getSinks()[0];
+  wm.insert(new LinkingTest.A());
+  wm.insert(new LinkingTest.B());
+  wm.insert(new LinkingTest.C());
+  LiaNodeMemory liaMem=(LiaNodeMemory)wm.getNodeMemory(liaNode);
+  SegmentMemory smem=liaMem.getSegmentMemory();
+  assertEquals(liaNode,smem.getRootNode());
+  assertEquals(liaNode,smem.getTipNode());
+  SegmentMemory rtnSmem1=smem.getFirst();
+  assertEquals(rtn1,rtnSmem1.getRootNode());
+  assertEquals(rtn1,rtnSmem1.getTipNode());
+  SegmentMemory bSmem=rtnSmem1.getNext();
+  assertEquals(bNode,bSmem.getRootNode());
+  assertEquals(bNode,bSmem.getTipNode());
+  assertNull(bSmem.getFirst());
+  assertNull(bSmem.getNext());
+  wm.fireAllRules();
+  SegmentMemory rtnSmem2=bSmem.getFirst();
+  assertEquals(rtn2,rtnSmem2.getRootNode());
+  assertEquals(rtn2,rtnSmem2.getTipNode());
+  SegmentMemory cSmem=rtnSmem2.getNext();
+  assertEquals(cNode,cSmem.getRootNode());
+  assertEquals(rtn3,cSmem.getTipNode());
+}

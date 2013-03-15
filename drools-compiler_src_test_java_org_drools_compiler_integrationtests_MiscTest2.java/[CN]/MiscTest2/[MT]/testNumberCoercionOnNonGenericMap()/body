@@ -1,0 +1,11 @@
+{
+  String str="package com.ilesteban.jit;\n" + "\n" + "import java.util.Map;\n"+ "import java.util.EnumMap;\n"+ "import MiscTest2.Parameter\n"+ "import MiscTest2.DataSample\n"+ "\n"+ "declare TestObject\n"+ "    data    :   java.util.Map\n"+ "end\n"+ "\n"+ "rule \"Rule 1\"\n"+ "when\n"+ "    $d: DataSample()\n"+ "then\n"+ "    //create a new object copying the Map<Parameter, Double> to a Map<Object, Object>\n"+ "    insert( new TestObject($d.getValues()));\n"+ "end\n"+ "\n"+ "rule \"Rule 2\"\n"+ "when\n"+ "    TestObject(data[Parameter.PARAM_A] > 3)\n"+ "then\n"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  Map<Parameter,Double> values=new EnumMap<Parameter,Double>(Parameter.class);
+  values.put(Parameter.PARAM_A,4.0);
+  DataSample data=new DataSample();
+  data.setValues(values);
+  ksession.insert(data);
+  assertEquals(2,ksession.fireAllRules());
+}
