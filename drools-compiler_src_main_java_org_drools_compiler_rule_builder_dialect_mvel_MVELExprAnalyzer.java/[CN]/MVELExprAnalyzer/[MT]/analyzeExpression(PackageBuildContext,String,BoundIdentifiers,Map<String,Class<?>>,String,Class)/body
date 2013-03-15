@@ -1,0 +1,128 @@
+{
+  MVELAnalysisResult result;
+  if (expr.trim().length() > 0) {
+    MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL=true;
+    MVEL.COMPILER_OPT_ALLOW_OVERRIDE_ALL_PROPHANDLING=true;
+    MVEL.COMPILER_OPT_ALLOW_RESOLVE_INNERCLASSES_WITH_DOTNOTATION=true;
+    MVEL.COMPILER_OPT_SUPPORT_JAVA_STYLE_CLASS_LITERALS=true;
+    MVELDialect dialect=(MVELDialect)context.getDialect("mvel");
+    MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
+    ParserConfiguration conf=data.getParserConfiguration();
+    conf.setClassLoader(context.getPackageBuilder().getRootClassLoader());
+    final ParserContext parserContext1=new ParserContext(conf);
+    if (localTypes != null) {
+      for (      Entry entry : localTypes.entrySet()) {
+        parserContext1.addInput((String)entry.getKey(),(Class)entry.getValue());
+      }
+    }
+    if (availableIdentifiers.getThisClass() != null) {
+      parserContext1.addInput("this",availableIdentifiers.getThisClass());
+    }
+    if (availableIdentifiers.getOperators() != null) {
+      for (      Entry<String,EvaluatorWrapper> opEntry : availableIdentifiers.getOperators().entrySet()) {
+        parserContext1.addInput(opEntry.getKey(),opEntry.getValue().getClass());
+      }
+    }
+    parserContext1.setStrictTypeEnforcement(false);
+    parserContext1.setStrongTyping(false);
+    parserContext1.setInterceptors(dialect.getInterceptors());
+    Class<?> returnType;
+    try {
+      returnType=MVEL.analyze(expr,parserContext1);
+    }
+ catch (    Exception e) {
+      BaseDescr base=(context instanceof RuleBuildContext) ? ((RuleBuildContext)context).getRuleDescr() : context.getParentDescr();
+      DialectUtil.copyErrorLocation(e,context.getParentDescr());
+      context.addError(new DescrBuildError(base,context.getParentDescr(),null,"Unable to Analyse Expression " + expr + ":\n"+ e.getMessage()));
+      return null;
+    }
+    Set<String> requiredInputs=new HashSet<String>();
+    requiredInputs.addAll(parserContext1.getInputs().keySet());
+    HashMap<String,Class<?>> variables=(HashMap<String,Class<?>>)((Map)parserContext1.getVariables());
+    if (localTypes != null) {
+      for (      String str : localTypes.keySet()) {
+        variables.remove(str);
+      }
+    }
+    if (availableIdentifiers.getThisClass() != null) {
+      for (Iterator<String> it=requiredInputs.iterator(); it.hasNext(); ) {
+        if (PropertyTools.getFieldOrAccessor(availableIdentifiers.getThisClass(),it.next()) != null) {
+          it.remove();
+        }
+      }
+    }
+    final ParserContext parserContext2=new ParserContext(conf);
+    parserContext2.setStrictTypeEnforcement(true);
+    parserContext2.setStrongTyping(true);
+    parserContext2.setInterceptors(dialect.getInterceptors());
+    for (    String str : requiredInputs) {
+      Class<?> cls=availableIdentifiers.getDeclrClasses().get(str);
+      if (cls != null) {
+        parserContext2.addInput(str,cls);
+        continue;
+      }
+      cls=availableIdentifiers.getGlobals().get(str);
+      if (cls != null) {
+        parserContext2.addInput(str,cls);
+        continue;
+      }
+      cls=availableIdentifiers.getOperators().keySet().contains(str) ? context.getConfiguration().getComponentFactory().getExpressionProcessor().getEvaluatorWrapperClass() : null;
+      if (cls != null) {
+        parserContext2.addInput(str,cls);
+        continue;
+      }
+      if (str.equals(contextIndeifier)) {
+        parserContext2.addInput(contextIndeifier,kcontextClass);
+      }
+ else       if (str.equals("kcontext")) {
+        parserContext2.addInput("kcontext",kcontextClass);
+      }
+      if (str.equals("rule")) {
+        parserContext2.addInput("rule",Rule.class);
+      }
+      if (localTypes != null) {
+        cls=localTypes.get(str);
+        if (cls != null) {
+          parserContext2.addInput(str,cls);
+        }
+      }
+    }
+    if (availableIdentifiers.getThisClass() != null) {
+      parserContext2.addInput("this",availableIdentifiers.getThisClass());
+    }
+    boolean typesafe=context.isTypesafe();
+    try {
+      returnType=MVEL.analyze(expr,parserContext2);
+      typesafe=true;
+    }
+ catch (    Exception e) {
+      if (typesafe) {
+        BaseDescr base=(context instanceof RuleBuildContext) ? ((RuleBuildContext)context).getRuleDescr() : context.getParentDescr();
+        DialectUtil.copyErrorLocation(e,context.getParentDescr());
+        context.addError(new DescrBuildError(base,context.getParentDescr(),null,"Unable to Analyse Expression " + expr + ":\n"+ e.getMessage()));
+        return null;
+      }
+    }
+    if (typesafe) {
+      requiredInputs=new HashSet<String>();
+      requiredInputs.addAll(parserContext2.getInputs().keySet());
+      requiredInputs.addAll(variables.keySet());
+      variables=(HashMap<String,Class<?>>)((Map)parserContext2.getVariables());
+      if (localTypes != null) {
+        for (        String str : localTypes.keySet()) {
+          variables.remove(str);
+        }
+      }
+    }
+    result=analyze(requiredInputs,availableIdentifiers);
+    result.setReturnType(returnType);
+    result.setMvelVariables(variables);
+    result.setTypesafe(typesafe);
+  }
+ else {
+    result=analyze((Set<String>)Collections.EMPTY_SET,availableIdentifiers);
+    result.setMvelVariables(new HashMap<String,Class<?>>());
+    result.setTypesafe(true);
+  }
+  return result;
+}

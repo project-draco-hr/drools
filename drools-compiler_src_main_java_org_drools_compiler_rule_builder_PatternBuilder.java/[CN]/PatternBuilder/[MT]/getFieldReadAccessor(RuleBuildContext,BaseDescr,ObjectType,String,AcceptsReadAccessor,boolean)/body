@@ -1,0 +1,60 @@
+{
+  InternalReadAccessor reader;
+  if (ValueType.FACTTEMPLATE_TYPE.equals(objectType.getValueType())) {
+    final FactTemplate factTemplate=((FactTemplateObjectType)objectType).getFactTemplate();
+    reader=new FactTemplateFieldExtractor(factTemplate,factTemplate.getFieldTemplateIndex(fieldName));
+    if (target != null) {
+      target.setReadAccessor(reader);
+    }
+  }
+ else   if (fieldName.indexOf('.') > -1 || fieldName.indexOf('[') > -1 || fieldName.indexOf('(') > -1) {
+    Dialect dialect=context.getDialect();
+    try {
+      MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
+      context.setDialect(mvelDialect);
+      Map<String,Class<?>> declarations=getDeclarationsMap(descr,context,false);
+      Map<String,Class<?>> globals=context.getPackageBuilder().getGlobals();
+      final AnalysisResult analysis=context.getDialect().analyzeExpression(context,descr,fieldName,new BoundIdentifiers(declarations,globals,null,((ClassObjectType)objectType).getClassType()));
+      if (analysis == null) {
+        if (reportError) {
+          context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to analyze expression '" + fieldName + "'"));
+        }
+        return null;
+      }
+      final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
+      if (!usedIdentifiers.getDeclrClasses().isEmpty()) {
+        if (reportError) {
+          context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Variables can not be used inside bindings. Variable " + usedIdentifiers.getDeclrClasses().keySet() + " is being used in binding '"+ fieldName+ "'"));
+        }
+        return null;
+      }
+      reader=context.getPkg().getClassFieldAccessorStore().getMVELReader(context.getPkg().getName(),((ClassObjectType)objectType).getClassName(),fieldName,context.isTypesafe(),((MVELAnalysisResult)analysis).getReturnType());
+      MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
+      ((MVELCompileable)reader).compile(data);
+      data.addCompileable((MVELCompileable)reader);
+    }
+ catch (    final Exception e) {
+      if (reportError) {
+        DialectUtil.copyErrorLocation(e,descr);
+        context.addError(new DescrBuildError(context.getParentDescr(),descr,e,"Unable to create reader for '" + fieldName + "':"+ e.getMessage()));
+      }
+      reader=null;
+    }
+ finally {
+      context.setDialect(dialect);
+    }
+  }
+ else {
+    try {
+      reader=context.getPkg().getClassFieldAccessorStore().getReader(((ClassObjectType)objectType).getClassName(),fieldName,target);
+    }
+ catch (    final Exception e) {
+      if (reportError) {
+        DialectUtil.copyErrorLocation(e,descr);
+        context.addError(new DescrBuildError(context.getParentDescr(),descr,e,"Unable to create Field Extractor for '" + fieldName + "'"+ e.getMessage()));
+      }
+      reader=null;
+    }
+  }
+  return reader;
+}
