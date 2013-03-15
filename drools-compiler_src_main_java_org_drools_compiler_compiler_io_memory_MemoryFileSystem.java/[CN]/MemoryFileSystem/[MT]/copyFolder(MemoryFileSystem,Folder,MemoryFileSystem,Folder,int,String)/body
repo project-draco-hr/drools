@@ -1,0 +1,37 @@
+{
+  if (!trgFolder.exists()) {
+    trgMfs.getFolder(trgFolder.getPath()).create();
+  }
+  if (srcFolder != null) {
+    for (    Resource rs : srcFolder.getMembers()) {
+      if (rs instanceof Folder) {
+        count=copyFolder(srcMfs,(Folder)rs,trgMfs,trgFolder.getFolder(((Folder)rs).getName()),count,filters);
+      }
+ else {
+        MemoryFile trgFile=(MemoryFile)trgFolder.getFile(((org.drools.compiler.compiler.io.File)rs).getName());
+        boolean accept=false;
+        if (filters == null || filters.length == 0) {
+          accept=true;
+        }
+ else {
+          for (          String filter : filters) {
+            if (trgFile.getName().endsWith(filter)) {
+              accept=true;
+              break;
+            }
+          }
+        }
+        if (accept) {
+          try {
+            trgMfs.setFileContents(trgFile,srcMfs.getFileContents((MemoryFile)rs));
+            count++;
+          }
+ catch (          IOException e) {
+            throw new RuntimeException(e);
+          }
+        }
+      }
+    }
+  }
+  return count;
+}

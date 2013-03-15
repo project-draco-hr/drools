@@ -1,0 +1,21 @@
+{
+  ConstraintConnectiveDescr constraint=null;
+  try {
+    DRLLexer lexer=DRLFactory.getDRLLexer(new ANTLRStringStream(text),languageLevel);
+    CommonTokenStream input=new CommonTokenStream(lexer);
+    RecognizerSharedState state=new RecognizerSharedState();
+    helper=new ParserHelper(input,state,languageLevel);
+    DRLExpressions parser=DRLFactory.getDRLExpressions(input,state,helper,languageLevel);
+    parser.setBuildDescr(true);
+    parser.setLeftMostExpr(null);
+    BaseDescr expr=parser.conditionalOrExpression();
+    if (expr != null && !parser.hasErrors()) {
+      constraint=ConstraintConnectiveDescr.newAnd();
+      constraint.addOrMerge(expr);
+    }
+  }
+ catch (  RecognitionException e) {
+    helper.reportError(e);
+  }
+  return constraint;
+}
