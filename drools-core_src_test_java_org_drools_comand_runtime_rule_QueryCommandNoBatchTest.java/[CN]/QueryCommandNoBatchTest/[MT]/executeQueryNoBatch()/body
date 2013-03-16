@@ -1,0 +1,22 @@
+{
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  ksession=kbase.newStatefulKnowledgeSession();
+  ExecutionResultImpl localKresults=new ExecutionResultImpl();
+  WorldImpl worldImpl=new WorldImpl();
+  worldImpl.createContext("__TEMP__");
+  worldImpl.getContext("__TEMP__").set("__TEMP__",new ContextImpl("__TEMP__",null));
+  ResolvingKnowledgeCommandContext kContext=new ResolvingKnowledgeCommandContext(worldImpl);
+  kContext.set("localResults",localKresults);
+  kContext.set("ksession",ksession);
+  commandService=new DefaultCommandService(kContext);
+  QueryCommand queryCommand=new QueryCommand("out","myQuery",new Object[]{});
+  SetVariableCommandFromCommand setVariableCmd=new SetVariableCommandFromCommand("__TEMP__","query123",queryCommand);
+  KnowledgeContextResolveFromContextCommand resolveFromContextCommand=new KnowledgeContextResolveFromContextCommand(setVariableCmd,null,null,"ksession","localResults");
+  ExecutionResults results=(ExecutionResults)commandService.execute(resolveFromContextCommand);
+  assertNull(results);
+  GetVariableCommand getVariableCmd=new GetVariableCommand("query123","__TEMP__");
+  resolveFromContextCommand=new KnowledgeContextResolveFromContextCommand(getVariableCmd,null,null,"ksession","localResults");
+  NativeQueryResults queryResults=(NativeQueryResults)commandService.execute(resolveFromContextCommand);
+  assertNotNull(queryResults);
+  assertEquals(0,queryResults.size());
+}
