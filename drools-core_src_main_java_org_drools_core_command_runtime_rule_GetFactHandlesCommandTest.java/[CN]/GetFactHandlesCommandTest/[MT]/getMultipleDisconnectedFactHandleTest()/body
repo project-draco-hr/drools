@@ -1,0 +1,44 @@
+{
+  System.out.println("\nTest: " + Thread.currentThread().getStackTrace()[1].getMethodName());
+  HashSet<String> factSet=new HashSet<String>();
+  int numFacts=4;
+  for (int i=0; i < numFacts; ++i) {
+    factSet.add("" + random.nextInt());
+  }
+  for (  String fact : factSet) {
+    ksession.insert(fact);
+  }
+  GetFactHandlesCommand command=new GetFactHandlesCommand(false);
+  Object result=commandService.execute(command);
+  verifyThatCollectionContainsTheseFactHandle(factSet,result);
+  Collection<FactHandle> factHandles=((Collection<FactHandle>)result);
+  command=new GetFactHandlesCommand(false);
+  result=commandService.execute(command);
+  verifyThatCollectionContainsTheseFactHandle(factSet,result);
+  Collection<FactHandle> connectedFactHandles=((Collection<FactHandle>)result);
+  command=new GetFactHandlesCommand(true);
+  result=commandService.execute(command);
+  verifyThatCollectionContainsTheseFactHandle(factSet,result);
+  Collection<FactHandle> disconnectedFactHandles=((Collection<FactHandle>)result);
+  HashSet<FactHandle> factHandlesCopy=new HashSet<FactHandle>(factHandles);
+  for (int i=0; i < connectedFactHandles.size(); ++i) {
+    for (    Object connectedFact : connectedFactHandles) {
+      Iterator<FactHandle> iter=factHandlesCopy.iterator();
+      while (iter.hasNext()) {
+        Object fact=iter.next();
+        if (fact == connectedFact) {
+          iter.remove();
+        }
+      }
+    }
+  }
+  Assert.assertTrue(factHandlesCopy.isEmpty());
+  for (int i=0; i < disconnectedFactHandles.size(); ++i) {
+    for (    Object disconnectedFact : disconnectedFactHandles) {
+      for (      Object fact : factHandles) {
+        Assert.assertTrue(!(fact == disconnectedFact));
+      }
+    }
+  }
+  Assert.assertTrue(factHandles.size() == disconnectedFactHandles.size());
+}
