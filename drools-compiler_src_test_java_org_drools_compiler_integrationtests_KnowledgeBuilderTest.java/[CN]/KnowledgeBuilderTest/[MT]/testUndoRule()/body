@@ -1,7 +1,7 @@
 {
-  String rule="package org.drools.test\n" + "global java.util.List list\n" + "import org.drools.test.FactA\n"+ "import org.drools.test.FactB\n"+ "rule R1 when\n"+ "   FactA( j == 1 )\n"+ "   FactB( i == 1 )\n"+ "then\n"+ "   list.add(\"OK\");"+ "end\n";
-  String declarationA="package org.drools.test\n" + "declare FactA\n" + "    i : int\n"+ "end\n";
-  String declarationB="package org.drools.test\n" + "declare FactB\n" + "    i : int\n"+ "end\n";
+  String rule="package org.drools.compiler.test\n" + "global java.util.List list\n" + "import org.drools.compiler.test.FactA\n"+ "import org.drools.compiler.test.FactB\n"+ "rule R1 when\n"+ "   FactA( j == 1 )\n"+ "   FactB( i == 1 )\n"+ "then\n"+ "   list.add(\"OK\");"+ "end\n";
+  String declarationA="package org.drools.compiler.test\n" + "declare FactA\n" + "    i : int\n"+ "end\n";
+  String declarationB="package org.drools.compiler.test\n" + "declare FactB\n" + "    i : int\n"+ "end\n";
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   kbuilder.add(ResourceFactory.newByteArrayResource(declarationB.getBytes()),ResourceType.DRL);
   assertFalse(kbuilder.hasErrors());
@@ -9,7 +9,7 @@
   assertTrue(kbuilder.hasErrors());
   kbuilder.undo();
   assertFalse(kbuilder.hasErrors());
-  rule="package org.drools.test\n" + "global java.util.List list\n" + "import org.drools.test.FactA\n"+ "import org.drools.test.FactB\n"+ "rule R1 when\n"+ "   FactA( i == 1 )\n"+ "   FactB( i == 1 )\n"+ "then\n"+ "   list.add(\"OK\");"+ "end\n";
+  rule="package org.drools.compiler.test\n" + "global java.util.List list\n" + "import org.drools.compiler.test.FactA\n"+ "import org.drools.compiler.test.FactB\n"+ "rule R1 when\n"+ "   FactA( i == 1 )\n"+ "   FactB( i == 1 )\n"+ "then\n"+ "   list.add(\"OK\");"+ "end\n";
   kbuilder.batch().type(ResourceType.DRL).add(ResourceFactory.newByteArrayResource(rule.getBytes())).add(ResourceFactory.newByteArrayResource(declarationA.getBytes())).build();
   assertFalse(kbuilder.hasErrors());
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
@@ -17,10 +17,10 @@
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   List list=new ArrayList();
   ksession.setGlobal("list",list);
-  FactType aType=kbase.getFactType("org.drools.test","FactA");
+  FactType aType=kbase.getFactType("org.drools.compiler.test","FactA");
   Object a=aType.newInstance();
   aType.set(a,"i",1);
-  FactType bType=kbase.getFactType("org.drools.test","FactB");
+  FactType bType=kbase.getFactType("org.drools.compiler.test","FactB");
   Object b=bType.newInstance();
   bType.set(b,"i",1);
   ksession.insert(a);
