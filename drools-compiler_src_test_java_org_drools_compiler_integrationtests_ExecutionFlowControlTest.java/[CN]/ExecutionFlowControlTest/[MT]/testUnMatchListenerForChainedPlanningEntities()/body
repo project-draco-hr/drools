@@ -1,5 +1,5 @@
 {
-  String str="" + "package org.kie.test;\n" + "\n"+ "import org.kie.Father;\n"+ "import org.kie.TotalHolder;\n"+ "\n"+ "global TotalHolder totalHolder;\n"+ "\n"+ "rule \"sumWeightOfFather\"\n"+ "when\n"+ "    $h: Father(father != null, $wf : weightOfFather)\n"+ "then\n"+ "    totalHolder.add($wf);\n"+ "    System.out.println(\"match \" + totalHolder.getTotal());\n"+ "    final TotalHolder finalTotalHolder = totalHolder;\n"+ "    final int finalWf = $wf;\n"+ "     org.kie.common.AgendaItem agendaItem = (org.kie.common.AgendaItem) kcontext.getActivation();"+ "     agendaItem.setActivationUnMatchListener(new org.kie.internal.event.rule.ActivationUnMatchListener() {"+ "            public void unMatch(org.kie.runtime.rule.WorkingMemory workingMemory, org.kie.runtime.rule.Activation activation) {"+ "                finalTotalHolder.subtract(finalWf);"+ "                System.out.println(\"unmatch \" + finalTotalHolder.getTotal());\n"+ "            }"+ "     });"+ "end";
+  String str="" + "package org.kie.test;\n" + "\n"+ "import org.kie.Father;\n"+ "import org.kie.TotalHolder;\n"+ "\n"+ "global TotalHolder totalHolder;\n"+ "\n"+ "rule \"sumWeightOfFather\"\n"+ "when\n"+ "    $h: Father(father != null, $wf : weightOfFather)\n"+ "then\n"+ "    totalHolder.add($wf);\n"+ "    System.out.println(\"match \" + totalHolder.getTotal());\n"+ "    final TotalHolder finalTotalHolder = totalHolder;\n"+ "    final int finalWf = $wf;\n"+ "     org.kie.common.AgendaItem agendaItem = (org.kie.common.AgendaItem) kcontext.getActivation();"+ "     agendaItem.setActivationUnMatchListener(new org.kie.internal.event.rule.ActivationUnMatchListener() {"+ "            public void unMatch(org.kie.api.runtime.rule.WorkingMemory workingMemory, org.kie.api.runtime.rule.Activation activation) {"+ "                finalTotalHolder.subtract(finalWf);"+ "                System.out.println(\"unmatch \" + finalTotalHolder.getTotal());\n"+ "            }"+ "     });"+ "end";
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
   assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
@@ -10,8 +10,8 @@
   Father abraham=new Father("abraham",null,100);
   Father homer=new Father("homer",null,20);
   Father bart=new Father("bart",null,3);
-  org.kie.runtime.rule.FactHandle abrahamHandle=kSession.insert(abraham);
-  org.kie.runtime.rule.FactHandle bartHandle=kSession.insert(bart);
+  org.kie.api.runtime.rule.FactHandle abrahamHandle=kSession.insert(abraham);
+  org.kie.api.runtime.rule.FactHandle bartHandle=kSession.insert(bart);
   kSession.fireAllRules();
   assertEquals(0,((TotalHolder)kSession.getGlobal("totalHolder")).getTotal());
   bart.setFather(abraham);
@@ -26,7 +26,7 @@
   kSession.update(bartHandle,bart);
   kSession.fireAllRules();
   assertEquals(100,((TotalHolder)kSession.getGlobal("totalHolder")).getTotal());
-  org.kie.runtime.rule.FactHandle homerHandle=kSession.insert(homer);
+  org.kie.api.runtime.rule.FactHandle homerHandle=kSession.insert(homer);
   homer.setFather(abraham);
   kSession.update(homerHandle,homer);
   bart.setFather(homer);
