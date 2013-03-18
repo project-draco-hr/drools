@@ -1,7 +1,7 @@
 {
   KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_FactBindings.drl"));
   StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
-  org.kie.event.rule.WorkingMemoryEventListener wmel=mock(org.kie.event.rule.WorkingMemoryEventListener.class);
+  org.kie.api.event.rule.WorkingMemoryEventListener wmel=mock(org.kie.api.event.rule.WorkingMemoryEventListener.class);
   ksession.addEventListener(wmel);
   final Person bigCheese=new Person("big cheese");
   final Cheese cheddar=new Cheese("cheddar",15);
@@ -9,9 +9,9 @@
   final org.kie.runtime.rule.FactHandle bigCheeseHandle=ksession.insert(bigCheese);
   final org.kie.runtime.rule.FactHandle cheddarHandle=ksession.insert(cheddar);
   ksession.fireAllRules();
-  ArgumentCaptor<org.kie.event.rule.ObjectUpdatedEvent> arg=ArgumentCaptor.forClass(org.kie.event.rule.ObjectUpdatedEvent.class);
+  ArgumentCaptor<org.kie.api.event.rule.ObjectUpdatedEvent> arg=ArgumentCaptor.forClass(org.kie.api.event.rule.ObjectUpdatedEvent.class);
   verify(wmel,times(2)).objectUpdated(arg.capture());
-  org.kie.event.rule.ObjectUpdatedEvent event=arg.getAllValues().get(0);
+  org.kie.api.event.rule.ObjectUpdatedEvent event=arg.getAllValues().get(0);
   assertSame(cheddarHandle,event.getFactHandle());
   assertSame(cheddar,event.getOldObject());
   assertSame(cheddar,event.getObject());

@@ -12,19 +12,19 @@
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
   kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
   StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
-  org.kie.event.rule.WorkingMemoryEventListener wml=Mockito.mock(org.kie.event.rule.WorkingMemoryEventListener.class);
-  org.kie.event.rule.AgendaEventListener ael=Mockito.mock(org.kie.event.rule.AgendaEventListener.class);
+  org.kie.api.event.rule.WorkingMemoryEventListener wml=Mockito.mock(org.kie.api.event.rule.WorkingMemoryEventListener.class);
+  org.kie.api.event.rule.AgendaEventListener ael=Mockito.mock(org.kie.api.event.rule.AgendaEventListener.class);
   ksession.addEventListener(wml);
   ksession.addEventListener(ael);
   int fired=ksession.fireAllRules();
   assertEquals(3,fired);
-  ArgumentCaptor<org.kie.event.rule.AfterMatchFiredEvent> actvs=ArgumentCaptor.forClass(org.kie.event.rule.AfterMatchFiredEvent.class);
+  ArgumentCaptor<org.kie.api.event.rule.AfterMatchFiredEvent> actvs=ArgumentCaptor.forClass(org.kie.api.event.rule.AfterMatchFiredEvent.class);
   verify(ael,times(3)).afterMatchFired(actvs.capture());
-  List<org.kie.event.rule.AfterMatchFiredEvent> values=actvs.getAllValues();
+  List<org.kie.api.event.rule.AfterMatchFiredEvent> values=actvs.getAllValues();
   assertThat(values.get(0).getMatch().getRule().getName(),is("init"));
   assertThat(values.get(1).getMatch().getRule().getName(),is("r1"));
   assertThat(values.get(2).getMatch().getRule().getName(),is("r2"));
-  verify(ael,never()).matchCancelled(any(org.kie.event.rule.MatchCancelledEvent.class));
-  verify(wml,times(2)).objectInserted(any(org.kie.event.rule.ObjectInsertedEvent.class));
+  verify(ael,never()).matchCancelled(any(org.kie.api.event.rule.MatchCancelledEvent.class));
+  verify(wml,times(2)).objectInserted(any(org.kie.api.event.rule.ObjectInsertedEvent.class));
   verify(wml,never()).objectDeleted(any(ObjectDeletedEvent.class));
 }
