@@ -9,12 +9,13 @@
       enableTMS(object,typeConf);
     }
     InternalFactHandle handle=null;
+    final PropagationContext propagationContext=new PropagationContextImpl(this.wm.getNextPropagationIdCounter(),PropagationContext.INSERTION,rule,(activation == null) ? null : activation.getTuple(),handle,entryPoint);
     if (this.wm.isSequential()) {
       handle=createHandle(object,typeConf);
-      insert(handle,object,rule,activation,typeConf);
+      propagationContext.setFactHandle(handle);
+      insert(handle,object,rule,activation,typeConf,propagationContext);
       return handle;
     }
-    final PropagationContext propagationContext=new PropagationContextImpl(this.wm.getNextPropagationIdCounter(),PropagationContext.INSERTION,rule,(activation == null) ? null : activation.getTuple(),handle,entryPoint);
     try {
       this.lock.lock();
       this.ruleBase.readLock();
@@ -22,6 +23,7 @@
       if (typeConf.isTMSEnabled()) {
         TruthMaintenanceSystem tms=getTruthMaintenanceSystem();
         if (handle != null) {
+          propagationContext.setFactHandle(handle);
           insertWhenHandleExists(object,tmsValue,logical,rule,activation,typeConf,handle,tms,propagationContext);
           return handle;
         }
@@ -71,10 +73,11 @@
         }
         handle=createHandle(object,typeConf);
       }
+      propagationContext.setFactHandle(handle);
       if (dynamic || typeConf.isDynamic()) {
         addPropertyChangeListener(handle,dynamic);
       }
-      insert(handle,object,rule,activation,typeConf);
+      insert(handle,object,rule,activation,typeConf,propagationContext);
     }
   finally {
       this.ruleBase.readUnlock();

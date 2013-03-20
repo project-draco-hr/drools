@@ -4,9 +4,14 @@
   if (tupleSource.getSinkPropagator().size() > 1) {
     counter++;
   }
+  ConditionalBranchNode cen=getConditionalBranchNode(tupleSource);
   boolean updateBitInNewSegment=true;
-  boolean updateAllLinkedTest=true;
+  boolean updateAllLinkedTest=(cen == null) ? true : false;
+  boolean subnetworkBoundaryCrossed=false;
   while (tupleSource.getType() != NodeTypeEnums.LeftInputAdapterNode) {
+    if (!subnetworkBoundaryCrossed && tupleSource.getType() == NodeTypeEnums.ConditionalBranchNode) {
+      updateAllLinkedTest=true;
+    }
     if (updateAllLinkedTest && updateBitInNewSegment && NodeTypeEnums.isBetaNode(tupleSource)) {
       updateBitInNewSegment=false;
       BetaNode bn=(BetaNode)tupleSource;
@@ -27,10 +32,11 @@
     }
     tupleSource=tupleSource.getLeftTupleSource();
     if (tupleSource == startTupleSource) {
+      subnetworkBoundaryCrossed=true;
       updateAllLinkedTest=false;
     }
   }
-  if (updateAllLinkedTest && tupleSource.getSinkPropagator().size() > 1) {
+  if (!subnetworkBoundaryCrossed) {
     allLinkedTestMask=allLinkedTestMask | 1;
   }
   pmem.setAllLinkedMaskTest(allLinkedTestMask);
