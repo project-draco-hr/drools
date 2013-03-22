@@ -1,3 +1,32 @@
 {
-  return this.networkEvaluator.evaluateNetwork(rmem,wm);
+  this.networkEvaluator.evaluateNetwork(rmem,wm,this);
+  if (!tupleList.isEmpty()) {
+    RuleTerminalNode rtn=(RuleTerminalNode)rmem.getRuleTerminalNode();
+    Rule rule=rtn.getRule();
+    InternalAgenda agenda=(InternalAgenda)wm.getAgenda();
+    int salience=rule.getSalience().getValue(null,null,null);
+    start:     while (!tupleList.isEmpty()) {
+      LeftTuple leftTuple=tupleList.removeFirst();
+      PropagationContext pctx=leftTuple.getPropagationContext();
+      pctx=RuleTerminalNode.findMostRecentPropagationContext(leftTuple,pctx);
+      if ((!rule.isEffective(leftTuple,rtn,wm)) || (rule.isNoLoop() && rule.equals(pctx.getRuleOrigin()))) {
+        leftTuple.setObject(Boolean.TRUE);
+        continue start;
+      }
+      if (rule.getCalendars() != null) {
+        long timestamp=wm.getSessionClock().getCurrentTime();
+        for (        String cal : rule.getCalendars()) {
+          if (!wm.getCalendars().get(cal).isTimeIncluded(timestamp)) {
+            continue start;
+          }
+        }
+      }
+      AgendaItem item=agenda.createAgendaItem(leftTuple,salience,pctx,rtn);
+      agenda.fireActivation(item);
+      if (!agenda.isActive(rule)) {
+        break;
+      }
+    }
+  }
+  return 0;
 }
