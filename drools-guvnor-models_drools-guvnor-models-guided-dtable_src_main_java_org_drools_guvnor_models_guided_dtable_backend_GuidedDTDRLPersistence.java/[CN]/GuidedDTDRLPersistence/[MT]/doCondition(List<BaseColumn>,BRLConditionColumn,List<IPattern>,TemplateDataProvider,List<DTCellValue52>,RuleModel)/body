@@ -1,0 +1,32 @@
+{
+  if (!hasVariables(column)) {
+    final BRLConditionVariableColumn variableColumn=column.getChildColumns().get(0);
+    final int index=allColumns.indexOf(variableColumn);
+    final DTCellValue52 dcv=row.get(index);
+    if (dcv != null && dcv.getBooleanValue()) {
+      for (      IPattern pattern : column.getDefinition()) {
+        patterns.add(pattern);
+      }
+    }
+  }
+ else {
+    for (    IPattern pattern : column.getDefinition()) {
+      boolean addPattern=true;
+      Map<InterpolationVariable,Integer> ivs=new HashMap<InterpolationVariable,Integer>();
+      RuleModelVisitor rmv=new RuleModelVisitor(pattern,ivs);
+      rmv.visit(pattern);
+      if (ivs.size() > 0) {
+        for (        InterpolationVariable variable : ivs.keySet()) {
+          String value=rowDataProvider.getTemplateKeyValue(variable.getVarName());
+          if ("".equals(value)) {
+            addPattern=false;
+            break;
+          }
+        }
+      }
+      if (addPattern) {
+        patterns.add(pattern);
+      }
+    }
+  }
+}

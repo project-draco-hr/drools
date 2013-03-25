@@ -1,0 +1,18 @@
+{
+  final String drl="rule \"r0\"\n" + "dialect \"mvel\"" + "when\n"+ "$a : Applicant( )\n"+ "then\n"+ "$a.addName( \"Michael\" );\n"+ "end\n";
+  final RuleModel m=BRDRLPersistence.getInstance().unmarshal(drl);
+  assertNotNull(m);
+  assertEquals(1,m.lhs.length);
+  assertTrue(m.lhs[0] instanceof FactPattern);
+  final FactPattern p=(FactPattern)m.lhs[0];
+  assertEquals("$a",p.getBoundName());
+  assertEquals("Applicant",p.getFactType());
+  assertEquals(1,m.rhs.length);
+  assertTrue(m.rhs[0] instanceof ActionCallMethod);
+  final ActionCallMethod a=(ActionCallMethod)m.rhs[0];
+  assertEquals("$a",a.getVariable());
+  assertEquals("addName",a.getMethodName());
+  assertEquals(1,a.getFieldValues().length);
+  final ActionFieldValue fv=a.getFieldValue(0);
+  assertEquals("Michael",fv.getValue());
+}

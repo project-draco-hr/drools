@@ -1,0 +1,34 @@
+{
+  String oldValue=System.getProperty("drools.dateformat");
+  try {
+    System.setProperty("drools.dateformat","dd-MMM-yyyy");
+    RuleModel m=new RuleModel();
+    m.name="RHS Date";
+    FactPattern p=new FactPattern("Person");
+    p.setBoundName("$p");
+    SingleFieldConstraint con=new SingleFieldConstraint();
+    con.setFieldType(DataType.TYPE_DATE);
+    con.setFieldName("dateOfBirth");
+    con.setOperator("==");
+    con.setValue("31-Jan-2000");
+    con.setConstraintValueType(SingleFieldConstraint.TYPE_LITERAL);
+    p.addConstraint(con);
+    m.addLhsItem(p);
+    ActionSetField au=new ActionSetField("$p");
+    au.addFieldValue(new ActionFieldValue("dob","31-Jan-2000",DataType.TYPE_DATE));
+    m.addRhsItem(au);
+    String result=BRDRLPersistence.getInstance().marshal(m);
+    assertTrue(result.indexOf("java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"dd-MMM-yyyy\");") != -1);
+    assertTrue(result.indexOf("$p.setDob( sdf.parse(\"31-Jan-2000\"") != -1);
+    assertTrue(result.indexOf("update( $p );") == -1);
+    checkMarshallUnmarshall(null,m);
+  }
+  finally {
+    if (oldValue == null) {
+      System.clearProperty("drools.dateformat");
+    }
+ else {
+      System.setProperty("drools.dateformat",oldValue);
+    }
+  }
+}

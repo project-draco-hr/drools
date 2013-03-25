@@ -1,0 +1,19 @@
+{
+  RuleModel m=new RuleModel();
+  m.name="test literal bigdecimal";
+  m.addAttribute(new RuleAttribute("dialect","java"));
+  FactPattern p=new FactPattern("Person");
+  SingleFieldConstraint con=new SingleFieldConstraint();
+  con.setFieldType(DataType.TYPE_NUMERIC_BIGDECIMAL);
+  con.setFieldName("field1");
+  con.setOperator("==");
+  con.setValue("44");
+  con.setConstraintValueType(SingleFieldConstraint.TYPE_LITERAL);
+  p.addConstraint(con);
+  m.addLhsItem(p);
+  ActionInsertFact ai=new ActionInsertFact("Person");
+  ai.addFieldValue(new ActionFieldValue("field1","55",DataType.TYPE_NUMERIC_BIGDECIMAL));
+  m.addRhsItem(ai);
+  String expected="rule \"test literal bigdecimal\" \n" + "\tdialect \"java\"\n when \n" + "     Person(field1 == 44B) \n"+ " then \n"+ "Person fact0 = new Person(); \n"+ "fact0.setField1( new java.math.BigDecimal( \"55\" ) ); \n"+ "insert( fact0 ); \n"+ "end";
+  checkMarshallUnmarshall(expected,m);
+}

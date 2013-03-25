@@ -1,0 +1,33 @@
+{
+  for (  CompositeColumn<? extends BaseColumn> col : dtable.getConditions()) {
+    if (col instanceof Pattern52) {
+      final Pattern52 p=(Pattern52)col;
+      if (p.isBound() && p.getBoundName().equals(var)) {
+        return p.getFactType();
+      }
+      for (      ConditionCol52 cc : p.getChildColumns()) {
+        if (cc.isBound() && cc.getBinding().equals(var)) {
+          return cc.getFieldType();
+        }
+      }
+    }
+ else     if (col instanceof BRLConditionColumn) {
+      final BRLConditionColumn brl=(BRLConditionColumn)col;
+      for (      IPattern p : brl.getDefinition()) {
+        if (p instanceof FactPattern) {
+          final FactPattern fp=(FactPattern)p;
+          if (fp.isBound() && fp.getBoundName().equals(var)) {
+            return fp.getFactType();
+          }
+          for (          FieldConstraint fc : fp.getFieldConstraints()) {
+            final String type=getFieldBinding(fc,var);
+            if (type != null) {
+              return type;
+            }
+          }
+        }
+      }
+    }
+  }
+  return super.getLHSBindingType(var);
+}

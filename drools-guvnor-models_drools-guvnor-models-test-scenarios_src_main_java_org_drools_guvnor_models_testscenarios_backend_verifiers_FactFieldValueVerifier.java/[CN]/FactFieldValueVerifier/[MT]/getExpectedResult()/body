@@ -1,0 +1,24 @@
+{
+  Object expectedResult=currentField.getExpected().trim();
+  if (currentField.getExpected().startsWith("=")) {
+    expectedResult=eval(currentField.getExpected().substring(1),this.populatedData);
+  }
+ else   if (currentField.getNature() == VerifyField.TYPE_ENUM) {
+    try {
+      String classNameOfEnum=currentField.getExpected().substring(0,currentField.getExpected().indexOf("."));
+      String valueOfEnum=currentField.getExpected().substring(currentField.getExpected().indexOf(".") + 1);
+      String fullName=resolver.getFullTypeName(classNameOfEnum);
+      if (fullName != null && !"".equals(fullName)) {
+        valueOfEnum=fullName + "." + valueOfEnum;
+      }
+      Serializable compiled=MVEL.compileExpression(valueOfEnum,pctx);
+      expectedResult=MVEL.executeExpression(compiled);
+    }
+ catch (    ClassNotFoundException e) {
+    }
+  }
+ else   if (isFieldDate()) {
+    return DateObjectFactory.createTimeObject(FieldTypeResolver.getFieldType(currentField.getFieldName(),factObject),currentField.getExpected());
+  }
+  return expectedResult;
+}

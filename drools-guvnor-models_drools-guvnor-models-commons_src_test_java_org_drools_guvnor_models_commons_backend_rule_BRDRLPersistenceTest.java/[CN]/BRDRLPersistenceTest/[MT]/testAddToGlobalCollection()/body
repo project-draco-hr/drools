@@ -1,0 +1,17 @@
+{
+  String global="global java.util.ArrayList list";
+  String drl="rule \"r0\"\n" + "dialect \"mvel\"" + "when\n"+ "$a : Applicant( )\n"+ "then\n"+ "list.add( $a );\n"+ "end\n";
+  final RuleModel m=BRDRLPersistence.getInstance().unmarshalUsingDSL(drl,Arrays.asList(global));
+  assertNotNull(m);
+  assertEqualsIgnoreWhitespace(drl,BRDRLPersistence.getInstance().marshal(m));
+  assertEquals(1,m.lhs.length);
+  assertTrue(m.lhs[0] instanceof FactPattern);
+  final FactPattern p=(FactPattern)m.lhs[0];
+  assertEquals("$a",p.getBoundName());
+  assertEquals("Applicant",p.getFactType());
+  assertEquals(1,m.rhs.length);
+  assertTrue(m.rhs[0] instanceof ActionGlobalCollectionAdd);
+  final ActionGlobalCollectionAdd a=(ActionGlobalCollectionAdd)m.rhs[0];
+  assertEquals("list",a.getGlobalName());
+  assertEquals("$a",a.getFactName());
+}

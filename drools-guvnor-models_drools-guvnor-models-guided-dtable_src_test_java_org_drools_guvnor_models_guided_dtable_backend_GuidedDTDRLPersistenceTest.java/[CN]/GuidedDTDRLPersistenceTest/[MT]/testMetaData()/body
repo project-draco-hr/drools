@@ -1,0 +1,30 @@
+{
+  GuidedDTDRLPersistence p=new GuidedDTDRLPersistence();
+  String[] row=new String[]{"1","desc","bar",""};
+  List<BaseColumn> allColumns=new ArrayList<BaseColumn>();
+  allColumns.add(new RowNumberCol52());
+  allColumns.add(new DescriptionCol52());
+  List<MetadataCol52> metadataCols=new ArrayList<MetadataCol52>();
+  RuleModel rm=new RuleModel();
+  RuleMetadata[] orig=rm.metadataList;
+  p.doMetadata(allColumns,metadataCols,DataUtilities.makeDataRowList(row),rm);
+  assertSame(orig,rm.metadataList);
+  MetadataCol52 col1=new MetadataCol52();
+  col1.setMetadata("foo");
+  MetadataCol52 col2=new MetadataCol52();
+  col2.setMetadata("foo2");
+  metadataCols.add(col1);
+  metadataCols.add(col2);
+  allColumns.addAll(metadataCols);
+  p.doMetadata(allColumns,metadataCols,DataUtilities.makeDataRowList(row),rm);
+  assertEquals(1,rm.metadataList.length);
+  assertEquals("foo",rm.metadataList[0].getAttributeName());
+  assertEquals("bar",rm.metadataList[0].getValue());
+  row=new String[]{"1","desc","bar1","bar2"};
+  p.doMetadata(allColumns,metadataCols,DataUtilities.makeDataRowList(row),rm);
+  assertEquals(2,rm.metadataList.length);
+  assertEquals("foo",rm.metadataList[0].getAttributeName());
+  assertEquals("bar1",rm.metadataList[0].getValue());
+  assertEquals("foo2",rm.metadataList[1].getAttributeName());
+  assertEquals("bar2",rm.metadataList[1].getValue());
+}

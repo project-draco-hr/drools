@@ -1,0 +1,28 @@
+{
+  GuidedDTDRLPersistence p=new GuidedDTDRLPersistence();
+  String[] row=new String[]{"1","desc","a","> 42"};
+  String[][] data=new String[1][];
+  data[0]=row;
+  List<BaseColumn> allColumns=new ArrayList<BaseColumn>();
+  List<CompositeColumn<? extends BaseColumn>> allPatterns=new ArrayList<CompositeColumn<? extends BaseColumn>>();
+  allColumns.add(new RowNumberCol52());
+  allColumns.add(new DescriptionCol52());
+  allColumns.add(new MetadataCol52());
+  Pattern52 p1=new Pattern52();
+  p1.setBoundName("p1");
+  p1.setFactType("Person");
+  allPatterns.add(p1);
+  ConditionCol52 col1=new ConditionCol52();
+  col1.setFactField("age");
+  col1.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  col1.setOperator("");
+  p1.getChildColumns().add(col1);
+  allColumns.add(col1);
+  RuleModel rm=new RuleModel();
+  allColumns.add(new AnalysisCol52());
+  List<DTCellValue52> rowData=DataUtilities.makeDataRowList(row);
+  TemplateDataProvider rowDataProvider=new GuidedDTTemplateDataProvider(allColumns,rowData);
+  p.doConditions(allColumns,allPatterns,rowDataProvider,rowData,DataUtilities.makeDataLists(data),rm);
+  String drl=BRDRLPersistence.getInstance().marshal(rm);
+  assertTrue(drl.indexOf("age > \"42\"") > 0);
+}

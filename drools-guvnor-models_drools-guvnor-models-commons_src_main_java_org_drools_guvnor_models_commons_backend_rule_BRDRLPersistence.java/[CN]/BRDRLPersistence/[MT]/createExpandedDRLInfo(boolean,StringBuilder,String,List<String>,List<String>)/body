@@ -1,0 +1,36 @@
+{
+  if (!hasDsl) {
+    return processFreeFormStatement(drl,thenLine,lhsStatements,rhsStatements);
+  }
+  ExpandedDRLInfo expandedDRLInfo=new ExpandedDRLInfo(hasDsl);
+  int lineCounter=-1;
+  for (  String statement : lhsStatements) {
+    lineCounter++;
+    String trimmed=statement.trim();
+    if (trimmed.startsWith(">")) {
+      drl.append(trimmed.substring(1)).append("\n");
+    }
+ else {
+      expandedDRLInfo.dslStatementsInLhs.put(lineCounter,trimmed);
+    }
+  }
+  drl.append(thenLine).append("\n");
+  lineCounter=-1;
+  for (  String statement : rhsStatements) {
+    lineCounter++;
+    String trimmed=statement.trim();
+    if (trimmed.endsWith("end")) {
+      trimmed=trimmed.substring(0,trimmed.length() - 3).trim();
+    }
+    if (trimmed.length() > 0) {
+      if (trimmed.startsWith(">")) {
+        drl.append(trimmed.substring(1)).append("\n");
+      }
+ else {
+        expandedDRLInfo.dslStatementsInRhs.put(lineCounter,trimmed);
+      }
+    }
+  }
+  expandedDRLInfo.plainDrl=drl.toString();
+  return expandedDRLInfo;
+}

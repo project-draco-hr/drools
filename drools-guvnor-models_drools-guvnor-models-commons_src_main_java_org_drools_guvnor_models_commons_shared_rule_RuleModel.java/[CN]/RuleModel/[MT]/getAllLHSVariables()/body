@@ -1,0 +1,34 @@
+{
+  List<String> result=new ArrayList<String>();
+  for (int i=0; i < this.lhs.length; i++) {
+    IPattern pat=this.lhs[i];
+    if (pat instanceof FromCompositeFactPattern) {
+      pat=((FromCompositeFactPattern)pat).getFactPattern();
+    }
+    if (pat instanceof FactPattern) {
+      FactPattern fact=(FactPattern)pat;
+      if (fact.isBound()) {
+        result.add(fact.getBoundName());
+      }
+      for (int j=0; j < fact.getFieldConstraints().length; j++) {
+        FieldConstraint fc=fact.getFieldConstraints()[j];
+        if (fc instanceof SingleFieldConstraintEBLeftSide) {
+          SingleFieldConstraintEBLeftSide exp=(SingleFieldConstraintEBLeftSide)fc;
+          if (exp.getExpressionLeftSide() != null && exp.getExpressionLeftSide().isBound()) {
+            result.add(exp.getExpressionLeftSide().getBinding());
+          }
+        }
+ else         if (fc instanceof SingleFieldConstraint) {
+          SingleFieldConstraint con=(SingleFieldConstraint)fc;
+          if (con.isBound()) {
+            result.add(con.getFieldBinding());
+          }
+          if (con.getExpressionValue() != null && con.getExpressionValue().isBound()) {
+            result.add(con.getExpressionValue().getBinding());
+          }
+        }
+      }
+    }
+  }
+  return result;
+}

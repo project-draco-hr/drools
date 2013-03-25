@@ -1,0 +1,85 @@
+{
+  List<ConditionCol52> cols=pattern.getChildColumns();
+  for (  ConditionCol52 c : cols) {
+    int index=allColumns.indexOf(c);
+    DTCellValue52 dcv=row.get(index);
+    String cell="";
+    if (c instanceof LimitedEntryCol) {
+      if (Boolean.TRUE.equals(dcv.getBooleanValue())) {
+        LimitedEntryCol lec=(LimitedEntryCol)c;
+        DTCellValue52 value=lec.getValue();
+        if (value != null) {
+          cell=GuidedDTDRLUtilities.convertDTCellValueToString(value);
+        }
+      }
+    }
+ else {
+      cell=GuidedDTDRLUtilities.convertDTCellValueToString(dcv);
+    }
+    boolean isOtherwise=dcv.isOtherwise();
+    boolean isValid=isOtherwise;
+    if (!isOtherwise) {
+      isValid=validCell(cell);
+    }
+    if (c.getOperator() != null && (c.getOperator().equals("== null") || c.getOperator().equals("!= null"))) {
+      isValid=Boolean.TRUE.equals(dcv.getBooleanValue());
+    }
+    if (isValid) {
+      IPattern ifp=findByFactPattern(patterns,pattern.getBoundName());
+      if (ifp == null) {
+        FactPattern fp=new FactPattern(pattern.getFactType());
+        fp.setBoundName(pattern.getBoundName());
+        fp.setNegated(pattern.isNegated());
+        fp.setWindow(pattern.getWindow());
+        if (pattern.getEntryPointName() != null && pattern.getEntryPointName().length() > 0) {
+          FromEntryPointFactPattern fep=new FromEntryPointFactPattern();
+          fep.setEntryPointName(pattern.getEntryPointName());
+          fep.setFactPattern(fp);
+          patterns.add(fep);
+          ifp=fep;
+        }
+ else {
+          patterns.add(fp);
+          ifp=fp;
+        }
+      }
+      FactPattern fp;
+      if (ifp instanceof FactPattern) {
+        fp=(FactPattern)ifp;
+      }
+ else       if (ifp instanceof FromEntryPointFactPattern) {
+        FromEntryPointFactPattern fep=(FromEntryPointFactPattern)ifp;
+        fp=fep.getFactPattern();
+      }
+ else {
+        throw new IllegalArgumentException("Inexpected IFactPattern implementation found.");
+      }
+switch (c.getConstraintValueType()) {
+case BaseSingleFieldConstraint.TYPE_LITERAL:
+case BaseSingleFieldConstraint.TYPE_RET_VALUE:
+        if (!isOtherwise) {
+          FieldConstraint fc=makeSingleFieldConstraint(c,cell);
+          fp.addConstraint(fc);
+        }
+ else {
+          FieldConstraint fc=makeSingleFieldConstraint(c,allColumns,data);
+          fp.addConstraint(fc);
+        }
+      break;
+case BaseSingleFieldConstraint.TYPE_PREDICATE:
+    SingleFieldConstraint pred=new SingleFieldConstraint();
+  pred.setConstraintValueType(c.getConstraintValueType());
+if (c.getFactField() != null && c.getFactField().indexOf("$param") > -1) {
+  pred.setValue(c.getFactField().replace("$param",cell));
+}
+ else {
+  pred.setValue(cell);
+}
+fp.addConstraint(pred);
+break;
+default :
+throw new IllegalArgumentException("Unknown constraintValueType: " + c.getConstraintValueType());
+}
+}
+}
+}

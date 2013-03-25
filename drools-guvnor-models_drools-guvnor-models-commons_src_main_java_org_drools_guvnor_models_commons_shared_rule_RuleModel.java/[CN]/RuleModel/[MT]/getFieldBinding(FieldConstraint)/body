@@ -1,0 +1,28 @@
+{
+  List<String> result=new ArrayList<String>();
+  if (f instanceof SingleFieldConstraint) {
+    SingleFieldConstraint con=(SingleFieldConstraint)f;
+    if (con.isBound()) {
+      result.add(con.getFieldBinding());
+    }
+    if (con.getExpressionValue() != null && con.getExpressionValue().isBound()) {
+      result.add(con.getExpressionValue().getBinding());
+    }
+    if (con instanceof SingleFieldConstraintEBLeftSide) {
+      SingleFieldConstraintEBLeftSide exp=(SingleFieldConstraintEBLeftSide)con;
+      if (exp.getExpressionLeftSide() != null && exp.getExpressionLeftSide().isBound()) {
+        result.add(exp.getExpressionLeftSide().getBinding());
+      }
+    }
+  }
+ else   if (f instanceof CompositeFieldConstraint) {
+    CompositeFieldConstraint cfc=(CompositeFieldConstraint)f;
+    if (cfc.getConstraints() != null) {
+      for (      FieldConstraint ss : cfc.getConstraints()) {
+        List<String> t=getFieldBinding(ss);
+        result.addAll(t);
+      }
+    }
+  }
+  return result;
+}

@@ -1,0 +1,34 @@
+{
+  GuidedDecisionTable52 dtable=new GuidedDecisionTable52();
+  Object[][] data=new Object[][]{new Object[]{"1","desc",Boolean.TRUE},new Object[]{"2","desc",Boolean.FALSE}};
+  dtable.setRowNumberCol(new RowNumberCol52());
+  dtable.setDescriptionCol(new DescriptionCol52());
+  BRLConditionColumn brl1=new BRLConditionColumn();
+  List<IPattern> brl1Definition=new ArrayList<IPattern>();
+  FactPattern brl1DefinitionFactPattern1=new FactPattern("Baddie");
+  SingleFieldConstraint brl1DefinitionFactPattern1Constraint1=new SingleFieldConstraint();
+  brl1DefinitionFactPattern1Constraint1.setFieldType(DataType.TYPE_STRING);
+  brl1DefinitionFactPattern1Constraint1.setConstraintValueType(SingleFieldConstraint.TYPE_LITERAL);
+  brl1DefinitionFactPattern1Constraint1.setFieldName("name");
+  brl1DefinitionFactPattern1Constraint1.setOperator("==");
+  brl1DefinitionFactPattern1Constraint1.setValue("Gargamel");
+  brl1DefinitionFactPattern1.addConstraint(brl1DefinitionFactPattern1Constraint1);
+  brl1Definition.add(brl1DefinitionFactPattern1);
+  brl1.setDefinition(brl1Definition);
+  BRLConditionVariableColumn brl1Variable1=new BRLConditionVariableColumn("",DataType.TYPE_BOOLEAN);
+  brl1.getChildColumns().add(brl1Variable1);
+  dtable.getConditions().add(brl1);
+  dtable.setData(DataUtilities.makeDataLists(data));
+  int ruleStartIndex;
+  int pattern1StartIndex;
+  GuidedDTDRLPersistence p=GuidedDTDRLPersistence.getInstance();
+  String drl=p.marshal(dtable);
+  ruleStartIndex=drl.indexOf("//from row number: 1");
+  assertFalse(ruleStartIndex == -1);
+  pattern1StartIndex=drl.indexOf("Baddie( name == \"Gargamel\" )",ruleStartIndex);
+  assertFalse(pattern1StartIndex == -1);
+  ruleStartIndex=drl.indexOf("//from row number: 2");
+  assertFalse(ruleStartIndex == -1);
+  pattern1StartIndex=drl.indexOf("Baddie( name == \"Gargamel\" )",ruleStartIndex);
+  assertTrue(pattern1StartIndex == -1);
+}

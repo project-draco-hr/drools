@@ -1,0 +1,29 @@
+{
+  for (Iterator<Fixture> iterator=fixtures.iterator(); iterator.hasNext(); ) {
+    Fixture fixture=iterator.next();
+    if (fixture instanceof FactData) {
+      factPopulator.add(factPopulatorFactory.createFactPopulator((FactData)fixture));
+    }
+ else     if (fixture instanceof RetractFact) {
+      factPopulator.retractFact(((RetractFact)fixture).getName());
+    }
+ else     if (fixture instanceof CallMethod) {
+      workingMemoryWrapper.executeMethod((CallMethod)fixture);
+    }
+ else     if (fixture instanceof ActivateRuleFlowGroup) {
+      workingMemoryWrapper.activateRuleFlowGroup(((ActivateRuleFlowGroup)fixture).getName());
+    }
+ else     if (fixture instanceof ExecutionTrace) {
+      factPopulator.populate();
+      workingMemoryWrapper.executeSubScenario((ExecutionTrace)fixture,scenarioSettings);
+    }
+ else     if (fixture instanceof Expectation) {
+      factPopulator.populate();
+      workingMemoryWrapper.verifyExpectation((Expectation)fixture);
+    }
+ else {
+      throw new IllegalArgumentException("Not sure what to do with " + fixture);
+    }
+  }
+  factPopulator.populate();
+}

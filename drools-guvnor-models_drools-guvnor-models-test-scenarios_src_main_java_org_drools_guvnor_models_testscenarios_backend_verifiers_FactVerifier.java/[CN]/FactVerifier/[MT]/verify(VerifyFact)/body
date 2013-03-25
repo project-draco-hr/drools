@@ -1,0 +1,23 @@
+{
+  for (  VerifyField vf : verifyFact.getFieldValues()) {
+    vf.setSuccessResult(null);
+    vf.setExplanation("Fact of type [" + verifyFact.getName() + "] was not found in the results.");
+  }
+  if (!verifyFact.anonymous) {
+    FactFieldValueVerifier fieldVerifier=new FactFieldValueVerifier(populatedData,verifyFact.getName(),getFactObject(verifyFact.getName(),populatedData,globalData),resolver,classLoader);
+    fieldVerifier.checkFields(verifyFact.getFieldValues());
+  }
+ else {
+    for (    Object object : ksession.getObjects()) {
+      if (verifyFact(object,verifyFact,populatedData,resolver)) {
+        return;
+      }
+    }
+    for (    VerifyField verifyField : verifyFact.getFieldValues()) {
+      if (verifyField.getSuccessResult() == null) {
+        verifyField.setSuccessResult(Boolean.FALSE);
+        verifyField.setActualResult("No match");
+      }
+    }
+  }
+}

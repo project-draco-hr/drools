@@ -1,0 +1,30 @@
+{
+  TypeResolver typeResolver=mock(TypeResolver.class);
+  ClassLoader classLoader=Thread.currentThread().getContextClassLoader();
+  FactVerifier factVerifier=new FactVerifier(new HashMap<String,Object>(),typeResolver,classLoader,ksession,new HashMap<String,Object>());
+  Cheese c=new Cheese();
+  c.setPrice(42);
+  c.setType("stilton");
+  Set o=Collections.singleton((Object)c);
+  when(ksession.getObjects()).thenReturn(o);
+  VerifyFact vf=new VerifyFact("Cheese",new ArrayList<VerifyField>(),true);
+  vf.getFieldValues().add(new VerifyField("price","42","=="));
+  vf.getFieldValues().add(new VerifyField("type","stilton","=="));
+  factVerifier.verify(vf);
+  assertTrue(vf.wasSuccessful());
+  vf=new VerifyFact("Person",new ArrayList<VerifyField>(),true);
+  vf.getFieldValues().add(new VerifyField("age","42","=="));
+  factVerifier.verify(vf);
+  assertFalse(vf.wasSuccessful());
+  vf=new VerifyFact("Cheese",new ArrayList<VerifyField>(),true);
+  vf.getFieldValues().add(new VerifyField("price","43","=="));
+  vf.getFieldValues().add(new VerifyField("type","stilton","=="));
+  factVerifier.verify(vf);
+  assertFalse(vf.wasSuccessful());
+  assertEquals(Boolean.FALSE,vf.getFieldValues().get(0).getSuccessResult());
+  vf=new VerifyFact("Cell",new ArrayList<VerifyField>(),true);
+  vf.getFieldValues().add(new VerifyField("value","43","=="));
+  factVerifier.verify(vf);
+  assertFalse(vf.wasSuccessful());
+  assertEquals(Boolean.FALSE,vf.getFieldValues().get(0).getSuccessResult());
+}

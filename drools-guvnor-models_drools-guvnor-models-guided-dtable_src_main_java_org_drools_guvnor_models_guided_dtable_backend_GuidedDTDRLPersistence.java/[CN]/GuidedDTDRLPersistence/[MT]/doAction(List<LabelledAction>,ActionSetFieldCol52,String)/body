@@ -1,0 +1,23 @@
+{
+  LabelledAction a=findByLabelledAction(actions,sf.getBoundName());
+  if (a == null) {
+    a=new LabelledAction();
+    a.boundName=sf.getBoundName();
+    if (!sf.isUpdate()) {
+      a.action=new ActionSetField(sf.getBoundName());
+    }
+ else {
+      a.action=new ActionUpdateField(sf.getBoundName());
+    }
+    actions.add(a);
+  }
+ else   if (sf.isUpdate() && !(a.action instanceof ActionUpdateField)) {
+    ActionSetField old=(ActionSetField)a.action;
+    ActionUpdateField update=new ActionUpdateField(sf.getBoundName());
+    update.setFieldValues(old.getFieldValues());
+    a.action=update;
+  }
+  ActionSetField asf=(ActionSetField)a.action;
+  ActionFieldValue val=new ActionFieldValue(sf.getFactField(),cell,sf.getType());
+  asf.addFieldValue(val);
+}

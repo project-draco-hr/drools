@@ -1,0 +1,106 @@
+{
+  List<String> splittedExpr=new ArrayList<String>();
+  int nestingLevel=0;
+  SplitterState status=SplitterState.START;
+  StringBuilder sb=new StringBuilder();
+  for (  char ch : expr.toCharArray()) {
+switch (status) {
+case START:
+      if (ch == '(') {
+        status=SplitterState.NESTED;
+        nestingLevel++;
+      }
+ else {
+        status=SplitterState.EXPR;
+        sb.append(ch);
+      }
+    break;
+case EXPR:
+  if (ch == '|') {
+    status=SplitterState.PIPE;
+  }
+ else   if (ch == '&') {
+    status=SplitterState.AMPERSAND;
+  }
+ else {
+    sb.append(ch);
+  }
+break;
+case PIPE:
+if (ch == '|') {
+status=SplitterState.OR;
+}
+ else {
+status=SplitterState.EXPR;
+sb.append('|').append(ch);
+}
+break;
+case AMPERSAND:
+if (ch == '&') {
+status=SplitterState.AND;
+}
+ else {
+status=SplitterState.EXPR;
+sb.append('&').append(ch);
+}
+break;
+case OR:
+case AND:
+if (ch == '=' || ch == '!' || ch == '<' || ch == '>') {
+status=SplitterState.EXPR;
+sb.append(status == SplitterState.AND ? "&& " : "|| ");
+sb.append(ch);
+}
+ else if (Character.isJavaIdentifierStart(ch)) {
+String currentExpr=sb.toString().trim();
+if (currentExpr.length() > 0) {
+splittedExpr.add(currentExpr);
+}
+splittedExpr.add(status == SplitterState.AND ? "&&" : "||");
+status=SplitterState.EXPR;
+sb=new StringBuilder();
+sb.append(ch);
+}
+ else if (ch == '(') {
+String currentExpr=sb.toString().trim();
+if (currentExpr.length() > 0) {
+splittedExpr.add(currentExpr);
+}
+splittedExpr.add(status == SplitterState.AND ? "&&" : "||");
+status=SplitterState.NESTED;
+nestingLevel++;
+sb=new StringBuilder();
+sb.append(ch);
+}
+break;
+case NESTED:
+if (ch == '(') {
+nestingLevel++;
+sb.append(ch);
+}
+ else if (ch == ')') {
+nestingLevel--;
+if (nestingLevel == 0) {
+String currentExpr=sb.toString().trim();
+if (currentExpr.length() > 0) {
+splittedExpr.add("(" + currentExpr);
+}
+status=SplitterState.EXPR;
+sb=new StringBuilder();
+}
+ else {
+sb.append(ch);
+}
+}
+ else {
+sb.append(ch);
+}
+break;
+}
+}
+String currentExpr=sb.toString().trim();
+if (currentExpr.length() > 0) {
+splittedExpr.add(currentExpr);
+}
+return splittedExpr;
+}

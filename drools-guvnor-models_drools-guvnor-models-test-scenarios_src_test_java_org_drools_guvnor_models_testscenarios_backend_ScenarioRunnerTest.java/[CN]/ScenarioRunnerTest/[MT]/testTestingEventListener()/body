@@ -1,0 +1,17 @@
+{
+  Scenario sc=new Scenario();
+  sc.getRules().add("foo");
+  sc.getRules().add("bar");
+  ExecutionTrace ext=new ExecutionTrace();
+  sc.getFixtures().add(ext);
+  PseudoClockScheduler clock=new PseudoClockScheduler();
+  long time=new Date().getTime();
+  clock.setStartupTime(time);
+  when(ksession.getSessionClock()).thenReturn(clock);
+  ScenarioRunner run=new ScenarioRunner(ksession);
+  run.run(sc);
+  verify(ksession).addEventListener(any(TestingEventListener.class));
+  assertEquals(2,sc.getRules().size());
+  assertTrue(sc.getRules().contains("foo"));
+  assertTrue(sc.getRules().contains("bar"));
+}

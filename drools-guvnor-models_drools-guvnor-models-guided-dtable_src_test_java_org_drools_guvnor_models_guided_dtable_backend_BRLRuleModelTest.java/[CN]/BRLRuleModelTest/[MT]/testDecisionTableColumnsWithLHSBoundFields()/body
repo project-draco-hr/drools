@@ -1,0 +1,37 @@
+{
+  GuidedDecisionTable52 dt=new GuidedDecisionTable52();
+  Pattern52 p1=new Pattern52();
+  p1.setFactType("Driver");
+  p1.setBoundName("$p1");
+  ConditionCol52 c1=new ConditionCol52();
+  c1.setFactField("name");
+  c1.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  c1.setBinding("$c1");
+  p1.getChildColumns().add(c1);
+  dt.getConditions().add(p1);
+  BRLConditionColumn brlCondition=new BRLConditionColumn();
+  FactPattern fp=new FactPattern("Driver");
+  fp.setBoundName("$brl1");
+  SingleFieldConstraint sfc1=new SingleFieldConstraint();
+  sfc1.setFieldBinding("$sfc1");
+  sfc1.setOperator("==");
+  sfc1.setFactType("Driver");
+  sfc1.setFieldName("name");
+  sfc1.setFieldType(DataType.TYPE_STRING);
+  fp.addConstraint(sfc1);
+  brlCondition.getDefinition().add(fp);
+  dt.getConditions().add(brlCondition);
+  ActionInsertFactCol52 ins=new ActionInsertFactCol52();
+  ins.setBoundName("$ins");
+  ins.setFactField("rating");
+  ins.setFactType("Person");
+  ins.setType(DataType.TYPE_STRING);
+  dt.getActionCols().add(ins);
+  BRLRuleModel model=new BRLRuleModel(dt);
+  FieldConstraint fcr1=model.getLHSBoundField("$sfc1");
+  assertNotNull(fcr1);
+  assertTrue(fcr1 instanceof SingleFieldConstraint);
+  SingleFieldConstraint fcr1sfc=(SingleFieldConstraint)fcr1;
+  assertEquals("name",fcr1sfc.getFieldName());
+  assertEquals(DataType.TYPE_STRING,fcr1sfc.getFieldType());
+}

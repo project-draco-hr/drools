@@ -1,0 +1,64 @@
+{
+  assertConditionColumnPatternGrouping(legacyDTModel);
+  GuidedDecisionTable52 newDTModel=new GuidedDecisionTable52();
+  newDTModel.setTableFormat(GuidedDecisionTable52.TableFormat.EXTENDED_ENTRY);
+  newDTModel.setTableName(legacyDTModel.tableName);
+  newDTModel.setParentName(legacyDTModel.parentName);
+  newDTModel.setRowNumberCol(new RowNumberCol52());
+  newDTModel.setDescriptionCol(new DescriptionCol52());
+  if (legacyDTModel.metadataCols != null) {
+    for (    MetadataCol c : legacyDTModel.metadataCols) {
+      newDTModel.getMetadataCols().add(makeNewColumn(c));
+    }
+  }
+  if (legacyDTModel.attributeCols != null) {
+    for (    AttributeCol c : legacyDTModel.attributeCols) {
+      newDTModel.getAttributeCols().add(makeNewColumn(c));
+    }
+  }
+  List<Pattern52> patterns=new ArrayList<Pattern52>();
+  Map<String,Pattern52> uniquePatterns=new HashMap<String,Pattern52>();
+  if (legacyDTModel.conditionCols != null) {
+    for (int i=0; i < legacyDTModel.conditionCols.size(); i++) {
+      ConditionCol c=legacyDTModel.conditionCols.get(i);
+      String boundName=c.boundName;
+      Pattern52 p=uniquePatterns.get(boundName);
+      if (p == null) {
+        p=new Pattern52();
+        p.setBoundName(boundName);
+        p.setFactType(c.factType);
+        patterns.add(p);
+        uniquePatterns.put(boundName,p);
+      }
+      if (p.getFactType() != null && !p.getFactType().equals(c.factType)) {
+        throw new IllegalArgumentException("Inconsistent FactTypes for ConditionCols bound to '" + boundName + "' detected.");
+      }
+      p.getChildColumns().add(makeNewColumn(c));
+    }
+    for (    Pattern52 p : patterns) {
+      newDTModel.getConditions().add(p);
+    }
+  }
+  if (legacyDTModel.actionCols != null) {
+    for (    ActionCol c : legacyDTModel.actionCols) {
+      newDTModel.getActionCols().add(makeNewColumn(c));
+    }
+  }
+  newDTModel.setData(DataUtilities.makeDataLists(legacyDTModel.data));
+  if (legacyDTModel.actionCols != null) {
+    final int metaDataColCount=(legacyDTModel.metadataCols == null ? 0 : legacyDTModel.metadataCols.size());
+    final int attributeColCount=(legacyDTModel.attributeCols == null ? 0 : legacyDTModel.attributeCols.size());
+    final int conditionColCount=(legacyDTModel.conditionCols == null ? 0 : legacyDTModel.conditionCols.size());
+    final int DATA_COLUMN_OFFSET=metaDataColCount + attributeColCount + conditionColCount+ GuidedDecisionTable.INTERNAL_ELEMENTS;
+    for (int iCol=0; iCol < legacyDTModel.actionCols.size(); iCol++) {
+      ActionCol lc=legacyDTModel.actionCols.get(iCol);
+      if (lc instanceof ActionRetractFactCol) {
+        String boundName=((ActionRetractFactCol)lc).boundName;
+        for (        List<DTCellValue52> row : newDTModel.getData()) {
+          row.get(DATA_COLUMN_OFFSET + iCol).setStringValue(boundName);
+        }
+      }
+    }
+  }
+  return newDTModel;
+}

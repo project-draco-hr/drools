@@ -1,0 +1,27 @@
+{
+  Map<InterpolationVariable,Integer> vars=getInterpolationVariables();
+  if (row.length != vars.size() - 1) {
+    throw new IllegalArgumentException("Invalid numbers of columns: " + row.length + " expected: "+ vars.size());
+  }
+  if (rowId == null || rowId.length() == 0) {
+    rowId=getNewIdColValue();
+  }
+  for (  Map.Entry<InterpolationVariable,Integer> entry : vars.entrySet()) {
+    List<String> list=table.get(entry.getKey().getVarName());
+    if (list == null) {
+      list=new ArrayList<String>();
+      table.put(entry.getKey().getVarName(),list);
+    }
+    if (rowsCount != list.size()) {
+      throw new IllegalArgumentException("invalid list size for " + entry.getKey() + ", expected: "+ rowsCount+ " was: "+ list.size());
+    }
+    if (ID_COLUMN_NAME.equals(entry.getKey().getVarName())) {
+      list.add(rowId);
+    }
+ else {
+      list.add(row[entry.getValue()]);
+    }
+  }
+  rowsCount++;
+  return rowId;
+}

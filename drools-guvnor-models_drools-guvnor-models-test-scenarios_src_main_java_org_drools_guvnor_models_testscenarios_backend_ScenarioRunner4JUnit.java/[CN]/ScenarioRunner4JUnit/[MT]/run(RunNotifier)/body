@@ -1,0 +1,22 @@
+{
+  Description description=descr.getChildren().get(0);
+  EachTestNotifier eachNotifier=new EachTestNotifier(notifier,description);
+  try {
+    eachNotifier.fireTestStarted();
+    ScenarioRunner runner=new ScenarioRunner(ksession);
+    runner.run(scenario);
+    if (!scenario.wasSuccessful()) {
+      StringBuilder builder=new StringBuilder();
+      for (      String message : scenario.getFailureMessages()) {
+        builder.append(message).append("\n");
+      }
+      eachNotifier.addFailedAssumption(new AssumptionViolatedException(builder.toString()));
+    }
+  }
+ catch (  Throwable t) {
+    eachNotifier.addFailure(t);
+  }
+ finally {
+    eachNotifier.fireTestFinished();
+  }
+}

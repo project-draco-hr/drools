@@ -1,0 +1,18 @@
+{
+  HashSet<String> set=new HashSet<String>();
+  KieSession session=getKieSession("test_rules.drl");
+  TestingEventListener ls=new TestingEventListener();
+  session.addEventListener(ls);
+  session.insert(new Cheese());
+  List<String> list=new ArrayList<String>();
+  session.setGlobal("list",list);
+  session.fireAllRules(ls.getAgendaFilter(set,false));
+  assertEquals(new Integer(1),(Integer)ls.firingCounts.get("rule1"));
+  assertEquals(new Integer(1),(Integer)ls.firingCounts.get("rule2"));
+  assertEquals(new Integer(1),(Integer)ls.firingCounts.get("rule3"));
+  String[] summary=ls.getRulesFiredSummary();
+  assertEquals(3,summary.length);
+  assertNotNull(summary[0]);
+  assertFalse(summary[1].equals(""));
+  assertEquals(1,list.size());
+}

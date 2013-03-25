@@ -1,0 +1,41 @@
+{
+  Scenario scenario=new Scenario();
+  scenario.getImports().addImport(new Import("org.drools.guvnor.models.testscenarios.backend.Cheese"));
+  scenario.getImports().addImport(new Import("org.drools.guvnor.models.testscenarios.backend.Person"));
+  ScenarioRunner runner=new ScenarioRunner(ksession);
+  scenario.getFixtures().add(new FactData("Cheese","f1",Arrays.<Field>asList(new FieldData("type","cheddar"),new FieldData("price","42")),false));
+  scenario.getFixtures().add(new FactData("Person","f2",Arrays.<Field>asList(new FieldData("name","michael"),new FieldData("age","33")),false));
+  VerifyFact verifyCheddar=new VerifyFact();
+  verifyCheddar.setName("f1");
+  verifyCheddar.setFieldValues(asList(new VerifyField("type","cheddar","=="),new VerifyField("price","42","==")));
+  scenario.getFixtures().add(verifyCheddar);
+  VerifyFact michaelVerifyFact=new VerifyFact();
+  michaelVerifyFact.setName("f2");
+  michaelVerifyFact.setFieldValues(asList(new VerifyField("name","michael","=="),new VerifyField("age","33","==")));
+  scenario.getFixtures().add(michaelVerifyFact);
+  VerifyFact markVerifyFact=new VerifyFact();
+  markVerifyFact.setName("f2");
+  markVerifyFact.setFieldValues(asList(new VerifyField("name","mark","=="),new VerifyField("age","33","==")));
+  scenario.getFixtures().add(markVerifyFact);
+  VerifyFact mark2VerifyFact=new VerifyFact();
+  mark2VerifyFact.setName("f2");
+  mark2VerifyFact.setFieldValues(asList(new VerifyField("name","mark","=="),new VerifyField("age","32","==")));
+  scenario.getFixtures().add(mark2VerifyFact);
+  runner.run(scenario);
+  for (  VerifyField verifyField : verifyCheddar.getFieldValues()) {
+    assertTrue(verifyField.getSuccessResult());
+  }
+  for (  VerifyField verifyField : michaelVerifyFact.getFieldValues()) {
+    assertTrue(verifyField.getSuccessResult());
+  }
+  assertFalse((markVerifyFact.getFieldValues().get(0)).getSuccessResult());
+  assertTrue((markVerifyFact.getFieldValues().get(1)).getSuccessResult());
+  assertEquals("michael",markVerifyFact.getFieldValues().get(0).getActualResult());
+  assertEquals("mark",markVerifyFact.getFieldValues().get(0).getExpected());
+  assertFalse((mark2VerifyFact.getFieldValues().get(0)).getSuccessResult());
+  assertFalse((mark2VerifyFact.getFieldValues().get(1)).getSuccessResult());
+  assertEquals("michael",mark2VerifyFact.getFieldValues().get(0).getActualResult());
+  assertEquals("mark",mark2VerifyFact.getFieldValues().get(0).getExpected());
+  assertEquals("33",mark2VerifyFact.getFieldValues().get(1).getActualResult());
+  assertEquals("32",mark2VerifyFact.getFieldValues().get(1).getExpected());
+}

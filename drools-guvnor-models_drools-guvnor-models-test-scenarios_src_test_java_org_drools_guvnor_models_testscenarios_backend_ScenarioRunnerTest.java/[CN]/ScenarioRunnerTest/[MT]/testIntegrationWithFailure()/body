@@ -1,0 +1,19 @@
+{
+  Scenario sc=new Scenario();
+  sc.getImports().addImport(new Import("org.drools.guvnor.models.testscenarios.backend.Cheese"));
+  sc.getImports().addImport(new Import("org.drools.guvnor.models.testscenarios.backend.Person"));
+  Expectation[] assertions=populateScenarioForFailure(sc);
+  KieSession ksession=getKieSession("test_rules2.drl");
+  ScenarioRunner run=new ScenarioRunner(ksession);
+  run.run(sc);
+  assertFalse(sc.wasSuccessful());
+  VerifyFact vf=(VerifyFact)assertions[1];
+  assertFalse((vf.getFieldValues().get(0)).getSuccessResult());
+  assertEquals("XXX",vf.getFieldValues().get(0).getExpected());
+  assertEquals("rule1",vf.getFieldValues().get(0).getActualResult());
+  assertNotNull(vf.getFieldValues().get(0).getExplanation());
+  VerifyRuleFired vr=(VerifyRuleFired)assertions[4];
+  assertFalse(vr.getSuccessResult());
+  assertEquals(2,vr.getExpectedCount().intValue());
+  assertEquals(0,vr.getActualResult().intValue());
+}

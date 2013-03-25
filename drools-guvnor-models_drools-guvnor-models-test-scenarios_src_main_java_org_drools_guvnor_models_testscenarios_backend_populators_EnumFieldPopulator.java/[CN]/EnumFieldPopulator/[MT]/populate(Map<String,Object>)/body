@@ -1,0 +1,27 @@
+{
+  Object value;
+  String valueOfEnum="";
+  if (fieldValue.indexOf(".") != -1) {
+    String classNameOfEnum=fieldValue.substring(0,fieldValue.lastIndexOf("."));
+    valueOfEnum=fieldValue.substring(fieldValue.lastIndexOf(".") + 1);
+    try {
+      String fullName=typeResolver.getFullTypeName(classNameOfEnum);
+      if (fullName != null && !"".equals(fullName)) {
+        valueOfEnum=fullName + "." + valueOfEnum;
+      }
+      Serializable compiled=MVEL.compileExpression(valueOfEnum,pctx);
+      value=MVEL.executeExpression(compiled);
+    }
+ catch (    ClassNotFoundException e) {
+      String fullName=classNameOfEnum;
+      if (fullName != null && !"".equals(fullName)) {
+        valueOfEnum=fullName + "." + valueOfEnum;
+      }
+      value=valueOfEnum;
+    }
+  }
+ else {
+    value=this.fieldValue;
+  }
+  populateField(value,populatedData);
+}

@@ -1,0 +1,32 @@
+{
+  if (!hasVariables(column)) {
+    final BRLActionVariableColumn variableColumn=column.getChildColumns().get(0);
+    final int index=allColumns.indexOf(variableColumn);
+    final DTCellValue52 dcv=row.get(index);
+    if (dcv.getBooleanValue()) {
+      for (      IAction action : column.getDefinition()) {
+        addAction(action,actions);
+      }
+    }
+  }
+ else {
+    for (    IAction action : column.getDefinition()) {
+      boolean addAction=true;
+      Map<InterpolationVariable,Integer> ivs=new HashMap<InterpolationVariable,Integer>();
+      RuleModelVisitor rmv=new RuleModelVisitor(action,ivs);
+      rmv.visit(action);
+      if (ivs.size() > 0) {
+        for (        InterpolationVariable variable : ivs.keySet()) {
+          String value=rowDataProvider.getTemplateKeyValue(variable.getVarName());
+          if ("".equals(value)) {
+            addAction=false;
+            break;
+          }
+        }
+      }
+      if (addAction) {
+        addAction(action,actions);
+      }
+    }
+  }
+}

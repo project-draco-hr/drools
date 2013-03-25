@@ -1,0 +1,35 @@
+{
+  SingleFieldConstraint sfc=new SingleFieldConstraint(c.getFactField());
+  if (no(c.getOperator())) {
+    String[] a=cell.split("\\s");
+    if (a.length > 1) {
+      StringBuilder operator=new StringBuilder(a[0]);
+      for (int i=1; i < a.length - 1; i++) {
+        operator.append(a[i]);
+      }
+      sfc.setOperator(operator.toString());
+      sfc.setValue(a[a.length - 1]);
+    }
+ else {
+      sfc.setValue(cell);
+    }
+  }
+ else {
+    sfc.setOperator(c.getOperator());
+    if (OperatorsOracle.operatorRequiresList(c.getOperator())) {
+      sfc.setValue(makeInList(cell));
+    }
+ else {
+      if (!c.getOperator().equals("== null") && !c.getOperator().equals("!= null")) {
+        sfc.setValue(cell);
+      }
+    }
+  }
+  if (c.getConstraintValueType() == BaseSingleFieldConstraint.TYPE_LITERAL && c.isBound()) {
+    sfc.setFieldBinding(c.getBinding());
+  }
+  sfc.setParameters(c.getParameters());
+  sfc.setConstraintValueType(c.getConstraintValueType());
+  sfc.setFieldType(c.getFieldType());
+  return sfc;
+}

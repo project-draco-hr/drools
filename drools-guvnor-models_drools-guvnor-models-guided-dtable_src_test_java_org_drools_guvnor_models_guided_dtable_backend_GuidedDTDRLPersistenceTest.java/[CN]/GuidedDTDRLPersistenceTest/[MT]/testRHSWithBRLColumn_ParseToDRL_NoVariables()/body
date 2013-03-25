@@ -1,0 +1,38 @@
+{
+  GuidedDecisionTable52 dtable=new GuidedDecisionTable52();
+  Object[][] data=new Object[][]{new Object[]{"1","desc",Boolean.TRUE},new Object[]{"2","desc",Boolean.FALSE}};
+  dtable.setRowNumberCol(new RowNumberCol52());
+  dtable.setDescriptionCol(new DescriptionCol52());
+  BRLActionColumn brl1=new BRLActionColumn();
+  List<IAction> brl1Definition=new ArrayList<IAction>();
+  ActionInsertFact brl1DefinitionAction1=new ActionInsertFact("Baddie");
+  ActionFieldValue brl1DefinitionAction1FieldValue1=new ActionFieldValue("name","Gargamel",DataType.TYPE_STRING);
+  brl1DefinitionAction1FieldValue1.setNature(BaseSingleFieldConstraint.TYPE_LITERAL);
+  brl1DefinitionAction1.addFieldValue(brl1DefinitionAction1FieldValue1);
+  brl1Definition.add(brl1DefinitionAction1);
+  brl1.setDefinition(brl1Definition);
+  BRLActionVariableColumn brl1Variable1=new BRLActionVariableColumn("",DataType.TYPE_BOOLEAN);
+  brl1.getChildColumns().add(brl1Variable1);
+  dtable.getActionCols().add(brl1);
+  dtable.setData(DataUtilities.makeDataLists(data));
+  int ruleStartIndex;
+  int action1StartIndex;
+  GuidedDTDRLPersistence p=GuidedDTDRLPersistence.getInstance();
+  String drl=p.marshal(dtable);
+  ruleStartIndex=drl.indexOf("//from row number: 1");
+  assertFalse(ruleStartIndex == -1);
+  action1StartIndex=drl.indexOf("Baddie fact0 = new Baddie();",ruleStartIndex);
+  assertFalse(action1StartIndex == -1);
+  action1StartIndex=drl.indexOf("fact0.setName( \"Gargamel\" );",action1StartIndex);
+  assertFalse(action1StartIndex == -1);
+  action1StartIndex=drl.indexOf("insert( fact0 );",action1StartIndex);
+  assertFalse(action1StartIndex == -1);
+  ruleStartIndex=drl.indexOf("//from row number: 2");
+  assertFalse(ruleStartIndex == -1);
+  action1StartIndex=drl.indexOf("Baddie fact0 = new Baddie();",ruleStartIndex);
+  assertTrue(action1StartIndex == -1);
+  action1StartIndex=drl.indexOf("fact0.setName( \"Gargamel\" );",ruleStartIndex);
+  assertTrue(action1StartIndex == -1);
+  action1StartIndex=drl.indexOf("insert( fact0 );",ruleStartIndex);
+  assertTrue(action1StartIndex == -1);
+}

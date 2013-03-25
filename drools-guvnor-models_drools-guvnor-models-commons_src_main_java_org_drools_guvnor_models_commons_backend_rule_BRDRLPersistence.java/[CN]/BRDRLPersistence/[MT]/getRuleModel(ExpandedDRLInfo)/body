@@ -1,0 +1,15 @@
+{
+  RuleDescr ruleDescr=parseDrl(expandedDRLInfo);
+  RuleModel model=new RuleModel();
+  model.name=ruleDescr.getName();
+  final String packageName=PackageNameParser.parsePackageName(expandedDRLInfo.plainDrl);
+  model.setPackageName(packageName);
+  final Imports imports=ImportsParser.parseImports(expandedDRLInfo.plainDrl);
+  for (  Import item : imports.getImports()) {
+    model.getImports().addImport(item);
+  }
+  boolean isJavaDialect=parseAttributes(model,ruleDescr.getAttributes());
+  Map<String,String> boundParams=parseLhs(model,ruleDescr.getLhs(),expandedDRLInfo);
+  parseRhs(model,expandedDRLInfo.consequence != null ? expandedDRLInfo.consequence : (String)ruleDescr.getConsequence(),isJavaDialect,boundParams,expandedDRLInfo);
+  return model;
+}

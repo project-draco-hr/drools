@@ -1,0 +1,46 @@
+{
+  final Set<String> variables=new HashSet<String>();
+  for (  CompositeColumn<? extends BaseColumn> col : dtable.getConditions()) {
+    if (col instanceof Pattern52) {
+      final Pattern52 p=(Pattern52)col;
+      if (p.isBound()) {
+        variables.add(p.getBoundName());
+      }
+      for (      ConditionCol52 cc : p.getChildColumns()) {
+        if (cc.isBound()) {
+          variables.add(cc.getBinding());
+        }
+      }
+    }
+ else     if (col instanceof BRLConditionColumn) {
+      final BRLConditionColumn brl=(BRLConditionColumn)col;
+      for (      IPattern p : brl.getDefinition()) {
+        if (p instanceof FactPattern) {
+          final FactPattern fp=(FactPattern)p;
+          if (fp.isBound()) {
+            variables.add(fp.getBoundName());
+          }
+          for (          FieldConstraint fc : fp.getFieldConstraints()) {
+            if (fc instanceof SingleFieldConstraintEBLeftSide) {
+              final SingleFieldConstraintEBLeftSide exp=(SingleFieldConstraintEBLeftSide)fc;
+              if (exp.getExpressionLeftSide() != null && exp.getExpressionLeftSide().isBound()) {
+                variables.add(exp.getExpressionLeftSide().getBinding());
+              }
+            }
+ else             if (fc instanceof SingleFieldConstraint) {
+              final SingleFieldConstraint sfc=(SingleFieldConstraint)fc;
+              if (sfc.isBound()) {
+                variables.add(sfc.getFieldBinding());
+              }
+              if (sfc.getExpressionValue() != null && sfc.getExpressionValue().isBound()) {
+                variables.add(sfc.getExpressionValue().getBinding());
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  variables.addAll(super.getAllLHSVariables());
+  return new ArrayList<String>(variables);
+}

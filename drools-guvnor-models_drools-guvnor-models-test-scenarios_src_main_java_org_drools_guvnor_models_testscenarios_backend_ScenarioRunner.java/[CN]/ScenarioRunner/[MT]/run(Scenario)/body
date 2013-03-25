@@ -1,0 +1,16 @@
+{
+  Map<String,Object> populatedData=new HashMap<String,Object>();
+  Map<String,Object> globalData=new HashMap<String,Object>();
+  ClassLoader classloader=Thread.currentThread().getContextClassLoader();
+  KieBase kieBase=ksession.getKieBase();
+  RuleBase ruleBase=((KnowledgeBaseImpl)kieBase).getRuleBase();
+  ClassLoader classloader2=((InternalRuleBase)ruleBase).getRootClassLoader();
+  ClassTypeResolver resolver=new ClassTypeResolver(scenario.getImports().getImportStrings(),classloader2);
+  this.workingMemoryWrapper=new TestScenarioKSessionWrapper(ksession,resolver,classloader,populatedData,globalData);
+  this.factPopulatorFactory=new FactPopulatorFactory(populatedData,globalData,resolver,classloader);
+  this.factPopulator=new FactPopulator(ksession,populatedData);
+  MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL=true;
+  scenario.setLastRunResult(new Date());
+  populateGlobals(scenario.getGlobals());
+  applyFixtures(scenario.getFixtures(),createScenarioSettings(scenario));
+}

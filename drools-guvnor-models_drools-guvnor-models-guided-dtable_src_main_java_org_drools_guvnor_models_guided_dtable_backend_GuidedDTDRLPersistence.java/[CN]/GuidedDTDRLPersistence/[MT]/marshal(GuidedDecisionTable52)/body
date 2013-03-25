@@ -1,0 +1,31 @@
+{
+  StringBuilder sb=new StringBuilder();
+  List<List<DTCellValue52>> data=dt.getData();
+  List<BaseColumn> allColumns=dt.getExpandedColumns();
+  PackageNameWriter.write(sb,dt);
+  ImportsWriter.write(sb,dt);
+  for (int i=0; i < data.size(); i++) {
+    List<DTCellValue52> row=data.get(i);
+    TemplateDataProvider rowDataProvider=new GuidedDTTemplateDataProvider(allColumns,row);
+    Integer num=(Integer)row.get(0).getNumericValue();
+    String desc=row.get(1).getStringValue();
+    BRLRuleModel rm=new BRLRuleModel(dt);
+    rm.name=getName(dt.getTableName(),num);
+    doMetadata(allColumns,dt.getMetadataCols(),row,rm);
+    doAttribs(allColumns,dt.getAttributeCols(),row,rm);
+    doConditions(allColumns,dt.getConditions(),rowDataProvider,row,data,rm);
+    doActions(allColumns,dt.getActionCols(),rowDataProvider,row,rm);
+    if (dt.getParentName() != null) {
+      rm.parentName=dt.getParentName();
+    }
+    sb.append("//from row number: " + (i + 1) + "\n");
+    if (desc != null && desc.length() > 0) {
+      sb.append("//" + desc + "\n");
+    }
+    GuidedDTBRDRLPersistence drlMarshaller=new GuidedDTBRDRLPersistence(rowDataProvider);
+    String rule=drlMarshaller.marshal(rm);
+    sb.append(rule);
+    sb.append("\n");
+  }
+  return sb.toString();
+}

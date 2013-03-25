@@ -1,0 +1,32 @@
+{
+  GuidedDecisionTable52 dt=new GuidedDecisionTable52();
+  dt.setTableFormat(GuidedDecisionTable52.TableFormat.LIMITED_ENTRY);
+  dt.setTableName("limited-entry");
+  Pattern52 p1=new Pattern52();
+  p1.setBoundName("p1");
+  p1.setFactType("Smurf");
+  dt.getConditions().add(p1);
+  LimitedEntryActionInsertFactCol52 asf1=new LimitedEntryActionInsertFactCol52();
+  asf1.setFactType("Smurf");
+  asf1.setBoundName("s1");
+  asf1.setFactField("colour");
+  asf1.setValue(new DTCellValue52("Blue"));
+  dt.getActionCols().add(asf1);
+  dt.setData(DataUtilities.makeDataLists(new Object[][]{new Object[]{1l,"desc",true},new Object[]{2l,"desc",false}}));
+  GuidedDTDRLPersistence p=GuidedDTDRLPersistence.getInstance();
+  String drl=p.marshal(dt);
+  int index=-1;
+  index=drl.indexOf("Smurf s1 = new Smurf();");
+  assertTrue(index > -1);
+  index=drl.indexOf("s1.setColour( \"Blue\" );",index + 1);
+  assertTrue(index > -1);
+  index=drl.indexOf("insert( s1 );",index + 1);
+  assertTrue(index > -1);
+  int indexRule2=index;
+  indexRule2=drl.indexOf("Smurf s1 = new Smurf();",index + 1);
+  assertFalse(indexRule2 > -1);
+  indexRule2=drl.indexOf("s1.setColour( \"Blue\" );",index + 1);
+  assertFalse(indexRule2 > -1);
+  indexRule2=drl.indexOf("insert(s1 );",index + 1);
+  assertFalse(indexRule2 > -1);
+}

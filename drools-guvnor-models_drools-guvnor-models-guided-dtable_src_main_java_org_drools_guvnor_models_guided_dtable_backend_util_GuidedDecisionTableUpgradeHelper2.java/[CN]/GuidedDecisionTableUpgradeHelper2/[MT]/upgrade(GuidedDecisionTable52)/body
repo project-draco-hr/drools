@@ -1,0 +1,43 @@
+{
+  final GuidedDecisionTable52 destination=source;
+  final int iRowNumberColumnIndex=0;
+  Integer iSalienceColumnIndex=null;
+  Integer iDurationColumnIndex=null;
+  List<BaseColumn> allColumns=destination.getExpandedColumns();
+  for (int iCol=0; iCol < allColumns.size(); iCol++) {
+    final BaseColumn column=allColumns.get(iCol);
+    if (column instanceof AttributeCol52) {
+      AttributeCol52 attributeCol=(AttributeCol52)column;
+      final String attributeName=attributeCol.getAttribute();
+      if (GuidedDecisionTable52.SALIENCE_ATTR.equals(attributeName)) {
+        iSalienceColumnIndex=iCol;
+      }
+ else       if (GuidedDecisionTable52.DURATION_ATTR.equals(attributeName)) {
+        iDurationColumnIndex=iCol;
+      }
+    }
+  }
+  for (  List<DTCellValue52> row : destination.getData()) {
+    final int rowNumberValue=row.get(iRowNumberColumnIndex).getNumericValue().intValue();
+    row.get(iRowNumberColumnIndex).setNumericValue(rowNumberValue);
+    if (iSalienceColumnIndex != null) {
+      final Number salienceValue=row.get(iSalienceColumnIndex).getNumericValue();
+      if (salienceValue == null) {
+        row.get(iSalienceColumnIndex).setNumericValue((Integer)null);
+      }
+ else {
+        row.get(iSalienceColumnIndex).setNumericValue(salienceValue.intValue());
+      }
+    }
+    if (iDurationColumnIndex != null) {
+      final Number durationValue=row.get(iDurationColumnIndex).getNumericValue();
+      if (durationValue == null) {
+        row.get(iDurationColumnIndex).setNumericValue((Long)null);
+      }
+ else {
+        row.get(iDurationColumnIndex).setNumericValue(durationValue.longValue());
+      }
+    }
+  }
+  return destination;
+}

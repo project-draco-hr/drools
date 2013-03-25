@@ -1,0 +1,24 @@
+{
+  final Set<String> variables=new HashSet<String>();
+  for (  CompositeColumn<? extends BaseColumn> col : dtable.getConditions()) {
+    if (col instanceof Pattern52) {
+      final Pattern52 p=(Pattern52)col;
+      if (p.isBound()) {
+        variables.add(p.getBoundName());
+      }
+      for (      ConditionCol52 cc : p.getChildColumns()) {
+        if (cc.isBound()) {
+          variables.add(cc.getBinding());
+        }
+      }
+    }
+ else     if (col instanceof BRLConditionColumn) {
+      final RuleModel rm=new RuleModel();
+      final BRLConditionColumn brl=(BRLConditionColumn)col;
+      rm.lhs=brl.getDefinition().toArray(new IPattern[brl.getDefinition().size()]);
+      variables.addAll(rm.getBoundVariablesInScope(con));
+    }
+  }
+  variables.addAll(super.getBoundVariablesInScope(con));
+  return new ArrayList<String>(variables);
+}

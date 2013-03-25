@@ -1,0 +1,40 @@
+{
+  if (patternSource instanceof AccumulateDescr) {
+    AccumulateDescr accumulate=(AccumulateDescr)patternSource;
+    FromAccumulateCompositeFactPattern fac=new FromAccumulateCompositeFactPattern();
+    fac.setSourcePattern(parseBaseDescr(accumulate.getInput(),boundParams));
+    fac.setFactPattern(new FactPattern(pattern.getObjectType()));
+    for (    AccumulateDescr.AccumulateFunctionCallDescr func : accumulate.getFunctions()) {
+      String funcName=func.getFunction();
+      boolean first=true;
+      StringBuilder sb=new StringBuilder();
+      for (      String param : func.getParams()) {
+        if (first) {
+          first=false;
+        }
+ else {
+          sb.append(", ");
+        }
+        sb.append(param);
+      }
+      fac.setFunction(funcName + "(" + sb+ ")");
+      break;
+    }
+    return fac;
+  }
+ else   if (patternSource instanceof CollectDescr) {
+    CollectDescr collect=(CollectDescr)patternSource;
+    FromCollectCompositeFactPattern fac=new FromCollectCompositeFactPattern();
+    fac.setRightPattern(parseBaseDescr(collect.getInputPattern(),boundParams));
+    fac.setFactPattern(new FactPattern(pattern.getObjectType()));
+    return fac;
+  }
+ else   if (patternSource instanceof EntryPointDescr) {
+    EntryPointDescr entryPoint=(EntryPointDescr)patternSource;
+    FromEntryPointFactPattern fep=new FromEntryPointFactPattern();
+    fep.setEntryPointName(entryPoint.getText());
+    fep.setFactPattern(getFactPattern(pattern,boundParams));
+    return fep;
+  }
+  throw new RuntimeException("Unknown pattern source " + patternSource);
+}

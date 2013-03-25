@@ -1,0 +1,25 @@
+{
+  GuidedDecisionTable52 dt=new GuidedDecisionTable52();
+  Pattern52 p1=new Pattern52();
+  p1.setBoundName("$c");
+  p1.setFactType("CheeseLover");
+  ConditionCol52 c=new ConditionCol52();
+  c.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  c.setFactField("favouriteCheese");
+  c.setDefaultValue(new DTCellValue52("cheddar"));
+  c.setOperator("==");
+  p1.getChildColumns().add(c);
+  dt.getConditions().add(p1);
+  String[][] data=new String[][]{new String[]{"1","desc","edam"}};
+  dt.setData(DataUtilities.makeDataLists(data));
+  String drl=GuidedDTDRLPersistence.getInstance().marshal(dt);
+  assertFalse(drl.indexOf("$c : CheeseLover( favouriteCheese == \"edam\" )") == -1);
+  data=new String[][]{new String[]{"1","desc",null}};
+  dt.setData(DataUtilities.makeDataLists(data));
+  drl=GuidedDTDRLPersistence.getInstance().marshal(dt);
+  assertTrue(drl.indexOf("$c : CheeseLover( favouriteCheese == \"cheddar\" )") == -1);
+  data=new String[][]{new String[]{"1","desc",""}};
+  dt.setData(DataUtilities.makeDataLists(data));
+  drl=GuidedDTDRLPersistence.getInstance().marshal(dt);
+  assertTrue(drl.indexOf("$c : CheeseLover( favouriteCheese == \"cheddar\" )") == -1);
+}

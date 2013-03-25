@@ -1,0 +1,23 @@
+{
+  TypeResolver typeResolver=mock(TypeResolver.class);
+  ClassLoader classLoader=Thread.currentThread().getContextClassLoader();
+  Cheese f1=new Cheese("cheddar",42);
+  HashMap<String,Object> populatedData=new HashMap<String,Object>();
+  populatedData.put("f1",f1);
+  Set o=Collections.singleton((Object)f1);
+  when(ksession.getObjects()).thenReturn(o);
+  FactVerifier factVerifier=new FactVerifier(populatedData,typeResolver,classLoader,ksession,new HashMap<String,Object>());
+  VerifyFact vf=new VerifyFact();
+  vf.setName("f1");
+  vf.getFieldValues().add(new VerifyField("type","cheddar","=="));
+  vf.getFieldValues().add(new VerifyField("price","4777","!="));
+  factVerifier.verify(vf);
+  for (int i=0; i < vf.getFieldValues().size(); i++) {
+    assertTrue(vf.getFieldValues().get(i).getSuccessResult());
+  }
+  vf=new VerifyFact();
+  vf.setName("f1");
+  vf.getFieldValues().add(new VerifyField("type","cheddar","!="));
+  factVerifier.verify(vf);
+  assertFalse(vf.getFieldValues().get(0).getSuccessResult());
+}

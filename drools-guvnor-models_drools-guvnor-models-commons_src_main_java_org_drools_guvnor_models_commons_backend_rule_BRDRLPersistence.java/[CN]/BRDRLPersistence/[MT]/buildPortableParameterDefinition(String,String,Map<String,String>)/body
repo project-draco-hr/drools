@@ -1,0 +1,46 @@
+{
+  PortableParameterDefinition paramDef;
+  String type=boundParams.get(value);
+  if (type != null) {
+    if (type.equals("Boolean")) {
+      paramDef=new PortableBooleanParameterDefinition();
+    }
+ else     if (type.equals("String")) {
+      paramDef=new PortableStringParameterDefinition();
+    }
+ else     if (type.equals("Float")) {
+      paramDef=new PortableBooleanParameterDefinition();
+    }
+ else     if (type.equals("Integer")) {
+      paramDef=new PortableIntegerParameterDefinition();
+    }
+ else {
+      paramDef=new PortableObjectParameterDefinition();
+    }
+    ((HasBinding)paramDef).setBinding(value);
+  }
+ else   if (value.equals("true") || value.equals("false") || value.equals("Boolean.TRUE")|| value.equals("Boolean.FALSE")) {
+    paramDef=new PortableBooleanParameterDefinition();
+    boolean b=value.equals("true") || value.equals("Boolean.TRUE");
+    ((PortableBooleanParameterDefinition)paramDef).setValue(b);
+  }
+ else   if (value.startsWith("\"")) {
+    paramDef=new PortableStringParameterDefinition();
+    ((PortableStringParameterDefinition)paramDef).setValue(value.substring(1,value.length() - 1));
+  }
+ else   if (Character.isDigit(value.charAt(0))) {
+    if (value.endsWith("f")) {
+      paramDef=new PortableFloatParameterDefinition();
+      ((PortableFloatParameterDefinition)paramDef).setValue(Float.parseFloat(value));
+    }
+ else {
+      paramDef=new PortableIntegerParameterDefinition();
+      ((PortableIntegerParameterDefinition)paramDef).setValue(Integer.parseInt(value));
+    }
+  }
+ else {
+    throw new RuntimeException("Unknown parameter " + value);
+  }
+  paramDef.setName(name.substring(1,name.length() - 1));
+  return paramDef;
+}

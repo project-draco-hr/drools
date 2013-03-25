@@ -1,0 +1,21 @@
+{
+  RuleModel m=new RuleModel();
+  m.name="r1";
+  SingleFieldConstraint sfc=new SingleFieldConstraint("bar");
+  sfc.setFactType(DataType.TYPE_NUMERIC_INTEGER);
+  sfc.setFieldBinding("$a");
+  sfc.setOperator("==");
+  sfc.setValue("777");
+  FactPattern fp=new FactPattern("Foo");
+  fp.addConstraint(sfc);
+  FromEntryPointFactPattern fep=new FromEntryPointFactPattern();
+  fep.setEntryPointName("ep");
+  fep.setFactPattern(fp);
+  FromAccumulateCompositeFactPattern fac=new FromAccumulateCompositeFactPattern();
+  fac.setSourcePattern(fep);
+  fac.setFactPattern(new FactPattern("java.util.List"));
+  fac.setFunction("max($a)");
+  m.addLhsItem(fac);
+  String expected="rule \"r1\"\n" + "dialect \"mvel\"\n" + "when\n"+ "java.util.List( ) from accumulate ( Foo( $a : bar == 777 ) from entry-point \"ep\", \n"+ "max($a))\n"+ "then\n"+ "end";
+  checkMarshallUnmarshall(expected,m);
+}

@@ -1,0 +1,44 @@
+{
+class ConditionColData {
+    ConditionCol col;
+    String[] data;
+  }
+  final int metaDataColCount=(model.metadataCols == null ? 0 : model.metadataCols.size());
+  final int attributeColCount=(model.attributeCols == null ? 0 : model.attributeCols.size());
+  final int DATA_COLUMN_OFFSET=metaDataColCount + attributeColCount + GuidedDecisionTable.INTERNAL_ELEMENTS;
+  Map<String,List<ConditionColData>> uniqueGroups=new TreeMap<String,List<ConditionColData>>();
+  List<List<ConditionColData>> groups=new ArrayList<List<ConditionColData>>();
+  final int DATA_ROWS=model.data.length;
+  for (int iCol=0; iCol < model.conditionCols.size(); iCol++) {
+    ConditionCol col=model.conditionCols.get(iCol);
+    String pattern=col.boundName + "";
+    List<ConditionColData> groupCols=uniqueGroups.get(pattern);
+    if (groupCols == null) {
+      groupCols=new ArrayList<ConditionColData>();
+      groups.add(groupCols);
+      uniqueGroups.put(pattern,groupCols);
+    }
+    ConditionColData ccd=new ConditionColData();
+    int colIndex=DATA_COLUMN_OFFSET + iCol;
+    ccd.data=new String[DATA_ROWS];
+    for (int iRow=0; iRow < DATA_ROWS; iRow++) {
+      String[] row=model.data[iRow];
+      ccd.data[iRow]=row[colIndex];
+    }
+    ccd.col=col;
+    groupCols.add(ccd);
+  }
+  int iCol=0;
+  model.conditionCols.clear();
+  for (  List<ConditionColData> me : groups) {
+    for (    ConditionColData ccd : me) {
+      model.conditionCols.add(ccd.col);
+      int colIndex=DATA_COLUMN_OFFSET + iCol;
+      for (int iRow=0; iRow < DATA_ROWS; iRow++) {
+        String[] row=model.data[iRow];
+        row[colIndex]=ccd.data[iRow];
+      }
+      iCol++;
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  RuleModel m=new RuleModel();
+  m.name="test literal strings";
+  FactPattern p=new FactPattern("Person");
+  SingleFieldConstraint con=new SingleFieldConstraint();
+  con.setFieldType(DataType.TYPE_STRING);
+  con.setFieldName("field1");
+  con.setOperator("==");
+  con.setValue("goo");
+  con.setConstraintValueType(SingleFieldConstraint.TYPE_VARIABLE);
+  p.addConstraint(con);
+  ConnectiveConstraint connective=new ConnectiveConstraint();
+  connective.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  connective.setFieldType(DataType.TYPE_STRING);
+  connective.setOperator("|| ==");
+  connective.setValue("blah");
+  con.setConnectives(new ConnectiveConstraint[1]);
+  con.getConnectives()[0]=connective;
+  m.addLhsItem(p);
+  String expected="rule \"test literal strings\" " + "\tdialect \"mvel\"\n when " + "Person( field1 == goo  || == \"blah\" )"+ " then "+ "end";
+  checkMarshallUnmarshall(expected,m);
+}

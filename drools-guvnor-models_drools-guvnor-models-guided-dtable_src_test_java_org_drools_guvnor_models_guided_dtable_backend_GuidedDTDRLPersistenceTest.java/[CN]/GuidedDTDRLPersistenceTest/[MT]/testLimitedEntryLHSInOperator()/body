@@ -1,0 +1,31 @@
+{
+  GuidedDecisionTable52 dt=new GuidedDecisionTable52();
+  dt.setTableFormat(GuidedDecisionTable52.TableFormat.LIMITED_ENTRY);
+  dt.setTableName("limited-entry");
+  Pattern52 p1=new Pattern52();
+  p1.setBoundName("p1");
+  p1.setFactType("Smurf");
+  dt.getConditions().add(p1);
+  LimitedEntryConditionCol52 cc1=new LimitedEntryConditionCol52();
+  cc1.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  cc1.setFieldType(DataType.TYPE_STRING);
+  cc1.setFactField("name");
+  cc1.setOperator("in");
+  cc1.setValue(new DTCellValue52("Pupa, Brains"));
+  p1.getChildColumns().add(cc1);
+  LimitedEntryConditionCol52 cc2=new LimitedEntryConditionCol52();
+  cc2.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  cc2.setFieldType(DataType.TYPE_NUMERIC_INTEGER);
+  cc2.setFactField("age");
+  cc2.setOperator("in");
+  cc2.setValue(new DTCellValue52("55, 66"));
+  p1.getChildColumns().add(cc2);
+  dt.setData(DataUtilities.makeDataLists(new Object[][]{new Object[]{1l,"desc",true,true},new Object[]{2l,"desc",false,false}}));
+  GuidedDTDRLPersistence p=GuidedDTDRLPersistence.getInstance();
+  String drl=p.marshal(dt);
+  int index=-1;
+  index=drl.indexOf("Smurf( name in ( \"Pupa\", \"Brains\" ) , age in ( 55, 66 ) )");
+  assertTrue(index > -1);
+  index=drl.indexOf("Smurf( )",index + 1);
+  assertFalse(index > -1);
+}

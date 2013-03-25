@@ -1,0 +1,17 @@
+{
+  Scenario sc=new Scenario();
+  PseudoClockScheduler clock=new PseudoClockScheduler();
+  long time=new Date().getTime();
+  clock.setStartupTime(time);
+  when(ksession.getSessionClock()).thenReturn(clock);
+  ScenarioRunner run=new ScenarioRunner(ksession);
+  run.run(sc);
+  assertEquals(time,ksession.getSessionClock().getCurrentTime());
+  ExecutionTrace ext=new ExecutionTrace();
+  ext.setScenarioSimulatedDate(new Date("10-Jul-1974"));
+  sc.getFixtures().add(ext);
+  run=new ScenarioRunner(ksession);
+  run.run(sc);
+  long expected=ext.getScenarioSimulatedDate().getTime();
+  assertEquals(expected,ksession.getSessionClock().getCurrentTime());
+}
