@@ -1,23 +1,22 @@
 {
-  Set<String> props=new HashSet<String>();
+  Set<SetterInClass> props=new TreeSet<SetterInClass>();
   for (  Method m : clazz.getMethods()) {
     if (m.getParameterTypes().length == 1) {
       String propName=setter2property(m.getName());
       if (propName != null) {
-        props.add(propName);
+        props.add(new SetterInClass(propName,m.getDeclaringClass()));
       }
     }
-    Modifies modifies=m.getAnnotation(Modifies.class);
-    if (modifies != null) {
-      for (      String prop : modifies.value()) {
-        props.add(prop.trim());
-      }
-    }
+    processModifiesAnnotation(clazz,props,m);
   }
   for (  Field f : clazz.getFields()) {
-    props.add(f.getName());
+    if (!Modifier.isFinal(f.getModifiers()) && !Modifier.isStatic(f.getModifiers())) {
+      props.add(new SetterInClass(f.getName(),f.getDeclaringClass()));
+    }
   }
-  List<String> settableProperties=new ArrayList<String>(props);
-  Collections.sort(settableProperties);
+  List<String> settableProperties=new ArrayList<String>();
+  for (  SetterInClass setter : props) {
+    settableProperties.add(setter.setter);
+  }
   return settableProperties;
 }

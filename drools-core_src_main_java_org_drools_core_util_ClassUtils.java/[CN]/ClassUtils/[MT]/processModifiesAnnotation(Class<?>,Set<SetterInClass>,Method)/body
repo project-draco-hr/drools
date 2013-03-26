@@ -1,0 +1,29 @@
+{
+  Modifies modifies=m.getAnnotation(Modifies.class);
+  if (modifies != null) {
+    for (    String prop : modifies.value()) {
+      prop=prop.trim();
+      try {
+        Field field=clazz.getField(prop);
+        props.add(new SetterInClass(field.getName(),field.getDeclaringClass()));
+      }
+ catch (      NoSuchFieldException e) {
+        String getter="get" + prop.substring(0,1).toUpperCase() + prop.substring(1);
+        try {
+          Method method=clazz.getMethod(getter);
+          props.add(new SetterInClass(prop,method.getDeclaringClass()));
+        }
+ catch (        NoSuchMethodException e1) {
+          getter="is" + prop.substring(0,1).toUpperCase() + prop.substring(1);
+          try {
+            Method method=clazz.getMethod(getter);
+            props.add(new SetterInClass(prop,method.getDeclaringClass()));
+          }
+ catch (          NoSuchMethodException e2) {
+            throw new RuntimeException(e2);
+          }
+        }
+      }
+    }
+  }
+}
