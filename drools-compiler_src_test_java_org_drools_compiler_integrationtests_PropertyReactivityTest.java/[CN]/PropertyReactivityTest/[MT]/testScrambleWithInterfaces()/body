@@ -1,0 +1,12 @@
+{
+  String str="package org.drools.test;\n" + "\n" + "import org.drools.compiler.integrationtests.PropertyReactivityTest.Intf1;\n"+ "import org.drools.compiler.integrationtests.PropertyReactivityTest.Intf2;\n"+ "import org.drools.compiler.integrationtests.PropertyReactivityTest.Klass;\n"+ "import org.drools.compiler.integrationtests.PropertyReactivityTest.Klass2;\n"+ "\n"+ "global java.util.List list;\n"+ "\n"+ "rule \"Init\"\n"+ "when\n"+ "then\n"+ "  insert( new Klass( 1, 2, 3, 4, 5, 6 ) );\n"+ "  insert( new Klass2( 2, 3, 4, 5 ) );\n"+ "end\n"+ "\n"+ "rule \"On1\"\n"+ "when\n"+ "  $x : Intf1( )\n"+ "then\n"+ "  System.out.println( \"Modify by interface \" );\n"+ "  modify ( $x ) { setD( 200 ) }\n"+ "end\n"+ "rule \"On2\"\n"+ "when\n"+ "  $x : Klass2( )\n"+ "then\n"+ "  System.out.println( \"Modify by class \" );\n"+ "  modify ( $x ) { setD( 200 ) }\n"+ "end\n"+ "\n"+ "rule \"Log1\"\n"+ "when\n"+ "  Klass( d == 200, $id : id ) \n"+ "then\n"+ "  System.out.println( \"Log1 - As K1 \" + $id );\n"+ "  list.add( $id + \"@K1\" );\n"+ "end\n"+ "\n"+ "rule \"Log2\"\n"+ "when\n"+ "  Klass2( d == 200, $id : id ) \n"+ "then\n"+ "  System.out.println( \"Log2 - As K2 \" + $id );\n"+ "  list.add( $id + \"@K2\" );\n"+ "end\n"+ "\n"+ "rule \"Log3\"\n"+ "when\n"+ "  Intf1( d == 200, $id : id ) \n"+ "then\n"+ "  System.out.println( \"Log3 - As I1 \" + $id );\n"+ "  list.add( $id + \"@I1\" );\n"+ "end\n"+ "\n"+ "rule \"Log4\"\n"+ "when\n"+ "  Intf2( d == 200, $id : id ) \n"+ "then\n"+ "  System.out.println( \"Log4 - As K2 \" + $id );\n"+ "  list.add( $id + \"@I2\" );\n"+ "end";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
+  System.out.println(list);
+  assertTrue(list.containsAll(Arrays.asList("k1@K1","k1@I1","k1@I2")));
+  assertTrue(list.containsAll(Arrays.asList("k2@K2","k2@I2")));
+  assertEquals(5,list.size());
+}

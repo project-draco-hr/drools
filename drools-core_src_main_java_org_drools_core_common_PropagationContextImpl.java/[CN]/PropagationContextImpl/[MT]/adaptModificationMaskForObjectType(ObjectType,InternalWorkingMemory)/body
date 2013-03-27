@@ -1,0 +1,29 @@
+{
+  modificationMask=originalMask;
+  if (modificationMask == Long.MAX_VALUE || !(type instanceof ClassObjectType)) {
+    return this;
+  }
+  Class<?> classType=((ClassObjectType)type).getClassType();
+  if (classType == modifiedClass || !(classType.isInterface() || modifiedClass.isInterface())) {
+    return this;
+  }
+  Long cachedMask=rule.getTransformedMask(modifiedClass,classType,originalMask);
+  if (cachedMask != null) {
+    modificationMask=cachedMask;
+    return this;
+  }
+  modificationMask=0L;
+  Package pkg=workingMemory.getRuleBase().getPackage(rule.getPackage());
+  List<String> typeClassProps=pkg.getTypeDeclaration(classType).getSettableProperties();
+  List<String> modifiedClassProps=pkg.getTypeDeclaration(modifiedClass).getSettableProperties();
+  for (int i=0; i < modifiedClassProps.size(); i++) {
+    if (BitMaskUtil.isPositionSet(originalMask,i)) {
+      int posInType=typeClassProps.indexOf(modifiedClassProps.get(i));
+      if (posInType >= 0) {
+        modificationMask=BitMaskUtil.set(modificationMask,posInType);
+      }
+    }
+  }
+  rule.storeTransformedMask(modifiedClass,classType,originalMask,modificationMask);
+  return this;
+}
