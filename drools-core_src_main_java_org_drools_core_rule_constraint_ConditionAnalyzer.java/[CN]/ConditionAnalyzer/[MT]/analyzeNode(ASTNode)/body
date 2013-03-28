@@ -9,8 +9,15 @@
     return new AritmeticExpression(analyzeNode(op.getLeft()),AritmeticOperator.fromMvelOpCode(op.getOperation()),analyzeNode(op.getRight()));
   }
   if (node instanceof TypeCast) {
-    ExecutableAccessor accessor=(ExecutableAccessor)((TypeCast)node).getStatement();
-    return new CastExpression(node.getEgressType(),analyzeNode(accessor.getNode()));
+    ExecutableStatement statement=((TypeCast)node).getStatement();
+    if (statement instanceof ExecutableAccessor) {
+      ExecutableAccessor accessor=(ExecutableAccessor)statement;
+      return new CastExpression(node.getEgressType(),analyzeNode(accessor.getNode()));
+    }
+ else {
+      ExecutableLiteral literal=(ExecutableLiteral)statement;
+      return new CastExpression(node.getEgressType(),new FixedExpression(literal.getLiteral()));
+    }
   }
   if (node instanceof Union) {
     ASTNode main=((Union)node).getMain();
