@@ -1,3 +1,13 @@
 {
-  return loadKnowledgeBase(ruleFiles).newStatefulKnowledgeSession();
+  KnowledgeBuilder knowledgeBuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  for (  String file : ruleFiles) {
+    knowledgeBuilder.add(ResourceFactory.newClassPathResource(file),ResourceType.DRL);
+  }
+  if (knowledgeBuilder.hasErrors()) {
+    throw new RuntimeException(knowledgeBuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(knowledgeBuilder.getKnowledgePackages());
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  return session;
 }

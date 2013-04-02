@@ -42,6 +42,10 @@
   }
   cw.visit(V1_5,ACC_PUBLIC + ACC_SUPER,internalProxy,null,Type.getInternalName(proxyBaseClass),new String[]{internalTrait,Type.getInternalName(Serializable.class)});
 {
+    fv=cw.visitField(ACC_PRIVATE + ACC_FINAL + ACC_STATIC,TraitType.traitNameField,Type.getDescriptor(String.class),null,null);
+    fv.visitEnd();
+  }
+{
     fv=cw.visitField(ACC_PUBLIC + ACC_FINAL,"object",descrCore,null,null);
     fv.visitEnd();
   }
@@ -54,6 +58,16 @@
       fv=cw.visitField(ACC_PRIVATE,mixin,BuildUtils.getTypeDescriptor(mixinClass.getName()),null,null);
       fv.visitEnd();
     }
+  }
+{
+    mv=cw.visitMethod(ACC_STATIC,"<clinit>","()V",null,null);
+    mv.visitCode();
+    mv.visitLdcInsn(Type.getType(Type.getDescriptor(trait.getDefinedClass())));
+    mv.visitMethodInsn(INVOKEVIRTUAL,Type.getInternalName(Class.class),"getName","()" + Type.getDescriptor(String.class));
+    mv.visitFieldInsn(PUTSTATIC,internalProxy,TraitType.traitNameField,Type.getDescriptor(String.class));
+    mv.visitInsn(RETURN);
+    mv.visitMaxs(0,0);
+    mv.visitEnd();
   }
 {
     mv=cw.visitMethod(ACC_PUBLIC,"<init>","()V",null,null);
@@ -109,27 +123,35 @@
     mv.visitMethodInsn(INVOKESPECIAL,internalWrapper,"<init>","(" + descrCore + Type.getDescriptor(Map.class)+ ")V");
     mv.visitFieldInsn(PUTFIELD,internalProxy,"fields",Type.getDescriptor(Map.class));
     mv.visitVarInsn(ALOAD,1);
-    mv.visitMethodInsn(INVOKEVIRTUAL,internalCore,"getDynamicProperties","()" + Type.getDescriptor(Map.class));
+    mv.visitMethodInsn(INVOKEVIRTUAL,internalCore,"_getDynamicProperties","()" + Type.getDescriptor(Map.class));
     Label l1=new Label();
     mv.visitJumpInsn(IFNONNULL,l1);
     mv.visitVarInsn(ALOAD,1);
     mv.visitVarInsn(ALOAD,2);
-    mv.visitMethodInsn(INVOKEVIRTUAL,internalCore,"setDynamicProperties","(" + Type.getDescriptor(Map.class) + ")V");
+    mv.visitMethodInsn(INVOKEVIRTUAL,internalCore,"_setDynamicProperties","(" + Type.getDescriptor(Map.class) + ")V");
     mv.visitLabel(l1);
     mv.visitVarInsn(ALOAD,1);
-    mv.visitMethodInsn(INVOKEVIRTUAL,internalCore,"getTraitMap","()" + Type.getDescriptor(Map.class));
+    mv.visitMethodInsn(INVOKEVIRTUAL,internalCore,"_getTraitMap","()" + Type.getDescriptor(Map.class));
     Label l2=new Label();
     mv.visitJumpInsn(IFNONNULL,l2);
     mv.visitVarInsn(ALOAD,1);
-    mv.visitTypeInsn(NEW,Type.getInternalName(VetoableTypedMap.class));
+    mv.visitTypeInsn(NEW,Type.getInternalName(TraitTypeMap.class));
     mv.visitInsn(DUP);
     mv.visitTypeInsn(NEW,Type.getInternalName(HashMap.class));
     mv.visitInsn(DUP);
     mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(HashMap.class),"<init>","()V");
-    mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(VetoableTypedMap.class),"<init>","(" + Type.getDescriptor(Map.class) + ")V");
-    mv.visitMethodInsn(INVOKEVIRTUAL,internalCore,"setTraitMap","(" + Type.getDescriptor(Map.class) + ")V");
+    mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(TraitTypeMap.class),"<init>","(" + Type.getDescriptor(Map.class) + ")V");
+    mv.visitMethodInsn(INVOKEVIRTUAL,internalCore,"_setTraitMap","(" + Type.getDescriptor(Map.class) + ")V");
     mv.visitLabel(l2);
     mv.visitInsn(RETURN);
+    mv.visitMaxs(0,0);
+    mv.visitEnd();
+  }
+{
+    mv=cw.visitMethod(ACC_PUBLIC,"getTraitName","()" + Type.getDescriptor(String.class),null,null);
+    mv.visitCode();
+    mv.visitFieldInsn(GETSTATIC,internalProxy,TraitType.traitNameField,Type.getDescriptor(String.class));
+    mv.visitInsn(ARETURN);
     mv.visitMaxs(0,0);
     mv.visitEnd();
   }

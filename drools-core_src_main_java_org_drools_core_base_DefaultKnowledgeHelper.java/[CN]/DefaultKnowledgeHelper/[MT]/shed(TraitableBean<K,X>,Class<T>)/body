@@ -5,7 +5,20 @@
     return (Thing<K>)core;
   }
  else {
-    retract(core.removeTrait(trait.getName()));
+    Collection<Thing<K>> removedTypes;
+    if (core.hasTrait(trait.getName())) {
+      removedTypes=core.removeTrait(trait.getName());
+    }
+ else {
+      HierarchyEncoder hier=((ReteooRuleBase)this.workingMemory.getRuleBase()).getConfiguration().getComponentFactory().getTraitRegistry().getHierarchy();
+      BitSet code=hier.getCode(trait.getName());
+      removedTypes=core.removeTrait(code);
+    }
+    for (    Thing t : removedTypes) {
+      if (!((TraitType)t).isVirtual()) {
+        retract(t);
+      }
+    }
     Thing<K> thing=core.getTrait(Thing.class.getName());
     update(thing);
     return thing;

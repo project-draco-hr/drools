@@ -1,4 +1,18 @@
 {
   InternalFactHandle h=(InternalFactHandle)handle;
   ((InternalWorkingMemoryEntryPoint)h.getEntryPoint()).update(h,((InternalFactHandle)handle).getObject(),mask,modifiedClass,this.activation);
+  if (h.isTrait()) {
+    if (((TraitFactHandle)h).isTraitable()) {
+      updateTraits(h.getObject(),mask,null,modifiedClass);
+    }
+ else {
+      Thing x=(Thing)h.getObject();
+      if (x != x.getCore()) {
+        Object core=x.getCore();
+        InternalFactHandle coreHandle=(InternalFactHandle)getFactHandle(core);
+        ((InternalWorkingMemoryEntryPoint)coreHandle.getEntryPoint()).update(coreHandle,core,mask,modifiedClass,this.activation);
+        updateTraits(core,mask,x,modifiedClass);
+      }
+    }
+  }
 }

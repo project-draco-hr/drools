@@ -1,0 +1,24 @@
+{
+  TraitableBean txBean=(TraitableBean)object;
+  Collection<Thing> px=txBean.getMostSpecificTraits();
+  BitSet veto=null;
+  if (originator != null) {
+    veto=(BitSet)((TraitProxy)originator).getTypeCode().clone();
+  }
+  for (  Thing t : px) {
+    if (t != originator) {
+      TraitProxy proxy=(TraitProxy)t;
+      proxy.setTypeFilter(veto);
+      InternalFactHandle h=(InternalFactHandle)getFactHandle(t);
+      ((InternalWorkingMemoryEntryPoint)h.getEntryPoint()).update(h,t,mask,modifiedClass,this.activation);
+      proxy.setTypeFilter(null);
+      BitSet tc=proxy.getTypeCode();
+      if (veto == null) {
+        veto=(BitSet)tc.clone();
+      }
+ else {
+        veto.and(tc);
+      }
+    }
+  }
+}

@@ -1,13 +1,22 @@
 {
   String source="org/drools/compiler/factmodel/traits/testTraitDon.drl";
-  KnowledgeBase kb=loadKnowledgeBase(source);
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  Resource res=ResourceFactory.newClassPathResource(source);
+  assertNotNull(res);
+  kbuilder.add(res,ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kb=KnowledgeBaseFactory.newKnowledgeBase();
+  TraitFactory.setMode(mode,kb);
+  kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
   TraitFactory tFactory=((AbstractRuleBase)((KnowledgeBaseImpl)kb).getRuleBase()).getConfiguration().getComponentFactory().getTraitFactory();
   try {
     FactType impClass=kb.getFactType("org.drools.compiler.trait.test","Imp");
     TraitableBean imp=(TraitableBean)impClass.newInstance();
     Class trait=kb.getFactType("org.drools.compiler.trait.test","Student").getFactClass();
     TraitProxy proxy=(TraitProxy)tFactory.getProxy(imp,trait);
-    Map<String,Object> virtualFields=imp.getDynamicProperties();
+    Map<String,Object> virtualFields=imp._getDynamicProperties();
     Map<String,Object> wrapper=proxy.getFields();
     wrapper.put("name","john");
     wrapper.put("virtualField","xyz");

@@ -1,0 +1,21 @@
+{
+  String s1="package test;\n" + "import org.drools.compiler.factmodel.traits.*;\n" + "global java.util.List list; \n"+ ""+ "declare trait A id : int end\n"+ "declare trait B extends A end\n"+ "declare trait C extends A end\n"+ "declare trait D extends A end\n"+ "declare trait E extends B end\n"+ "declare trait F extends C end\n"+ "declare trait G extends D end\n"+ "declare trait H extends D end\n"+ "declare trait I extends E end\n"+ "declare trait J extends F end\n"+ "declare trait K extends G, H end\n"+ "declare trait L extends G, H end\n"+ "declare trait M extends I, J end\n"+ "declare trait N extends K, L end\n"+ ""+ "declare Core @Traitable id : int = 0 end \n"+ ""+ "rule \"Init\" when \n"+ "then \n"+ " insert( new Core() );"+ "end \n"+ ""+ "rule \"donManyThing\"\n"+ "when\n"+ " $x : Core( id == 0 )\n"+ "then\n"+ " don( $x, A.class );\n"+ " don( $x, B.class );\n"+ " don( $x, D.class );\n"+ " don( $x, F.class );\n"+ " don( $x, E.class );\n"+ " don( $x, I.class );\n"+ " don( $x, K.class );\n"+ " don( $x, J.class );\n"+ " don( $x, C.class );\n"+ " don( $x, H.class );\n"+ " don( $x, G.class );\n"+ " don( $x, L.class );\n"+ " don( $x, M.class );\n"+ " don( $x, N.class );\n"+ "end\n"+ "\n"+ "\n"+ "\n"+ "rule \"Log A\" when $x : A( id == 1 ) then System.out.println( \"A >> \" + $x ); list.add( 1 ); end \n"+ "rule \"Log B\" when $x : B( id == 1 ) then System.out.println( \"B >> \" + $x ); list.add( 2 ); end \n"+ "rule \"Log C\" when $x : C( id == 1 ) then System.out.println( \"C >> \" + $x ); list.add( 3 ); end \n"+ "rule \"Log D\" when $x : D( id == 1 ) then System.out.println( \"D >> \" + $x ); list.add( 4 ); end \n"+ "rule \"Log E\" when $x : E( id == 1 ) then System.out.println( \"E >> \" + $x ); list.add( 5 ); end \n"+ "rule \"Log F\" when $x : F( id == 1 ) then System.out.println( \"F >> \" + $x ); list.add( 6 ); end \n"+ "rule \"Log G\" when $x : G( id == 1 ) then System.out.println( \"G >> \" + $x ); list.add( 7 ); end \n"+ "rule \"Log H\" when $x : H( id == 1 ) then System.out.println( \"H >> \" + $x ); list.add( 8 ); end \n"+ "rule \"Log I\" when $x : I( id == 1 ) then System.out.println( \"I >> \" + $x ); list.add( 9 ); end \n"+ "rule \"Log J\" when $x : J( id == 1 ) then System.out.println( \"J >> \" + $x ); list.add( 10 ); end \n"+ "rule \"Log K\" when $x : K( id == 1 ) then System.out.println( \"K >> \" + $x ); list.add( 11 ); end \n"+ "rule \"Log L\" when $x : L( id == 1 ) then System.out.println( \"L >> \" + $x ); list.add( 12 ); end \n"+ "rule \"Log M\" when $x : M( id == 1 ) then System.out.println( \"M >> \" + $x ); list.add( 13 ); end \n"+ "rule \"Log N\" when $x : N( id == 1 ) then System.out.println( \"N >> \" + $x ); list.add( 14 ); end \n"+ ""+ "rule \"Log Core\" when $x : Core( $id : id ) then System.out.println( \"Core >>>>>> \" +  $x ); end \n"+ ""+ "rule \"Mod\" \n"+ "salience -10 \n"+ "when \n"+ " String( this == \"go\" ) \n"+ " $x : Core( id == 0 ) \n"+ "then \n"+ " System.out.println( \" ------------------------------------------------------------------------------ \" ); \n"+ " modify ( $x ) { setId( 1 ); }"+ "end \n"+ "";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(new ByteArrayResource(s1.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  TraitFactory.setMode(TraitFactory.VirtualPropertyMode.MAP,kbase);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  List list=new ArrayList();
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
+  ksession.insert("go");
+  ksession.fireAllRules();
+  assertEquals(14,list.size());
+  for (int j=1; j <= 14; j++) {
+    assertTrue(list.contains(j));
+  }
+}

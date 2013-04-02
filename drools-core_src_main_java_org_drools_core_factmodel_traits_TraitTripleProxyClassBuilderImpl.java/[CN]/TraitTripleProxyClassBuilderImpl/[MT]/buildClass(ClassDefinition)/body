@@ -42,6 +42,10 @@
   }
   cw.visit(V1_5,ACC_PUBLIC + ACC_SUPER,internalProxy,null,Type.getInternalName(proxyBaseClass),new String[]{internalTrait,Type.getInternalName(Externalizable.class)});
 {
+    fv=cw.visitField(ACC_PRIVATE + ACC_FINAL + ACC_STATIC,TraitType.traitNameField,Type.getDescriptor(String.class),null,null);
+    fv.visitEnd();
+  }
+{
     fv=cw.visitField(ACC_PUBLIC,"object",descrCore,null,null);
     fv.visitEnd();
   }
@@ -58,6 +62,16 @@
       fv=cw.visitField(ACC_PRIVATE,mixin,Type.getDescriptor(mixinClass),null,null);
       fv.visitEnd();
     }
+  }
+{
+    mv=cw.visitMethod(ACC_STATIC,"<clinit>","()V",null,null);
+    mv.visitCode();
+    mv.visitLdcInsn(Type.getType(Type.getDescriptor(trait.getDefinedClass())));
+    mv.visitMethodInsn(INVOKEVIRTUAL,Type.getInternalName(Class.class),"getName","()" + Type.getDescriptor(String.class));
+    mv.visitFieldInsn(PUTSTATIC,internalProxy,TraitType.traitNameField,Type.getDescriptor(String.class));
+    mv.visitInsn(RETURN);
+    mv.visitMaxs(0,0);
+    mv.visitEnd();
   }
 {
     mv=cw.visitMethod(ACC_PUBLIC,"<init>","()V",null,null);
@@ -77,6 +91,14 @@
     mv.visitFieldInsn(PUTFIELD,internalProxy,"storeId",Type.getDescriptor(String.class));
     int size=buildConstructorCore(cw,mv,internalProxy,internalWrapper,internalCore,descrCore,mixin,mixinClass);
     mv.visitInsn(RETURN);
+    mv.visitMaxs(0,0);
+    mv.visitEnd();
+  }
+{
+    mv=cw.visitMethod(ACC_PUBLIC,"getTraitName","()" + Type.getDescriptor(String.class),null,null);
+    mv.visitCode();
+    mv.visitFieldInsn(GETSTATIC,internalProxy,TraitType.traitNameField,Type.getDescriptor(String.class));
+    mv.visitInsn(ARETURN);
     mv.visitMaxs(0,0);
     mv.visitEnd();
   }

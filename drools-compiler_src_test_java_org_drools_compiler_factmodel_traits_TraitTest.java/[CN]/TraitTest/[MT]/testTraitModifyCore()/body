@@ -1,0 +1,14 @@
+{
+  String s1="package test;\n" + "import org.drools.compiler.factmodel.traits.*;\n" + ""+ "declare trait Student name : String end\n"+ "declare trait Worker name : String end\n"+ "declare trait StudentWorker extends Student, Worker name : String end\n"+ "declare trait Assistant extends Student, Worker name : String end\n"+ "declare Person @Traitable name : String end\n"+ ""+ "rule \"Init\" \n"+ "when \n"+ "then \n"+ " Person p = new Person( \"john\" ); \n"+ " insert( p ); \n"+ "end \n"+ ""+ "rule \"Don\" \n"+ "when \n"+ " $p : Person( name == \"john\" ) \n"+ "then \n"+ " System.out.println( $p ); \n"+ " don( $p, Student.class ); \n"+ " don( $p, Worker.class ); \n"+ " don( $p, StudentWorker.class ); \n"+ " don( $p, Assistant.class ); \n"+ "end \n"+ ""+ "rule \"Log S\" \n"+ "when \n"+ " $t : Student() \n"+ "then \n"+ " System.out.println( \"Student >> \" + $t ); \n"+ "end \n"+ "rule \"Log W\" \n"+ "when \n"+ " $t : Worker() \n"+ "then \n"+ " System.out.println( \"Worker >> \" + $t ); \n"+ "end \n"+ "rule \"Log SW\" \n"+ "when \n"+ " $t : StudentWorker() \n"+ "then \n"+ " System.out.println( \"StudentWorker >> \" + $t ); \n"+ "end \n"+ "rule \"Log RA\" \n"+ "when \n"+ " $t : Assistant() \n"+ "then \n"+ " System.out.println( \"Assistant >> \" + $t ); \n"+ "end \n"+ ""+ "rule \"Mod\" \n"+ "salience -10 \n"+ "when \n"+ " $p : Person( name == \"john\" ) \n"+ "then \n"+ " modify ( $p ) { setName( \"alan\" ); } "+ "end \n"+ "";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(new ByteArrayResource(s1.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  TraitFactory.setMode(TraitFactory.VirtualPropertyMode.MAP,kbase);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  int k=ksession.fireAllRules();
+  assertEquals(15,k);
+}

@@ -1,0 +1,35 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(new ClassPathResource("org/drools/compiler/factmodel/traits/testComplexDonShed.drl"),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  TraitFactory.setMode(mode,kbase);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  HierarchyEncoder hier=((ReteooRuleBase)((KnowledgeBaseImpl)ksession.getKieBase()).getRuleBase()).getConfiguration().getComponentFactory().getTraitRegistry().getHierarchy();
+  System.out.println(hier);
+  ksession.insert(trig);
+  ksession.fireAllRules();
+  TraitableBean ent=(TraitableBean)ksession.getGlobal("core");
+  assertEquals(CodedHierarchyImpl.stringToBitSet("1"),ent.getCurrentTypeCode());
+  ksession.insert("b");
+  ksession.fireAllRules();
+  assertEquals(CodedHierarchyImpl.stringToBitSet("11"),ent.getCurrentTypeCode());
+  ksession.insert("c");
+  ksession.fireAllRules();
+  assertEquals(CodedHierarchyImpl.stringToBitSet("1011"),ent.getCurrentTypeCode());
+  ksession.insert("e");
+  ksession.fireAllRules();
+  assertEquals(CodedHierarchyImpl.stringToBitSet("11011"),ent.getCurrentTypeCode());
+  ksession.insert("-c");
+  ksession.fireAllRules();
+  assertEquals(CodedHierarchyImpl.stringToBitSet("11"),ent.getCurrentTypeCode());
+  ksession.insert("dg");
+  ksession.fireAllRules();
+  assertEquals(CodedHierarchyImpl.stringToBitSet("111111"),ent.getCurrentTypeCode());
+  ksession.insert("-f");
+  ksession.fireAllRules();
+  assertEquals(CodedHierarchyImpl.stringToBitSet("111"),ent.getCurrentTypeCode());
+}

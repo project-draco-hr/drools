@@ -1,0 +1,24 @@
+{
+  boolean conflicted=false;
+  Collection<HierNode<T>> nodes=new ArrayList<HierNode<T>>(getNodes());
+  for (  HierNode<T> y : nodes) {
+    if (incomparable(x,y)) {
+      int sup=superset(y,x);
+      if (sup == 0) {
+        x.setBitMask(increment(x.getBitMask(),freeBit(x)));
+        propagate(y,freeBit(x));
+      }
+      if (sup > 0) {
+        updateMask(x,increment(x.getBitMask(),freeBit(x)));
+      }
+      int sub=superset(x,y);
+      if (sub > 0) {
+        modify(x,y);
+        conflicted=true;
+      }
+    }
+  }
+  if (conflicted) {
+    inheritMerged(x);
+  }
+}

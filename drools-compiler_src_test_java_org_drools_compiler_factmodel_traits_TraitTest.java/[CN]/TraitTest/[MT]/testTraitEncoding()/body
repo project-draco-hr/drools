@@ -1,0 +1,22 @@
+{
+  String s1="package org.drools.compiler.factmodel.traits;\n" + "import org.drools.core.factmodel.traits.Entity\n" + "declare trait A end\n"+ "declare trait B extends A end\n"+ "declare trait C extends A end\n"+ "declare trait D extends A end\n"+ "declare trait E extends B end\n"+ "declare trait F extends C end\n"+ "declare trait G extends D end\n"+ "declare trait H extends D end\n"+ "declare trait I extends E end\n"+ "declare trait J extends F end\n"+ "declare trait K extends G, H end\n"+ "declare trait L extends G, H end\n"+ "declare trait M extends I, J end\n"+ "declare trait N extends K, L end\n"+ ""+ "rule \"donOneThing\"\n"+ "when\n"+ " $x : Entity()\n"+ "then\n"+ " don( $x, A.class );\n"+ "end\n"+ ""+ "rule \"donManyThing\"\n"+ "when\n"+ " String( this == \"y\" ) \n"+ " $x : Entity()\n"+ "then\n"+ " don( $x, B.class );\n"+ " don( $x, D.class );\n"+ " don( $x, F.class );\n"+ " don( $x, E.class );\n"+ " don( $x, I.class );\n"+ " don( $x, K.class );\n"+ " don( $x, J.class );\n"+ " don( $x, C.class );\n"+ " don( $x, H.class );\n"+ " don( $x, G.class );\n"+ " don( $x, L.class );\n"+ " don( $x, M.class );\n"+ " don( $x, N.class );\n"+ "end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(new ByteArrayResource(s1.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  TraitFactory.setMode(TraitFactory.VirtualPropertyMode.MAP,kbase);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  TraitRegistry tr=((ReteooRuleBase)((KnowledgeBaseImpl)kbase).getRuleBase()).getConfiguration().getComponentFactory().getTraitRegistry();
+  System.out.println(tr.getHierarchy());
+  Entity ent=new Entity("x");
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.insert(ent);
+  ksession.fireAllRules();
+  assertEquals(1,ent.getMostSpecificTraits().size());
+  ksession.insert("y");
+  ksession.fireAllRules();
+  System.out.println(ent.getMostSpecificTraits());
+  assertEquals(2,ent.getMostSpecificTraits().size());
+}

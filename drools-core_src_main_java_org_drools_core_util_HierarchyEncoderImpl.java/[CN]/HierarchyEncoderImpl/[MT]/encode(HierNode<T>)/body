@@ -1,0 +1,34 @@
+{
+  Collection<HierNode<T>> parents=node.getParents();
+switch (parents.size()) {
+case 0:
+    BitSet zero=new BitSet();
+  if (hasKey(zero)) {
+    HierNode root=getNodeByKey(zero);
+    if (root.getValue() != null) {
+      fixedRoot=true;
+      HierNode previousRoot=root;
+      root=new HierNode((Object)null);
+      root.addChild(previousRoot);
+      previousRoot.addParent(root);
+      root.setBitMask(zero);
+      propagate(previousRoot,freeBit(root));
+      add(root);
+    }
+    node.addParent(root);
+    updateMask(node,increment(root.getBitMask(),freeBit(root)));
+  }
+ else {
+    updateMask(node,new BitSet());
+  }
+break;
+case 1:
+HierNode<T> parent=parents.iterator().next();
+updateMask(node,increment(parent.getBitMask(),freeBit(parent)));
+break;
+default :
+inheritMerged(node);
+resolveConflicts(node);
+break;
+}
+}

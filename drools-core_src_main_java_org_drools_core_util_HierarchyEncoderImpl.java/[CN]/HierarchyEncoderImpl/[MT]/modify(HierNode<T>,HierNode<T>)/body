@@ -1,0 +1,44 @@
+{
+  int i=freeBit(x);
+  Collection<HierNode<T>> py=y.getParents();
+  BitSet t=new BitSet();
+  for (  HierNode<T> parent : py) {
+    t.or(parent.getBitMask());
+  }
+  BitSet d=singleBitDiff(t,y.getBitMask());
+  int inDex=d.nextSetBit(0);
+  if (inDex < 0) {
+    propagate(y,i);
+  }
+ else {
+    Set<HierNode<T>> ancestors=ancestorNodes(x);
+    Set<HierNode<T>> affectedAncestors=new HashSet<HierNode<T>>();
+    for (    HierNode<T> anc : ancestors) {
+      if (anc.getBitMask().get(inDex)) {
+        affectedAncestors.add(anc);
+      }
+    }
+    Set<HierNode<T>> gcs=gcs(affectedAncestors);
+    Set<HierNode<T>> affectedDescendants=new HashSet<HierNode<T>>();
+    for (    HierNode<T> g : gcs) {
+      affectedDescendants.addAll(descendantNodes(g));
+    }
+    affectedDescendants.remove(x);
+    int dx=firstOne(d);
+    for (    HierNode<T> sub : affectedDescendants) {
+      boolean keepsBit=false;
+      for (      HierNode<T> sup : sub.getParents()) {
+        if (!keepsBit && !affectedDescendants.contains(sup) && sup.getBitMask().get(inDex)) {
+          keepsBit=true;
+        }
+      }
+      BitSet subMask=sub.getBitMask();
+      if (!keepsBit) {
+        subMask=decrement(subMask,dx);
+      }
+      subMask=increment(subMask,i);
+      updateMask(sub,subMask);
+    }
+    inDex=d.nextSetBit(inDex + 1);
+  }
+}
