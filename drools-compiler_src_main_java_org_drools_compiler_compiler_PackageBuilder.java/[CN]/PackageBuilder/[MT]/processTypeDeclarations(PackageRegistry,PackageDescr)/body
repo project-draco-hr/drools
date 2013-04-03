@@ -1,20 +1,25 @@
 {
   for (  AbstractClassTypeDeclarationDescr typeDescr : packageDescr.getClassAndEnumDeclarationDescrs()) {
-    if (isEmpty(typeDescr.getNamespace())) {
+    String qName=typeDescr.getType().getFullName();
+    Class typeClass=getClassForType(qName);
+    if (typeClass == null) {
+      typeClass=getClassForType(typeDescr.getTypeName());
+    }
+    if (typeClass == null) {
       for (      ImportDescr id : packageDescr.getImports()) {
         String imp=id.getTarget();
         int separator=imp.lastIndexOf('.');
         String tail=imp.substring(separator + 1);
         if (tail.equals(typeDescr.getTypeName())) {
           typeDescr.setNamespace(imp.substring(0,separator));
+          typeClass=getClassForType(typeDescr.getType().getFullName());
+          break;
         }
       }
     }
-    String qName=typeDescr.getType().getFullName();
-    int dotPos=qName.lastIndexOf('.');
+    String className=typeClass != null ? typeClass.getName() : qName;
+    int dotPos=className.lastIndexOf('.');
     if (dotPos >= 0) {
-      String className=typeName2ClassName(qName);
-      dotPos=className.lastIndexOf('.');
       typeDescr.setNamespace(className.substring(0,dotPos));
       typeDescr.setTypeName(className.substring(dotPos + 1));
     }
