@@ -1,0 +1,8 @@
+{
+  String str1="package org.pkg1;\n" + "declare trait Trait " + "    @propertyReactive\n"+ "    a : int\n"+ "end";
+  String str2="package org.pkg2;\n" + "declare Bean " + "    @propertyReactive\n"+ "    @Traitable\n"+ "    a : int\n"+ "    b : int\n"+ "end";
+  String str3="package org.pkg3;\n" + "import org.pkg1.Trait;\n" + "import org.pkg2.Bean;\n"+ "rule Init\n"+ "when\n"+ "then\n"+ "    insert(new Bean(1, 2));\n"+ "end\n"+ "rule R\n"+ "when\n"+ "   $b : Bean( b == 2)"+ "then\n"+ "   Trait t = don( $b, Trait.class, true );\n"+ "   modify(t) { setA(2) };\n"+ "end";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str1,str2,str3);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.fireAllRules();
+}
