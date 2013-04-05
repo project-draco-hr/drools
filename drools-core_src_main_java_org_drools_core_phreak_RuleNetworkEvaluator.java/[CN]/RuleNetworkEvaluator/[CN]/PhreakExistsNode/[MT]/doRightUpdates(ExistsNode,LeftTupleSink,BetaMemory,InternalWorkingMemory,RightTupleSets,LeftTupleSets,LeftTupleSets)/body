@@ -3,6 +3,7 @@
   RightTupleMemory rtm=bm.getRightTupleMemory();
   ContextEntry[] contextEntry=bm.getContext();
   BetaConstraints constraints=existsNode.getRawConstraints();
+  boolean resumeFromCurrent=!(existsNode.isIndexedUnificationJoin() || rtm.getIndexType().isComparison());
   for (RightTuple rightTuple=srcRightTuples.getUpdateFirst(); rightTuple != null; ) {
     RightTuple next=rightTuple.getStagedNext();
     FastIterator leftIt=existsNode.getLeftIterator(ltm);
@@ -25,14 +26,16 @@
       leftTuple=temp;
     }
     if (firstBlocked != null) {
-      FastIterator rightIt=existsNode.getRightIterator(rtm);
-      boolean useComparisonIndex=rtm.getIndexType().isComparison();
-      RightTuple rootBlocker=useComparisonIndex ? null : (RightTuple)rightIt.next(rightTuple);
-      RightTupleList list=rightTuple.getMemory();
-      rtm.removeAdd(rightTuple);
-      if (!useComparisonIndex && rootBlocker == null && list == rightTuple.getMemory()) {
-        rootBlocker=rightTuple;
+      RightTuple rootBlocker=rightTuple.getTempNextRightTuple();
+      if (rootBlocker != null) {
+        if (rootBlocker != rightTuple) {
+          rootBlocker=(RightTuple)rootBlocker.getNext();
+        }
       }
+ else {
+        resumeFromCurrent=false;
+      }
+      FastIterator rightIt=existsNode.getRightIterator(rtm);
       for (LeftTuple leftTuple=(LeftTuple)firstBlocked; leftTuple != null; ) {
         LeftTuple temp=leftTuple.getBlockedNext();
         leftTuple.clearBlocker();
@@ -43,11 +46,11 @@
           continue;
         }
         constraints.updateFromTuple(contextEntry,wm,leftTuple);
-        if (useComparisonIndex) {
+        if (resumeFromCurrent) {
           rootBlocker=existsNode.getFirstRightTuple(leftTuple,rtm,null,rightIt);
         }
         for (RightTuple newBlocker=rootBlocker; newBlocker != null; newBlocker=(RightTuple)rightIt.next(newBlocker)) {
-          if (constraints.isAllowedCachedLeft(contextEntry,newBlocker.getFactHandle())) {
+          if (leftTuple.getStagedType() != LeftTuple.DELETE && constraints.isAllowedCachedLeft(contextEntry,newBlocker.getFactHandle())) {
             leftTuple.setBlocker(newBlocker);
             newBlocker.addBlocked(leftTuple);
             break;

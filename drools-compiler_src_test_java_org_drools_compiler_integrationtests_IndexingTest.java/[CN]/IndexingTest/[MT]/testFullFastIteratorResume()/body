@@ -1,0 +1,66 @@
+{
+  String str="";
+  str+="package org.drools.compiler.test  \n";
+  str+="import org.drools.compiler.Person \n";
+  str+="query peeps( String $name, int $age ) \n";
+  str+="    not $p2 : Person( $name := name, age > $age ) \n";
+  str+="end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  List<ObjectTypeNode> nodes=((InternalRuleBase)((KnowledgeBaseImpl)kbase).ruleBase).getRete().getObjectTypeNodes();
+  ObjectTypeNode node=null;
+  for (  ObjectTypeNode n : nodes) {
+    if (((ClassObjectType)n.getObjectType()).getClassType() == DroolsQuery.class) {
+      node=n;
+      break;
+    }
+  }
+  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession()).session;
+  AlphaNode alphanode=(AlphaNode)node.getSinkPropagator().getSinks()[0];
+  LeftInputAdapterNode liaNode=(LeftInputAdapterNode)alphanode.getSinkPropagator().getSinks()[0];
+  NotNode n=(NotNode)liaNode.getSinkPropagator().getSinks()[0];
+  DoubleNonIndexSkipBetaConstraints c=(DoubleNonIndexSkipBetaConstraints)n.getRawConstraints();
+  assertTrue(c.isIndexed());
+  BetaMemory bm=(BetaMemory)wm.getNodeMemory(n);
+  System.out.println(bm.getLeftTupleMemory().getClass());
+  System.out.println(bm.getRightTupleMemory().getClass());
+  assertTrue(bm.getLeftTupleMemory() instanceof LeftTupleIndexHashTable);
+  assertTrue(bm.getRightTupleMemory() instanceof RightTupleIndexHashTable);
+  final Map<String,Integer> map=new HashMap<String,Integer>();
+  map.put("inserted",new Integer(0));
+  map.put("deleted",new Integer(0));
+  map.put("updated",new Integer(0));
+  wm.openLiveQuery("peeps",new Object[]{Variable.v,99},new ViewChangedEventListener(){
+    @Override public void rowInserted(    Row row){
+    }
+    @Override public void rowDeleted(    Row row){
+    }
+    @Override public void rowUpdated(    Row row){
+    }
+  }
+);
+  Map<String,InternalFactHandle> peeps=new HashMap<String,InternalFactHandle>();
+  Person p=new Person("x0",100);
+  InternalFactHandle fh=(InternalFactHandle)wm.insert(p);
+  peeps.put(p.getName(),fh);
+  for (int i=1; i < 100; i++) {
+    p=new Person("x" + i,101);
+    fh=(InternalFactHandle)wm.insert(p);
+    wm.fireAllRules();
+    peeps.put(p.getName(),fh);
+  }
+  List<RightTuple> list=new ArrayList<RightTuple>(100);
+  FastIterator it=n.getRightIterator(bm.getRightTupleMemory());
+  for (RightTuple rt=n.getFirstRightTuple(null,bm.getRightTupleMemory(),null,it); rt != null; rt=(RightTuple)it.next(rt)) {
+    list.add(rt);
+  }
+  assertEquals(100,list.size());
+  for (int i=0; i < 100; i++) {
+    RightTuple rightTuple=list.get(i);
+    it=n.getRightIterator(bm.getRightTupleMemory(),rightTuple);
+    int j=i + 1;
+    for (RightTuple rt=(RightTuple)it.next(rightTuple); rt != null; rt=(RightTuple)it.next(rt)) {
+      assertSame(list.get(j),rt);
+      j++;
+    }
+  }
+}

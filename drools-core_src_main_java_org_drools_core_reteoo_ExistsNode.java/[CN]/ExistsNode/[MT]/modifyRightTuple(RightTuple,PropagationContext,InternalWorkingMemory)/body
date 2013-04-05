@@ -22,36 +22,7 @@
   }
   RightTupleMemory rightTupleMemory=memory.getRightTupleMemory();
   if (firstBlocked != null) {
-    boolean useComparisonIndex=rightTupleMemory.getIndexType().isComparison();
-    FastIterator rightIt=getRightIterator(rightTupleMemory);
-    RightTuple rootBlocker=useComparisonIndex ? null : (RightTuple)rightIt.next(rightTuple);
-    RightTupleList list=rightTuple.getMemory();
-    rightTupleMemory.removeAdd(rightTuple);
-    if (!useComparisonIndex && rootBlocker == null && list == rightTuple.getMemory()) {
-      rootBlocker=rightTuple;
-    }
-    for (LeftTuple leftTuple=(LeftTuple)firstBlocked; leftTuple != null; ) {
-      LeftTuple temp=leftTuple.getBlockedNext();
-      leftTuple.setBlockedPrevious(null);
-      leftTuple.setBlockedNext(null);
-      leftTuple.setBlocker(null);
-      this.constraints.updateFromTuple(memory.getContext(),workingMemory,leftTuple);
-      if (useComparisonIndex) {
-        rootBlocker=getFirstRightTuple(leftTuple,rightTupleMemory,(InternalFactHandle)context.getFactHandle(),rightIt);
-      }
-      for (RightTuple newBlocker=rootBlocker; newBlocker != null; newBlocker=(RightTuple)rightIt.next(newBlocker)) {
-        if (this.constraints.isAllowedCachedLeft(memory.getContext(),newBlocker.getFactHandle())) {
-          leftTuple.setBlocker(newBlocker);
-          newBlocker.addBlocked(leftTuple);
-          break;
-        }
-      }
-      if (leftTuple.getBlocker() == null) {
-        memory.getLeftTupleMemory().add(leftTuple);
-        this.sink.propagateRetractLeftTuple(leftTuple,context,workingMemory);
-      }
-      leftTuple=temp;
-    }
+    updateLeftTupleToNewBlocker(rightTuple,context,workingMemory,memory,leftMemory,firstBlocked,rightTupleMemory,true);
   }
  else {
     rightTupleMemory.removeAdd(rightTuple);
