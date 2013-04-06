@@ -1,9 +1,22 @@
 {
-  LeftTupleList tupleList=activation.getLeftTupleList();
+  boolean declarativeAgendaEnabled=ruleNetworkEvaluatorActivation.isDeclarativeAgendaEnabled();
+  InternalAgenda agenda=(InternalAgenda)wm.getAgenda();
+  int salience=0;
+  if (declarativeAgendaEnabled && rtnNode.getType() == NodeTypeEnums.RuleTerminalNode) {
+    salience=rtnNode.getRule().getSalience().getValue(null,null,null);
+  }
+  LeftTupleList tupleList=ruleNetworkEvaluatorActivation.getLeftTupleList();
   for (LeftTuple leftTuple=srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
     tupleList.add(leftTuple);
     leftTuple.increaseActivationCountForEvents();
+    if (declarativeAgendaEnabled) {
+      PropagationContext pctx=leftTuple.getPropagationContext();
+      AgendaItem item=agenda.createAgendaItem(leftTuple,salience,pctx,rtnNode,ruleNetworkEvaluatorActivation);
+      item.setActivated(true);
+      leftTuple.setObject(item);
+      agenda.insertAndStageActivation(item);
+    }
     leftTuple.clearStaged();
     leftTuple=next;
   }
