@@ -1,0 +1,18 @@
+{
+  String str="package org.drools.test1;\n" + "import org.drools.compiler.Cheese;\n" + ""+ "rule R\n"+ "when Cheese() then end \n"+ "";
+  String str2="package org.drools.test2;\n" + "import org.drools.compiler.Cheese;\n" + ""+ "rule S\n"+ "when Cheese() then end \n"+ "";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  kbuilder.add(ResourceFactory.newByteArrayResource(str2.getBytes()),ResourceType.DRL);
+  assertEquals(3,kbuilder.getKnowledgePackages().size());
+  for (  KnowledgePackage kp : kbuilder.getKnowledgePackages()) {
+    KnowledgePackageImp kpi=(KnowledgePackageImp)kp;
+    TypeDeclaration cheez=kpi.pkg.getTypeDeclaration("Cheese");
+    if ("org.drools.compiler".equals(kpi.getName())) {
+      assertNotNull(cheez);
+    }
+ else {
+      assertNull(cheez);
+    }
+  }
+}
