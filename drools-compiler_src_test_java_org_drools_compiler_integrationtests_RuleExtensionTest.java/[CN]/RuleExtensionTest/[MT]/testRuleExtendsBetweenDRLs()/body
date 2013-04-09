@@ -1,0 +1,18 @@
+{
+  String str="package org.drools.test;\n" + "\n" + "global java.util.List list;\n"+ "\n"+ "rule \"Base\"\n"+ "when\n"+ "  String( this == \"go\" )\n"+ "then\n"+ "end\n"+ "";
+  String str2="package org.drools.test;\n" + "\n" + "rule \"ExtYes\" extends \"Base\"\n"+ "when\n"+ "then\n"+ "  list.add( 1 );\n"+ "end\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  kbuilder.add(ResourceFactory.newByteArrayResource(str2.getBytes()),ResourceType.DRL);
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kb=KnowledgeBaseFactory.newKnowledgeBase();
+  kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession knowledgeSession=kb.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  knowledgeSession.setGlobal("list",list);
+  knowledgeSession.fireAllRules();
+  assertEquals(0,list.size());
+  knowledgeSession.insert("go");
+  knowledgeSession.fireAllRules();
+  assertEquals(1,list.size());
+}
