@@ -1,0 +1,37 @@
+{
+  PackageRegistry pkgRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
+  Package pkg=pkgRegistry.getPackage();
+  List<RuleDescr> roots=new LinkedList<RuleDescr>();
+  Map<String,List<RuleDescr>> parents=new HashMap<String,List<RuleDescr>>();
+  List<RuleDescr> sorted=new ArrayList<RuleDescr>();
+  for (  RuleDescr ruleDescr : packageDescr.getRules()) {
+    if (!ruleDescr.hasParent()) {
+      roots.add(ruleDescr);
+    }
+ else     if (pkg.getRule(ruleDescr.getParentName()) != null) {
+      sorted.add(ruleDescr);
+    }
+ else {
+      List<RuleDescr> children=parents.get(ruleDescr.getParentName());
+      if (children == null) {
+        children=new ArrayList<RuleDescr>();
+        parents.put(ruleDescr.getParentName(),children);
+      }
+      children.add(ruleDescr);
+    }
+  }
+  if (parents.isEmpty()) {
+    return;
+  }
+  while (!roots.isEmpty()) {
+    RuleDescr root=roots.remove(0);
+    sorted.add(root);
+    List<RuleDescr> children=parents.remove(root.getName());
+    if (children != null) {
+      roots.addAll(children);
+    }
+  }
+  reportHierarchyErrors(parents,sorted);
+  packageDescr.getRules().clear();
+  packageDescr.getRules().addAll(sorted);
+}
