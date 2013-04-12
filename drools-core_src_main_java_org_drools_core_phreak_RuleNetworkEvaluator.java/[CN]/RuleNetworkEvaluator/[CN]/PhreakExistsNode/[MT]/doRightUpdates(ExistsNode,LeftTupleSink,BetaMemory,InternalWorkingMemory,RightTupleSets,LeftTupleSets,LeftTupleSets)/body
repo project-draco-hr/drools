@@ -3,7 +3,7 @@
   RightTupleMemory rtm=bm.getRightTupleMemory();
   ContextEntry[] contextEntry=bm.getContext();
   BetaConstraints constraints=existsNode.getRawConstraints();
-  boolean resumeFromCurrent=!(existsNode.isIndexedUnificationJoin() || rtm.getIndexType().isComparison());
+  boolean iterateFromStart=existsNode.isIndexedUnificationJoin() || rtm.getIndexType().isComparison();
   for (RightTuple rightTuple=srcRightTuples.getUpdateFirst(); rightTuple != null; ) {
     RightTuple next=rightTuple.getStagedNext();
     FastIterator leftIt=existsNode.getLeftIterator(ltm);
@@ -34,7 +34,7 @@
         }
       }
  else {
-        resumeFromCurrent=false;
+        iterateFromStart=true;
       }
       FastIterator rightIt=existsNode.getRightIterator(rtm);
       for (LeftTuple leftTuple=(LeftTuple)firstBlocked; leftTuple != null; ) {
@@ -47,7 +47,7 @@
           continue;
         }
         constraints.updateFromTuple(contextEntry,wm,leftTuple);
-        if (resumeFromCurrent) {
+        if (iterateFromStart) {
           rootBlocker=existsNode.getFirstRightTuple(leftTuple,rtm,null,rightIt);
         }
         for (RightTuple newBlocker=rootBlocker; newBlocker != null; newBlocker=(RightTuple)rightIt.next(newBlocker)) {
