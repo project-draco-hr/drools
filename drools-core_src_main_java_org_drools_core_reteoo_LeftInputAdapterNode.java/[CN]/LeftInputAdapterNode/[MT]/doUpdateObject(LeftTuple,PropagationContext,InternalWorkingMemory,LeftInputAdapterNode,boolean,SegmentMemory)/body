@@ -7,34 +7,12 @@
   }
   LeftTupleSets leftTuples=sm.getStagedLeftTuples();
   LeftTupleSink sink=liaNode.getSinkPropagator().getFirstLeftTupleSink();
-  if (leftTuple.getStagedType() != LeftTuple.INSERT) {
-    leftTuple.setPropagationContext(context);
-  }
-  if (leftTuple.getStagedType() == LeftTuple.NONE) {
-    long mask=sink.getLeftInferredMask();
-    if (mask == Long.MAX_VALUE || intersect(context.getModificationMask(),mask)) {
-      if (linkOrNotify && sm.getStagedLeftTuples().updateSize() == 0) {
-        sm.notifyRuleLinkSegment(wm);
-      }
-      leftTuples.addUpdate(leftTuple);
-    }
-  }
+  doUpdateSegmentMemory(leftTuple,context,wm,linkOrNotify,sm,leftTuples,sink);
   if (sm.getNext() != null) {
     for (sm=sm.getNext(); sm != null; sm=sm.getNext()) {
       leftTuple=leftTuple.getPeer();
       leftTuples=sm.getStagedLeftTuples();
-      if (leftTuple.getStagedType() != LeftTuple.INSERT) {
-        leftTuple.setPropagationContext(context);
-      }
-      if (leftTuple.getStagedType() == LeftTuple.NONE) {
-        long mask=((LeftTupleSink)sm.getRootNode()).getLeftInferredMask();
-        if (mask == Long.MAX_VALUE || intersect(context.getModificationMask(),mask)) {
-          if (linkOrNotify && sm.getStagedLeftTuples().updateSize() == 0) {
-            sm.notifyRuleLinkSegment(wm);
-          }
-          leftTuples.addUpdate(leftTuple);
-        }
-      }
+      doUpdateSegmentMemory(leftTuple,context,wm,linkOrNotify,sm,leftTuples,((LeftTupleSink)sm.getRootNode()));
     }
   }
 }
