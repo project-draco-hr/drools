@@ -8,7 +8,7 @@
   BitSet d=singleBitDiff(t,y.getBitMask());
   int inDex=d.nextSetBit(0);
   if (inDex < 0) {
-    propagate(y,i);
+    propagate(y,Math.max(i,freeBit(y)));
   }
  else {
     Set<HierNode<T>> ancestors=ancestorNodes(x);
@@ -27,6 +27,13 @@
       affectedDescendants.addAll(descendantNodes(g));
     }
     affectedDescendants.remove(x);
+    BitSet desc=new BitSet();
+    for (    HierNode node : affectedDescendants) {
+      desc.or(node.getBitMask());
+    }
+    if (desc.get(i)) {
+      i=Math.max(i,desc.length() + 1);
+    }
     int dx=firstOne(d);
     for (    HierNode<T> sub : affectedDescendants) {
       boolean keepsBit=false;
