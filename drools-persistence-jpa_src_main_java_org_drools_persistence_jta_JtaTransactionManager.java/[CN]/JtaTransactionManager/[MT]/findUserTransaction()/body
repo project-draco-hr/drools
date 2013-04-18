@@ -5,6 +5,11 @@
   }
  catch (  NamingException ex) {
     logger.debug("No UserTransaction found at JNDI location [{}]",DEFAULT_USER_TRANSACTION_NAME,ex);
-    throw new IllegalStateException("Unable to find transaction: " + ex.getMessage(),ex);
+    try {
+      return InitialContext.doLookup(System.getProperty("jbpm.ut.jndi.lookup","java:jboss/UserTransaction"));
+    }
+ catch (    Exception e1) {
+      throw new IllegalStateException("Unable to find transaction: " + ex.getMessage(),ex);
+    }
   }
 }
