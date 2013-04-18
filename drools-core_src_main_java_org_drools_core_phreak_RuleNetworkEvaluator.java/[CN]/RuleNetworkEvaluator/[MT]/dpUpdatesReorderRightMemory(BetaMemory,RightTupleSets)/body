@@ -1,9 +1,21 @@
 {
   RightTupleMemory rtm=bm.getRightTupleMemory();
+  boolean[] hasMemory=new boolean[srcRightTuples.updateSize()];
+  int i=0;
   for (RightTuple rightTuple=srcRightTuples.getUpdateFirst(); rightTuple != null; ) {
     RightTuple next=rightTuple.getStagedNext();
-    if (rightTuple.getMemory() != null) {
-      rtm.removeAdd(rightTuple);
+    hasMemory[i]=rightTuple.getMemory() != null;
+    if (hasMemory[i]) {
+      rtm.remove(rightTuple);
+    }
+    rightTuple=next;
+    i++;
+  }
+  i=0;
+  for (RightTuple rightTuple=srcRightTuples.getUpdateFirst(); rightTuple != null; ) {
+    RightTuple next=rightTuple.getStagedNext();
+    if (hasMemory[i]) {
+      rtm.add(rightTuple);
       for (LeftTuple childLeftTuple=rightTuple.getFirstChild(); childLeftTuple != null; ) {
         LeftTuple childNext=childLeftTuple.getRightParentNext();
         childLeftTuple.reAddLeft();
@@ -11,5 +23,6 @@
       }
     }
     rightTuple=next;
+    i++;
   }
 }
