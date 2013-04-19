@@ -1,36 +1,31 @@
 {
   RightTupleMemory rtm=bm.getRightTupleMemory();
   boolean resumeFromCurrent=!(betaNode.isIndexedUnificationJoin() || rtm.getIndexType().isComparison());
-  boolean[] hasMemory=new boolean[srcRightTuples.updateSize()];
-  RightTuple[] tempRightTuples=new RightTuple[srcRightTuples.updateSize()];
-  RightTupleMemory[] currentRtms=new RightTupleMemory[srcRightTuples.updateSize()];
-  int i=0;
   for (RightTuple rightTuple=srcRightTuples.getUpdateFirst(); rightTuple != null; ) {
     RightTuple next=rightTuple.getStagedNext();
-    hasMemory[i]=rightTuple.getMemory() != null;
-    if (hasMemory[i]) {
+    if (rightTuple.getMemory() != null) {
       if (resumeFromCurrent) {
-        currentRtms[i]=rightTuple.getMemory();
-        tempRightTuples[i]=(RightTuple)rightTuple.getPrevious();
-        while (tempRightTuples[i] != null && tempRightTuples[i].getStagedType() != LeftTuple.NONE) {
-          tempRightTuples[i]=(RightTuple)tempRightTuples[i].getPrevious();
+        rightTuple.setTempRightTupleMemory(rightTuple.getMemory());
+        RightTuple tempRightTuple=(RightTuple)rightTuple.getPrevious();
+        while (tempRightTuple != null && tempRightTuple.getStagedType() != LeftTuple.NONE) {
+          tempRightTuple=(RightTuple)tempRightTuple.getPrevious();
         }
+        rightTuple.setTempNextRightTuple(tempRightTuple);
       }
       rtm.remove(rightTuple);
     }
     rightTuple=next;
-    i++;
   }
-  i=0;
   for (RightTuple rightTuple=srcRightTuples.getUpdateFirst(); rightTuple != null; ) {
     RightTuple next=rightTuple.getStagedNext();
-    if (hasMemory[i]) {
+    if (rightTuple.getTempRightTupleMemory() != null) {
       rtm.add(rightTuple);
       if (resumeFromCurrent) {
-        if (tempRightTuples[i] == null && rightTuple.getMemory() == currentRtms[i]) {
-          tempRightTuples[i]=rightTuple;
+        RightTuple tempRightTuple=rightTuple.getTempNextRightTuple();
+        if (tempRightTuple == null && rightTuple.getMemory() == rightTuple.getTempRightTupleMemory()) {
+          tempRightTuple=rightTuple;
         }
-        rightTuple.setTempNextRightTuple(tempRightTuples[i]);
+        rightTuple.setTempNextRightTuple(tempRightTuple);
       }
       for (LeftTuple childLeftTuple=rightTuple.getFirstChild(); childLeftTuple != null; ) {
         LeftTuple childNext=childLeftTuple.getRightParentNext();
@@ -39,6 +34,5 @@
       }
     }
     rightTuple=next;
-    i++;
   }
 }
