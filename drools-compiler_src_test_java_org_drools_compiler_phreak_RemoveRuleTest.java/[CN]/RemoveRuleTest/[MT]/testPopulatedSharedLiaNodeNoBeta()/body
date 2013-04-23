@@ -1,0 +1,26 @@
+{
+  KnowledgeBase kbase1=buildKnowledgeBase("r1","   A()\n");
+  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase1.newStatefulKnowledgeSession()).session;
+  List list=new ArrayList();
+  wm.setGlobal("list",list);
+  A a1=new A(1);
+  InternalFactHandle fh1=(InternalFactHandle)wm.insert(a1);
+  A a2=new A(2);
+  InternalFactHandle fh2=(InternalFactHandle)wm.insert(a2);
+  wm.fireAllRules();
+  assertEquals(2,list.size());
+  kbase1.addKnowledgePackages(buildKnowledgePackage("r2","   a : A()\n"));
+  wm.fireAllRules();
+  assertEquals(4,list.size());
+  kbase1.removeRule("org.kie","r1");
+  kbase1.removeRule("org.kie","r2");
+  list.clear();
+  assertNull(fh1.getFirstLeftTuple());
+  assertNull(fh1.getLastLeftTuple());
+  assertNull(fh2.getFirstLeftTuple());
+  assertNull(fh2.getLastLeftTuple());
+  wm.update(fh1,a1);
+  wm.update(fh2,a2);
+  wm.fireAllRules();
+  assertEquals(0,list.size());
+}

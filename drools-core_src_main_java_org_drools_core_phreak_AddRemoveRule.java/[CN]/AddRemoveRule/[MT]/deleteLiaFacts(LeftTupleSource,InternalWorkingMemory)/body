@@ -1,0 +1,22 @@
+{
+  LeftInputAdapterNode lian=(LeftInputAdapterNode)startNode;
+  ObjectSource os=lian.getObjectSource();
+  while (os.getType() != NodeTypeEnums.ObjectTypeNode) {
+    os=os.getParentObjectSource();
+  }
+  ObjectTypeNode otn=(ObjectTypeNode)os;
+  final ObjectTypeNodeMemory omem=(ObjectTypeNodeMemory)wm.getNodeMemory(otn);
+  Iterator it=omem.getObjectHashSet().iterator();
+  for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
+    InternalFactHandle fh=(InternalFactHandle)entry.getValue();
+    if (fh.getFirstLeftTuple() != null) {
+      for (LeftTuple childLt=fh.getFirstLeftTuple(); childLt != null; ) {
+        LeftTuple next=childLt.getLeftParentNext();
+        if (childLt.getSink() == lian) {
+          fh.removeLeftTuple(childLt);
+        }
+        childLt=next;
+      }
+    }
+  }
+}

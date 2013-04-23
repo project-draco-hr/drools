@@ -1,0 +1,68 @@
+{
+  boolean isHandle=peer.getLeftParent() == null;
+  InternalFactHandle fh=peer.getLastHandle();
+  LeftTuple leftParent=peer.getLeftParent();
+  RightTuple rightParent=peer.getRightParent();
+  newPeer.setLeftParent(peer.getLeftParent());
+  newPeer.setRightParent(peer.getRightParent());
+  if (leftPrevious == null && leftNext == null) {
+    if (isHandle) {
+      fh.removeLeftTuple(peer);
+      fh.addFirstLeftTuple(newPeer);
+    }
+ else {
+      peer.unlinkFromLeftParent();
+      leftParent.setFirstChild(newPeer);
+      leftParent.setLastChild(newPeer);
+    }
+  }
+ else   if (leftNext != null) {
+    newPeer.setLeftParentNext(leftNext);
+    leftNext.setLeftParentPrevious(newPeer);
+    if (isHandle) {
+      fh.setFirstLeftTuple(newPeer);
+    }
+ else {
+      leftParent.setFirstChild(newPeer);
+    }
+  }
+ else   if (leftPrevious != null) {
+    newPeer.setLeftParentPrevious(leftPrevious);
+    leftPrevious.setLeftParentNext(newPeer);
+    if (isHandle) {
+      fh.setLastLeftTuple(newPeer);
+    }
+ else {
+      leftParent.setLastChild(newPeer);
+    }
+  }
+ else {
+    newPeer.setLeftParentPrevious(leftPrevious);
+    newPeer.setLeftParentNext(leftNext);
+    leftPrevious.setLeftParentNext(newPeer);
+    leftNext.setLeftParentPrevious(newPeer);
+  }
+  if (rightParent != null) {
+    if (rightPrevious == null && rightNext == null) {
+      peer.unlinkFromRightParent();
+      rightParent.setFirstChild(newPeer);
+      rightParent.setLastChild(newPeer);
+    }
+ else     if (rightNext != null) {
+      newPeer.setRightParentNext(rightNext);
+      rightNext.setRightParentPrevious(newPeer);
+      rightParent.setFirstChild(newPeer);
+    }
+ else     if (rightPrevious != null) {
+      newPeer.setRightParentPrevious(rightPrevious);
+      rightPrevious.setRightParentNext(newPeer);
+      rightParent.setLastChild(newPeer);
+    }
+ else {
+      newPeer.setRightParentPrevious(rightPrevious);
+      newPeer.setRightParentNext(rightNext);
+      rightPrevious.setRightParentNext(newPeer);
+      rightNext.setRightParentPrevious(newPeer);
+    }
+  }
+}

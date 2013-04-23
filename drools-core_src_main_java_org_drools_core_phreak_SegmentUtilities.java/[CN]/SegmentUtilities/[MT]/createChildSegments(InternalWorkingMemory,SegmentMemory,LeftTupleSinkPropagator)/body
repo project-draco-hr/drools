@@ -1,28 +1,7 @@
 {
   for (LeftTupleSinkNode sink=(LeftTupleSinkNode)sinkProp.getFirstLeftTupleSink(); sink != null; sink=sink.getNextLeftTupleSinkNode()) {
     Memory memory=wm.getNodeMemory((MemoryFactory)sink);
-    if (!(NodeTypeEnums.isTerminalNode(sink) || sink.getType() == NodeTypeEnums.RightInputAdaterNode)) {
-      if (memory.getSegmentMemory() == null) {
-        SegmentUtilities.createSegmentMemory((LeftTupleSource)sink,wm);
-      }
-    }
- else {
-      if (memory.getSegmentMemory() == null) {
-        SegmentMemory childSmem=new SegmentMemory(sink);
-        PathMemory rmem;
-        if (NodeTypeEnums.isTerminalNode(sink)) {
-          rmem=(PathMemory)memory;
-        }
- else {
-          rmem=((RiaNodeMemory)memory).getRiaPathMemory();
-        }
-        rmem.getSegmentMemories()[rmem.getSegmentMemories().length - 1]=childSmem;
-        rmem.setSegmentMemory(childSmem);
-        childSmem.getPathMemories().add(rmem);
-        childSmem.setTipNode(sink);
-        childSmem.setSinkFactory(sink);
-      }
-    }
-    smem.add(memory.getSegmentMemory());
+    SegmentMemory childSmem=createChildSegment(wm,sink,memory);
+    smem.add(childSmem);
   }
 }

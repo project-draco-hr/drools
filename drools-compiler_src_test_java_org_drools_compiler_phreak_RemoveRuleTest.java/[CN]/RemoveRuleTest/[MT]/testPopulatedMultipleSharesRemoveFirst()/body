@@ -1,0 +1,36 @@
+{
+  KnowledgeBase kbase1=buildKnowledgeBase("r1","   A(1;)  A(2;) B(1;) B(2;) C(1;) D() E()\n");
+  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase1.newStatefulKnowledgeSession()).session;
+  List list=new ArrayList();
+  wm.setGlobal("list",list);
+  InternalFactHandle fh1=(InternalFactHandle)wm.insert(new A(1));
+  InternalFactHandle fh2=(InternalFactHandle)wm.insert(new A(2));
+  InternalFactHandle fh3=(InternalFactHandle)wm.insert(new A(2));
+  InternalFactHandle fh4=(InternalFactHandle)wm.insert(new A(3));
+  InternalFactHandle fh5=(InternalFactHandle)wm.insert(new B(1));
+  InternalFactHandle fh6=(InternalFactHandle)wm.insert(new B(2));
+  InternalFactHandle fh7=(InternalFactHandle)wm.insert(new C(1));
+  InternalFactHandle fh8=(InternalFactHandle)wm.insert(new C(2));
+  InternalFactHandle fh9=(InternalFactHandle)wm.insert(new D(1));
+  InternalFactHandle fh10=(InternalFactHandle)wm.insert(new E(1));
+  wm.fireAllRules();
+  assertEquals(2,list.size());
+  kbase1.addKnowledgePackages(buildKnowledgePackage("r2","   A(1;)  A(2;) B(1;) B(2;) C(2;) D() E()\n"));
+  kbase1.addKnowledgePackages(buildKnowledgePackage("r3","   A(1;)  A(3;) B(1;) B(2;) C(2;) D() E()\n"));
+  wm.fireAllRules();
+  assertEquals(5,list.size());
+  kbase1.removeRule("org.kie","r1");
+  list.clear();
+  wm.update(fh1,fh1.getObject());
+  wm.update(fh2,fh2.getObject());
+  wm.update(fh3,fh3.getObject());
+  wm.update(fh4,fh4.getObject());
+  wm.update(fh5,fh5.getObject());
+  wm.update(fh6,fh6.getObject());
+  wm.update(fh7,fh7.getObject());
+  wm.update(fh8,fh8.getObject());
+  wm.update(fh9,fh9.getObject());
+  wm.update(fh10,fh10.getObject());
+  wm.fireAllRules();
+  assertEquals(3,list.size());
+}

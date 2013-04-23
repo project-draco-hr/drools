@@ -1,0 +1,32 @@
+{
+  LeftTupleSink sink=sinks.get(i);
+  if (i == 0) {
+    if (insert) {
+      if (NodeTypeEnums.isBetaNode(sink)) {
+        BetaNode bn=(BetaNode)sink;
+        if (bn.isRightInputIsRiaNode()) {
+          SegmentMemory subSmem=smem.getPrevious();
+          insertPeerLeftTuple(lt,(LeftTupleSink)subSmem.getRootNode(),subSmem);
+        }
+      }
+      insertPeerLeftTuple(lt,sink,smem);
+    }
+ else {
+      if (NodeTypeEnums.isBetaNode(sink)) {
+        BetaNode bn=(BetaNode)sink;
+        if (bn.isRightInputIsRiaNode()) {
+          SegmentMemory subSmem=smem.getPrevious();
+          deletePeerLeftTuple(lt,(LeftTupleSink)subSmem.getRootNode(),subSmem);
+        }
+      }
+      deletePeerLeftTuple(lt,sink,smem);
+    }
+  }
+ else {
+    LeftTuple peer=lt;
+    while (peer.getSink() != sink) {
+      peer=peer.getPeer();
+    }
+    followPeer(peer,smem,sinks,i - 1,insert,wm);
+  }
+}

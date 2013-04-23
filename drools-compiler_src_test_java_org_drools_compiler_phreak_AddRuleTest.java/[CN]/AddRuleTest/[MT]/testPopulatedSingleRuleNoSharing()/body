@@ -1,0 +1,25 @@
+{
+  KieBaseConfiguration kconf=(KieBaseConfiguration)KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(PhreakOption.ENABLED);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
+  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession()).session;
+  wm.insert(new A(1));
+  wm.insert(new B(1));
+  wm.insert(new C(1));
+  wm.insert(new C(2));
+  wm.insert(new D(1));
+  wm.insert(new E(1));
+  wm.fireAllRules();
+  kbase.addKnowledgePackages(buildKnowledgePackage("r1","   A() B() C(object == 2) D() E()\n"));
+  List list=new ArrayList();
+  wm.setGlobal("list",list);
+  ObjectTypeNode aotn=getObjectTypeNode(kbase,A.class);
+  LeftInputAdapterNode liaNode=(LeftInputAdapterNode)aotn.getSinkPropagator().getSinks()[0];
+  LiaNodeMemory lm=(LiaNodeMemory)wm.getNodeMemory(liaNode);
+  SegmentMemory sm=lm.getSegmentMemory();
+  assertEquals(1,sm.getStagedLeftTuples().insertSize());
+  wm.fireAllRules();
+  assertEquals(0,sm.getStagedLeftTuples().insertSize());
+  assertEquals(1,list.size());
+  assertEquals("r1",((Match)list.get(0)).getRule().getName());
+}

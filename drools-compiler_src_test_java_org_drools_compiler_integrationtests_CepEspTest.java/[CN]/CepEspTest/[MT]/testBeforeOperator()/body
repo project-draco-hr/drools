@@ -7,8 +7,8 @@
   StatefulKnowledgeSession ksession=createKnowledgeSession(kbase,sconf);
   final PseudoClockScheduler clock=(PseudoClockScheduler)ksession.<SessionClock>getSessionClock();
   clock.setStartupTime(1000);
-  AgendaEventListener ael=mock(AgendaEventListener.class);
-  ksession.addEventListener(ael);
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
   StockTickInterface tick1=new StockTick(1,"DROO",50,System.currentTimeMillis(),3);
   StockTickInterface tick2=new StockTick(2,"ACME",10,System.currentTimeMillis(),3);
   StockTickInterface tick3=new StockTick(3,"ACME",10,System.currentTimeMillis(),3);
@@ -30,9 +30,9 @@
   ksession.insert(tick7);
   clock.advanceTime(2,TimeUnit.MILLISECONDS);
   ksession.insert(tick8);
-  ArgumentCaptor<MatchCreatedEvent> arg=ArgumentCaptor.forClass(MatchCreatedEvent.class);
-  verify(ael).matchCreated(arg.capture());
-  assertThat(arg.getValue().getMatch().getRule().getName(),is("before"));
   ksession.fireAllRules();
-  verify(ael).afterMatchFired(any(AfterMatchFiredEvent.class));
+  assertEquals(1,list.size());
+  StockTick[] stocks=(StockTick[])list.get(0);
+  assertSame(tick4,stocks[0]);
+  assertSame(tick2,stocks[1]);
 }

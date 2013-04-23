@@ -1,0 +1,26 @@
+{
+  LinkedList<Memory> smNodeMemories1=sm1.getNodeMemories();
+  LinkedList<Memory> smNodeMemories2=sm2.getNodeMemories();
+  int nodePosMask=1;
+  for (int i=0, length=smNodeMemories1.size(); i < length; i++) {
+    nodePosMask=nodePosMask >> 1;
+  }
+  for (Memory mem=smNodeMemories2.getFirst(); mem != null; ) {
+    Memory next=mem.getNext();
+    smNodeMemories2.remove(mem);
+    smNodeMemories1.add(mem);
+    mem.setSegmentMemory(sm1);
+    BetaMemory bm=null;
+    if (mem instanceof AccumulateNode.AccumulateMemory) {
+      bm=((AccumulateNode.AccumulateMemory)mem).getBetaMemory();
+    }
+ else     if (mem instanceof BetaMemory) {
+      bm=(BetaMemory)mem;
+    }
+    if (bm != null) {
+      bm.setNodePosMaskBit(nodePosMask);
+    }
+    nodePosMask=nodePosMask >> 1;
+    mem=next;
+  }
+}

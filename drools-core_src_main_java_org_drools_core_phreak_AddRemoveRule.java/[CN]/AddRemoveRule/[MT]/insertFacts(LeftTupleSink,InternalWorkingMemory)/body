@@ -1,0 +1,19 @@
+{
+  LeftTupleSink lts=startNode;
+  while (!NodeTypeEnums.isTerminalNode(lts) && lts.getLeftTupleSource().getType() != NodeTypeEnums.RightInputAdaterNode) {
+    if (NodeTypeEnums.isBetaNode(lts)) {
+      BetaNode bn=(BetaNode)lts;
+      if (!bn.isRightInputIsRiaNode()) {
+        final PropagationContext pctx=new PropagationContextImpl(wm.getNextPropagationIdCounter(),PropagationContext.RULE_ADDITION,null,null,null);
+        bn.getRightInput().updateSink(bn,pctx,wm);
+      }
+ else {
+        insertSubnetworkFacts(bn,wm);
+      }
+    }
+ else     if (lts.getType() == NodeTypeEnums.RightInputAdaterNode) {
+      return;
+    }
+    lts=((LeftTupleSource)lts).getSinkPropagator().getFirstLeftTupleSink();
+  }
+}

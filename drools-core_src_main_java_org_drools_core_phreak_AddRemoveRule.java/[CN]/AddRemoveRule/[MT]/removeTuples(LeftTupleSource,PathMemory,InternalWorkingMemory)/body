@@ -1,0 +1,29 @@
+{
+  int smemIndex=getSegmentPos(splitStartNode,null);
+  SegmentMemory[] smems=pmem.getSegmentMemories();
+  SegmentMemory sm;
+  LeftTupleSink sink;
+  Memory mem;
+  if (smems.length == 1) {
+    sm=smems[0];
+    if (sm == null) {
+      return;
+    }
+    sink=((LeftInputAdapterNode)sm.getRootNode()).getSinkPropagator().getFirstLeftTupleSink();
+    mem=sm.getNodeMemories().get(1);
+  }
+ else {
+    sm=smems[smemIndex + 1];
+    if (sm == null) {
+      return;
+    }
+    sink=(LeftTupleSink)sm.getRootNode();
+    mem=sm.getNodeMemories().get(0);
+  }
+  processLeftTuples(splitStartNode,sink,sm,wm,false);
+  RuleNetworkEvaluator rne=new RuleNetworkEvaluator();
+  LeftInputAdapterNode lian=(LeftInputAdapterNode)smems[0].getRootNode();
+  LinkedList<StackEntry> stack=new LinkedList<StackEntry>();
+  Set<String> visitedRules=new HashSet<String>();
+  rne.eval1(lian,pmem,sink,mem,smems,smemIndex,sm.getStagedLeftTuples(),wm,stack,visitedRules,true,pmem.getAgendaItem());
+}
