@@ -10,8 +10,7 @@
     PropagationContext context=rightTuple.getPropagationContext();
     LeftTuple firstLeftTuple=existsNode.getFirstLeftTuple(rightTuple,ltm,context,leftIt);
     constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
-    LeftTuple firstBlocked=rightTuple.getBlocked();
-    rightTuple.nullBlocked();
+    LeftTuple firstBlocked=rightTuple.getTempBlocked();
     for (LeftTuple leftTuple=firstLeftTuple; leftTuple != null; ) {
       LeftTuple temp=(LeftTuple)leftIt.next(leftTuple);
       if (leftTuple.getStagedType() == LeftTuple.UPDATE) {
@@ -28,12 +27,7 @@
     }
     if (firstBlocked != null) {
       RightTuple rootBlocker=rightTuple.getTempNextRightTuple();
-      if (rootBlocker != null) {
-        if (rootBlocker != rightTuple && rootBlocker.getNext() != null) {
-          rootBlocker=(RightTuple)rootBlocker.getNext();
-        }
-      }
- else {
+      if (rootBlocker == null) {
         iterateFromStart=true;
       }
       FastIterator rightIt=existsNode.getRightIterator(rtm);

@@ -10,8 +10,7 @@
     constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
     FastIterator leftIt=notNode.getLeftIterator(ltm);
     LeftTuple firstLeftTuple=notNode.getFirstLeftTuple(rightTuple,ltm,context,leftIt);
-    LeftTuple firstBlocked=rightTuple.getBlocked();
-    rightTuple.nullBlocked();
+    LeftTuple firstBlocked=rightTuple.getTempBlocked();
     for (LeftTuple leftTuple=firstLeftTuple; leftTuple != null; ) {
       LeftTuple temp=(LeftTuple)leftIt.next(leftTuple);
       if (leftTuple.getStagedType() == LeftTuple.UPDATE) {
@@ -32,12 +31,7 @@
     }
     if (firstBlocked != null) {
       RightTuple rootBlocker=rightTuple.getTempNextRightTuple();
-      if (rootBlocker != null) {
-        if (rootBlocker != rightTuple && rootBlocker.getNext() != null) {
-          rootBlocker=(RightTuple)rootBlocker.getNext();
-        }
-      }
- else {
+      if (rootBlocker == null) {
         iterateFromStart=true;
       }
       FastIterator rightIt=notNode.getRightIterator(rtm);

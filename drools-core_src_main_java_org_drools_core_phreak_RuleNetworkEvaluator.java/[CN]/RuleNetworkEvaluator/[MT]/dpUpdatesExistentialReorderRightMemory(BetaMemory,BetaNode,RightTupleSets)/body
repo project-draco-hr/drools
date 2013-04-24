@@ -6,12 +6,22 @@
     if (rightTuple.getMemory() != null) {
       if (resumeFromCurrent) {
         rightTuple.setTempRightTupleMemory(rightTuple.getMemory());
-        RightTuple tempRightTuple=rightTuple.getBlocked() != null ? (RightTuple)rightTuple.getPrevious() : null;
-        while (tempRightTuple != null && tempRightTuple.getStagedType() != LeftTuple.NONE) {
-          tempRightTuple=(RightTuple)tempRightTuple.getPrevious();
+        if (rightTuple.getBlocked() != null) {
+          RightTuple tempRightTuple=(RightTuple)rightTuple.getNext();
+          while (tempRightTuple != null && tempRightTuple.getStagedType() != LeftTuple.NONE) {
+            tempRightTuple=(RightTuple)tempRightTuple.getNext();
+          }
+          if (tempRightTuple == null) {
+            tempRightTuple=(RightTuple)rightTuple.getPrevious();
+            while (tempRightTuple != null && tempRightTuple.getStagedType() != LeftTuple.NONE) {
+              tempRightTuple=(RightTuple)tempRightTuple.getPrevious();
+            }
+          }
+          rightTuple.setTempNextRightTuple(tempRightTuple);
         }
-        rightTuple.setTempNextRightTuple(tempRightTuple);
       }
+      rightTuple.setTempBlocked(rightTuple.getBlocked());
+      rightTuple.nullBlocked();
       rtm.remove(rightTuple);
     }
     rightTuple=next;
@@ -22,10 +32,9 @@
       rtm.add(rightTuple);
       if (resumeFromCurrent) {
         RightTuple tempRightTuple=rightTuple.getTempNextRightTuple();
-        if (tempRightTuple == null && rightTuple.getMemory() == rightTuple.getTempRightTupleMemory()) {
-          tempRightTuple=rightTuple;
+        if (rightTuple.getBlocked() != null && tempRightTuple == null && rightTuple.getMemory() == rightTuple.getTempRightTupleMemory()) {
+          rightTuple.setTempNextRightTuple(rightTuple);
         }
-        rightTuple.setTempNextRightTuple(tempRightTuple);
       }
       for (LeftTuple childLeftTuple=rightTuple.getFirstChild(); childLeftTuple != null; ) {
         LeftTuple childNext=childLeftTuple.getRightParentNext();
