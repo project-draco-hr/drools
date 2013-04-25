@@ -41,6 +41,28 @@
     factHandleEntry=null;
     otnIterator=null;
   }
+ else   if (((InternalRuleBase)wm.getRuleBase()).getConfiguration().isPhreakEnabled() && source instanceof AccumulateNode) {
+    BetaMemory memory=((AccumulateMemory)wm.getNodeMemory((MemoryFactory)source)).betaMemory;
+    FastIterator localIt=memory.getLeftTupleMemory().fullFastIterator(leftTuple.getParent());
+    LeftTuple childLeftTuple=leftTuple;
+    if (childLeftTuple != null) {
+      leftTuple=childLeftTuple.getParent();
+      while (leftTuple != null) {
+        if (childLeftTuple == null) {
+          childLeftTuple=leftTuple.getFirstChild();
+        }
+ else {
+          childLeftTuple=childLeftTuple.getLeftParentNext();
+        }
+        for (; childLeftTuple != null; childLeftTuple=childLeftTuple.getLeftParentNext()) {
+          if (childLeftTuple.getLeftTupleSink() == sink) {
+            return childLeftTuple;
+          }
+        }
+        leftTuple=(LeftTuple)localIt.next(leftTuple);
+      }
+    }
+  }
  else   if (source instanceof JoinNode || source instanceof NotNode || source instanceof FromNode|| source instanceof AccumulateNode) {
     BetaMemory memory;
     FastIterator localIt;
