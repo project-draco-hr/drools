@@ -12,10 +12,25 @@
       this.results.add(new TypeDeclarationError(tdescr,"Found duplicate declaration for type " + tdescr.getTypeName()));
     }
     Collection<QualifiedName> supers=taxonomy.get(name);
-    supers.addAll(tdescr.getSuperTypes());
+    boolean circular=false;
+    for (    QualifiedName sup : tdescr.getSuperTypes()) {
+      if (!Object.class.getName().equals(name.getFullName())) {
+        if (!hasCircularDependency(tdescr.getType(),sup,taxonomy)) {
+          supers.add(sup);
+        }
+ else {
+          circular=true;
+          this.results.add(new TypeDeclarationError(tdescr,"Found circular dependency for type " + tdescr.getTypeName()));
+          break;
+        }
+      }
+    }
+    if (circular) {
+      tdescr.getSuperTypes().clear();
+    }
     for (    TypeFieldDescr field : tdescr.getFields().values()) {
       QualifiedName typeName=new QualifiedName(field.getPattern().getObjectType());
-      if (!typeName.equals(name) && !hasCircularDependency(name,typeName,taxonomy)) {
+      if (!hasCircularDependency(name,typeName,taxonomy)) {
         supers.add(typeName);
       }
     }
