@@ -1,5 +1,5 @@
 {
-  int i=freeBit(x);
+  int i=freeBit(x,y);
   Collection<HierNode<T>> py=y.getParents();
   BitSet t=new BitSet();
   for (  HierNode<T> parent : py) {
@@ -8,7 +8,7 @@
   BitSet d=singleBitDiff(t,y.getBitMask());
   int inDex=d.nextSetBit(0);
   if (inDex < 0) {
-    propagate(y,Math.max(i,freeBit(y)));
+    propagate(y,i);
   }
  else {
     Set<HierNode<T>> ancestors=ancestorNodes(x);
@@ -27,14 +27,10 @@
       affectedDescendants.addAll(descendantNodes(g));
     }
     affectedDescendants.remove(x);
-    BitSet desc=new BitSet();
-    for (    HierNode node : affectedDescendants) {
-      desc.or(node.getBitMask());
-    }
-    if (desc.get(i)) {
-      i=Math.max(i,desc.length() + 1);
-    }
     int dx=firstOne(d);
+    if (bottom.get(i)) {
+      i=freeBit(new HierNode<T>(bottom));
+    }
     for (    HierNode<T> sub : affectedDescendants) {
       boolean keepsBit=false;
       for (      HierNode<T> sup : sub.getParents()) {
