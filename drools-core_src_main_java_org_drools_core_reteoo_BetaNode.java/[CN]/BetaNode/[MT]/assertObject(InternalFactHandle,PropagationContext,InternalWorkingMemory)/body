@@ -1,7 +1,6 @@
 {
   final BetaMemory memory=(BetaMemory)getBetaMemoryFromRightInput(this,wm);
   RightTuple rightTuple=createRightTuple(factHandle,this,context);
-  rightTuple.setPropagationContext(context);
   if (isUnlinkingEnabled()) {
     if (memory.getAndIncCounter() == 0) {
       memory.linkNode(wm);
@@ -10,6 +9,10 @@
       memory.getSegmentMemory().notifyRuleLinkSegment(wm);
     }
     memory.getStagedRightTuples().addInsert(rightTuple);
+    if (context.getReaderContext() != null) {
+      MarshallerReaderContext mrc=(MarshallerReaderContext)context.getReaderContext();
+      mrc.filter.fireRNEAs(wm);
+    }
     return;
   }
   assertRightTuple(rightTuple,context,wm);

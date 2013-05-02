@@ -12,12 +12,14 @@
   }
   context.wm=session;
   readNodeMemories(context,_session.getRuleData());
-  readInitialFactHandle(context,_session.getRuleData());
+  List<PropagationContextImpl> pctxs=new ArrayList<PropagationContextImpl>();
+  readInitialFactHandle(context,_session.getRuleData(),pctxs);
   for (  ProtobufMessages.EntryPoint _ep : _session.getRuleData().getEntryPointList()) {
     SessionEntryPoint wmep=context.wm.getEntryPoints().get(_ep.getEntryPointId());
-    readFactHandles(context,_ep,((NamedEntryPoint)wmep).getObjectStore());
-    readTruthMaintenanceSystem(context,wmep,_ep);
+    readFactHandles(context,_ep,((NamedEntryPoint)wmep).getObjectStore(),pctxs);
+    readTruthMaintenanceSystem(context,wmep,_ep,pctxs);
   }
+  cleanReaderContexts(pctxs);
   readActionQueue(context,_session.getRuleData());
   if (processMarshaller != null) {
     if (_session.hasProcessData()) {

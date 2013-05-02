@@ -34,12 +34,15 @@
       AgendaItem item=(AgendaItem)leftTuple.getObject();
       if (item == null) {
         item=agenda.createAgendaItem(leftTuple,salience,pctx,rtn,this);
-        item.setActivated(true);
         leftTuple.setObject(item);
       }
  else {
         item.setPropagationContext(pctx);
       }
+      if (agenda.getActivationsFilter() != null && !agenda.getActivationsFilter().accept(item,pctx,wm,rtn)) {
+        continue;
+      }
+      item.setActivated(true);
       agenda.fireActivation(item);
       localFireCount++;
       RuleNetworkEvaluatorActivation nextRule=agenda.peekNextRule();

@@ -1,0 +1,24 @@
+{
+  TruthMaintenanceSystem tms=((NamedEntryPoint)wmep).getTruthMaintenanceSystem();
+  ProtobufMessages.TruthMaintenanceSystem _tms=_ep.getTms();
+  for (  ProtobufMessages.EqualityKey _key : _tms.getKeyList()) {
+    InternalFactHandle handle=(InternalFactHandle)context.handles.get(_key.getHandleId());
+    ObjectTypeConf typeConf=context.wm.getObjectTypeConfigurationRegistry().getObjectTypeConf(((NamedEntryPoint)handle.getEntryPoint()).getEntryPoint(),handle.getObject());
+    if (!typeConf.isTMSEnabled()) {
+      typeConf.enableTMS();
+    }
+    EqualityKey key=new EqualityKey(handle,_key.getStatus());
+    handle.setEqualityKey(key);
+    if (key.getStatus() == EqualityKey.JUSTIFIED) {
+      ((NamedEntryPoint)handle.getEntryPoint()).getObjectStore().addHandle(handle,handle.getObject());
+      assertHandleIntoOTN(context,context.wm,handle,pctxs);
+    }
+    for (    Integer factHandleId : _key.getOtherHandleList()) {
+      handle=(InternalFactHandle)context.handles.get(factHandleId.intValue());
+      key.addFactHandle(handle);
+      handle.setEqualityKey(key);
+    }
+    tms.put(key);
+    readBeliefSet(context,tms,key,_key.getBeliefSet());
+  }
+}
