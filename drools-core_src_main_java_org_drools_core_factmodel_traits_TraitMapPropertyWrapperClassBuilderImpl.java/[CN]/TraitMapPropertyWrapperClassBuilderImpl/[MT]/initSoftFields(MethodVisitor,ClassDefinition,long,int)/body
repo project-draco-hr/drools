@@ -6,6 +6,11 @@
     if (isSoftField) {
       mv.visitVarInsn(ALOAD,varNum);
       mv.visitLdcInsn(field.getName());
+      mv.visitMethodInsn(INVOKEINTERFACE,Type.getInternalName(Map.class),"containsKey",Type.getMethodDescriptor(Type.getType(boolean.class),new Type[]{Type.getType(Object.class)}));
+      Label l0=new Label();
+      mv.visitJumpInsn(IFNE,l0);
+      mv.visitVarInsn(ALOAD,varNum);
+      mv.visitLdcInsn(field.getName());
       mv.visitInsn(BuildUtils.zero(field.getTypeName()));
       if (BuildUtils.isPrimitive(field.getTypeName())) {
         TraitFactory.valueOf(mv,field.getTypeName());
@@ -17,6 +22,7 @@
       }
       mv.visitMethodInsn(INVOKEINTERFACE,Type.getInternalName(Map.class),"put","(" + Type.getDescriptor(Object.class) + Type.getDescriptor(Object.class)+ ")"+ Type.getDescriptor(Object.class));
       mv.visitInsn(POP);
+      mv.visitLabel(l0);
     }
   }
   return stackSize;
