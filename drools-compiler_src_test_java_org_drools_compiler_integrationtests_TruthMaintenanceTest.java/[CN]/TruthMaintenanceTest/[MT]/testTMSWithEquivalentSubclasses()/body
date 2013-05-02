@@ -1,0 +1,18 @@
+{
+  String droolsSource="package project_java_rules2_xxx \n" + "import " + HashBrown.class.getCanonicalName() + "; \n"+ "declare Foo id : int @key end \n\n"+ "rule Zero \n"+ "when \n"+ " $s : String( this == \"go\" ) \n"+ "then \n"+ " insertLogical( new HashBrown(1) ); \n"+ "end \n"+ "rule Init \n"+ "when \n"+ "then \n"+ " insertLogical( new HashBrown(7) ); \n"+ "end \n";
+  KnowledgeBuilder kBuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kBuilder.add(new ByteArrayResource(droolsSource.getBytes()),ResourceType.DRL);
+  assertFalse(kBuilder.getErrors().toString(),kBuilder.hasErrors());
+  final RuleBaseConfiguration conf=new RuleBaseConfiguration();
+  conf.setAssertBehaviour(RuleBaseConfiguration.AssertBehaviour.EQUALITY);
+  conf.setSequentialAgenda(RuleBaseConfiguration.SequentialAgenda.SEQUENTIAL);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(conf);
+  kbase.addKnowledgePackages(kBuilder.getKnowledgePackages());
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  session.fireAllRules();
+  FactHandle handle=session.insert(new HashBlack(1));
+  session.insert("go");
+  session.fireAllRules();
+  assertNotNull(((DefaultFactHandle)handle).getEqualityKey());
+  session.dispose();
+}
