@@ -10,17 +10,18 @@
   handle.clearLeftTuples();
   handle.clearRightTuples();
   for (int i=0, length=cachedNodes.length; i < length; i++) {
-    cachedNodes[i].modifyObject(handle,modifyPreviousTuples,context,wm);
+    cachedNodes[i].modifyObject(handle,modifyPreviousTuples,pctx,wm);
     if (i < cachedNodes.length - 1) {
       RightTuple rightTuple=modifyPreviousTuples.peekRightTuple();
       while (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getObjectTypeNode() == cachedNodes[i]) {
         modifyPreviousTuples.removeRightTuple();
         if (unlinkingEnabled) {
+          rightTuple.setPropagationContext(pctx);
           BetaMemory bm=BetaNode.getBetaMemory((BetaNode)rightTuple.getRightTupleSink(),wm);
           BetaNode.doDeleteRightTuple(rightTuple,wm,bm);
         }
  else {
-          ((BetaNode)rightTuple.getRightTupleSink()).retractRightTuple(rightTuple,context,wm);
+          ((BetaNode)rightTuple.getRightTupleSink()).retractRightTuple(rightTuple,pctx,wm);
         }
         rightTuple=modifyPreviousTuples.peekRightTuple();
       }
@@ -43,13 +44,13 @@
         if (unlinkingEnabled) {
           LeftInputAdapterNode liaNode=(LeftInputAdapterNode)leftTuple.getLeftTupleSink().getLeftTupleSource();
           LiaNodeMemory lm=(LiaNodeMemory)wm.getNodeMemory(liaNode);
-          LeftInputAdapterNode.doDeleteObject(leftTuple,context,lm.getSegmentMemory(),wm,liaNode,true,lm);
+          LeftInputAdapterNode.doDeleteObject(leftTuple,pctx,lm.getSegmentMemory(),wm,liaNode,true,lm);
         }
  else {
-          leftTuple.getLeftTupleSink().retractLeftTuple(leftTuple,context,wm);
+          leftTuple.getLeftTupleSink().retractLeftTuple(leftTuple,pctx,wm);
         }
       }
     }
   }
-  modifyPreviousTuples.retractTuples(context,wm);
+  modifyPreviousTuples.retractTuples(pctx,wm);
 }
