@@ -1,0 +1,28 @@
+{
+  LeftTupleList tupleList=executor.getLeftTupleList();
+  for (LeftTuple leftTuple=srcLeftTuples.getDeleteFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    LeftTuple rtnLeftTuple=(LeftTuple)leftTuple.getObject();
+    LeftTuple mainLeftTuple=leftTuple.getFirstChild();
+    if (rtnLeftTuple != null) {
+      RuleTerminalNode rtn=(RuleTerminalNode)rtnLeftTuple.getSink();
+      if (rtnLeftTuple.getMemory() != null) {
+        tupleList.remove(rtnLeftTuple);
+      }
+      rtn.retractLeftTuple(rtnLeftTuple,rtnLeftTuple.getPropagationContext(),wm);
+    }
+    if (mainLeftTuple != null) {
+switch (mainLeftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+        stagedLeftTuples.removeInsert(mainLeftTuple);
+      break;
+case LeftTuple.UPDATE:
+    stagedLeftTuples.removeUpdate(mainLeftTuple);
+  break;
+}
+trgLeftTuples.addDelete(mainLeftTuple);
+}
+leftTuple.clearStaged();
+leftTuple=next;
+}
+}
