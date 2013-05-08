@@ -1,29 +1,24 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LockOnActive.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=loadKnowledgeBase("test_LockOnActive.drl");
+  KieSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  ksession.setGlobal("list",list);
   final Cheese brie12=new Cheese("brie",12);
-  workingMemory.insert(brie12);
-  DefaultAgenda agenda=(DefaultAgenda)workingMemory.getAgenda();
+  ksession.insert(brie12);
+  InternalAgenda agenda=((AgendaImpl)ksession.getAgenda()).getAgenda();
   final AgendaGroup group1=agenda.getAgendaGroup("group1");
   assertEquals(1,group1.size());
-  workingMemory.setFocus("group1");
+  ksession.getAgenda().getAgendaGroup("group1").setFocus();
   final Cheese brie10=new Cheese("brie",10);
-  workingMemory.insert(brie10);
+  ksession.insert(brie10);
   assertEquals(1,group1.size());
   final Cheese cheddar20=new Cheese("cheddar",20);
-  workingMemory.insert(cheddar20);
+  ksession.insert(cheddar20);
   final AgendaGroup group2=agenda.getAgendaGroup("group1");
   assertEquals(1,group2.size());
   final RuleFlowGroupImpl rfg=(RuleFlowGroupImpl)agenda.getRuleFlowGroup("ruleflow2");
   rfg.setActive(true);
   final Cheese cheddar17=new Cheese("cheddar",17);
-  workingMemory.insert(cheddar17);
+  ksession.insert(cheddar17);
   assertEquals(1,group2.size());
 }

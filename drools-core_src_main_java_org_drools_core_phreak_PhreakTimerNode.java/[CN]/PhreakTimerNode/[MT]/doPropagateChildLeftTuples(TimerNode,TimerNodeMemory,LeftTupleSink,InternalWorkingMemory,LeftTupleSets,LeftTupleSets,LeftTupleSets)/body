@@ -1,0 +1,27 @@
+{
+  LeftTupleList leftTuples=tm.getLeftTuples();
+synchronized (leftTuples) {
+    for (LeftTuple leftTuple=leftTuples.getFirst(); leftTuple != null; ) {
+      LeftTuple next=(LeftTuple)leftTuple.getNext();
+      LeftTuple childLeftTuple=leftTuple.getFirstChild();
+      if (childLeftTuple == null) {
+        childLeftTuple=sink.createLeftTuple(leftTuple,sink,leftTuple.getPropagationContext(),true);
+        trgLeftTuples.addInsert(childLeftTuple);
+      }
+ else {
+switch (childLeftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+          stagedLeftTuples.removeInsert(childLeftTuple);
+        break;
+case LeftTuple.UPDATE:
+      stagedLeftTuples.removeUpdate(childLeftTuple);
+    break;
+}
+trgLeftTuples.addUpdate(childLeftTuple);
+}
+leftTuple.clear();
+leftTuple=next;
+}
+leftTuples.clear();
+}
+}

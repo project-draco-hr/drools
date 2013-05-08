@@ -1,0 +1,28 @@
+{
+  TimerService timerService=wm.getTimerService();
+  LeftTupleList leftTuples=tm.getLeftTuples();
+synchronized (leftTuples) {
+    for (LeftTuple leftTuple=srcLeftTuples.getDeleteFirst(); leftTuple != null; ) {
+      LeftTuple next=leftTuple.getStagedNext();
+      DefaultJobHandle jobHandle=(DefaultJobHandle)leftTuple.getObject();
+      timerService.removeJob(jobHandle);
+      if (leftTuple.getMemory() != null) {
+        leftTuples.remove(leftTuple);
+      }
+      LeftTuple childLeftTuple=leftTuple.getFirstChild();
+      if (childLeftTuple != null) {
+switch (childLeftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+          stagedLeftTuples.removeInsert(childLeftTuple);
+        break;
+case LeftTuple.UPDATE:
+      stagedLeftTuples.removeUpdate(childLeftTuple);
+    break;
+}
+trgLeftTuples.addDelete(childLeftTuple);
+}
+leftTuple.clearStaged();
+leftTuple=next;
+}
+}
+}

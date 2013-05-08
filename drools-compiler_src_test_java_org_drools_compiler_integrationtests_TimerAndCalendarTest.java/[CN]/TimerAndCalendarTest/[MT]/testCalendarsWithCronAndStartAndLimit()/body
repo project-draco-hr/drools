@@ -12,18 +12,11 @@
     str+="then \n";
     str+="  list.add(\"fired\"); \n";
     str+="end  \n";
-    KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-    kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
-    if (kbuilder.hasErrors()) {
-      System.out.println(kbuilder.getErrors());
-      assertTrue(kbuilder.hasErrors());
-    }
-    KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-    kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
     KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
     conf.setOption(ClockTypeOption.get("pseudo"));
+    KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+    KieSession ksession=createKnowledgeSession(kbase,conf);
     List list=new ArrayList();
-    StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(conf,null);
     PseudoClockScheduler timeService=(PseudoClockScheduler)ksession.<SessionClock>getSessionClock();
     DateFormat df=new SimpleDateFormat("dd-MMM-yyyy",Locale.UK);
     Date date=df.parse("1-JAN-2010");
@@ -40,14 +33,19 @@
     ksession.fireAllRules();
     assertEquals(0,list.size());
     timeService.advanceTime(oneDay,TimeUnit.SECONDS);
+    ksession.fireAllRules();
     assertEquals(0,list.size());
     timeService.advanceTime(oneDay,TimeUnit.SECONDS);
+    ksession.fireAllRules();
     assertEquals(1,list.size());
     timeService.advanceTime(oneDay,TimeUnit.SECONDS);
+    ksession.fireAllRules();
     assertEquals(2,list.size());
     timeService.advanceTime(oneDay,TimeUnit.SECONDS);
+    ksession.fireAllRules();
     assertEquals(3,list.size());
     timeService.advanceTime(oneDay,TimeUnit.SECONDS);
+    ksession.fireAllRules();
     assertEquals(3,list.size());
   }
   finally {

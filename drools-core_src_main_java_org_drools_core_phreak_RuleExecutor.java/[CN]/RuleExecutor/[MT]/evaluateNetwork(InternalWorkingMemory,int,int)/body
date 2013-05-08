@@ -1,5 +1,6 @@
 {
-  this.networkEvaluator.evaluateNetwork(rmem,wm,this);
+  LinkedList<StackEntry> outerStack=new LinkedList<StackEntry>();
+  this.networkEvaluator.evaluateNetwork(rmem,outerStack,this,wm);
   setDirty(false);
   wm.executeQueuedActions();
   int localFireCount=0;
@@ -9,7 +10,7 @@
     InternalAgenda agenda=(InternalAgenda)wm.getAgenda();
     int salience=rule.getSalience().getValue(null,null,null);
     if (isDeclarativeAgendaEnabled()) {
-      RuleInstanceAgendaItem nextRule=agenda.peekNextRule();
+      RuleAgendaItem nextRule=agenda.peekNextRule();
       if (!isHighestSalience(nextRule,salience)) {
         ((InternalAgenda)wm.getAgenda()).addActivation(ruleAgendaItem);
         return localFireCount;
@@ -33,7 +34,7 @@
       }
       AgendaItem item=(AgendaItem)leftTuple.getObject();
       if (item == null) {
-        item=agenda.createAgendaItem(leftTuple,salience,pctx,rtn,ruleAgendaItem);
+        item=agenda.createAgendaItem(leftTuple,salience,pctx,rtn,ruleAgendaItem,ruleAgendaItem.getAgendaGroup(),ruleAgendaItem.getRuleFlowGroup());
         leftTuple.setObject(item);
       }
  else {
@@ -42,19 +43,23 @@
       if (agenda.getActivationsFilter() != null && !agenda.getActivationsFilter().accept(item,pctx,wm,rtn)) {
         continue;
       }
-      item.setActivated(true);
+      item.setQueued(true);
       agenda.fireActivation(item);
       localFireCount++;
-      RuleInstanceAgendaItem nextRule=agenda.peekNextRule();
+      RuleAgendaItem nextRule=agenda.peekNextRule();
       if (haltRuleFiring(nextRule,fireCount,fireLimit,localFireCount,agenda,salience)) {
         break;
       }
       if (isDirty()) {
         ruleAgendaItem.dequeue();
         setDirty(false);
-        this.networkEvaluator.evaluateNetwork(rmem,wm,this);
+        this.networkEvaluator.evaluateNetwork(rmem,outerStack,this,wm);
       }
       wm.executeQueuedActions();
+      if (tupleList.isEmpty() && !outerStack.isEmpty()) {
+        StackEntry entry=outerStack.removeFirst();
+        this.networkEvaluator.evalStackEntry(entry,outerStack,outerStack,this,wm);
+      }
     }
   }
   return localFireCount;

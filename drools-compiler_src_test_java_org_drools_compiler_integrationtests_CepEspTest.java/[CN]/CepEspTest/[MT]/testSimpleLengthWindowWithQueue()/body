@@ -1,0 +1,33 @@
+{
+  KieBaseConfiguration conf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  conf.setOption(EventProcessingOption.STREAM);
+  final KnowledgeBase kbase=loadKnowledgeBase(conf,"test_CEP_SimpleLengthWindow.drl");
+  KieSessionConfiguration sconf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  sconf.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase,sconf);
+  final List results=new ArrayList();
+  ksession.setGlobal("results",results);
+  EventFactHandle handle1=(EventFactHandle)ksession.insert(new OrderEvent("1","customer A",80));
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  EventFactHandle handle2=(EventFactHandle)ksession.insert(new OrderEvent("2","customer A",70));
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  EventFactHandle handle3=(EventFactHandle)ksession.insert(new OrderEvent("3","customer A",60));
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  EventFactHandle handle4=(EventFactHandle)ksession.insert(new OrderEvent("4","customer A",50));
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  assertEquals(4,results.size());
+  assertEquals(80,((Number)results.get(0)).intValue());
+  assertEquals(75,((Number)results.get(1)).intValue());
+  assertEquals(70,((Number)results.get(2)).intValue());
+  assertEquals(65,((Number)results.get(3)).intValue());
+  EventFactHandle handle5=(EventFactHandle)ksession.insert(new OrderEvent("5","customer A",10));
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  assertEquals(4,results.size());
+  EventFactHandle handle6=(EventFactHandle)ksession.insert(new OrderEvent("6","customer A",90));
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  assertEquals(5,results.size());
+  assertEquals(57,((Number)results.get(4)).intValue());
+}

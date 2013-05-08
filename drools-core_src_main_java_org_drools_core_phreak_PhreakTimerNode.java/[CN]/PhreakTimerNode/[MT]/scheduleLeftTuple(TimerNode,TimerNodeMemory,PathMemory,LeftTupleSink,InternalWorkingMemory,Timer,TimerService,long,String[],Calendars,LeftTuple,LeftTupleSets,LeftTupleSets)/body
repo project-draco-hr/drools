@@ -1,0 +1,30 @@
+{
+  DefaultJobHandle jobHandle=(DefaultJobHandle)leftTuple.getObject();
+  Trigger trigger=timer.createTrigger(timestamp,leftTuple,jobHandle,calendarNames,calendars,timerNode.getDeclarations(),wm);
+  if (trigger.hasNextFireTime().getTime() <= timestamp) {
+    LeftTuple childLeftTuple=leftTuple.getFirstChild();
+    if (childLeftTuple == null) {
+      childLeftTuple=sink.createLeftTuple(leftTuple,sink,leftTuple.getPropagationContext(),true);
+      trgLeftTuples.addInsert(childLeftTuple);
+    }
+ else {
+switch (childLeftTuple.getStagedType()) {
+case LeftTuple.INSERT:
+        stagedLeftTuples.removeInsert(childLeftTuple);
+      break;
+case LeftTuple.UPDATE:
+    stagedLeftTuples.removeUpdate(childLeftTuple);
+  break;
+}
+trgLeftTuples.addUpdate(childLeftTuple);
+}
+trigger.nextFireTime();
+if (trigger.hasNextFireTime().getTime() <= timestamp) {
+throw new IllegalStateException("Trigger.nextFireTime is not increasing");
+}
+}
+TimerNodeJob job=new TimerNodeJob();
+TimerNodeJobContext jobCtx=new TimerNodeJobContext(trigger,leftTuple,tm,sink,pmem,wm);
+jobHandle=(DefaultJobHandle)timerService.scheduleJob(job,jobCtx,trigger);
+leftTuple.setObject(jobHandle);
+}

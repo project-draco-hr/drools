@@ -1,20 +1,20 @@
 {
   final EventSupport eventsupport=(EventSupport)this.workingMemory;
   ((InternalAgendaGroup)agendaGroup).setClearedForRecency(this.workingMemory.getFactHandleFactory().getRecency());
-  List<RuleInstanceAgendaItem> lazyItems=null;
+  List<RuleAgendaItem> lazyItems=null;
   if (this.unlinkingEnabled) {
-    lazyItems=new ArrayList<RuleInstanceAgendaItem>();
+    lazyItems=new ArrayList<RuleAgendaItem>();
   }
   for (  Activation aQueueable : ((InternalAgendaGroup)agendaGroup).getAndClear()) {
     final AgendaItem item=(AgendaItem)aQueueable;
     if (item == null) {
       continue;
     }
-    if (this.unlinkingEnabled && item.isRuleNetworkEvaluatorActivation()) {
-      lazyItems.add((RuleInstanceAgendaItem)item);
+    if (this.unlinkingEnabled && item.isRuleAgendaItem()) {
+      lazyItems.add((RuleAgendaItem)item);
       continue;
     }
-    item.setActivated(false);
+    item.setQueued(false);
     if (item.getActivationGroupNode() != null) {
       item.getActivationGroupNode().getActivationGroup().removeActivation(item);
     }
@@ -25,7 +25,7 @@
     eventsupport.getAgendaEventSupport().fireActivationCancelled(item,this.workingMemory,MatchCancelledCause.CLEAR);
   }
   if (this.unlinkingEnabled) {
-    for (    RuleInstanceAgendaItem lazyItem : lazyItems) {
+    for (    RuleAgendaItem lazyItem : lazyItems) {
       ((InternalAgendaGroup)agendaGroup).add(lazyItem);
     }
   }

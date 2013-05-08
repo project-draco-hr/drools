@@ -1,0 +1,15 @@
+{
+  TimerNodeJobContext timerJobCtx=(TimerNodeJobContext)ctx;
+  Trigger trigger=timerJobCtx.getTrigger();
+  PathMemory pmem=timerJobCtx.getPathMemory();
+  pmem.doLinkRule(timerJobCtx.getWorkingMemory());
+  LeftTupleList leftTuples=timerJobCtx.getTimerNodeMemory().getLeftTuples();
+  LeftTuple lt=timerJobCtx.getLeftTuple();
+  log.trace("Timer Executor {} {}",timerJobCtx.getTrigger(),lt);
+synchronized (leftTuples) {
+    if (lt.getMemory() == null) {
+      leftTuples.add(lt);
+    }
+  }
+  pmem.queueRuleAgendaItem();
+}

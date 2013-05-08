@@ -1,0 +1,45 @@
+{
+  NetworkNode node=entry.getNode();
+  Memory nodeMem=entry.getNodeMem();
+  LeftTupleSets trgTuples=entry.getTrgTuples();
+  if (node.getType() == NodeTypeEnums.QueryElementNode) {
+    trgTuples.addAll(((QueryElementNodeMemory)nodeMem).getResultLeftTuples());
+  }
+  LeftTupleSinkNode sink=entry.getSink();
+  PathMemory rmem=entry.getRmem();
+  SegmentMemory[] smems=entry.getSmems();
+  int smemIndex=entry.getSmemIndex();
+  Set<String> visitedRules=entry.getVisitedRules();
+  boolean processRian;
+  if (NodeTypeEnums.isBetaNode(node)) {
+    processRian=false;
+  }
+ else {
+    processRian=true;
+  }
+  if (entry.isResumeFromNextNode()) {
+    SegmentMemory smem=smems[smemIndex];
+    if (node != smem.getTipNode()) {
+      LeftTupleSink nextSink=sink.getNextLeftTupleSinkNode();
+      if (nextSink == null) {
+        node=sink;
+      }
+ else {
+        node=nextSink;
+      }
+      nodeMem=nodeMem.getNext();
+    }
+ else {
+      SegmentPropagator.propagate(smem,trgTuples,wm);
+      smem=smems[++smemIndex];
+      trgTuples=smem.getStagedLeftTuples();
+      node=(LeftTupleSink)smem.getRootNode();
+      nodeMem=smem.getNodeMemories().getFirst();
+    }
+  }
+  if (log.isTraceEnabled()) {
+    int offset=getOffset(node);
+    log.trace("{} Resume {} {}",indent(offset),node.toString(),trgTuples.toStringSizes());
+  }
+  innerEval(entry.getLiaNode(),rmem,node,nodeMem,smems,smemIndex,trgTuples,wm,stack,outerStack,visitedRules,processRian,executor);
+}

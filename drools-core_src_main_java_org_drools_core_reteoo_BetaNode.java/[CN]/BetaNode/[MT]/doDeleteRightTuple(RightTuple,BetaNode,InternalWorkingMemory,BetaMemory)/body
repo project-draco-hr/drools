@@ -1,0 +1,23 @@
+{
+  RightTupleSets stagedRightTuples=memory.getStagedRightTuples();
+  RightTuple deleteFirst=stagedRightTuples.getDeleteFirst();
+  if (!memory.getDequeu().isEmpty() || (bnode.isStreamMode() && deleteFirst != null && deleteFirst.getPropagationContext() != rightTuple.getPropagationContext())) {
+    memory.getDequeu().add(rightTuple);
+    return;
+  }
+switch (rightTuple.getStagedType()) {
+case LeftTuple.INSERT:
+    stagedRightTuples.removeInsert(rightTuple);
+  break;
+case LeftTuple.UPDATE:
+stagedRightTuples.removeUpdate(rightTuple);
+break;
+}
+if (memory.getAndDecCounter() == 1) {
+memory.unlinkNode(wm);
+}
+ else if (stagedRightTuples.deleteSize() == 0) {
+memory.getSegmentMemory().notifyRuleLinkSegment(wm);
+}
+stagedRightTuples.addDelete(rightTuple);
+}

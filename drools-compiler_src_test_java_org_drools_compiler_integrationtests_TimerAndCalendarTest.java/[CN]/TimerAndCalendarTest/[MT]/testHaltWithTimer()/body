@@ -1,20 +1,15 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Halt_With_Timer.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final StatefulSession workingMemory=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=loadKnowledgeBase("test_Halt_With_Timer.drl");
+  final KieSession ksession=createKnowledgeSession(kbase);
   new Thread(new Runnable(){
     public void run(){
-      workingMemory.fireUntilHalt();
+      ksession.fireUntilHalt();
     }
   }
 ).start();
   Thread.sleep(1000);
-  FactHandle handle=workingMemory.insert("halt");
+  FactHandle handle=(FactHandle)ksession.insert("halt");
   Thread.sleep(2000);
-  assertEquals(2,workingMemory.getFactCount());
-  workingMemory.retract(handle);
+  assertEquals(2,ksession.getFactCount());
+  ksession.retract(handle);
 }

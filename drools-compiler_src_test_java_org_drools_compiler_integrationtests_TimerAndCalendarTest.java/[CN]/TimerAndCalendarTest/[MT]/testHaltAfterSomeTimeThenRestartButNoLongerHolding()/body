@@ -1,15 +1,13 @@
 {
-  String drl="package org.kie.test;" + "global java.util.List list; \n" + "\n"+ "\n"+ "rule FireAtWill\n"+ "timer(int:0 100)\n"+ "when  \n"+ "  eval(true)"+ "  String( this == \"trigger\" )"+ "then \n"+ "  list.add( 0 );\n"+ "end\n"+ "\n"+ "rule ImDone\n"+ "when\n"+ "  String( this == \"halt\" )\n"+ "then\n"+ "  drools.halt();\n"+ "end\n"+ "\n";
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new ByteArrayResource(drl.getBytes()));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final StatefulSession ksession=ruleBase.newStatefulSession();
+  if (CommonTestMethodBase.preak == PhreakOption.DISABLED) {
+    return;
+  }
+  String drl="package org.kie.test;" + "global java.util.List list; \n" + "\n"+ "\n"+ "rule FireAtWill\n"+ "   timer(int:0 100)\n"+ "when  \n"+ "  eval(true)"+ "  String( this == \"trigger\" )"+ "then \n"+ "  list.add( 0 );\n"+ "end\n"+ "\n"+ "rule ImDone\n"+ "when\n"+ "  String( this == \"halt\" )\n"+ "then\n"+ "  drools.halt();\n"+ "end\n"+ "\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(drl);
+  final KieSession ksession=createKnowledgeSession(kbase);
   List list=new ArrayList();
   ksession.setGlobal("list",list);
-  FactHandle handle=ksession.insert("trigger");
+  FactHandle handle=(FactHandle)ksession.insert("trigger");
   new Thread(new Runnable(){
     public void run(){
       ksession.fireUntilHalt();
@@ -17,9 +15,12 @@
   }
 ).start();
   Thread.sleep(150);
+  assertEquals(2,list.size());
+  assertEquals(java.util.Arrays.asList(0,0),list);
   ksession.insert("halt");
   Thread.sleep(200);
   ksession.retract(handle);
+  assertEquals(2,list.size());
   new Thread(new Runnable(){
     public void run(){
       ksession.fireUntilHalt();

@@ -10,11 +10,12 @@ synchronized (queue.queue) {
       if (handle.isValid()) {
         final PropagationContext pctx=new PropagationContextImpl(workingMemory.getNextPropagationIdCounter(),PropagationContext.EXPIRATION,null,null,handle);
         WindowTupleList list=(WindowTupleList)memory.events.get(handle);
-        for (RightTuple tuple=list.getFirstWindowTuple(); tuple != null; tuple=list.getFirstWindowTuple()) {
+        for (WindowTuple tuple=list.getFirstWindowTuple(); tuple != null; ) {
+          WindowTuple next=tuple.getWindowNext();
           tuple.setPropagationContext(pctx);
           tuple.getRightTupleSink().retractRightTuple(tuple,pctx,workingMemory);
           pctx.evaluateActionQueue(workingMemory);
-          tuple.unlinkFromRightParent();
+          tuple=next;
         }
       }
       queue.expiringHandle=null;

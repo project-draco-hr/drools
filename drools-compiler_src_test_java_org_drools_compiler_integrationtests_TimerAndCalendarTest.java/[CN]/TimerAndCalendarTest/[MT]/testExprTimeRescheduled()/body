@@ -1,15 +1,9 @@
 {
-  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   String text="package org.kie.test\n" + "global java.util.List list\n" + "import " + FactA.class.getCanonicalName() + "\n"+ "rule r1 timer (expr: f1.field2, f1.field4)\n"+ "when\n"+ "    f1 : FactA() \n"+ "then\n"+ "    list.add( f1 );\n"+ "end\n"+ "\n";
-  kbuilder.add(ResourceFactory.newByteArrayResource(text.getBytes()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    fail(kbuilder.getErrors().toString());
-  }
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
   KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
   conf.setOption(ClockTypeOption.get("pseudo"));
-  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(conf,null);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(text);
+  KieSession ksession=createKnowledgeSession(kbase,conf);
   PseudoClockScheduler timeService=(PseudoClockScheduler)ksession.<SessionClock>getSessionClock();
   timeService.advanceTime(new Date().getTime(),TimeUnit.MILLISECONDS);
   List list=new ArrayList();
@@ -21,11 +15,17 @@
   FactHandle fh=(FactHandle)ksession.insert(fact1);
   ksession.fireAllRules();
   assertEquals(0,list.size());
-  timeService.advanceTime(2600,TimeUnit.MILLISECONDS);
+  timeService.advanceTime(1100,TimeUnit.MILLISECONDS);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  assertEquals(fact1,list.get(0));
+  timeService.advanceTime(1100,TimeUnit.MILLISECONDS);
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+  assertEquals(fact1,list.get(1));
+  timeService.advanceTime(400,TimeUnit.MILLISECONDS);
   ksession.fireAllRules();
   assertEquals(3,list.size());
-  assertEquals(fact1,list.get(0));
-  assertEquals(fact1,list.get(1));
   assertEquals(fact1,list.get(2));
   list.clear();
   fact1.setField2(300);

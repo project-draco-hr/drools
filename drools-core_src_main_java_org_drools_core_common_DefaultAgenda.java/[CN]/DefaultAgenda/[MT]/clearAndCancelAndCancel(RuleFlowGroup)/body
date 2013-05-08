@@ -1,19 +1,19 @@
 {
   final EventSupport eventsupport=(EventSupport)this.workingMemory;
   ((InternalRuleFlowGroup)ruleFlowGroup).setClearedForRecency(this.workingMemory.getFactHandleFactory().getRecency());
-  List<RuleInstanceAgendaItem> lazyItems=null;
+  List<RuleAgendaItem> lazyItems=null;
   if (this.unlinkingEnabled) {
-    lazyItems=new ArrayList<RuleInstanceAgendaItem>();
+    lazyItems=new ArrayList<RuleAgendaItem>();
   }
   for (Iterator it=ruleFlowGroup.iterator(); it.hasNext(); ) {
     ActivationNode node=(ActivationNode)it.next();
     AgendaItem item=(AgendaItem)node.getActivation();
     if (item != null) {
-      if (this.unlinkingEnabled && item.isRuleNetworkEvaluatorActivation()) {
-        lazyItems.add((RuleInstanceAgendaItem)item);
+      if (this.unlinkingEnabled && item.isRuleAgendaItem()) {
+        lazyItems.add((RuleAgendaItem)item);
         continue;
       }
-      item.setActivated(false);
+      item.setQueued(false);
       item.remove();
       if (item.getActivationGroupNode() != null) {
         item.getActivationGroupNode().getActivationGroup().removeActivation(item);
@@ -27,7 +27,7 @@
     this.workingMemory.queueWorkingMemoryAction(action);
   }
   if (this.unlinkingEnabled) {
-    for (    RuleInstanceAgendaItem lazyItem : lazyItems) {
+    for (    RuleAgendaItem lazyItem : lazyItems) {
       lazyItem.setActivationNode(null);
       ((InternalRuleFlowGroup)ruleFlowGroup).addActivation(lazyItem);
     }

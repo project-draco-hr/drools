@@ -1,27 +1,22 @@
 {
   try {
-    String str="package org.drools.compiler.test\n" + "import " + TimeUnit.class.getName() + "\n"+ "global java.util.List list \n"+ "global "+ CountDownLatch.class.getName()+ " latch\n"+ "rule TimerRule \n"+ "   timer (int:0 50) \n"+ "when \n"+ "then \n"+ "        //forces it to pause until main thread is ready\n"+ "        latch.await(10, TimeUnit.MINUTES); \n"+ "        list.add(list.size()); \n"+ " end";
-    final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-    kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
-    if (kbuilder.hasErrors()) {
-      System.out.println(kbuilder.getErrors().toString());
-      throw new RuntimeException("Unable to compile \"TimerRule.drl\".");
-    }
-    final Collection<KnowledgePackage> pkgs=kbuilder.getKnowledgePackages();
-    final KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-    kbase.addKnowledgePackages(pkgs);
+    String str="package org.drools.compiler.test\n" + "import " + TimeUnit.class.getName() + "\n"+ "global java.util.List list \n"+ "global "+ CountDownLatch.class.getName()+ " latch\n"+ "rule TimerRule \n"+ "   timer (int:100 50) \n"+ "when \n"+ "then \n"+ "        //forces it to pause until main thread is ready\n"+ "        latch.await(10, TimeUnit.MINUTES); \n"+ "        list.add(list.size()); \n"+ " end";
+    KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+    KieSession ksession=createKnowledgeSession(kbase);
     CountDownLatch latch=new CountDownLatch(1);
-    final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
     List list=Collections.synchronizedList(new ArrayList());
     ksession.setGlobal("list",list);
     ksession.setGlobal("latch",latch);
     ksession.fireAllRules();
     Thread.sleep(200);
     kbase.removeRule("org.drools.compiler.test","TimerRule");
+    ksession.fireAllRules();
     latch.countDown();
     Thread.sleep(100);
+    ksession.fireAllRules();
     list.clear();
     Thread.sleep(500);
+    ksession.fireAllRules();
     assertEquals(0,list.size());
     ksession.dispose();
   }

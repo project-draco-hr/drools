@@ -8,16 +8,10 @@
   str+="then \n";
   str+="  list.add(\"fired\"); \n";
   str+="end  \n";
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    fail(kbuilder.getErrors().toString());
-  }
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
   KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
   conf.setOption(ClockTypeOption.get("pseudo"));
-  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(conf,null);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  KieSession ksession=createKnowledgeSession(kbase,conf);
   List list=new ArrayList();
   PseudoClockScheduler timeService=(PseudoClockScheduler)ksession.<SessionClock>getSessionClock();
   timeService.advanceTime(new Date().getTime(),TimeUnit.MILLISECONDS);

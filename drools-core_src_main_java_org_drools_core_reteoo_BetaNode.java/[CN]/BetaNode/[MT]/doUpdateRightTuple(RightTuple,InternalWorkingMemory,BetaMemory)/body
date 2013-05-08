@@ -3,10 +3,11 @@
   if (stagedRightTuples.updateSize() == 0 || stagedRightTuples.insertSize() == 0) {
     memory.getSegmentMemory().notifyRuleLinkSegment(wm);
   }
-  if (!memory.getDequeu().isEmpty()) {
+  RightTuple updateFirst=memory.getStagedRightTuples().getUpdateFirst();
+  if (!memory.getDequeu().isEmpty() || (streamMode && updateFirst != null && updateFirst.getPropagationContext() != rightTuple.getPropagationContext())) {
     memory.getDequeu().add(rightTuple);
   }
- else   if (rightTuple.getStagedType() == LeftTuple.NONE) {
-    stagedRightTuples.addUpdate(rightTuple);
+ else {
+    memory.getStagedRightTuples().addUpdate(rightTuple);
   }
 }

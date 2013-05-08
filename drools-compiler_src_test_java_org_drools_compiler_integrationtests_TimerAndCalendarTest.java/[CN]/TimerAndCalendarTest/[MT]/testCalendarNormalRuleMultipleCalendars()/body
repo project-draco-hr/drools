@@ -9,12 +9,10 @@
   str+="then \n";
   str+="  list.add(\"fired\"); \n";
   str+="end  \n";
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    System.out.println(kbuilder.getErrors());
-    assertTrue(kbuilder.hasErrors());
-  }
+  KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  conf.setOption(ClockTypeOption.get("pseudo"));
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  KieSession ksession=createKnowledgeSession(kbase,conf);
   Calendar calFalse=new Calendar(){
     public boolean isTimeIncluded(    long timestamp){
       return false;
@@ -27,12 +25,7 @@
     }
   }
 ;
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
-  conf.setOption(ClockTypeOption.get("pseudo"));
   List list=new ArrayList();
-  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(conf,null);
   PseudoClockScheduler timeService=(PseudoClockScheduler)ksession.<SessionClock>getSessionClock();
   DateFormat df=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
   Date date=df.parse("2009-01-01T00:00:00.000-0000");

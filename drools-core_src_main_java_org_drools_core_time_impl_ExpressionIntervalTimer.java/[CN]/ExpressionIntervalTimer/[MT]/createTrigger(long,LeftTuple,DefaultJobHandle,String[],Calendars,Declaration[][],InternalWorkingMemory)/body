@@ -1,0 +1,16 @@
+{
+  long timeSinceLastFire=0;
+  Declaration[] delayDeclarations=declrs[0];
+  Declaration[] periodDeclarations=declrs[1];
+  if (jh != null) {
+    IntervalTrigger preTrig=(IntervalTrigger)jh.getTimerJobInstance().getTrigger();
+    if (preTrig.hasNextFireTime() != null) {
+      timeSinceLastFire=timestamp - preTrig.getLastFireTime().getTime();
+    }
+  }
+  long newDelay=(delay != null ? evalDelay(leftTuple,delayDeclarations,wm) : 0) - timeSinceLastFire;
+  if (newDelay < 0) {
+    newDelay=0;
+  }
+  return new IntervalTrigger(timestamp,this.startTime,this.endTime,this.repeatLimit,newDelay,period != null ? evalPeriod(leftTuple,periodDeclarations,wm) : 0,calendarNames,calendars);
+}

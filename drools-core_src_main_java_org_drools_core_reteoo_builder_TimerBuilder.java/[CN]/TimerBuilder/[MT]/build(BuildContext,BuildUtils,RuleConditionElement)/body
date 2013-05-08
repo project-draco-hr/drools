@@ -1,0 +1,26 @@
+{
+  final Timer timer=(Timer)rce;
+  context.pushRuleComponent(timer);
+  Declaration[][] declrs=null;
+  if (timer instanceof ExpressionIntervalTimer) {
+    Map<String,Declaration> outerDeclrs=context.getSubRule().getOuterDeclarations();
+    ExpressionIntervalTimer exprTimer=(ExpressionIntervalTimer)timer;
+    Declaration[] delayDeclrs=exprTimer.getDelayMVELCompilationUnit().getPreviousDeclarations();
+    Declaration[] periodDeclrs=exprTimer.getPeriodMVELCompilationUnit().getPreviousDeclarations();
+    delayDeclrs=Arrays.copyOf(delayDeclrs,delayDeclrs.length);
+    periodDeclrs=Arrays.copyOf(periodDeclrs,delayDeclrs.length);
+    for (int i=0; i < delayDeclrs.length; i++) {
+      delayDeclrs[i]=outerDeclrs.get(delayDeclrs[i].getIdentifier());
+    }
+    Arrays.sort(delayDeclrs,SortDeclarations.instance);
+    for (int i=0; i < periodDeclrs.length; i++) {
+      periodDeclrs[i]=outerDeclrs.get(periodDeclrs[i].getIdentifier());
+    }
+    Arrays.sort(periodDeclrs,SortDeclarations.instance);
+    declrs=new Declaration[][]{delayDeclrs,periodDeclrs};
+  }
+  context.setTupleSource((LeftTupleSource)utils.attachNode(context,context.getComponentFactory().getNodeFactoryService().buildTimerNode(context.getNextId(),timer,context.getRule().getCalendars(),declrs,context.getTupleSource(),context)));
+  context.setAlphaConstraints(null);
+  context.setBetaconstraints(null);
+  context.popRuleComponent();
+}

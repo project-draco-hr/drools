@@ -1,12 +1,12 @@
 {
   Rule rule=item.getRule();
-  item.setActivated(true);
-  if (rule.getAutoFocus()) {
+  item.setQueued(true);
+  if (!item.isRuleAgendaItem() && rule.getAutoFocus()) {
     this.setFocus(item.getPropagationContext(),rule.getAgendaGroup());
   }
   addItemToActivationGroup(item);
   final Timer timer=rule.getTimer();
-  if (timer != null && item instanceof ScheduledAgendaItem) {
+  if (!item.isRuleAgendaItem() && timer != null && item instanceof ScheduledAgendaItem) {
     ScheduledAgendaItem sitem=(ScheduledAgendaItem)item;
     if (sitem.isEnqueued()) {
       this.scheduledActivations.remove(sitem);
@@ -14,14 +14,7 @@
     scheduleItem(sitem,workingMemory);
   }
  else {
-    InternalAgendaGroup agendaGroup=(InternalAgendaGroup)this.getAgendaGroup(rule.getAgendaGroup());
-    if (item.getRule().getRuleFlowGroup() == null) {
-      agendaGroup.add(item);
-    }
- else {
-      InternalRuleFlowGroup rfg=(InternalRuleFlowGroup)this.getRuleFlowGroup(rule.getRuleFlowGroup());
-      rfg.addActivation(item);
-    }
+    addAgendaItemToGroup(item);
   }
   if (notify) {
     if (isFiringActivation) {

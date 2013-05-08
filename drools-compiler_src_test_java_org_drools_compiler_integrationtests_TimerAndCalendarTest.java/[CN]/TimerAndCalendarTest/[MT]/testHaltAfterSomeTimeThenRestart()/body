@@ -1,12 +1,10 @@
 {
+  if (CommonTestMethodBase.preak == PhreakOption.DISABLED) {
+    return;
+  }
   String drl="package org.kie.test;" + "global java.util.List list; \n" + "\n"+ "\n"+ "rule FireAtWill\n"+ "timer(int:0 100)\n"+ "when  \n"+ "then \n"+ "  list.add( 0 );\n"+ "end\n"+ "\n"+ "rule ImDone\n"+ "when\n"+ "  String( this == \"halt\" )\n"+ "then\n"+ "  drools.halt();\n"+ "end\n"+ "\n"+ "rule Hi \n"+ "salience 10 \n"+ "when \n"+ "  String( this == \"trigger\" ) \n"+ "then \n "+ "  list.add( 5 ); \n"+ "end \n"+ "\n"+ "rule Lo \n"+ "salience -5 \n"+ "when \n"+ "  String( this == \"trigger\" ) \n"+ "then \n "+ "  list.add( -5 ); \n"+ "end \n";
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new ByteArrayResource(drl.getBytes()));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final StatefulSession ksession=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(drl);
+  final KieSession ksession=createKnowledgeSession(kbase);
   List list=new ArrayList();
   ksession.setGlobal("list",list);
   new Thread(new Runnable(){
@@ -16,9 +14,11 @@
   }
 ).start();
   Thread.sleep(250);
+  assertEquals(java.util.Arrays.asList(0,0,0),list);
   ksession.insert("halt");
   ksession.insert("trigger");
   Thread.sleep(300);
+  assertEquals(java.util.Arrays.asList(0,0,0),list);
   new Thread(new Runnable(){
     public void run(){
       ksession.fireUntilHalt();
@@ -26,5 +26,5 @@
   }
 ).start();
   Thread.sleep(200);
-  assertEquals(java.util.Arrays.asList(0,0,0,5,0,0,0,-5,0,0),list);
+  assertEquals(java.util.Arrays.asList(0,0,0,5,0,-5,0,0),list);
 }
