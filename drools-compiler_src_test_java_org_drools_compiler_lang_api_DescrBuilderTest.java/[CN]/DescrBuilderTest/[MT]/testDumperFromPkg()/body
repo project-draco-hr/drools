@@ -1,0 +1,22 @@
+{
+  PackageDescr pkg=DescrFactory.newPackage().name("org.test").newRule().name("org.test").lhs().and().or().pattern().id("$x",false).type("Integer").constraint("this > 10").end().pattern().id("$x",false).type("Integer").constraint("this < 20").end().end().pattern().type("Integer").constraint("this == $x").constraint("this == 42").end().end().end().rhs("").end().end().getDescr();
+  String drl=new DrlDumper().dump(pkg);
+  System.out.println(drl);
+  KnowledgeBuilder knowledgeBuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  knowledgeBuilder.add(new ByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  System.err.println(knowledgeBuilder.getErrors());
+  assertFalse(knowledgeBuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(knowledgeBuilder.getKnowledgePackages());
+  StatefulKnowledgeSession knowledgeSession=kbase.newStatefulKnowledgeSession();
+  KnowledgePackage rebuiltPkg=knowledgeBuilder.getKnowledgePackages().iterator().next();
+  org.kie.api.definition.rule.Rule rule=rebuiltPkg.getRules().iterator().next();
+  Rule r=((RuleImpl)rule).getRule();
+  assertEquals(2,r.getLhs().getChildren().size());
+  Iterator<RuleConditionElement> iter=r.getLhs().getChildren().iterator();
+  RuleConditionElement arg1=iter.next();
+  assertTrue(arg1 instanceof GroupElement && ((GroupElement)arg1).getType() == GroupElement.Type.OR);
+  assertEquals(2,((GroupElement)arg1).getChildren().size());
+  RuleConditionElement arg2=iter.next();
+  assertTrue(arg2 instanceof Pattern);
+}
