@@ -143,6 +143,8 @@
     mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(TraitTypeMap.class),"<init>","(" + Type.getDescriptor(Map.class) + ")V");
     mv.visitMethodInsn(INVOKEVIRTUAL,internalCore,"_setTraitMap","(" + Type.getDescriptor(Map.class) + ")V");
     mv.visitLabel(l2);
+    mv.visitVarInsn(ALOAD,0);
+    mv.visitMethodInsn(INVOKESPECIAL,internalProxy,"synchFields","()V");
     mv.visitInsn(RETURN);
     mv.visitMaxs(0,0);
     mv.visitEnd();
@@ -179,6 +181,14 @@
     mv.visitVarInsn(ALOAD,0);
     mv.visitMethodInsn(INVOKEVIRTUAL,internalProxy,"getCore","()" + descrCore);
     mv.visitInsn(ARETURN);
+    mv.visitMaxs(0,0);
+    mv.visitEnd();
+  }
+{
+    mv=cw.visitMethod(ACC_PUBLIC,"isTop","()Z",null,null);
+    mv.visitCode();
+    mv.visitInsn(Thing.class.equals(trait.getDefinedClass()) ? ICONST_1 : ICONST_0);
+    mv.visitInsn(IRETURN);
     mv.visitMaxs(0,0);
     mv.visitEnd();
   }
@@ -262,6 +272,7 @@
     buildMixinMethods(cw,masterName,mixin,mixinClass,mixinGetSet.values());
   }
   buildCommonMethods(cw,masterName,core.getClassName());
+  buildExtendedMethods(cw,trait,core);
   cw.visitEnd();
   return cw.toByteArray();
 }
