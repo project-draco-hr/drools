@@ -1,0 +1,24 @@
+{
+  FieldData fieldData=new FieldData("cheeseType","CheeseType.CHEDDAR");
+  fieldData.setNature(FieldData.TYPE_ENUM);
+  FactData cheeseFactData=new FactData("Cheese","c1",Arrays.<Field>asList(fieldData),false);
+  FieldData cheeseType=new FieldData("cheeseType","CheeseType.CHEDDAR");
+  cheeseType.setNature(FieldData.TYPE_ENUM);
+  FactData f1=new FactData("Cheese","f1",Arrays.<Field>asList(cheeseType),false);
+  Scenario scenario=new Scenario();
+  scenario.getImports().addImport(new Import("org.drools.workbench.models.testscenarios.backend.Cheese"));
+  scenario.getImports().addImport(new Import("org.drools.workbench.models.testscenarios.backend.CheeseType"));
+  scenario.getFixtures().add(cheeseFactData);
+  scenario.getFixtures().add(f1);
+  ScenarioRunner runner=new ScenarioRunner(ksession);
+  VerifyFact vf=new VerifyFact();
+  vf.setName("f1");
+  VerifyField verifyField=new VerifyField("cheeseType","CheeseType.CHEDDAR","==");
+  verifyField.setNature(VerifyField.TYPE_ENUM);
+  vf.setFieldValues(ls(verifyField));
+  scenario.getFixtures().add(vf);
+  runner.run(scenario);
+  for (  VerifyField field : vf.getFieldValues()) {
+    assertTrue(field.getSuccessResult());
+  }
+}

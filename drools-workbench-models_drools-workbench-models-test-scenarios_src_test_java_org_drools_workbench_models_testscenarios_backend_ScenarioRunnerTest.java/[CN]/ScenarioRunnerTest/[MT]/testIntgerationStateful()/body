@@ -1,0 +1,16 @@
+{
+  Scenario sc=new Scenario();
+  sc.getImports().addImport(new Import("org.drools.workbench.models.testscenarios.backend.Cheese"));
+  sc.getFixtures().add(new FactData("Cheese","c1",Arrays.<Field>asList(new FieldData("price","1")),false));
+  ExecutionTrace ex=new ExecutionTrace();
+  sc.getFixtures().add(ex);
+  sc.getFixtures().add(new FactData("Cheese","c2",Arrays.<Field>asList(new FieldData("price","2")),false));
+  sc.getFixtures().add(new VerifyFact("c1",ls(new VerifyField("type","rule1","=="))));
+  ex=new ExecutionTrace();
+  sc.getFixtures().add(ex);
+  sc.getFixtures().add(new VerifyFact("c1",ls(new VerifyField("type","rule2","=="))));
+  KieSession ksession=getKieSession("test_stateful.drl");
+  ScenarioRunner run=new ScenarioRunner(ksession);
+  run.run(sc);
+  assertTrue(sc.wasSuccessful());
+}
