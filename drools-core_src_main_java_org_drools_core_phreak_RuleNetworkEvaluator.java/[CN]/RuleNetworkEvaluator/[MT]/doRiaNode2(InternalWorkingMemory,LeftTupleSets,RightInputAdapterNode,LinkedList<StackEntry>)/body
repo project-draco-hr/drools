@@ -26,11 +26,13 @@
       }
     }
   }
+  RiaNodeMemory rnm=(RiaNodeMemory)wm.getNodeMemory(riaNode);
   length--;
   for (LeftTuple leftTuple=srcTuples.getInsertFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
     PropagationContext pctx=leftTuple.getPropagationContext();
     InternalFactHandle handle=riaNode.createFactHandle(leftTuple,pctx,wm);
+    rnm.getMap().put(leftTuple,handle);
     RightTuple rightTuple=new RightTuple(handle,betaNode);
     leftTuple.setObject(rightTuple);
     rightTuple.setPropagationContext(pctx);
@@ -47,6 +49,7 @@
   }
   for (LeftTuple leftTuple=srcTuples.getDeleteFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
+    rnm.getMap().remove(leftTuple);
     RightTuple rightTuple=(RightTuple)leftTuple.getObject();
     RightTupleSets rightTuples=bm.getStagedRightTuples();
 switch (rightTuple.getStagedType()) {
