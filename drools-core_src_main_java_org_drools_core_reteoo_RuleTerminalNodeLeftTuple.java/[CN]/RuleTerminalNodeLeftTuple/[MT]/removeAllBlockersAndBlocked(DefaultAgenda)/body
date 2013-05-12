@@ -1,0 +1,29 @@
+{
+  if (this.blockers != null) {
+    for (LinkedListEntry<LogicalDependency> node=blockers.getFirst(); node != null; node=node.getNext()) {
+      LogicalDependency dep=node.getObject();
+      dep.getJustifier().getBlocked().remove(dep);
+    }
+  }
+  this.blockers=null;
+  if (this.blocked != null) {
+    for (LogicalDependency dep=blocked.getFirst(); dep != null; ) {
+      LogicalDependency tmp=dep.getNext();
+      removeBlocked(dep);
+      RuleTerminalNodeLeftTuple justified=(RuleTerminalNodeLeftTuple)dep.getJustified();
+      if (justified.getBlockers().isEmpty()) {
+        if (ruleAgendaItem == null) {
+          agenda.getStageActivationsGroup().addActivation(justified);
+        }
+ else {
+          if (!ruleAgendaItem.isQueued()) {
+            agenda.addActivation(ruleAgendaItem);
+          }
+          ruleAgendaItem.getRuleExecutor().getLeftTupleList().add(justified.getTuple());
+        }
+      }
+      dep=tmp;
+    }
+  }
+  this.blocked=null;
+}
