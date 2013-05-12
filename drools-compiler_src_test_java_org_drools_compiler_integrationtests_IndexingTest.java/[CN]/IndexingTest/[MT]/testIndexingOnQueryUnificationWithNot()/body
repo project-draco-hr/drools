@@ -53,20 +53,22 @@
   Map<String,InternalFactHandle> peeps=new HashMap<String,InternalFactHandle>();
   Person p=null;
   InternalFactHandle fh=null;
-  for (int i=0; i < 100; i++) {
+  int max=100;
+  for (int i=0; i < max; i++) {
     p=new Person("x" + i,100);
     fh=(InternalFactHandle)wm.insert(p);
     wm.fireAllRules();
     peeps.put(p.getName(),fh);
   }
-  for (int i=0; i < 99; i++) {
+  for (int i=0; i < (max - 1); i++) {
     fh=peeps.get("x" + i);
     p=(Person)fh.getObject();
     p.setAge(90);
     wm.update(fh,p);
+    wm.fireAllRules();
     assertEquals("i=" + i,1,map.get("inserted").intValue());
   }
-  for (int i=0; i < 99; i++) {
+  for (int i=0; i < (max - 1); i++) {
     fh=peeps.get("x" + i);
     p=(Person)fh.getObject();
     p.setAge(102);
@@ -74,7 +76,7 @@
     wm.fireAllRules();
     assertEquals("i=" + i,1,map.get("inserted").intValue());
   }
-  for (int i=98; i >= 0; i--) {
+  for (int i=(max - 2); i >= 0; i--) {
     fh=peeps.get("x" + i);
     p=(Person)fh.getObject();
     p.setAge(90);
@@ -82,7 +84,7 @@
     wm.fireAllRules();
     assertEquals("i=" + i,1,map.get("inserted").intValue());
   }
-  fh=peeps.get("x99");
+  fh=peeps.get("x" + (max - 1));
   p=(Person)fh.getObject();
   p.setAge(90);
   wm.update(fh,p);
