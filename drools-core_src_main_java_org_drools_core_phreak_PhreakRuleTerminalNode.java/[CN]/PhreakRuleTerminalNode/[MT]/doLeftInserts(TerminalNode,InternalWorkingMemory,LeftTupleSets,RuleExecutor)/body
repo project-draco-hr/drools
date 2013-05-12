@@ -9,9 +9,20 @@
   LeftTupleList tupleList=executor.getLeftTupleList();
   for (LeftTuple leftTuple=srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
+    if (rtnNode.getRule().isLockOnActive() && leftTuple.getPropagationContext().getType() != org.kie.api.runtime.rule.PropagationContext.RULE_ADDITION) {
+      PropagationContext pctx=leftTuple.getPropagationContext();
+      pctx=RuleTerminalNode.findMostRecentPropagationContext(leftTuple,pctx);
+      long handleRecency=((InternalFactHandle)pctx.getFactHandle()).getRecency();
+      InternalAgendaGroup agendaGroup=executor.getRuleAgendaItem().getAgendaGroup();
+      if (blockedByLockOnActive(rtnNode.getRule(),agenda,pctx,handleRecency,agendaGroup)) {
+        leftTuple.clearStaged();
+        leftTuple=next;
+        continue;
+      }
+    }
     tupleList.add(leftTuple);
     leftTuple.increaseActivationCountForEvents();
-    if (declarativeAgendaEnabled) {
+    if (!rtnNode.isFireDirect() && declarativeAgendaEnabled) {
       PropagationContext pctx=leftTuple.getPropagationContext();
       AgendaItem item=agenda.createAgendaItem(leftTuple,salience,pctx,rtnNode,agendaItem,agendaItem.getAgendaGroup(),agendaItem.getRuleFlowGroup());
       item.setQueued(true);

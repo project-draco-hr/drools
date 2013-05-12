@@ -13,9 +13,20 @@
       }
     }
     if (reAdd && leftTuple.getMemory() == null) {
+      if (rtnNode.getRule().isLockOnActive() && leftTuple.getPropagationContext().getType() != org.kie.api.runtime.rule.PropagationContext.RULE_ADDITION) {
+        PropagationContext pctx=leftTuple.getPropagationContext();
+        pctx=RuleTerminalNode.findMostRecentPropagationContext(leftTuple,pctx);
+        long handleRecency=((InternalFactHandle)pctx.getFactHandle()).getRecency();
+        InternalAgendaGroup agendaGroup=executor.getRuleAgendaItem().getAgendaGroup();
+        if (blockedByLockOnActive(rtnNode.getRule(),agenda,pctx,handleRecency,agendaGroup)) {
+          leftTuple.clearStaged();
+          leftTuple=next;
+          continue;
+        }
+      }
       tupleList.add(leftTuple);
     }
-    if (declarativeAgendaEnabled) {
+    if (!rtnNode.isFireDirect() && declarativeAgendaEnabled) {
       agenda.modifyActivation(item,item.isQueued());
     }
     leftTuple.clearStaged();

@@ -1,42 +1,27 @@
 {
   String str="package BROKEN_TEST;\n" + "import " + Holder.class.getCanonicalName() + ";\n"+ "rule \"_12\"\n"+ "    \n"+ "    salience 3\n"+ "    activation-group \"BROKEN\"\n"+ "    when\n"+ "        $a : Holder(value in (0))\n"+ "    then\n"+ "        System.out.println(\"setting 0\");\n"+ "        $a.setOutcome(\"setting 0\");\n"+ "end\n"+ "\n"+ "rule \"_13\"\n"+ "    \n"+ "    salience 2\n"+ "    activation-group \"BROKEN\"\n"+ "    when\n"+ "        $a : Holder(value in (1))\n"+ "    then\n"+ "        System.out.println(\"setting 1\");\n"+ "        $a.setOutcome(\"setting 1\");\n"+ "end\n"+ "\n"+ "rule \"_22\"\n"+ "    \n"+ "    salience 1\n"+ "    activation-group \"BROKEN\"\n"+ "    when\n"+ "        $a : Holder(value == null)\n"+ "    then\n"+ "        System.out.println(\"setting null\");\n"+ "        $a.setOutcome(\"setting null\");\n"+ "end\n"+ "\n"+ "";
-  KnowledgeBuilder kBuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kBuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
-  if (kBuilder.hasErrors()) {
-    System.err.println("Errors");
-    KnowledgeBuilderErrors errors=kBuilder.getErrors();
-    for (    KnowledgeBuilderError kbe : errors) {
-      System.err.println(kbe.getMessage());
-      for (      int errLine : kbe.getLines()) {
-        System.err.println(errLine);
-      }
-    }
-    System.exit(1);
-  }
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  Collection<KnowledgePackage> knowledgePackages=kBuilder.getKnowledgePackages();
-  kbase.addKnowledgePackages(knowledgePackages);
-  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  KieSession ksession=createKnowledgeSession(kbase);
   Holder inrec=new Holder(1);
   System.out.println("Holds: " + inrec.getValue());
-  session.insert(inrec);
-  session.fireAllRules();
-  Assert.assertEquals(1,session.getFactHandles().size());
+  ksession.insert(inrec);
+  ksession.fireAllRules();
+  Assert.assertEquals(1,ksession.getFactHandles().size());
   Assert.assertEquals("setting 1",inrec.getOutcome());
-  session.dispose();
-  session=createKnowledgeSession(kbase);
+  ksession.dispose();
+  ksession=createKnowledgeSession(kbase);
   inrec=new Holder(null);
   System.out.println("Holds: " + inrec.getValue());
-  session.insert(inrec);
-  session.fireAllRules();
-  Assert.assertEquals(1,session.getFactHandles().size());
+  ksession.insert(inrec);
+  ksession.fireAllRules();
+  Assert.assertEquals(1,ksession.getFactHandles().size());
   Assert.assertEquals("setting null",inrec.getOutcome());
-  session.dispose();
-  session=createKnowledgeSession(kbase);
+  ksession.dispose();
+  ksession=createKnowledgeSession(kbase);
   inrec=new Holder(0);
   System.out.println("Holds: " + inrec.getValue());
-  session.insert(inrec);
-  session.fireAllRules();
-  Assert.assertEquals(1,session.getFactHandles().size());
+  ksession.insert(inrec);
+  ksession.fireAllRules();
+  Assert.assertEquals(1,ksession.getFactHandles().size());
   Assert.assertEquals("setting 0",inrec.getOutcome());
 }
