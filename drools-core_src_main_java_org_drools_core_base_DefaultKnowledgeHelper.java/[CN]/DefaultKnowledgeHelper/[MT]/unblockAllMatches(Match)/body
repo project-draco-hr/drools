@@ -13,10 +13,17 @@
       ((DefaultAgenda)workingMemory.getAgenda()).getStageActivationsGroup().addActivation(targetMatch);
     }
  else {
-      if (!ruleAgendaItem.isQueued()) {
-        ((InternalAgenda)workingMemory.getAgenda()).addActivation(ruleAgendaItem);
+      int salienceInt=0;
+      Salience salience=ruleAgendaItem.getRule().getSalience();
+      RuleTerminalNodeLeftTuple rtnLeftTuple=(RuleTerminalNodeLeftTuple)targetMatch;
+      if (!salience.isDynamic()) {
+        salienceInt=ruleAgendaItem.getRule().getSalience().getValue();
       }
-      targetMatch.getRuleAgendaItem().getRuleExecutor().getLeftTupleList().add(targetMatch.getTuple());
+ else {
+        salienceInt=salience.getValue(new DefaultKnowledgeHelper(rtnLeftTuple,getWorkingMemory()),null,getWorkingMemory());
+      }
+      ((RuleTerminalNodeLeftTuple)targetMatch).update(salienceInt,activation.getPropagationContext());
+      targetMatch.getRuleAgendaItem().getRuleExecutor().addLeftTuple(targetMatch.getTuple());
     }
   }
 }

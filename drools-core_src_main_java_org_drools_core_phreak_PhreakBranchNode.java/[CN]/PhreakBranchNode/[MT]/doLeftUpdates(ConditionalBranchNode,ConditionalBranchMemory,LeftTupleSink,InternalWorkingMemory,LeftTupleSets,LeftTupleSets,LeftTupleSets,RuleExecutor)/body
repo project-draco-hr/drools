@@ -1,6 +1,12 @@
 {
   ConditionalBranchEvaluator branchEvaluator=branchNode.getBranchEvaluator();
-  LeftTupleList tupleList=executor.getLeftTupleList();
+  RuleAgendaItem ruleAgendaItem=executor.getRuleAgendaItem();
+  int salienceInt=0;
+  Salience salience=ruleAgendaItem.getRule().getSalience();
+  if (!salience.isDynamic()) {
+    salienceInt=ruleAgendaItem.getRule().getSalience().getValue();
+    salience=null;
+  }
   for (LeftTuple leftTuple=srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
     LeftTuple rtnLeftTuple=(LeftTuple)leftTuple.getObject();
@@ -19,30 +25,25 @@
     if (oldRtn != null) {
       if (newRtn == null) {
         if (rtnLeftTuple.getMemory() != null) {
-          tupleList.remove(rtnLeftTuple);
+          executor.removeLeftTuple(rtnLeftTuple);
         }
         oldRtn.retractLeftTuple(rtnLeftTuple,rtnLeftTuple.getPropagationContext(),wm);
       }
  else       if (newRtn == oldRtn) {
-        if (rtnLeftTuple.getMemory() != null) {
-          tupleList.remove(rtnLeftTuple);
-        }
-        tupleList.add(rtnLeftTuple);
+        PhreakRuleTerminalNode.doLeftTupleUpdate(newRtn,executor,(InternalAgenda)wm.getAgenda(),salienceInt,salience,leftTuple,wm);
       }
  else {
         if (rtnLeftTuple.getMemory() != null) {
-          tupleList.remove(rtnLeftTuple);
+          executor.removeLeftTuple(rtnLeftTuple);
         }
         oldRtn.retractLeftTuple(rtnLeftTuple,rtnLeftTuple.getPropagationContext(),wm);
         rtnLeftTuple=newRtn.createLeftTuple(leftTuple,newRtn,leftTuple.getPropagationContext(),true);
-        leftTuple.setObject(rtnLeftTuple);
-        tupleList.add(rtnLeftTuple);
+        PhreakRuleTerminalNode.doLeftTupleInsert(newRtn,executor,(InternalAgenda)wm.getAgenda(),executor.getRuleAgendaItem(),salienceInt,salience,rtnLeftTuple,wm);
       }
     }
  else     if (newRtn != null) {
       rtnLeftTuple=newRtn.createLeftTuple(leftTuple,newRtn,leftTuple.getPropagationContext(),true);
-      leftTuple.setObject(rtnLeftTuple);
-      tupleList.add(rtnLeftTuple);
+      PhreakRuleTerminalNode.doLeftTupleInsert(newRtn,executor,(InternalAgenda)wm.getAgenda(),executor.getRuleAgendaItem(),salienceInt,salience,rtnLeftTuple,wm);
     }
     if (mainLeftTuple != null) {
 switch (mainLeftTuple.getStagedType()) {

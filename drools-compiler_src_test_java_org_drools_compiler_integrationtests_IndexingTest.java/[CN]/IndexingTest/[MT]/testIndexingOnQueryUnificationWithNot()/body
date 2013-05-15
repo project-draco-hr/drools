@@ -49,17 +49,23 @@
 );
   System.out.println("inserted: " + map.get("inserted"));
   System.out.println("deleted: " + map.get("deleted"));
-  System.out.println("inserted: " + map.get("updated"));
+  System.out.println("updated: " + map.get("updated"));
   Map<String,InternalFactHandle> peeps=new HashMap<String,InternalFactHandle>();
   Person p=null;
   InternalFactHandle fh=null;
-  int max=100;
+  int max=3;
+  assertEquals(1,map.get("inserted").intValue());
+  assertEquals(0,map.get("deleted").intValue());
+  assertEquals(0,map.get("updated").intValue());
   for (int i=0; i < max; i++) {
     p=new Person("x" + i,100);
     fh=(InternalFactHandle)wm.insert(p);
     wm.fireAllRules();
     peeps.put(p.getName(),fh);
   }
+  assertEquals(1,map.get("inserted").intValue());
+  assertEquals(1,map.get("deleted").intValue());
+  assertEquals(0,map.get("updated").intValue());
   for (int i=0; i < (max - 1); i++) {
     fh=peeps.get("x" + i);
     p=(Person)fh.getObject();
@@ -68,6 +74,9 @@
     wm.fireAllRules();
     assertEquals("i=" + i,1,map.get("inserted").intValue());
   }
+  assertEquals(1,map.get("inserted").intValue());
+  assertEquals(1,map.get("deleted").intValue());
+  assertEquals(0,map.get("updated").intValue());
   for (int i=0; i < (max - 1); i++) {
     fh=peeps.get("x" + i);
     p=(Person)fh.getObject();
@@ -76,6 +85,9 @@
     wm.fireAllRules();
     assertEquals("i=" + i,1,map.get("inserted").intValue());
   }
+  assertEquals(1,map.get("inserted").intValue());
+  assertEquals(1,map.get("deleted").intValue());
+  assertEquals(0,map.get("updated").intValue());
   for (int i=(max - 2); i >= 0; i--) {
     fh=peeps.get("x" + i);
     p=(Person)fh.getObject();

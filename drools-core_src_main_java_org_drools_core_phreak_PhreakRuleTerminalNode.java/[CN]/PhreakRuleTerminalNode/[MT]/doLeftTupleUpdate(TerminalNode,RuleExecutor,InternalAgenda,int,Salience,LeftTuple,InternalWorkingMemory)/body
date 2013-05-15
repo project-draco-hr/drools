@@ -1,0 +1,39 @@
+{
+  PropagationContext pctx=leftTuple.getPropagationContext();
+  pctx=RuleTerminalNode.findMostRecentPropagationContext(leftTuple,pctx);
+  boolean blocked=false;
+  RuleTerminalNodeLeftTuple rtnLeftTuple=(RuleTerminalNodeLeftTuple)leftTuple;
+  if (executor.isDeclarativeAgendaEnabled()) {
+    if (rtnLeftTuple.getBlockers() != null && !rtnLeftTuple.getBlockers().isEmpty()) {
+      blocked=true;
+    }
+  }
+  if (salience != null) {
+    salienceInt=salience.getValue(new DefaultKnowledgeHelper(rtnLeftTuple,wm),rtnNode.getRule(),wm);
+  }
+  if (!blocked) {
+    boolean addToExector=true;
+    if (rtnNode.getRule().isLockOnActive() && pctx.getType() != org.kie.api.runtime.rule.PropagationContext.RULE_ADDITION) {
+      long handleRecency=((InternalFactHandle)pctx.getFactHandle()).getRecency();
+      InternalAgendaGroup agendaGroup=executor.getRuleAgendaItem().getAgendaGroup();
+      if (blockedByLockOnActive(rtnNode.getRule(),agenda,pctx,handleRecency,agendaGroup)) {
+        addToExector=false;
+      }
+    }
+    if (addToExector) {
+      if (rtnLeftTuple.isQueued()) {
+        executor.updateLeftTuple(rtnLeftTuple,salienceInt,pctx);
+      }
+ else {
+        rtnLeftTuple.update(salienceInt,pctx);
+        executor.addLeftTuple(leftTuple);
+      }
+    }
+  }
+ else {
+    rtnLeftTuple.update(salienceInt,pctx);
+  }
+  if (!rtnNode.isFireDirect() && executor.isDeclarativeAgendaEnabled()) {
+    agenda.modifyActivation(rtnLeftTuple,rtnLeftTuple.isQueued());
+  }
+}

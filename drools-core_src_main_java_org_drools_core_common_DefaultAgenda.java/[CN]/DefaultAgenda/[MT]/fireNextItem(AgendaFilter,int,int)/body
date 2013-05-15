@@ -3,13 +3,18 @@
   int localFireCount=0;
   try {
     do {
+      while (!eager.isEmpty()) {
+        RuleAgendaItem item=eager.removeFirst();
+        log.trace("Eager Evaluating rule {}.",item.getRule().getName());
+        item.getRuleExecutor().evaluateNetwork(this.workingMemory);
+      }
       this.workingMemory.prepareToFireActivation();
       tryagain=false;
       final InternalAgendaGroup group=(InternalAgendaGroup)getNextFocus();
       if (group != null) {
         if (this.unlinkingEnabled) {
           final RuleAgendaItem item=(RuleAgendaItem)group.peekNext();
-          localFireCount=item.getRuleExecutor().evaluateNetwork(this.workingMemory,filter,fireCount,fireLimit);
+          localFireCount=item.getRuleExecutor().evaluateNetworkAndFire(this.workingMemory,filter,fireCount,fireLimit);
           if (localFireCount == 0) {
             tryagain=true;
             this.workingMemory.executeQueuedActions();

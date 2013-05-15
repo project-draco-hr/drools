@@ -1,0 +1,72 @@
+{
+  LinkedList<StackEntry> outerStack=new LinkedList<StackEntry>();
+  if (dirty) {
+    this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
+    setDirty(false);
+    wm.executeQueuedActions();
+  }
+  int localFireCount=0;
+  if (!tupleList.isEmpty()) {
+    RuleTerminalNode rtn=(RuleTerminalNode)pmem.getNetworkNode();
+    InternalAgenda agenda=(InternalAgenda)wm.getAgenda();
+    int salience=ruleAgendaItem.getSalience();
+    if (isDeclarativeAgendaEnabled()) {
+      RuleAgendaItem nextRule=agenda.peekNextRule();
+      if (!isHighestSalience(nextRule,salience)) {
+        return localFireCount;
+      }
+    }
+    while (!tupleList.isEmpty()) {
+      LeftTuple leftTuple;
+      if (queue != null) {
+        leftTuple=(LeftTuple)queue.dequeue();
+        tupleList.remove(leftTuple);
+      }
+ else {
+        leftTuple=tupleList.removeFirst();
+      }
+      rtn=(RuleTerminalNode)leftTuple.getSink();
+      Rule rule=rtn.getRule();
+      PropagationContext pctx=leftTuple.getPropagationContext();
+      pctx=RuleTerminalNode.findMostRecentPropagationContext(leftTuple,pctx);
+      if (isNotEffective(wm,rtn,rule,leftTuple,pctx)) {
+        continue;
+      }
+      AgendaItem item=(AgendaItem)leftTuple;
+      if (agenda.getActivationsFilter() != null && !agenda.getActivationsFilter().accept(item,pctx,wm,rtn)) {
+        continue;
+      }
+      if (filter == null || filter.accept(item)) {
+        agenda.fireActivation(item);
+        localFireCount++;
+      }
+      salience=ruleAgendaItem.getSalience();
+      if (queue != null && !queue.isEmpty() && salience != queue.peek().getSalience()) {
+        ruleAgendaItem.dequeue();
+        ruleAgendaItem.setSalience(queue.peek().getSalience());
+        ruleAgendaItem.getAgendaGroup().add(ruleAgendaItem);
+        salience=ruleAgendaItem.getSalience();
+      }
+      RuleAgendaItem nextRule=agenda.peekNextRule();
+      if (haltRuleFiring(nextRule,fireCount,fireLimit,localFireCount,agenda,salience)) {
+        break;
+      }
+      if (isDirty()) {
+        setDirty(false);
+        this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
+      }
+      wm.executeQueuedActions();
+      if (tupleList.isEmpty() && !outerStack.isEmpty()) {
+        StackEntry entry=outerStack.removeFirst();
+        this.networkEvaluator.evalStackEntry(entry,outerStack,outerStack,this,wm);
+      }
+    }
+  }
+  if (!dirty && tupleList.isEmpty()) {
+    ruleAgendaItem.remove();
+    if (ruleAgendaItem.getRule().isEager()) {
+      ((InternalAgenda)wm.getAgenda()).removeEagerRuleAgendaItem(ruleAgendaItem);
+    }
+  }
+  return localFireCount;
+}

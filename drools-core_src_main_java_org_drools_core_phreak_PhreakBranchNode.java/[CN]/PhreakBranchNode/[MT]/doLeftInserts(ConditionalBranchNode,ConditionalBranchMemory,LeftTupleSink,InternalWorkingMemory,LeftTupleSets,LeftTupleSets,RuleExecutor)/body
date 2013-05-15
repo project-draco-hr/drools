@@ -1,6 +1,12 @@
 {
   ConditionalBranchEvaluator branchEvaluator=branchNode.getBranchEvaluator();
-  LeftTupleList tupleList=executor.getLeftTupleList();
+  RuleAgendaItem ruleAgendaItem=executor.getRuleAgendaItem();
+  int salienceInt=0;
+  Salience salience=ruleAgendaItem.getRule().getSalience();
+  if (!salience.isDynamic()) {
+    salienceInt=ruleAgendaItem.getRule().getSalience().getValue();
+    salience=null;
+  }
   for (LeftTuple leftTuple=srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
     boolean breaking=false;
@@ -9,8 +15,7 @@
     if (conditionalExecution != null) {
       RuleTerminalNode rtn=(RuleTerminalNode)conditionalExecution.getSink().getFirstLeftTupleSink();
       LeftTuple branchedLeftTuple=rtn.createLeftTuple(leftTuple,rtn,leftTuple.getPropagationContext(),useLeftMemory);
-      leftTuple.setObject(branchedLeftTuple);
-      tupleList.add(branchedLeftTuple);
+      PhreakRuleTerminalNode.doLeftTupleInsert(rtn,executor,(InternalAgenda)wm.getAgenda(),executor.getRuleAgendaItem(),salienceInt,salience,branchedLeftTuple,wm);
       breaking=conditionalExecution.isBreaking();
     }
     if (!breaking) {

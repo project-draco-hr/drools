@@ -1,13 +1,7 @@
 {
-  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   String text="package org.kie.test\n" + "global java.util.List list\n" + "import " + FactA.class.getCanonicalName() + "\n"+ "import "+ Foo.class.getCanonicalName()+ "\n"+ "import "+ Pet.class.getCanonicalName()+ "\n"+ "rule r1 salience (f1.field2)\n"+ "when\n"+ "    foo: Foo()\n"+ "    ( Pet()  and f1 : FactA( field1 == 'f1') ) or \n"+ "    f1 : FactA(field1 == 'f2') \n"+ "then\n"+ "    list.add( f1 );\n"+ "    foo.setId( 'xxx' );\n"+ "end\n"+ "\n";
-  kbuilder.add(ResourceFactory.newByteArrayResource(text.getBytes()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    fail(kbuilder.getErrors().toString());
-  }
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(text);
+  KieSession ksession=createKnowledgeSession(kbase);
   List list=new ArrayList();
   ksession.setGlobal("list",list);
   ksession.insert(new Foo(null,null));
@@ -25,6 +19,7 @@
   ksession.insert(fact2);
   ksession.insert(fact3);
   ksession.fireAllRules();
+  System.out.println(list);
   assertEquals(3,list.size());
   assertEquals(fact2,list.get(0));
   assertEquals(fact3,list.get(1));

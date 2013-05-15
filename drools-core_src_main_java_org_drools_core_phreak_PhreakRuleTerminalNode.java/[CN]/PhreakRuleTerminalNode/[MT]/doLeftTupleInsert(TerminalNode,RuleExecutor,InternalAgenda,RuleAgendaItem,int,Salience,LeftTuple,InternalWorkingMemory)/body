@@ -1,0 +1,22 @@
+{
+  PropagationContext pctx=leftTuple.getPropagationContext();
+  pctx=RuleTerminalNode.findMostRecentPropagationContext(leftTuple,pctx);
+  if (salience != null) {
+    salienceInt=salience.getValue(new DefaultKnowledgeHelper((AgendaItem)leftTuple,wm),rtnNode.getRule(),wm);
+  }
+  RuleTerminalNodeLeftTuple rtnLeftTuple=(RuleTerminalNodeLeftTuple)leftTuple;
+  rtnLeftTuple.init(agenda.getNextActivationCounter(),salienceInt,pctx,ruleAgendaItem,ruleAgendaItem.getAgendaGroup(),ruleAgendaItem.getRuleFlowGroup());
+  rtnLeftTuple.setObject(rtnLeftTuple);
+  if (rtnNode.getRule().isLockOnActive() && leftTuple.getPropagationContext().getType() != org.kie.api.runtime.rule.PropagationContext.RULE_ADDITION) {
+    long handleRecency=((InternalFactHandle)pctx.getFactHandle()).getRecency();
+    InternalAgendaGroup agendaGroup=executor.getRuleAgendaItem().getAgendaGroup();
+    if (blockedByLockOnActive(rtnNode.getRule(),agenda,pctx,handleRecency,agendaGroup)) {
+      return;
+    }
+  }
+  executor.addLeftTuple(leftTuple);
+  leftTuple.increaseActivationCountForEvents();
+  if (!rtnNode.isFireDirect() && executor.isDeclarativeAgendaEnabled()) {
+    agenda.insertAndStageActivation(rtnLeftTuple);
+  }
+}

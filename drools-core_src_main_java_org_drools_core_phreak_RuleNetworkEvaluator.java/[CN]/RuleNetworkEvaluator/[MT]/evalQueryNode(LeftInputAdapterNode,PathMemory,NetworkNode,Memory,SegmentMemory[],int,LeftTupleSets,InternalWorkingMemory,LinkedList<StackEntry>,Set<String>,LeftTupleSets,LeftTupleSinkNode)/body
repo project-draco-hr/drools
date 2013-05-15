@@ -10,15 +10,15 @@
   visitedRules.add(qnode.getQueryElement().getQueryName());
   trgTuples.addAll(qmem.getResultLeftTuples());
   if (!srcTuples.isEmpty()) {
-    StackEntry stackEntry=new StackEntry(liaNode,node,sink,rmem,nodeMem,smems,smemIndex,trgTuples,visitedRules,true);
+    StackEntry stackEntry=new StackEntry(liaNode,node,sink,pmem,nodeMem,smems,smemIndex,trgTuples,visitedRules,true);
     stack.add(stackEntry);
     pQueryNode.doNode(qnode,(QueryElementNodeMemory)nodeMem,stackEntry,sink,wm,srcTuples);
     SegmentMemory qsmem=((QueryElementNodeMemory)nodeMem).getQuerySegmentMemory();
-    List<PathMemory> qrmems=qsmem.getPathMemories();
-    for (int i=0; i < qrmems.size(); i++) {
-      PathMemory qrmem=qrmems.get(i);
-      rmem=qrmem;
-      smems=qrmem.getSegmentMemories();
+    List<PathMemory> qpmems=qsmem.getPathMemories();
+    for (int i=0; i < qpmems.size(); i++) {
+      PathMemory qpmem=qpmems.get(i);
+      pmem=qpmem;
+      smems=qpmem.getSegmentMemories();
       smemIndex=0;
       SegmentMemory smem=smems[smemIndex];
       liaNode=(LeftInputAdapterNode)smem.getRootNode();
@@ -32,7 +32,7 @@
         nodeMem=smem.getNodeMemories().getFirst().getNext();
       }
       trgTuples=smem.getStagedLeftTuples();
-      stackEntry=new StackEntry(liaNode,node,null,rmem,nodeMem,smems,smemIndex,trgTuples,visitedRules,false);
+      stackEntry=new StackEntry(liaNode,node,null,pmem,nodeMem,smems,smemIndex,trgTuples,visitedRules,false);
       if (log.isTraceEnabled()) {
         int offset=getOffset(stackEntry.getNode());
         log.trace("{} ORQueue branch={} {} {}",indent(offset),i,stackEntry.getNode().toString(),trgTuples.toStringSizes());

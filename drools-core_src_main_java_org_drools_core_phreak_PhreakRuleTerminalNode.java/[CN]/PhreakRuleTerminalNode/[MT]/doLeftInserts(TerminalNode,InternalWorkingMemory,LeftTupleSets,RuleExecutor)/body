@@ -1,34 +1,18 @@
 {
-  boolean declarativeAgendaEnabled=executor.isDeclarativeAgendaEnabled();
   InternalAgenda agenda=(InternalAgenda)wm.getAgenda();
-  int salience=0;
-  if (declarativeAgendaEnabled && rtnNode.getType() == NodeTypeEnums.RuleTerminalNode) {
-    salience=rtnNode.getRule().getSalience().getValue(null,null,null);
+  RuleAgendaItem ruleAgendaItem=executor.getRuleAgendaItem();
+  int salienceInt=0;
+  Salience salience=ruleAgendaItem.getRule().getSalience();
+  if (!salience.isDynamic()) {
+    salienceInt=ruleAgendaItem.getRule().getSalience().getValue();
+    salience=null;
   }
-  RuleAgendaItem agendaItem=executor.getRuleAgendaItem();
-  LeftTupleList tupleList=executor.getLeftTupleList();
+  if (rtnNode.getRule().getAutoFocus() && !ruleAgendaItem.getAgendaGroup().isActive()) {
+    ((DefaultAgenda)wm.getAgenda()).setFocus(ruleAgendaItem.getAgendaGroup());
+  }
   for (LeftTuple leftTuple=srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
-    if (rtnNode.getRule().isLockOnActive() && leftTuple.getPropagationContext().getType() != org.kie.api.runtime.rule.PropagationContext.RULE_ADDITION) {
-      PropagationContext pctx=leftTuple.getPropagationContext();
-      pctx=RuleTerminalNode.findMostRecentPropagationContext(leftTuple,pctx);
-      long handleRecency=((InternalFactHandle)pctx.getFactHandle()).getRecency();
-      InternalAgendaGroup agendaGroup=executor.getRuleAgendaItem().getAgendaGroup();
-      if (blockedByLockOnActive(rtnNode.getRule(),agenda,pctx,handleRecency,agendaGroup)) {
-        leftTuple.clearStaged();
-        leftTuple=next;
-        continue;
-      }
-    }
-    tupleList.add(leftTuple);
-    leftTuple.increaseActivationCountForEvents();
-    if (!rtnNode.isFireDirect() && declarativeAgendaEnabled) {
-      PropagationContext pctx=leftTuple.getPropagationContext();
-      AgendaItem item=agenda.createAgendaItem(leftTuple,salience,pctx,rtnNode,agendaItem,agendaItem.getAgendaGroup(),agendaItem.getRuleFlowGroup());
-      item.setQueued(true);
-      leftTuple.setObject(item);
-      agenda.insertAndStageActivation(item);
-    }
+    doLeftTupleInsert(rtnNode,executor,agenda,ruleAgendaItem,salienceInt,salience,leftTuple,wm);
     leftTuple.clearStaged();
     leftTuple=next;
   }
