@@ -3,9 +3,13 @@
   if (endMethodName >= 0) {
     String methodName=exprStr.substring(0,endMethodName).trim();
     String propertyName=setter2property(methodName);
-    String methodParams=exprStr.substring(endMethodName + 1,exprStr.lastIndexOf(')')).trim();
+    int endMethodArgs=findEndMethodArgs(exprStr,endMethodName);
+    String methodParams=exprStr.substring(endMethodName + 1,endMethodArgs).trim();
     List<String> args=splitArgumentsList(methodParams);
     int argsNr=args.size();
+    if (propertyName == null && exprStr.length() > endMethodArgs + 1 && exprStr.substring(endMethodArgs + 1).trim().startsWith(".")) {
+      propertyName=getter2property(methodName);
+    }
     if (propertyName != null) {
       modificationMask=updateModificationMask(settableProperties,propertyReactive,modificationMask,propertyName);
       statement.addField(propertyName,argsNr > 0 ? args.get(0) : null);
