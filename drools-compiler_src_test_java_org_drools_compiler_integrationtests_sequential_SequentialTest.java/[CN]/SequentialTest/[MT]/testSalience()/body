@@ -1,15 +1,8 @@
 {
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newClassPathResource("simpleSalience.drl",getClass()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    fail(kbuilder.getErrors().toString());
-  }
   KieBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
   kconf.setOption(SequentialOption.YES);
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  kbase=org.drools.compiler.integrationtests.SerializationHelper.serializeObject(kbase);
-  final StatelessKnowledgeSession ksession=kbase.newStatelessKnowledgeSession();
+  KnowledgeBase kbase=loadKnowledgeBase(kconf,"simpleSalience.drl");
+  StatelessKnowledgeSession ksession=createStatelessKnowledgeSession(kbase);
   final List list=new ArrayList();
   ksession.setGlobal("list",list);
   ksession.execute(new Person("pob"));

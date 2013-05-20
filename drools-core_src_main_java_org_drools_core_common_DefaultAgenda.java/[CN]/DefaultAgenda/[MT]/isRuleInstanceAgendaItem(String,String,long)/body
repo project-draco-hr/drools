@@ -1,10 +1,25 @@
 {
   RuleFlowGroup systemRuleFlowGroup=this.getRuleFlowGroup(ruleflowGroupName);
-  for (  ActivationNode aSystemRuleFlowGroup : systemRuleFlowGroup) {
-    Activation activation=aSystemRuleFlowGroup.getActivation();
-    if (ruleName.equals(activation.getRule().getName())) {
-      if (checkProcessInstance(activation,processInstanceId)) {
-        return true;
+  Match[] matches=((InternalAgendaGroup)systemRuleFlowGroup).getActivations();
+  for (  Match match : matches) {
+    Activation act=(Activation)match;
+    if (act.isRuleAgendaItem()) {
+      RuleAgendaItem ruleAgendaItem=(RuleAgendaItem)act;
+      ruleAgendaItem.getRuleExecutor().evaluateNetwork(workingMemory);
+      LeftTupleList list=ruleAgendaItem.getRuleExecutor().getLeftTupleList();
+      for (RuleTerminalNodeLeftTuple lt=(RuleTerminalNodeLeftTuple)list.getFirst(); lt != null; lt=(RuleTerminalNodeLeftTuple)lt.getNext()) {
+        if (ruleName.equals(lt.getRule().getName())) {
+          if (checkProcessInstance(lt,processInstanceId)) {
+            return true;
+          }
+        }
+      }
+    }
+ else {
+      if (ruleName.equals(act.getRule().getName())) {
+        if (checkProcessInstance(act,processInstanceId)) {
+          return true;
+        }
       }
     }
   }

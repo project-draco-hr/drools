@@ -1,13 +1,18 @@
 {
   KnowledgeBase kbase=loadKnowledgeBase("ruleflowgroup.drl");
-  KieSession ksession=createKnowledgeSession(kbase);
+  final KieSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
   ksession.setGlobal("list",list);
+  new Thread(new Runnable(){
+    public void run(){
+      ksession.fireUntilHalt();
+    }
+  }
+).start();
   ksession.insert("Test");
-  ksession.fireAllRules();
   assertEquals(0,list.size());
-  ((AgendaImpl)ksession.getAgenda()).getAgenda().activateRuleFlowGroup("Group1");
-  ksession.fireAllRules();
+  ((DefaultAgenda)((AgendaImpl)ksession.getAgenda()).getAgenda()).activateRuleFlowGroup("Group1");
+  Thread.sleep(1000);
   assertEquals(1,list.size());
   ksession.halt();
 }

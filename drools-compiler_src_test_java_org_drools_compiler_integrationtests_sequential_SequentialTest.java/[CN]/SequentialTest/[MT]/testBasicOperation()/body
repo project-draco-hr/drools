@@ -1,15 +1,8 @@
 {
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newClassPathResource("simpleSequential.drl",getClass()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    fail(kbuilder.getErrors().toString());
-  }
   KieBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
   kconf.setOption(SequentialOption.YES);
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  kbase=org.drools.compiler.integrationtests.SerializationHelper.serializeObject(kbase);
-  final StatelessKnowledgeSession ksession=kbase.newStatelessKnowledgeSession();
+  KnowledgeBase kbase=loadKnowledgeBase(kconf,"simpleSequential.drl");
+  StatelessKnowledgeSession ksession=createStatelessKnowledgeSession(kbase);
   final List list=new ArrayList();
   ksession.setGlobal("list",list);
   final Person p1=new Person("p1","stilton");
@@ -17,6 +10,6 @@
   final Person p3=new Person("p3","stilton");
   final Cheese stilton=new Cheese("stilton",15);
   final Cheese cheddar=new Cheese("cheddar",15);
-  ksession.execute(Arrays.asList(new Object[]{p1,stilton,p2,cheddar,p3}));
+  ksession.execute(CommandFactory.newInsertElements(Arrays.asList(new Object[]{p1,stilton,p2,cheddar,p3})));
   assertEquals(3,list.size());
 }

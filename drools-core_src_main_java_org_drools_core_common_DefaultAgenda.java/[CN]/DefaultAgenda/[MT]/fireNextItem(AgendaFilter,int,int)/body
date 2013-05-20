@@ -13,7 +13,14 @@
       final InternalAgendaGroup group=(InternalAgendaGroup)getNextFocus();
       if (group != null) {
         if (this.unlinkingEnabled) {
-          final RuleAgendaItem item=(RuleAgendaItem)group.peekNext();
+          RuleAgendaItem item;
+          if (((InternalRuleBase)workingMemory.getRuleBase()).getConfiguration().isSequential()) {
+            item=(RuleAgendaItem)group.getNext();
+            item.setBlocked(true);
+          }
+ else {
+            item=(RuleAgendaItem)group.peekNext();
+          }
           localFireCount=item.getRuleExecutor().evaluateNetworkAndFire(this.workingMemory,filter,fireCount,fireLimit);
           if (localFireCount == 0) {
             tryagain=true;
