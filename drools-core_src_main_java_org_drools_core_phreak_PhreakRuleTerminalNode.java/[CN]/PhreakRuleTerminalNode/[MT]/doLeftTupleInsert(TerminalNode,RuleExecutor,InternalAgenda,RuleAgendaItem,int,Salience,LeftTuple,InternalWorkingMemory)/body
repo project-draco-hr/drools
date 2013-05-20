@@ -7,10 +7,13 @@
   RuleTerminalNodeLeftTuple rtnLeftTuple=(RuleTerminalNodeLeftTuple)leftTuple;
   rtnLeftTuple.init(agenda.getNextActivationCounter(),salienceInt,pctx,ruleAgendaItem,ruleAgendaItem.getAgendaGroup());
   rtnLeftTuple.setObject(rtnLeftTuple);
+  EventSupport es=(EventSupport)wm;
+  es.getAgendaEventSupport().fireActivationCreated(rtnLeftTuple,wm);
   if (rtnNode.getRule().isLockOnActive() && leftTuple.getPropagationContext().getType() != org.kie.api.runtime.rule.PropagationContext.RULE_ADDITION) {
     long handleRecency=((InternalFactHandle)pctx.getFactHandle()).getRecency();
     InternalAgendaGroup agendaGroup=executor.getRuleAgendaItem().getAgendaGroup();
     if (blockedByLockOnActive(rtnNode.getRule(),agenda,pctx,handleRecency,agendaGroup)) {
+      es.getAgendaEventSupport().fireActivationCancelled(rtnLeftTuple,wm,MatchCancelledCause.FILTER);
       return;
     }
   }

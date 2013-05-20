@@ -29,17 +29,15 @@
       Rule rule=rtn.getRule();
       PropagationContext pctx=leftTuple.getPropagationContext();
       pctx=RuleTerminalNode.findMostRecentPropagationContext(leftTuple,pctx);
-      if (isNotEffective(wm,rtn,rule,leftTuple,pctx)) {
+      if (cancelAndContinue(wm,rtn,rule,leftTuple,pctx,filter)) {
         continue;
       }
       AgendaItem item=(AgendaItem)leftTuple;
       if (agenda.getActivationsFilter() != null && !agenda.getActivationsFilter().accept(item,pctx,wm,rtn)) {
         continue;
       }
-      if (filter == null || filter.accept(item)) {
-        agenda.fireActivation(item);
-        localFireCount++;
-      }
+      agenda.fireActivation(item);
+      localFireCount++;
       salience=ruleAgendaItem.getSalience();
       if (queue != null && !queue.isEmpty() && salience != queue.peek().getSalience()) {
         ruleAgendaItem.dequeue();

@@ -14,20 +14,49 @@
   ksession.insert(bob);
   ksession.insert(mic);
   ksession.insert(mark);
+  InternalWorkingMemory wm=(InternalWorkingMemory)((StatefulKnowledgeSessionImpl)ksession).getInternalWorkingMemory();
   final DefaultAgenda agenda=(DefaultAgenda)((AgendaImpl)ksession.getAgenda()).getAgenda();
   final AgendaGroup group1=agenda.getAgendaGroup("group1");
-  agenda.setFocus(group1);
-  assertEquals(3,group1.size());
-  agenda.fireNextItem(null,0,0);
-  assertEquals(2,group1.size());
-  ksession.update(brieHandle,brie);
-  assertEquals(2,group1.size());
-  AgendaGroup group2=agenda.getAgendaGroup("group2");
-  assertEquals(3,group2.size());
-  agenda.setFocus(group2);
-  agenda.activateRuleFlowGroup("ruleflow2");
-  agenda.fireNextItem(null,0,0);
-  assertEquals(2,group2.size());
-  ksession.update(brieHandle,brie);
-  assertEquals(2,group2.size());
+  if (preak == PhreakOption.DISABLED) {
+    agenda.setFocus(group1);
+    assertEquals(3,group1.size());
+    agenda.fireNextItem(null,0,0);
+    assertEquals(2,group1.size());
+    ksession.update(brieHandle,brie);
+    assertEquals(2,group1.size());
+    AgendaGroup group2=agenda.getAgendaGroup("group2");
+    assertEquals(3,group2.size());
+    agenda.setFocus(group2);
+    agenda.activateRuleFlowGroup("ruleflow2");
+    agenda.fireNextItem(null,0,0);
+    assertEquals(2,group2.size());
+    ksession.update(brieHandle,brie);
+    assertEquals(2,group2.size());
+  }
+ else {
+    agenda.setFocus(group1);
+    assertEquals(1,group1.size());
+    RuleAgendaItem ruleItem1=(RuleAgendaItem)group1.getActivations()[0];
+    ruleItem1.getRuleExecutor().evaluateNetwork(wm);
+    assertEquals(3,ruleItem1.getRuleExecutor().getLeftTupleList().size());
+    agenda.fireNextItem(null,0,0);
+    assertEquals(1,group1.size());
+    assertEquals(2,ruleItem1.getRuleExecutor().getLeftTupleList().size());
+    ksession.update(brieHandle,brie);
+    assertEquals(1,group1.size());
+    ruleItem1.getRuleExecutor().evaluateNetwork(wm);
+    assertEquals(2,ruleItem1.getRuleExecutor().getLeftTupleList().size());
+    AgendaGroup group2=agenda.getAgendaGroup("group2");
+    agenda.setFocus(group2);
+    assertEquals(1,group2.size());
+    RuleAgendaItem ruleItem2=(RuleAgendaItem)group2.getActivations()[0];
+    ruleItem2.getRuleExecutor().evaluateNetwork(wm);
+    assertEquals(3,ruleItem2.getRuleExecutor().getLeftTupleList().size());
+    agenda.fireNextItem(null,0,0);
+    assertEquals(1,group2.size());
+    assertEquals(2,ruleItem2.getRuleExecutor().getLeftTupleList().size());
+    ksession.update(brieHandle,brie);
+    assertEquals(1,group2.size());
+    assertEquals(2,ruleItem2.getRuleExecutor().getLeftTupleList().size());
+  }
 }
