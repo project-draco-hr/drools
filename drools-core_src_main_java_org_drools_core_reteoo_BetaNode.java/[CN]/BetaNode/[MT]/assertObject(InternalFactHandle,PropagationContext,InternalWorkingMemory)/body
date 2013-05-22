@@ -2,18 +2,12 @@
   final BetaMemory memory=(BetaMemory)getBetaMemoryFromRightInput(this,wm);
   RightTuple rightTuple=createRightTuple(factHandle,this,pctx);
   if (isUnlinkingEnabled()) {
+    int insertSize=memory.getStagedRightTuples().addInsert(rightTuple);
     if (memory.getAndIncCounter() == 0) {
       memory.linkNode(wm);
     }
- else     if (memory.getStagedRightTuples().insertSize() == 0) {
+ else     if (insertSize == 0) {
       memory.getSegmentMemory().notifyRuleLinkSegment(wm);
-    }
-    RightTuple insertFirst=memory.getStagedRightTuples().getInsertFirst();
-    if (streamMode && insertFirst != null && insertFirst.getPropagationContext() != pctx) {
-      memory.getDequeu().add(rightTuple);
-    }
- else {
-      memory.getStagedRightTuples().addInsert(rightTuple);
     }
     if (pctx.getReaderContext() != null) {
       MarshallerReaderContext mrc=(MarshallerReaderContext)pctx.getReaderContext();
