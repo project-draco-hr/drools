@@ -2,13 +2,16 @@
   int maxRows=sheet.getLastRowNum();
   CellRangeAddress[] mergedRanges=getMergedCells(sheet);
   DataFormatter formatter=new DataFormatter();
+  FormulaEvaluator formulaEvaluator=sheet.getWorkbook().getCreationHelper().createFormulaEvaluator();
   for (int i=0; i <= maxRows; i++) {
     Row row=sheet.getRow(i);
     int lastCellNum=row != null ? row.getLastCellNum() : 0;
     newRow(listeners,i,lastCellNum);
     for (int cellNum=0; cellNum < lastCellNum; cellNum++) {
       Cell cell=row.getCell(cellNum);
-      if (cell == null)       continue;
+      if (cell == null) {
+        continue;
+      }
       double num=0;
       CellRangeAddress merged=getRangeIfMerged(cell,mergedRanges);
       if (merged != null) {
@@ -16,17 +19,24 @@
         newCell(listeners,i,cellNum,formatter.formatCellValue(topLeft),topLeft.getColumnIndex());
       }
  else {
-        if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
-          num=cell.getNumericCellValue();
-        }
-        if (num - Math.round(num) != 0) {
-          newCell(listeners,i,cellNum,String.valueOf(num),DataListener.NON_MERGED);
-        }
+switch (cell.getCellType()) {
+case Cell.CELL_TYPE_FORMULA:
+          CellValue cv=formulaEvaluator.evaluate(cell);
+        String cellValue=getCellValue(cv);
+      newCell(listeners,i,cellNum,cellValue,DataListener.NON_MERGED);
+    break;
+case Cell.CELL_TYPE_NUMERIC:
+  num=cell.getNumericCellValue();
+default :
+if (num - Math.round(num) != 0) {
+  newCell(listeners,i,cellNum,String.valueOf(num),DataListener.NON_MERGED);
+}
  else {
-          newCell(listeners,i,cellNum,formatter.formatCellValue(cell),DataListener.NON_MERGED);
-        }
-      }
-    }
-  }
-  finishSheet(listeners);
+  newCell(listeners,i,cellNum,formatter.formatCellValue(cell),DataListener.NON_MERGED);
+}
+}
+}
+}
+}
+finishSheet(listeners);
 }
