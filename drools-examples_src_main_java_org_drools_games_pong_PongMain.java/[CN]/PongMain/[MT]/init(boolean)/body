@@ -1,14 +1,6 @@
 {
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.batch().add(newClassPathResource("init.drl",getClass()),DRL).add(newClassPathResource("game.drl",getClass()),DRL).add(newClassPathResource("keys.drl",getClass()),DRL).add(newClassPathResource("move.drl",getClass()),DRL).add(newClassPathResource("collision.drl",getClass()),DRL).add(newClassPathResource("ui.drl",getClass()),DRL).build();
-  if (kbuilder.hasErrors()) {
-    throw new RuntimeException(kbuilder.getErrors().toString());
-  }
-  KieBaseConfiguration config=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
-  config.setOption(EventProcessingOption.STREAM);
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(config);
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  KieContainer kc=KieServices.Factory.get().getKieClasspathContainer();
+  final KieSession ksession=kc.newKieSession("PongKS");
   PongConfiguration pconf=new PongConfiguration();
   pconf.setExitOnClose(exitOnClose);
   ksession.setGlobal("pconf",pconf);
