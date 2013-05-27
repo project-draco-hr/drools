@@ -1,9 +1,7 @@
 {
-  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newClassPathResource("Shopping.drl",ShoppingExample.class),ResourceType.DRL);
-  final KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  KieContainer kc=KieServices.Factory.get().getKieClasspathContainer();
+  System.out.println(kc.verify().getMessages().toString());
+  KieSession ksession=kc.newKieSession("ShoppingKS");
   Customer mark=new Customer("mark",0);
   ksession.insert(mark);
   Product shoes=new Product("shoes",60);
@@ -13,7 +11,7 @@
   ksession.insert(new Purchase(mark,shoes));
   FactHandle hatPurchaseHandle=ksession.insert(new Purchase(mark,hat));
   ksession.fireAllRules();
-  ksession.retract(hatPurchaseHandle);
+  ksession.delete(hatPurchaseHandle);
   System.out.println("Customer mark has returned the hat");
   ksession.fireAllRules();
 }
