@@ -4,8 +4,12 @@
   List<RuleDescr> roots=new LinkedList<RuleDescr>();
   Map<String,List<RuleDescr>> children=new HashMap<String,List<RuleDescr>>();
   LinkedHashMap<String,RuleDescr> sorted=new LinkedHashMap<String,RuleDescr>();
+  List<RuleDescr> queries=new ArrayList<RuleDescr>();
   for (  RuleDescr ruleDescr : packageDescr.getRules()) {
-    if (!ruleDescr.hasParent()) {
+    if (ruleDescr.isQuery()) {
+      queries.add(ruleDescr);
+    }
+ else     if (!ruleDescr.hasParent()) {
       roots.add(ruleDescr);
     }
  else     if (pkg.getRule(ruleDescr.getParentName()) != null) {
@@ -21,6 +25,10 @@
     }
   }
   if (children.isEmpty()) {
+    if (!queries.isEmpty()) {
+      packageDescr.getRules().removeAll(queries);
+      packageDescr.getRules().addAll(0,queries);
+    }
     return;
   }
   while (!roots.isEmpty()) {
@@ -33,6 +41,7 @@
   }
   reportHierarchyErrors(children,sorted);
   packageDescr.getRules().clear();
+  packageDescr.getRules().addAll(queries);
   for (  RuleDescr descr : sorted.values()) {
     packageDescr.getRules().add(descr);
   }
