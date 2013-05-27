@@ -1,8 +1,8 @@
 {
   LinkedList<StackEntry> outerStack=new LinkedList<StackEntry>();
   if (dirty) {
-    this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
     setDirty(false);
+    this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
     wm.executeQueuedActions();
   }
   int localFireCount=0;
@@ -61,9 +61,16 @@
     }
   }
   if (!dirty && tupleList.isEmpty()) {
-    ruleAgendaItem.remove();
-    if (ruleAgendaItem.getRule().isEager()) {
-      ((InternalAgenda)wm.getAgenda()).removeEagerRuleAgendaItem(ruleAgendaItem);
+synchronized (ruleAgendaItem) {
+      if (!dirty && tupleList.isEmpty()) {
+        if (log.isTraceEnabled()) {
+          log.trace("Removing RuleAgendaItem");
+        }
+        ruleAgendaItem.remove();
+        if (ruleAgendaItem.getRule().isEager()) {
+          ((InternalAgenda)wm.getAgenda()).removeEagerRuleAgendaItem(ruleAgendaItem);
+        }
+      }
     }
   }
   return localFireCount;

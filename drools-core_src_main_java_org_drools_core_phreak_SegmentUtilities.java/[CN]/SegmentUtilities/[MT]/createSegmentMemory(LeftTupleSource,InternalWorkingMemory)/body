@@ -51,16 +51,16 @@ if (NodeTypeEnums.isLeftTupleSource(sink)) {
 tupleSource=(LeftTupleSource)sink;
 }
  else {
+Memory memory=null;
 if (sink.getType() == NodeTypeEnums.RightInputAdaterNode) {
-RiaNodeMemory memory=(RiaNodeMemory)wm.getNodeMemory((MemoryFactory)sink);
-smem.getNodeMemories().add(memory.getRiaPathMemory());
-memory.getRiaPathMemory().setSegmentMemory(smem);
+memory=wm.getNodeMemory((MemoryFactory)sink);
+smem.getNodeMemories().add(((RiaNodeMemory)memory).getRiaPathMemory());
 }
  else if (NodeTypeEnums.isTerminalNode(sink)) {
-PathMemory pmem=(PathMemory)wm.getNodeMemory((MemoryFactory)sink);
-smem.getNodeMemories().add(pmem);
-pmem.setSegmentMemory(smem);
+memory=wm.getNodeMemory((MemoryFactory)sink);
+smem.getNodeMemories().add((PathMemory)memory);
 }
+memory.setSegmentMemory(smem);
 smem.setTipNode(sink);
 break;
 }
@@ -83,6 +83,9 @@ pathRoot=pathRoot.getLeftTupleSource();
 }
 smem.setSegmentPosMaskBit(ruleSegmentPosMask);
 smem.setPos(counter);
+if (smem.getRootNode().getType() != NodeTypeEnums.LeftInputAdapterNode && ((LeftTupleSource)smem.getRootNode()).getLeftTupleSource().getType() == NodeTypeEnums.LeftInputAdapterNode) {
+smem.setStagedTuples(new SynchronizedLeftTupleSets());
+}
 updateRiaAndTerminalMemory(tupleSource,tupleSource,smem,wm);
 return smem;
 }

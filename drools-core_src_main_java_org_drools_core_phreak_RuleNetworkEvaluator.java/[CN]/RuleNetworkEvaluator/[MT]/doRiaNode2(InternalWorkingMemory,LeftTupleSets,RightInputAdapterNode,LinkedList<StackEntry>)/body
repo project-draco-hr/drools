@@ -52,79 +52,31 @@
     rnm.getMap().remove(leftTuple);
     RightTuple rightTuple=(RightTuple)leftTuple.getObject();
     RightTupleSets rightTuples=bm.getStagedRightTuples();
-switch (rightTuple.getStagedType()) {
-case LeftTuple.INSERT:
-{
-        rightTuples.removeInsert(rightTuple);
-        break;
+    rightTuples.addDelete(rightTuple);
+    if (bns != null) {
+      for (int i=0; i < length; i++) {
+        rightTuple=rightTuple.getHandleNext();
+        rightTuples=bms[i].getStagedRightTuples();
+        rightTuples.addDelete(rightTuple);
       }
-case LeftTuple.UPDATE:
-{
-      rightTuples.removeUpdate(rightTuple);
-      break;
     }
-}
-rightTuples.addDelete(rightTuple);
-if (bns != null) {
-  for (int i=0; i < length; i++) {
-    rightTuple=rightTuple.getHandleNext();
-    rightTuples=bms[i].getStagedRightTuples();
-switch (rightTuple.getStagedType()) {
-case LeftTuple.INSERT:
-{
-        rightTuples.removeInsert(rightTuple);
-        break;
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+  for (LeftTuple leftTuple=srcTuples.getUpdateFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    RightTuple rightTuple=(RightTuple)leftTuple.getObject();
+    RightTupleSets rightTuples=bm.getStagedRightTuples();
+    rightTuples.addUpdate(rightTuple);
+    if (bns != null) {
+      for (int i=0; i < length; i++) {
+        rightTuple=rightTuple.getHandleNext();
+        rightTuples=bms[i].getStagedRightTuples();
+        rightTuples.addUpdate(rightTuple);
       }
-case LeftTuple.UPDATE:
-{
-      rightTuples.removeUpdate(rightTuple);
-      break;
     }
-}
-rightTuples.addDelete(rightTuple);
-}
-}
-leftTuple.clearStaged();
-leftTuple=next;
-}
-for (LeftTuple leftTuple=srcTuples.getUpdateFirst(); leftTuple != null; ) {
-LeftTuple next=leftTuple.getStagedNext();
-RightTuple rightTuple=(RightTuple)leftTuple.getObject();
-RightTupleSets rightTuples=bm.getStagedRightTuples();
-switch (rightTuple.getStagedType()) {
-case LeftTuple.INSERT:
-{
-rightTuples.removeInsert(rightTuple);
-break;
-}
-case LeftTuple.UPDATE:
-{
-rightTuples.removeUpdate(rightTuple);
-break;
-}
-}
-rightTuples.addUpdate(rightTuple);
-if (bns != null) {
-for (int i=0; i < length; i++) {
-rightTuple=rightTuple.getHandleNext();
-rightTuples=bms[i].getStagedRightTuples();
-switch (rightTuple.getStagedType()) {
-case LeftTuple.INSERT:
-{
-rightTuples.removeInsert(rightTuple);
-break;
-}
-case LeftTuple.UPDATE:
-{
-rightTuples.removeUpdate(rightTuple);
-break;
-}
-}
-rightTuples.addUpdate(rightTuple);
-}
-}
-leftTuple.clearStaged();
-leftTuple=next;
-}
-srcTuples.resetAll();
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+  srcTuples.resetAll();
 }

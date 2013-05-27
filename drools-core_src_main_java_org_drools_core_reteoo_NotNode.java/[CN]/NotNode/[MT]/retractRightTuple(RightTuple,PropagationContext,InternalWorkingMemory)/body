@@ -1,31 +1,23 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
   if (isUnlinkingEnabled()) {
-    SynchronizedRightTupleSets stagedRightTuples=memory.getStagedRightTuples();
-switch (rightTuple.getStagedType()) {
-case LeftTuple.INSERT:
-      stagedRightTuples.removeInsert(rightTuple);
-    break;
-case LeftTuple.UPDATE:
-  stagedRightTuples.removeUpdate(rightTuple);
-break;
-}
-if (memory.getAndDecCounter() == 1 && isEmptyBetaConstraints()) {
-memory.linkNode(workingMemory);
-}
- else if (stagedRightTuples.deleteSize() == 0) {
-memory.getSegmentMemory().notifyRuleLinkSegment(workingMemory);
-}
-stagedRightTuples.addDelete(rightTuple);
-return;
-}
-RightTupleMemory rtm=memory.getRightTupleMemory();
-if (rightTuple.getBlocked() != null) {
-updateLeftTupleToNewBlocker(rightTuple,context,workingMemory,memory,memory.getLeftTupleMemory(),rightTuple.getBlocked(),rtm,false);
-rightTuple.nullBlocked();
-}
+    RightTupleSets stagedRightTuples=memory.getStagedRightTuples();
+    boolean stagedDeleteWasEmpty=stagedRightTuples.addDelete(rightTuple);
+    if (memory.getAndDecCounter() == 1 && isEmptyBetaConstraints()) {
+      memory.linkNode(workingMemory);
+    }
+ else     if (stagedDeleteWasEmpty) {
+      memory.getSegmentMemory().notifyRuleLinkSegment(workingMemory);
+    }
+    return;
+  }
+  RightTupleMemory rtm=memory.getRightTupleMemory();
+  if (rightTuple.getBlocked() != null) {
+    updateLeftTupleToNewBlocker(rightTuple,context,workingMemory,memory,memory.getLeftTupleMemory(),rightTuple.getBlocked(),rtm,false);
+    rightTuple.nullBlocked();
+  }
  else {
-rtm.remove(rightTuple);
-}
-this.constraints.resetTuple(memory.getContext());
+    rtm.remove(rightTuple);
+  }
+  this.constraints.resetTuple(memory.getContext());
 }

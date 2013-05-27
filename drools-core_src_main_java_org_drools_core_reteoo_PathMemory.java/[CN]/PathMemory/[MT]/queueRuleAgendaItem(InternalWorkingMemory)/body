@@ -1,8 +1,13 @@
 {
-  agendaItem.getRuleExecutor().setDirty(true);
-  if (!agendaItem.isQueued() && !agendaItem.isBlocked()) {
-    InternalAgendaGroup ag=agendaItem.getAgendaGroup();
-    ag.add(agendaItem);
+synchronized (agendaItem) {
+    agendaItem.getRuleExecutor().setDirty(true);
+    if (!agendaItem.isQueued() && !agendaItem.isBlocked()) {
+      if (log.isTraceEnabled()) {
+        log.trace("Queue RuleAgendaItem {}",agendaItem);
+      }
+      InternalAgendaGroup ag=agendaItem.getAgendaGroup();
+      ag.add(agendaItem);
+    }
   }
   if (agendaItem.getRule().isEager()) {
     ((InternalAgenda)wm.getAgenda()).addEagerRuleAgendaItem(agendaItem);

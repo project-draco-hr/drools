@@ -2,13 +2,14 @@
   if (leftTuple.getStagedType() != LeftTuple.INSERT) {
     leftTuple.setPropagationContext(context);
   }
-  if (leftTuple.getStagedType() == LeftTuple.NONE) {
-    long mask=sink.getLeftInferredMask();
-    if (mask == Long.MAX_VALUE || intersect(context.getModificationMask(),mask)) {
-      if (linkOrNotify && sm.getStagedLeftTuples().updateSize() == 0) {
-        sm.notifyRuleLinkSegment(wm);
+synchronized (((SynchronizedLeftTupleSets)leftTuples).getLock()) {
+    if (leftTuple.getStagedType() == LeftTuple.NONE) {
+      long mask=sink.getLeftInferredMask();
+      if (mask == Long.MAX_VALUE || intersect(context.getModificationMask(),mask)) {
+        if (leftTuples.addUpdate(leftTuple) && linkOrNotify) {
+          sm.notifyRuleLinkSegment(wm);
+        }
       }
-      leftTuples.addUpdate(leftTuple);
     }
   }
 }
