@@ -1,0 +1,44 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId releaseId=ks.newReleaseId("org.kie","metadata-test2","1.0-SNAPSHOT");
+  String pomText=getPom(releaseId);
+  File pomFile=new File(System.getProperty("java.io.tmpdir"),MavenRepository.toFileName(releaseId,null) + ".pom");
+  try {
+    FileOutputStream fos=new FileOutputStream(pomFile);
+    fos.write(pomText.getBytes());
+    fos.flush();
+    fos.close();
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.writePomXML(getPom(releaseId));
+  kfs.write("src/main/java/org/kie/test/Bean.java",createJavaSourceInPackage());
+  KieBuilder kieBuilder1=ks.newKieBuilder(kfs);
+  Assert.assertTrue(kieBuilder1.buildAll().getResults().getMessages().isEmpty());
+  InternalKieModule kieModule=(InternalKieModule)kieBuilder1.getKieModule();
+  MavenRepository.getMavenRepository().deployArtifact(releaseId,kieModule,pomFile);
+  ReleaseId releaseId2=ks.newReleaseId("org.kie","metadata-test-using-pom","1.0-SNAPSHOT");
+  String pomText2=getPom(releaseId2,releaseId);
+  File pomFile2=new File(System.getProperty("java.io.tmpdir"),MavenRepository.toFileName(releaseId2,null) + ".pom");
+  try {
+    FileOutputStream fos=new FileOutputStream(pomFile2);
+    fos.write(pomText2.getBytes());
+    fos.flush();
+    fos.close();
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+  KieServices kieServices=KieServices.Factory.get();
+  KieFileSystem kieFileSystem=kieServices.newKieFileSystem();
+  InputStream is=new FileInputStream(pomFile2);
+  KieModuleModel kproj2=ks.newKieModuleModel();
+  kieFileSystem.write("pom.xml",KieServices.Factory.get().getResources().newInputStreamResource(is));
+  kieFileSystem.writeKModuleXML(kproj2.toXML());
+  kieFileSystem.write("src/main/resources/rule.drl",createDRLWithImport("rule1"));
+  KieBuilder kieBuilder=kieServices.newKieBuilder(kieFileSystem);
+  kieBuilder.buildAll();
+  assertTrue(kieBuilder.getResults().getMessages().isEmpty());
+}
