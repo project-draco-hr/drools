@@ -14,7 +14,13 @@
     initExistingKnowledgeSession(sessionId,kbase,conf,persistenceContext);
     txm.commit(transactionOwner);
   }
- catch (  RuntimeException re) {
+ catch (  SessionNotFoundException e) {
+    if (transactionOwner) {
+      rollbackTransaction(e,transactionOwner);
+    }
+    throw e;
+  }
+catch (  RuntimeException re) {
     rollbackTransaction(re,transactionOwner);
     throw re;
   }
