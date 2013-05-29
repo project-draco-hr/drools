@@ -1,7 +1,7 @@
 {
   String str="global java.util.List results\n" + "rule R1 when\n" + "   String( this == \"1\") from entry-point EP1\n"+ "   String( this == \"2\") from entry-point EP2\n"+ "   String( this == \"3\") from entry-point EP3\n"+ "   String( this == \"4\") from entry-point EP4\n"+ "   String( this == \"5\") from entry-point EP5\n"+ "   String( this == \"6\") from entry-point EP6\n"+ "   String( this == \"7\") from entry-point EP7\n"+ "   String( this == \"8\") from entry-point EP8\n"+ "   String( this == \"9\") from entry-point EP9\n"+ "then\n"+ "   results.add(\"R1\");\n"+ "end\n"+ "\n"+ "rule R2 when\n"+ "   String( this == \"1\") from entry-point EP1\n"+ "   String( this == \"2\") from entry-point EP2\n"+ "   String( this == \"3\") from entry-point EP3\n"+ "   eval(true)\n"+ "   String( this == \"4\") from entry-point EP4\n"+ "   String( this == \"5\") from entry-point EP5\n"+ "   String( this == \"6\") from entry-point EP6\n"+ "   String( this == \"7\") from entry-point EP7\n"+ "   String( this == \"8\") from entry-point EP8\n"+ "   String( this == \"9\") from entry-point EP9\n"+ "then\n"+ "   results.add(\"R2\");\n"+ "end\n"+ "\n"+ "rule R3 when\n"+ "   String( this == \"1\") from entry-point EP1\n"+ "   String( this == \"2\") from entry-point EP2\n"+ "   String( this == \"3\") from entry-point EP3\n"+ "   eval(true)\n"+ "   String( this == \"4\") from entry-point EP4\n"+ "   String( this == \"5\") from entry-point EP5\n"+ "   String( this == \"6\") from entry-point EP6\n"+ "   eval(true)\n"+ "   String( this == \"7\") from entry-point EP7\n"+ "   String( this == \"8\") from entry-point EP8\n"+ "   String( this == \"9\") from entry-point EP9\n"+ "then\n"+ "   results.add(\"R3\");\n"+ "end\n";
   KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
-  KieSession ksession=kbase.newStatefulKnowledgeSession();
+  final KieSession ksession=kbase.newStatefulKnowledgeSession();
   List<String> results=new ArrayList<String>();
   ksession.setGlobal("results",results);
   EPManipulator3[] epManipulators=new EPManipulator3[9];
@@ -23,7 +23,19 @@
       }
     }
     assertTrue(success);
-    ksession.fireAllRules();
+    new Thread(){
+      public void run(){
+        ksession.fireUntilHalt();
+      }
+    }
+.start();
+    try {
+      Thread.sleep(1000);
+    }
+ catch (    InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+    ksession.halt();
     if (deleteIndex % 10 == 0) {
       assertEquals(3,results.size());
       assertTrue(results.containsAll(asList("R1","R2","R3")));
