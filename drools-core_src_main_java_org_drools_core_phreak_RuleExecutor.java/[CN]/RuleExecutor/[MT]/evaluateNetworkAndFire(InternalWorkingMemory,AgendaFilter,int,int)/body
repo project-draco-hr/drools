@@ -1,8 +1,23 @@
 {
   LinkedList<StackEntry> outerStack=new LinkedList<StackEntry>();
-  if (dirty) {
+  if (log.isTraceEnabled()) {
+    log.trace("Start eval entry {}",pmem.getQueue().isEmpty());
+  }
+  if (isDirty() || (pmem.getQueue() != null && !pmem.getQueue().isEmpty())) {
     setDirty(false);
-    this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
+    boolean callEvaluateNetwork=true;
+    if (pmem.getQueue() != null && !pmem.getQueue().isEmpty()) {
+      removeQueuedTupleEntry();
+      this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
+      while (tupleList.isEmpty() && !pmem.getQueue().isEmpty()) {
+        removeQueuedTupleEntry();
+        this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
+        callEvaluateNetwork=false;
+      }
+    }
+    if (callEvaluateNetwork) {
+      this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
+    }
     wm.executeQueuedActions();
   }
   int localFireCount=0;
@@ -49,9 +64,20 @@
       if (haltRuleFiring(nextRule,fireCount,fireLimit,localFireCount,agenda,salience)) {
         break;
       }
-      if (isDirty()) {
+      if (isDirty() || (pmem.getQueue() != null && !pmem.getQueue().isEmpty())) {
         setDirty(false);
-        this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
+        boolean callEvaluateNetwork=true;
+        if (pmem.getQueue() != null && !pmem.getQueue().isEmpty()) {
+          removeQueuedTupleEntry();
+          while (tupleList.isEmpty() && !pmem.getQueue().isEmpty()) {
+            removeQueuedTupleEntry();
+            this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
+            callEvaluateNetwork=false;
+          }
+        }
+        if (callEvaluateNetwork) {
+          this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
+        }
       }
       wm.executeQueuedActions();
       if (tupleList.isEmpty() && !outerStack.isEmpty()) {

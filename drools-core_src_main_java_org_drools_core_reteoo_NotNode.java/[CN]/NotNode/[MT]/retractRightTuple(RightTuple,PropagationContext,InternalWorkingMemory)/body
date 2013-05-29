@@ -2,7 +2,14 @@
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
   if (isUnlinkingEnabled()) {
     RightTupleSets stagedRightTuples=memory.getStagedRightTuples();
-    boolean stagedDeleteWasEmpty=stagedRightTuples.addDelete(rightTuple);
+    boolean stagedDeleteWasEmpty=false;
+    if (streamMode) {
+      stagedDeleteWasEmpty=memory.getSegmentMemory().getTupleQueue().isEmpty();
+      memory.getSegmentMemory().getTupleQueue().add(new RightTupleEntry(rightTuple,rightTuple.getPropagationContext(),memory));
+    }
+ else {
+      stagedDeleteWasEmpty=stagedRightTuples.addDelete(rightTuple);
+    }
     if (memory.getAndDecCounter() == 1 && isEmptyBetaConstraints()) {
       memory.linkNode(workingMemory);
     }

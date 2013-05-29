@@ -1,7 +1,15 @@
 {
   LeftTupleSets leftTuples=sm.getStagedLeftTuples();
-  if (leftTuples.addDelete(leftTuple) && linkOrNotify) {
+  leftTuple.setPropagationContext(context);
+  boolean stagedDeleteWasEmpty=false;
+  if (((BaseNode)sm.getRootNode()).isStreamMode()) {
+    stagedDeleteWasEmpty=sm.getTupleQueue().isEmpty();
+    sm.getTupleQueue().add(new LeftTupleEntry(leftTuple,context,sm.getNodeMemories().getFirst()));
+  }
+ else {
+    stagedDeleteWasEmpty=leftTuples.addDelete(leftTuple);
+  }
+  if (stagedDeleteWasEmpty && linkOrNotify) {
     sm.notifyRuleLinkSegment(wm);
   }
-  leftTuple.setPropagationContext(context);
 }

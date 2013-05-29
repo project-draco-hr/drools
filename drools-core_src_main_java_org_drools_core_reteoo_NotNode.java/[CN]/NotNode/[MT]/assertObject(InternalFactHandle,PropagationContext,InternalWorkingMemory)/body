@@ -3,7 +3,14 @@
   RightTuple rightTuple=createRightTuple(factHandle,this,pctx);
   rightTuple.setPropagationContext(pctx);
   if (isUnlinkingEnabled()) {
-    boolean stagedInsertWasEmpty=memory.getStagedRightTuples().addInsert(rightTuple);
+    boolean stagedInsertWasEmpty=false;
+    if (streamMode) {
+      stagedInsertWasEmpty=memory.getSegmentMemory().getTupleQueue().isEmpty();
+      memory.getSegmentMemory().getTupleQueue().add(new RightTupleEntry(rightTuple,pctx,memory));
+    }
+ else {
+      stagedInsertWasEmpty=memory.getStagedRightTuples().addInsert(rightTuple);
+    }
     if (memory.getAndIncCounter() == 0 && isEmptyBetaConstraints()) {
       memory.linkNode(wm);
     }

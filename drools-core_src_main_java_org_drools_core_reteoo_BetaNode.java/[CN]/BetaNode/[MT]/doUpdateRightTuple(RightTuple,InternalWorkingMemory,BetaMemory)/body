@@ -1,6 +1,14 @@
 {
   RightTupleSets stagedRightTuples=memory.getStagedRightTuples();
-  if (stagedRightTuples.addUpdate(rightTuple)) {
+  boolean stagedUpdateWasEmpty=false;
+  if (streamMode) {
+    stagedUpdateWasEmpty=memory.getSegmentMemory().getTupleQueue().isEmpty();
+    memory.getSegmentMemory().getTupleQueue().add(new RightTupleEntry(rightTuple,rightTuple.getPropagationContext(),memory));
+  }
+ else {
+    stagedUpdateWasEmpty=stagedRightTuples.addUpdate(rightTuple);
+  }
+  if (stagedUpdateWasEmpty) {
     memory.getSegmentMemory().notifyRuleLinkSegment(wm);
   }
 }

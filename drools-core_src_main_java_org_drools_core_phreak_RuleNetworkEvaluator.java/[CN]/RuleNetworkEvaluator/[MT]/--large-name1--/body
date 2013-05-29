@@ -13,45 +13,13 @@
     doRiaNode(wm,liaNode,pmem,srcTuples,betaNode,sink,smems,smemIndex,nodeMem,bm,stack,outerStack,visitedRules,executor);
     return true;
   }
-  Deque<RightTuple> que=bm.getDequeu();
-  if (!que.isEmpty()) {
-    RightTupleSets rightTuples=bm.getStagedRightTuples();
-    if (rightTuples.isEmpty()) {
-      RightTuple rightTuple=que.peekFirst();
-      PropagationContext pctx=rightTuple.getPropagationContext();
-      loop:       while (rightTuple != null && rightTuple.getPropagationContext() == pctx) {
-switch (rightTuple.getPropagationContext().getType()) {
-case PropagationContext.INSERTION:
-case PropagationContext.RULE_ADDITION:
-          rightTuples.addInsert(rightTuple);
-        break;
-case PropagationContext.MODIFICATION:
-      rightTuples.addUpdate(rightTuple);
-    break;
-case PropagationContext.DELETION:
-case PropagationContext.RULE_REMOVAL:
-  rightTuples.addDelete(rightTuple);
-break;
-case PropagationContext.EXPIRATION:
-rightTuples.addDelete(rightTuple);
-break loop;
-}
-que.removeFirst();
-rightTuple=que.peekFirst();
-}
-}
-if (!que.isEmpty()) {
-StackEntry stackEntry=new StackEntry(liaNode,node,sink,pmem,nodeMem,smems,smemIndex,trgTuples,visitedRules,false);
-outerStack.add(stackEntry);
-}
-}
-if (stagedLeftTuples != null) {
+  if (stagedLeftTuples != null) {
 synchronized (stagedLeftTuples) {
-switchOnDoBetaNode(node,trgTuples,wm,srcTuples,stagedLeftTuples,sink,bm,am);
-}
-}
+      switchOnDoBetaNode(node,trgTuples,wm,srcTuples,stagedLeftTuples,sink,bm,am);
+    }
+  }
  else {
-switchOnDoBetaNode(node,trgTuples,wm,srcTuples,stagedLeftTuples,sink,bm,am);
-}
-return false;
+    switchOnDoBetaNode(node,trgTuples,wm,srcTuples,stagedLeftTuples,sink,bm,am);
+  }
+  return false;
 }

@@ -6,7 +6,15 @@ synchronized (((SynchronizedLeftTupleSets)leftTuples).getLock()) {
     if (leftTuple.getStagedType() == LeftTuple.NONE) {
       long mask=sink.getLeftInferredMask();
       if (mask == Long.MAX_VALUE || intersect(context.getModificationMask(),mask)) {
-        if (leftTuples.addUpdate(leftTuple) && linkOrNotify) {
+        boolean stagedUpdateWasEmpty=false;
+        if (((BaseNode)sm.getRootNode()).isStreamMode()) {
+          stagedUpdateWasEmpty=sm.getTupleQueue().isEmpty();
+          sm.getTupleQueue().add(new LeftTupleEntry(leftTuple,context,sm.getNodeMemories().getFirst()));
+        }
+ else {
+          stagedUpdateWasEmpty=leftTuples.addUpdate(leftTuple);
+        }
+        if (stagedUpdateWasEmpty && linkOrNotify) {
           sm.notifyRuleLinkSegment(wm);
         }
       }

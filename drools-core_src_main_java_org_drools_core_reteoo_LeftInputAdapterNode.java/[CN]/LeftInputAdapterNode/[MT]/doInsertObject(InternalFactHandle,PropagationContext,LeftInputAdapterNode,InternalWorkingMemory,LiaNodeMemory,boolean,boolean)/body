@@ -2,34 +2,34 @@
   SegmentMemory sm=lm.getSegmentMemory();
   if (sm.getTipNode() == liaNode) {
     if (sm.isEmpty()) {
-synchronized (sm) {
-        if (sm.isEmpty()) {
-          SegmentUtilities.createChildSegments(wm,sm,liaNode.getSinkPropagator());
-        }
-      }
+      SegmentUtilities.createChildSegments(wm,sm,liaNode.getSinkPropagator());
     }
     sm=sm.getFirst();
   }
-  if (useLeftMemory && lm.getAndIncreaseCounter() == 0) {
-    if (linkOrNotify) {
-      lm.linkNode(wm);
-    }
- else {
-      lm.linkNodeWithoutRuleNotify();
-    }
-    linkOrNotify=false;
+  boolean notifySegment=linkOrNotify;
+  int counter=lm.getAndIncreaseCounter();
+  if (counter == 1) {
+    notifySegment=false;
   }
   LeftTupleSink sink=liaNode.getSinkPropagator().getFirstLeftTupleSink();
   LeftTuple leftTuple=sink.createLeftTuple(factHandle,sink,useLeftMemory);
   leftTuple.setPropagationContext(context);
   long mask=sink.getLeftInferredMask();
-  doInsertSegmentMemory(context,wm,linkOrNotify,sm,leftTuple,mask);
+  doInsertSegmentMemory(context,wm,notifySegment,sm,leftTuple,mask);
   if (sm.getRootNode() != liaNode) {
     for (sm=sm.getNext(); sm != null; sm=sm.getNext()) {
       sink=sm.getSinkFactory();
       leftTuple=sink.createPeer(leftTuple);
       mask=((LeftTupleSink)sm.getRootNode()).getLeftInferredMask();
-      doInsertSegmentMemory(context,wm,linkOrNotify,sm,leftTuple,mask);
+      doInsertSegmentMemory(context,wm,notifySegment,sm,leftTuple,mask);
+    }
+  }
+  if (useLeftMemory && counter == 0) {
+    if (linkOrNotify) {
+      lm.linkNode(wm);
+    }
+ else {
+      lm.linkNodeWithoutRuleNotify();
     }
   }
   if (context.getReaderContext() != null && sm != null) {

@@ -1,6 +1,13 @@
 {
   RightTupleSets stagedRightTuples=memory.getStagedRightTuples();
-  boolean stagedDeleteWasEmpty=stagedRightTuples.addDelete(rightTuple);
+  boolean stagedDeleteWasEmpty=false;
+  if (bnode.isStreamMode()) {
+    stagedDeleteWasEmpty=memory.getSegmentMemory().getTupleQueue().isEmpty();
+    memory.getSegmentMemory().getTupleQueue().add(new RightTupleEntry(rightTuple,rightTuple.getPropagationContext(),memory));
+  }
+ else {
+    stagedDeleteWasEmpty=stagedRightTuples.addDelete(rightTuple);
+  }
   if (memory.getAndDecCounter() == 1) {
     memory.unlinkNode(wm);
   }

@@ -1,0 +1,42 @@
+{
+  TupleEntry tupleEntry=pmem.getQueue().remove();
+  if (log.isTraceEnabled()) {
+    log.trace("Stream removed entry {}",tupleEntry);
+  }
+  if (tupleEntry.getLeftTuple() != null) {
+    SegmentMemory sm=(SegmentMemory)tupleEntry.getNodeMemory().getSegmentMemory();
+    LeftTupleSets tuples=sm.getStagedLeftTuples();
+    tupleEntry.getLeftTuple().setPropagationContext(tupleEntry.getPropagationContext());
+switch (tupleEntry.getPropagationContext().getType()) {
+case PropagationContext.INSERTION:
+case PropagationContext.RULE_ADDITION:
+      tuples.addInsert(tupleEntry.getLeftTuple());
+    break;
+case PropagationContext.MODIFICATION:
+  tuples.addUpdate(tupleEntry.getLeftTuple());
+break;
+case PropagationContext.DELETION:
+case PropagationContext.EXPIRATION:
+case PropagationContext.RULE_REMOVAL:
+tuples.addDelete(tupleEntry.getLeftTuple());
+break;
+}
+}
+ else {
+BetaMemory bm=(BetaMemory)tupleEntry.getNodeMemory();
+switch (tupleEntry.getPropagationContext().getType()) {
+case PropagationContext.INSERTION:
+case PropagationContext.RULE_ADDITION:
+bm.getStagedRightTuples().addInsert(tupleEntry.getRightTuple());
+break;
+case PropagationContext.MODIFICATION:
+bm.getStagedRightTuples().addUpdate(tupleEntry.getRightTuple());
+break;
+case PropagationContext.DELETION:
+case PropagationContext.EXPIRATION:
+case PropagationContext.RULE_REMOVAL:
+bm.getStagedRightTuples().addDelete(tupleEntry.getRightTuple());
+break;
+}
+}
+}
