@@ -1,0 +1,27 @@
+{
+  String str="global java.util.List results\n" + "\n" + "rule \"R0\" when\n"+ "    $s : String( ) from entry-point EP0\n"+ "    $i : Integer( toString().equals($s) ) from entry-point EP1\n"+ "    $l : Long( intValue() == $i ) from entry-point EP2\n"+ "then\n"+ "    results.add( $s );\n"+ "end\n"+ "\n"+ "rule \"R1\" when\n"+ "    $s : String( ) from entry-point EP1\n"+ "    $i : Integer( toString().equals($s) ) from entry-point EP2\n"+ "    $l : Long( intValue() == $i ) from entry-point EP0\n"+ "then\n"+ "    results.add( $s );\n"+ "end\n"+ "\n"+ "rule \"R2\" when\n"+ "    $s : String( ) from entry-point EP2\n"+ "    $i : Integer( toString().equals($s) ) from entry-point EP0\n"+ "    $l : Long( intValue() == $i ) from entry-point EP1\n"+ "then\n"+ "    results.add( $s );\n"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  KieSession ksession=kbase.newStatefulKnowledgeSession();
+  List<String> results=new ArrayList<String>();
+  ksession.setGlobal("results",results);
+  boolean success=true;
+  CompletionService<Boolean> ecs=new ExecutorCompletionService<Boolean>(executor);
+  for (int i=0; i < 3; i++) {
+    ecs.submit(new EPManipulator2(ksession,i));
+  }
+  for (int i=0; i < 3; i++) {
+    try {
+      success=ecs.take().get() && success;
+    }
+ catch (    Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+  assertTrue(success);
+  ksession.fireAllRules();
+  System.out.println(results);
+  assertEquals(3,results.size());
+  for (  String s : results) {
+    assertEquals("2",s);
+  }
+}
