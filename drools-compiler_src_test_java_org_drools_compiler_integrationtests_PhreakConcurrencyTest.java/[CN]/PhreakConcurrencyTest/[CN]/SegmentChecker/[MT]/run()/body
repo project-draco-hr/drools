@@ -1,0 +1,111 @@
+{
+  System.out.println("Sync point");
+  if (pathMemories == null) {
+    initPathMemories();
+  }
+  String s="";
+  for (int i=0; i < epManipulators.length; i++) {
+    if (epManipulators[i].isInserted()) {
+      s="1" + s;
+    }
+ else {
+      s="0" + s;
+    }
+  }
+  System.out.println("Inserted facts mask = " + s);
+  SegmentMemory s0=pathMemories[0].getSegmentMemories()[0];
+  SegmentMemory s1=pathMemories[0].getSegmentMemories()[1];
+  SegmentMemory s2=pathMemories[1].getSegmentMemories()[1];
+  SegmentMemory s3=pathMemories[1].getSegmentMemories()[2];
+  SegmentMemory s4=pathMemories[2].getSegmentMemories()[2];
+  long s0Mask=1;
+  long s1Mask=0;
+  long s2Mask=0;
+  long s3Mask=0;
+  long s4Mask=0;
+  if (epManipulators[0].isInserted()) {
+    s0Mask|=2;
+  }
+  if (epManipulators[1].isInserted()) {
+    s0Mask|=4;
+  }
+  if (epManipulators[2].isInserted()) {
+    s0Mask|=8;
+  }
+  if (epManipulators[3].isInserted()) {
+    s1Mask|=1;
+    s2Mask|=2;
+  }
+  if (epManipulators[4].isInserted()) {
+    s1Mask|=2;
+    s2Mask|=4;
+  }
+  if (epManipulators[5].isInserted()) {
+    s1Mask|=4;
+    s2Mask|=8;
+  }
+  if (epManipulators[6].isInserted()) {
+    s1Mask|=8;
+    s3Mask|=1;
+    s4Mask|=2;
+  }
+  if (epManipulators[7].isInserted()) {
+    s1Mask|=16;
+    s3Mask|=2;
+    s4Mask|=4;
+  }
+  if (epManipulators[8].isInserted()) {
+    s1Mask|=32;
+    s3Mask|=4;
+    s4Mask|=8;
+  }
+  assertEquals(s0Mask,s0.getLinkedNodeMask());
+  assertEquals(s1Mask,s1.getLinkedNodeMask());
+  assertEquals(s2Mask,s2.getLinkedNodeMask());
+  assertEquals(s3Mask,s3.getLinkedNodeMask());
+  assertEquals(s4Mask,s4.getLinkedNodeMask());
+  long p0Mask=0;
+  long p1Mask=0;
+  long p2Mask=0;
+  if ((s0Mask & 15) == 15) {
+    assertTrue(s0.isSegmentLinked());
+    p0Mask|=1;
+    p1Mask|=1;
+    p2Mask|=1;
+  }
+ else {
+    assertFalse(s0.isSegmentLinked());
+  }
+  if ((s1Mask & 63) == 63) {
+    assertTrue(s1.isSegmentLinked());
+    p0Mask|=2;
+  }
+ else {
+    assertFalse(s1.isSegmentLinked());
+  }
+  if ((s2Mask & 14) == 14) {
+    assertTrue(s2.isSegmentLinked());
+    p1Mask|=2;
+    p2Mask|=2;
+  }
+ else {
+    assertFalse(s2.isSegmentLinked());
+  }
+  if ((s3Mask & 7) == 7) {
+    assertTrue(s3.isSegmentLinked());
+    p1Mask|=4;
+  }
+ else {
+    assertFalse(s3.isSegmentLinked());
+  }
+  if ((s4Mask & 14) == 14) {
+    assertTrue(s4.isSegmentLinked());
+    p2Mask|=4;
+  }
+ else {
+    assertFalse(s4.isSegmentLinked());
+  }
+  assertEquals(p0Mask == 3,pathMemories[0].isRuleLinked());
+  assertEquals(p1Mask == 7,pathMemories[1].isRuleLinked());
+  assertEquals(p2Mask == 7,pathMemories[2].isRuleLinked());
+}
