@@ -1,0 +1,30 @@
+{
+  String expected="rule \"RegexDslRule\"\n" + "dialect \"mvel\"\n" + "when\n"+ "When the ages is less than  57\n"+ "then\n"+ "end\n";
+  final String dslDefinition="When the ages is less than {num:1?[0-9]?[0-9]}";
+  final DSLSentence dsl=new DSLSentence();
+  dsl.setDefinition(dslDefinition);
+  final List<DSLVariableValue> values=dsl.getValues();
+  assertEquals(1,values.size());
+  assertTrue(values.get(0) instanceof DSLComplexVariableValue);
+  assertEquals("num",values.get(0).getValue());
+  assertEquals("1?[0-9]?[0-9]",((DSLComplexVariableValue)values.get(0)).getId());
+  dsl.getValues().get(0).setValue("57");
+  final String expansion=dsl.interpolate();
+  assertEquals("When the ages is less than 57",expansion);
+  assertEquals(dsl.getDefinition(),dslDefinition);
+  final RuleModel m=new RuleModel();
+  m.name="RegexDslRule";
+  m.addLhsItem(dsl);
+  String drl=brlPersistence.marshal(m);
+  assertEqualsIgnoreWhitespace(expected,drl);
+  String dslFile="[when]" + dslDefinition + "=applicant:Applicant(age<{num})";
+  RuleModel model=brlPersistence.unmarshalUsingDSL(drl,null,dslFile);
+  DSLSentence dslSentence=(DSLSentence)model.lhs[0];
+  assertEquals(dslDefinition,dslSentence.getDefinition());
+  assertEquals(1,dslSentence.getValues().size());
+  assertTrue(dslSentence.getValues().get(0) instanceof DSLComplexVariableValue);
+  DSLComplexVariableValue dslComplexVariableValue=(DSLComplexVariableValue)dslSentence.getValues().get(0);
+  assertEquals("57",dslComplexVariableValue.getValue());
+  assertEquals("1?[0-9]?[0-9]",dslComplexVariableValue.getId());
+  assertEqualsIgnoreWhitespace(drl,brlPersistence.marshal(model));
+}
