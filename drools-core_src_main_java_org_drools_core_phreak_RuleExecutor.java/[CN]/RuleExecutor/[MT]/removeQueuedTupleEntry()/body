@@ -1,8 +1,6 @@
 {
   TupleEntry tupleEntry=pmem.getQueue().remove();
-  TupleEntry originalTupleEntry=tupleEntry;
   PropagationContext originalPctx=tupleEntry.getPropagationContext();
-  PropagationContext pctx=originalPctx;
   EventFactHandle evFh1=null;
   EventFactHandle evFh2=null;
   if (tupleEntry.getLeftTuple() != null) {
@@ -17,7 +15,7 @@
       log.trace("Stream removed entry {} {} size {}",System.identityHashCode(pmem.getQueue()),tupleEntry,pmem.getQueue().size());
     }
     if (tupleEntry.getLeftTuple() != null) {
-      SegmentMemory sm=(SegmentMemory)tupleEntry.getNodeMemory().getSegmentMemory();
+      SegmentMemory sm=tupleEntry.getNodeMemory().getSegmentMemory();
       LeftTupleSets tuples=sm.getStagedLeftTuples();
       tupleEntry.getLeftTuple().setPropagationContext(tupleEntry.getPropagationContext());
 switch (tupleEntry.getPropagationContext().getType()) {
@@ -37,6 +35,7 @@ break;
 }
  else {
 BetaMemory bm=(BetaMemory)tupleEntry.getNodeMemory();
+tupleEntry.getRightTuple().setPropagationContext(tupleEntry.getPropagationContext());
 switch (tupleEntry.getPropagationContext().getType()) {
 case PropagationContext.INSERTION:
 case PropagationContext.RULE_ADDITION:
@@ -54,31 +53,12 @@ break;
 }
 if (!pmem.getQueue().isEmpty()) {
 tupleEntry=pmem.getQueue().peek();
-pctx=tupleEntry.getPropagationContext();
-if (fireUntilHalt) {
-if (pctx.getPropagationNumber() != originalPctx.getPropagationNumber()) {
-repeat=false;
-}
-if (tupleEntry.getLeftTuple() != null) {
-evFh2=(EventFactHandle)tupleEntry.getLeftTuple().getLastHandle();
-}
- else {
-evFh2=(EventFactHandle)tupleEntry.getRightTuple().getFactHandle();
-}
-if (evFh2.getStartTimestamp() <= evFh1.getStartTimestamp()) {
-repeat=true;
-}
-}
- else {
-if (tupleEntry.getLeftTuple() != null && tupleEntry.getLeftTuple().getStagedType() == LeftTuple.NONE) {
-repeat=true;
-}
- else if (tupleEntry.getRightTuple() != null && tupleEntry.getRightTuple().getStagedType() == LeftTuple.NONE) {
+PropagationContext pctx=tupleEntry.getPropagationContext();
+if (pctx.getPropagationNumber() == originalPctx.getPropagationNumber()) {
 repeat=true;
 }
  else {
 repeat=false;
-}
 }
 }
  else {
