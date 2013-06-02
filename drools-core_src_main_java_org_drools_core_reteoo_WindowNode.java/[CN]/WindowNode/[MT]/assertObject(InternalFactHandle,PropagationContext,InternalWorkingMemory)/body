@@ -1,21 +1,22 @@
 {
   final WindowMemory memory=(WindowMemory)workingMemory.getNodeMemory(this);
+  EventFactHandle evFh=(EventFactHandle)factHandle;
   memory.gate.lock();
   try {
     int index=0;
     for (    AlphaNodeFieldConstraint constraint : constraints) {
-      if (!constraint.isAllowed(factHandle,workingMemory,memory.context[index++])) {
+      if (!constraint.isAllowed(evFh,workingMemory,memory.context[index++])) {
         return;
       }
     }
-    if (!behavior.assertFact(memory,factHandle,workingMemory)) {
+    RightTuple rightTuple=new RightTuple(evFh,this);
+    rightTuple.setPropagationContext(pctx);
+    InternalFactHandle clonedFh=evFh.cloneAndLink();
+    rightTuple.setObject(clonedFh);
+    if (!behavior.assertFact(memory,clonedFh,pctx,workingMemory)) {
       return;
     }
-    WindowTupleList list=new WindowTupleList((EventFactHandle)factHandle,this);
-    context.setActiveWindowTupleList(list);
-    memory.events.put(factHandle,list);
-    this.sink.propagateAssertObject(factHandle,context,workingMemory);
-    context.setActiveWindowTupleList(null);
+    this.sink.propagateAssertObject(clonedFh,pctx,workingMemory);
   }
   finally {
     memory.gate.unlock();

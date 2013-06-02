@@ -1,0 +1,91 @@
+{
+  TupleEntry tupleEntry=pmem.getQueue().remove();
+  TupleEntry originalTupleEntry=tupleEntry;
+  PropagationContext originalPctx=tupleEntry.getPropagationContext();
+  PropagationContext pctx=originalPctx;
+  EventFactHandle evFh1=null;
+  EventFactHandle evFh2=null;
+  if (tupleEntry.getLeftTuple() != null) {
+    evFh1=(EventFactHandle)tupleEntry.getLeftTuple().getLastHandle();
+  }
+ else {
+    evFh1=(EventFactHandle)tupleEntry.getRightTuple().getFactHandle();
+  }
+  boolean repeat=true;
+  while (repeat) {
+    if (log.isTraceEnabled()) {
+      log.trace("Stream removed entry {} {} size {}",System.identityHashCode(pmem.getQueue()),tupleEntry,pmem.getQueue().size());
+    }
+    if (tupleEntry.getLeftTuple() != null) {
+      SegmentMemory sm=(SegmentMemory)tupleEntry.getNodeMemory().getSegmentMemory();
+      LeftTupleSets tuples=sm.getStagedLeftTuples();
+      tupleEntry.getLeftTuple().setPropagationContext(tupleEntry.getPropagationContext());
+switch (tupleEntry.getPropagationContext().getType()) {
+case PropagationContext.INSERTION:
+case PropagationContext.RULE_ADDITION:
+        tuples.addInsert(tupleEntry.getLeftTuple());
+      break;
+case PropagationContext.MODIFICATION:
+    tuples.addUpdate(tupleEntry.getLeftTuple());
+  break;
+case PropagationContext.DELETION:
+case PropagationContext.EXPIRATION:
+case PropagationContext.RULE_REMOVAL:
+tuples.addDelete(tupleEntry.getLeftTuple());
+break;
+}
+}
+ else {
+BetaMemory bm=(BetaMemory)tupleEntry.getNodeMemory();
+switch (tupleEntry.getPropagationContext().getType()) {
+case PropagationContext.INSERTION:
+case PropagationContext.RULE_ADDITION:
+bm.getStagedRightTuples().addInsert(tupleEntry.getRightTuple());
+break;
+case PropagationContext.MODIFICATION:
+bm.getStagedRightTuples().addUpdate(tupleEntry.getRightTuple());
+break;
+case PropagationContext.DELETION:
+case PropagationContext.EXPIRATION:
+case PropagationContext.RULE_REMOVAL:
+bm.getStagedRightTuples().addDelete(tupleEntry.getRightTuple());
+break;
+}
+}
+if (!pmem.getQueue().isEmpty()) {
+tupleEntry=pmem.getQueue().peek();
+pctx=tupleEntry.getPropagationContext();
+if (fireUntilHalt) {
+if (pctx.getPropagationNumber() != originalPctx.getPropagationNumber()) {
+repeat=false;
+}
+if (tupleEntry.getLeftTuple() != null) {
+evFh2=(EventFactHandle)tupleEntry.getLeftTuple().getLastHandle();
+}
+ else {
+evFh2=(EventFactHandle)tupleEntry.getRightTuple().getFactHandle();
+}
+if (evFh2.getStartTimestamp() <= evFh1.getStartTimestamp()) {
+repeat=true;
+}
+}
+ else {
+if (tupleEntry.getLeftTuple() != null && tupleEntry.getLeftTuple().getStagedType() == LeftTuple.NONE) {
+repeat=true;
+}
+ else if (tupleEntry.getRightTuple() != null && tupleEntry.getRightTuple().getStagedType() == LeftTuple.NONE) {
+repeat=true;
+}
+ else {
+repeat=false;
+}
+}
+}
+ else {
+repeat=false;
+}
+if (repeat) {
+tupleEntry=pmem.getQueue().remove();
+}
+}
+}

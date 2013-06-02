@@ -15,15 +15,17 @@
   if (initRtn) {
     initialiseRtnMemory(segmentRoot,wm,pmems);
   }
-  Queue queue=null;
-  if (tupleSource.isStreamMode()) {
-    queue=pmems.get(0).getQueue();
-  }
-  smem=new SegmentMemory(segmentRoot,queue);
+  smem=new SegmentMemory(segmentRoot,null);
   long nodePosMask=1;
   long allLinkedTestMask=0;
   boolean updateNodeBit=true;
   while (true) {
+    if (tupleSource.isStreamMode() && smem.getTupleQueue() == null) {
+      if (pmems.isEmpty()) {
+        initialiseRtnMemory(segmentRoot,wm,pmems);
+      }
+      smem.setTupleQueue(pmems.get(0).getQueue());
+    }
     if (NodeTypeEnums.isBetaNode(tupleSource)) {
       allLinkedTestMask=processBetaNode(tupleSource,wm,smem,nodePosMask,allLinkedTestMask,updateNodeBit);
     }

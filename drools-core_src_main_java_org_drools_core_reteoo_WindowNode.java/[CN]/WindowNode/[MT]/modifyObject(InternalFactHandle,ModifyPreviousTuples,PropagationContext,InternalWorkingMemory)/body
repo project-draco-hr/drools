@@ -1,35 +1,16 @@
 {
-  final WindowMemory memory=(WindowMemory)workingMemory.getNodeMemory(this);
-  memory.gate.lock();
-  try {
-    int index=0;
-    boolean isAllowed=true;
-    for (    AlphaNodeFieldConstraint constraint : constraints) {
-      if (!constraint.isAllowed(factHandle,workingMemory,memory.context[index++])) {
-        isAllowed=false;
-        break;
-      }
-    }
-    WindowTupleList list=(WindowTupleList)memory.events.get(factHandle);
-    if (isAllowed) {
-      if (list != null) {
-        context.setActiveWindowTupleList(list);
-        this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context,workingMemory);
-        context.setActiveWindowTupleList(null);
-      }
- else {
-        list=new WindowTupleList((EventFactHandle)factHandle,this);
-        context.setActiveWindowTupleList(list);
-        memory.events.put(factHandle,list);
-        this.sink.propagateAssertObject(factHandle,context,workingMemory);
-        context.setActiveWindowTupleList(null);
-      }
-    }
- else {
-      memory.events.remove(factHandle);
-    }
+  RightTuple rightTuple=modifyPreviousTuples.peekRightTuple();
+  while (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getRightInputOtnId().before(getRightInputOtnId())) {
+    modifyPreviousTuples.removeRightTuple();
+    rightTuple.setPropagationContext(context);
+    retractRightTuple(rightTuple,context,wm);
+    rightTuple=modifyPreviousTuples.peekRightTuple();
   }
-  finally {
-    memory.gate.unlock();
+  if (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getRightInputOtnId().equals(getRightInputOtnId())) {
+    modifyPreviousTuples.removeRightTuple();
+    modifyRightTuple(rightTuple,context,wm);
+  }
+ else {
+    assertObject(factHandle,context,wm);
   }
 }

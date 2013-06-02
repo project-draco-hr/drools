@@ -1,5 +1,5 @@
 {
-  String str="declare A\n" + "    @role( event )\n" + "    id : int\n"+ "end\n"+ "declare B\n"+ "    @role( event )\n"+ "    id : int\n"+ "end\n"+ "rule launch\n"+ "when\n"+ "then\n"+ "    insert( new A( 1 ) );\n"+ "    insert( new A( 2 ) );\n"+ "    insert( new B( 1 ) );\n"+ "    insert( new A( 3 ) );\n"+ "    insert( new B( 2 ) );\n"+ "end\n"+ "rule \"ab\"\n"+ "when\n"+ "    A( $a : id ) over window:length( 1 )\n"+ "    B( $b : id ) over window:length( 1 )\n"+ "then\n"+ "    //System.out.println(\"AB: ( \"+$a+\", \"+$b+\" )\");\n"+ "end\n"+ "rule \"ba\"\n"+ "when\n"+ "    B( $b : id ) over window:length( 1 )\n"+ "    A( $a : id ) over window:length( 1 )\n"+ "then\n"+ "    //System.out.println(\"BA: ( \"+$b+\", \"+$a+\" )\");\n"+ "end";
+  String str="declare A\n" + "    @role( event )\n" + "    id : int\n"+ "end\n"+ "declare B\n"+ "    @role( event )\n"+ "    id : int\n"+ "end\n"+ "rule launch\n"+ "when\n"+ "then\n"+ "    insert( new A( 1 ) );\n"+ "    insert( new A( 2 ) );\n"+ "    insert( new B( 1 ) );\n"+ "    insert( new A( 3 ) );\n"+ "    insert( new B( 2 ) );\n"+ "end\n"+ "rule \"ab\"\n"+ "when\n"+ "    A( $a : id ) over window:length( 1 )\n"+ "    B( $b : id ) over window:length( 1 )\n"+ "then\n"+ "    System.out.println(\"AB: ( \"+$a+\", \"+$b+\" )\");\n"+ "end\n"+ "rule \"ba\"\n"+ "when\n"+ "    B( $b : id ) over window:length( 1 )\n"+ "    A( $a : id ) over window:length( 1 )\n"+ "then\n"+ "    System.out.println(\"BA: ( \"+$b+\", \"+$a+\" )\");\n"+ "end";
   KieBaseConfiguration config=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
   config.setOption(EventProcessingOption.STREAM);
   KnowledgeBase kbase=loadKnowledgeBaseFromString(config,str);
@@ -12,28 +12,56 @@
   List<AfterMatchFiredEvent> values=captor.getAllValues();
   Match act=values.get(0).getMatch();
   assertThat(act.getRule().getName(),is("launch"));
-  act=values.get(1).getMatch();
-  assertThat(act.getRule().getName(),is("ba"));
-  assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(3));
-  assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(2));
-  act=values.get(2).getMatch();
-  assertThat(act.getRule().getName(),is("ab"));
-  assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(3));
-  assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(2));
-  act=values.get(3).getMatch();
-  assertThat(act.getRule().getName(),is("ba"));
-  assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(3));
-  assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(1));
-  act=values.get(4).getMatch();
-  assertThat(act.getRule().getName(),is("ab"));
-  assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(3));
-  assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(1));
-  act=values.get(5).getMatch();
-  assertThat(act.getRule().getName(),is("ba"));
-  assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(2));
-  assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(1));
-  act=values.get(6).getMatch();
-  assertThat(act.getRule().getName(),is("ab"));
-  assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(2));
-  assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(1));
+  if (preak == PhreakOption.ENABLED) {
+    act=values.get(1).getMatch();
+    assertThat(act.getRule().getName(),is("ba"));
+    assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(2));
+    assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(1));
+    act=values.get(2).getMatch();
+    assertThat(act.getRule().getName(),is("ba"));
+    assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(3));
+    assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(1));
+    act=values.get(3).getMatch();
+    assertThat(act.getRule().getName(),is("ba"));
+    assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(3));
+    assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(2));
+    act=values.get(4).getMatch();
+    assertThat(act.getRule().getName(),is("ab"));
+    assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(2));
+    assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(1));
+    act=values.get(5).getMatch();
+    assertThat(act.getRule().getName(),is("ab"));
+    assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(3));
+    assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(1));
+    act=values.get(6).getMatch();
+    assertThat(act.getRule().getName(),is("ab"));
+    assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(3));
+    assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(2));
+  }
+ else {
+    act=values.get(1).getMatch();
+    assertThat(act.getRule().getName(),is("ba"));
+    assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(3));
+    assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(2));
+    act=values.get(2).getMatch();
+    assertThat(act.getRule().getName(),is("ab"));
+    assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(3));
+    assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(2));
+    act=values.get(3).getMatch();
+    assertThat(act.getRule().getName(),is("ba"));
+    assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(3));
+    assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(1));
+    act=values.get(4).getMatch();
+    assertThat(act.getRule().getName(),is("ab"));
+    assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(3));
+    assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(1));
+    act=values.get(5).getMatch();
+    assertThat(act.getRule().getName(),is("ba"));
+    assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(2));
+    assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(1));
+    act=values.get(6).getMatch();
+    assertThat(act.getRule().getName(),is("ab"));
+    assertThat(((Number)act.getDeclarationValue("$a")).intValue(),is(2));
+    assertThat(((Number)act.getDeclarationValue("$b")).intValue(),is(1));
+  }
 }

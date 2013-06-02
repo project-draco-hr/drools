@@ -1,21 +1,21 @@
 {
   LinkedList<StackEntry> outerStack=new LinkedList<StackEntry>();
   if (log.isTraceEnabled()) {
-    log.trace("Start eval entry {}",pmem.getQueue().isEmpty());
+    log.trace("Start eval entry {} {}",pmem.getRuleAgendaItem().getRule().getName(),pmem.getQueue().isEmpty());
   }
+  InternalAgenda agenda=(InternalAgenda)wm.getAgenda();
+  boolean fireUntilHalt=agenda.isFireUntilHalt();
   if (isDirty() || (pmem.getQueue() != null && !pmem.getQueue().isEmpty())) {
     setDirty(false);
-    boolean callEvaluateNetwork=true;
     if (pmem.getQueue() != null && !pmem.getQueue().isEmpty()) {
-      removeQueuedTupleEntry();
+      removeQueuedTupleEntry(fireUntilHalt);
       this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
       while (tupleList.isEmpty() && !pmem.getQueue().isEmpty()) {
-        removeQueuedTupleEntry();
+        removeQueuedTupleEntry(fireUntilHalt);
         this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
-        callEvaluateNetwork=false;
       }
     }
-    if (callEvaluateNetwork) {
+ else {
       this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
     }
     wm.executeQueuedActions();
@@ -23,7 +23,6 @@
   int localFireCount=0;
   if (!tupleList.isEmpty()) {
     RuleTerminalNode rtn=(RuleTerminalNode)pmem.getNetworkNode();
-    InternalAgenda agenda=(InternalAgenda)wm.getAgenda();
     int salience=ruleAgendaItem.getSalience();
     if (isDeclarativeAgendaEnabled()) {
       RuleAgendaItem nextRule=agenda.peekNextRule();
@@ -66,16 +65,15 @@
       }
       if (isDirty() || (pmem.getQueue() != null && !pmem.getQueue().isEmpty())) {
         setDirty(false);
-        boolean callEvaluateNetwork=true;
         if (pmem.getQueue() != null && !pmem.getQueue().isEmpty()) {
-          removeQueuedTupleEntry();
+          removeQueuedTupleEntry(fireUntilHalt);
+          this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
           while (tupleList.isEmpty() && !pmem.getQueue().isEmpty()) {
-            removeQueuedTupleEntry();
+            removeQueuedTupleEntry(fireUntilHalt);
             this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
-            callEvaluateNetwork=false;
           }
         }
-        if (callEvaluateNetwork) {
+ else {
           this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
         }
       }

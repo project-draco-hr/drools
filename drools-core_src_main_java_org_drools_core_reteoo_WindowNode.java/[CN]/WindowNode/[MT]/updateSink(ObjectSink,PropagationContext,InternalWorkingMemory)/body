@@ -1,15 +1,12 @@
 {
-  final WindowMemory memory=(WindowMemory)workingMemory.getNodeMemory(this);
+  final WindowMemory memory=(WindowMemory)wm.getNodeMemory(this);
   memory.gate.lock();
   try {
-    Iterator it=memory.events.iterator();
-    try {
-      for (ObjectHashMap.ObjectEntry entry=(ObjectHashMap.ObjectEntry)it.next(); entry != null; entry=(ObjectHashMap.ObjectEntry)it.next()) {
-        sink.assertObject((InternalFactHandle)entry.getValue(),context,workingMemory);
-      }
-    }
- catch (    Exception e) {
-      e.printStackTrace();
+    final ObjectTypeNodeMemory omem=(ObjectTypeNodeMemory)wm.getNodeMemory(getObjectTypeNode());
+    Iterator it=omem.getObjectHashSet().iterator();
+    for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
+      InternalFactHandle fh=(InternalFactHandle)entry.getValue();
+      sink.assertObject(fh,context,wm);
     }
   }
   finally {
