@@ -67,7 +67,6 @@
   for (  AbstractClassTypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
     registerGeneratedType(typeDescr);
   }
-  List<TypeDefinition> unresolvedTypeDefinitions=null;
   for (  AbstractClassTypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
     if (!typeDescr.getNamespace().equals(packageDescr.getNamespace())) {
       continue;
@@ -138,7 +137,7 @@
       className=type.getTypeName();
     }
     try {
-      generateDeclaredBean(typeDescr,type,pkgRegistry,unresolvedTypeDefinitions);
+      generateDeclaredBean(typeDescr,type,pkgRegistry,unresolvedTypes);
       Class<?> clazz=pkgRegistry.getTypeResolver().resolveType(typeDescr.getType().getFullName());
       type.setTypeClass(clazz);
     }
@@ -147,11 +146,8 @@
       continue;
     }
     if (!processTypeFields(pkgRegistry,typeDescr,type,true)) {
-      if (unresolvedTypeDefinitions == null) {
-        unresolvedTypeDefinitions=new ArrayList<TypeDefinition>();
-      }
-      unresolvedTypeDefinitions.add(new TypeDefinition(type,typeDescr));
+      unresolvedTypes.add(new TypeDefinition(type,typeDescr));
     }
   }
-  return unresolvedTypeDefinitions;
+  return unresolvedTypes;
 }
