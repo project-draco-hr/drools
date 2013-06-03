@@ -1,8 +1,14 @@
 {
   ProtobufMessages.Agenda _agenda=_ruleData.getAgenda();
   for (  org.drools.core.marshalling.impl.ProtobufMessages.Agenda.AgendaGroup _agendaGroup : _agenda.getAgendaGroupList()) {
-    InternalAgendaGroup group=(InternalAgendaGroup)agenda.getAgendaGroup(_agendaGroup.getName(),context.ruleBase);
+    BinaryHeapQueueAgendaGroup group=(BinaryHeapQueueAgendaGroup)agenda.getAgendaGroup(_agendaGroup.getName(),context.ruleBase);
     group.setActive(_agendaGroup.getIsActive());
+    group.setAutoDeactivate(_agendaGroup.getIsAutoDeactivate());
+    group.setClearedForRecency(_agendaGroup.getClearedForRecency());
+    group.setActivatedForRecency(_agendaGroup.getActivatedForRecency());
+    for (    org.drools.core.marshalling.impl.ProtobufMessages.Agenda.AgendaGroup.NodeInstance _nodeInstance : _agendaGroup.getNodeInstanceList()) {
+      group.addNodeInstance(_nodeInstance.getProcessInstanceId(),_nodeInstance.getNodeInstanceId());
+    }
     agenda.getAgendaGroupsMap().put(group.getName(),group);
   }
   for (  String _groupName : _agenda.getFocusStack().getGroupNameList()) {

@@ -4,10 +4,17 @@
   org.drools.core.marshalling.impl.ProtobufMessages.Agenda.Builder _ab=ProtobufMessages.Agenda.newBuilder();
   AgendaGroup[] agendaGroups=(AgendaGroup[])agenda.getAgendaGroupsMap().values().toArray(new AgendaGroup[agenda.getAgendaGroupsMap().size()]);
   Arrays.sort(agendaGroups,AgendaGroupSorter.instance);
-  for (  AgendaGroup group : agendaGroups) {
+  for (  AgendaGroup ag : agendaGroups) {
+    BinaryHeapQueueAgendaGroup group=(BinaryHeapQueueAgendaGroup)ag;
     org.drools.core.marshalling.impl.ProtobufMessages.Agenda.AgendaGroup.Builder _agb=ProtobufMessages.Agenda.AgendaGroup.newBuilder();
-    _agb.setName(group.getName());
-    _agb.setIsActive(group.isActive());
+    _agb.setName(group.getName()).setIsActive(group.isActive()).setIsAutoDeactivate(group.isAutoDeactivate()).setClearedForRecency(group.getClearedForRecency()).setActivatedForRecency(group.getActivatedForRecency());
+    Map<Long,String> nodeInstances=group.getNodeInstances();
+    for (    Map.Entry<Long,String> entry : nodeInstances.entrySet()) {
+      org.drools.core.marshalling.impl.ProtobufMessages.Agenda.AgendaGroup.NodeInstance.Builder _nib=ProtobufMessages.Agenda.AgendaGroup.NodeInstance.newBuilder();
+      _nib.setProcessInstanceId(entry.getKey());
+      _nib.setNodeInstanceId(entry.getValue());
+      _agb.addNodeInstance(_nib.build());
+    }
     _ab.addAgendaGroup(_agb.build());
   }
   org.drools.core.marshalling.impl.ProtobufMessages.Agenda.FocusStack.Builder _fsb=ProtobufMessages.Agenda.FocusStack.newBuilder();
