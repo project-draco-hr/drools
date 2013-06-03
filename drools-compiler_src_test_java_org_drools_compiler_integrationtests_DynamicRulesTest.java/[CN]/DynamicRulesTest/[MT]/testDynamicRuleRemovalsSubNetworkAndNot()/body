@@ -1,23 +1,21 @@
 {
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("test_DynamicRulesWithNotSubnetwork.drl")),ResourceType.DRL);
-  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
-  final KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  final StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  KnowledgeBase kbase=loadKnowledgeBase("test_DynamicRulesWithNotSubnetwork.drl");
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
   final AgendaEventListener alistener=mock(AgendaEventListener.class);
   ksession.addEventListener(alistener);
   ksession.insert(new Person("toni"));
+  ksession.fireAllRules();
   verify(alistener,never()).matchCreated(any(org.kie.api.event.rule.MatchCreatedEvent.class));
   ksession.insert(new Person("bob"));
+  ksession.fireAllRules();
   verify(alistener,times(1)).matchCreated(any(org.kie.api.event.rule.MatchCreatedEvent.class));
   ksession.insert(new Person("mark"));
+  ksession.fireAllRules();
   verify(alistener,times(1)).matchCreated(any(org.kie.api.event.rule.MatchCreatedEvent.class));
   kbase.removeKnowledgePackage("org.drools.compiler");
   assertEquals(0,kbase.getKnowledgePackages().size());
-  kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("test_DynamicRulesWithNotSubnetwork.drl")),ResourceType.DRL);
-  assertFalse(kbuilder.getErrors().toString(),kbuilder.hasErrors());
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  Collection<KnowledgePackage> kpkgs=loadKnowledgePackages("test_DynamicRulesWithNotSubnetwork.drl");
+  kbase.addKnowledgePackages(kpkgs);
+  ksession.fireAllRules();
   verify(alistener,times(2)).matchCreated(any(org.kie.api.event.rule.MatchCreatedEvent.class));
 }

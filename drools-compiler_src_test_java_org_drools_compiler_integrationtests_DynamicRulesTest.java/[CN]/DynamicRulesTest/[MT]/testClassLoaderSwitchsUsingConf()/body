@@ -2,26 +2,16 @@
   try {
     ClassLoader loader1=new SubvertedClassLoader(new URL[]{getClass().getResource("/")},this.getClass().getClassLoader());
     Class cheeseClass=loader1.loadClass("org.drools.compiler.Cheese");
-    PackageBuilderConfiguration conf=new PackageBuilderConfiguration(loader1);
-    PackageBuilder builder=new PackageBuilder(conf);
-    builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic1.drl")));
-    RuleBaseConfiguration rbconf=new RuleBaseConfiguration(loader1);
-    RuleBase ruleBase=RuleBaseFactory.newRuleBase(rbconf);
-    Package pkg=SerializationHelper.serializeObject(builder.getPackage());
-    ruleBase.addPackage(pkg);
-    StatefulSession wm=ruleBase.newStatefulSession();
+    KnowledgeBuilderConfiguration kbuilderConf=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,loader1);
+    KnowledgeBase kbase=loadKnowledgeBase(kbuilderConf,"test_Dynamic1.drl");
+    StatefulKnowledgeSession wm=createKnowledgeSession(kbase);
     wm.insert(cheeseClass.newInstance());
     wm.fireAllRules();
     ClassLoader loader2=new SubvertedClassLoader(new URL[]{getClass().getResource("/")},this.getClass().getClassLoader());
     cheeseClass=loader2.loadClass("org.drools.compiler.Cheese");
-    conf=new PackageBuilderConfiguration(loader2);
-    builder=new PackageBuilder(conf);
-    builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_Dynamic1.drl")));
-    rbconf=new RuleBaseConfiguration(loader2);
-    ruleBase=RuleBaseFactory.newRuleBase(rbconf);
-    pkg=SerializationHelper.serializeObject(builder.getPackage());
-    ruleBase.addPackage(pkg);
-    wm=ruleBase.newStatefulSession();
+    kbuilderConf=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,loader2);
+    kbase=loadKnowledgeBase(kbuilderConf,"test_Dynamic1.drl");
+    wm=createKnowledgeSession(kbase);
     wm.insert(cheeseClass.newInstance());
     wm.fireAllRules();
   }
