@@ -2,11 +2,17 @@
   if (log.isTraceEnabled()) {
     log.trace("UnlinkNode notify=true nmask={} smask={} spos={} rules={}",mask,linkedNodeMask,pos,getRuleNames());
   }
-  boolean linked=isSegmentLinked();
   linkedNodeMask=linkedNodeMask ^ mask;
-  if (linked) {
+  if (!isSegmentLinked()) {
     for (int i=0, length=pathMemories.size(); i < length; i++) {
       pathMemories.get(i).unlinkedSegment(segmentPosMaskBit,wm);
+    }
+  }
+ else {
+    for (int i=0, length=pathMemories.size(); i < length; i++) {
+      if (pathMemories.get(i).isRuleLinked()) {
+        pathMemories.get(i).doLinkRule(wm);
+      }
     }
   }
 }
