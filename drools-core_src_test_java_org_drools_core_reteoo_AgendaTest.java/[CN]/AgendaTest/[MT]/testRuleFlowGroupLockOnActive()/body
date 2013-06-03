@@ -2,9 +2,9 @@
   final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
   final ReteooWorkingMemory workingMemory=(ReteooWorkingMemory)ruleBase.newStatefulSession();
   final DefaultAgenda agenda=(DefaultAgenda)workingMemory.getAgenda();
-  final RuleFlowGroupImpl ruleFlowGroup=(RuleFlowGroupImpl)agenda.getRuleFlowGroup("rule-flow-group-0");
+  final RuleFlowGroup ruleFlowGroup=(RuleFlowGroup)agenda.getRuleFlowGroup("rule-flow-group-0");
   final Rule rule=new Rule("test-rule");
-  rule.setRuleFlowGroup("rule-flow-group-0");
+  rule.setAgendaGroup("rule-flow-group-0");
   final RuleTerminalNode node=new RuleTerminalNode(2,new MockTupleSource(2),rule,rule.getLhs(),0,buildContext);
   final RuleTerminalNodeLeftTuple tuple1=new RuleTerminalNodeLeftTuple(new DefaultFactHandle(1,"cheese"),node,true);
   final RuleTerminalNodeLeftTuple tuple2=new RuleTerminalNodeLeftTuple(new DefaultFactHandle(1,"cheese"),node,true);
@@ -12,7 +12,7 @@
   final PropagationContext context=new PropagationContextImpl(0,PropagationContext.INSERTION,rule,null,new DefaultFactHandle());
   rule.setLockOnActive(true);
   ruleFlowGroup.setAutoDeactivate(false);
-  ruleFlowGroup.setActive(true);
+  ((InternalRuleFlowGroup)ruleFlowGroup).setActive(true);
   node.assertLeftTuple(tuple1,context,workingMemory);
   assertEquals(0,ruleFlowGroup.size());
   rule.setLockOnActive(false);
@@ -20,7 +20,7 @@
   agenda.unstageActivations();
   assertEquals(1,ruleFlowGroup.size());
   rule.setLockOnActive(true);
-  ruleFlowGroup.setActive(false);
+  ((InternalAgendaGroup)ruleFlowGroup).setActive(false);
   node.assertLeftTuple(tuple3,context,workingMemory);
   agenda.unstageActivations();
   assertEquals(2,ruleFlowGroup.size());
