@@ -1,40 +1,38 @@
 {
   if (parserConfiguration == null) {
-    ClassLoader classLoader=rootClassLoader;
-{
-      String key=null;
-      Object value=null;
-      try {
-        for (        Entry<String,Object> entry : this.imports.entrySet()) {
-          key=entry.getKey();
-          value=entry.getValue();
-          if (entry.getValue() instanceof String) {
-            String str=(String)value;
-            if (str.startsWith("m:")) {
-              Class cls=this.rootClassLoader.loadClass(str.substring(2));
-              String methodName=key;
-              for (              Method method : cls.getDeclaredMethods()) {
-                if (method.getName().equals(methodName)) {
-                  entry.setValue(method);
-                  break;
-                }
+    ClassLoader packageClassLoader=getPackageClassLoader();
+    String key=null;
+    Object value=null;
+    try {
+      for (      Entry<String,Object> entry : this.imports.entrySet()) {
+        key=entry.getKey();
+        value=entry.getValue();
+        if (entry.getValue() instanceof String) {
+          String str=(String)value;
+          if (str.startsWith("m:")) {
+            Class cls=packageClassLoader.loadClass(str.substring(2));
+            String methodName=key;
+            for (            Method method : cls.getDeclaredMethods()) {
+              if (method.getName().equals(methodName)) {
+                entry.setValue(method);
+                break;
               }
             }
+          }
  else {
-              Class cls=this.rootClassLoader.loadClass(str);
-              entry.setValue(cls);
-            }
+            Class cls=packageClassLoader.loadClass(str);
+            entry.setValue(cls);
           }
         }
       }
- catch (      ClassNotFoundException e) {
-        throw new IllegalArgumentException("Unable to resolve method of field: " + key + " - "+ value,e);
-      }
+    }
+ catch (    ClassNotFoundException e) {
+      throw new IllegalArgumentException("Unable to resolve method of field: " + key + " - "+ value,e);
     }
     this.parserConfiguration=new ParserConfiguration();
     this.parserConfiguration.setImports(this.imports);
     this.parserConfiguration.setPackageImports(this.packageImports);
-    this.parserConfiguration.setClassLoader(classLoader);
+    this.parserConfiguration.setClassLoader(packageClassLoader);
   }
   return this.parserConfiguration;
 }

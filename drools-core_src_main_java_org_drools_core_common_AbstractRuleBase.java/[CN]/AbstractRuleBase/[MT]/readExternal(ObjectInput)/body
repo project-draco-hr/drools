@@ -9,18 +9,16 @@
     droolsStream=new DroolsObjectInputStream(bytes);
   }
   boolean classLoaderCacheEnabled=droolsStream.readBoolean();
-  this.rootClassLoader=ClassLoaderUtil.getClassLoader(new ClassLoader[]{droolsStream.getParentClassLoader()},getClass(),classLoaderCacheEnabled);
+  Map<String,byte[]> store=(Map<String,byte[]>)droolsStream.readObject();
+  this.rootClassLoader=createProjectClassLoader(droolsStream.getParentClassLoader(),store);
   droolsStream.setClassLoader(this.rootClassLoader);
   droolsStream.setRuleBase(this);
-  JavaDialectRuntimeData typeStore=(JavaDialectRuntimeData)droolsStream.readObject();
-  this.declarationClassLoader=new JavaDialectRuntimeData.TypeDeclarationClassLoader(typeStore,this.rootClassLoader);
-  this.rootClassLoader.addClassLoader(this.declarationClassLoader);
   this.classFieldAccessorCache=new ClassFieldAccessorCache(this.rootClassLoader);
   this.config=(RuleBaseConfiguration)droolsStream.readObject();
   this.config.setClassLoader(droolsStream.getParentClassLoader());
   this.pkgs=(Map<String,Package>)droolsStream.readObject();
-  for (  final Object object : this.pkgs.values()) {
-    ((Package)object).getDialectRuntimeRegistry().onAdd(this.rootClassLoader);
+  for (  Package pkg : this.pkgs.values()) {
+    pkg.getDialectRuntimeRegistry().onAdd(this.rootClassLoader);
   }
   this.id=(String)droolsStream.readObject();
   this.workingMemoryCounter.set(droolsStream.readInt());
@@ -36,10 +34,10 @@
 catch (  IllegalAccessException e) {
     DroolsObjectInputStream.newInvalidClassException(cls,e);
   }
-  for (  final Object object : this.pkgs.values()) {
-    ((Package)object).getDialectRuntimeRegistry().onBeforeExecute();
-    ((Package)object).getClassFieldAccessorStore().setClassFieldAccessorCache(this.classFieldAccessorCache);
-    ((Package)object).getClassFieldAccessorStore().wire();
+  for (  Package pkg : this.pkgs.values()) {
+    pkg.getDialectRuntimeRegistry().onBeforeExecute();
+    pkg.getClassFieldAccessorStore().setClassFieldAccessorCache(this.classFieldAccessorCache);
+    pkg.getClassFieldAccessorStore().wire();
   }
   this.populateTypeDeclarationMaps();
   Map<String,String> globs=(Map<String,String>)droolsStream.readObject();
