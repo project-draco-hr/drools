@@ -18,7 +18,7 @@
   }
 ;
   final Rule rule0=new Rule("test-rule0");
-  rule0.setRuleFlowGroup("rule-flow-group-0");
+  rule0.setAgendaGroup("rule-flow-group-0");
   rule0.setConsequence(consequence0);
   final RuleTerminalNode node0=new RuleTerminalNode(idGenerator.getNextId(),new MockTupleSource(idGenerator.getNextId()),rule0,rule0.getLhs(),0,buildContext);
   final RuleFlowGroup ruleFlowGroup0=agenda.getRuleFlowGroup("rule-flow-group-0");
@@ -31,5 +31,27 @@
   workingMemory.fireAllRules();
   assertEquals(1,ruleFlowGroup0.size());
   agenda.activateRuleFlowGroup("rule-flow-group-0");
+  assertEquals(1,ruleFlowGroup0.size());
+  agenda.fireNextItem(null,0,-1);
+  assertEquals(0,ruleFlowGroup0.size());
+  assertTrue(ruleFlowGroup0.isActive());
+  ruleFlowGroup0.setAutoDeactivate(true);
+  assertTrue(ruleFlowGroup0.isAutoDeactivate());
+  agenda.fireNextItem(null,0,-1);
+  assertFalse(ruleFlowGroup0.isActive());
+  final RuleTerminalNodeLeftTuple tuple1=new RuleTerminalNodeLeftTuple(new DefaultFactHandle(1,"cheese"),node0,true);
+  node0.assertLeftTuple(tuple1,context0,workingMemory);
+  agenda.unstageActivations();
+  agenda.activateRuleFlowGroup("rule-flow-group-0");
+  assertEquals(1,ruleFlowGroup0.size());
+  assertTrue(ruleFlowGroup0.isActive());
+  agenda.fireNextItem(null,0,-1);
+  assertEquals(0,ruleFlowGroup0.size());
+  workingMemory.executeQueuedActions();
+  assertEquals(0,ruleFlowGroup0.size());
+  assertFalse(ruleFlowGroup0.isActive());
+  final RuleTerminalNodeLeftTuple tuple2=new RuleTerminalNodeLeftTuple(new DefaultFactHandle(1,"cheese"),node0,true);
+  node0.assertLeftTuple(tuple2,context0,workingMemory);
+  agenda.unstageActivations();
   assertEquals(1,ruleFlowGroup0.size());
 }
