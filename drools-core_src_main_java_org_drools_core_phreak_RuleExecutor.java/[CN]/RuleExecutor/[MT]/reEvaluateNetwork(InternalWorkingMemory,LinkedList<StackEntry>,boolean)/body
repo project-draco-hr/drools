@@ -1,0 +1,23 @@
+{
+  if (isDirty() || (pmem.getQueue() != null && !pmem.getQueue().isEmpty())) {
+    setDirty(false);
+    boolean evaled=false;
+    if (pmem.getQueue() != null) {
+      if (!fireUntilHalt) {
+        while (!pmem.getQueue().isEmpty()) {
+          removeQueuedTupleEntry();
+          this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
+          evaled=true;
+        }
+      }
+ else {
+        removeQueuedTupleEntry();
+        this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
+        evaled=true;
+      }
+    }
+    if (!evaled) {
+      this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
+    }
+  }
+}

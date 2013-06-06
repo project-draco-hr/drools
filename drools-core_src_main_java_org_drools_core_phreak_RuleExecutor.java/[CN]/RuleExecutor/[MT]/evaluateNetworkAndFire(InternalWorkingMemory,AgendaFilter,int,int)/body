@@ -2,28 +2,8 @@
   LinkedList<StackEntry> outerStack=new LinkedList<StackEntry>();
   InternalAgenda agenda=(InternalAgenda)wm.getAgenda();
   boolean fireUntilHalt=agenda.isFireUntilHalt();
-  if (isDirty() || (pmem.getQueue() != null && !pmem.getQueue().isEmpty())) {
-    setDirty(false);
-    boolean evaled=false;
-    if (pmem.getQueue() != null) {
-      if (!fireUntilHalt) {
-        while (!pmem.getQueue().isEmpty()) {
-          removeQueuedTupleEntry();
-          this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
-          evaled=true;
-        }
-      }
- else {
-        removeQueuedTupleEntry();
-        this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
-        evaled=true;
-      }
-    }
-    if (!evaled) {
-      this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
-    }
-    wm.executeQueuedActions();
-  }
+  reEvaluateNetwork(wm,outerStack,fireUntilHalt);
+  wm.executeQueuedActions();
   int localFireCount=0;
   if (!tupleList.isEmpty()) {
     RuleTerminalNode rtn=(RuleTerminalNode)pmem.getNetworkNode();
@@ -67,27 +47,7 @@
       if (haltRuleFiring(nextRule,fireCount,fireLimit,localFireCount,agenda,salience)) {
         break;
       }
-      if (isDirty() || (pmem.getQueue() != null && !pmem.getQueue().isEmpty())) {
-        setDirty(false);
-        boolean evaled=false;
-        if (pmem.getQueue() != null) {
-          if (!fireUntilHalt) {
-            while (!pmem.getQueue().isEmpty()) {
-              removeQueuedTupleEntry();
-              this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
-              evaled=true;
-            }
-          }
- else {
-            removeQueuedTupleEntry();
-            this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
-            evaled=true;
-          }
-        }
-        if (!evaled) {
-          this.networkEvaluator.evaluateNetwork(pmem,outerStack,this,wm);
-        }
-      }
+      reEvaluateNetwork(wm,outerStack,fireUntilHalt);
       wm.executeQueuedActions();
       if (tupleList.isEmpty() && !outerStack.isEmpty()) {
         StackEntry entry=outerStack.removeFirst();
