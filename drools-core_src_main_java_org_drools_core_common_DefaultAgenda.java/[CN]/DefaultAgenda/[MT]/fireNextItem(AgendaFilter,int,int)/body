@@ -14,11 +14,11 @@
         if (this.unlinkingEnabled) {
           RuleAgendaItem item;
           if (((InternalRuleBase)workingMemory.getRuleBase()).getConfiguration().isSequential()) {
-            item=(RuleAgendaItem)group.getNext();
+            item=(RuleAgendaItem)group.remove();
             item.setBlocked(true);
           }
  else {
-            item=(RuleAgendaItem)group.peekNext();
+            item=(RuleAgendaItem)group.peek();
           }
           localFireCount=item.getRuleExecutor().evaluateNetworkAndFire(this.workingMemory,filter,fireCount,fireLimit);
           if (localFireCount == 0) {
@@ -27,13 +27,8 @@
           }
         }
  else {
-          final AgendaItem item=(AgendaItem)group.getNext();
+          final AgendaItem item=(AgendaItem)group.remove();
           if (item != null) {
-            InternalRuleFlowGroup ruleFlowGroup=null;
-            if (item.getActivationNode() != null) {
-              ruleFlowGroup=(InternalRuleFlowGroup)item.getActivationNode().getParentContainer();
-              ruleFlowGroup.removeActivation(item);
-            }
             if (filter == null || filter.accept(item)) {
               fireActivation(item);
               localFireCount++;
@@ -44,13 +39,9 @@
               eventsupport.getAgendaEventSupport().fireActivationCancelled(item,this.workingMemory,MatchCancelledCause.FILTER);
               tryagain=true;
             }
-            if (ruleFlowGroup != null) {
-              ruleFlowGroup.deactivateIfEmpty();
-              this.workingMemory.executeQueuedActions();
-            }
           }
         }
-        if ((AgendaItem)group.peekNext() == null || !((AgendaItem)group.peekNext()).getTerminalNode().isFireDirect()) {
+        if ((AgendaItem)group.peek() == null || !((AgendaItem)group.peek()).getTerminalNode().isFireDirect()) {
           unstageActivations();
         }
       }
