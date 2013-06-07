@@ -13,12 +13,14 @@
   model.generateCode(xjcOpts,errorReceiver);
   MapVfsCodeWriter codeWriter=new MapVfsCodeWriter();
   model.codeModel.build(xjcOpts.createCodeWriter(codeWriter));
+  MemoryResourceReader src=new MemoryResourceReader();
+  boolean useProjectClassLoader=pkgBuilder.getRootClassLoader() instanceof ProjectClassLoader;
   List<String> classNames=new ArrayList<String>();
+  List<String> srcNames=new ArrayList<String>();
   for (  Entry<String,byte[]> entry : codeWriter.getMap().entrySet()) {
     String name=entry.getKey();
-    String pkgName=null;
     int dotPos=name.lastIndexOf('.');
-    pkgName=name.substring(0,dotPos);
+    String pkgName=name.substring(0,dotPos);
     if (!name.endsWith("package-info.java")) {
       classNames.add(pkgName);
     }
@@ -31,10 +33,36 @@
       pkgBuilder.addPackage(new PackageDescr(pkgName));
       pkgReg=pkgBuilder.getPackageRegistry(pkgName);
     }
-    JavaDialect dialect=(JavaDialect)pkgReg.getDialectCompiletimeRegistry().getDialect("java");
-    dialect.addSrc(convertToResource(entry.getKey()),entry.getValue());
+    if (useProjectClassLoader) {
+      String srcName=convertToResource(entry.getKey());
+      src.add(srcName,entry.getValue());
+      srcNames.add(srcName);
+    }
+ else {
+      JavaDialect dialect=(JavaDialect)pkgReg.getDialectCompiletimeRegistry().getDialect("java");
+      dialect.addSrc(convertToResource(entry.getKey()),entry.getValue());
+    }
   }
-  pkgBuilder.compileAll();
-  pkgBuilder.updateResults();
+  if (useProjectClassLoader) {
+    ProjectJavaCompiler compiler=new ProjectJavaCompiler(pkgBuilder);
+    List<KnowledgeBuilderResult> results=compiler.compileAll((ProjectClassLoader)pkgBuilder.getRootClassLoader(),srcNames,src);
+    for (    String className : classNames) {
+      Class<?> clazz=null;
+      try {
+        clazz=Class.forName(className,true,pkgBuilder.getRootClassLoader());
+      }
+ catch (      ClassNotFoundException e) {
+        continue;
+      }
+      String pkgName=className.substring(0,className.lastIndexOf('.'));
+      PackageRegistry pkgReg=pkgBuilder.getPackageRegistry(pkgName);
+      pkgReg.getPackage().addTypeDeclaration(new TypeDeclaration(clazz));
+    }
+    pkgBuilder.updateResults(results);
+  }
+ else {
+    pkgBuilder.compileAll();
+    pkgBuilder.updateResults();
+  }
   return classNames.toArray(new String[classNames.size()]);
 }

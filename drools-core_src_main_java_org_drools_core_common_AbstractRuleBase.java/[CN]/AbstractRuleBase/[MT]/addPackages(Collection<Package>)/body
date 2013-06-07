@@ -18,15 +18,19 @@
       String lastType=null;
       try {
         if (newPkg.getTypeDeclarations() != null) {
+          JavaDialectRuntimeData runtime=((JavaDialectRuntimeData)newPkg.getDialectRuntimeRegistry().getDialectData("java"));
           for (          TypeDeclaration newDecl : newPkg.getTypeDeclarations().values()) {
             lastType=newDecl.getTypeClassName();
             TypeDeclaration typeDeclaration=this.classTypeDeclaration.get(newDecl.getTypeClassName());
             if (typeDeclaration == null) {
               String className=newDecl.getTypeClassName();
-              byte[] def=((JavaDialectRuntimeData)newPkg.getDialectRuntimeRegistry().getDialectData("java")).getClassDefinition(JavaDialectRuntimeData.convertClassToResourcePath(className));
+              byte[] def=runtime.getClassDefinition(JavaDialectRuntimeData.convertClassToResourcePath(className));
               Class<?> definedKlass=registerAndLoadTypeDefinition(className,def);
               if (definedKlass == null && typeDeclaration.isNovel()) {
                 throw new RuntimeException("Registering null bytes for class " + className);
+              }
+              if (newDecl.getTypeClassDef() == null) {
+                newDecl.setTypeClassDef(new ClassDefinition());
               }
               newDecl.getTypeClassDef().setDefinedClass(definedKlass);
               newDecl.setTypeClass(definedKlass);
