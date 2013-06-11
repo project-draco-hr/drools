@@ -1,0 +1,34 @@
+{
+  String drl="package it.intext.drools.fusion.bug;\n" + "\n" + "import org.drools.compiler.integrationtests.MultithreadTest.MyFact;\n"+ " global java.util.List list; \n"+ "\n"+ "declare MyFact\n"+ "\t@role( event )\n"+ "\t@expires( 1s )\n"+ "end\n"+ "\n"+ "rule \"Dummy\"\n"+ "timer( cron: 0/1 * * * * ? )\n"+ "when\n"+ "  Number( $count : intValue ) from accumulate( MyFact( ) over window:time(1s), sum(1) )\n"+ "then\n"+ "    System.out.println($count+\" myfact(s) seen in the last 1 seconds\");\n"+ "    list.add( $count ); \n"+ "end";
+  KieBaseConfiguration kbconfig=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kbconfig.setOption(EventProcessingOption.STREAM);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(kbconfig,drl);
+  KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  conf.setOption(ClockTypeOption.get("REALTIME"));
+  final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(conf,null);
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
+  Runner t=new Runner(ksession);
+  t.start();
+  final int FACTS_PER_POLL=1000;
+  final int POLL_INTERVAL=500;
+  ScheduledExecutorService executor=Executors.newSingleThreadScheduledExecutor();
+  executor.scheduleAtFixedRate(new Runnable(){
+    public void run(){
+      for (int j=0; j < FACTS_PER_POLL; j++) {
+        ksession.insert(new MyFact());
+      }
+    }
+  }
+,0,POLL_INTERVAL,TimeUnit.MILLISECONDS);
+  Thread.sleep(10200);
+  executor.shutdownNow();
+  ksession.halt();
+  t.join();
+  if (t.getError() != null) {
+    fail(t.getError().getMessage());
+  }
+  System.out.println("Final size " + ksession.getObjects().size());
+  ksession.dispose();
+}
