@@ -2,9 +2,18 @@
   Declaration declaration=null;
   int dotPos=expr.indexOf('.');
   if (dotPos < 0) {
+    if (!isIdentifier(expr)) {
+      return null;
+    }
     declaration=context.getDeclarationResolver().getDeclaration(context.getRule(),expr);
-    if (declaration == null && "this".equals(expr)) {
-      declaration=createDeclarationObject(context,"this",pattern);
+    if (declaration == null) {
+      if ("this".equals(expr)) {
+        declaration=createDeclarationObject(context,"this",pattern);
+      }
+ else {
+        declaration=new Declaration("this",pattern);
+        context.getPkg().getClassFieldAccessorStore().getReader(((ClassObjectType)pattern.getObjectType()).getClassName(),expr,declaration);
+      }
     }
   }
  else {
