@@ -2,6 +2,7 @@
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
   final Package pkg=new Package("org.drools.test");
   final Rule rule=new Rule("test1");
+  rule.setEager(true);
   rule.setAgendaGroup("test group");
   final ClassObjectType cheeseObjectType=new ClassObjectType(Cheese.class);
   final Pattern pattern=new Pattern(0,cheeseObjectType);
@@ -77,6 +78,8 @@
   assertEquals(1,ksession.getAgendaEventListeners().size());
   final Cheese cheddar=new Cheese("cheddar",15);
   FactHandle cheddarHandle=ksession.insert(cheddar);
+  DefaultAgenda agenda=(DefaultAgenda)((AgendaImpl)ksession.getAgenda()).getAgenda();
+  agenda.evaluateEagerList();
   assertEquals(1,agendaList.size());
   MatchCreatedEvent createdEvent=(MatchCreatedEvent)agendaList.get(0);
   assertSame(cheddarHandle,createdEvent.getMatch().getFactHandles().toArray()[0]);
@@ -86,6 +89,7 @@
   agendaList.clear();
   cheddar.setPrice(14);
   ksession.update(cheddarHandle,cheddar);
+  agenda.evaluateEagerList();
   assertEquals(1,agendaList.size());
   createdEvent=(MatchCreatedEvent)agendaList.get(0);
   assertSame(cheddarHandle,createdEvent.getMatch().getFactHandles().toArray()[0]);
