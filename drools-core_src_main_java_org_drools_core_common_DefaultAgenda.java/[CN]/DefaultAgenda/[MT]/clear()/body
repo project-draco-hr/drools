@@ -8,23 +8,16 @@
     }
   }
   getStageActivationsGroup().clear();
-  List<RuleAgendaItem> lazyItems=null;
   for (  InternalAgendaGroup group : this.agendaGroups.values()) {
     if (this.unlinkingEnabled) {
       ((InternalAgendaGroup)group).setClearedForRecency(this.workingMemory.getFactHandleFactory().getRecency());
-      lazyItems=new ArrayList<RuleAgendaItem>();
       for (      Match a : group.getActivations()) {
         if (((Activation)a).isRuleAgendaItem()) {
-          lazyItems.add((RuleAgendaItem)a);
+          ((RuleAgendaItem)a).getRuleExecutor().reEvaluateNetwork(this.workingMemory,new org.drools.core.util.LinkedList<StackEntry>(),false);
         }
       }
     }
     group.clear();
-    if (this.unlinkingEnabled) {
-      for (      RuleAgendaItem lazyItem : lazyItems) {
-        group.add(lazyItem);
-      }
-    }
   }
   for (  ActivationGroup group : this.activationGroups.values()) {
     group.setTriggeredForRecency(this.workingMemory.getFactHandleFactory().getRecency());
