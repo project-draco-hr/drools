@@ -1,0 +1,59 @@
+{
+  List<LeftTuple> leftTuples=new ArrayList<LeftTuple>();
+  List<LeftTupleSink> sinks=new ArrayList<LeftTupleSink>();
+  sinks.add(peerNode);
+  while (NodeTypeEnums.LeftInputAdapterNode != node.getType()) {
+    Memory memory=wm.getNodeMemory((MemoryFactory)node);
+    if (memory.getSegmentMemory() == null) {
+      return leftTuples;
+    }
+    if (NodeTypeEnums.isBetaNode(node)) {
+      BetaMemory bm;
+      if (NodeTypeEnums.AccumulateNode == node.getType()) {
+        AccumulateMemory am=(AccumulateMemory)memory;
+        bm=am.getBetaMemory();
+      }
+ else {
+        bm=(BetaMemory)wm.getNodeMemory((MemoryFactory)node);
+      }
+      FastIterator it=bm.getRightTupleMemory().fullFastIterator();
+      RightTuple rt=((BetaNode)node).getFirstRightTuple(bm.getRightTupleMemory(),it);
+      for (; rt != null; rt=(RightTuple)it.next(rt)) {
+        followPeerFromRightInput(leftTuples,rt.getFirstChild(),peerNode,sinks,wm);
+      }
+      return leftTuples;
+    }
+ else     if (NodeTypeEnums.FromNode == node.getType()) {
+      FromMemory fm=(FromMemory)wm.getNodeMemory((MemoryFactory)node);
+      LeftTupleMemory ltm=fm.getBetaMemory().getLeftTupleMemory();
+      FastIterator it=ltm.fullFastIterator();
+      for (LeftTuple lt=(LeftTuple)it.next(null); lt != null; lt=(LeftTuple)it.next(lt)) {
+        followPeerFromLeftInput(leftTuples,lt.getFirstChild(),peerNode,sinks,wm);
+      }
+      return leftTuples;
+    }
+    sinks.add((LeftTupleSink)node);
+    node=node.getLeftTupleSource();
+  }
+  LeftInputAdapterNode lian=(LeftInputAdapterNode)node;
+  Memory memory=wm.getNodeMemory((MemoryFactory)node);
+  if (memory.getSegmentMemory() == null) {
+    return leftTuples;
+  }
+  ObjectSource os=lian.getObjectSource();
+  while (os.getType() != NodeTypeEnums.ObjectTypeNode) {
+    os=os.getParentObjectSource();
+  }
+  ObjectTypeNode otn=(ObjectTypeNode)os;
+  final ObjectTypeNodeMemory omem=(ObjectTypeNodeMemory)wm.getNodeMemory(otn);
+  Iterator it=omem.getObjectHashSet().iterator();
+  for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
+    InternalFactHandle fh=(InternalFactHandle)entry.getValue();
+    if (fh.getFirstLeftTuple() != null) {
+      for (LeftTuple childLt=fh.getFirstLeftTuple(); childLt != null; childLt=childLt.getLeftParentNext()) {
+        followPeer(leftTuples,childLt,sinks,sinks.size() - 1,wm);
+      }
+    }
+  }
+  return leftTuples;
+}
