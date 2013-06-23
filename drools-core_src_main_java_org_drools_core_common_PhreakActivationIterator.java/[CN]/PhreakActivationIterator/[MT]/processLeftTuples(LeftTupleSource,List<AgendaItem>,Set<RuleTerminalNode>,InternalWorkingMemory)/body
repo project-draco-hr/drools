@@ -1,0 +1,53 @@
+{
+  while (NodeTypeEnums.LeftInputAdapterNode != node.getType()) {
+    Memory memory=wm.getNodeMemory((MemoryFactory)node);
+    if (memory.getSegmentMemory() == null) {
+      return;
+    }
+    if (NodeTypeEnums.isBetaNode(node)) {
+      BetaMemory bm;
+      if (NodeTypeEnums.AccumulateNode == node.getType()) {
+        AccumulateMemory am=(AccumulateMemory)memory;
+        bm=am.getBetaMemory();
+      }
+ else {
+        bm=(BetaMemory)wm.getNodeMemory((MemoryFactory)node);
+      }
+      FastIterator it=bm.getRightTupleMemory().fullFastIterator();
+      RightTuple rt=((BetaNode)node).getFirstRightTuple(bm.getRightTupleMemory(),it);
+      for (; rt != null; rt=(RightTuple)it.next(rt)) {
+        collectFromRightInput(rt.getFirstChild(),agendaItems,nodeSet,wm);
+      }
+      return;
+    }
+ else     if (NodeTypeEnums.FromNode == node.getType()) {
+      FromMemory fm=(FromMemory)wm.getNodeMemory((MemoryFactory)node);
+      LeftTupleMemory ltm=fm.getBetaMemory().getLeftTupleMemory();
+      FastIterator it=ltm.fullFastIterator();
+      for (LeftTuple lt=(LeftTuple)it.next(null); lt != null; lt=(LeftTuple)it.next(lt)) {
+        collectFromLeftInput(lt.getFirstChild(),agendaItems,nodeSet,wm);
+      }
+      return;
+    }
+    node=node.getLeftTupleSource();
+  }
+  LeftInputAdapterNode lian=(LeftInputAdapterNode)node;
+  Memory memory=wm.getNodeMemory((MemoryFactory)node);
+  if (memory.getSegmentMemory() == null) {
+    return;
+  }
+  ObjectSource os=lian.getObjectSource();
+  while (os.getType() != NodeTypeEnums.ObjectTypeNode) {
+    os=os.getParentObjectSource();
+  }
+  ObjectTypeNode otn=(ObjectTypeNode)os;
+  final ObjectTypeNodeMemory omem=(ObjectTypeNodeMemory)wm.getNodeMemory(otn);
+  Iterator it=omem.getObjectHashSet().iterator();
+  LeftTupleSink firstLiaSink=lian.getSinkPropagator().getFirstLeftTupleSink();
+  for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
+    InternalFactHandle fh=(InternalFactHandle)entry.getValue();
+    if (fh.getFirstLeftTuple() != null) {
+      collectFromLeftInput(fh.getFirstLeftTuple(),agendaItems,nodeSet,wm);
+    }
+  }
+}
