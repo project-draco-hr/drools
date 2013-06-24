@@ -14,12 +14,11 @@
   final StockTickInterface st2=new StockTick(2,"RHT",100,1000);
   ksession.insert(st1);
   ksession.insert(st2);
+  assertThat(ksession.fireAllRules(),equalTo(2));
   verify(wml,times(2)).objectInserted(any(org.kie.api.event.rule.ObjectInsertedEvent.class));
   verify(ael,times(2)).matchCreated(any(MatchCreatedEvent.class));
   assertThat(ksession.getObjects().size(),equalTo(2));
   assertThat((Collection<Object>)ksession.getObjects(),hasItems((Object)st1,st2));
-  int fired=ksession.fireAllRules();
-  assertThat(fired,equalTo(2));
   clock.advanceTime(3,TimeUnit.SECONDS);
   ksession.fireAllRules();
   assertThat(ksession.getObjects().size(),equalTo(0));
