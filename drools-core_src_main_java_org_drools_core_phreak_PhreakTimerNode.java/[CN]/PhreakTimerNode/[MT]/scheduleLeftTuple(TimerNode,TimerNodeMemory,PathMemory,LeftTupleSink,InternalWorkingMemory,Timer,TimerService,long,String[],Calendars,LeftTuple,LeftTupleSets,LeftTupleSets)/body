@@ -1,20 +1,18 @@
 {
-  DefaultJobHandle jobHandle=(DefaultJobHandle)leftTuple.getObject();
-  Trigger trigger=timer.createTrigger(timestamp,leftTuple,jobHandle,calendarNames,calendars,timerNode.getDeclarations(),wm);
-  if (trigger.hasNextFireTime().getTime() <= timestamp) {
-    log.trace("Timer Fire Now {}",leftTuple);
-    doPropagateChildLeftTuple(sink,trgLeftTuples,stagedLeftTuples,leftTuple);
-    trigger.nextFireTime();
-    Date nextFireTime=trigger.hasNextFireTime();
-    if (nextFireTime != null && nextFireTime.getTime() <= timestamp) {
-      throw new IllegalStateException("Trigger.nextFireTime is not increasing");
-    }
+  if (leftTuple.getPropagationContext().getReaderContext() == null) {
+    final Trigger trigger=createTrigger(timerNode,wm,timer,timestamp,calendarNames,calendars,leftTuple);
+    scheduleTimer(timerNode,tm,pmem,sink,wm,timerService,timestamp,leftTuple,trgLeftTuples,stagedLeftTuples,trigger);
   }
-  if (trigger.hasNextFireTime() != null) {
-    TimerNodeJob job=new TimerNodeJob();
-    TimerNodeJobContext jobCtx=new TimerNodeJobContext(trigger,leftTuple,tm,sink,pmem,wm);
-    jobHandle=(DefaultJobHandle)timerService.scheduleJob(job,jobCtx,trigger);
-    leftTuple.setObject(jobHandle);
-    log.trace("Timer Scheduled {}",leftTuple);
+ else {
+    Scheduler scheduler=new Scheduler(){
+      @Override public void schedule(      Trigger t){
+        scheduleTimer(timerNode,tm,pmem,sink,wm,timerService,timestamp,leftTuple,trgLeftTuples,stagedLeftTuples,t);
+      }
+      @Override public Trigger getTrigger(){
+        return createTrigger(timerNode,wm,timer,timestamp,calendarNames,calendars,leftTuple);
+      }
+    }
+;
+    leftTuple.getPropagationContext().getReaderContext().addTimerNodeScheduler(timerNode.getId(),PersisterHelper.createTupleKey(leftTuple),scheduler);
   }
 }
