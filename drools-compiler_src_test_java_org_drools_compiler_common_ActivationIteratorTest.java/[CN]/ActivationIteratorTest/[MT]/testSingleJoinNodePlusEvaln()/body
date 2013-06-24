@@ -1,5 +1,5 @@
 {
-  String str="package org.kie.test \n" + "\n" + "rule rule1 when\n"+ "    $s1 : String( )\n"+ "    $s2 : String( )\n"+ "    eval( 1 == 1 ) \n"+ "then\n"+ "end\n"+ "\n";
+  String str="package org.kie.test \n" + "\n" + "rule rule1 @Eager(true) when\n"+ "    $s1 : String( )\n"+ "    $s2 : String( )\n"+ "    eval( 1 == 1 ) \n"+ "then\n"+ "end\n"+ "\n";
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
   if (kbuilder.hasErrors()) {
@@ -11,7 +11,8 @@
   for (int i=0; i < 2; i++) {
     ksession.insert(new String("" + i));
   }
-  ActivationIterator it=ActivationIterator.iterator(ksession);
+  ((DefaultAgenda)((StatefulKnowledgeSessionImpl)ksession).session.getAgenda()).evaluateEagerList();
+  Iterator it=ActivationIterator.iterator(ksession);
   List list=new ArrayList();
   for (AgendaItem act=(AgendaItem)it.next(); act != null; act=(AgendaItem)it.next()) {
     list.add(act.getRule().getName() + ":" + act.getDeclarationValue("$s1")+ ":"+ act.getDeclarationValue("$s2")+ ":"+ act.isQueued());

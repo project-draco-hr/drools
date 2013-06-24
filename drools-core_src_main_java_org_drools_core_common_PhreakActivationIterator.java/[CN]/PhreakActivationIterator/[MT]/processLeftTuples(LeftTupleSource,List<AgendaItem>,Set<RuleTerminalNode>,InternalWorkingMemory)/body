@@ -1,33 +1,55 @@
 {
+  LeftTupleSource node1=node;
+  while (NodeTypeEnums.LeftInputAdapterNode != node1.getType()) {
+    node1=node1.getLeftTupleSource();
+  }
+  int maxShareCount=node1.getAssociations().size();
   while (NodeTypeEnums.LeftInputAdapterNode != node.getType()) {
     Memory memory=wm.getNodeMemory((MemoryFactory)node);
     if (memory.getSegmentMemory() == null) {
       return;
     }
-    if (NodeTypeEnums.isBetaNode(node)) {
-      BetaMemory bm;
-      if (NodeTypeEnums.AccumulateNode == node.getType()) {
-        AccumulateMemory am=(AccumulateMemory)memory;
-        bm=am.getBetaMemory();
-      }
+    if (node.getAssociations().size() == maxShareCount) {
+      if (NodeTypeEnums.isBetaNode(node)) {
+        BetaMemory bm;
+        if (NodeTypeEnums.AccumulateNode == node.getType()) {
+          AccumulateMemory am=(AccumulateMemory)memory;
+          bm=am.getBetaMemory();
+          FastIterator it=bm.getLeftTupleMemory().fullFastIterator();
+          LeftTuple lt=((BetaNode)node).getFirstLeftTuple(bm.getLeftTupleMemory(),it);
+          for (; lt != null; lt=(LeftTuple)it.next(lt)) {
+            collectFromPeers(lt,agendaItems,nodeSet,wm);
+          }
+        }
+ else         if (NodeTypeEnums.ExistsNode == node.getType()) {
+          bm=(BetaMemory)wm.getNodeMemory((MemoryFactory)node);
+          FastIterator it=bm.getRightTupleMemory().fullFastIterator();
+          RightTuple rt=((BetaNode)node).getFirstRightTuple(bm.getRightTupleMemory(),it);
+          for (; rt != null; rt=(RightTuple)it.next(rt)) {
+            for (LeftTuple lt=rt.getBlocked(); lt != null; lt=lt.getBlockedNext()) {
+              collectFromPeers(lt,agendaItems,nodeSet,wm);
+            }
+          }
+        }
  else {
-        bm=(BetaMemory)wm.getNodeMemory((MemoryFactory)node);
+          bm=(BetaMemory)wm.getNodeMemory((MemoryFactory)node);
+          FastIterator it=bm.getLeftTupleMemory().fullFastIterator();
+          LeftTuple lt=((BetaNode)node).getFirstLeftTuple(bm.getLeftTupleMemory(),it);
+          for (; lt != null; lt=(LeftTuple)it.next(lt)) {
+            collectFromLeftInput(lt.getFirstChild(),agendaItems,nodeSet,wm);
+          }
+        }
+        return;
       }
-      FastIterator it=bm.getRightTupleMemory().fullFastIterator();
-      RightTuple rt=((BetaNode)node).getFirstRightTuple(bm.getRightTupleMemory(),it);
-      for (; rt != null; rt=(RightTuple)it.next(rt)) {
-        collectFromRightInput(rt.getFirstChild(),agendaItems,nodeSet,wm);
+ else       if (NodeTypeEnums.FromNode == node.getType()) {
+        FromMemory fm=(FromMemory)wm.getNodeMemory((MemoryFactory)node);
+        LeftTupleMemory ltm=fm.getBetaMemory().getLeftTupleMemory();
+        FastIterator it=ltm.fullFastIterator();
+        for (LeftTuple lt=(LeftTuple)ltm.getFirst(null); lt != null; lt=(LeftTuple)it.next(lt)) {
+          collectFromLeftInput(lt.getFirstChild(),agendaItems,nodeSet,wm);
+        }
+        return;
       }
-      return;
-    }
- else     if (NodeTypeEnums.FromNode == node.getType()) {
-      FromMemory fm=(FromMemory)wm.getNodeMemory((MemoryFactory)node);
-      LeftTupleMemory ltm=fm.getBetaMemory().getLeftTupleMemory();
-      FastIterator it=ltm.fullFastIterator();
-      for (LeftTuple lt=(LeftTuple)it.next(null); lt != null; lt=(LeftTuple)it.next(lt)) {
-        collectFromLeftInput(lt.getFirstChild(),agendaItems,nodeSet,wm);
-      }
-      return;
     }
     node=node.getLeftTupleSource();
   }
