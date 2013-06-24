@@ -1,11 +1,10 @@
 {
-  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_CollectResultConstraints.drl"));
-  RuleBase ruleBase=loadRuleBase(reader);
-  StatefulSession wm=ruleBase.newStatefulSession();
+  KieBase kbase=loadKnowledgeBase("test_CollectResultConstraints.drl");
+  StatefulKnowledgeSession wm=createKnowledgeSession((KnowledgeBase)kbase);
   List results=new ArrayList();
   wm.setGlobal("results",results);
   wm.insert(new Cheese("stilton",10));
-  wm=SerializationHelper.getSerialisedStatefulSession(wm);
+  wm=SerializationHelper.getSerialisedStatefulKnowledgeSession(wm,true);
   results=(List)wm.getGlobal("results");
   wm.fireAllRules();
   assertEquals(1,results.size());
@@ -13,7 +12,7 @@
   wm.insert(new Cheese("stilton",7));
   wm.insert(new Cheese("stilton",8));
   wm.fireAllRules();
-  wm=SerializationHelper.getSerialisedStatefulSession(wm);
+  wm=SerializationHelper.getSerialisedStatefulKnowledgeSession(wm,true);
   results=(List)wm.getGlobal("results");
   assertEquals(1,results.size());
   assertEquals(3,((Collection)results.get(0)).size());

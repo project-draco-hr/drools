@@ -1,11 +1,6 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_FromInsideNotAndExists.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KieBase kbase=loadKnowledgeBase("test_FromInsideNotAndExists.drl");
+  StatefulKnowledgeSession workingMemory=createKnowledgeSession((KnowledgeBase)kbase);
   final List list=new ArrayList();
   workingMemory.setGlobal("results",list);
   final Cheese cheddar=new Cheese("cheddar",7);
@@ -13,7 +8,7 @@
   final Cheesery cheesery=new Cheesery();
   cheesery.addCheese(cheddar);
   cheesery.addCheese(provolone);
-  FactHandle handle=workingMemory.insert(cheesery);
+  FactHandle handle=(FactHandle)workingMemory.insert(cheesery);
   workingMemory.fireAllRules();
   assertEquals(0,list.size());
   cheesery.addCheese(new Cheese("stilton",10));

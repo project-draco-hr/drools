@@ -35,18 +35,20 @@
     for (    RightTuple rightTuple : previousMatches.values()) {
       for (RightTuple current=rightTuple; current != null; current=(RightTuple)rightIt.next(current)) {
         LeftTuple childLeftTuple=current.getFirstChild();
-        childLeftTuple.unlinkFromLeftParent();
-        childLeftTuple.unlinkFromRightParent();
+        if (childLeftTuple != null) {
+          childLeftTuple.unlinkFromLeftParent();
+          childLeftTuple.unlinkFromRightParent();
 switch (childLeftTuple.getStagedType()) {
 case LeftTuple.INSERT:
-          stagedLeftTuples.removeInsert(childLeftTuple);
-        break;
+            stagedLeftTuples.removeInsert(childLeftTuple);
+          break;
 case LeftTuple.UPDATE:
-      stagedLeftTuples.removeUpdate(childLeftTuple);
-    break;
+        stagedLeftTuples.removeUpdate(childLeftTuple);
+      break;
+  }
+  childLeftTuple.setPropagationContext(propagationContext);
+  trgLeftTuples.addDelete(childLeftTuple);
 }
-childLeftTuple.setPropagationContext(propagationContext);
-trgLeftTuples.addDelete(childLeftTuple);
 }
 }
 leftTuple.clearStaged();

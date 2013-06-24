@@ -1,23 +1,22 @@
 {
-  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_Collect.drl"));
-  RuleBase ruleBase=loadRuleBase(reader);
-  StatefulSession wm=ruleBase.newStatefulSession();
   List results=new ArrayList();
+  KieBase kbase=loadKnowledgeBase("test_Collect.drl");
+  StatefulKnowledgeSession wm=createKnowledgeSession((KnowledgeBase)kbase);
   wm.setGlobal("results",results);
   wm.insert(new Cheese("stilton",10));
   wm.insert(new Cheese("stilton",7));
   wm.insert(new Cheese("stilton",8));
   wm.insert(new Cheese("brie",5));
   wm.insert(new Cheese("provolone",150));
-  wm=SerializationHelper.getSerialisedStatefulSession(wm);
+  wm=SerializationHelper.getSerialisedStatefulKnowledgeSession(wm,true);
   results=(List)wm.getGlobal("results");
   wm.insert(new Cheese("provolone",20));
   wm.insert(new Person("Bob","stilton"));
   wm.insert(new Person("Mark","provolone"));
-  wm=SerializationHelper.getSerialisedStatefulSession(wm);
+  wm=SerializationHelper.getSerialisedStatefulKnowledgeSession(wm,true);
   results=(List)wm.getGlobal("results");
   wm.fireAllRules();
-  wm=SerializationHelper.getSerialisedStatefulSession(wm);
+  wm=SerializationHelper.getSerialisedStatefulKnowledgeSession(wm,true);
   results=(List)wm.getGlobal("results");
   assertEquals(1,results.size());
   assertEquals(3,((Collection)results.get(0)).size());

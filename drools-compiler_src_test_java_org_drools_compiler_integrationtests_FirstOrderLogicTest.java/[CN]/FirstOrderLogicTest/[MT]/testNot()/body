@@ -1,23 +1,16 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("not_rule_test.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  final Package pkg=builder.getPackage();
-  final RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KieBase kbase=loadKnowledgeBase("not_rule_test.drl");
+  StatefulKnowledgeSession wm=createKnowledgeSession((KnowledgeBase)kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  wm.setGlobal("list",list);
   final Cheese stilton=new Cheese("stilton",5);
-  final FactHandle stiltonHandle=workingMemory.insert(stilton);
+  final FactHandle stiltonHandle=(FactHandle)wm.insert(stilton);
   final Cheese cheddar=new Cheese("cheddar",7);
-  final FactHandle cheddarHandle=workingMemory.insert(cheddar);
-  workingMemory.fireAllRules();
+  final FactHandle cheddarHandle=(FactHandle)wm.insert(cheddar);
+  wm.fireAllRules();
   assertEquals(0,list.size());
-  workingMemory.retract(stiltonHandle);
-  workingMemory.fireAllRules();
+  wm.retract(stiltonHandle);
+  wm.fireAllRules();
   assertEquals(4,list.size());
   assertTrue(list.contains(new Integer(5)));
   assertTrue(list.contains(new Integer(6)));

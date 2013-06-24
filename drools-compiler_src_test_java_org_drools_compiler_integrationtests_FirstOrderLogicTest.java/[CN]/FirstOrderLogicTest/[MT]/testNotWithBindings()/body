@@ -1,25 +1,17 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("not_with_bindings_rule_test.drl")));
-  final Package pkg=builder.getPackage();
-  final Rule rule=pkg.getRules()[0];
-  assertTrue(rule.isValid());
-  assertEquals(0,builder.getErrors().getErrors().length);
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KieBase kbase=loadKnowledgeBase("not_with_bindings_rule_test.drl");
+  StatefulKnowledgeSession wm=createKnowledgeSession((KnowledgeBase)kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  wm.setGlobal("list",list);
   final Cheese stilton=new Cheese("stilton",5);
-  final FactHandle stiltonHandle=workingMemory.insert(stilton);
+  final FactHandle stiltonHandle=(FactHandle)wm.insert(stilton);
   final Cheese cheddar=new Cheese("cheddar",7);
-  final FactHandle cheddarHandle=workingMemory.insert(cheddar);
+  final FactHandle cheddarHandle=(FactHandle)wm.insert(cheddar);
   final PersonInterface paul=new Person("paul","stilton",12);
-  workingMemory.insert(paul);
-  workingMemory.fireAllRules();
+  wm.insert(paul);
+  wm.fireAllRules();
   assertEquals(0,list.size());
-  workingMemory.retract(stiltonHandle);
-  workingMemory.fireAllRules();
+  wm.retract(stiltonHandle);
+  wm.fireAllRules();
   assertEquals(1,list.size());
 }

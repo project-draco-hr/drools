@@ -1,22 +1,17 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_collectNodeSharing.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession workingMemory=ruleBase.newStatefulSession();
+  KieBase kbase=loadKnowledgeBase("test_collectNodeSharing.drl");
+  StatefulKnowledgeSession wm=createKnowledgeSession((KnowledgeBase)kbase);
   List results=new ArrayList();
-  workingMemory.setGlobal("results",results);
-  workingMemory=SerializationHelper.getSerialisedStatefulSession(workingMemory);
-  results=(List)workingMemory.getGlobal("results");
-  workingMemory.insert(new Cheese("stilton",10));
-  workingMemory=SerializationHelper.getSerialisedStatefulSession(workingMemory);
-  results=(List)workingMemory.getGlobal("results");
-  workingMemory.insert(new Cheese("brie",15));
-  workingMemory.fireAllRules();
-  workingMemory=SerializationHelper.getSerialisedStatefulSession(workingMemory);
-  results=(List)workingMemory.getGlobal("results");
+  wm.setGlobal("results",results);
+  wm=SerializationHelper.getSerialisedStatefulKnowledgeSession(wm,true);
+  results=(List)wm.getGlobal("results");
+  wm.insert(new Cheese("stilton",10));
+  wm=SerializationHelper.getSerialisedStatefulKnowledgeSession(wm,true);
+  results=(List)wm.getGlobal("results");
+  wm.insert(new Cheese("brie",15));
+  wm.fireAllRules();
+  wm=SerializationHelper.getSerialisedStatefulKnowledgeSession(wm,true);
+  results=(List)wm.getGlobal("results");
   assertEquals(1,results.size());
   assertEquals(2,((List)results.get(0)).size());
 }

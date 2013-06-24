@@ -1,18 +1,13 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_ExistsWithBindings.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KieBase kbase=loadKnowledgeBase("test_ExistsWithBindings.drl");
+  StatefulKnowledgeSession wm=createKnowledgeSession((KnowledgeBase)kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("results",list);
+  wm.setGlobal("results",list);
   final Cheese c=new Cheese("stilton",10);
   final Person p=new Person("Mark","stilton");
-  workingMemory.insert(c);
-  workingMemory.insert(p);
-  workingMemory.fireAllRules();
+  wm.insert(c);
+  wm.insert(p);
+  wm.fireAllRules();
   assertTrue(list.contains(c.getType()));
   assertEquals(1,list.size());
 }

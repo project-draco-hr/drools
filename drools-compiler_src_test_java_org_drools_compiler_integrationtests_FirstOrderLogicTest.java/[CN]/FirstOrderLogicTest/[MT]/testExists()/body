@@ -1,23 +1,18 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("exists_rule_test.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getSinglethreadRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KieBase kbase=loadKnowledgeBase("exists_rule_test.drl");
+  StatefulKnowledgeSession wm=createKnowledgeSession((KnowledgeBase)kbase);
   final List list=new ArrayList();
-  workingMemory.setGlobal("list",list);
+  wm.setGlobal("list",list);
   final Cheese cheddar=new Cheese("cheddar",7);
-  final FactHandle cheddarHandle=workingMemory.insert(cheddar);
-  workingMemory.fireAllRules();
+  final FactHandle cheddarHandle=(FactHandle)wm.insert(cheddar);
+  wm.fireAllRules();
   assertEquals(0,list.size());
   final Cheese stilton=new Cheese("stilton",5);
-  final FactHandle stiltonHandle=workingMemory.insert(stilton);
-  workingMemory.fireAllRules();
+  final FactHandle stiltonHandle=(FactHandle)wm.insert(stilton);
+  wm.fireAllRules();
   assertEquals(1,list.size());
   final Cheese brie=new Cheese("brie",5);
-  final FactHandle brieHandle=workingMemory.insert(brie);
-  workingMemory.fireAllRules();
+  final FactHandle brieHandle=(FactHandle)wm.insert(brie);
+  wm.fireAllRules();
   assertEquals(1,list.size());
 }
