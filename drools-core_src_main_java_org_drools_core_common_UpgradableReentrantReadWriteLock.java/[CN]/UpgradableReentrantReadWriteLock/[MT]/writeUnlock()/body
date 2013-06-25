@@ -1,9 +1,11 @@
 {
   if (lock.getWriteHoldCount() == 1) {
-    IntegerRef upgradedReadCount=upgradedReadCounters.get(Thread.currentThread().getId());
-    if (upgradedReadCount != null) {
-      for (int i=upgradedReadCount.get(); i > 0; i--)       lock.readLock().lock();
-      upgradedReadCounters.remove(Thread.currentThread().getId());
+    LockRequestCounter lockCounter=lockCounters.get();
+    if (lockCounter.upgradedReadCounter > 0) {
+      for (int i=lockCounter.upgradedReadCounter; i > 0; i--) {
+        lock.readLock().lock();
+      }
+      lockCounter.upgradedReadCounter=0;
     }
   }
   lock.writeLock().unlock();

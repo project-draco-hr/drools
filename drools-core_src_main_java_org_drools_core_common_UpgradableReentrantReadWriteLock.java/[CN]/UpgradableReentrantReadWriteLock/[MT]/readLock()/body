@@ -1,6 +1,7 @@
 {
-  if (increaseUpgradedReadCounter())   return;
-  if (shouldTryAtomicUpgrade && tryingLockUpgrade.get() && readCounters.get(Thread.currentThread().getId()) == null) {
+  LockRequestCounter lockCounter=lockCounters.get();
+  if (increaseUpgradedReadCounter(lockCounter))   return;
+  if (shouldTryAtomicUpgrade && tryingLockUpgrade.get() && lockCounter.readCounter == 0) {
     try {
 synchronized (lowPriotityMonitor) {
         lowPriotityMonitor.wait();
@@ -11,5 +12,5 @@ synchronized (lowPriotityMonitor) {
     }
   }
   lock.readLock().lock();
-  increaseReadCounter();
+  increaseReadCounter(lockCounter);
 }
