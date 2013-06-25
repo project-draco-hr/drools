@@ -12,16 +12,15 @@
   str+="    list.add( $alarm );\n";
   str+="    update($alarm);\n";
   str+="end\n";
-  PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new StringReader(str));
-  RuleBase ruleBase=RuleBaseFactory.newRuleBase();
-  ruleBase.addPackage(builder.getPackage());
-  StatefulSession session=ruleBase.newStatefulSession();
+  KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  conf.setOption(ClockTypeOption.get("pseudo"));
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  KieSession ksession=createKnowledgeSession(kbase,conf);
   List list=new ArrayList();
-  session.setGlobal("list",list);
-  session.insert(new Alarm());
-  session.fireAllRules();
+  ksession.setGlobal("list",list);
+  ksession.insert(new Alarm());
+  ksession.fireAllRules();
   Thread.sleep(1000);
   assertEquals(5,list.size());
-  assertEquals(0,session.getAgenda().getScheduledActivations().length);
+  assertEquals(0,((AgendaImpl)ksession.getAgenda()).getAgenda().getScheduledActivations().length);
 }

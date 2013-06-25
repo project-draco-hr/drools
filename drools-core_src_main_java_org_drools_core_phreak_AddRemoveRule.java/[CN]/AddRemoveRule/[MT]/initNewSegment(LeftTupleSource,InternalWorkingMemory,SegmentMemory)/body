@@ -1,5 +1,14 @@
 {
-  LeftTupleSink peerLts=splitStartLeftTupleSource.getSinkPropagator().getLastLeftTupleSink();
+  LeftTupleSinkNode peerLts=splitStartLeftTupleSource.getSinkPropagator().getLastLeftTupleSink();
+  if (NodeTypeEnums.isBetaNode(peerLts) && ((BetaNode)peerLts).isRightInputIsRiaNode()) {
+    LeftTupleSink subNetworkLts=peerLts.getPreviousLeftTupleSinkNode();
+    Memory memory=wm.getNodeMemory((MemoryFactory)subNetworkLts);
+    SegmentMemory newSmem=SegmentUtilities.createChildSegment(wm,peerLts,memory);
+    sm.add(newSmem);
+    if (sm.getTipNode().getType() == NodeTypeEnums.LeftInputAdapterNode) {
+      newSmem.setStagedTuples(new SynchronizedLeftTupleSets());
+    }
+  }
   Memory memory=wm.getNodeMemory((MemoryFactory)peerLts);
   SegmentMemory newSmem=SegmentUtilities.createChildSegment(wm,peerLts,memory);
   sm.add(newSmem);
