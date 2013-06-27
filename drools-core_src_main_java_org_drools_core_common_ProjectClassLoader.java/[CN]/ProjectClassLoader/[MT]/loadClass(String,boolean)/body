@@ -1,4 +1,14 @@
 {
+  if (CACHE_NON_EXISTING_CLASSES && nonExistingClasses.contains(name)) {
+    throw dummyCFNE;
+  }
+  if (droolsClassLoader != null) {
+    try {
+      return Class.forName(name,resolve,droolsClassLoader);
+    }
+ catch (    ClassNotFoundException e) {
+    }
+  }
   try {
     return super.loadClass(name,resolve);
   }
@@ -9,6 +19,9 @@
  catch (    ClassNotFoundException e2) {
       byte[] bytecode=getBytecode(convertClassToResourcePath(name));
       if (bytecode == null) {
+        if (CACHE_NON_EXISTING_CLASSES) {
+          nonExistingClasses.add(name);
+        }
         throw e2;
       }
       return defineClass(name,bytecode,0,bytecode.length);
