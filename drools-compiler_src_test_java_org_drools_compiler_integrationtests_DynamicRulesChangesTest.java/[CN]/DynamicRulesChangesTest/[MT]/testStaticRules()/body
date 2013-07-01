@@ -1,0 +1,23 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(DRL.getBytes()),ResourceType.DRL);
+  kbase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  KieSession ksession=kbase.newKieSession();
+  dumpRete(kbase);
+  final List<String> events=new ArrayList<String>();
+  ksession.setGlobal("events",events);
+  Room room1=new Room("Room 1");
+  ksession.insert(room1);
+  FactHandle fireFact1=ksession.insert(new Fire(room1));
+  ksession.fireAllRules();
+  assertEquals(1,events.size());
+  Sprinkler sprinkler1=new Sprinkler(room1);
+  ksession.insert(sprinkler1);
+  ksession.fireAllRules();
+  assertEquals(2,events.size());
+  ksession.delete(fireFact1);
+  ksession.fireAllRules();
+  System.out.println(events);
+  assertEquals(5,events.size());
+}

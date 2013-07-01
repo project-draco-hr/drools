@@ -1,7 +1,7 @@
 {
   RightTupleSets stagedRightTuples=memory.getStagedRightTuples();
   boolean stagedDeleteWasEmpty=false;
-  if (bnode.isStreamMode()) {
+  if (isStreamMode()) {
     stagedDeleteWasEmpty=memory.getSegmentMemory().getTupleQueue().isEmpty();
     memory.getSegmentMemory().getTupleQueue().add(new RightTupleEntry(rightTuple,rightTuple.getPropagationContext(),memory));
     log.trace("JoinNode delete queue={} size={} pctx={} lt={}",System.identityHashCode(memory.getSegmentMemory().getTupleQueue()),memory.getSegmentMemory().getTupleQueue().size(),PropagationContextImpl.intEnumToString(rightTuple.getPropagationContext()),rightTuple);
@@ -10,7 +10,7 @@
     stagedDeleteWasEmpty=stagedRightTuples.addDelete(rightTuple);
   }
   if (memory.getAndDecCounter() == 1) {
-    memory.unlinkNode(wm);
+    memory.linkNode(wm);
   }
  else   if (stagedDeleteWasEmpty) {
     memory.getSegmentMemory().notifyRuleLinkSegment(wm);
