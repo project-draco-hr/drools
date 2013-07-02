@@ -21,18 +21,34 @@
  else {
 switch (cell.getCellType()) {
 case Cell.CELL_TYPE_FORMULA:
+          String cellValue=null;
+        try {
           CellValue cv=formulaEvaluator.evaluate(cell);
-        String cellValue=getCellValue(cv);
-      newCell(listeners,i,cellNum,cellValue,DataListener.NON_MERGED);
-    break;
+          cellValue=getCellValue(cv);
+          newCell(listeners,i,cellNum,cellValue,DataListener.NON_MERGED);
+        }
+ catch (        RuntimeException e) {
+switch (cell.getCachedFormulaResultType()) {
 case Cell.CELL_TYPE_NUMERIC:
-  num=cell.getNumericCellValue();
+            num=cell.getNumericCellValue();
+default :
+          if (num - Math.round(num) != 0) {
+            newCell(listeners,i,cellNum,String.valueOf(num),DataListener.NON_MERGED);
+          }
+ else {
+            newCell(listeners,i,cellNum,formatter.formatCellValue(cell),DataListener.NON_MERGED);
+          }
+      }
+    }
+  break;
+case Cell.CELL_TYPE_NUMERIC:
+num=cell.getNumericCellValue();
 default :
 if (num - Math.round(num) != 0) {
-  newCell(listeners,i,cellNum,String.valueOf(num),DataListener.NON_MERGED);
+newCell(listeners,i,cellNum,String.valueOf(num),DataListener.NON_MERGED);
 }
  else {
-  newCell(listeners,i,cellNum,formatter.formatCellValue(cell),DataListener.NON_MERGED);
+newCell(listeners,i,cellNum,formatter.formatCellValue(cell),DataListener.NON_MERGED);
 }
 }
 }
