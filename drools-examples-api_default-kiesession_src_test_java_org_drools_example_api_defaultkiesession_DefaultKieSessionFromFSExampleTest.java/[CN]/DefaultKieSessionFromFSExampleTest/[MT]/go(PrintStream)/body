@@ -1,0 +1,25 @@
+{
+  String currentFolder=null;
+  try {
+    currentFolder=new File(".").getCanonicalPath();
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+  File rootFolder=null;
+  if (currentFolder.endsWith("drools")) {
+    rootFolder=new File("drools-examples-api/default-kiesession");
+  }
+ else   if (currentFolder.endsWith("drools-examples-api")) {
+    rootFolder=new File("default-kiesession");
+  }
+ else {
+    rootFolder=new File(".");
+  }
+  KieServices ks=KieServices.Factory.get();
+  KieBuilder kieBuilder=ks.newKieBuilder(rootFolder).buildAll();
+  KieSession kSession=ks.newKieContainer(kieBuilder.getKieModule().getReleaseId()).newKieSession();
+  kSession.setGlobal("out",out);
+  kSession.insert(new Message("Dave","Hello, HAL. Do you read me, HAL?"));
+  kSession.fireAllRules();
+}
