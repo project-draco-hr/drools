@@ -1,0 +1,26 @@
+{
+  SegmentMemory smem=new SegmentMemory(rootNode);
+  smem.tipNode=tipNode;
+  smem.linkedNodeMask=linkedNodeMask;
+  smem.allLinkedMaskTest=allLinkedMaskTest;
+  smem.segmentPosMaskBit=segmentPosMaskBit;
+  smem.pos=pos;
+  int i=0;
+  for (  NetworkNode node : smem.getNodesInSegment()) {
+    Memory mem=wm.getNodeMemory((MemoryFactory)node);
+    mem.setSegmentMemory(smem);
+    smem.getNodeMemories().add(mem);
+    MemoryPrototype proto=memories.get(i++);
+    if (proto != null) {
+      proto.populateMemory(wm,mem);
+    }
+  }
+  if (hasQueue && tipNode instanceof RuleTerminalNode) {
+    PathMemory pmem=(PathMemory)wm.getNodeMemory((MemoryFactory)tipNode);
+    smem.queue=pmem.getQueue();
+  }
+  if (hasSyncStagedLeftTuple) {
+    smem.setStagedTuples(new SynchronizedLeftTupleSets());
+  }
+  return smem;
+}
