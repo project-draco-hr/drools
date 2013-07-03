@@ -14,6 +14,15 @@
   if (lsmem == null) {
     lsmem=SegmentUtilities.createSegmentMemory(lts,this);
   }
+  if (this.ruleBase.getConfiguration().getEventProcessingMode().equals(EventProcessingOption.STREAM)) {
+    lmem.linkNode(this);
+    List<PathMemory> pmems=lmem.getSegmentMemory().getPathMemories();
+    PathMemory pmm=pmems != null && !pmems.isEmpty() ? pmems.get(0) : null;
+    if (pmm != null) {
+      RuleAgendaItem item=pmm.getRuleAgendaItem();
+      item.getRuleExecutor().reEvaluateNetwork(this,new org.drools.core.util.LinkedList<StackEntry>(),false);
+    }
+  }
   LeftInputAdapterNode.doInsertObject(handle,pCtx,lian,this,lmem,false,queryObject.isOpen());
   List<PathMemory> pmems=lmem.getSegmentMemory().getPathMemories();
   for (int i=0, length=pmems.size(); i < length; i++) {

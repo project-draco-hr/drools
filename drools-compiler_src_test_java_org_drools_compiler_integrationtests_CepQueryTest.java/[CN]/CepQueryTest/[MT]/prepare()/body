@@ -1,0 +1,15 @@
+{
+  final String drl="package org.drools.compiler.integrationtests\n" + "import org.drools.compiler.integrationtests.CepQueryTest.TestEvent;\n" + "declare TestEvent\n"+ "    @role( event )\n"+ "end\n"+ "query EventsAfterZeroToNineSeconds\n"+ "    $event : TestEvent() from entry-point FirstStream\n"+ "    $result : TestEvent( this after [0s, 9s] $event) from entry-point SecondStream\n"+ "end\n";
+  final KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  KieModuleModel module=ks.newKieModuleModel();
+  KieBaseModel baseModel=module.newKieBaseModel("defaultKBase").setDefault(true).setEventProcessingMode(EventProcessingOption.STREAM);
+  baseModel.newKieSessionModel("defaultKSession").setDefault(true).setClockType(ClockTypeOption.get("pseudo"));
+  kfs.writeKModuleXML(module.toXML());
+  kfs.write(ResourceFactory.newByteArrayResource(drl.getBytes()).setTargetPath("defaultPkg/query.drl"));
+  assertTrue(ks.newKieBuilder(kfs).buildAll().getResults().getMessages().isEmpty());
+  ksession=ks.newKieContainer(ks.getRepository().getDefaultReleaseId()).newKieSession();
+  clock=ksession.getSessionClock();
+  firstEntryPoint=ksession.getEntryPoint("FirstStream");
+  secondEntryPoint=ksession.getEntryPoint("SecondStream");
+}
