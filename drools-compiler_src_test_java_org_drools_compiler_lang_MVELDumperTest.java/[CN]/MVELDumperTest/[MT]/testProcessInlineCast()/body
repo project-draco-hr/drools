@@ -1,18 +1,23 @@
 {
   String expr="field1#Class.field2";
-  String expectedInstanceof="field1 instanceof Class && ";
+  String expectedInstanceof="field1 instanceof Class";
   String expectedcasted="((Class)field1).field2";
   AtomicExprDescr atomicExpr=new AtomicExprDescr(expr);
-  String[] instanceofAndCastedExpr=dumper.processImplicitConstraints(expr,atomicExpr,null);
-  assertEquals(expectedInstanceof,instanceofAndCastedExpr[0]);
-  assertEquals(expectedcasted,instanceofAndCastedExpr[1]);
+  ConstraintConnectiveDescr ccd=new ConstraintConnectiveDescr();
+  ccd.addDescr(atomicExpr);
+  String[] instanceofAndCastedExpr=dumper.processImplicitConstraints(expr,atomicExpr,ccd,ccd.getDescrs().indexOf(atomicExpr),null);
+  assertEquals(2,ccd.getDescrs().size());
+  assertEquals(expectedInstanceof,ccd.getDescrs().get(0).toString());
   assertEquals(expectedcasted,atomicExpr.getRewrittenExpression());
   expr="field1#Class1.field2#Class2.field3";
-  expectedInstanceof="field1 instanceof Class1 && ((Class1)field1).field2 instanceof Class2 && ";
+  String expectedInstanceof1="field1 instanceof Class1";
+  String expectedInstanceof2="((Class1)field1).field2 instanceof Class2";
   expectedcasted="((Class2)((Class1)field1).field2).field3";
   atomicExpr=new AtomicExprDescr(expr);
-  instanceofAndCastedExpr=dumper.processImplicitConstraints(expr,atomicExpr,null);
-  assertEquals(expectedInstanceof,instanceofAndCastedExpr[0]);
+  ccd=new ConstraintConnectiveDescr();
+  instanceofAndCastedExpr=dumper.processImplicitConstraints(expr,atomicExpr,ccd,ccd.getDescrs().indexOf(atomicExpr),null);
+  assertEquals(expectedInstanceof1,ccd.getDescrs().get(0).toString());
+  assertEquals(expectedInstanceof2,ccd.getDescrs().get(1).toString());
   assertEquals(expectedcasted,instanceofAndCastedExpr[1]);
   assertEquals(expectedcasted,atomicExpr.getRewrittenExpression());
 }

@@ -1,5 +1,22 @@
 {
-  for (  BaseDescr d : descr.getDescrs()) {
-    buildCcdDescr(context,patternDescr,pattern,d,mvelCtx);
+  List<BaseDescr> initialDescrs=new ArrayList<BaseDescr>(descr.getDescrs());
+  for (  BaseDescr d : initialDescrs) {
+    buildCcdDescr(context,patternDescr,pattern,d,descr,mvelCtx);
+  }
+  if (descr.getDescrs().size() > initialDescrs.size()) {
+    List<BaseDescr> additionalDescrs=new ArrayList<BaseDescr>(descr.getDescrs());
+    additionalDescrs.removeAll(initialDescrs);
+    if (!additionalDescrs.isEmpty()) {
+      List<Constraint> constraints=new ArrayList<Constraint>(pattern.getConstraints());
+      for (      Constraint c : constraints) {
+        pattern.removeConstraint(c);
+      }
+      for (      BaseDescr d : additionalDescrs) {
+        buildCcdDescr(context,patternDescr,pattern,d,descr,mvelCtx);
+      }
+      for (      Constraint c : constraints) {
+        pattern.addConstraint(c);
+      }
+    }
   }
 }
