@@ -1,0 +1,13 @@
+{
+  String str="";
+  str+="package org.drools.compiler;\n" + "\n" + "import org.drools.compiler.compiler.TypeDeclarationTest.EventBar.Foo;\n"+ ""+ "declare Foo\n"+ " @role( event )\n"+ "end\n"+ ""+ "rule R when Foo() then end";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  System.err.println(kbuilder.getErrors());
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kBase=KnowledgeBaseFactory.newKnowledgeBase();
+  kBase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession knowledgeSession=kBase.newStatefulKnowledgeSession();
+  FactHandle handle=knowledgeSession.insert(new EventBar.Foo());
+  assertTrue(handle instanceof EventFactHandle);
+}
