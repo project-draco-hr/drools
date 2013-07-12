@@ -1,21 +1,43 @@
 {
   final Object objectValue=extractor.getValue(workingMemory,handle.getObject());
-  Object typeName=value.getValue();
-  if (typeName instanceof Class) {
-    typeName=((Class)typeName).getName();
+  final Object literal=value.getValue();
+  if (cachedValue != literal) {
+    cachedValue=literal;
+    cacheLiteral(literal,workingMemory);
   }
-  TraitableBean core=null;
+  TraitableBean core;
   if (objectValue instanceof Thing) {
     Thing thing=(Thing)objectValue;
     core=(TraitableBean)thing.getCore();
-    return this.getOperator().isNegated() ^ core.hasTrait(typeName.toString());
+    BitSet code=core.getCurrentTypeCode();
+    if (code != null) {
+      return this.getOperator().isNegated() ^ isA(code,cachedLiteral);
+    }
+ else {
+      return this.getOperator().isNegated() ^ hasTrait(core,literal);
+    }
   }
  else   if (objectValue instanceof TraitableBean) {
     core=(TraitableBean)objectValue;
-    return this.getOperator().isNegated() ^ core.hasTrait(typeName.toString());
+    BitSet code=core.getCurrentTypeCode();
+    if (code != null) {
+      return this.getOperator().isNegated() ^ isA(code,cachedLiteral);
+    }
+ else {
+      return this.getOperator().isNegated() ^ hasTrait(core,literal);
+    }
   }
  else {
     core=lookForWrapper(objectValue,workingMemory);
-    return (core == null && this.getOperator().isNegated()) || (core != null && this.getOperator().isNegated() ^ core.hasTrait(typeName.toString()));
+    if (core == null) {
+      return this.getOperator().isNegated();
+    }
+    BitSet code=core.getCurrentTypeCode();
+    if (code != null) {
+      return this.getOperator().isNegated() ^ isA(code,cachedLiteral);
+    }
+ else {
+      return this.getOperator().isNegated() ^ hasTrait(core,literal);
+    }
   }
 }

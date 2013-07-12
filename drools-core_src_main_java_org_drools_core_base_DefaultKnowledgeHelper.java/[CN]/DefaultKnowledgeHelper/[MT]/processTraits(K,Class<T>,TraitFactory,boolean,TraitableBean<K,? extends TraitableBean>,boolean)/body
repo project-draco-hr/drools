@@ -1,5 +1,11 @@
 {
   T thing;
+  BitSet veto=inner.getCurrentTypeCode() != null ? (BitSet)inner.getCurrentTypeCode().clone() : null;
+  if (veto != null) {
+    TraitTypeMap line=((TraitTypeMap)inner._getTraitMap());
+    veto=line.metMembersCode(line.immediateParents(veto));
+  }
+  boolean refresh=false;
   if (trait.isAssignableFrom(inner.getClass())) {
     thing=(T)inner;
     inner.addTrait(trait.getName(),(Thing<K>)core);
@@ -10,12 +16,27 @@
   }
  else {
     thing=(T)builder.getProxy(inner,trait);
+    refresh=Thing.class != trait;
   }
   if (needsUpdate) {
     this.update(getFactHandle(core),inner);
   }
   if (!inner.hasTrait(Thing.class.getName())) {
     don(inner,Thing.class,logical);
+  }
+  if (refresh) {
+    FactHandle handle=lookupFactHandle(inner);
+    InternalFactHandle h=(InternalFactHandle)handle;
+    if (handle != null) {
+      ((InternalWorkingMemoryEntryPoint)h.getEntryPoint()).update(h,((InternalFactHandle)handle).getObject(),Long.MIN_VALUE,core.getClass(),this.activation);
+      updateTraits(inner,-1L,null,trait,veto);
+    }
+ else {
+      handle=this.workingMemory.insert(inner,null,false,false,this.activation.getRule(),this.activation);
+      if (this.identityMap != null) {
+        this.getIdentityMap().put(inner,handle);
+      }
+    }
   }
   return thing;
 }

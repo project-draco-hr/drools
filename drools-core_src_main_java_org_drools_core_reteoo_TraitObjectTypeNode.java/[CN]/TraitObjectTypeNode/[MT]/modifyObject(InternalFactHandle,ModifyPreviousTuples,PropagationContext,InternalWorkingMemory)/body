@@ -6,24 +6,17 @@
   }
   context.setObjectType(objectType);
   if (compiledNetwork != null) {
-    compiledNetwork.modifyObject(factHandle,modifyPreviousTuples,context.adaptModificationMaskForObjectType(objectType,workingMemory),workingMemory);
+    compiledNetwork.modifyObject(factHandle,modifyPreviousTuples,context.getModificationMask() > 0L ? context.adaptModificationMaskForObjectType(objectType,workingMemory) : context,workingMemory);
   }
  else {
     if (factHandle.getObject() instanceof TraitProxy) {
       BitSet vetoMask=((TraitProxy)factHandle.getObject()).getTypeFilter();
-      if (vetoMask == null) {
-        this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context.adaptModificationMaskForObjectType(objectType,workingMemory),workingMemory);
-      }
- else {
-        BitSet checkMask=(BitSet)typeMask.clone();
-        checkMask.and(vetoMask);
-        if (!checkMask.equals(typeMask)) {
-          this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context.adaptModificationMaskForObjectType(objectType,workingMemory),workingMemory);
-        }
+      if (vetoMask == null || typeMask.isEmpty() || !HierarchyEncoderImpl.supersetOrEqualset(vetoMask,this.typeMask)) {
+        this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context.getModificationMask() > 0L ? context.adaptModificationMaskForObjectType(objectType,workingMemory) : context,workingMemory);
       }
     }
  else {
-      this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context.adaptModificationMaskForObjectType(objectType,workingMemory),workingMemory);
+      this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context.getModificationMask() > 0L ? context.adaptModificationMaskForObjectType(objectType,workingMemory) : context,workingMemory);
     }
   }
 }

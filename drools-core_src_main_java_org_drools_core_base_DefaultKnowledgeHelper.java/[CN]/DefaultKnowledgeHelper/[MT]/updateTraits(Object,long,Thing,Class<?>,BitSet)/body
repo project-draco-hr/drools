@@ -1,7 +1,6 @@
 {
   TraitableBean txBean=(TraitableBean)object;
   Collection<Thing> px=txBean.getMostSpecificTraits();
-  BitSet veto=null;
   if (originator != null) {
     veto=(BitSet)((TraitProxy)originator).getTypeCode().clone();
   }
@@ -9,8 +8,10 @@
     if (t != originator) {
       TraitProxy proxy=(TraitProxy)t;
       proxy.setTypeFilter(veto);
-      InternalFactHandle h=(InternalFactHandle)getFactHandle(t);
-      ((InternalWorkingMemoryEntryPoint)h.getEntryPoint()).update(h,t,mask,modifiedClass,this.activation);
+      InternalFactHandle h=(InternalFactHandle)lookupFactHandle(t);
+      if (h != null) {
+        ((InternalWorkingMemoryEntryPoint)h.getEntryPoint()).update(h,t,mask,modifiedClass,this.activation);
+      }
       proxy.setTypeFilter(null);
       BitSet tc=proxy.getTypeCode();
       if (veto == null) {

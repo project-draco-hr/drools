@@ -3,15 +3,19 @@
   if (modificationMask == Long.MAX_VALUE || !(type instanceof ClassObjectType)) {
     return this;
   }
+  long typeBit=modificationMask & Long.MIN_VALUE;
+  modificationMask&=Long.MAX_VALUE;
   ClassObjectType classObjectType=(ClassObjectType)type;
   Class<?> classType=classObjectType.getClassType();
   String pkgName=classType.getPackage().getName();
   if (classType == modifiedClass || "java.lang".equals(pkgName) || !(classType.isInterface() || modifiedClass.isInterface())) {
+    modificationMask|=typeBit;
     return this;
   }
   Long cachedMask=classObjectType.getTransformedMask(modifiedClass,originalMask);
   if (cachedMask != null) {
     modificationMask=cachedMask;
+    modificationMask|=typeBit;
     return this;
   }
   modificationMask=0L;
@@ -25,6 +29,7 @@
       }
     }
   }
+  modificationMask|=typeBit;
   classObjectType.storeTransformedMask(modifiedClass,originalMask,modificationMask);
   return this;
 }

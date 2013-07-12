@@ -4,9 +4,29 @@
   String getter=BuildUtils.getterName(fieldName,field.getTypeName());
   MethodVisitor mv=cw.visitMethod(ACC_PUBLIC,getter,"()" + Type.getDescriptor(field.getType()),null,null);
   mv.visitCode();
-  TraitFactory.invokeExtractor(mv,masterName,proxy,core,field);
-  if (!BuildUtils.isPrimitive(fieldType.getName())) {
-    mv.visitTypeInsn(CHECKCAST,Type.getInternalName(fieldType));
+  if (field.hasAlias() && proxy.getField(field.getAlias()) != null) {
+    FieldDefinition aliasedField=proxy.getField(field.getAlias());
+    if (field.getType().isAssignableFrom(aliasedField.getType())) {
+      TraitFactory.invokeExtractor(mv,masterName,proxy,core,field);
+      if (!BuildUtils.isPrimitive(fieldType.getName())) {
+        mv.visitTypeInsn(CHECKCAST,Type.getInternalName(fieldType));
+      }
+    }
+ else {
+      TraitFactory.invokeExtractor(mv,masterName,proxy,core,field);
+      mv.visitTypeInsn(CHECKCAST,Type.getInternalName(TraitableBean.class));
+      mv.visitVarInsn(ASTORE,1);
+      mv.visitVarInsn(ALOAD,1);
+      mv.visitLdcInsn(fieldType.getName());
+      mv.visitMethodInsn(INVOKEINTERFACE,Type.getInternalName(TraitableBean.class),"getTrait",Type.getMethodDescriptor(Type.getType(Thing.class),new Type[]{Type.getType(String.class)}));
+      mv.visitTypeInsn(CHECKCAST,Type.getInternalName(fieldType));
+    }
+  }
+ else {
+    TraitFactory.invokeExtractor(mv,masterName,proxy,core,field);
+    if (!BuildUtils.isPrimitive(fieldType.getName())) {
+      mv.visitTypeInsn(CHECKCAST,Type.getInternalName(fieldType));
+    }
   }
   mv.visitInsn(BuildUtils.returnType(field.getTypeName()));
   mv.visitMaxs(0,0);

@@ -1,12 +1,32 @@
 {
-  String fieldType=field.getTypeName();
-  MethodVisitor mv=cw.visitMethod(protect ? ACC_PROTECTED : ACC_PUBLIC,getterName,"()" + BuildUtils.getTypeDescriptor(fieldType),null,null);
+  Class fieldType=field.getType();
+  MethodVisitor mv=cw.visitMethod(protect ? ACC_PROTECTED : ACC_PUBLIC,getterName,"()" + Type.getDescriptor(fieldType),null,null);
   mv.visitCode();
-  TraitFactory.invokeExtractor(mv,masterName,proxy,core,field);
-  if (!BuildUtils.isPrimitive(fieldType)) {
-    mv.visitTypeInsn(CHECKCAST,BuildUtils.getInternalType(fieldType));
+  if (field.hasAlias() && proxy.getField(field.getAlias()) != null) {
+    FieldDefinition aliasedField=proxy.getField(field.getAlias());
+    if (field.getType().isAssignableFrom(aliasedField.getType())) {
+      TraitFactory.invokeExtractor(mv,masterName,proxy,core,field);
+      if (!BuildUtils.isPrimitive(fieldType.getName())) {
+        mv.visitTypeInsn(CHECKCAST,Type.getInternalName(fieldType));
+      }
+    }
+ else {
+      TraitFactory.invokeExtractor(mv,masterName,proxy,core,field);
+      mv.visitTypeInsn(CHECKCAST,Type.getInternalName(TraitableBean.class));
+      mv.visitVarInsn(ASTORE,1);
+      mv.visitVarInsn(ALOAD,1);
+      mv.visitLdcInsn(fieldType.getName());
+      mv.visitMethodInsn(INVOKEINTERFACE,Type.getInternalName(TraitableBean.class),"getTrait",Type.getMethodDescriptor(Type.getType(Thing.class),new Type[]{Type.getType(String.class)}));
+      mv.visitTypeInsn(CHECKCAST,Type.getInternalName(fieldType));
+    }
   }
-  mv.visitInsn(BuildUtils.returnType(fieldType));
+ else {
+    TraitFactory.invokeExtractor(mv,masterName,proxy,core,field);
+    if (!BuildUtils.isPrimitive(fieldType.getName())) {
+      mv.visitTypeInsn(CHECKCAST,Type.getInternalName(fieldType));
+    }
+  }
+  mv.visitInsn(BuildUtils.returnType(fieldType.getName()));
   mv.visitMaxs(0,0);
   mv.visitEnd();
 }

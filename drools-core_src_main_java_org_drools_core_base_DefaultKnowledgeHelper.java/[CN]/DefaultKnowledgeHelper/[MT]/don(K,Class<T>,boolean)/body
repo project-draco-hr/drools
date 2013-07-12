@@ -1,11 +1,16 @@
 {
   try {
+    BitSet currentType=core instanceof TraitableBean ? ((TraitableBean)core).getCurrentTypeCode() : null;
+    BitSet veto=currentType != null ? (BitSet)currentType.clone() : null;
     T thing=applyTrait(core,trait,logical);
     if (thing == core) {
       return thing;
     }
  else {
-      return doInsertTrait(thing,logical);
+      ((TraitProxy)thing).setTypeFilter(veto);
+      T t=doInsertTrait(thing,logical);
+      ((TraitProxy)thing).setTypeFilter(null);
+      return t;
     }
   }
  catch (  LogicalTypeInconsistencyException ltie) {
