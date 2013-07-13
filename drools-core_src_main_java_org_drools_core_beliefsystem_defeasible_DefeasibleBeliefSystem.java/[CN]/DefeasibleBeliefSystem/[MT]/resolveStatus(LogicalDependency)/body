@@ -1,0 +1,28 @@
+{
+  FactHandle justified=(FactHandle)node.getJustified();
+  Rule justifierRule=node.getJustifier().getRule();
+  List<? extends FactHandle> premise=node.getJustifier().getFactHandles();
+  DefeasibilityStatus status=DefeasibilityStatus.resolve(node.getValue());
+  if (status == null) {
+    DefeasibleRuleNature defeasibleType=DefeasibleRuleNature.STRICT;
+    if (node.getJustifier().getRule().getMetaData().containsKey(DefeasibleRuleNature.DEFEASIBLE.getLabel())) {
+      defeasibleType=DefeasibleRuleNature.DEFEASIBLE;
+    }
+ else     if (node.getJustifier().getRule().getMetaData().containsKey(DefeasibleRuleNature.DEFEATER.getLabel())) {
+      defeasibleType=DefeasibleRuleNature.DEFEATER;
+    }
+switch (defeasibleType) {
+case DEFEASIBLE:
+      status=checkDefeasible(justified,justifierRule,premise);
+    break;
+case DEFEATER:
+  status=checkDefeater(justified,justifierRule,premise);
+break;
+case STRICT:
+default :
+status=checkStrict(justified,justifierRule,premise);
+break;
+}
+}
+return status;
+}

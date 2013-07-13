@@ -1,0 +1,60 @@
+{
+  boolean pos=dep.getValue() != null && MODE.POSITIVE.getId().equals(dep.getValue().toString());
+switch (dep.getStatus()) {
+case DEFINITELY:
+    if (pos) {
+      definitelyPosCount--;
+      if (definitelyPosCount == 0) {
+        statusMask=statusMask ^ DEFINITELY_POS_BIT;
+      }
+    }
+ else {
+      definitelyNegCount--;
+      if (definitelyNegCount == 0) {
+        statusMask=statusMask ^ DEFINITELY_NEG_BIT;
+      }
+    }
+  break;
+case DEFEASIBLY:
+if (pos) {
+  defeasiblyPosCount--;
+  if (defeasiblyPosCount == 0) {
+    statusMask=statusMask ^ DEFEASIBLY_POS_BIT;
+  }
+}
+ else {
+  defeasiblyNegCount--;
+  if (defeasiblyNegCount == 0) {
+    statusMask=statusMask ^ DEFEASIBLY_NEG_BIT;
+  }
+}
+break;
+case DEFEATEDLY:
+if (pos) {
+defeatedlyPosCount--;
+if (defeatedlyPosCount == 0) {
+statusMask=statusMask ^ DEFEATEDLY_POS_BIT;
+}
+}
+ else {
+defeatedlyNegCount--;
+if (defeatedlyNegCount == 0) {
+statusMask=statusMask ^ DEFEATEDLY_NEG_BIT;
+}
+}
+break;
+case UNDECIDABLY:
+throw new IllegalStateException("Individual logical dependencies cannot be undecidably");
+}
+if (this.rootUndefeated == dep) {
+removeFirst();
+}
+ else if (this.tailUndefeated == dep) {
+removeLast();
+}
+ else {
+dep.getPrevious().setNext(dep.getNext());
+(dep.getNext()).setPrevious(dep.getPrevious());
+dep.nullPrevNext();
+}
+}

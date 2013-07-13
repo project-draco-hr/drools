@@ -1,0 +1,32 @@
+{
+  DefeasibleLogicalDependency newDep=(DefeasibleLogicalDependency)node;
+  Rule rule=newDep.getJustifier().getRule();
+  boolean wasDefeated=false;
+  for (DefeasibleLogicalDependency existingDep=rootUndefeated; existingDep != null; existingDep=(DefeasibleLogicalDependency)existingDep.getNext()) {
+    wasDefeated=checkAndApplyIsDefeated(newDep,rule,existingDep);
+    if (wasDefeated) {
+      break;
+    }
+  }
+  if (!wasDefeated) {
+    DefeasibleLogicalDependency stagedDeps=null;
+    for (DefeasibleLogicalDependency existingDep=rootUndefeated; existingDep != null; ) {
+      DefeasibleLogicalDependency next=(DefeasibleLogicalDependency)existingDep.getNext();
+      if (checkAndApplyIsDefeated(existingDep,existingDep.getJustifier().getRule(),newDep)) {
+        removeUndefeated(existingDep);
+        if (existingDep.getRootDefeated() != null) {
+          if (stagedDeps == null) {
+            stagedDeps=existingDep.getRootDefeated();
+          }
+ else {
+            stagedDeps.setPrevious(existingDep.getTailDefeated());
+            stagedDeps=existingDep.getRootDefeated();
+          }
+        }
+      }
+      existingDep=next;
+    }
+    addUndefeated(newDep);
+    reprocessDefeated(stagedDeps);
+  }
+}
