@@ -1,6 +1,13 @@
 {
+  Object o=((InternalFactHandle)handle).getObject();
   ((InternalWorkingMemoryEntryPoint)((InternalFactHandle)handle).getEntryPoint()).delete(handle,this.activation.getRule(),this.activation);
   if (this.identityMap != null) {
-    this.getIdentityMap().remove(((InternalFactHandle)handle).getObject());
+    this.getIdentityMap().remove(o);
+  }
+  if (o instanceof TraitableBean) {
+    Collection proxies=new ArrayList(((TraitableBean)o)._getTraitMap().values());
+    for (    Object t : proxies) {
+      retract(t);
+    }
   }
 }
