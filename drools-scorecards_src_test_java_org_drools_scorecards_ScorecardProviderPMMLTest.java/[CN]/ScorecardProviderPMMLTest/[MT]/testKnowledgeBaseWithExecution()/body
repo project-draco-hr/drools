@@ -1,0 +1,20 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  ScoreCardConfiguration scconf=KnowledgeBuilderFactory.newScoreCardConfiguration();
+  scconf.setInputType(SCORECARD_INPUT_TYPE.PMML);
+  kbuilder.add(ResourceFactory.newUrlResource(ScorecardProviderPMMLTest.class.getResource("/SimpleScorecard.pmml")),ResourceType.SCARD,scconf);
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  assertNotNull(kbase);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  FactType scorecardType=kbase.getFactType("org.drools.scorecards.example","SampleScore");
+  assertNotNull(scorecardType);
+  DroolsScorecard scorecard=(DroolsScorecard)scorecardType.newInstance();
+  assertNotNull(scorecard);
+  scorecardType.set(scorecard,"age",10);
+  session.insert(scorecard);
+  session.fireAllRules();
+  session.dispose();
+  assertEquals(29.0,scorecard.getCalculatedScore());
+}
