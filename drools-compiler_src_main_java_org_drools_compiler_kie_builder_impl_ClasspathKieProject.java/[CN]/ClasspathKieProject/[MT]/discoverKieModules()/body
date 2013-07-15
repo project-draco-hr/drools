@@ -1,24 +1,27 @@
 {
-  final Enumeration<URL> e;
-  try {
-    e=cl.getResources(KieModuleModelImpl.KMODULE_JAR_PATH);
-  }
- catch (  IOException exc) {
-    log.error("Unable to find and build index of kmodule.xml \n" + exc.getMessage());
-    return;
-  }
-  while (e.hasMoreElements()) {
-    URL url=e.nextElement();
-    System.out.println("kmodules: " + url);
+  String[] configFiles={KieModuleModelImpl.KMODULE_JAR_PATH,KieModuleModelImpl.KMODULE_SPRING_JAR_PATH};
+  for (  String configFile : configFiles) {
+    final Enumeration<URL> e;
     try {
-      InternalKieModule kModule=fetchKModule(url);
-      ReleaseId releaseId=kModule.getReleaseId();
-      kieModules.put(releaseId,kModule);
-      log.debug("Discovered classpath module " + releaseId.toExternalForm());
-      kr.addKieModule(kModule);
+      e=cl.getResources(configFile);
     }
- catch (    Exception exc) {
-      log.error("Unable to build index of kmodule.xml url=" + url.toExternalForm() + "\n"+ exc.getMessage());
+ catch (    IOException exc) {
+      log.error("Unable to find and build index of " + configFile + "."+ exc.getMessage());
+      return;
+    }
+    while (e.hasMoreElements()) {
+      URL url=e.nextElement();
+      System.out.println("kmodules: " + url);
+      try {
+        InternalKieModule kModule=fetchKModule(url);
+        ReleaseId releaseId=kModule.getReleaseId();
+        kieModules.put(releaseId,kModule);
+        log.debug("Discovered classpath module " + releaseId.toExternalForm());
+        kr.addKieModule(kModule);
+      }
+ catch (      Exception exc) {
+        log.error("Unable to build index of kmodule.xml url=" + url.toExternalForm() + "\n"+ exc.getMessage());
+      }
     }
   }
 }
