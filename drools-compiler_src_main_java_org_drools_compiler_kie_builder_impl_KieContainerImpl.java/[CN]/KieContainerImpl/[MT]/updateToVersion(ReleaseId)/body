@@ -1,5 +1,56 @@
 {
-  kBases.clear();
-  this.kProject=new KieModuleKieProject((InternalKieModule)kr.getKieModule(releaseId));
-  this.kProject.init();
+  if (kProject instanceof ClasspathKieProject) {
+    throw new UnsupportedOperationException("It is not possible to update a classpath container to a new version.");
+  }
+  ReleaseId currentReleaseId=kProject.getGAV();
+  InternalKieModule currentKM=(InternalKieModule)kr.getKieModule(currentReleaseId);
+  InternalKieModule newKM=(InternalKieModule)kr.getKieModule(newReleaseId);
+  ChangeSetBuilder csb=new ChangeSetBuilder();
+  KieJarChangeSet cs=csb.build(currentKM,newKM);
+  ((KieModuleKieProject)kProject).updateToModule(newKM);
+  List<String> kbasesToRemove=new ArrayList<String>();
+  for (  Map.Entry<String,KieBase> kBaseEntry : kBases.entrySet()) {
+    String kbaseName=kBaseEntry.getKey();
+    KieBaseModel kieBaseModel=kProject.getKieBaseModel(kbaseName);
+    if (kieBaseModel == null) {
+      kbasesToRemove.add(kbaseName);
+    }
+ else {
+      KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder((KnowledgeBase)kBaseEntry.getValue());
+      PackageBuilder pkgbuilder=kbuilder instanceof PackageBuilder ? ((PackageBuilder)kbuilder) : ((KnowledgeBuilderImpl)kbuilder).getPackageBuilder();
+      CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
+      int fileCount=0;
+      for (      ResourceChangeSet rcs : cs.getChanges().values()) {
+        if (rcs.getChangeType().equals(ChangeType.REMOVED)) {
+          String resourceName=rcs.getResourceName();
+          if (KieBuilderImpl.filterFileInKBase(kieBaseModel,resourceName) && !resourceName.endsWith(".properties")) {
+            pkgbuilder.removeObjectsGeneratedFromResource(currentKM.getResource(resourceName));
+          }
+        }
+      }
+      for (      ResourceChangeSet rcs : cs.getChanges().values()) {
+        if (!rcs.getChangeType().equals(ChangeType.REMOVED)) {
+          String resourceName=rcs.getResourceName();
+          if (KieBuilderImpl.filterFileInKBase(kieBaseModel,resourceName) && !resourceName.endsWith(".properties")) {
+            fileCount+=AbstractKieModule.addFile(ckbuilder,newKM,resourceName) ? 1 : 0;
+          }
+        }
+      }
+      if (fileCount > 0) {
+        ckbuilder.build();
+      }
+    }
+  }
+  for (Iterator<Map.Entry<String,KieSession>> it=this.kSessions.entrySet().iterator(); it.hasNext(); ) {
+    Entry<String,KieSession> ksession=it.next();
+    if (kProject.getKieSessionModel(ksession.getKey()) == null) {
+      it.remove();
+    }
+  }
+  for (Iterator<Map.Entry<String,StatelessKieSession>> it=this.statelessKSessions.entrySet().iterator(); it.hasNext(); ) {
+    Entry<String,StatelessKieSession> ksession=it.next();
+    if (kProject.getKieSessionModel(ksession.getKey()) == null) {
+      it.remove();
+    }
+  }
 }
