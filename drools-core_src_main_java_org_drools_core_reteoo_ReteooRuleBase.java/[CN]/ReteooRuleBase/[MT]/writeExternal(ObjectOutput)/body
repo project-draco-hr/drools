@@ -1,22 +1,33 @@
 {
-  DroolsObjectOutputStream droolsStream;
-  boolean isDrools=stream instanceof DroolsObjectOutputStream;
-  ByteArrayOutputStream bytes=null;
-  stream.writeBoolean(isDrools);
+  ObjectOutput droolsStream;
+  boolean isDrools=out instanceof DroolsObjectOutputStream;
+  ByteArrayOutputStream bytes;
   if (isDrools) {
-    droolsStream=(DroolsObjectOutputStream)stream;
+    droolsStream=out;
+    bytes=null;
   }
  else {
     bytes=new ByteArrayOutputStream();
     droolsStream=new DroolsObjectOutputStream(bytes);
   }
-  super.writeExternal(droolsStream);
+  droolsStream.writeBoolean(this.config.isClassLoaderCacheEnabled());
+  droolsStream.writeObject(((ProjectClassLoader)rootClassLoader).getStore());
+  droolsStream.writeObject(this.config);
+  droolsStream.writeObject(this.pkgs);
+  droolsStream.writeObject(this.id);
+  droolsStream.writeInt(this.workingMemoryCounter.get());
+  droolsStream.writeObject(this.processes);
+  droolsStream.writeUTF(this.factHandleFactory.getClass().getName());
+  droolsStream.writeObject(buildGlobalMapForSerialization());
+  droolsStream.writeObject(this.partitionIDs);
+  this.eventSupport.removeEventListener(RuleBaseEventListener.class);
+  droolsStream.writeObject(this.eventSupport);
   droolsStream.writeObject(this.reteooBuilder);
   droolsStream.writeObject(this.rete);
   if (!isDrools) {
     droolsStream.flush();
     droolsStream.close();
     bytes.close();
-    stream.writeObject(bytes.toByteArray());
+    out.writeObject(bytes.toByteArray());
   }
 }
