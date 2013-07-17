@@ -17,13 +17,13 @@
   lhs2.addDescr(pattern2);
   builder.addPackage(packageDescr);
   assertLength(0,builder.getErrors().getErrors());
-  RuleBase ruleBase=RuleBaseFactory.newRuleBase();
-  ruleBase.addPackage(builder.getPackage());
-  StatefulSession session=ruleBase.newStatefulSession();
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(Arrays.asList(new KnowledgePackage[]{new KnowledgePackageImp(builder.getPackage())}));
+  final KieSession session=kbase.newStatefulKnowledgeSession();
   session.insert(new Cheese("stilton",15));
   QueryResults results=session.getQueryResults("query1","stilton");
   assertEquals(1,results.size());
-  Object object=results.get(0).get(0);
+  Object object=results.iterator().next().get("stilton");
   assertEquals(new Cheese("stilton",15),object);
   results=session.getQueryResults("query1",new Object[]{"cheddar"});
   assertEquals(0,results.size());

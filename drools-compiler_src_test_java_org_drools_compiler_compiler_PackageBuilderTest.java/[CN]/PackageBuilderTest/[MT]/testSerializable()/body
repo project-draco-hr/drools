@@ -20,14 +20,14 @@
   newPkg.getDialectRuntimeRegistry().onAdd(ruleBase.getRootClassLoader());
   newPkg.getDialectRuntimeRegistry().onBeforeExecute();
   ruleBase.getGlobals().put("map",Map.class);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final KieSession workingMemory=new KnowledgeBaseImpl(ruleBase).newStatefulKnowledgeSession();
   final HashMap map=new HashMap();
   workingMemory.setGlobal("map",map);
   final LeftTupleImpl tuple=new MockTuple(new HashMap());
   tuple.setLeftTupleSink(new RuleTerminalNode(1,new CompositeObjectSinkAdapterTest.MockBetaNode(),newRule,newRule.getLhs(),0,new BuildContext(ruleBase,null)));
   final Activation activation=new MockActivation(newRule,0,newRule.getLhs(),tuple);
-  final DefaultKnowledgeHelper knowledgeHelper=new org.drools.core.base.DefaultKnowledgeHelper(workingMemory);
+  final DefaultKnowledgeHelper knowledgeHelper=new org.drools.core.base.DefaultKnowledgeHelper(((StatefulKnowledgeSessionImpl)workingMemory).session);
   knowledgeHelper.setActivation(activation);
-  newRule.getConsequence().evaluate(knowledgeHelper,workingMemory);
+  newRule.getConsequence().evaluate(knowledgeHelper,((StatefulKnowledgeSessionImpl)workingMemory).session);
   assertEquals(new Integer(1),map.get("value"));
 }

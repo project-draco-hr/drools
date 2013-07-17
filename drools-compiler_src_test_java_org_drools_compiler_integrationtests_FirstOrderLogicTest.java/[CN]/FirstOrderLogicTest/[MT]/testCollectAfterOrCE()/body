@@ -1,27 +1,17 @@
 {
+  Collection<KnowledgePackage> pkgs=loadKnowledgePackages("test_OrCEFollowedByCollect.drl");
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(pkgs);
+  StatefulKnowledgeSession session=createKnowledgeSession((KnowledgeBase)kbase);
   final Cheesery bonFromage=new Cheesery();
   bonFromage.addCheese(new Cheese("cheddar"));
   bonFromage.addCheese(new Cheese("cheddar"));
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newClassPathResource("test_OrCEFollowedByCollect.drl",getClass()),ResourceType.DRL);
-  KnowledgeBuilderErrors errors=kbuilder.getErrors();
-  if (errors.size() > 0) {
-    for (    KnowledgeBuilderError error : errors) {
-      logger.warn(error.toString());
-    }
-    throw new IllegalArgumentException("Could not parse knowledge.");
-  }
-  assertFalse(kbuilder.hasErrors());
-  Collection<KnowledgePackage> knowledgePackages=kbuilder.getKnowledgePackages();
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(knowledgePackages);
-  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
   session.insert(bonFromage);
   int rules=session.fireAllRules();
   assertEquals(2,rules);
-  knowledgePackages=SerializationHelper.serializeObject(knowledgePackages);
+  pkgs=SerializationHelper.serializeObject(pkgs);
   kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(knowledgePackages);
+  kbase.addKnowledgePackages(pkgs);
   session=createKnowledgeSession(kbase);
   session.insert(bonFromage);
   rules=session.fireAllRules();

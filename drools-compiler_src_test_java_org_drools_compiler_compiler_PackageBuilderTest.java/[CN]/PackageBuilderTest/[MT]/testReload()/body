@@ -13,15 +13,15 @@
   assertLength(0,builder.getErrors().getErrors());
   final ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
   ruleBase.getGlobals().put("map",Map.class);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  final KieSession workingMemory=new KnowledgeBaseImpl(ruleBase).newStatefulKnowledgeSession();
   final HashMap map=new HashMap();
   workingMemory.setGlobal("map",map);
   final LeftTupleImpl tuple=new MockTuple(new HashMap());
   tuple.setLeftTupleSink(new RuleTerminalNode(1,new CompositeObjectSinkAdapterTest.MockBetaNode(),rule,rule.getLhs(),0,new BuildContext(ruleBase,null)));
   final Activation activation=new MockActivation(rule,0,rule.getLhs(),tuple);
-  DefaultKnowledgeHelper knowledgeHelper=new org.drools.core.base.DefaultKnowledgeHelper(workingMemory);
+  DefaultKnowledgeHelper knowledgeHelper=new org.drools.core.base.DefaultKnowledgeHelper(((StatefulKnowledgeSessionImpl)workingMemory).session);
   knowledgeHelper.setActivation(activation);
-  rule.getConsequence().evaluate(knowledgeHelper,workingMemory);
+  rule.getConsequence().evaluate(knowledgeHelper,((StatefulKnowledgeSessionImpl)workingMemory).session);
   assertEquals(new Integer(1),map.get("value"));
   ruleDescr.setConsequence("map.put(\"value\", new Integer(2) );");
   pkg.removeRule(rule);
@@ -29,8 +29,8 @@
   builder.addPackage(packageDescr);
   pkg=builder.getPackage();
   rule=pkg.getRule("rule-1");
-  knowledgeHelper=new org.drools.core.base.DefaultKnowledgeHelper(workingMemory);
+  knowledgeHelper=new org.drools.core.base.DefaultKnowledgeHelper(((StatefulKnowledgeSessionImpl)workingMemory).session);
   knowledgeHelper.setActivation(activation);
-  rule.getConsequence().evaluate(knowledgeHelper,workingMemory);
+  rule.getConsequence().evaluate(knowledgeHelper,((StatefulKnowledgeSessionImpl)workingMemory).session);
   assertEquals(new Integer(2),map.get("value"));
 }
