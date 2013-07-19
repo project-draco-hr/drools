@@ -1,0 +1,21 @@
+{
+  String type="package org.drools.test\n" + "declare Message\n" + "   message : String\n"+ "end\n";
+  String drl1="package org.drools.test\n" + "rule R1 when\n" + "   $o : Object()\n"+ "then\n"+ "   if ($o.getClass().getName().equals(\"org.drools.test.Message\") && $o.getClass() != new Message(\"Test\").getClass()) {\n"+ "       throw new RuntimeException();\n"+ "   }\n"+ "end\n";
+  String drl2="package org.drools.test\n" + "rule R2_2 when\n" + "   $m : Message( message == \"Hello World\" )\n"+ "then\n"+ "   if ($m.getClass() != new Message(\"Test\").getClass()) {\n"+ "       throw new RuntimeException();\n"+ "   }\n"+ "end\n";
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId releaseId1=ks.newReleaseId("org.kie","test-delete","1.0.0");
+  KieModule km=createAndDeployJar(ks,releaseId1,type,drl1,drl2);
+  KieContainer kieContainer=ks.newKieContainer(releaseId1);
+  KieContainer kieContainer2=ks.newKieContainer(releaseId1);
+  KieSession ksession=kieContainer.newKieSession();
+  KieSession ksession2=kieContainer2.newKieSession();
+  Class cls1=kieContainer.getClassLoader().loadClass("org.drools.test.Message");
+  Constructor constructor=cls1.getConstructor(String.class);
+  ksession.insert(constructor.newInstance("Hello World"));
+  assertEquals(3,ksession.fireAllRules());
+  Class cls2=kieContainer2.getClassLoader().loadClass("org.drools.test.Message");
+  Constructor constructor2=cls2.getConstructor(String.class);
+  ksession2.insert(constructor2.newInstance("Hello World"));
+  assertEquals(3,ksession2.fireAllRules());
+  assertNotSame(cls1,cls2);
+}

@@ -5,13 +5,19 @@
   ReleaseId releaseId1=ks.newReleaseId("org.kie","test-delete","1.0.0");
   KieModule km=createAndDeployJar(ks,releaseId1,drl1,drl2);
   KieContainer kieContainer=ks.newKieContainer(releaseId1);
+  KieContainer kieContainer2=ks.newKieContainer(releaseId1);
   KieSession ksession=kieContainer.newKieSession();
   ksession.insert(new Message("Hello World"));
   assertEquals(2,ksession.fireAllRules());
   ReleaseId releaseId2=ks.newReleaseId("org.kie","test-delete","1.0.1");
   km=createAndDeployJar(ks,releaseId2,null,drl2);
   kieContainer.updateToVersion(releaseId2);
+  ksession.insert(new Message("Hello World"));
+  assertEquals(1,ksession.fireAllRules());
   ksession=kieContainer.newKieSession();
   ksession.insert(new Message("Hello World"));
   assertEquals(1,ksession.fireAllRules());
+  KieSession ksession2=kieContainer2.newKieSession();
+  ksession2.insert(new Message("Hello World"));
+  assertEquals(2,ksession2.fireAllRules());
 }

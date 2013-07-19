@@ -1,7 +1,11 @@
 {
+  List<Package> clonedPkgs=new ArrayList<Package>();
+  for (  Package newPkg : newPkgs) {
+    clonedPkgs.add(newPkg.deepCloneIfAlreadyInUse(rootClassLoader));
+  }
   lock();
   try {
-    for (    Package newPkg : newPkgs) {
+    for (    Package newPkg : clonedPkgs) {
       newPkg.checkValidity();
       this.additionsSinceLock++;
       this.eventSupport.fireBeforePackageAdded(newPkg);
@@ -14,7 +18,7 @@
       }
       pkg.getDialectRuntimeRegistry().merge(newPkg.getDialectRuntimeRegistry(),this.rootClassLoader,true);
     }
-    for (    Package newPkg : newPkgs) {
+    for (    Package newPkg : clonedPkgs) {
       String lastType=null;
       try {
         if (newPkg.getTypeDeclarations() != null) {
@@ -51,7 +55,7 @@
         throw new RuntimeDroolsException("unable to resolve Type Declaration class '" + lastType + "'",e);
       }
     }
-    for (    Package newPkg : newPkgs) {
+    for (    Package newPkg : clonedPkgs) {
       Package pkg=this.pkgs.get(newPkg.getName());
       if (newPkg.getFunctions() != null) {
         for (        Map.Entry<String,Function> entry : newPkg.getFunctions().entrySet()) {
@@ -61,7 +65,7 @@
       pkg.getDialectRuntimeRegistry().onBeforeExecute();
       pkg.getClassFieldAccessorStore().merge(newPkg.getClassFieldAccessorStore());
     }
-    for (    Package newPkg : newPkgs) {
+    for (    Package newPkg : clonedPkgs) {
       Package pkg=this.pkgs.get(newPkg.getName());
       mergePackage(pkg,newPkg);
       for (      WindowDeclaration window : newPkg.getWindowDeclarations().values()) {
