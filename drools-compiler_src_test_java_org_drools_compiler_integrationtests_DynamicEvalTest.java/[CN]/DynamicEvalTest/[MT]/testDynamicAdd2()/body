@@ -1,0 +1,23 @@
+{
+  String test="rule id3\n" + "when\n" + "eval(0 == 0)\n"+ "String( this == \"go\" )\n"+ "then\n"+ "insertLogical( \"done\" );\n"+ "end\n"+ "rule id5\n"+ "when\n"+ "eval(0 == 0)\n"+ "Integer( this == 7 )\n"+ "then\n"+ "insertLogical( \"done3\" );\n"+ "end\n";
+  loadPackages(ResourceFactory.newByteArrayResource(test.getBytes()),ResourceType.DRL);
+  ((KnowledgeBaseImpl)session.getKieBase()).addKnowledgePackages(kbuilder.getKnowledgePackages());
+  session.addEventListener(new DebugWorkingMemoryEventListener());
+  session.insert("go");
+  session.insert(5);
+  session.insert(7);
+  int fired=session.fireAllRules();
+  System.out.println(fired);
+  effects=session.getObjects();
+  assertTrue("fired",effects.contains("done"));
+  String test2="\nrule id4" + "\nwhen" + "\neval(0 == 0 )"+ "\nInteger( this == 5 )"+ "\nthen"+ "\ninsertLogical( \"done2\" );"+ "\nend";
+  loadPackages(ResourceFactory.newByteArrayResource(test2.getBytes()),ResourceType.DRL);
+  ((KnowledgeBaseImpl)session.getKieBase()).addKnowledgePackages(kbuilder.getKnowledgePackages());
+  fired=session.fireAllRules();
+  System.out.println(fired);
+  effects=session.getObjects();
+  assertTrue("fired",effects.contains("done2"));
+  for (  Object o : session.getObjects()) {
+    System.out.println(o);
+  }
+}
