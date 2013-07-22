@@ -1,0 +1,15 @@
+{
+  final EventSupport eventsupport=(EventSupport)this.workingMemory;
+  activationGroup.setTriggeredForRecency(this.workingMemory.getFactHandleFactory().getRecency());
+  for (final Iterator it=activationGroup.iterator(); it.hasNext(); ) {
+    final ActivationGroupNode node=(ActivationGroupNode)it.next();
+    final Activation activation=node.getActivation();
+    activation.setActivationGroupNode(null);
+    if (activation.isQueued()) {
+      activation.setQueued(false);
+      activation.remove();
+      eventsupport.getAgendaEventSupport().fireActivationCancelled(activation,this.workingMemory,MatchCancelledCause.CLEAR);
+    }
+  }
+  activationGroup.clear();
+}

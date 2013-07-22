@@ -1,0 +1,32 @@
+{
+  final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
+  if (memory.getLeftTupleMemory() == null || (memory.getLeftTupleMemory().size() == 0 && rightTuple.getBlocked() == null)) {
+    memory.getRightTupleMemory().removeAdd(rightTuple);
+    return;
+  }
+  this.constraints.updateFromFactHandle(memory.getContext(),workingMemory,rightTuple.getFactHandle());
+  LeftTupleMemory leftMemory=memory.getLeftTupleMemory();
+  FastIterator leftIt=getLeftIterator(leftMemory);
+  LeftTuple firstLeftTuple=getFirstLeftTuple(rightTuple,leftMemory,context,leftIt);
+  LeftTuple firstBlocked=rightTuple.getBlocked();
+  rightTuple.nullBlocked();
+  for (LeftTuple leftTuple=firstLeftTuple; leftTuple != null; ) {
+    LeftTuple temp=(LeftTuple)leftIt.next(leftTuple);
+    if (this.constraints.isAllowedCachedRight(memory.getContext(),leftTuple)) {
+      leftTuple.setBlocker(rightTuple);
+      rightTuple.addBlocked(leftTuple);
+      leftMemory.remove(leftTuple);
+      propagateRetractLeftTuple(context,workingMemory,leftTuple);
+    }
+    leftTuple=temp;
+  }
+  RightTupleMemory rightTupleMemory=memory.getRightTupleMemory();
+  if (firstBlocked != null) {
+    updateLeftTupleToNewBlocker(rightTuple,context,workingMemory,memory,leftMemory,firstBlocked,rightTupleMemory,true);
+  }
+ else {
+    rightTupleMemory.removeAdd(rightTuple);
+  }
+  this.constraints.resetFactHandle(memory.getContext());
+  this.constraints.resetTuple(memory.getContext());
+}

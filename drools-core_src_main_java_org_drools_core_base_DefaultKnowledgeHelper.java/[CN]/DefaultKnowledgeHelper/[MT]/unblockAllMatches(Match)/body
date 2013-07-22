@@ -9,24 +9,7 @@
   }
   if (wasBlocked) {
     RuleAgendaItem ruleAgendaItem=targetMatch.getRuleAgendaItem();
-    if (ruleAgendaItem == null) {
-      ((DefaultAgenda)workingMemory.getAgenda()).getStageActivationsGroup().addActivation(targetMatch);
-    }
- else {
-      int salienceInt=0;
-      Salience salience=ruleAgendaItem.getRule().getSalience();
-      RuleTerminalNodeLeftTuple rtnLeftTuple=(RuleTerminalNodeLeftTuple)targetMatch;
-      if (!salience.isDynamic()) {
-        salienceInt=ruleAgendaItem.getRule().getSalience().getValue();
-      }
- else {
-        salienceInt=salience.getValue(new DefaultKnowledgeHelper(rtnLeftTuple,getWorkingMemory()),null,getWorkingMemory());
-      }
-      ((RuleTerminalNodeLeftTuple)targetMatch).update(salienceInt,activation.getPropagationContext());
-      targetMatch.getRuleAgendaItem().getRuleExecutor().addLeftTuple(targetMatch.getTuple());
-      if (!targetMatch.getRuleAgendaItem().isQueued()) {
-        targetMatch.getRuleAgendaItem().getAgendaGroup().add(targetMatch.getRuleAgendaItem());
-      }
-    }
+    InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
+    agenda.stageLeftTuple(ruleAgendaItem,targetMatch);
   }
 }

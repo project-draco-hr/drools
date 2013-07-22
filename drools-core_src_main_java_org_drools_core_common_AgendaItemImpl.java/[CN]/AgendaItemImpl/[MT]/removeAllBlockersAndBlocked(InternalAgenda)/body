@@ -1,0 +1,21 @@
+{
+  if (this.blockers != null) {
+    for (LinkedListEntry<LogicalDependency> node=blockers.getFirst(); node != null; node=node.getNext()) {
+      LogicalDependency dep=node.getObject();
+      dep.getJustifier().getBlocked().remove(dep);
+    }
+  }
+  this.blockers=null;
+  if (this.blocked != null) {
+    for (LogicalDependency dep=blocked.getFirst(); dep != null; ) {
+      LogicalDependency tmp=dep.getNext();
+      removeBlocked(dep);
+      AgendaItem justified=(AgendaItem)dep.getJustified();
+      if (justified.getBlockers().isEmpty()) {
+        agenda.stageLeftTuple(ruleAgendaItem,justified);
+      }
+      dep=tmp;
+    }
+  }
+  this.blocked=null;
+}

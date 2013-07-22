@@ -2,22 +2,18 @@
   final BetaMemory memory=(BetaMemory)getBetaMemoryFromRightInput(this,wm);
   RightTuple rightTuple=createRightTuple(factHandle,this,pctx);
   rightTuple.setPropagationContext(pctx);
-  if (isUnlinkingEnabled()) {
-    boolean stagedInsertWasEmpty=false;
-    if (streamMode) {
-      stagedInsertWasEmpty=memory.getSegmentMemory().getTupleQueue().isEmpty();
-      memory.getSegmentMemory().getTupleQueue().add(new RightTupleEntry(rightTuple,pctx,memory));
-    }
- else {
-      stagedInsertWasEmpty=memory.getStagedRightTuples().addInsert(rightTuple);
-    }
-    if (memory.getAndIncCounter() == 0 && isEmptyBetaConstraints()) {
-      memory.linkNode(wm);
-    }
- else     if (stagedInsertWasEmpty) {
-      memory.getSegmentMemory().notifyRuleLinkSegment(wm);
-    }
-    return;
+  boolean stagedInsertWasEmpty=false;
+  if (streamMode) {
+    stagedInsertWasEmpty=memory.getSegmentMemory().getTupleQueue().isEmpty();
+    memory.getSegmentMemory().getTupleQueue().add(new RightTupleEntry(rightTuple,pctx,memory));
   }
-  assertRightTuple(rightTuple,pctx,wm);
+ else {
+    stagedInsertWasEmpty=memory.getStagedRightTuples().addInsert(rightTuple);
+  }
+  if (memory.getAndIncCounter() == 0 && isEmptyBetaConstraints()) {
+    memory.linkNode(wm);
+  }
+ else   if (stagedInsertWasEmpty) {
+    memory.getSegmentMemory().notifyRuleLinkSegment(wm);
+  }
 }

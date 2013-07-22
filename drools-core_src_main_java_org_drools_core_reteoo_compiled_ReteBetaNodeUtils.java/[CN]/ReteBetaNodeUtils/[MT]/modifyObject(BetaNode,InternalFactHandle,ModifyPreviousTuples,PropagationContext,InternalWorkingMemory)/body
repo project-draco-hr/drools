@@ -1,0 +1,24 @@
+{
+  RightTuple rightTuple=modifyPreviousTuples.peekRightTuple();
+  while (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getRightInputOtnId().before(betaNode.getRightInputOtnId())) {
+    modifyPreviousTuples.removeRightTuple();
+    rightTuple.setPropagationContext(context);
+    rightTuple.getRightTupleSink().retractRightTuple(rightTuple,context,wm);
+    rightTuple=modifyPreviousTuples.peekRightTuple();
+  }
+  if (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getRightInputOtnId().equals(betaNode.getRightInputOtnId())) {
+    modifyPreviousTuples.removeRightTuple();
+    rightTuple.reAdd();
+    if (rightTuple.getStagedType() != LeftTuple.INSERT) {
+      rightTuple.setPropagationContext(context);
+    }
+    if (intersect(context.getModificationMask(),betaNode.getRightInferredMask())) {
+      betaNode.modifyRightTuple(rightTuple,context,wm);
+    }
+  }
+ else {
+    if (intersect(context.getModificationMask(),betaNode.getRightInferredMask())) {
+      betaNode.assertObject(factHandle,context,wm);
+    }
+  }
+}

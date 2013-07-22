@@ -1,0 +1,29 @@
+{
+  final FromMemory memory=(FromMemory)workingMemory.getNodeMemory(this);
+  Map<Object,RightTuple> matches=null;
+  boolean useLeftMemory=true;
+  if (!this.tupleMemoryEnabled) {
+    Object object=leftTuple.get(0).getObject();
+    if (!(object instanceof DroolsQuery) || !((DroolsQuery)object).isOpen()) {
+      useLeftMemory=false;
+    }
+  }
+  if (useLeftMemory) {
+    memory.betaMemory.getLeftTupleMemory().add(leftTuple);
+    matches=new LinkedHashMap<Object,RightTuple>();
+    leftTuple.setObject(matches);
+  }
+  this.betaConstraints.updateFromTuple(memory.betaMemory.getContext(),workingMemory,leftTuple);
+  for (final java.util.Iterator<?> it=this.dataProvider.getResults(leftTuple,workingMemory,context,memory.providerContext); it.hasNext(); ) {
+    final Object object=it.next();
+    if ((object == null) || !resultClass.isAssignableFrom(object.getClass())) {
+      continue;
+    }
+    RightTuple rightTuple=createRightTuple(leftTuple,context,workingMemory,object);
+    checkConstraintsAndPropagate(leftTuple,rightTuple,context,workingMemory,memory,useLeftMemory);
+    if (useLeftMemory) {
+      addToCreatedHandlesMap(matches,rightTuple);
+    }
+  }
+  this.betaConstraints.resetTuple(memory.betaMemory.getContext());
+}

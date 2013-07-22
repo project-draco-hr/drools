@@ -1,0 +1,14 @@
+{
+  betaNode.getRawConstraints().init(context,betaNode.getType());
+  betaNode.setUnificationJoin();
+  betaNode.getRightInput().addObjectSink(betaNode);
+  betaNode.getLeftTupleSource().addTupleSink(betaNode,context);
+  if (context == null) {
+    return;
+  }
+  for (  InternalWorkingMemory workingMemory : context.getWorkingMemories()) {
+    final PropagationContext propagationContext=new PropagationContextImpl(workingMemory.getNextPropagationIdCounter(),PropagationContext.RULE_ADDITION,null,null,null);
+    betaNode.getRightInput().updateSink(betaNode,propagationContext,workingMemory);
+    betaNode.getLeftTupleSource().updateSink(betaNode,propagationContext,workingMemory);
+  }
+}

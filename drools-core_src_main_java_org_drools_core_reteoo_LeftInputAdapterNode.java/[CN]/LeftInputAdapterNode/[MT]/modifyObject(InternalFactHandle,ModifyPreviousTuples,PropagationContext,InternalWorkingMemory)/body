@@ -1,29 +1,24 @@
 {
-  if (unlinkingEnabled) {
-    LeftTuple leftTuple=modifyPreviousTuples.peekLeftTuple();
-    ObjectTypeNode.Id otnId=this.sink.getFirstLeftTupleSink().getLeftInputOtnId();
-    while (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId().before(otnId)) {
-      modifyPreviousTuples.removeLeftTuple();
-      LeftInputAdapterNode prevLiaNode=(LeftInputAdapterNode)leftTuple.getLeftTupleSink().getLeftTupleSource();
-      LiaNodeMemory prevLm=(LiaNodeMemory)workingMemory.getNodeMemory(prevLiaNode);
-      SegmentMemory prevSm=(SegmentMemory)prevLm.getSegmentMemory();
-      doDeleteObject(leftTuple,context,prevSm,workingMemory,prevLiaNode,true,prevLm);
-      leftTuple=modifyPreviousTuples.peekLeftTuple();
-    }
-    LiaNodeMemory lm=(LiaNodeMemory)workingMemory.getNodeMemory(this);
-    if (lm.getSegmentMemory() == null) {
-      SegmentUtilities.createSegmentMemory(this,workingMemory);
-    }
-    if (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId().equals(otnId)) {
-      modifyPreviousTuples.removeLeftTuple();
-      leftTuple.reAdd();
-      doUpdateObject(leftTuple,context,workingMemory,(LeftInputAdapterNode)leftTuple.getLeftTupleSink().getLeftTupleSource(),true,lm.getSegmentMemory());
-    }
- else {
-      doInsertObject(factHandle,context,this,workingMemory,lm,true,true);
-    }
+  LeftTuple leftTuple=modifyPreviousTuples.peekLeftTuple();
+  ObjectTypeNode.Id otnId=this.sink.getFirstLeftTupleSink().getLeftInputOtnId();
+  while (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId().before(otnId)) {
+    modifyPreviousTuples.removeLeftTuple();
+    LeftInputAdapterNode prevLiaNode=(LeftInputAdapterNode)leftTuple.getLeftTupleSink().getLeftTupleSource();
+    LiaNodeMemory prevLm=(LiaNodeMemory)workingMemory.getNodeMemory(prevLiaNode);
+    SegmentMemory prevSm=(SegmentMemory)prevLm.getSegmentMemory();
+    doDeleteObject(leftTuple,context,prevSm,workingMemory,prevLiaNode,true,prevLm);
+    leftTuple=modifyPreviousTuples.peekLeftTuple();
+  }
+  LiaNodeMemory lm=(LiaNodeMemory)workingMemory.getNodeMemory(this);
+  if (lm.getSegmentMemory() == null) {
+    SegmentUtilities.createSegmentMemory(this,workingMemory);
+  }
+  if (leftTuple != null && leftTuple.getLeftTupleSink().getLeftInputOtnId().equals(otnId)) {
+    modifyPreviousTuples.removeLeftTuple();
+    leftTuple.reAdd();
+    doUpdateObject(leftTuple,context,workingMemory,(LeftInputAdapterNode)leftTuple.getLeftTupleSink().getLeftTupleSource(),true,lm.getSegmentMemory());
   }
  else {
-    this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context,workingMemory);
+    doInsertObject(factHandle,context,this,workingMemory,lm,true,true);
   }
 }

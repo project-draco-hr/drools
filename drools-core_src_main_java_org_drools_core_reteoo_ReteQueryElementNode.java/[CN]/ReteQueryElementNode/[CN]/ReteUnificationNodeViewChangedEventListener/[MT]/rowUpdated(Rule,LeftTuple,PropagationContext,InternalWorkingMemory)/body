@@ -1,0 +1,33 @@
+{
+  RightTuple rightTuple=(RightTuple)resultLeftTuple.getObject();
+  if (rightTuple.getMemory() != null) {
+    return;
+  }
+  rightTuple.setLeftTuple(null);
+  resultLeftTuple.setObject(null);
+  QueryTerminalNode node=(QueryTerminalNode)resultLeftTuple.getLeftTupleSink();
+  Declaration[] decls=node.getDeclarations();
+  InternalFactHandle rootHandle=resultLeftTuple.get(0);
+  DroolsQuery dquery=(DroolsQuery)rootHandle.getObject();
+  Object[] objects=new Object[dquery.getElements().length];
+  Declaration decl;
+  for (int i=0, length=this.variables.length; i < length; i++) {
+    decl=decls[this.variables[i]];
+    objects[this.variables[i]]=decl.getValue(workingMemory,resultLeftTuple.get(decl).getObject());
+  }
+  QueryElementFactHandle handle=(QueryElementFactHandle)rightTuple.getFactHandle();
+  handle.setRecency(workingMemory.getFactHandleFactory().getAtomicRecency().incrementAndGet());
+  handle.setObject(objects);
+  if (dquery.isOpen()) {
+    rightTuple.setLeftTuple(resultLeftTuple);
+    resultLeftTuple.setObject(rightTuple);
+  }
+  RightTupleList rightTuples=dquery.getResultUpdateRightTupleList();
+  if (rightTuples == null) {
+    rightTuples=new RightTupleList();
+    dquery.setResultUpdateRightTupleList(rightTuples);
+    QueryResultUpdateAction updateAction=new QueryResultUpdateAction(context,this.factHandle,leftTuple,this.node);
+    context.getQueue2().addFirst(updateAction);
+  }
+  rightTuples.add(rightTuple);
+}

@@ -1,0 +1,30 @@
+{
+  unstageActivations();
+  this.halt.set(false);
+  if (log.isTraceEnabled()) {
+    log.trace("Starting fireUntilHalt");
+  }
+  while (continueFiring(-1)) {
+    boolean fired=fireNextItem(agendaFilter,0,-1) >= 0 || !((AbstractWorkingMemory)this.workingMemory).getActionQueue().isEmpty();
+    this.workingMemory.executeQueuedActions();
+    if (!fired) {
+      try {
+synchronized (this.halt) {
+          if (!this.halt.get()) {
+            this.halt.wait();
+          }
+        }
+      }
+ catch (      InterruptedException e) {
+        this.halt.set(true);
+      }
+    }
+ else {
+      this.workingMemory.executeQueuedActions();
+    }
+  }
+  if (log.isTraceEnabled()) {
+    log.trace("Ending fireUntilHalt");
+  }
+  fireUntilHalt=false;
+}

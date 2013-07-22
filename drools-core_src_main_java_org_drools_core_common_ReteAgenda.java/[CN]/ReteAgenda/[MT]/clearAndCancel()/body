@@ -1,0 +1,17 @@
+{
+  for (  InternalAgendaGroup internalAgendaGroup : this.agendaGroups.values()) {
+    clearAndCancelAgendaGroup(internalAgendaGroup);
+  }
+  final EventSupport eventsupport=(EventSupport)this.workingMemory;
+  if (!this.scheduledActivations.isEmpty()) {
+    for (ScheduledAgendaItem item=this.scheduledActivations.removeFirst(); item != null; item=this.scheduledActivations.removeFirst()) {
+      item.setEnqueued(false);
+      Scheduler.removeAgendaItem(item,this);
+      eventsupport.getAgendaEventSupport().fireActivationCancelled(item,this.workingMemory,MatchCancelledCause.CLEAR);
+    }
+  }
+  clearAndCancelStagedActivations();
+  for (  ActivationGroup group : this.activationGroups.values()) {
+    clearAndCancelActivationGroup(group);
+  }
+}

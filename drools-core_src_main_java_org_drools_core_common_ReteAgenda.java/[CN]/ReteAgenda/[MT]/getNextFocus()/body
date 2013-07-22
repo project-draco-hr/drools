@@ -1,0 +1,28 @@
+{
+  InternalAgendaGroup agendaGroup;
+  while (true) {
+    agendaGroup=(InternalAgendaGroup)this.focusStack.getLast();
+    if (!agendaGroup.isAutoDeactivate()) {
+      break;
+    }
+    final boolean empty=agendaGroup.isEmpty();
+    if (empty && (this.focusStack.size() > 1)) {
+      agendaGroup.setActive(false);
+      this.focusStack.removeLast();
+      if (agendaGroup.isAutoDeactivate() && !agendaGroup.getNodeInstances().isEmpty()) {
+        innerDeactiveRuleFlowGroup((InternalRuleFlowGroup)agendaGroup);
+      }
+      final EventSupport eventsupport=(EventSupport)this.workingMemory;
+      eventsupport.getAgendaEventSupport().fireAgendaGroupPopped(agendaGroup,this.workingMemory);
+    }
+ else {
+      agendaGroup=(empty) ? null : agendaGroup;
+      break;
+    }
+  }
+  if (agendaGroup != null && !agendaGroup.isActive()) {
+    agendaGroup.setActivatedForRecency(this.workingMemory.getFactHandleFactory().getRecency());
+    agendaGroup.setActive(true);
+  }
+  return agendaGroup;
+}

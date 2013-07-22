@@ -1,5 +1,4 @@
 {
-  unstageActivations();
   this.halt.set(false);
   if (log.isTraceEnabled()) {
     log.trace("Starting fireUntilHalt");
@@ -8,18 +7,7 @@
     boolean fired=fireNextItem(agendaFilter,0,-1) >= 0 || !((AbstractWorkingMemory)this.workingMemory).getActionQueue().isEmpty();
     this.workingMemory.executeQueuedActions();
     if (!fired) {
-      if (!unlinkingEnabled) {
-        try {
-synchronized (this.halt) {
-            if (!this.halt.get()) {
-              this.halt.wait();
-            }
-          }
-        }
- catch (        InterruptedException e) {
-          this.halt.set(true);
-        }
-      }
+      Thread.yield();
     }
  else {
       this.workingMemory.executeQueuedActions();

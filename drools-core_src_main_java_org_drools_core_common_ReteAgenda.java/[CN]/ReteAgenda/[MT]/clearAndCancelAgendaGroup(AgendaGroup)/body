@@ -1,0 +1,15 @@
+{
+  final EventSupport eventsupport=(EventSupport)this.workingMemory;
+  ((InternalAgendaGroup)agendaGroup).setClearedForRecency(this.workingMemory.getFactHandleFactory().getRecency());
+  for (  Activation aQueueable : ((InternalAgendaGroup)agendaGroup).getAndClear()) {
+    final AgendaItem item=(AgendaItem)aQueueable;
+    if (item == null) {
+      continue;
+    }
+    item.setQueued(false);
+    if (item.getActivationGroupNode() != null) {
+      item.getActivationGroupNode().getActivationGroup().removeActivation(item);
+    }
+    eventsupport.getAgendaEventSupport().fireActivationCancelled(item,this.workingMemory,MatchCancelledCause.CLEAR);
+  }
+}

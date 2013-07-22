@@ -1,0 +1,62 @@
+{
+  this.workingMemory.startOperation();
+  isFiringActivation=true;
+  try {
+    final EventSupport eventsupport=(EventSupport)this.workingMemory;
+    eventsupport.getAgendaEventSupport().fireBeforeActivationFired(activation,this.workingMemory);
+    if (activation.getActivationGroupNode() != null) {
+      final ActivationGroup activationGroup=activation.getActivationGroupNode().getActivationGroup();
+      activationGroup.removeActivation(activation);
+      clearAndCancelActivationGroup(activationGroup);
+    }
+    activation.setQueued(false);
+    try {
+      this.knowledgeHelper.setActivation(activation);
+      if (log.isTraceEnabled()) {
+        log.trace("Fire \"{}\" \n{}",activation.getRule().getName(),activation.getTuple());
+      }
+      activation.getConsequence().evaluate(this.knowledgeHelper,this.workingMemory);
+      this.knowledgeHelper.cancelRemainingPreviousLogicalDependencies();
+      this.knowledgeHelper.reset();
+    }
+ catch (    final Exception e) {
+      if (this.legacyConsequenceExceptionHandler != null) {
+        this.legacyConsequenceExceptionHandler.handleException(activation,this.workingMemory,e);
+      }
+ else       if (this.consequenceExceptionHandler != null) {
+        this.consequenceExceptionHandler.handleException(activation,this.workingMemory.getKnowledgeRuntime(),e);
+      }
+ else {
+        throw new RuntimeException(e);
+      }
+    }
+ finally {
+      if (activation.getFactHandle() != null) {
+        InternalFactHandle factHandle=activation.getFactHandle();
+        workingMemory.getEntryPointNode().modifyActivation(factHandle,activation.getPropagationContext(),workingMemory);
+        activation.getPropagationContext().evaluateActionQueue(workingMemory);
+      }
+      for (LeftTuple tuple=activation.getTuple(); tuple != null; tuple=tuple.getParent()) {
+        if (tuple.getLastHandle().isEvent()) {
+          EventFactHandle handle=(EventFactHandle)tuple.getLastHandle();
+          handle.decreaseActivationsCount();
+          if (handle.isExpired()) {
+            if (handle.getActivationsCount() <= 0) {
+              handle.getEntryPoint().retract(handle);
+            }
+          }
+        }
+      }
+    }
+    eventsupport.getAgendaEventSupport().fireAfterActivationFired(activation,this.workingMemory);
+    unstageActivations();
+  }
+  finally {
+    isFiringActivation=false;
+    if (mustNotifyHalt) {
+      mustNotifyHalt=false;
+      notifyHalt();
+    }
+    this.workingMemory.endOperation();
+  }
+}
