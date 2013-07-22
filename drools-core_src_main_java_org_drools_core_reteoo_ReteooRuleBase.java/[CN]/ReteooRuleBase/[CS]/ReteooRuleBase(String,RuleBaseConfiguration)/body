@@ -1,3 +1,21 @@
 {
-  this(id,config,config != null ? config.getComponentFactory().getFactHandleFactoryService() : KieComponentFactory.getDefaultHandleFactoryProvider());
+  this.config=(config != null) ? config : new RuleBaseConfiguration();
+  this.config.makeImmutable();
+  createRulebaseId(id);
+  this.rootClassLoader=this.config.getClassLoader();
+  this.pkgs=new HashMap<String,Package>();
+  this.processes=new HashMap<String,Process>();
+  this.globals=new HashMap<String,Class<?>>();
+  this.statefulSessions=new ObjectHashSet();
+  this.classTypeDeclaration=new HashMap<String,TypeDeclaration>();
+  this.partitionIDs=new CopyOnWriteArrayList<RuleBasePartitionId>();
+  this.classFieldAccessorCache=new ClassFieldAccessorCache(this.rootClassLoader);
+  kieComponentFactory=getConfiguration().getComponentFactory();
+  this.factHandleFactory=kieComponentFactory.getFactHandleFactoryService();
+  kieComponentFactory.getTraitFactory().setRuleBase(this);
+  kieComponentFactory.getTripleStore().setId(id);
+  setupRete();
+  if (config != null && config.isMBeansEnabled()) {
+    DroolsManagementAgent.getInstance().registerKnowledgeBase(this);
+  }
 }

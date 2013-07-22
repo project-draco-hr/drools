@@ -1,0 +1,28 @@
+{
+  JTMSBeliefSet jtmsBeliefSet=(JTMSBeliefSet)beliefSet;
+  boolean wasEmpty=jtmsBeliefSet.isEmpty();
+  boolean wasNegated=jtmsBeliefSet.isNegated();
+  boolean wasConflicting=jtmsBeliefSet.isConflicting();
+  jtmsBeliefSet.add(node.getJustifierEntry());
+  if (wasEmpty) {
+    insertBelief(node,typeConf,jtmsBeliefSet,wasNegated,wasConflicting);
+  }
+ else   if (!wasConflicting && jtmsBeliefSet.isConflicting()) {
+    if (STRICT) {
+      throw new IllegalStateException("FATAL : A fact and its negation have been asserted " + jtmsBeliefSet.getFactHandle().getObject());
+    }
+    InternalFactHandle fh;
+    boolean fullyRetract;
+    if (wasNegated) {
+      fh=jtmsBeliefSet.getNegativeFactHandle();
+      jtmsBeliefSet.setNegativeFactHandle(null);
+      fullyRetract=true;
+    }
+ else {
+      fh=jtmsBeliefSet.getPositiveFactHandle();
+      jtmsBeliefSet.setPositiveFactHandle(null);
+      fullyRetract=false;
+    }
+    retractOrUpdateBelief(node,context,fh,false,fullyRetract);
+  }
+}
