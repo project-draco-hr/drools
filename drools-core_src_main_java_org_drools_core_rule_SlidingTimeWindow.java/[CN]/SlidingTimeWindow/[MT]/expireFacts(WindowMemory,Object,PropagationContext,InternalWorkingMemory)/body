@@ -8,7 +8,8 @@ synchronized (queue.queue) {
       queue.expiringHandle=handle;
       queue.queue.remove();
       if (handle.isValid()) {
-        final PropagationContext expiresPctx=new PropagationContextImpl(workingMemory.getNextPropagationIdCounter(),PropagationContext.EXPIRATION,null,null,handle);
+        PropagationContextFactory pctxFactory=((InternalRuleBase)workingMemory.getRuleBase()).getConfiguration().getComponentFactory().getPropagationContextFactory();
+        final PropagationContext expiresPctx=pctxFactory.createPropagationContextImpl(workingMemory.getNextPropagationIdCounter(),PropagationContext.EXPIRATION,null,null,handle);
         ObjectTypeNode.doRetractObject(handle,expiresPctx,workingMemory);
         expiresPctx.evaluateActionQueue(workingMemory);
       }
