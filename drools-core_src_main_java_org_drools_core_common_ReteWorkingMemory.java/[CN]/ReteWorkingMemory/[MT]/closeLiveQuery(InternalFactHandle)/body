@@ -1,0 +1,16 @@
+{
+  try {
+    startOperation();
+    this.ruleBase.readLock();
+    this.lock.lock();
+    final PropagationContext pCtx=pctxFactory.createPropagationContext(getNextPropagationIdCounter(),PropagationContext.INSERTION,null,null,factHandle,getEntryPoint());
+    getEntryPointNode().retractQuery(factHandle,pCtx,this);
+    pCtx.evaluateActionQueue(this);
+    getFactHandleFactory().destroyFactHandle(factHandle);
+  }
+  finally {
+    this.lock.unlock();
+    this.ruleBase.readUnlock();
+    endOperation();
+  }
+}
