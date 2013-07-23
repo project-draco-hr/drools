@@ -1,7 +1,7 @@
 {
   SegmentMemory[] smems=pmem.getSegmentMemories();
   LeftInputAdapterNode lian=(LeftInputAdapterNode)smems[0].getRootNode();
-  SegmentMemory sm=pmem.getSegmentMemory();
+  SegmentMemory sm=tm.getSegmentMemory();
   int smemIndex=0;
   for (  SegmentMemory smem : smems) {
     if (smem == sm) {
@@ -9,6 +9,10 @@
     }
     smemIndex++;
   }
+  LeftTupleSets trgLeftTuples=new LeftTupleSetsImpl();
+  doPropagateChildLeftTuples(null,tm,sink,wm,null,trgLeftTuples,sm.getStagedLeftTuples());
   RuleNetworkEvaluator rne=new RuleNetworkEvaluator();
-  rne.outerEval(lian,pmem,sink,mem,smems,smemIndex,sm.getStagedLeftTuples(),wm,new LinkedList<StackEntry>(),new LinkedList<StackEntry>(),new HashSet<String>(),true,pmem.getRuleAgendaItem().getRuleExecutor());
+  LinkedList<StackEntry> outerStack=new LinkedList<StackEntry>();
+  rne.outerEval(lian,pmem,sink,tm,smems,smemIndex,trgLeftTuples,wm,new LinkedList<StackEntry>(),outerStack,new HashSet<String>(),true,pmem.getRuleAgendaItem().getRuleExecutor());
+  pmem.getRuleAgendaItem().getRuleExecutor().fire(wm,outerStack);
 }

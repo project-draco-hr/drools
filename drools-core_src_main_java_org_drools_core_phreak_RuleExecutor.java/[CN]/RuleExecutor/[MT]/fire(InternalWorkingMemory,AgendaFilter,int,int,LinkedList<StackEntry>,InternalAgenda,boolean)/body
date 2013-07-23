@@ -1,0 +1,59 @@
+{
+  int localFireCount=0;
+  if (!tupleList.isEmpty()) {
+    RuleTerminalNode rtn=(RuleTerminalNode)pmem.getNetworkNode();
+    int salience=ruleAgendaItem.getSalience();
+    if (isDeclarativeAgendaEnabled()) {
+      RuleAgendaItem nextRule=agenda.peekNextRule();
+      if (!isHighestSalience(nextRule,salience)) {
+        return localFireCount;
+      }
+    }
+    while (!tupleList.isEmpty()) {
+      LeftTuple leftTuple;
+      if (queue != null) {
+        leftTuple=(LeftTuple)queue.dequeue();
+        tupleList.remove(leftTuple);
+      }
+ else {
+        leftTuple=tupleList.removeFirst();
+        ((Activation)leftTuple).setQueued(false);
+      }
+      rtn=(RuleTerminalNode)leftTuple.getSink();
+      Rule rule=rtn.getRule();
+      PropagationContext pctx=leftTuple.getPropagationContext();
+      pctx=RuleTerminalNode.findMostRecentPropagationContext(leftTuple,pctx);
+      if (cancelAndContinue(wm,rtn,rule,leftTuple,pctx,filter)) {
+        continue;
+      }
+      AgendaItem item=(AgendaItem)leftTuple;
+      if (agenda.getActivationsFilter() != null && !agenda.getActivationsFilter().accept(item,wm,rtn)) {
+        continue;
+      }
+      agenda.fireActivation(item);
+      localFireCount++;
+      if (rtn.getLeftTupleSource() == null) {
+        break;
+      }
+      salience=ruleAgendaItem.getSalience();
+      if (queue != null && !queue.isEmpty() && salience != queue.peek().getSalience()) {
+        ruleAgendaItem.dequeue();
+        ruleAgendaItem.setSalience(queue.peek().getSalience());
+        ruleAgendaItem.getAgendaGroup().add(ruleAgendaItem);
+        salience=ruleAgendaItem.getSalience();
+      }
+      RuleAgendaItem nextRule=agenda.peekNextRule();
+      if (haltRuleFiring(nextRule,fireCount,fireLimit,localFireCount,agenda,salience)) {
+        break;
+      }
+      reEvaluateNetwork(wm,outerStack,fireUntilHalt);
+      wm.executeQueuedActions();
+      if (tupleList.isEmpty() && !outerStack.isEmpty()) {
+        StackEntry entry=outerStack.removeFirst();
+        this.networkEvaluator.evalStackEntry(entry,outerStack,outerStack,this,wm);
+      }
+    }
+  }
+  removeRuleAgendaItemWhenEmpty(wm);
+  return localFireCount;
+}
