@@ -1,0 +1,33 @@
+{
+  if (this.ruleBase.getConfiguration().isPhreakEnabled()) {
+    AddRemoveRule.removeRule(tn,workingMemories);
+  }
+  RuleRemovalContext.CleanupAdapter adapter=null;
+  if (!this.ruleBase.getConfiguration().isPhreakEnabled()) {
+    if (tn instanceof RuleTerminalNode) {
+      adapter=new RuleTerminalNode.RTNCleanupAdapter((RuleTerminalNode)tn);
+    }
+    context.setCleanupAdapter(adapter);
+  }
+  BaseNode node=(BaseNode)tn;
+  LinkedList<BaseNode> stack=new LinkedList<BaseNode>();
+  LinkedList<BaseNode> stillInUse=new LinkedList<BaseNode>();
+  boolean processRian=true;
+  while (node != null) {
+    removeNode(node,stack,stillInUse,processRian,workingMemories,context);
+    if (!stack.isEmpty()) {
+      node=stack.removeLast();
+      if (node.getType() == NodeTypeEnums.RightInputAdaterNode) {
+        processRian=true;
+      }
+ else {
+        processRian=false;
+      }
+    }
+ else {
+      node=null;
+    }
+  }
+  ;
+  resetMasks(stillInUse);
+}

@@ -2,58 +2,8 @@
   InternalWorkingMemory[] workingMemories=this.ruleBase.getWorkingMemories();
   final RuleRemovalContext context=new RuleRemovalContext(rule);
   context.setRuleBase(ruleBase);
-  if (ruleBase.getConfiguration().isPhreakEnabled()) {
-    context.setUnlinkEnabled(true);
-  }
- else {
-    context.setUnlinkEnabled(false);
-  }
   final BaseNode[] nodes=this.rules.remove(rule.getName());
-  if (this.ruleBase.getConfiguration().isPhreakEnabled()) {
-    for (    BaseNode node : nodes) {
-      AddRemoveRule.removeRule((TerminalNode)node,workingMemories);
-    }
-  }
   for (  BaseNode node : nodes) {
-    NodeSet nodeSet=new NodeSet();
-    node.collectAncestors(nodeSet);
-    List<BaseNode> removingNodes=nodeSet.getNodes();
-    Collections.sort(removingNodes,new Comparator<BaseNode>(){
-      private Map<Integer,NodeSet> ancestorsMap=new HashMap<Integer,NodeSet>();
-      public int compare(      BaseNode o1,      BaseNode o2){
-        return o2.getId() > o1.getId() ? (getAncestors(o1).contains(o2) ? -1 : 1) : (getAncestors(o2).contains(o1) ? 1 : -1);
-      }
-      private NodeSet getAncestors(      BaseNode o2){
-        NodeSet ancestors=ancestorsMap.get(o2.getId());
-        if (ancestors == null) {
-          ancestors=new NodeSet();
-          o2.collectAncestors(ancestors);
-          ancestorsMap.put(o2.getId(),ancestors);
-        }
-        return ancestors;
-      }
-    }
-);
-    RuleRemovalContext.CleanupAdapter adapter=null;
-    if (node instanceof RuleTerminalNode) {
-      adapter=context.getCleanupAdapter();
-      context.setCleanupAdapter(new RuleTerminalNode.RTNCleanupAdapter((RuleTerminalNode)node));
-    }
-    for (    BaseNode removingNode : removingNodes) {
-      removingNode.remove(context,this,workingMemories);
-      if (removingNode.getType() != NodeTypeEnums.ObjectTypeNode && !removingNode.isInUse() && ruleBase.getConfiguration().isPhreakEnabled()) {
-        for (        InternalWorkingMemory workingMemory : workingMemories) {
-          workingMemory.clearNodeMemory((MemoryFactory)removingNode);
-        }
-      }
-    }
-    if (node instanceof TerminalNode) {
-      for (      InternalWorkingMemory workingMemory : workingMemories) {
-        workingMemory.executeQueuedActions();
-        workingMemory.clearNodeMemory((MemoryFactory)node);
-      }
-      context.setCleanupAdapter(adapter);
-    }
+    removeTerminalNode(context,(TerminalNode)node,workingMemories);
   }
-  resetMasks(context);
 }
