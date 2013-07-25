@@ -1,8 +1,9 @@
 {
-  DefeasibleLogicalDependency newDep=(DefeasibleLogicalDependency)node;
+  DefeasibleLogicalDependency newDep=(DefeasibleLogicalDependency)((LinkedListEntry)node).getObject();
   Rule rule=newDep.getJustifier().getRule();
   boolean wasDefeated=false;
-  for (DefeasibleLogicalDependency existingDep=rootUndefeated; existingDep != null; existingDep=(DefeasibleLogicalDependency)existingDep.getNext()) {
+  for (LinkedListEntry<DefeasibleLogicalDependency> existingNode=rootUndefeated; existingNode != null; existingNode=existingNode.getNext()) {
+    DefeasibleLogicalDependency existingDep=existingNode.getObject();
     wasDefeated=checkAndApplyIsDefeated(newDep,rule,existingDep);
     if (wasDefeated) {
       break;
@@ -10,10 +11,11 @@
   }
   if (!wasDefeated) {
     DefeasibleLogicalDependency stagedDeps=null;
-    for (DefeasibleLogicalDependency existingDep=rootUndefeated; existingDep != null; ) {
-      DefeasibleLogicalDependency next=(DefeasibleLogicalDependency)existingDep.getNext();
+    for (LinkedListEntry<DefeasibleLogicalDependency> existingNode=rootUndefeated; existingNode != null; existingNode=existingNode.getNext()) {
+      LinkedListEntry<DefeasibleLogicalDependency> next=existingNode.getNext();
+      DefeasibleLogicalDependency existingDep=existingNode.getObject();
       if (checkAndApplyIsDefeated(existingDep,existingDep.getJustifier().getRule(),newDep)) {
-        removeUndefeated(existingDep);
+        removeUndefeated(existingDep,existingNode);
         if (existingDep.getRootDefeated() != null) {
           if (stagedDeps == null) {
             stagedDeps=existingDep.getRootDefeated();
@@ -24,9 +26,9 @@
           }
         }
       }
-      existingDep=next;
+      existingNode=next;
     }
-    addUndefeated(newDep);
+    addUndefeated(newDep,(LinkedListEntry<DefeasibleLogicalDependency>)node);
     reprocessDefeated(stagedDeps);
   }
 }
