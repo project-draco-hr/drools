@@ -1,10 +1,11 @@
 {
   StatefulKnowledgeSession kSession=getSession("strict.drl");
+  Map<String,FactHandle> handles=new HashMap<String,FactHandle>();
   kSession.fireAllRules();
   EntryPoint ep=kSession.getEntryPoint(EntryPointId.DEFAULT.getEntryPointId());
   TruthMaintenanceSystem tms=((NamedEntryPoint)ep).getTruthMaintenanceSystem();
-  for (  Object o : kSession.getObjects()) {
-    System.out.println(o);
-  }
+  assertEquals(2,tms.getEqualityKeyMap().size());
   assertEquals(5,kSession.getObjects().size());
+  checkDefeasibilityByHandleId(getEqualityKey("C( id=99 )",tms),DefeasibilityStatus.DEFINITELY,2,2);
+  checkDefeasibilityByHandleId(getEqualityKey("D( id=-5 )",tms),DefeasibilityStatus.DEFINITELY,1,1);
 }
