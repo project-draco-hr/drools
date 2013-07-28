@@ -1,0 +1,12 @@
+{
+  final int parallelThread=Runtime.getRuntime().availableProcessors();
+  CompletionService<Boolean> ecs=ExecutorProviderFactory.getExecutorProvider().getCompletionService();
+  int size=wireListSize / parallelThread;
+  for (int i=1; i <= parallelThread; i++) {
+    List<String> subList=wireList.subList((i - 1) * size,i == parallelThread ? wireListSize : i * size);
+    ecs.submit(new WiringExecutor(classLoader,getInvokers(),subList));
+  }
+  for (int i=1; i <= parallelThread; i++) {
+    ecs.take().get();
+  }
+}
