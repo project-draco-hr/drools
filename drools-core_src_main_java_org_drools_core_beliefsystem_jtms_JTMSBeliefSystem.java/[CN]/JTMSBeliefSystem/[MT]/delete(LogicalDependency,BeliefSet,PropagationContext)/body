@@ -1,5 +1,5 @@
 {
-  JTMSBeliefSetImpl jtmsBeliefSet=(JTMSBeliefSetImpl)beliefSet;
+  JTMSBeliefSet jtmsBeliefSet=(JTMSBeliefSet)beliefSet;
   boolean wasConflicting=jtmsBeliefSet.isUndecided();
   boolean wasNegated=jtmsBeliefSet.isNegated();
   boolean primeChanged=false;
@@ -19,13 +19,17 @@
     }
   }
  else   if (wasConflicting && !jtmsBeliefSet.isUndecided()) {
-    insertBelief(node,defEP.getObjectTypeConfigurationRegistry().getObjectTypeConf(defEP.getEntryPoint(),node.getObject()),jtmsBeliefSet,false,wasNegated,wasConflicting);
+    insertBelief(node,defEP.getObjectTypeConfigurationRegistry().getObjectTypeConf(defEP.getEntryPoint(),node.getObject()),jtmsBeliefSet,context,false,wasNegated,wasConflicting);
   }
  else   if (primeChanged) {
     String value;
     InternalFactHandle handle;
     Object object=null;
     if (jtmsBeliefSet.isNegated()) {
+      if (!wasNegated) {
+        jtmsBeliefSet.setNegativeFactHandle(jtmsBeliefSet.getPositiveFactHandle());
+        jtmsBeliefSet.setPositiveFactHandle(null);
+      }
       value=MODE.NEGATIVE.getId();
       handle=jtmsBeliefSet.getNegativeFactHandle();
       for (LinkedListEntry<LogicalDependency> entry=(LinkedListEntry<LogicalDependency>)jtmsBeliefSet.getLast(); entry != null; entry=(LinkedListEntry<LogicalDependency>)entry.getPrevious()) {
@@ -36,10 +40,14 @@
       }
     }
  else {
+      if (wasNegated) {
+        jtmsBeliefSet.setPositiveFactHandle(jtmsBeliefSet.getNegativeFactHandle());
+        jtmsBeliefSet.setNegativeFactHandle(null);
+      }
       value=MODE.POSITIVE.getId();
       handle=jtmsBeliefSet.getPositiveFactHandle();
       for (LinkedListEntry<LogicalDependency> entry=(LinkedListEntry<LogicalDependency>)jtmsBeliefSet.getFirst(); entry != null; entry=(LinkedListEntry<LogicalDependency>)entry.getNext()) {
-        if (entry.getObject().getValue().equals(value)) {
+        if (entry.getObject().getValue() == null || entry.getObject().getValue().equals(value)) {
           object=entry.getObject().getObject();
           break;
         }

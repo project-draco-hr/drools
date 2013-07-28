@@ -1,0 +1,44 @@
+{
+  StatefulKnowledgeSession kSession=getSession("org/drools/compiler/beliefsystem/defeasible/defeatDefeater.drl");
+  ArrayList list=new ArrayList();
+  kSession.setGlobal("list",list);
+  kSession.fireAllRules();
+  TruthMaintenanceSystem tms=((NamedEntryPoint)kSession.getEntryPoint("DEFAULT")).getTruthMaintenanceSystem();
+  FactType Xtype=kSession.getKieBase().getFactType("org.drools.defeasible","X");
+  ObjectHashMap keys=tms.getEqualityKeyMap();
+  Iterator iter=keys.iterator();
+  ObjectHashMap.ObjectEntry entry;
+  while ((entry=(ObjectHashMap.ObjectEntry)iter.next()) != null) {
+    EqualityKey key=(EqualityKey)entry.getValue();
+    Class factClass=key.getFactHandle().getObject().getClass();
+    if (factClass == Xtype.getFactClass()) {
+      checkStatus(key,1,DefeasibilityStatus.DEFEATEDLY);
+    }
+ else {
+      fail("Unrecognized object has been logically justified : " + factClass);
+    }
+  }
+  for (  Object o : kSession.getObjects()) {
+    System.out.println(o);
+  }
+  assertEquals(4,kSession.getObjects().size());
+  assertEquals(1,list.size());
+  assertTrue(list.contains("Stage1"));
+  kSession.insert("go");
+  kSession.fireAllRules();
+  keys=tms.getEqualityKeyMap();
+  iter=keys.iterator();
+  while ((entry=(ObjectHashMap.ObjectEntry)iter.next()) != null) {
+    EqualityKey key=(EqualityKey)entry.getValue();
+    Class factClass=key.getFactHandle().getObject().getClass();
+    if (factClass == Xtype.getFactClass()) {
+      checkStatus(key,3,DefeasibilityStatus.DEFEASIBLY);
+    }
+ else {
+      fail("Unrecognized object has been logically justified : " + factClass);
+    }
+  }
+  assertEquals(3,list.size());
+  assertTrue(list.contains("Stage1"));
+  assertTrue(list.contains("Stage2"));
+}
