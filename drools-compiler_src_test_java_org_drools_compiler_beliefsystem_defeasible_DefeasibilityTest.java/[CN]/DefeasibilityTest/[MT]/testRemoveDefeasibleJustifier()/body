@@ -1,0 +1,38 @@
+{
+  StatefulKnowledgeSession kSession=getSession("org/drools/compiler/beliefsystem/defeasible/defeaterRetract.drl");
+  FactHandle h=kSession.insert("go");
+  kSession.fireAllRules();
+  TruthMaintenanceSystem tms=((NamedEntryPoint)kSession.getEntryPoint("DEFAULT")).getTruthMaintenanceSystem();
+  FactType Ctype=kSession.getKieBase().getFactType("org.drools.defeasible","C");
+  FactType Atype=kSession.getKieBase().getFactType("org.drools.defeasible","A");
+  ObjectHashMap keys=tms.getEqualityKeyMap();
+  Iterator iter=keys.iterator();
+  ObjectHashMap.ObjectEntry entry;
+  while ((entry=(ObjectHashMap.ObjectEntry)iter.next()) != null) {
+    EqualityKey key=(EqualityKey)entry.getValue();
+    Class factClass=key.getFactHandle().getObject().getClass();
+    if (factClass == Ctype.getFactClass()) {
+      checkStatus(key,1,DefeasibilityStatus.DEFINITELY);
+    }
+ else     if (factClass == Atype.getFactClass()) {
+      checkStatus(key,1,DefeasibilityStatus.DEFINITELY);
+    }
+ else {
+      fail("Unrecognized object has been logically justified : " + factClass);
+    }
+  }
+  kSession.retract(h);
+  kSession.fireAllRules();
+  keys=tms.getEqualityKeyMap();
+  iter=keys.iterator();
+  while ((entry=(ObjectHashMap.ObjectEntry)iter.next()) != null) {
+    EqualityKey key=(EqualityKey)entry.getValue();
+    Class factClass=key.getFactHandle().getObject().getClass();
+    if (factClass == Ctype.getFactClass()) {
+      checkStatus(key,1,DefeasibilityStatus.DEFINITELY);
+    }
+ else {
+      fail("Unrecognized object has been logically justified : " + factClass);
+    }
+  }
+}

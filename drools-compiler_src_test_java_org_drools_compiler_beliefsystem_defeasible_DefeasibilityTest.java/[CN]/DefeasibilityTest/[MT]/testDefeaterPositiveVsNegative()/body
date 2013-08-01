@@ -1,0 +1,46 @@
+{
+  StatefulKnowledgeSession kSession=getSession("org/drools/compiler/beliefsystem/defeasible/defeatersPosNeg.drl");
+  ArrayList list=new ArrayList();
+  kSession.setGlobal("list",list);
+  kSession.fireAllRules();
+  TruthMaintenanceSystem tms=((NamedEntryPoint)kSession.getEntryPoint("DEFAULT")).getTruthMaintenanceSystem();
+  FactType Xtype=kSession.getKieBase().getFactType("org.drools.defeasible","X");
+  ObjectHashMap keys=tms.getEqualityKeyMap();
+  Iterator iter=keys.iterator();
+  ObjectHashMap.ObjectEntry entry;
+  while ((entry=(ObjectHashMap.ObjectEntry)iter.next()) != null) {
+    EqualityKey key=(EqualityKey)entry.getValue();
+    Object fact=key.getFactHandle().getObject();
+    Class factClass=fact.getClass();
+    if (factClass == Xtype.getFactClass()) {
+      Integer val=(Integer)Xtype.get(fact,"id");
+switch (val) {
+case -1:
+        checkStatus(key,2,DefeasibilityStatus.UNDECIDABLY);
+      break;
+case 3:
+    checkStatus(key,1,DefeasibilityStatus.DEFEATEDLY);
+  break;
+case -35:
+checkStatus(key,3,DefeasibilityStatus.UNDECIDABLY);
+break;
+case 44:
+checkStatus(key,2,DefeasibilityStatus.DEFEASIBLY);
+break;
+default :
+fail("Unrecognized fact");
+}
+}
+ else {
+fail("Unrecognized object has been logically justified : " + factClass);
+}
+}
+for (Object o : kSession.getObjects()) {
+System.out.println(o);
+}
+System.err.println(list);
+assertEquals(1,list.size());
+assertTrue(list.contains(-44));
+assertTrue(!list.contains(-35));
+assertEquals(4,kSession.getFactCount());
+}

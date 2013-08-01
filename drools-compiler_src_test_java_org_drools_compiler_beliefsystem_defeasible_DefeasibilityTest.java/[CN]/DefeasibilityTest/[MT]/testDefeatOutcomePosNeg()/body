@@ -1,5 +1,7 @@
 {
-  StatefulKnowledgeSession kSession=getSession("org/drools/compiler/beliefsystem/defeasible/defeat.drl");
+  StatefulKnowledgeSession kSession=getSession("org/drools/compiler/beliefsystem/defeasible/negDefeatPos.drl");
+  ArrayList list=new ArrayList();
+  kSession.setGlobal("list",list);
   kSession.fireAllRules();
   TruthMaintenanceSystem tms=((NamedEntryPoint)kSession.getEntryPoint("DEFAULT")).getTruthMaintenanceSystem();
   FactType Xtype=kSession.getKieBase().getFactType("org.drools.defeasible","X");
@@ -10,7 +12,7 @@
     EqualityKey key=(EqualityKey)entry.getValue();
     Class factClass=key.getFactHandle().getObject().getClass();
     if (factClass == Xtype.getFactClass()) {
-      checkStatus(key,3,DefeasibilityStatus.UNDECIDABLY);
+      checkStatus(key,1,DefeasibilityStatus.DEFEASIBLY);
     }
  else {
       fail("Unrecognized object has been logically justified : " + factClass);
@@ -19,5 +21,7 @@
   for (  Object o : kSession.getObjects()) {
     System.out.println(o);
   }
-  assertEquals(3,kSession.getObjects().size());
+  assertEquals(2,kSession.getObjects().size());
+  assertEquals(1,list.size());
+  assertTrue(list.contains("-1"));
 }
