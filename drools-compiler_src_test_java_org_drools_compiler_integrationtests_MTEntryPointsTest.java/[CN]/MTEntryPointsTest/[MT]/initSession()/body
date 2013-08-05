@@ -1,0 +1,12 @@
+{
+  String str="package org.jboss.brms\n" + "\n" + "import org.drools.compiler.integrationtests.MTEntryPointsTest.MessageEvent\n"+ "\n"+ "declare MessageEvent\n"+ "    @role( event )\n"+ "end\n"+ "\n"+ "rule \"sum of last event from first entry point\"\n"+ "    when\n"+ "\t    accumulate (\n"+ "\t        MessageEvent ($value : value) over window:length(1) from entry-point \"FirstStream\",\n"+ "\t        $sum : sum($value)\n"+ "\t    )\n"+ "    then\n"+ "end\n"+ "\n"+ "rule \"sum of last event from both entry points\"\n"+ "    when\n"+ "        accumulate (\n"+ "            MessageEvent ($value1 : value) over window:length(1) from entry-point \"FirstStream\",\n"+ "            $thirdSum1 : sum($value1)\n"+ "        )\n"+ "        accumulate (\n"+ "            MessageEvent ($value2 : value) over window:length(1) from entry-point \"SecondStream\",\n"+ "            $thirdSum2 : sum($value2)\n"+ "        )\n"+ "    then\n"+ "end\n"+ "\n";
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem().write("src/main/resources/r1.drl",str);
+  KieModuleModel kmoduleModel=ks.newKieModuleModel();
+  kmoduleModel.newKieBaseModel("defaultKieBase").addPackage("*").newKieSessionModel("defaultKieSession").setDefault(true).setClockType(ClockTypeOption.get("pseudo"));
+  kfs.writeKModuleXML(kmoduleModel.toXML());
+  KieBuilder builder=ks.newKieBuilder(kfs).buildAll();
+  assertEquals(0,builder.getResults().getMessages().size());
+  ks.getRepository().addKieModule(builder.getKieModule());
+  this.kieSession=ks.newKieContainer(ks.getRepository().getDefaultReleaseId()).newKieSession();
+}

@@ -1,0 +1,19 @@
+{
+  final EntryPoint firstThreadEntryPoint=kieSession.getEntryPoint("FirstStream");
+  int numInsertersInEachEntryPoint=10;
+  int numThreadPoolCapacity=numInsertersInEachEntryPoint;
+  ExecutorService executorService=Executors.newFixedThreadPool(numThreadPoolCapacity);
+  List<Future<?>> futures=new ArrayList<Future<?>>();
+  for (int i=0; i < numInsertersInEachEntryPoint; i++) {
+    Future<?> futureForFirstThread=executorService.submit(new TestInserter(kieSession,firstThreadEntryPoint));
+    futures.add(futureForFirstThread);
+  }
+  try {
+    for (    Future<?> f : futures) {
+      f.get(30,TimeUnit.SECONDS);
+    }
+  }
+ catch (  ExecutionException ex) {
+    throw ex;
+  }
+}
