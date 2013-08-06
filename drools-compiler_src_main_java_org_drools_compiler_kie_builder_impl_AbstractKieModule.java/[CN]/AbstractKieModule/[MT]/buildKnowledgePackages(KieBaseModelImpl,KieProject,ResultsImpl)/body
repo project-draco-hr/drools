@@ -4,19 +4,16 @@
   pconf.setCompilationCache(kModule.getCompilationCache(kBaseModel.getName()));
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(pconf);
   CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
-  Set<String> includes=kBaseModel.getIncludes();
-  if (includes != null && !includes.isEmpty()) {
-    for (    String include : includes) {
-      if (StringUtils.isEmpty(include)) {
-        continue;
-      }
-      InternalKieModule includeModule=kieProject.getKieModuleForKBase(include);
-      if (includeModule == null) {
-        log.error("Unable to build KieBase, could not find include: " + include);
-        return null;
-      }
-      addFiles(ckbuilder,kieProject.getKieBaseModel(include),includeModule);
+  for (  String include : getTransitiveIncludes(kieProject,kBaseModel)) {
+    if (StringUtils.isEmpty(include)) {
+      continue;
     }
+    InternalKieModule includeModule=kieProject.getKieModuleForKBase(include);
+    if (includeModule == null) {
+      log.error("Unable to build KieBase, could not find include: " + include);
+      return null;
+    }
+    addFiles(ckbuilder,kieProject.getKieBaseModel(include),includeModule);
   }
   addFiles(ckbuilder,kBaseModel,kModule);
   ckbuilder.build();
