@@ -4,6 +4,7 @@
   pconf.setCompilationCache(kModule.getCompilationCache(kBaseModel.getName()));
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(pconf);
   CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
+  Map<String,InternalKieModule> assets=new HashMap<String,InternalKieModule>();
   for (  String include : getTransitiveIncludes(kieProject,kBaseModel)) {
     if (StringUtils.isEmpty(include)) {
       continue;
@@ -13,9 +14,22 @@
       log.error("Unable to build KieBase, could not find include: " + include);
       return null;
     }
-    addFiles(ckbuilder,kieProject.getKieBaseModel(include),includeModule);
+    addFiles(assets,kieProject.getKieBaseModel(include),includeModule);
   }
-  addFiles(ckbuilder,kBaseModel,kModule);
+  addFiles(assets,kBaseModel,kModule);
+  if (assets.isEmpty()) {
+    if (kModule instanceof FileKieModule) {
+      log.warn("No files found for KieBase " + kBaseModel.getName() + ", searching folder "+ kModule.getFile());
+    }
+ else {
+      log.warn("No files found for KieBase " + kBaseModel.getName());
+    }
+  }
+ else {
+    for (    Map.Entry<String,InternalKieModule> entry : assets.entrySet()) {
+      addFile(ckbuilder,entry.getValue(),entry.getKey());
+    }
+  }
   ckbuilder.build();
   if (kbuilder.hasErrors()) {
     for (    KnowledgeBuilderError error : kbuilder.getErrors()) {
