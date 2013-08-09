@@ -1,8 +1,9 @@
 {
-  Map<String,TypeDeclaration> typeDeclarations=new HashMap<String,TypeDeclaration>();
+  Map<String,TypeMetaInfo> typeInfos=new HashMap<String,TypeMetaInfo>();
+  Map<String,List<String>> rulesByKieBase=new HashMap<String,List<String>>();
   KieModuleModel kieModuleModel=kModule.getKieModuleModel();
-  for (  String kieBaseNames : kieModuleModel.getKieBaseModels().keySet()) {
-    KnowledgeBuilderImpl kBuilder=(KnowledgeBuilderImpl)kModule.getKnowledgeBuilderForKieBase(kieBaseNames);
+  for (  String kieBaseName : kieModuleModel.getKieBaseModels().keySet()) {
+    KnowledgeBuilderImpl kBuilder=(KnowledgeBuilderImpl)kModule.getKnowledgeBuilderForKieBase(kieBaseName);
     Map<String,PackageRegistry> pkgRegistryMap=kBuilder.getPackageBuilder().getPackageRegistry();
     KModuleCache.Builder _kmoduleCacheBuilder=createCacheBuilder();
     CompilationData.Builder _compData=createCompilationData();
@@ -14,7 +15,7 @@
         Class<?> typeClass=((ClassDefinition)factType).getDefinedClass();
         TypeDeclaration typeDeclaration=pkgRegistry.getPackage().getTypeDeclaration(typeClass);
         if (typeDeclaration != null) {
-          typeDeclarations.put(typeClass.getName(),typeDeclaration);
+          typeInfos.put(typeClass.getName(),new TypeMetaInfo(typeDeclaration));
         }
         String className=factType.getName();
         String internalName=className.replace('.','/') + ".class";
@@ -22,10 +23,17 @@
         trgMfs.write(internalName,bytes,true);
         types.add(internalName);
       }
+      List<String> rules=new ArrayList<String>();
+      for (      Rule rule : kPkg.getRules()) {
+        rules.add(rule.getName());
+      }
+      if (!rules.isEmpty()) {
+        rulesByKieBase.put(kieBaseName,rules);
+      }
       addToCompilationData(_compData,runtimeData,types);
     }
     _kmoduleCacheBuilder.addCompilationData(_compData.build());
-    writeCompilationDataToTrg(_kmoduleCacheBuilder.build(),kieBaseNames);
+    writeCompilationDataToTrg(_kmoduleCacheBuilder.build(),kieBaseName);
   }
-  return typeDeclarations;
+  return new KieModuleMetaInfo(typeInfos,rulesByKieBase);
 }

@@ -2,14 +2,13 @@
   final KieServices ks=KieServices.Factory.get();
   final KieFileSystem kfs=ks.newKieFileSystem();
   kfs.write("src/main/resources/test1.drl","package org.test\n" + "rule A\n" + " when\n"+ "then\n"+ "end\n"+ "rule B\n"+ " when\n"+ "then\n"+ "end\n");
-  kfs.write("src/main/resources/test1.drl","package org.test\n" + "rule C\n" + " when\n"+ "then\n"+ "end\n");
+  kfs.write("src/main/resources/test2.drl","package org.test\n" + "rule C\n" + " when\n"+ "then\n"+ "end\n");
   final KieBuilder kieBuilder=ks.newKieBuilder(kfs);
   final List<Message> messages=kieBuilder.buildAll().getResults().getMessages();
   assertTrue(messages.isEmpty());
   final KieModule kieModule=kieBuilder.getKieModule();
   final KieModuleMetaData kieModuleMetaData=KieModuleMetaData.Factory.newKieModuleMetaData(kieModule);
-  assertFalse(kieModuleMetaData.getRuleNames().isEmpty());
-  TestCase.assertTrue(kieModuleMetaData.getRuleNames().contains("A"));
-  TestCase.assertTrue(kieModuleMetaData.getRuleNames().contains("B"));
-  TestCase.assertTrue(kieModuleMetaData.getRuleNames().contains("C"));
+  Collection<String> rules=kieModuleMetaData.getRuleNames("defaultKieBase");
+  assertEquals(3,rules.size());
+  assertTrue(rules.containsAll(asList("A","B","C")));
 }
