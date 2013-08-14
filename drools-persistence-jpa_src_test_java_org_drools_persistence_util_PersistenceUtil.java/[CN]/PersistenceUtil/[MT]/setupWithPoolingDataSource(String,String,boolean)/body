@@ -3,55 +3,14 @@
   Properties dsProps=getDatasourceProperties();
   String jdbcUrl=dsProps.getProperty("url");
   String driverClass=dsProps.getProperty("driverClassName");
-  if (!driverClass.startsWith("org.h2")) {
-    TEST_MARSHALLING=false;
-  }
-  Object testMarshallingProperty=dsProps.get("testMarshalling");
-  if ("true".equals(testMarshallingProperty)) {
-    TEST_MARSHALLING=true;
-    if (!testMarshalling) {
-      TEST_MARSHALLING=false;
-    }
-  }
- else {
-    TEST_MARSHALLING=false;
-  }
-  if (TEST_MARSHALLING) {
-    Class<?> testClass=null;
-    StackTraceElement[] ste=Thread.currentThread().getStackTrace();
-    int i=1;
-    do {
-      try {
-        testClass=Class.forName(ste[i++].getClassName());
-      }
- catch (      ClassNotFoundException e) {
-      }
-    }
- while (PersistenceUtil.class.equals(testClass) && i < ste.length);
-    assertNotNull("Unable to resolve test class!",testClass);
-    jdbcUrl=initializeTestDb(dsProps,testClass);
-  }
   PoolingDataSource ds1=setupPoolingDataSource(dsProps,dataSourceName);
   if (driverClass.startsWith("org.h2")) {
-    if (!TEST_MARSHALLING) {
-      jdbcUrl+="tcp://localhost/JPADroolsFlow";
-    }
+    jdbcUrl+="tcp://localhost/target/drools-persistence-test";
     ds1.getDriverProperties().setProperty("url",jdbcUrl);
   }
   ds1.init();
   context.put(DATASOURCE,ds1);
-  EntityManagerFactory emf;
-  if (TEST_MARSHALLING) {
-    Properties overrideProperties=new Properties();
-    overrideProperties.setProperty("hibernate.connection.url",jdbcUrl);
-    EntityManagerFactory realEmf=Persistence.createEntityManagerFactory(persistenceUnitName,overrideProperties);
-    emf=(EntityManagerFactory)EntityManagerFactoryProxy.newInstance(realEmf);
-    UserTransaction ut=(UserTransaction)UserTransactionProxy.newInstance(realEmf);
-    context.put(TRANSACTION,ut);
-  }
- else {
-    emf=Persistence.createEntityManagerFactory(persistenceUnitName);
-  }
+  EntityManagerFactory emf=Persistence.createEntityManagerFactory(persistenceUnitName);
   context.put(ENTITY_MANAGER_FACTORY,emf);
   return context;
 }
