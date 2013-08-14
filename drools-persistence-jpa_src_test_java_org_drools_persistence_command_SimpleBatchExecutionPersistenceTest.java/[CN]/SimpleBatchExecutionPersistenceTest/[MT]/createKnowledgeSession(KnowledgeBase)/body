@@ -3,5 +3,9 @@
     context=PersistenceUtil.setupWithPoolingDataSource(DROOLS_PERSISTENCE_UNIT_NAME);
   }
   KieSessionConfiguration ksconf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
-  return JPAKnowledgeService.newStatefulKnowledgeSession(kbase,ksconf,createEnvironment(context));
+  Environment env=createEnvironment(context);
+  if (this.locking) {
+    env.set(EnvironmentName.USE_PESSIMISTIC_LOCKING,true);
+  }
+  return JPAKnowledgeService.newStatefulKnowledgeSession(kbase,ksconf,env);
 }

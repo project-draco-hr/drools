@@ -1,3 +1,22 @@
 {
+  if (this.pessimisticLocking) {
+    if (em.contains(workItemInfo)) {
+      em.lock(workItemInfo,LockModeType.PESSIMISTIC_FORCE_INCREMENT);
+    }
+ else {
+      WorkItemInfo dbWorkItemInfo=em.find(WorkItemInfo.class,workItemInfo.getId(),LockModeType.PESSIMISTIC_FORCE_INCREMENT);
+      for (      Field field : WorkItemInfo.class.getDeclaredFields()) {
+        boolean access=field.isAccessible();
+        field.setAccessible(true);
+        try {
+          field.set(dbWorkItemInfo,field.get(workItemInfo));
+        }
+ catch (        Exception e) {
+          logger.error("Unable to set field " + field.getName() + " of unmerged WorkItemInfo instance!",e);
+        }
+        field.setAccessible(access);
+      }
+    }
+  }
   return em.merge(workItemInfo);
 }
