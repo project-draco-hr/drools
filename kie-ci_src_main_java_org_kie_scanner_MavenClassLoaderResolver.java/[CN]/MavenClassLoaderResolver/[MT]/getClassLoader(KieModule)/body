@@ -1,0 +1,30 @@
+{
+  ClassLoader parent=Thread.currentThread().getContextClassLoader();
+  if (parent == null) {
+    parent=ClassLoader.getSystemClassLoader();
+  }
+  if (parent == null) {
+    parent=MavenClassLoaderResolver.class.getClassLoader();
+  }
+  List<ReleaseId> jarDependencies=((InternalKieModule)kmodule).getJarDependencies();
+  ArtifactResolver resolver=ArtifactResolver.getResolverFor(kmodule.getReleaseId(),true);
+  URL[] urls=new URL[jarDependencies.size()];
+  int i=0;
+  for (  ReleaseId rid : jarDependencies) {
+    try {
+      Artifact artifact=resolver.resolveArtifact(rid.toString());
+      if (artifact != null) {
+        File jar=artifact.getFile();
+        urls[i++]=jar.toURI().toURL();
+      }
+ else {
+        logger.warn("Dependency artifact not found for: " + rid);
+      }
+    }
+ catch (    MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  ClassLoader classLoader=new URLClassLoader(urls,parent);
+  return classLoader;
+}

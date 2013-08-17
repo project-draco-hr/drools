@@ -1,0 +1,29 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  String pojoNS="org.kie.pojos";
+  ReleaseId pojoID=KieServices.Factory.get().newReleaseId(pojoNS,"pojojar","2.0.0");
+  String className="Message";
+  ClassDefinition def=new ClassDefinition(pojoNS + "." + className);
+  def.addField(new FieldDefinition("text",String.class.getName()));
+  byte[] messageClazz=ClassBuilderFactory.getDefaultBeanClassBuilder().buildClass(def);
+  MemoryFileSystem mfs=new MemoryFileSystem();
+  mfs.write(pojoNS.replace('.','/') + "/" + className+ ".class",messageClazz);
+  byte[] pomContent=generatePomXml(pojoID).getBytes();
+  mfs.write("META-INF/maven/" + pojoID.getGroupId() + "/"+ pojoID.getArtifactId()+ "/pom.xml",pomContent);
+  mfs.write("META-INF/maven/" + pojoID.getGroupId() + "/"+ pojoID.getArtifactId()+ "/pom.properties",generatePomProperties(pojoID).getBytes());
+  byte[] pojojar=mfs.writeAsBytes();
+  MavenRepository.getMavenRepository().deployArtifact(pojoID,pojojar,pomContent);
+  String kjarNS="org.kie.test1";
+  ReleaseId kjarID=KieServices.Factory.get().newReleaseId(kjarNS,"rkjar","1.0.0");
+  String rule=getRule(kjarNS,pojoNS,"R1");
+  String pom=generatePomXml(kjarID,pojoID);
+  byte[] rkjar=createKJar(ks,kjarID,pom,rule);
+  KieModule kmodule=deployJar(ks,rkjar);
+  assertNotNull(kmodule);
+  KieContainer kContainer=ks.newKieContainer(kjarID);
+  KieSession kSession=kContainer.newKieSession();
+  List<?> list=new ArrayList<Object>();
+  kSession.setGlobal("list",list);
+  kSession.fireAllRules();
+  assertEquals(1,list.size());
+}
