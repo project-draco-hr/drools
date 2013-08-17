@@ -3,21 +3,6 @@
   int smemIndex=0;
   SegmentMemory smem=smems[smemIndex];
   LeftInputAdapterNode liaNode=(LeftInputAdapterNode)smem.getRootNode();
-  NetworkNode node;
-  Memory nodeMem;
-  if (liaNode == smem.getTipNode()) {
-    smem=smems[++smemIndex];
-    node=smem.getRootNode();
-    nodeMem=smem.getNodeMemories().getFirst();
-  }
- else {
-    node=liaNode.getSinkPropagator().getFirstLeftTupleSink();
-    nodeMem=smem.getNodeMemories().getFirst().getNext();
-  }
-  LeftTupleSets srcTuples=smem.getStagedLeftTuples().takeAll();
-  if (log.isTraceEnabled()) {
-    log.trace("Rule[name={}] segments={} {}",((TerminalNode)pmem.getNetworkNode()).getRule().getName(),smems.length,srcTuples.toStringSizes());
-  }
   Set<String> visitedRules;
   if (pmem.getNetworkNode().getType() == NodeTypeEnums.QueryTerminalNode) {
     visitedRules=new HashSet<String>();
@@ -26,5 +11,22 @@
     visitedRules=Collections.emptySet();
   }
   LinkedList<StackEntry> stack=new LinkedList<StackEntry>();
-  outerEval(liaNode,pmem,node,nodeMem,smems,smemIndex,srcTuples,wm,stack,outerStack,visitedRules,true,executor);
+  NetworkNode node;
+  Memory nodeMem;
+  long bit=1;
+  if (liaNode == smem.getTipNode()) {
+    smem=smems[++smemIndex];
+    node=smem.getRootNode();
+    nodeMem=smem.getNodeMemories().getFirst();
+  }
+ else {
+    bit=2;
+    node=liaNode.getSinkPropagator().getFirstLeftTupleSink();
+    nodeMem=smem.getNodeMemories().getFirst().getNext();
+  }
+  LeftTupleSets srcTuples=smem.getStagedLeftTuples().takeAll();
+  if (log.isTraceEnabled()) {
+    log.trace("Rule[name={}] segments={} {}",((TerminalNode)pmem.getNetworkNode()).getRule().getName(),smems.length,srcTuples.toStringSizes());
+  }
+  outerEval(liaNode,pmem,node,bit,nodeMem,smems,smemIndex,srcTuples,wm,stack,outerStack,visitedRules,true,executor);
 }

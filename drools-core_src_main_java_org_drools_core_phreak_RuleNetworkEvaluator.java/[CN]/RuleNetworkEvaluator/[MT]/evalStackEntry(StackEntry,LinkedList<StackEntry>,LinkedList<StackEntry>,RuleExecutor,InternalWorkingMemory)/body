@@ -3,7 +3,9 @@
   Memory nodeMem=entry.getNodeMem();
   LeftTupleSets trgTuples=entry.getTrgTuples();
   if (node.getType() == NodeTypeEnums.QueryElementNode) {
-    trgTuples.addAll(((QueryElementNodeMemory)nodeMem).getResultLeftTuples());
+    QueryElementNodeMemory qmem=(QueryElementNodeMemory)nodeMem;
+    qmem.setNodeCleanWithoutNotify();
+    trgTuples.addAll(qmem.getResultLeftTuples());
   }
   LeftTupleSinkNode sink=entry.getSink();
   PathMemory pmem=entry.getRmem();
@@ -17,6 +19,7 @@
  else {
     processRian=true;
   }
+  long bit=entry.getBit();
   if (entry.isResumeFromNextNode()) {
     SegmentMemory smem=smems[smemIndex];
     if (node != smem.getTipNode()) {
@@ -28,18 +31,20 @@
         node=nextSink;
       }
       nodeMem=nodeMem.getNext();
+      bit=bit << 1;
     }
  else {
       SegmentPropagator.propagate(smem,trgTuples,wm);
       smem=smems[++smemIndex];
-      trgTuples=smem.getStagedLeftTuples();
+      trgTuples=smem.getStagedLeftTuples().takeAll();
       node=smem.getRootNode();
       nodeMem=smem.getNodeMemories().getFirst();
+      bit=1;
     }
   }
   if (log.isTraceEnabled()) {
     int offset=getOffset(node);
     log.trace("{} Resume {} {}",indent(offset),node.toString(),trgTuples.toStringSizes());
   }
-  innerEval(entry.getLiaNode(),pmem,node,nodeMem,smems,smemIndex,trgTuples,wm,stack,outerStack,visitedRules,processRian,executor);
+  innerEval(entry.getLiaNode(),pmem,node,bit,nodeMem,smems,smemIndex,trgTuples,wm,stack,outerStack,visitedRules,processRian,executor);
 }

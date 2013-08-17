@@ -12,5 +12,8 @@
   RightTuple rightTuple=createResultRightTuple(resultHandle,resultLeftTuple,dquery.isOpen());
   LeftTupleSink sink=dquery.getLeftTupleSink();
   LeftTuple childLeftTuple=sink.createLeftTuple(this.leftTuple,rightTuple,sink);
-  dquery.getResultLeftTupleSets().addInsert(childLeftTuple);
+  boolean stagedInsertWasEmpty=dquery.getResultLeftTupleSets().addInsert(childLeftTuple);
+  if (stagedInsertWasEmpty) {
+    dquery.getQueryNodeMemory().setNodeDirtyWithoutNotify();
+  }
 }
