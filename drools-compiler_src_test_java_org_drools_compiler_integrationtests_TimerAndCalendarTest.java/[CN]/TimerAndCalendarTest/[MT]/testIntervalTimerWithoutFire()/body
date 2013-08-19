@@ -15,10 +15,11 @@
   final BlockingQueue<TimedRuleExecution> queue=new LinkedBlockingQueue<TimedRuleExecution>();
   ((StatefulKnowledgeSessionImpl)ksession).session.setTimedExecutionsQueue(queue);
   final CyclicBarrier barrier=new CyclicBarrier(2);
+  final AtomicBoolean run=new AtomicBoolean(true);
   Thread t=new Thread(new Runnable(){
     public void run(){
       try {
-        while (true) {
+        while (run.get()) {
           queue.take().evauateAndFireRule();
           try {
             barrier.await();
@@ -54,4 +55,6 @@
   barrier.await();
   barrier.reset();
   assertEquals(3,list.size());
+  run.set(false);
+  barrier.reset();
 }

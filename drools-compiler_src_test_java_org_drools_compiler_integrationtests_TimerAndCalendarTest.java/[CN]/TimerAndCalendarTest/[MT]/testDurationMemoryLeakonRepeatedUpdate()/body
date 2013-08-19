@@ -16,11 +16,15 @@
   conf.setOption(ClockTypeOption.get("pseudo"));
   KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
   KieSession ksession=createKnowledgeSession(kbase,conf);
+  PseudoClockScheduler timeService=(PseudoClockScheduler)ksession.<SessionClock>getSessionClock();
+  timeService.advanceTime(new Date().getTime(),TimeUnit.MILLISECONDS);
   List list=new ArrayList();
   ksession.setGlobal("list",list);
   ksession.insert(new Alarm());
   ksession.fireAllRules();
-  Thread.sleep(1000);
+  for (int i=0; i < 6; i++) {
+    timeService.advanceTime(55,TimeUnit.MILLISECONDS);
+    ksession.fireAllRules();
+  }
   assertEquals(5,list.size());
-  assertEquals(0,((AgendaImpl)ksession.getAgenda()).getAgenda().getScheduledActivations().length);
 }
