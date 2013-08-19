@@ -1,12 +1,24 @@
 {
   if (!this.isInUse()) {
     for (    InternalWorkingMemory workingMemory : workingMemories) {
-      RiaNodeMemory memory=(RiaNodeMemory)workingMemory.getNodeMemory(this);
-      Iterator it=memory.getMap().iterator();
-      for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
-        LeftTuple leftTuple=(LeftTuple)entry.getKey();
-        leftTuple.unlinkFromLeftParent();
-        leftTuple.unlinkFromRightParent();
+      BetaNode betaNode=(BetaNode)this.getNextLeftTupleSinkNode();
+      Memory betaMemory=workingMemory.getNodeMemory(betaNode);
+      BetaMemory bm;
+      if (betaNode.getType() == NodeTypeEnums.AccumulateNode) {
+        bm=((AccumulateMemory)betaMemory).getBetaMemory();
+      }
+ else {
+        bm=(BetaMemory)betaMemory;
+      }
+      bm.getRightTupleMemory().iterator();
+      if (bm.getRightTupleMemory().size() > 0) {
+        ProtobufMessages.NodeMemory.RIANodeMemory.Builder _ria=ProtobufMessages.NodeMemory.RIANodeMemory.newBuilder();
+        final org.drools.core.util.Iterator it=bm.getRightTupleMemory().iterator();
+        for (RightTuple entry=(RightTuple)it.next(); entry != null; entry=(RightTuple)it.next()) {
+          LeftTuple leftTuple=(LeftTuple)entry.getFactHandle().getObject();
+          leftTuple.unlinkFromLeftParent();
+          leftTuple.unlinkFromRightParent();
+        }
       }
       workingMemory.clearNodeMemory(this);
     }

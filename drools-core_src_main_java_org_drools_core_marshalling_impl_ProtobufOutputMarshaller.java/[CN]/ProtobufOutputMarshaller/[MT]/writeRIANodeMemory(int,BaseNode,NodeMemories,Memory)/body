@@ -1,6 +1,7 @@
 {
-  BetaNode betaNode=(BetaNode)this.getNextLeftTupleSinkNode();
-  Memory betaMemory=workingMemory.getNodeMemory(betaNode);
+  RightInputAdapterNode riaNode=(RightInputAdapterNode)node;
+  BetaNode betaNode=(BetaNode)riaNode.getNextLeftTupleSinkNode();
+  Memory betaMemory=memories.peekNodeMemory(betaNode.getId());
   BetaMemory bm;
   if (betaNode.getType() == NodeTypeEnums.AccumulateNode) {
     bm=((AccumulateMemory)betaMemory).getBetaMemory();
@@ -15,7 +16,10 @@
     for (RightTuple entry=(RightTuple)it.next(); entry != null; entry=(RightTuple)it.next()) {
       LeftTuple leftTuple=(LeftTuple)entry.getFactHandle().getObject();
       InternalFactHandle handle=(InternalFactHandle)leftTuple.getObject();
-      sink.assertObject((InternalFactHandle)handle,context,workingMemory);
+      FactHandle _handle=ProtobufMessages.FactHandle.newBuilder().setId(handle.getId()).setRecency(handle.getRecency()).build();
+      _ria.addContext(ProtobufMessages.NodeMemory.RIANodeMemory.RIAContext.newBuilder().setTuple(PersisterHelper.createTuple(leftTuple)).setResultHandle(_handle).build());
     }
+    return ProtobufMessages.NodeMemory.newBuilder().setNodeId(nodeId).setNodeType(ProtobufMessages.NodeMemory.NodeType.RIA).setRia(_ria.build()).build();
   }
+  return null;
 }
