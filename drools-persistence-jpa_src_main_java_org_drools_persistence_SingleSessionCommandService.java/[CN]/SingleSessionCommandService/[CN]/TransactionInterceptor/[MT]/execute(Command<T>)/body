@@ -1,0 +1,39 @@
+{
+  if (command instanceof DisposeCommand) {
+    T result=executeNext((GenericCommand<T>)command);
+    jpm.dispose();
+    return result;
+  }
+  PersistenceContext persistenceContext=jpm.getApplicationScopedPersistenceContext();
+  boolean transactionOwner=false;
+  try {
+    transactionOwner=txm.begin();
+    persistenceContext.joinTransaction();
+    initExistingKnowledgeSession(sessionInfo.getId(),marshallingHelper.getKbase(),marshallingHelper.getConf(),persistenceContext);
+    jpm.beginCommandScopedEntityManager();
+    registerRollbackSync();
+    T result=null;
+    if (command instanceof BatchExecutionCommand) {
+      result=ksession.execute(command);
+    }
+ else {
+      result=executeNext((GenericCommand<T>)command);
+    }
+    txm.commit(transactionOwner);
+    return result;
+  }
+ catch (  RuntimeException re) {
+    rollbackTransaction(re,transactionOwner);
+    throw re;
+  }
+catch (  Exception t1) {
+    rollbackTransaction(t1,transactionOwner);
+    throw new RuntimeException("Wrapped exception see cause",t1);
+  }
+ finally {
+    if (command instanceof DisposeCommand) {
+      executeNext((GenericCommand<T>)command);
+      jpm.dispose();
+    }
+  }
+}

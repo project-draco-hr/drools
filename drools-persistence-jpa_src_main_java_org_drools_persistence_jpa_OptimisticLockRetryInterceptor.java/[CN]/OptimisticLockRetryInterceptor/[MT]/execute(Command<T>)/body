@@ -1,0 +1,32 @@
+{
+  int attempt=1;
+  long sleepTime=delay;
+  RuntimeException originException=null;
+  while (attempt <= retries) {
+    if (attempt > 1) {
+      logger.trace("retrying (attempt {})...",attempt);
+    }
+    try {
+      return executeNext(command);
+    }
+ catch (    RuntimeException ex) {
+      if (!isCausedByOptimisticLockingFailure(ex)) {
+        throw ex;
+      }
+      attempt++;
+      logger.trace("Command failed due to optimistic locking {} waiting {} millis before retry",ex,sleepTime);
+      if (originException == null) {
+        originException=ex;
+      }
+      try {
+        Thread.sleep(sleepTime);
+      }
+ catch (      InterruptedException e1) {
+        logger.trace("retry sleeping got interrupted");
+      }
+      sleepTime*=delayFactor;
+    }
+  }
+  logger.warn("Retry failed after {} attempts",attempt);
+  throw originException;
+}
