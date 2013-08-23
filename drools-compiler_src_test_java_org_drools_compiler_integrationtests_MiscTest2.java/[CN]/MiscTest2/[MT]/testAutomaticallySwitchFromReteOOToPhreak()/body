@@ -1,0 +1,14 @@
+{
+  String str="rule R when then end\n";
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.write("src/main/resources/rule.drl",str);
+  KieBuilder kbuilder=ks.newKieBuilder(kfs);
+  kbuilder.buildAll();
+  assertEquals(0,kbuilder.getResults().getMessages().size());
+  KieBaseConfiguration conf=ks.newKieBaseConfiguration();
+  conf.setOption(RuleEngineOption.RETEOO);
+  KieBase kbase=ks.newKieContainer(kbuilder.getKieModule().getReleaseId()).newKieBase(conf);
+  KieSession ksession=kbase.newKieSession();
+  ksession.fireAllRules();
+}
