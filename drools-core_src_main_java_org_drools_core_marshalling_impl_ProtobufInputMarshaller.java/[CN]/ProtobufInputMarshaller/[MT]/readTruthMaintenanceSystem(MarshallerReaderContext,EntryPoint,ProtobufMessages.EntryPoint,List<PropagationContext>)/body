@@ -1,10 +1,17 @@
 {
   TruthMaintenanceSystem tms=((NamedEntryPoint)wmep).getTruthMaintenanceSystem();
+  boolean wasOTCSerialized=_ep.getOtcCount() > 0;
+  Set<String> tmsEnabled=new HashSet<String>();
+  for (  ObjectTypeConfiguration _otc : _ep.getOtcList()) {
+    if (_otc.getTmsEnabled()) {
+      tmsEnabled.add(_otc.getType());
+    }
+  }
   ProtobufMessages.TruthMaintenanceSystem _tms=_ep.getTms();
   for (  ProtobufMessages.EqualityKey _key : _tms.getKeyList()) {
     InternalFactHandle handle=(InternalFactHandle)context.handles.get(_key.getHandleId());
     ObjectTypeConf typeConf=context.wm.getObjectTypeConfigurationRegistry().getObjectTypeConf(((NamedEntryPoint)handle.getEntryPoint()).getEntryPoint(),handle.getObject());
-    if (!typeConf.isTMSEnabled()) {
+    if (!typeConf.isTMSEnabled() && (!wasOTCSerialized || tmsEnabled.contains(typeConf.getTypeName()))) {
       typeConf.enableTMS();
     }
     EqualityKey key=new EqualityKey(handle,_key.getStatus());
