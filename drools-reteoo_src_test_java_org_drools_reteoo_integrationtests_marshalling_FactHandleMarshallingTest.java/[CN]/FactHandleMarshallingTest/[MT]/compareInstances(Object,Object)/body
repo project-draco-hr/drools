@@ -1,0 +1,36 @@
+{
+  boolean same=true;
+  if (objA != null && objB != null) {
+    if (!objA.getClass().equals(objB.getClass())) {
+      return false;
+    }
+    String className=objA.getClass().getName();
+    if (className.startsWith("java")) {
+      return objA.equals(objB);
+    }
+    try {
+      Field[] fields=objA.getClass().getDeclaredFields();
+      if (fields.length == 0) {
+        same=true;
+      }
+ else {
+        for (int i=0; same && i < fields.length; ++i) {
+          fields[i].setAccessible(true);
+          Object subObjA=fields[i].get(objA);
+          Object subObjB=fields[i].get(objB);
+          if (!compareInstances(subObjA,subObjB)) {
+            return false;
+          }
+        }
+      }
+    }
+ catch (    Exception e) {
+      same=false;
+      Assert.fail(e.getClass().getSimpleName() + ":" + e.getMessage());
+    }
+  }
+ else   if (objA != objB) {
+    return false;
+  }
+  return same;
+}

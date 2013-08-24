@@ -1,0 +1,23 @@
+{
+  KnowledgeBase kbase=loadKnowledgeBase("test_mapNullConstraints.drl");
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  org.kie.api.event.rule.AgendaEventListener ael=mock(org.kie.api.event.rule.AgendaEventListener.class);
+  ksession.addEventListener(ael);
+  new WorkingMemoryConsoleLogger(ksession);
+  Map addresses=new HashMap();
+  addresses.put("home",new Address("home street"));
+  Person bob=new Person("Bob");
+  bob.setNamedAddresses(addresses);
+  ksession.insert(bob);
+  ksession.fireAllRules();
+  ArgumentCaptor<org.kie.api.event.rule.AfterMatchFiredEvent> arg=ArgumentCaptor.forClass(org.kie.api.event.rule.AfterMatchFiredEvent.class);
+  verify(ael,times(4)).afterMatchFired(arg.capture());
+  org.kie.api.event.rule.AfterMatchFiredEvent aaf=arg.getAllValues().get(0);
+  assertThat(aaf.getMatch().getRule().getName(),is("1. home != null"));
+  aaf=arg.getAllValues().get(1);
+  assertThat(aaf.getMatch().getRule().getName(),is("2. not home == null"));
+  aaf=arg.getAllValues().get(2);
+  assertThat(aaf.getMatch().getRule().getName(),is("7. work == null"));
+  aaf=arg.getAllValues().get(3);
+  assertThat(aaf.getMatch().getRule().getName(),is("8. not work != null"));
+}

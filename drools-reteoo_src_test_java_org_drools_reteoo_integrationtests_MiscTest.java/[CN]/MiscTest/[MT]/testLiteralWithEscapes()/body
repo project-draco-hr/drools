@@ -1,0 +1,13 @@
+{
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_literal_with_escapes.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+  final List list=new ArrayList();
+  session.setGlobal("list",list);
+  String expected="s\tti\"lto\nn";
+  final Cheese stilton=new Cheese(expected,5);
+  session.insert(stilton);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
+  int fired=session.fireAllRules();
+  assertEquals(1,fired);
+  assertEquals(expected,((List)session.getGlobal("list")).get(0));
+}

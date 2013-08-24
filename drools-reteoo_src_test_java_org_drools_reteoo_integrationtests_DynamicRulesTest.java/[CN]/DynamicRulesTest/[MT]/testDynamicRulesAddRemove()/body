@@ -1,0 +1,46 @@
+{
+  try {
+    KnowledgeBase kbase=loadKnowledgeBase("test_DynamicRulesTom.drl");
+    StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+    List<?> results=new ArrayList<Object>();
+    session.setGlobal("results",results);
+    InternalFactHandle h1=(InternalFactHandle)session.insert(new Person("tom",1));
+    InternalFactHandle h2=(InternalFactHandle)session.insert(new Person("fred",2));
+    InternalFactHandle h3=(InternalFactHandle)session.insert(new Person("harry",3));
+    InternalFactHandle h4=(InternalFactHandle)session.insert(new Person("fred",4));
+    InternalFactHandle h5=(InternalFactHandle)session.insert(new Person("ed",5));
+    InternalFactHandle h6=(InternalFactHandle)session.insert(new Person("tom",6));
+    InternalFactHandle h7=(InternalFactHandle)session.insert(new Person("sreeni",7));
+    InternalFactHandle h8=(InternalFactHandle)session.insert(new Person("jill",8));
+    InternalFactHandle h9=(InternalFactHandle)session.insert(new Person("ed",9));
+    InternalFactHandle h10=(InternalFactHandle)session.insert(new Person("tom",10));
+    session.fireAllRules();
+    assertEquals(3,results.size());
+    assertTrue(results.contains(h1.getObject()));
+    assertTrue(results.contains(h6.getObject()));
+    assertTrue(results.contains(h10.getObject()));
+    results.clear();
+    kbase.addKnowledgePackages(loadKnowledgePackages("test_DynamicRulesFred.drl"));
+    session.fireAllRules();
+    assertEquals(2,results.size());
+    assertTrue(results.contains(h2.getObject()));
+    assertTrue(results.contains(h4.getObject()));
+    results.clear();
+    kbase.removeKnowledgePackage("tom");
+    kbase.addKnowledgePackages(loadKnowledgePackages("test_DynamicRulesEd.drl"));
+    session.fireAllRules();
+    assertEquals(2,results.size());
+    assertTrue(results.contains(h5.getObject()));
+    assertTrue(results.contains(h9.getObject()));
+    results.clear();
+    ((Person)h3.getObject()).setName("ed");
+    session.update(h3,h3.getObject());
+    session.fireAllRules();
+    assertEquals(1,results.size());
+    assertTrue(results.contains(h3.getObject()));
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail("Should not raise any exception: " + e.getMessage());
+  }
+}

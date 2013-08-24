@@ -1,0 +1,19 @@
+{
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_Dynamic1.drl","test_Dynamic2.drl","test_Dynamic3.drl","test_Dynamic4.drl"));
+  StatefulKnowledgeSession workingMemory=createKnowledgeSession(kbase);
+  assertEquals(2,kbase.getKnowledgePackages().size());
+  KnowledgePackage knowledgePackage=null;
+  for (  KnowledgePackage pkg : kbase.getKnowledgePackages()) {
+    if (pkg.getName().equals("org.drools.compiler.test")) {
+      knowledgePackage=pkg;
+      break;
+    }
+  }
+  assertEquals(5,knowledgePackage.getRules().size());
+  kbase.removeRule("org.drools.compiler.test","Who likes Stilton");
+  assertEquals(4,knowledgePackage.getRules().size());
+  kbase.removeRule("org.drools.compiler.test","like cheese");
+  assertEquals(3,knowledgePackage.getRules().size());
+  kbase.removeKnowledgePackage("org.drools.compiler.test");
+  assertEquals(1,kbase.getKnowledgePackages().size());
+}

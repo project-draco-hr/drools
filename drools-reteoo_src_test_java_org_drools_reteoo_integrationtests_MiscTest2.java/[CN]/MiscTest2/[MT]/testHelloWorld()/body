@@ -1,0 +1,20 @@
+{
+  String drl="package org.drools.test\n" + "declare Message\n" + "   message : String\n"+ "end\n"+ "rule R1 when\n"+ "   $m : Message( message == \"Hello World\" )\n"+ "then\n"+ "end\n";
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem().write("src/main/resources/r1.drl",drl);
+  KieBuilder builder=ks.newKieBuilder(kfs).buildAll();
+  assertEquals(0,builder.getResults().getMessages().size());
+  ks.getRepository().addKieModule(builder.getKieModule());
+  KieSession ksession=ks.newKieContainer(ks.getRepository().getDefaultReleaseId()).newKieSession();
+  FactType messageType=ksession.getKieBase().getFactType("org.drools.test","Message");
+  Object message=messageType.newInstance();
+  messageType.set(message,"message","Hello World");
+  ksession.insert(message);
+  assertEquals(1,ksession.fireAllRules());
+  KieSession ksession2=ks.newKieContainer(ks.getRepository().getDefaultReleaseId()).newKieSession();
+  FactType messageType2=ksession2.getKieBase().getFactType("org.drools.test","Message");
+  Object message2=messageType2.newInstance();
+  messageType2.set(message2,"message","Hello World");
+  ksession2.insert(message2);
+  assertEquals(1,ksession2.fireAllRules());
+}

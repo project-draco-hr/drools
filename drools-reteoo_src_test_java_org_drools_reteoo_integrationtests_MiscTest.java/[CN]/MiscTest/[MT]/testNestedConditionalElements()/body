@@ -1,0 +1,17 @@
+{
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_NestedConditionalElements.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  final List list=new ArrayList();
+  ksession.setGlobal("results",list);
+  final State state=new State("SP");
+  ksession.insert(state);
+  final Person bob=new Person("Bob");
+  bob.setStatus(state.getState());
+  bob.setLikes("stilton");
+  ksession.insert(bob);
+  ksession.fireAllRules();
+  assertEquals(0,list.size());
+  ksession.insert(new Cheese(bob.getLikes(),10));
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+}

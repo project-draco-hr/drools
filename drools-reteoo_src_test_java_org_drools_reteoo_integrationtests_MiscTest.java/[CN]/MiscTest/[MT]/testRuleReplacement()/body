@@ -1,0 +1,23 @@
+{
+  Collection<KnowledgePackage> kpkgs=loadKnowledgePackages("test_RuleNameClashes3.drl","test_RuleNameClashes3.drl");
+  for (  KnowledgePackage kpkg : kpkgs) {
+    if (kpkg.getName().equals("org.drools.package1")) {
+      assertEquals(1,kpkg.getRules().size());
+      break;
+    }
+  }
+  KnowledgeBase kbase=loadKnowledgeBase();
+  kbase.addKnowledgePackages(kpkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  final List results=new ArrayList();
+  ksession.setGlobal("results",results);
+  ksession.insert(new Cheese("stilton",10));
+  ksession.insert(new Cheese("brie",5));
+  ksession.fireAllRules();
+  assertEquals(results.toString(),0,results.size());
+  ksession.insert(new Cheese("muzzarella",7));
+  ksession.fireAllRules();
+  assertEquals(results.toString(),1,results.size());
+  assertTrue(results.contains("p1.r3"));
+}

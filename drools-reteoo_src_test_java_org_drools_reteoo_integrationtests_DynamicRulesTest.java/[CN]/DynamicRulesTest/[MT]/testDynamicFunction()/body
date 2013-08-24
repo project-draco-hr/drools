@@ -1,0 +1,34 @@
+{
+  Collection<KnowledgePackage> kpkgs=SerializationHelper.serializeObject(loadKnowledgePackages("test_DynamicFunction1.drl"));
+  KnowledgeBase kbase=loadKnowledgeBase();
+  kbase.addKnowledgePackages(kpkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  final StatefulKnowledgeSession workingMemory=createKnowledgeSession(kbase);
+  final List<?> list=new ArrayList<Object>();
+  workingMemory.setGlobal("list",list);
+  final Cheese stilton=new Cheese("stilton",5);
+  workingMemory.insert(stilton);
+  workingMemory.fireAllRules();
+  assertEquals(new Integer(5),list.get(0));
+  kbase.removeFunction("org.drools.compiler.test","addFive");
+  final Cheese cheddar=new Cheese("cheddar",5);
+  workingMemory.insert(cheddar);
+  try {
+    workingMemory.fireAllRules();
+    fail("Function should have been removed and NoClassDefFoundError thrown from the Consequence");
+  }
+ catch (  final NoClassDefFoundError e) {
+  }
+  Collection<KnowledgePackage> kpkgs2=SerializationHelper.serializeObject(loadKnowledgePackages("test_DynamicFunction2.drl"));
+  kbase.addKnowledgePackages(kpkgs2);
+  final Cheese brie=new Cheese("brie",5);
+  workingMemory.insert(brie);
+  workingMemory.fireAllRules();
+  assertEquals(new Integer(6),list.get(1));
+  Collection<KnowledgePackage> kpkgs3=SerializationHelper.serializeObject(loadKnowledgePackages("test_DynamicFunction3.drl"));
+  kbase.addKnowledgePackages(kpkgs3);
+  final Cheese feta=new Cheese("feta",5);
+  workingMemory.insert(feta);
+  workingMemory.fireAllRules();
+  assertEquals(new Integer(5),list.get(2));
+}

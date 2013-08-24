@@ -10,7 +10,10 @@
   context.wm=session;
   readNodeMemories(context,_session.getRuleData());
   List<PropagationContext> pctxs=new ArrayList<PropagationContext>();
-  readInitialFactHandle(context,_session.getRuleData(),pctxs);
+  if (context.ruleBase.getConfiguration().isPhreakEnabled() || _session.getRuleData().getInitialFact() != null) {
+    ((AbstractWorkingMemory)context.wm).initInitialFact(context.ruleBase,context);
+    context.handles.put(session.getInitialFactHandle().getId(),session.getInitialFactHandle());
+  }
   for (  ProtobufMessages.EntryPoint _ep : _session.getRuleData().getEntryPointList()) {
     EntryPoint wmep=context.wm.getEntryPoints().get(_ep.getEntryPointId());
     readFactHandles(context,_ep,((NamedEntryPoint)wmep).getObjectStore(),pctxs);

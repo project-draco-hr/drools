@@ -1,0 +1,18 @@
+{
+  String str="package org.drools.compiler.test; \n" + "\n" + "global java.util.List list;"+ "\n"+ "declare Bean\n"+ "  field : java.util.ArrayList\n"+ "end\n"+ "\n"+ "\n"+ "rule \"Init\"\n"+ "when  \n"+ "then\n"+ "  insert( new Bean( new java.util.ArrayList( java.util.Arrays.asList( \"x\" ) ) ) );\n"+ "end\n"+ "\n"+ "rule \"Check\"\n"+ "when\n"+ "  $b : Bean( $fld : field == [\"x\"] )\n"+ "then\n"+ "  System.out.println( $fld );\n"+ "  list.add( \"OK\" ); \n"+ "end";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KieBaseConfiguration kbConf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kbConf.setOption(EqualityBehaviorOption.EQUALITY);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kbConf);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
+  assertTrue(list.contains("OK"));
+  ksession.dispose();
+}

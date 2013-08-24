@@ -1,0 +1,16 @@
+{
+  String rule="import org.drools.core.reteoo.InitialFactImpl\n" + "import org.drools.compiler.FactB\n" + "rule \"Clear\" when\n"+ "   $f: Object(class != FactB.class)\n"+ "then\n"+ "   if( ! ($f instanceof InitialFactImpl) ){\n"+ "     retract( $f );\n"+ "   }\n"+ "end";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(rule);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.insert(new FactA());
+  ksession.insert(new FactA());
+  ksession.insert(new FactB());
+  ksession.insert(new FactB());
+  ksession.insert(new FactC());
+  ksession.insert(new FactC());
+  ksession.fireAllRules();
+  for (  org.kie.api.runtime.rule.FactHandle fact : ksession.getFactHandles()) {
+    InternalFactHandle internalFact=(InternalFactHandle)fact;
+    assertTrue(internalFact.getObject() instanceof FactB);
+  }
+}

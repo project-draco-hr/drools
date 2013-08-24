@@ -1,0 +1,13 @@
+{
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("evalmodify.drl"));
+  Environment env=EnvironmentFactory.newEnvironment();
+  env.set(EnvironmentName.OBJECT_MARSHALLING_STRATEGIES,new ObjectMarshallingStrategy[]{new IdentityPlaceholderResolverStrategy(ClassObjectMarshallingStrategyAcceptor.DEFAULT)});
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase,null,env);
+  final Cell cell1=new Cell(9);
+  final Cell cell=new Cell(0);
+  session.insert(cell1);
+  org.kie.api.runtime.rule.FactHandle cellHandle=session.insert(cell);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
+  session.fireAllRules();
+  assertEquals(9,cell.getValue());
+}

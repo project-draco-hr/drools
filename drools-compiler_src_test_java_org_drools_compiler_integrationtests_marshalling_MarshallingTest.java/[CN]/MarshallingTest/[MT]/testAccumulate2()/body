@@ -1,17 +1,12 @@
 {
-  PackageBuilder builder=new PackageBuilder();
-  Reader source=new StringReader("package org.drools\n" + "\n" + "import org.drools.compiler.Message\n"+ "\n"+ "rule MyRule\n"+ "  when\n"+ "    Number( intValue >= 5 ) from accumulate ( m: Message( ), count( m ) )\n"+ "  then\n"+ "    System.out.println(\"Found messages\");\n"+ "end");
-  builder.addPackageFromDrl(source);
-  Package pkg=builder.getPackage();
-  RuleBase ruleBase=RuleBaseFactory.newRuleBase();
-  ruleBase.addPackage(pkg);
-  StatefulSession session=ruleBase.newStatefulSession();
-  session.fireAllRules();
-  session=getSerialisedStatefulSession(session);
-  session.insert(new Message());
-  session.insert(new Message());
-  session.insert(new Message());
-  session.insert(new Message());
-  session.insert(new Message());
-  assertEquals(1,session.getAgenda().getActivations().length);
+  String str="package org.drools\n" + "\n" + "import org.drools.compiler.Message\n"+ "\n"+ "rule MyRule\n"+ "  when\n"+ "    Number( intValue >= 5 ) from accumulate ( m: Message( ), count( m ) )\n"+ "  then\n"+ "    System.out.println(\"Found messages\");\n"+ "end\n";
+  KnowledgeBase kBase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kBase.newStatefulKnowledgeSession();
+  ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.insert(new Message());
+  ksession.insert(new Message());
+  ksession.insert(new Message());
+  ksession.insert(new Message());
+  ksession.insert(new Message());
+  assertEquals(1,((AgendaImpl)ksession.getAgenda()).getAgenda().agendaSize());
 }

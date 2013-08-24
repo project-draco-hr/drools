@@ -1,26 +1,39 @@
 {
   try {
     ClassLoader loader1=new SubvertedClassLoader(new URL[]{getClass().getResource("/testEnum.jar")},this.getClass().getClassLoader());
+    loader1.loadClass("org.drools.Primitives");
+    loader1.loadClass("org.drools.TestEnum");
     KnowledgeBuilderConfiguration conf=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,loader1);
-    KnowledgeBuilder builder=KnowledgeBuilderFactory.newKnowledgeBuilder(conf);
-    builder.add(ResourceFactory.newInputStreamResource(getClass().getResourceAsStream("test_EnumSerialization.drl")),ResourceType.DRL);
-    if (builder.hasErrors()) {
-      fail(builder.getErrors().toString());
-    }
-    Collection<KnowledgePackage> pkgs=builder.getKnowledgePackages();
-    KnowledgePackage pkg=pkgs.iterator().next();
-    byte[] out=DroolsStreamUtils.streamOut(((KnowledgePackageImp)pkg).pkg);
+    Collection<KnowledgePackage> kpkgs=loadKnowledgePackages(conf,"test_EnumSerialization.drl");
+    byte[] out=DroolsStreamUtils.streamOut(kpkgs);
     KieBaseConfiguration kbaseConf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration(null,loader1);
-    KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kbaseConf);
-    kbase.addKnowledgePackages(pkgs);
+    KnowledgeBase kbase=getKnowledgeBase(kbaseConf);
+    kbase.addKnowledgePackages(kpkgs);
+    StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+    List list=new ArrayList();
+    ksession.setGlobal("list",list);
+    assertEquals(1,ksession.fireAllRules());
+    assertEquals(1,list.size());
     ClassLoader loader2=new SubvertedClassLoader(new URL[]{getClass().getResource("/testEnum.jar")},this.getClass().getClassLoader());
-    KnowledgeBuilderConfiguration conf2=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,loader2);
-    KnowledgeBuilder builder2=KnowledgeBuilderFactory.newKnowledgeBuilder(conf2);
-    builder2.add(ResourceFactory.newByteArrayResource(out),ResourceType.PKG);
-    Collection<KnowledgePackage> pkgs2=builder2.getKnowledgePackages();
+    loader2.loadClass("org.drools.Primitives");
+    loader2.loadClass("org.drools.TestEnum");
+    ClassLoader ccl=Thread.currentThread().getContextClassLoader();
+    Collection<KnowledgePackage> kpkgs2=null;
+    try {
+      Thread.currentThread().setContextClassLoader(loader2);
+      kpkgs2=(Collection<KnowledgePackage>)DroolsStreamUtils.streamIn(out);
+    }
+  finally {
+      Thread.currentThread().setContextClassLoader(ccl);
+    }
     KieBaseConfiguration kbaseConf2=KnowledgeBaseFactory.newKnowledgeBaseConfiguration(null,loader2);
-    KnowledgeBase kbase2=KnowledgeBaseFactory.newKnowledgeBase(kbaseConf2);
-    kbase2.addKnowledgePackages(pkgs2);
+    KnowledgeBase kbase2=getKnowledgeBase(kbaseConf2);
+    kbase2.addKnowledgePackages(kpkgs2);
+    ksession=createKnowledgeSession(kbase2);
+    list=new ArrayList();
+    ksession.setGlobal("list",list);
+    assertEquals(1,ksession.fireAllRules());
+    assertEquals(1,list.size());
   }
  catch (  ClassCastException cce) {
     cce.printStackTrace();

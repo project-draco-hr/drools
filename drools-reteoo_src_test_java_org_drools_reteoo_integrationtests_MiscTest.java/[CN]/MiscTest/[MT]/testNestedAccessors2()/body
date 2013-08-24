@@ -1,0 +1,23 @@
+{
+  String rule="package org.drools.compiler\n" + "rule 'rule1'" + "    salience 10\n"+ "when\n"+ "    Cheesery( typedCheeses[0].type == 'stilton' );\n"+ "then\n"+ "end\n"+ "rule 'rule2'\n"+ "when\n"+ "    Cheesery( typedCheeses[0].price == 10 );\n"+ "then\n"+ "end";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(rule.toString());
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  org.kie.api.event.rule.AgendaEventListener ael=mock(org.kie.api.event.rule.AgendaEventListener.class);
+  ksession.addEventListener(ael);
+  Cheesery c1=new Cheesery();
+  c1.addCheese(new Cheese("stilton",20));
+  Cheesery c2=new Cheesery();
+  c2.addCheese(new Cheese("brie",10));
+  Cheesery c3=new Cheesery();
+  c3.addCheese(new Cheese("muzzarella",30));
+  ksession.insert(c1);
+  ksession.insert(c2);
+  ksession.insert(c3);
+  ksession.fireAllRules();
+  ArgumentCaptor<org.kie.api.event.rule.AfterMatchFiredEvent> captor=ArgumentCaptor.forClass(org.kie.api.event.rule.AfterMatchFiredEvent.class);
+  verify(ael,times(2)).afterMatchFired(captor.capture());
+  List<org.kie.api.event.rule.AfterMatchFiredEvent> values=captor.getAllValues();
+  assertThat((Cheesery)values.get(0).getMatch().getObjects().get(0),is(c1));
+  assertThat((Cheesery)values.get(1).getMatch().getObjects().get(0),is(c2));
+  ksession.dispose();
+}

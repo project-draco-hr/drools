@@ -1,0 +1,38 @@
+{
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_Dynamic1.drl"));
+  StatefulKnowledgeSession workingMemory=createKnowledgeSession(kbase);
+  workingMemory.setGlobal("total",new Integer(0));
+  final List<?> list=new ArrayList<Object>();
+  workingMemory.setGlobal("list",list);
+  final PersonInterface bob=new Person("bob","stilton");
+  bob.setStatus("Not evaluated");
+  workingMemory.insert(bob);
+  final Cheese stilton=new Cheese("stilton",5);
+  workingMemory.insert(stilton);
+  final Cheese cheddar=new Cheese("cheddar",5);
+  workingMemory.insert(cheddar);
+  workingMemory.fireAllRules();
+  assertEquals(1,list.size());
+  assertEquals("stilton",list.get(0));
+  Collection<KnowledgePackage> kpkgs=SerializationHelper.serializeObject(loadKnowledgePackages("test_Dynamic2.drl"));
+  kbase.addKnowledgePackages(kpkgs);
+  workingMemory.fireAllRules();
+  assertEquals(5,list.size());
+  assertEquals("stilton",list.get(0));
+  assertTrue("cheddar".equals(list.get(1)) || "cheddar".equals(list.get(2)));
+  assertTrue("stilton".equals(list.get(1)) || "stilton".equals(list.get(2)));
+  list.clear();
+  kpkgs=SerializationHelper.serializeObject(loadKnowledgePackages("test_Dynamic3.drl"));
+  kbase.addKnowledgePackages(kpkgs);
+  workingMemory.fireAllRules();
+  assertEquals("Rule from package 3 should have been fired","match Person ok",bob.getStatus());
+  assertEquals(1,list.size());
+  assertEquals(bob,list.get(0));
+  kpkgs=SerializationHelper.serializeObject(loadKnowledgePackages("test_Dynamic4.drl"));
+  kbase.addKnowledgePackages(kpkgs);
+  workingMemory.fireAllRules();
+  kbase=SerializationHelper.serializeObject(kbase);
+  assertEquals("Rule from package 4 should have been fired","Who likes Stilton ok",bob.getStatus());
+  assertEquals(2,list.size());
+  assertEquals(bob,list.get(1));
+}

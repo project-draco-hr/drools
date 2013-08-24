@@ -1,0 +1,25 @@
+{
+  DataObject thingy=new DataObject();
+  thingy.type='a';
+  thingy.time=new Date().getTime();
+  thingy.strCount="1";
+  byte[] bytes=marshallThingy(thingy);
+  ByteArrayInputStream bais=new ByteArrayInputStream(bytes);
+  BufferedInputStream bis=new BufferedInputStream(bais);
+  ObjectInputStream stream=new ObjectInputStream(bis);
+  DataObject unmaThingy=new DataObject();
+  unmaThingy.type=stream.readChar();
+  unmaThingy.time=stream.readLong();
+  assertTrue("Mark/reset is not supported",bis.markSupported());
+  bis.mark(8);
+  int[] intBytes=new int[4];
+  intBytes[0]=bis.read();
+  intBytes[1]=bis.read();
+  intBytes[2]=bis.read();
+  intBytes[3]=bis.read();
+  if ((intBytes[0] | intBytes[1] | intBytes[2]| intBytes[3]) < 0) {
+    bis.reset();
+  }
+  unmaThingy.strCount=stream.readUTF();
+  assertTrue(thingy.equals(unmaThingy));
+}

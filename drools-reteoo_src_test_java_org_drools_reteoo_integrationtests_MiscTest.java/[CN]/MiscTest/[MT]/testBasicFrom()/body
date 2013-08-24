@@ -1,0 +1,35 @@
+{
+  if (CommonTestMethodBase.phreak == RuleEngineOption.RETEOO) {
+    return;
+  }
+  KnowledgeBase kbase=loadKnowledgeBase("test_From.drl");
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  final List list1=new ArrayList();
+  ksession.setGlobal("list1",list1);
+  final List list2=new ArrayList();
+  ksession.setGlobal("list2",list2);
+  final List list3=new ArrayList();
+  ksession.setGlobal("list3",list3);
+  final Cheesery cheesery=new Cheesery();
+  final Cheese stilton=new Cheese("stilton",12);
+  final Cheese cheddar=new Cheese("cheddar",15);
+  cheesery.addCheese(stilton);
+  cheesery.addCheese(cheddar);
+  ksession.setGlobal("cheesery",cheesery);
+  ksession.insert(cheesery);
+  Person p=new Person("stilton");
+  ksession.insert(p);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  assertEquals(2,((List)ksession.getGlobal("list1")).size());
+  assertEquals(cheddar,((List)ksession.getGlobal("list1")).get(0));
+  assertEquals(stilton,((List)ksession.getGlobal("list1")).get(1));
+  assertEquals(2,((List)ksession.getGlobal("list2")).size());
+  assertEquals(cheddar,((List)ksession.getGlobal("list2")).get(0));
+  assertEquals(stilton,((List)ksession.getGlobal("list2")).get(1));
+  assertEquals(1,((List)ksession.getGlobal("list3")).size());
+  assertEquals(stilton,((List)ksession.getGlobal("list3")).get(0));
+}

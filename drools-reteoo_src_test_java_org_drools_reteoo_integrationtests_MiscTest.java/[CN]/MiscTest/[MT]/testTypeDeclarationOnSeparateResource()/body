@@ -1,0 +1,10 @@
+{
+  String file1="package a.b.c\n" + "declare SomePerson\n" + "    weight : double\n"+ "    height : double\n"+ "end\n";
+  String file2="package a.b.c\n" + "import org.drools.compiler.*\n" + "declare Holder\n"+ "    person : Person\n"+ "end\n"+ "rule \"create holder\"\n"+ "    when\n"+ "        person : Person( )\n"+ "        not (\n"+ "            Holder( person; )\n"+ "        )\n"+ "    then\n"+ "        insert(new Holder(person));\n"+ "end";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(file1,file2);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  assertEquals(0,ksession.fireAllRules());
+  ksession.insert(new Person("Bob"));
+  assertEquals(1,ksession.fireAllRules());
+  assertEquals(0,ksession.fireAllRules());
+}

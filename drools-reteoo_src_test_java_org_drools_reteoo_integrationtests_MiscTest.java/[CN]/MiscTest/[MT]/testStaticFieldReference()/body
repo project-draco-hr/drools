@@ -1,0 +1,21 @@
+{
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_StaticField.drl"));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
+  List list=new ArrayList();
+  session.setGlobal("list",list);
+  final Cheesery cheesery1=new Cheesery();
+  cheesery1.setStatus(Cheesery.SELLING_CHEESE);
+  cheesery1.setMaturity(Maturity.OLD);
+  session.insert(cheesery1);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
+  final Cheesery cheesery2=new Cheesery();
+  cheesery2.setStatus(Cheesery.MAKING_CHEESE);
+  cheesery2.setMaturity(Maturity.YOUNG);
+  session.insert(cheesery2);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
+  session.fireAllRules();
+  assertEquals(2,list.size());
+  assertEquals(cheesery1,list.get(0));
+  assertEquals(cheesery2,list.get(1));
+}

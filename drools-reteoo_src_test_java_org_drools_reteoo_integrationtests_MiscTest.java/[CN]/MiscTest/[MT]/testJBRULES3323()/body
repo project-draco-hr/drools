@@ -1,0 +1,40 @@
+{
+  StringBuilder rule=new StringBuilder();
+  rule.append("package de.orbitx.accumulatetesettest;\n");
+  rule.append("import java.util.Set;\n");
+  rule.append("import java.util.HashSet;\n");
+  rule.append("import org.drools.compiler.Foo;\n");
+  rule.append("import org.drools.compiler.Bar;\n");
+  rule.append("rule \"Sub optimal foo parallelism - this rule is causing NPE upon reverse\"\n");
+  rule.append("when\n");
+  rule.append("$foo : Foo($leftId : id, $leftBar : bar != null)\n");
+  rule.append("$fooSet : Set()\n");
+  rule.append("from accumulate ( Foo(id > $leftId, bar != null && != $leftBar, $bar : bar),\n");
+  rule.append("collectSet( $bar ) )\n");
+  rule.append("then\n");
+  rule.append("//System.out.println(\"ok\");\n");
+  rule.append("end\n");
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(rule.toString());
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  Bar[] barList=new Bar[3];
+  for (int i=0; i < barList.length; i++) {
+    barList[i]=new Bar(String.valueOf(i));
+  }
+  Foo[] fooList=new Foo[4];
+  for (int i=0; i < fooList.length; i++) {
+    fooList[i]=new Foo(String.valueOf(i),i == 3 ? barList[2] : barList[i]);
+  }
+  for (  Foo foo : fooList) {
+    ksession.insert(foo);
+  }
+  int[] magicFoos=new int[]{3,3,1,1,0,0,2,2,1,1,0,0,3,3,2,2,3,1,1};
+  int[] magicBars=new int[]{1,2,0,1,1,0,1,2,2,1,2,0,0,2,0,2,0,0,1};
+  for (int i=0; i < magicFoos.length; i++) {
+    Foo tehFoo=fooList[magicFoos[i]];
+    org.kie.api.runtime.rule.FactHandle fooFactHandle=ksession.getFactHandle(tehFoo);
+    tehFoo.setBar(barList[magicBars[i]]);
+    ksession.update(fooFactHandle,tehFoo);
+    ksession.fireAllRules();
+  }
+  ksession.dispose();
+}

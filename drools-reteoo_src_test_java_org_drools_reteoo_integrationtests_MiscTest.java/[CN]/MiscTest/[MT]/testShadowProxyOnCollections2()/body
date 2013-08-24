@@ -1,0 +1,17 @@
+{
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_ShadowProxyOnCollections2.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  final List results=new ArrayList();
+  ksession.setGlobal("results",results);
+  List list=new ArrayList();
+  list.add("example1");
+  list.add("example2");
+  MockPersistentSet mockPersistentSet=new MockPersistentSet(false);
+  mockPersistentSet.addAll(list);
+  ObjectWithSet objectWithSet=new ObjectWithSet();
+  objectWithSet.setSet(mockPersistentSet);
+  ksession.insert(objectWithSet);
+  ksession.fireAllRules();
+  assertEquals(1,results.size());
+  assertEquals("show",objectWithSet.getMessage());
+}

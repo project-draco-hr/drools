@@ -1,0 +1,17 @@
+{
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_JavaModifyBlock.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  final List list=new ArrayList();
+  ksession.setGlobal("results",list);
+  Person bob=new Person("Bob",30);
+  bob.setStatus("hungry");
+  ksession.insert(bob);
+  ksession.insert(new Cheese());
+  ksession.insert(new Cheese());
+  ksession.insert(new OuterClass.InnerClass(1));
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+  assertEquals("full",bob.getStatus());
+  assertEquals(31,bob.getAge());
+  assertEquals(2,((OuterClass.InnerClass)list.get(1)).getIntAttr());
+}

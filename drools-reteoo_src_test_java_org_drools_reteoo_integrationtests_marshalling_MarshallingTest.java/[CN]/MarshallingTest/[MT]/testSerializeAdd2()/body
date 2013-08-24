@@ -1,0 +1,34 @@
+{
+  Collection<KnowledgePackage> kpkgs=loadKnowledgePackages("../test_Dynamic1_0.drl");
+  kpkgs=SerializationHelper.serializeObject(kpkgs);
+  KnowledgeBase kBase=getKnowledgeBase();
+  kBase.addKnowledgePackages(kpkgs);
+  kBase=SerializationHelper.serializeObject(kBase);
+  List results=new ArrayList();
+  StatefulKnowledgeSession session=kBase.newStatefulKnowledgeSession();
+  session.setGlobal("results",results);
+  InternalFactHandle stilton1=(InternalFactHandle)session.insert(new Cheese("stilton",10));
+  session.insert(new Cheese("brie",10));
+  InternalFactHandle bob=(InternalFactHandle)session.insert(new Person("bob",10));
+  session.fireAllRules();
+  assertEquals(1,results.size());
+  assertEquals(stilton1.getObject(),results.get(0));
+  kBase=(KnowledgeBase)SerializationHelper.serializeObject(kBase);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,kBase,true);
+  kpkgs=loadKnowledgePackages("../test_Dynamic3_0.drl");
+  kBase.addKnowledgePackages(SerializationHelper.serializeObject(kpkgs));
+  kBase=(KnowledgeBase)SerializationHelper.serializeObject(kBase);
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,kBase,true);
+  InternalFactHandle stilton2=(InternalFactHandle)session.insert(new Cheese("stilton",20));
+  session.insert(new Cheese("brie",20));
+  InternalFactHandle mark=(InternalFactHandle)session.insert(new Person("mark",20));
+  session.fireAllRules();
+  results=(List)session.getGlobal("results");
+  assertEquals(4,results.size());
+  assertEquals(stilton2.getObject(),results.get(1));
+  assertEquals(mark.getObject(),results.get(2));
+  assertEquals(bob.getObject(),results.get(3));
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,kBase,true);
+  kBase=(KnowledgeBase)SerializationHelper.serializeObject(kBase);
+  session.dispose();
+}

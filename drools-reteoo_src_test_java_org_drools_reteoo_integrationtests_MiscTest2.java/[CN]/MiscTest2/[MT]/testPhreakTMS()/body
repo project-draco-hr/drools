@@ -1,0 +1,13 @@
+{
+  String str="import org.drools.compiler.Person\n" + "import org.drools.compiler.Cheese\n" + "rule R when\n"+ "  Person( $age : age, $name : name == \"A\" )\n"+ "  not Person( age == $age + 1 )\n"+ "then\n"+ "  insertLogical(new Cheese(\"gorgonzola\", 10));\n"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  Person p1=new Person("A",31);
+  FactHandle fh1=ksession.insert(p1);
+  ksession.fireAllRules();
+  assertEquals(1,ksession.getObjects(new ClassObjectFilter(Cheese.class)).size());
+  Person p2=new Person("A",32);
+  FactHandle fh2=ksession.insert(p2);
+  ksession.fireAllRules();
+  assertEquals(1,ksession.getObjects(new ClassObjectFilter(Cheese.class)).size());
+}

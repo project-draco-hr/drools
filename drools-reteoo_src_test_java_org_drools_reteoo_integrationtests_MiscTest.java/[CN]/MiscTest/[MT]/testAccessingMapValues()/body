@@ -1,0 +1,23 @@
+{
+  String rule="";
+  rule+="package org.drools.compiler;\n";
+  rule+="import org.drools.compiler.Pet;\n";
+  rule+="rule \"Test Rule\"\n";
+  rule+="  when\n";
+  rule+="    $pet: Pet()\n";
+  rule+="    Pet( \n";
+  rule+="      ownerName == $pet.attributes[\"key\"] \n";
+  rule+="    )\n";
+  rule+="  then\n";
+  rule+="    System.out.println(\"hi pet\");\n";
+  rule+="end";
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(rule));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+  assertNotNull(session);
+  Pet pet1=new Pet("Toni");
+  pet1.getAttributes().put("key","value");
+  Pet pet2=new Pet("Toni");
+  session.insert(pet1);
+  session.insert(pet2);
+  session.fireAllRules();
+}

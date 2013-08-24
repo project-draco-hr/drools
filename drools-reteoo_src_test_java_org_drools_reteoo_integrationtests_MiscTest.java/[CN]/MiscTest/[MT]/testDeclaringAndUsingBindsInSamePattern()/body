@@ -1,0 +1,16 @@
+{
+  KieBaseConfiguration kbc=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kbc.setOption(RemoveIdentitiesOption.YES);
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase(kbc,"test_DeclaringAndUsingBindsInSamePattern.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  final List sensors=new ArrayList();
+  ksession.setGlobal("sensors",sensors);
+  final Sensor sensor1=new Sensor(100,150);
+  ksession.insert(sensor1);
+  ksession.fireAllRules();
+  assertEquals(0,sensors.size());
+  final Sensor sensor2=new Sensor(200,150);
+  ksession.insert(sensor2);
+  ksession.fireAllRules();
+  assertEquals(3,sensors.size());
+}

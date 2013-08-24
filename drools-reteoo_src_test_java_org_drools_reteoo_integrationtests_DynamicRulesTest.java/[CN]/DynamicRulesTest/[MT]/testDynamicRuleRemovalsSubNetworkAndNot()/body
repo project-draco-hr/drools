@@ -1,0 +1,21 @@
+{
+  KnowledgeBase kbase=loadKnowledgeBase("test_DynamicRulesWithNotSubnetwork.drl");
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  final AgendaEventListener alistener=mock(AgendaEventListener.class);
+  ksession.addEventListener(alistener);
+  ksession.insert(new Person("toni"));
+  ksession.fireAllRules();
+  verify(alistener,never()).matchCreated(any(MatchCreatedEvent.class));
+  ksession.insert(new Person("bob"));
+  ksession.fireAllRules();
+  verify(alistener,times(1)).matchCreated(any(MatchCreatedEvent.class));
+  ksession.insert(new Person("mark"));
+  ksession.fireAllRules();
+  verify(alistener,times(1)).matchCreated(any(MatchCreatedEvent.class));
+  kbase.removeKnowledgePackage("org.drools.compiler");
+  assertEquals(0,kbase.getKnowledgePackages().size());
+  Collection<KnowledgePackage> kpkgs=loadKnowledgePackages("test_DynamicRulesWithNotSubnetwork.drl");
+  kbase.addKnowledgePackages(kpkgs);
+  ksession.fireAllRules();
+  verify(alistener,times(2)).matchCreated(any(MatchCreatedEvent.class));
+}

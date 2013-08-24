@@ -1,37 +1,3 @@
 {
-  if (((ReteooRuleBase)((KnowledgeBaseImpl)(ksession.getKieBase())).getRuleBase()).getConfiguration().isPhreakEnabled()) {
-    return ksession;
-  }
-  ProtobufMarshaller marshaller=(ProtobufMarshaller)MarshallerFactory.newMarshaller(ksession.getKieBase(),(ObjectMarshallingStrategy[])ksession.getEnvironment().get(EnvironmentName.OBJECT_MARSHALLING_STRATEGIES));
-  long time=ksession.<SessionClock>getSessionClock().getCurrentTime();
-  ksession.getEnvironment().set(EnvironmentName.GLOBALS,ksession.getGlobals());
-  final byte[] b1;
-{
-    ByteArrayOutputStream bos=new ByteArrayOutputStream();
-    marshaller.marshall(bos,ksession,time);
-    b1=bos.toByteArray();
-    bos.close();
-  }
-  StatefulKnowledgeSession ksession2;
-{
-    ByteArrayInputStream bais=new ByteArrayInputStream(b1);
-    ksession2=marshaller.unmarshall(bais,new SessionConfiguration(),ksession.getEnvironment());
-    bais.close();
-  }
-  if (testRoundTrip) {
-    final byte[] b2;
-{
-      ByteArrayOutputStream bos=new ByteArrayOutputStream();
-      marshaller.marshall(bos,ksession2,time);
-      b2=bos.toByteArray();
-      bos.close();
-    }
-    if (!areByteArraysEqual(b1,b2)) {
-      throw new IllegalArgumentException("byte streams for serialisation test are not equal");
-    }
-  }
-  if (dispose) {
-    ksession.dispose();
-  }
-  return ksession2;
+  return getSerialisedStatefulKnowledgeSession(ksession,ksession.getKieBase(),dispose,testRoundTrip);
 }

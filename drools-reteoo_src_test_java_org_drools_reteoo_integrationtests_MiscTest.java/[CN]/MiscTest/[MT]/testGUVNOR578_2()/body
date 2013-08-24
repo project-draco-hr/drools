@@ -1,0 +1,38 @@
+{
+  MapBackedClassLoader loader=new MapBackedClassLoader(this.getClass().getClassLoader());
+  JarInputStream jis=new JarInputStream(this.getClass().getResourceAsStream("/primespoc.jar"));
+  JarEntry entry=null;
+  byte[] buf=new byte[1024];
+  int len=0;
+  while ((entry=jis.getNextJarEntry()) != null) {
+    if (!entry.isDirectory()) {
+      ByteArrayOutputStream out=new ByteArrayOutputStream();
+      while ((len=jis.read(buf)) >= 0) {
+        out.write(buf,0,len);
+      }
+      loader.addResource(entry.getName(),out.toByteArray());
+    }
+  }
+  List<JarInputStream> jarInputStreams=new ArrayList<JarInputStream>();
+  jarInputStreams.add(jis);
+  Properties properties=new Properties();
+  properties.setProperty(DefaultPackageNameOption.PROPERTY_NAME,"foo.bar");
+  PackageBuilder builder=new PackageBuilder(new PackageBuilderConfiguration(properties,loader));
+  PackageDescr pc=new PackageDescr("foo.bar");
+  builder.addPackage(pc);
+  String header="import fr.gouv.agriculture.dag.agorha.business.primes.SousPeriodePrimeAgent\n";
+  builder.addPackageFromDrl(new StringReader(header));
+  assertFalse(builder.hasErrors());
+  String passingRule="rule \"rule1\"\n" + "dialect \"mvel\"\n" + "when\n"+ "SousPeriodePrimeAgent( echelle == \"abc\" )"+ "then\n"+ "end\n";
+  String failingRule="rule \"rule2\"\n" + "dialect \"mvel\"\n" + "when\n"+ "SousPeriodePrimeAgent( quotiteRemuneration == 123 , echelle == \"abc\" )"+ "then\n"+ "end\n";
+  builder.addPackageFromDrl(new StringReader(passingRule));
+  if (builder.hasErrors()) {
+    logger.warn(builder.getErrors().getErrors()[0].getMessage());
+  }
+  assertFalse(builder.hasErrors());
+  builder.addPackageFromDrl(new StringReader(failingRule));
+  if (builder.hasErrors()) {
+    logger.warn(builder.getErrors().getErrors()[0].getMessage());
+  }
+  assertFalse(builder.hasErrors());
+}

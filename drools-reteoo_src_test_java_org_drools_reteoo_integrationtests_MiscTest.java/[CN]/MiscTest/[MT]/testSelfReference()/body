@@ -1,0 +1,20 @@
+{
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_SelfReference.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  final List results=new ArrayList();
+  ksession.setGlobal("results",results);
+  final Order order=new Order(10,"Bob");
+  final OrderItem item1=new OrderItem(order,1);
+  final OrderItem item2=new OrderItem(order,2);
+  final OrderItem anotherItem1=new OrderItem(null,3);
+  final OrderItem anotherItem2=new OrderItem(null,4);
+  ksession.insert(order);
+  ksession.insert(item1);
+  ksession.insert(item2);
+  ksession.insert(anotherItem1);
+  ksession.insert(anotherItem2);
+  ksession.fireAllRules();
+  assertEquals(2,results.size());
+  assertTrue(results.contains(item1));
+  assertTrue(results.contains(item2));
+}

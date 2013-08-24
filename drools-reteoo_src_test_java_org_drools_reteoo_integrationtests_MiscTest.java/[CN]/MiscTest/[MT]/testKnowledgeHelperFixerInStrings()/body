@@ -1,0 +1,24 @@
+{
+  String str="";
+  str+="package org.simple \n";
+  str+="global java.util.List list \n";
+  str+="rule xxx \n";
+  str+="  no-loop true ";
+  str+="when \n";
+  str+="  $fact : String() \n";
+  str+="then \n";
+  str+="  list.add(\"This is an update()\"); \n";
+  str+="  list.add(\"This is an update($fact)\"); \n";
+  str+="  update($fact); \n";
+  str+="end  \n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.insert("hello");
+  ksession.fireAllRules();
+  ksession.dispose();
+  assertEquals(2,list.size());
+  assertEquals("This is an update()",list.get(0));
+  assertEquals("This is an update($fact)",list.get(1));
+}

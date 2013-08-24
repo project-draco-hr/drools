@@ -1,0 +1,29 @@
+{
+  String rule="";
+  rule+="package org.drools.compiler;\n";
+  rule+="import java.util.ArrayList;\n";
+  rule+="import org.drools.compiler.Person;\n";
+  rule+="rule \"Test Rule\"\n";
+  rule+="when\n";
+  rule+="    $list: ArrayList()                                   \n";
+  rule+="    ArrayList()                                          \n";
+  rule+="            from collect(                                \n";
+  rule+="                  Person(                                \n";
+  rule+="                      (                                  \n";
+  rule+="                          pet memberOf $list             \n";
+  rule+="                      ) || (                             \n";
+  rule+="                          pet == null                    \n";
+  rule+="                      )                                  \n";
+  rule+="                  )                                      \n";
+  rule+="            )\n";
+  rule+="then\n";
+  rule+="  System.out.println(\"hello person\");\n";
+  rule+="end";
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(rule));
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+  Person toni=new Person("Toni",12);
+  toni.setPet(new Pet("Mittens"));
+  session.insert(new ArrayList());
+  session.insert(toni);
+  session.fireAllRules();
+}

@@ -1,0 +1,15 @@
+{
+  KnowledgeBuilderConfiguration kbconf=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration();
+  kbconf.setProperty(JavaDialectConfiguration.JAVA_COMPILER_PROPERTY,"JANINO");
+  KnowledgeBase kbase=loadKnowledgeBase(kbconf,"eval_rule_test.drl");
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.setGlobal("five",new Integer(5));
+  final List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  final Cheese stilton=new Cheese("stilton",5);
+  ksession.insert(stilton);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  assertEquals(stilton,((List)ksession.getGlobal("list")).get(0));
+}

@@ -1,0 +1,18 @@
+{
+  KnowledgeBase kbase=loadKnowledgeBase("../test_Serializable.drl");
+  KieSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.setGlobal("list",new ArrayList());
+  final Person bob=new Person("bob");
+  ksession.insert(bob);
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  assertEquals(1,ksession.getFactCount());
+  assertEquals(bob,ksession.getObjects().iterator().next());
+  int fired=ksession.fireAllRules();
+  assertEquals(3,fired);
+  List list=(List)ksession.getGlobal("list");
+  assertEquals(3,list.size());
+  assertEquals(new Integer(4),list.get(0));
+  Collection<? extends Object> facts=ksession.getObjects();
+  System.out.println(new ArrayList(facts));
+  assertEquals(2,facts.size());
+}

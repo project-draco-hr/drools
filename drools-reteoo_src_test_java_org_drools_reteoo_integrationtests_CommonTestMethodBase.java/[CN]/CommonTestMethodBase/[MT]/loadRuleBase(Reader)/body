@@ -1,0 +1,18 @@
+{
+  final DrlParser parser=new DrlParser(LanguageLevelOption.DRL5);
+  final PackageDescr packageDescr=parser.parse(reader);
+  if (parser.hasErrors()) {
+    fail("Error messages in parser, need to sort this our (or else collect error messages):\n" + parser.getErrors());
+  }
+  final PackageBuilder builder=new PackageBuilder();
+  builder.addPackage(packageDescr);
+  if (builder.hasErrors()) {
+    fail(builder.getErrors().toString());
+  }
+  org.drools.core.rule.Package pkg=builder.getPackage();
+  pkg=org.drools.compiler.integrationtests.SerializationHelper.serializeObject(pkg);
+  RuleBase ruleBase=getSinglethreadRuleBase();
+  ruleBase.addPackage(pkg);
+  ruleBase=org.drools.compiler.integrationtests.SerializationHelper.serializeObject(ruleBase);
+  return ruleBase;
+}

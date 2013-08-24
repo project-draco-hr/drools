@@ -1,0 +1,22 @@
+{
+  try {
+    ClassLoader loader1=new SubvertedClassLoader(new URL[]{getClass().getResource("/")},this.getClass().getClassLoader());
+    Class cheeseClass=loader1.loadClass("org.drools.compiler.Cheese");
+    KnowledgeBuilderConfiguration kbuilderConf=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,loader1);
+    KnowledgeBase kbase=loadKnowledgeBase(kbuilderConf,"test_Dynamic1.drl");
+    StatefulKnowledgeSession wm=createKnowledgeSession(kbase);
+    wm.insert(cheeseClass.newInstance());
+    wm.fireAllRules();
+    ClassLoader loader2=new SubvertedClassLoader(new URL[]{getClass().getResource("/")},this.getClass().getClassLoader());
+    cheeseClass=loader2.loadClass("org.drools.compiler.Cheese");
+    kbuilderConf=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration(null,loader2);
+    kbase=loadKnowledgeBase(kbuilderConf,"test_Dynamic1.drl");
+    wm=createKnowledgeSession(kbase);
+    wm.insert(cheeseClass.newInstance());
+    wm.fireAllRules();
+  }
+ catch (  ClassCastException cce) {
+    cce.printStackTrace();
+    fail("No ClassCastException should be raised.");
+  }
+}

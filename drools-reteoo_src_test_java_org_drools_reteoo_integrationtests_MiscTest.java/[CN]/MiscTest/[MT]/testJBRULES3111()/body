@@ -1,0 +1,17 @@
+{
+  String str="package org.drools.compiler\n" + "declare Bool123\n" + "    bool1 : boolean\n"+ "    bool2 : boolean\n"+ "    bool3 : boolean\n"+ "end\n"+ "declare Thing\n"+ "    name : String\n"+ "    bool123 : Bool123\n"+ "end\n"+ "rule kickOff\n"+ "when\n"+ "then\n"+ "    insert( new Thing( \"one\", new Bool123( true, false, false ) ) );\n"+ "    insert( new Thing( \"two\", new Bool123( false, false, false ) ) );\n"+ "    insert( new Thing( \"three\", new Bool123( false, false, false ) ) );\n"+ "end\n"+ "rule r1\n"+ "when\n"+ "    $t: Thing( bool123.bool1 == true )\n"+ "then\n"+ "end\n"+ "rule r2\n"+ "when\n"+ "    $t: Thing( bool123.bool2 == true )\n"+ "then\n"+ "end\n"+ "rule r3\n"+ "when\n"+ "    $t: Thing( bool123.bool3 == true )\n"+ "then\n"+ "end";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  org.kie.api.event.rule.AgendaEventListener ael=mock(org.kie.api.event.rule.AgendaEventListener.class);
+  ksession.addEventListener(ael);
+  int rulesFired=ksession.fireAllRules();
+  assertEquals(2,rulesFired);
+  ArgumentCaptor<org.kie.api.event.rule.AfterMatchFiredEvent> captor=ArgumentCaptor.forClass(org.kie.api.event.rule.AfterMatchFiredEvent.class);
+  verify(ael,times(2)).afterMatchFired(captor.capture());
+  List<org.kie.api.event.rule.AfterMatchFiredEvent> aafe=captor.getAllValues();
+  Assert.assertThat(aafe.get(0).getMatch().getRule().getName(),is("kickOff"));
+  Assert.assertThat(aafe.get(1).getMatch().getRule().getName(),is("r1"));
+  Object value=aafe.get(1).getMatch().getDeclarationValue("$t");
+  String name=(String)MVEL.eval("$t.name",Collections.singletonMap("$t",value));
+  Assert.assertThat(name,is("one"));
+}

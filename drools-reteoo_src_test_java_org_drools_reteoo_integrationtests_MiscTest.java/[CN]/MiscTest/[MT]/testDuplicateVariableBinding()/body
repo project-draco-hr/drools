@@ -1,0 +1,21 @@
+{
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_duplicateVariableBinding.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  final Map result=new HashMap();
+  ksession.setGlobal("results",result);
+  final Cheese stilton=new Cheese("stilton",20);
+  final Cheese brie=new Cheese("brie",10);
+  ksession.insert(stilton);
+  ksession.insert(brie);
+  ksession.fireAllRules();
+  assertEquals(5,result.size());
+  assertEquals(stilton.getPrice(),((Integer)result.get(stilton.getType())).intValue());
+  assertEquals(brie.getPrice(),((Integer)result.get(brie.getType())).intValue());
+  assertEquals(stilton.getPrice(),((Integer)result.get(stilton)).intValue());
+  assertEquals(brie.getPrice(),((Integer)result.get(brie)).intValue());
+  assertEquals(stilton.getPrice(),((Integer)result.get("test3" + stilton.getType())).intValue());
+  ksession.insert(new Person("bob",brie.getType()));
+  ksession.fireAllRules();
+  assertEquals(6,result.size());
+  assertEquals(brie.getPrice(),((Integer)result.get("test3" + brie.getType())).intValue());
+}

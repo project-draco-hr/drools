@@ -1,0 +1,34 @@
+{
+  KnowledgeBase kbase=loadKnowledgeBase("test_GeneratedBeans.drl");
+  kbase=SerializationHelper.serializeObject(kbase);
+  FactType cheeseFact=kbase.getFactType("org.drools.generatedbeans","Cheese");
+  Object cheese=cheeseFact.newInstance();
+  cheeseFact.set(cheese,"type","stilton");
+  assertEquals("stilton",cheeseFact.get(cheese,"type"));
+  FactType personType=kbase.getFactType("org.drools.generatedbeans","Person");
+  Object ps=personType.newInstance();
+  personType.set(ps,"age",42);
+  Map<String,Object> personMap=personType.getAsMap(ps);
+  assertEquals(42,personMap.get("age"));
+  personMap.put("age",43);
+  personType.setFromMap(ps,personMap);
+  assertEquals(43,personType.get(ps,"age"));
+  assertEquals("stilton",cheeseFact.getField("type").get(cheese));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  Object cg=cheeseFact.newInstance();
+  ksession.setGlobal("cg",cg);
+  List<Object> result=new ArrayList<Object>();
+  ksession.setGlobal("list",result);
+  ksession.insert(cheese);
+  ksession.fireAllRules();
+  assertEquals(1,result.size());
+  assertEquals(new Integer(5),result.get(0));
+  FactType personFact=kbase.getFactType("org.drools.generatedbeans","Person");
+  Object person=personFact.newInstance();
+  personFact.getField("likes").set(person,cheese);
+  personFact.getField("age").set(person,7);
+  ksession.insert(person);
+  ksession.fireAllRules();
+  assertEquals(2,result.size());
+  assertEquals(person,result.get(1));
+}

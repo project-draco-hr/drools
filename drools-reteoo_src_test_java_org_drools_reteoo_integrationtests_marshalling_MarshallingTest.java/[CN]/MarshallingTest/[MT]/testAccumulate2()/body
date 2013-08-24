@@ -1,0 +1,14 @@
+{
+  String str="package org.drools\n" + "\n" + "import org.drools.compiler.Message\n"+ "\n"+ "rule MyRule\n"+ "  when\n"+ "    Number( intValue >= 5 ) from accumulate ( m: Message( ), count( m ) )\n"+ "  then\n"+ "    System.out.println(\"Found messages\");\n"+ "end\n";
+  KnowledgeBase kBase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kBase.newStatefulKnowledgeSession();
+  ksession=getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.insert(new Message());
+  ksession.insert(new Message());
+  ksession.insert(new Message());
+  ksession.insert(new Message());
+  ksession.insert(new Message());
+  ksession.insert(new Message());
+  ((ReteWorkingMemory)((StatefulKnowledgeSessionImpl)ksession).session).initInitialFact();
+  assertEquals(1,((AgendaImpl)ksession.getAgenda()).getAgenda().agendaSize());
+}

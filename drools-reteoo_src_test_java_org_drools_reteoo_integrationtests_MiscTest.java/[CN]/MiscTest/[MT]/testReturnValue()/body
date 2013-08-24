@@ -1,0 +1,16 @@
+{
+  KnowledgeBase kbase=loadKnowledgeBase("returnvalue_rule_test.drl");
+  kbase=SerializationHelper.serializeObject(kbase);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.setGlobal("two",new Integer(2));
+  final List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  final PersonInterface peter=new Person("peter",null,12);
+  ksession.insert(peter);
+  final PersonInterface jane=new Person("jane",null,10);
+  ksession.insert(jane);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  assertEquals(jane,((List)ksession.getGlobal("list")).get(0));
+  assertEquals(peter,((List)ksession.getGlobal("list")).get(1));
+}

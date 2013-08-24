@@ -1,0 +1,32 @@
+{
+  String str="package org.domain.test \n" + "import " + getClass().getCanonicalName() + ".*\n"+ "import java.util.List\n"+ "global java.util.List list\n"+ "declare A\n"+ " @role( event )\n"+ " @expires( 10m )\n"+ "end\n"+ "declare B\n"+ ""+ " @role( event )\n"+ " @expires( 10m )\n"+ "end\n"+ ""+ "rule a1\n"+ "when\n"+ "   $l : List() from collect( A()  over window:length(3) from entry-point 'a-ep') \n"+ "then\n"+ "   list.add( $l );"+ "end\n";
+  KieBaseConfiguration conf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  conf.setOption(EventProcessingOption.STREAM);
+  final KnowledgeBase kbase=loadKnowledgeBaseFromString(conf,str);
+  KieSessionConfiguration ksconf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  ksconf.setOption(ClockTypeOption.get("pseudo"));
+  ksconf.setOption(TimerJobFactoryOption.get("trackable"));
+  KieSession ksession=createKnowledgeSession(kbase,ksconf);
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  EntryPoint aep=ksession.getEntryPoint("a-ep");
+  aep.insert(new A());
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  aep=ksession.getEntryPoint("a-ep");
+  aep.insert(new A());
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  list.clear();
+  ksession.fireAllRules();
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  assertEquals(2,((List)list.get(0)).size());
+  aep=ksession.getEntryPoint("a-ep");
+  aep.insert(new A());
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  aep=ksession.getEntryPoint("a-ep");
+  aep.insert(new A());
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  list.clear();
+  ksession.fireAllRules();
+  ksession=marsallStatefulKnowledgeSession(ksession);
+  assertEquals(3,((List)list.get(0)).size());
+}

@@ -1,0 +1,23 @@
+{
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_RuntimeTypeCoercion.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  final List list=new ArrayList();
+  ksession.setGlobal("results",list);
+  final PolymorphicFact fact=new PolymorphicFact(new Integer(10));
+  final org.kie.api.runtime.rule.FactHandle handle=ksession.insert(fact);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  assertEquals(fact.getData(),list.get(0));
+  fact.setData("10");
+  ksession.update(handle,fact);
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+  assertEquals(fact.getData(),list.get(1));
+  try {
+    fact.setData(new Boolean(true));
+    ksession.update(handle,fact);
+    assertEquals(2,list.size());
+  }
+ catch (  ClassCastException cce) {
+  }
+}

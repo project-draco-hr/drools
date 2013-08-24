@@ -1,0 +1,34 @@
+{
+  KnowledgeBase kbase=loadKnowledgeBase(fileName);
+  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+  DataSet data=new DataSet();
+  data.results=new ArrayList<Object>();
+  session.setGlobal("results",data.results);
+  data.cheese=new Cheese[]{new Cheese("stilton",8,0),new Cheese("stilton",10,1),new Cheese("stilton",9,2),new Cheese("brie",11,3),new Cheese("brie",4,4),new Cheese("provolone",8,5)};
+  data.bob=new Person("Bob","stilton");
+  data.cheeseHandles=new FactHandle[data.cheese.length];
+  for (int i=0; i < data.cheese.length; i++) {
+    data.cheeseHandles[i]=session.insert(data.cheese[i]);
+  }
+  data.bobHandle=session.insert(data.bob);
+  session.fireAllRules();
+  assertEquals(1,data.results.size());
+  assertEquals(27,((Number)data.results.get(data.results.size() - 1)).intValue());
+  session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
+  updateReferences(session,data);
+  final int index=1;
+  data.cheese[index].setPrice(3);
+  session.update(data.cheeseHandles[index],data.cheese[index]);
+  int count=session.fireAllRules();
+  assertEquals(1,count);
+  assertEquals(2,data.results.size());
+  assertEquals(20,((Number)data.results.get(data.results.size() - 1)).intValue());
+  data.bob.setLikes("brie");
+  session.update(data.bobHandle,data.bob);
+  session.fireAllRules();
+  assertEquals(3,data.results.size());
+  assertEquals(15,((Number)data.results.get(data.results.size() - 1)).intValue());
+  session.retract(data.cheeseHandles[3]);
+  session.fireAllRules();
+  assertEquals(3,data.results.size());
+}

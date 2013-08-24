@@ -1,0 +1,31 @@
+{
+  KnowledgeBase kbase=loadKnowledgeBase("test_CollectDynamicRules1.drl");
+  kbase=SerializationHelper.serializeObject(kbase);
+  Environment env=EnvironmentFactory.newEnvironment();
+  env.set(EnvironmentName.OBJECT_MARSHALLING_STRATEGIES,new ObjectMarshallingStrategy[]{new IdentityPlaceholderResolverStrategy(ClassObjectMarshallingStrategyAcceptor.DEFAULT)});
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(null,env);
+  List<?> results=new ArrayList<Object>();
+  ksession.setGlobal("results",results);
+  final Cheese a=new Cheese("stilton",10);
+  final Cheese b=new Cheese("stilton",15);
+  final Cheese c=new Cheese("stilton",20);
+  ksession.insert(a);
+  ksession.insert(b);
+  ksession.insert(c);
+  Collection<KnowledgePackage> kpkgs=SerializationHelper.serializeObject(loadKnowledgePackages("test_DynamicNotNode.drl"));
+  kbase.addKnowledgePackages(kpkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,false);
+  results=(List)ksession.getGlobal("results");
+  ksession.fireAllRules();
+  assertEquals(0,results.size());
+  kbase.removeKnowledgePackage("org.drools.compiler");
+  ksession.retract(ksession.getFactHandle(b));
+  kpkgs=SerializationHelper.serializeObject(loadKnowledgePackages("test_DynamicNotNode.drl"));
+  kbase.addKnowledgePackages(kpkgs);
+  kbase=SerializationHelper.serializeObject(kbase);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,false);
+  results=(List<?>)ksession.getGlobal("results");
+  ksession.fireAllRules();
+  assertEquals(1,results.size());
+}

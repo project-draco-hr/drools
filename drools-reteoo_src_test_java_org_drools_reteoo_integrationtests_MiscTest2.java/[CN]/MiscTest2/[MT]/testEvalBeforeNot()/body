@@ -1,0 +1,15 @@
+{
+  String str="package org.drools.compiler.integration; \n" + "import " + A.class.getCanonicalName() + ";\n"+ "global java.util.List list;\n"+ "\n"+ "rule r1\n"+ "   salience 10\n"+ "   when\n"+ "      eval( list.size() == 0 || list.size() == 1 ) \n"+ "      not  A( )"+ "   then\n"+ "       list.add('xxx');\n"+ "end\n"+ "\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  assertEquals("xxx",list.get(0));
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,true);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  assertEquals("xxx",list.get(0));
+}

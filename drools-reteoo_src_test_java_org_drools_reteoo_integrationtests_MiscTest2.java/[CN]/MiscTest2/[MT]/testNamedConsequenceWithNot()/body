@@ -1,0 +1,11 @@
+{
+  List<String> firedRules=new ArrayList<String>();
+  String str="import " + Foo.class.getCanonicalName() + "\n"+ "import "+ Foo2.class.getCanonicalName()+ "\n"+ "global java.util.List fired;\n"+ "rule \"weird foo\"\n"+ "    when\n"+ "        $foo: Foo($x: x)\n"+ "        if( $foo.getX() != 1 ) break[needThis] \n"+ "        not( Foo(x == 2) ) \n"+ "        $foo2: Foo2(x == $x)\n"+ "    then\n"+ "        fired.add(\"We made it!\");\n"+ "    then[needThis]\n"+ "        modify($foo){\n"+ "            setX(1)\n"+ "        };\n"+ "end";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.setGlobal("fired",firedRules);
+  ksession.insert(new Foo());
+  ksession.insert(new Foo2(1));
+  ksession.fireAllRules();
+  assertEquals(1,firedRules.size());
+}

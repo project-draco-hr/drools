@@ -1,0 +1,19 @@
+{
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_memberOf.drl"));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  final List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  final Cheese stilton=new Cheese("stilton",12);
+  final Cheese muzzarela=new Cheese("muzzarela",10);
+  final Cheese brie=new Cheese("brie",15);
+  ksession.insert(stilton);
+  ksession.insert(muzzarela);
+  final Cheesery cheesery=new Cheesery();
+  cheesery.getCheeses().add(stilton.getType());
+  cheesery.getCheeses().add(brie.getType());
+  ksession.insert(cheesery);
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+  assertEquals(stilton,list.get(0));
+  assertEquals(muzzarela,list.get(1));
+}

@@ -1,0 +1,12 @@
+{
+  String ruleFileContent1="package org.drools.integrationtests;\n" + "function void myFunction() {\n" + "}\n"+ "declare MyDeclaredType\n"+ "  someProperty: boolean\n"+ "end";
+  String ruleFileContent2="package de.something;\n" + "import org.drools.integrationtests.*;\n" + "rule \"CheckMyDeclaredType\"\n"+ "  when\n"+ "    MyDeclaredType()\n"+ "  then\n"+ "    insertLogical(\"THIS-IS-MY-MARKER-STRING\");\n"+ "end";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(ruleFileContent1,ruleFileContent2);
+  StatefulKnowledgeSession knowledgeSession=createKnowledgeSession(kbase);
+  final FactType myDeclaredFactType=kbase.getFactType("org.drools.integrationtests","MyDeclaredType");
+  Object myDeclaredFactInstance=myDeclaredFactType.newInstance();
+  knowledgeSession.insert(myDeclaredFactInstance);
+  int rulesFired=knowledgeSession.fireAllRules();
+  assertEquals(1,rulesFired);
+  knowledgeSession.dispose();
+}
