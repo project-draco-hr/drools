@@ -5,9 +5,13 @@
   RightTupleMemory rtm=bm.getRightTupleMemory();
   ContextEntry[] contextEntry=bm.getContext();
   BetaConstraints constraints=accNode.getRawConstraints();
+  boolean leftTupleMemoryEnabled=accNode.isLeftTupleMemoryEnabled();
+  if (leftTupleMemoryEnabled && srcLeftTuples.insertSize() > 32 && ltm instanceof AbstractHashTable) {
+    ((AbstractHashTable)ltm).ensureCapacity(srcLeftTuples.insertSize());
+  }
   for (LeftTuple leftTuple=srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
-    boolean useLeftMemory=RuleNetworkEvaluator.useLeftMemory(accNode,leftTuple);
+    boolean useLeftMemory=leftTupleMemoryEnabled || RuleNetworkEvaluator.useLeftMemory(accNode,leftTuple);
     if (useLeftMemory) {
       ltm.add(leftTuple);
     }
