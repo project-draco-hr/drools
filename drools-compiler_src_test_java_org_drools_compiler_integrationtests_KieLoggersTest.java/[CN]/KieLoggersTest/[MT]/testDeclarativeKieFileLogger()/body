@@ -1,0 +1,24 @@
+{
+  String drl="package org.drools.integrationtests\n" + "import org.drools.compiler.Message;\n" + "rule \"Hello World\"\n"+ "    when\n"+ "        m : Message( myMessage : message )\n"+ "    then\n"+ "end";
+  String fileName="testKieFileLogger";
+  File file=new File(fileName + ".log");
+  if (file.exists()) {
+    file.delete();
+  }
+  KieServices ks=KieServices.Factory.get();
+  KieModuleModel kproj=ks.newKieModuleModel();
+  kproj.newKieBaseModel("KBase1").newKieSessionModel("KSession1").setFileLogger(fileName);
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.writeKModuleXML(kproj.toXML());
+  kfs.write("src/main/resources/KBase1/rule.drl",drl);
+  KieModule kieModule=ks.newKieBuilder(kfs).buildAll().getKieModule();
+  KieContainer kieContainer=ks.newKieContainer(kieModule.getReleaseId());
+  KieSession ksession=kieContainer.newKieSession("KSession1");
+  ksession.insert(new Message("Hello World"));
+  int fired=ksession.fireAllRules();
+  assertEquals(1,fired);
+  ksession.dispose();
+  file=new File(fileName + ".log");
+  assertTrue(file.exists());
+  file.delete();
+}

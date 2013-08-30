@@ -1,0 +1,16 @@
+{
+  String drl="package org.drools.integrationtests\n" + "import org.drools.compiler.Message;\n" + "rule \"Hello World\"\n"+ "    when\n"+ "        m : Message( myMessage : message )\n"+ "    then\n"+ "end";
+  KieServices ks=KieServices.Factory.get();
+  KieModuleModel kproj=ks.newKieModuleModel();
+  kproj.newKieBaseModel("KBase1").newKieSessionModel("KSession1").setType(KieSessionModel.KieSessionType.STATELESS).setConsoleLogger("logger");
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.writeKModuleXML(kproj.toXML());
+  kfs.write("src/main/resources/KBase1/rule.drl",drl);
+  KieModule kieModule=ks.newKieBuilder(kfs).buildAll().getKieModule();
+  KieContainer kieContainer=ks.newKieContainer(kieModule.getReleaseId());
+  StatelessKieSession ksession=kieContainer.newStatelessKieSession("KSession1");
+  ksession.execute(new Message("Hello World"));
+  KieRuntimeLogger logger=ksession.getLogger();
+  assertNotNull(logger);
+  logger.close();
+}
