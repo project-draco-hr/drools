@@ -1,0 +1,13 @@
+{
+  String drlString="package org.jboss.brms\n" + "import org.drools.compiler.StockTick\n" + "declare StockTick\n"+ "    @role( event )\n"+ "    @expires( 4s )\n"+ "end\n"+ "rule \"TestEventReceived\"\n"+ "    when\n"+ "        $event : StockTick() over window:time(4s) from entry-point EventStream\n"+ "    then\n"+ "        // do something;\n"+ "end";
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  final Resource drl=ks.getResources().newByteArrayResource(drlString.getBytes()).setTargetPath("org/jboss/brms/lifecycle.drl");
+  kfs.write(drl);
+  KieModuleModel kmoduleModel=ks.newKieModuleModel();
+  kmoduleModel.newKieBaseModel("defaultKBase").addPackage("*").setEventProcessingMode(EventProcessingOption.STREAM).newKieSessionModel("defaultKieSession").setDefault(true).setClockType(ClockTypeOption.get("pseudo"));
+  kfs.writeKModuleXML(kmoduleModel.toXML());
+  KieBuilder builder=ks.newKieBuilder(kfs).buildAll();
+  assertEquals(0,builder.getResults().getMessages().size());
+  this.kieSession=ks.newKieContainer(ks.getRepository().getDefaultReleaseId()).newKieSession();
+}
