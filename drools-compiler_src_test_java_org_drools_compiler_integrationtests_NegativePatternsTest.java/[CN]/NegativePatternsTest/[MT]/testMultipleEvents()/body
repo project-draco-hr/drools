@@ -1,0 +1,30 @@
+{
+  EntryPoint entryPoint=ksession.getEntryPoint("EventStream");
+  int count=0;
+  for (; count < LOOPS / 2; ) {
+    entryPoint.insert(new TestEvent(count,"EventA"));
+    ksession.fireAllRules();
+    count++;
+    advanceTime(SHORT_SLEEP_TIME);
+    ksession.fireAllRules();
+  }
+  assertEquals(count,firedRulesListener.ruleFiredCount("MultipleEvents"));
+  entryPoint.insert(new TestEvent(count,"EventA"));
+  FactHandle handle=entryPoint.insert(new TestEvent(-1,"EventB"));
+  advanceTime(SHORT_SLEEP_TIME);
+  ksession.fireAllRules();
+  entryPoint.delete(handle);
+  ksession.fireAllRules();
+  count++;
+  advanceTime(SHORT_SLEEP_TIME);
+  ksession.fireAllRules();
+  for (; count < LOOPS; ) {
+    entryPoint.insert(new TestEvent(count,"EventA"));
+    ksession.fireAllRules();
+    count++;
+    advanceTime(SHORT_SLEEP_TIME);
+    ksession.fireAllRules();
+  }
+  ksession.fireAllRules();
+  assertEquals(count,firedRulesListener.ruleFiredCount("MultipleEvents"));
+}

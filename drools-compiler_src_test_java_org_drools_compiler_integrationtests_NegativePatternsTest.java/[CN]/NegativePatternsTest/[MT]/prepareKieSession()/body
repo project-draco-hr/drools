@@ -1,0 +1,14 @@
+{
+  String drl="package org.drools.compiler.integrationtests\n" + "\n" + "import org.drools.compiler.integrationtests.NegativePatternsTest.TestEvent\n"+ "\n"+ "declare TestEvent\n"+ "    @role( event )\n"+ "    @expires( 22ms )\n"+ "end\n"+ "\n"+ "rule \"SingleAbsence\"\n"+ "    duration( 18ms )\n"+ "    when\n"+ "        not ( TestEvent ( ) from entry-point EventStream )\n"+ "    then\n"+ "        // consequence\n"+ "end\n"+ "\n"+ "rule \"SingleConstrained\"\n"+ "    duration( 18ms )\n"+ "    when\n"+ "        not ( TestEvent ( name == \"EventA\" ) from entry-point EventStream )\n"+ "    then\n"+ "        // consequence\n"+ "end\n"+ "\n"+ "rule \"MultipleEvents\"\n"+ "    duration( 18ms )\n"+ "    when\n"+ "        TestEvent ( name == \"EventA\" ) over window:time( 22ms ) from entry-point EventStream\n"+ "        not ( TestEvent ( name == \"EventB\" ) over window:time( 22ms )  from entry-point EventStream )\n"+ "    then\n"+ "        // consequence\n"+ "end\n"+ "\n"+ "rule \"MultipleEntryPoints\"\n"+ "    duration( 18ms )\n"+ "    when\n"+ "        not (\n"+ "            TestEvent( name == \"EventA\" ) from entry-point EventStream\n"+ "        )\n"+ "        not (\n"+ "            TestEvent( name == \"EventB\" ) from entry-point OtherStream\n"+ "        )\n"+ "    then\n"+ "        // consequence\n"+ "end\n";
+  KieServices ks=KieServices.Factory.get();
+  KieModuleModel kieModule=ks.newKieModuleModel();
+  KieBaseModel defaultBase=kieModule.newKieBaseModel("defaultKBase").setDefault(true).addPackage("*").setEventProcessingMode(EventProcessingOption.STREAM);
+  defaultBase.newKieSessionModel(DEFAULT_SESSION_NAME).setClockType(ClockTypeOption.get("pseudo")).setDefault(true);
+  KieFileSystem kfs=ks.newKieFileSystem().write("src/main/resources/r1.drl",drl);
+  kfs.writeKModuleXML(kieModule.toXML());
+  KieModule builtModule=ks.newKieBuilder(kfs).buildAll().getKieModule();
+  ks.getRepository().addKieModule(builtModule);
+  ksession=ks.newKieContainer(ks.getRepository().getDefaultReleaseId()).newKieSession(DEFAULT_SESSION_NAME);
+  firedRulesListener=new TrackingAgendaEventListener();
+  ksession.addEventListener(firedRulesListener);
+}
