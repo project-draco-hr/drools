@@ -1,0 +1,27 @@
+{
+  ExecutorService thread=Executors.newSingleThreadExecutor();
+  final Future fireUntilHaltResult=thread.submit(new Runnable(){
+    @Override public void run(){
+      ksession.fireUntilHalt();
+    }
+  }
+);
+  try {
+    final Date eventTime=new Date(clock.getCurrentTime());
+    for (int i=0; i < 205; i++) {
+      ksession.insert(new MetadataEvent(eventTime,0L));
+    }
+    ksession.insert("events_inserted");
+    Thread.sleep(1000);
+    clock.advanceTime(30,TimeUnit.SECONDS);
+    Thread.sleep(1000);
+    assertFalse("The result is unexpectedly empty",result.isEmpty());
+    assertEquals(205,(long)result.get(0));
+    assertEquals(0,(long)result.get(1));
+  }
+  finally {
+    ksession.halt();
+    fireUntilHaltResult.get(60000,TimeUnit.SECONDS);
+    thread.shutdown();
+  }
+}
