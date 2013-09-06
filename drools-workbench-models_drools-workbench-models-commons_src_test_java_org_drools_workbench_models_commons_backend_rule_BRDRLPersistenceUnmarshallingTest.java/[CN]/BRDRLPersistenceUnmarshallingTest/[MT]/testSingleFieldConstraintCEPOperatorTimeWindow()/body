@@ -1,0 +1,19 @@
+{
+  String drl="rule \"rule1\"\n" + "when\n" + "Event() over window:time (1d)\n"+ "then\n"+ "end";
+  RuleModel m=BRDRLPersistence.getInstance().unmarshal(drl);
+  assertNotNull(m);
+  assertEquals("rule1",m.name);
+  assertEquals(1,m.lhs.length);
+  IPattern p1=m.lhs[0];
+  assertTrue(p1 instanceof FactPattern);
+  FactPattern fp1=(FactPattern)p1;
+  assertEquals("Event",fp1.getFactType());
+  assertNull(fp1.getBoundName());
+  assertEquals(0,fp1.getNumberOfConstraints());
+  assertNotNull(fp1.getWindow());
+  CEPWindow window=fp1.getWindow();
+  assertEquals("over window:time",window.getOperator());
+  assertEquals(2,window.getParameters().size());
+  assertEquals("1d",window.getParameter("1"));
+  assertEquals("org.drools.workbench.models.commons.backend.rule.CEPWindowOperatorParameterDRLBuilder",window.getParameter("org.kie.guvnor.guided.server.util.BRDRLPersistence.operatorParameterGenerator"));
+}
