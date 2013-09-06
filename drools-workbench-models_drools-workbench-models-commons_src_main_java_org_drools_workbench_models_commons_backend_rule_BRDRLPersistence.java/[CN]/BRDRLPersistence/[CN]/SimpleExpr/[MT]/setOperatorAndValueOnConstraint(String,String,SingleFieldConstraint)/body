@@ -1,27 +1,24 @@
 {
-  if (operator != null) {
-    con.setOperator(operator);
-    String type=null;
-    boolean isAnd=false;
-    String[] splittedValue=new String[0];
-    if (value != null) {
-      isAnd=value.contains("&&");
-      splittedValue=isAnd ? value.split("\\&\\&") : value.split("\\|\\|");
-      type=setValueOnConstraint(operator,con,splittedValue[0].trim());
-    }
-    if (splittedValue.length > 1) {
-      ConnectiveConstraint[] connectiveConstraints=new ConnectiveConstraint[splittedValue.length - 1];
-      for (int i=0; i < connectiveConstraints.length; i++) {
-        String constraint=splittedValue[i + 1].trim();
-        String connectiveOperator=findOperator(constraint);
-        String connectiveValue=constraint.substring(connectiveOperator.length()).trim();
-        connectiveConstraints[i]=new ConnectiveConstraint();
-        connectiveConstraints[i].setOperator((isAnd ? "&& " : "|| ") + connectiveOperator);
-        setValueOnConstraint(operator,connectiveConstraints[i],connectiveValue);
-      }
-      con.setConnectives(connectiveConstraints);
-    }
-    return type;
+  con.setOperator(operator);
+  String type=null;
+  boolean isAnd=false;
+  String[] splittedValue=new String[0];
+  if (value != null) {
+    isAnd=value.contains("&&");
+    splittedValue=isAnd ? value.split("\\&\\&") : value.split("\\|\\|");
+    type=setValueOnConstraint(operator,con,splittedValue[0].trim());
   }
-  return null;
+  if (splittedValue.length > 1) {
+    ConnectiveConstraint[] connectiveConstraints=new ConnectiveConstraint[splittedValue.length - 1];
+    for (int i=0; i < connectiveConstraints.length; i++) {
+      String constraint=splittedValue[i + 1].trim();
+      String connectiveOperator=findOperator(constraint);
+      String connectiveValue=constraint.substring(connectiveOperator.length()).trim();
+      connectiveConstraints[i]=new ConnectiveConstraint();
+      connectiveConstraints[i].setOperator((isAnd ? "&& " : "|| ") + connectiveOperator);
+      setValueOnConstraint(operator,connectiveConstraints[i],connectiveValue);
+    }
+    con.setConnectives(connectiveConstraints);
+  }
+  return type;
 }
