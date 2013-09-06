@@ -1,0 +1,36 @@
+{
+  String drl="rule \"rule1\"\n" + "dialect \"mvel\"\n" + "when\n"+ "ParentType( this != null, this.parentChildField != null, this.parentChildField.childField == \"hello\" )\n"+ "then\n"+ "end";
+  RuleModel m=new RuleModel();
+  m.name="rule1";
+  CompositeFactPattern cfp=new CompositeFactPattern();
+  cfp.setType(CompositeFactPattern.COMPOSITE_TYPE_OR);
+  FactPattern fp1=new FactPattern();
+  fp1.setFactType("ParentType");
+  SingleFieldConstraint fp1_sfp1=new SingleFieldConstraint();
+  fp1_sfp1.setFactType("ParentType");
+  fp1_sfp1.setFieldName("this");
+  fp1_sfp1.setFieldType(DataType.TYPE_THIS);
+  fp1_sfp1.setOperator("!= null");
+  fp1_sfp1.setConstraintValueType(BaseSingleFieldConstraint.TYPE_UNDEFINED);
+  fp1.addConstraint(fp1_sfp1);
+  SingleFieldConstraint fp1_sfp2=new SingleFieldConstraint();
+  fp1_sfp2.setFactType("ParentType");
+  fp1_sfp2.setFieldName("parentChildField");
+  fp1_sfp2.setFieldType("ChildType");
+  fp1_sfp2.setOperator("!= null");
+  fp1_sfp2.setConstraintValueType(BaseSingleFieldConstraint.TYPE_UNDEFINED);
+  fp1.addConstraint(fp1_sfp2);
+  fp1_sfp2.setParent(fp1_sfp1);
+  SingleFieldConstraint fp1_sfp3=new SingleFieldConstraint();
+  fp1_sfp3.setFactType("ChildType");
+  fp1_sfp3.setFieldName("childField");
+  fp1_sfp3.setFieldType(DataType.TYPE_STRING);
+  fp1_sfp3.setOperator("==");
+  fp1_sfp3.setValue("hello");
+  fp1_sfp3.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  fp1.addConstraint(fp1_sfp3);
+  fp1_sfp3.setParent(fp1_sfp2);
+  m.addLhsItem(fp1);
+  String actualDrl=BRDRLPersistence.getInstance().marshal(m);
+  assertEqualsIgnoreWhitespace(drl,actualDrl);
+}
