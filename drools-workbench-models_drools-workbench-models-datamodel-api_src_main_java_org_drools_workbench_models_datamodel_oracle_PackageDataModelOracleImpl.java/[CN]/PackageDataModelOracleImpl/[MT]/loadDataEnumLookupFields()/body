@@ -1,0 +1,32 @@
+{
+  if (packageEnumLookupFields == null) {
+    packageEnumLookupFields=new HashMap<String,Object>();
+    final Set<String> keys=filteredEnumLists.keySet();
+    for (    String key : keys) {
+      if (key.indexOf('[') != -1) {
+        int ix=key.indexOf('[');
+        final String factField=key.substring(0,ix);
+        final String predicate=key.substring(ix + 1,key.indexOf(']'));
+        if (predicate.indexOf('=') > -1) {
+          final String[] bits=predicate.split(",");
+          final StringBuilder typeFieldBuilder=new StringBuilder();
+          for (int i=0; i < bits.length; i++) {
+            typeFieldBuilder.append(bits[i].substring(0,bits[i].indexOf('=')));
+            if (i != (bits.length - 1)) {
+              typeFieldBuilder.append(",");
+            }
+          }
+          packageEnumLookupFields.put(factField,typeFieldBuilder.toString());
+        }
+ else {
+          final String[] fields=predicate.split(",");
+          for (int i=0; i < fields.length; i++) {
+            fields[i]=fields[i].trim();
+          }
+          packageEnumLookupFields.put(factField,fields);
+        }
+      }
+    }
+  }
+  return packageEnumLookupFields;
+}

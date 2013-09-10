@@ -1,0 +1,55 @@
+{
+  final Map<String,Object> dataEnumLookupFields=loadDataEnumLookupFields();
+  if (!currentValueMap.isEmpty()) {
+    final Object _typeFields=dataEnumLookupFields.get(type + "#" + field);
+    if (_typeFields instanceof String) {
+      final String typeFields=(String)_typeFields;
+      final StringBuilder dataEnumListsKeyBuilder=new StringBuilder(type);
+      dataEnumListsKeyBuilder.append("#").append(field);
+      boolean addOpeninColumn=true;
+      final String[] splitTypeFields=typeFields.split(",");
+      for (int j=0; j < splitTypeFields.length; j++) {
+        final String typeField=splitTypeFields[j];
+        for (        Map.Entry<String,String> currentValueEntry : currentValueMap.entrySet()) {
+          final String fieldName=currentValueEntry.getKey();
+          final String fieldValue=currentValueEntry.getValue();
+          if (fieldName.trim().equals(typeField.trim())) {
+            if (addOpeninColumn) {
+              dataEnumListsKeyBuilder.append("[");
+              addOpeninColumn=false;
+            }
+            dataEnumListsKeyBuilder.append(typeField).append("=").append(fieldValue);
+            if (j != (splitTypeFields.length - 1)) {
+              dataEnumListsKeyBuilder.append(",");
+            }
+          }
+        }
+      }
+      if (!addOpeninColumn) {
+        dataEnumListsKeyBuilder.append("]");
+      }
+      final DropDownData data=DropDownData.create(filteredEnumLists.get(dataEnumListsKeyBuilder.toString()));
+      if (data != null) {
+        return data;
+      }
+    }
+ else     if (_typeFields != null) {
+      final String[] fieldsNeeded=(String[])_typeFields;
+      final String queryString=getQueryString(type,field,fieldsNeeded,filteredEnumLists);
+      final String[] valuePairs=new String[fieldsNeeded.length];
+      for (int i=0; i < fieldsNeeded.length; i++) {
+        for (        Map.Entry<String,String> currentValueEntry : currentValueMap.entrySet()) {
+          final String fieldName=currentValueEntry.getKey();
+          final String fieldValue=currentValueEntry.getValue();
+          if (fieldName.equals(fieldsNeeded[i])) {
+            valuePairs[i]=fieldsNeeded[i] + "=" + fieldValue;
+          }
+        }
+      }
+      if (valuePairs.length > 0 && valuePairs[0] != null) {
+        return DropDownData.create(queryString,valuePairs);
+      }
+    }
+  }
+  return DropDownData.create(getEnumValues(type,field));
+}
