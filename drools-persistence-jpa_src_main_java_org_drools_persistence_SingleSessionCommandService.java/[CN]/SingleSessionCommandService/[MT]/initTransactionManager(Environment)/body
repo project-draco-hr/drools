@@ -49,9 +49,14 @@ catch (      Exception e) {
     }
     env.set(EnvironmentName.PERSISTENCE_CONTEXT_MANAGER,this.jpm);
     env.set(EnvironmentName.TRANSACTION_MANAGER,this.txm);
-  }
-  Boolean lock=(Boolean)env.get(EnvironmentName.USE_PESSIMISTIC_LOCKING);
-  if (lock != null && lock) {
-    this.pessimisticLocking=true;
+    if (env.get(EnvironmentName.USE_SESSION_LOCKING) != null) {
+      Object useSessionLockObj=env.get(EnvironmentName.USE_SESSION_LOCKING);
+      if (useSessionLockObj instanceof String) {
+        this.doSessionLocking=Boolean.parseBoolean((String)useSessionLockObj);
+      }
+ else       if (useSessionLockObj instanceof Boolean) {
+        this.doSessionLocking=(Boolean)useSessionLockObj;
+      }
+    }
   }
 }
