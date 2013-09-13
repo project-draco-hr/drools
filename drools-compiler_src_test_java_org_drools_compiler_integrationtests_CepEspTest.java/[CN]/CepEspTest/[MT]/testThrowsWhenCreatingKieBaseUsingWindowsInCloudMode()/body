@@ -7,5 +7,11 @@
   KieFileSystem kfs=ks.newKieFileSystem().write("src/main/resources/r1.drl",drl);
   kfs.writeKModuleXML(kieModule.toXML());
   KieBuilder kieBuilder=ks.newKieBuilder(kfs).buildAll();
-  assertFalse("Should have raised a compilation error as you cannot use sliding window in cloud mode",kieBuilder.getResults().getMessages().isEmpty());
+  KieContainer kieContainer=ks.newKieContainer(ks.getRepository().getDefaultReleaseId());
+  try {
+    kieContainer.getKieBase("KBase");
+    fail("Should throw a RuntimeException because the CLOUD kbase is trying to use features only available in STREAM mode");
+  }
+ catch (  Exception e) {
+  }
 }

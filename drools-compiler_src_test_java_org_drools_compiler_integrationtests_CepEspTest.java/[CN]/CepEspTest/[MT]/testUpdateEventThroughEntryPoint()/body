@@ -2,6 +2,9 @@
   String drl="import org.drools.compiler.integrationtests.CepEspTest.TestEvent\n" + "\n" + "declare TestEvent\n"+ "    @role( event )\n"+ "    @expires( 4s )\n"+ "end\n"+ "\n"+ "rule \"TestEventReceived\"\n"+ "    no-loop\n"+ "    when\n"+ "        $event : TestEvent ( name != null ) over window:time( 4s ) from entry-point EventStream\n"+ "    then\n"+ "        // insert( new Message( $event.getValue().toString() ) );\n"+ "end\n";
   KieServices ks=KieServices.Factory.get();
   KieFileSystem kfs=ks.newKieFileSystem();
+  KieModuleModel kieModule=ks.newKieModuleModel();
+  kieModule.newKieBaseModel("KBase").setDefault(true).setEventProcessingMode(EventProcessingOption.STREAM).newKieSessionModel("KSession").setDefault(true);
+  kfs.writeKModuleXML(kieModule.toXML());
   kfs.write("src/main/resources/lifecycle.drl",drl);
   KieBuilder builder=ks.newKieBuilder(kfs).buildAll();
   assertEquals(0,builder.getResults().getMessages().size());
