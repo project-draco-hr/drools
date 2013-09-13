@@ -1,7 +1,8 @@
 {
   String drl="rule \"rule1\"\n" + "when\n" + "ParentType( this != null, this.parentChildField != null, this.parentChildField.childField == \"hello\" )\n"+ "then\n"+ "end";
-  addModelField("ParentType","parentChildField","ChildType","org.test.ChildType");
-  addModelField("ChildType","childField","String","java.lang.String");
+  addModelField("org.test.ParentType","parentChildField","ChildType","org.test.ChildType");
+  addModelField("org.test.ChildType","childField","String","java.lang.String");
+  when(dmo.getAllFactTypes()).thenReturn(new String[]{"org.test.ParentType","org.test.ChildType"});
   RuleModel m=BRDRLPersistence.getInstance().unmarshal(drl,dmo);
   assertNotNull(m);
   assertEquals("rule1",m.name);
@@ -24,6 +25,7 @@
   SingleFieldConstraint sfp1=(SingleFieldConstraint)fp.getConstraint(1);
   assertEquals("ParentType",sfp1.getFactType());
   assertEquals("parentChildField",sfp1.getFieldName());
+  assertEquals("org.test.ChildType",sfp1.getFieldType());
   assertEquals("!= null",sfp1.getOperator());
   assertNull(sfp1.getValue());
   assertEquals(BaseSingleFieldConstraint.TYPE_UNDEFINED,sfp1.getConstraintValueType());
@@ -31,6 +33,7 @@
   assertTrue(fp.getConstraint(2) instanceof SingleFieldConstraint);
   SingleFieldConstraint sfp2=(SingleFieldConstraint)fp.getConstraint(2);
   assertEquals("childField",sfp2.getFieldName());
+  assertEquals("java.lang.String",sfp2.getFieldType());
   assertEquals("==",sfp2.getOperator());
   assertEquals("hello",sfp2.getValue());
   assertEquals(BaseSingleFieldConstraint.TYPE_LITERAL,sfp2.getConstraintValueType());

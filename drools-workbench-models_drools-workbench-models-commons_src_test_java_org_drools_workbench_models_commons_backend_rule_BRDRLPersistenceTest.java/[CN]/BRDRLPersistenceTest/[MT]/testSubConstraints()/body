@@ -14,5 +14,14 @@
   p.addConstraint(con2);
   m.addLhsItem(p);
   String expected="rule \"test sub constraints\"" + "\tdialect \"mvel\"\n when " + "     Person(field1.field2 == variableHere)"+ " then "+ "end";
-  checkMarshallUnmarshall(expected,m);
+  PackageDataModelOracle dmo=mock(PackageDataModelOracle.class);
+  when(dmo.getModelFields()).thenReturn(new HashMap<String,ModelField[]>(){
+{
+      put("Person",new ModelField[]{new ModelField("field1","Field1",ModelField.FIELD_CLASS_TYPE.TYPE_DECLARATION_CLASS,ModelField.FIELD_ORIGIN.DECLARED,FieldAccessorsAndMutators.BOTH,"Field1")});
+      put("Field1",new ModelField[]{new ModelField("field2","Field2",ModelField.FIELD_CLASS_TYPE.TYPE_DECLARATION_CLASS,ModelField.FIELD_ORIGIN.DECLARED,FieldAccessorsAndMutators.BOTH,"Field2")});
+    }
+  }
+);
+  when(dmo.getAllFactTypes()).thenReturn(new String[]{"Person","Field1","Field2"});
+  checkMarshallUnmarshall(expected,m,dmo);
 }

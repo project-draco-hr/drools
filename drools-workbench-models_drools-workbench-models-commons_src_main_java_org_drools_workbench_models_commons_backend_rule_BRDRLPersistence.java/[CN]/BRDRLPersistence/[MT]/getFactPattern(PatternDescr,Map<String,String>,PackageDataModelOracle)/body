@@ -1,0 +1,26 @@
+{
+  String type=pattern.getObjectType();
+  FactPattern factPattern=new FactPattern(type);
+  if (pattern.getIdentifier() != null) {
+    String identifier=pattern.getIdentifier();
+    factPattern.setBoundName(identifier);
+    boundParams.put(identifier,type);
+  }
+  parseConstraint(factPattern,pattern.getConstraint(),boundParams,dmo);
+  for (  BehaviorDescr behavior : pattern.getBehaviors()) {
+    if (behavior.getText().equals("window")) {
+      CEPWindow window=new CEPWindow();
+      window.setOperator("over window:" + behavior.getSubType());
+      window.setParameter("org.kie.guvnor.guided.server.util.BRDRLPersistence.operatorParameterGenerator","org.drools.workbench.models.commons.backend.rule.CEPWindowOperatorParameterDRLBuilder");
+      List<String> params=behavior.getParameters();
+      if (params != null) {
+        int i=1;
+        for (        String param : params) {
+          window.setParameter("" + i++,param);
+        }
+      }
+      factPattern.setWindow(window);
+    }
+  }
+  return factPattern;
+}
