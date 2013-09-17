@@ -2,7 +2,6 @@
   if (!isBuilt() && kModuleModel != null) {
     trgMfs=new MemoryFileSystem();
     writePomAndKModule();
-    compileJavaClasses();
     addKBasesFilesToTrg();
     kModule=new MemoryKieModule(releaseId,kModuleModel,trgMfs);
     if (kieDependencies != null && !kieDependencies.isEmpty()) {
@@ -10,7 +9,12 @@
         kModule.addKieDependency((InternalKieModule)kieModule);
       }
     }
-    if (buildKieModule(kModule,results)) {
+    if (pomModel != null) {
+      kModule.setPomModel(pomModel);
+    }
+    KieModuleKieProject kProject=new KieModuleKieProject(kModule);
+    compileJavaClasses(kProject.getClassLoader());
+    if (buildKieProject(kModule,results,kProject)) {
       writeKieModuleMetaInfo(generateKieModuleMetaInfo());
     }
   }
