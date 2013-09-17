@@ -9,14 +9,23 @@
   List<String> javaFiles=new ArrayList<String>();
   for (  String fileName : srcMfs.getFileNames()) {
     if (fileName.endsWith(".java") && !classFiles.contains(fileName.substring(0,fileName.length() - ".java".length()))) {
-      javaFiles.add(fileName.replace(File.separatorChar,'/'));
+      fileName=fileName.replace(File.separatorChar,'/');
+      if (!fileName.startsWith(JAVA_ROOT)) {
+        results.addMessage(Level.WARNING,fileName,"Found Java file out of the Java source folder: \"" + fileName + "\"");
+      }
+ else       if (fileName.substring(JAVA_ROOT.length()).indexOf('/') < 0) {
+        results.addMessage(Level.ERROR,fileName,"A Java class must have a package: " + fileName.substring(JAVA_ROOT.length()) + " is not allowed");
+      }
+ else {
+        javaFiles.add(fileName);
+      }
     }
   }
   if (javaFiles.isEmpty()) {
     return;
   }
   String[] sourceFiles=javaFiles.toArray(new String[javaFiles.size()]);
-  EclipseJavaCompiler compiler=createCompiler("src/main/java/");
+  EclipseJavaCompiler compiler=createCompiler(JAVA_ROOT);
   CompilationResult res=compiler.compile(sourceFiles,srcMfs,trgMfs,classLoader);
   for (  CompilationProblem problem : res.getErrors()) {
     results.addMessage(problem);
