@@ -5,7 +5,15 @@
     return null;
   }
   if (versionRange.fixed) {
-    return artifactMap.get(new ComparableVersion(releaseId.getVersion()));
+    KieModule kieModule=artifactMap.get(new ComparableVersion(releaseId.getVersion()));
+    if (kieModule != null && releaseId.isSnapshot()) {
+      String oldSnapshotVersion=((ReleaseIdImpl)kieModule.getReleaseId()).getSnapshotVersion();
+      String currentSnapshotVersion=kieScanner.getArtifactVersion(releaseId);
+      if (oldSnapshotVersion != null && currentSnapshotVersion != null && new ComparableVersion(currentSnapshotVersion).compareTo(new ComparableVersion(oldSnapshotVersion)) > 0) {
+        return null;
+      }
+    }
+    return kieModule;
   }
   if (versionRange.upperBound == null) {
     return artifactMap.lastEntry().getValue();
