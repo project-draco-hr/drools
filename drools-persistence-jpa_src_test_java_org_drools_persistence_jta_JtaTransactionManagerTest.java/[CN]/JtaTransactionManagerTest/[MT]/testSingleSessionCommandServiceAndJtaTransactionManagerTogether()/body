@@ -2,10 +2,12 @@
   Environment env=createEnvironment(context);
   KnowledgeBase kbase=initializeKnowledgeBase(simpleRule);
   StatefulKnowledgeSession commandKSession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
+  commandKSession.getId();
   SingleSessionCommandService commandService=(SingleSessionCommandService)((CommandBasedStatefulKnowledgeSession)commandKSession).getCommandService();
   JpaPersistenceContextManager jpm=(JpaPersistenceContextManager)getValueOfField("jpm",commandService);
-  jpm.getApplicationScopedPersistenceContext();
-  EntityManager em=(EntityManager)getValueOfField("appScopedEntityManager",jpm);
+  Method csemMethod=JpaPersistenceContextManager.class.getDeclaredMethod("getInternalCommandScopedEntityManager");
+  csemMethod.setAccessible(true);
+  EntityManager em=(EntityManager)csemMethod.invoke(jpm);
   TransactionTestObject mainObject=new TransactionTestObject();
   mainObject.setName("mainCommand");
   TransactionTestObject subObject=new TransactionTestObject();

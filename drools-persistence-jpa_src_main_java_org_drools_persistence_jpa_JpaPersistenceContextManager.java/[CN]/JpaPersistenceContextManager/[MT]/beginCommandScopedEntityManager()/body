@@ -1,14 +1,24 @@
 {
-  EntityManager cmdScopedEntityManager=(EntityManager)env.get(EnvironmentName.CMD_SCOPED_ENTITY_MANAGER);
-  if (cmdScopedEntityManager == null || (this.cmdScopedEntityManager != null && !this.cmdScopedEntityManager.isOpen())) {
-    internalCmdScopedEntityManager=true;
-    this.cmdScopedEntityManager=this.emf.createEntityManager();
-    this.cmdScopedEntityManager.setFlushMode(FlushModeType.COMMIT);
-    this.env.set(EnvironmentName.CMD_SCOPED_ENTITY_MANAGER,this.cmdScopedEntityManager);
-    cmdScopedEntityManager=this.cmdScopedEntityManager;
+  EntityManager externalCmdScopedEntityManager=(EntityManager)this.env.get(EnvironmentName.CMD_SCOPED_ENTITY_MANAGER);
+  EntityManager internalCmdScopedEntityManager=getInternalCommandScopedEntityManager();
+  EntityManager cmdScopedEntityManager;
+  boolean openInternalCSEM=internalCmdScopedEntityManager != null && internalCmdScopedEntityManager.isOpen();
+  if (openInternalCSEM || (externalCmdScopedEntityManager != null && externalCmdScopedEntityManager.isOpen())) {
+    if (internalCmdScopedEntityManager != null) {
+      cmdScopedEntityManager=internalCmdScopedEntityManager;
+    }
+ else {
+      internalCmdScopedEntityManagerFlag=false;
+      cmdScopedEntityManager=externalCmdScopedEntityManager;
+      setInternalCommandScopedEntityManager(externalCmdScopedEntityManager);
+    }
   }
  else {
-    internalCmdScopedEntityManager=false;
+    internalCmdScopedEntityManagerFlag=true;
+    internalCmdScopedEntityManager=this.emf.createEntityManager();
+    setInternalCommandScopedEntityManager(internalCmdScopedEntityManager);
+    internalCmdScopedEntityManager.setFlushMode(FlushModeType.COMMIT);
+    cmdScopedEntityManager=internalCmdScopedEntityManager;
   }
   cmdScopedEntityManager.joinTransaction();
   appScopedEntityManager.joinTransaction();

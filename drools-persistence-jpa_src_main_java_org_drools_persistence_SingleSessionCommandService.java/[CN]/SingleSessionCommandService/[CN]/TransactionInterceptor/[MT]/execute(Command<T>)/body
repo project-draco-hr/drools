@@ -8,9 +8,6 @@
   boolean transactionOwner=false;
   try {
     transactionOwner=txm.begin();
-    if (!transactionOwner && doSessionLocking) {
-      lock.lock();
-    }
     persistenceContext.joinTransaction();
     initExistingKnowledgeSession(sessionInfo.getId(),marshallingHelper.getKbase(),marshallingHelper.getConf(),persistenceContext);
     jpm.beginCommandScopedEntityManager();
@@ -20,6 +17,7 @@
       result=ksession.execute(command);
     }
  else {
+      logger.trace("Executing " + command.getClass().getSimpleName());
       result=executeNext((GenericCommand<T>)command);
     }
     txm.commit(transactionOwner);

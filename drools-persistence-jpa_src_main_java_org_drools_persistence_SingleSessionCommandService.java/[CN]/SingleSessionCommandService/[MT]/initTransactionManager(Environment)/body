@@ -7,10 +7,10 @@
  else {
     if (tm != null && isSpringTransactionManager(tm.getClass())) {
       try {
+        logger.debug("Instantiating KieSpringTransactionManager");
         Class<?> cls=Class.forName("org.kie.spring.persistence.KieSpringTransactionManager");
         Constructor<?> con=cls.getConstructors()[0];
         this.txm=(TransactionManager)con.newInstance(tm);
-        logger.debug("Instantiating  KieSpringTransactionManager");
         cls=Class.forName("org.kie.spring.persistence.KieSpringJpaManager");
         con=cls.getConstructors()[0];
         this.jpm=(PersistenceContextManager)con.newInstance(new Object[]{this.env});
@@ -18,22 +18,22 @@
  catch (      Exception e) {
         logger.warn("Could not instantiate KieSpringTransactionManager. Trying with DroolsSpringTransactionManager.");
         try {
+          logger.debug("Instantiating DroolsSpringTransactionManager");
           Class<?> cls=Class.forName("org.drools.container.spring.beans.persistence.DroolsSpringTransactionManager");
           Constructor<?> con=cls.getConstructors()[0];
           this.txm=(TransactionManager)con.newInstance(tm);
-          logger.debug("Instantiating  DroolsSpringTransactionManager");
           cls=Class.forName("org.drools.container.spring.beans.persistence.DroolsSpringJpaManager");
           con=cls.getConstructors()[0];
           this.jpm=(PersistenceContextManager)con.newInstance(new Object[]{this.env});
         }
  catch (        Exception ex) {
           logger.warn("Could not instantiate DroolsSpringTransactionManager");
-          throw new RuntimeException("Could not instatiate org.kie.container.spring.beans.persistence.DroolsSpringTransactionManager",ex);
+          throw new RuntimeException("Could not instantiate org.kie.container.spring.beans.persistence.DroolsSpringTransactionManager",ex);
         }
       }
     }
  else {
-      logger.debug("Instantiating  JtaTransactionManager");
+      logger.debug("Instantiating JtaTransactionManager");
       this.txm=new JtaTransactionManager(env.get(EnvironmentName.TRANSACTION),env.get(EnvironmentName.TRANSACTION_SYNCHRONIZATION_REGISTRY),tm);
       try {
         Class<?> jpaPersistenceCtxMngrClass=Class.forName("org.jbpm.persistence.JpaProcessPersistenceContextManager");
@@ -49,14 +49,5 @@ catch (      Exception e) {
     }
     env.set(EnvironmentName.PERSISTENCE_CONTEXT_MANAGER,this.jpm);
     env.set(EnvironmentName.TRANSACTION_MANAGER,this.txm);
-    if (env.get(EnvironmentName.USE_SESSION_LOCKING) != null) {
-      Object useSessionLockObj=env.get(EnvironmentName.USE_SESSION_LOCKING);
-      if (useSessionLockObj instanceof String) {
-        this.doSessionLocking=Boolean.parseBoolean((String)useSessionLockObj);
-      }
- else       if (useSessionLockObj instanceof Boolean) {
-        this.doSessionLocking=(Boolean)useSessionLockObj;
-      }
-    }
   }
 }
