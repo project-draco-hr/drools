@@ -1,0 +1,17 @@
+{
+  CommandBasedStatefulKnowledgeSession ksession=createSession(-1,"agenda-groups.drl");
+  org.drools.core.spi.AgendaGroup[] groups=((AgendaImpl)stripSession(ksession).getAgenda()).getAgenda().getAgendaGroups();
+  assertEquals(1,groups.length);
+  assertEquals("MAIN",groups[0].getName());
+  int id=ksession.getId();
+  List<String> list=new ArrayList<String>();
+  list.add("Test");
+  ksession.insert(list);
+  ksession.execute(new ActivateAgendaGroupCommand("agenda-group"));
+  ksession.dispose();
+  ksession=createSession(id,"agenda-groups.drl");
+  groups=((AgendaImpl)stripSession(ksession).getAgenda()).getAgenda().getAgendaGroups();
+  assertEquals(2,groups.length);
+  assertEquals("MAIN",groups[0].getName());
+  assertEquals("agenda-group",groups[1].getName());
+}

@@ -1,0 +1,21 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  for (  String rule : rules) {
+    kbuilder.add(new ClassPathResource(rule),ResourceType.DRL);
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  Environment env=createEnvironment(context);
+  if (locking) {
+    env.set(EnvironmentName.USE_PESSIMISTIC_LOCKING,true);
+  }
+  if (id == -1) {
+    return (CommandBasedStatefulKnowledgeSession)JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
+  }
+ else {
+    return (CommandBasedStatefulKnowledgeSession)JPAKnowledgeService.loadStatefulKnowledgeSession(id,kbase,null,env);
+  }
+}
