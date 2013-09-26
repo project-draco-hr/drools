@@ -1,20 +1,35 @@
 {
-  this.halt.set(false);
-  if (log.isTraceEnabled()) {
-    log.trace("Starting fireUntilHalt");
-  }
-  while (continueFiring(-1)) {
-    boolean fired=fireNextItem(agendaFilter,0,-1) >= 0 || !((AbstractWorkingMemory)this.workingMemory).getActionQueue().isEmpty();
-    this.workingMemory.executeQueuedActions();
-    if (!fired) {
-      Thread.yield();
+  if (this.halt.compareAndSet(true,false)) {
+    fireUntilHalt=true;
+    try {
+      if (log.isTraceEnabled()) {
+        log.trace("Starting fireUntilHalt");
+      }
+      while (continueFiring(-1)) {
+        boolean fired=fireNextItem(agendaFilter,0,-1) > 0 || !((AbstractWorkingMemory)this.workingMemory).getActionQueue().isEmpty();
+        this.workingMemory.executeQueuedActions();
+        if (!fired) {
+synchronized (this.halt) {
+            if (!this.halt.get()) {
+              InternalAgendaGroup nextFocus=getNextFocus();
+              if (nextFocus == null || nextFocus.isEmpty()) {
+                try {
+                  this.halt.wait();
+                }
+ catch (                InterruptedException e) {
+                }
+              }
+            }
+          }
+        }
+      }
+      if (log.isTraceEnabled()) {
+        log.trace("Ending fireUntilHalt");
+      }
     }
- else {
-      this.workingMemory.executeQueuedActions();
+  finally {
+      fireUntilHalt=false;
+      this.halt.set(true);
     }
   }
-  if (log.isTraceEnabled()) {
-    log.trace("Ending fireUntilHalt");
-  }
-  fireUntilHalt=false;
 }

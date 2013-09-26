@@ -3,6 +3,16 @@
   final KieSession ksession=createKnowledgeSession(kbase);
   final List list=new ArrayList();
   ksession.setGlobal("list",list);
+  final AtomicBoolean fired=new AtomicBoolean(false);
+  ksession.addEventListener(new org.kie.api.event.rule.DefaultAgendaEventListener(){
+    @Override public void afterMatchFired(    AfterMatchFiredEvent event){
+synchronized (fired) {
+        fired.set(true);
+        fired.notifyAll();
+      }
+    }
+  }
+);
   new Thread(new Runnable(){
     public void run(){
       ksession.fireUntilHalt();
@@ -12,7 +22,11 @@
   ksession.insert("Test");
   assertEquals(0,list.size());
   ((AgendaImpl)ksession.getAgenda()).getAgenda().activateRuleFlowGroup("Group1");
-  Thread.sleep(1000);
+synchronized (fired) {
+    if (!fired.get()) {
+      fired.wait();
+    }
+  }
   assertEquals(1,list.size());
   ksession.halt();
 }

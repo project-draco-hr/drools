@@ -1,16 +1,22 @@
 {
   unstageActivations();
-  this.halt.set(false);
   int fireCount=0;
-  int returnedFireCount=0;
-  do {
-    returnedFireCount=fireNextItem(agendaFilter,fireCount,fireLimit);
-    fireCount+=returnedFireCount;
-    this.workingMemory.executeQueuedActions();
-  }
+  if (this.halt.compareAndSet(true,false)) {
+    try {
+      int returnedFireCount=0;
+      do {
+        returnedFireCount=fireNextItem(agendaFilter,fireCount,fireLimit);
+        fireCount+=returnedFireCount;
+        this.workingMemory.executeQueuedActions();
+      }
  while (continueFiring(0) && returnedFireCount != 0 && (fireLimit == -1 || (fireCount < fireLimit)));
-  if (this.focusStack.size() == 1 && getMainAgendaGroup().isEmpty()) {
-    getMainAgendaGroup().setActive(false);
+      if (this.focusStack.size() == 1 && getMainAgendaGroup().isEmpty()) {
+        getMainAgendaGroup().setActive(false);
+      }
+    }
+  finally {
+      this.halt.set(true);
+    }
   }
   return fireCount;
 }
