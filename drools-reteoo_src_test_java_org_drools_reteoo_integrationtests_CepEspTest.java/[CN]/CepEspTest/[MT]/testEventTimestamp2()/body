@@ -1,0 +1,32 @@
+{
+  String drl="\n" + "import org.drools.reteoo.integrationtests.CepEspTest.Event; \n" + "global java.util.List list; \n"+ "global org.drools.core.time.SessionPseudoClock clock; \n"+ ""+ "declare Event \n"+ " @role( event )\n"+ " @timestamp( time ) \n"+ " @expires( 10000000 ) \n"+ "end \n"+ ""+ ""+ "rule \"inform about E1\"\n"+ "when\n"+ " $event1 : Event( type == 1 )\n"+ " $event2: Event( type == 2 )\n"+ " not Event( type == 3, this after [0, 1000ms] $event1 ) \n"+ "then\n"+ " list.add( clock.getCurrentTime() ); \n "+ "end\n"+ "\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KieBaseConfiguration baseConfig=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  baseConfig.setOption(EventProcessingOption.STREAM);
+  baseConfig.setOption(RuleEngineOption.RETEOO);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(baseConfig);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  KieSessionConfiguration sessionConfig=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  sessionConfig.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession(sessionConfig,null);
+  ArrayList list=new ArrayList();
+  ksession.setGlobal("list",list);
+  SessionPseudoClock clock=(SessionPseudoClock)ksession.<SessionClock>getSessionClock();
+  ksession.setGlobal("clock",clock);
+  ksession.insert(new Event(1,0,clock.getCurrentTime()));
+  clock.advanceTime(600,TimeUnit.MILLISECONDS);
+  ksession.fireAllRules();
+  ksession.insert(new Event(2,0,clock.getCurrentTime()));
+  clock.advanceTime(600,TimeUnit.MILLISECONDS);
+  ksession.insert(new Event(3,0,clock.getCurrentTime()));
+  ksession.fireAllRules();
+  assertFalse(list.isEmpty());
+  assertEquals(1,list.size());
+  long time=(Long)list.get(0);
+  assertTrue(time >= 1000);
+  ksession.dispose();
+}
