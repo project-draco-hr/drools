@@ -7,7 +7,13 @@
   for (LeftTuple leftTuple=srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
     DefaultJobHandle jobHandle=(DefaultJobHandle)leftTuple.getObject();
-    timerService.removeJob(jobHandle);
+    LeftTupleList leftTuples=tm.getInsertOrUpdateLeftTuples();
+synchronized (leftTuples) {
+      timerService.removeJob(jobHandle);
+      if (leftTuple.getMemory() != null) {
+        leftTuples.remove(leftTuple);
+      }
+    }
     scheduleLeftTuple(timerNode,tm,pmem,sink,wm,timer,timerService,timestamp,calendarNames,calendars,leftTuple,trgLeftTuples,stagedLeftTuples);
     leftTuple.clearStaged();
     leftTuple=next;
