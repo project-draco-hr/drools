@@ -2,10 +2,10 @@
   int localFireCount=0;
   if (!tupleList.isEmpty()) {
     RuleTerminalNode rtn=(RuleTerminalNode)pmem.getNetworkNode();
-    int salience=ruleAgendaItem.getSalience();
-    if (isDeclarativeAgendaEnabled()) {
+    if (!fireExitedEarly && isDeclarativeAgendaEnabled()) {
       RuleAgendaItem nextRule=agenda.peekNextRule();
-      if (!isHighestSalience(nextRule,salience)) {
+      if (!isHighestSalience(nextRule,ruleAgendaItem.getSalience())) {
+        fireExitedEarly=true;
         return localFireCount;
       }
     }
@@ -35,7 +35,7 @@
       if (rtn.getLeftTupleSource() == null) {
         break;
       }
-      salience=ruleAgendaItem.getSalience();
+      int salience=ruleAgendaItem.getSalience();
       if (queue != null && !queue.isEmpty() && salience != queue.peek().getSalience()) {
         ruleAgendaItem.dequeue();
         ruleAgendaItem.setSalience(queue.peek().getSalience());
@@ -50,10 +50,11 @@
       wm.executeQueuedActions();
       if (tupleList.isEmpty() && !outerStack.isEmpty()) {
         StackEntry entry=outerStack.removeFirst();
-        this.networkEvaluator.evalStackEntry(entry,outerStack,outerStack,this,wm);
+        NETWORK_EVALUATOR.evalStackEntry(entry,outerStack,outerStack,this,wm);
       }
     }
   }
   removeRuleAgendaItemWhenEmpty(wm);
+  fireExitedEarly=false;
   return localFireCount;
 }
