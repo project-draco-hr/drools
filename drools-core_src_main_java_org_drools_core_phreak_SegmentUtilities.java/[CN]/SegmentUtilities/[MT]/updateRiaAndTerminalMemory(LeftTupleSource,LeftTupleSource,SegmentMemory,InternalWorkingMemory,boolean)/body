@@ -7,7 +7,7 @@
           createSegmentMemory((NotNode)sink,wm);
         }
       }
-      updateRiaAndTerminalMemory((LeftTupleSource)sink,originalLt,smem,wm);
+      updateRiaAndTerminalMemory((LeftTupleSource)sink,originalLt,smem,wm,fromPrototype);
     }
  else     if (sink.getType() == NodeTypeEnums.RightInputAdaterNode) {
       if (inSubNetwork((RightInputAdapterNode)sink,originalLt)) {
@@ -15,6 +15,14 @@
         PathMemory pmem=(PathMemory)riaMem.getRiaPathMemory();
         smem.getPathMemories().add(pmem);
         pmem.getSegmentMemories()[smem.getPos()]=smem;
+        if (fromPrototype) {
+          ObjectSink[] nodes=((RightInputAdapterNode)sink).getSinkPropagator().getSinks();
+          for (          ObjectSink node : nodes) {
+            if (NodeTypeEnums.isLeftTupleSource(node)) {
+              restoreSegmentFromPrototype(wm,(LeftTupleSource)node);
+            }
+          }
+        }
       }
     }
  else     if (NodeTypeEnums.isTerminalNode(sink)) {

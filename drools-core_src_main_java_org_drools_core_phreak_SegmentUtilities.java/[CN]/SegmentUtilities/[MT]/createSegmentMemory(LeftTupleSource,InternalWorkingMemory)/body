@@ -11,12 +11,8 @@
     tupleSource=tupleSource.getLeftTupleSource();
   }
   LeftTupleSource segmentRoot=tupleSource;
-  smem=((ReteooRuleBase)wm.getRuleBase()).getSegmentFromPrototype(wm,segmentRoot);
+  smem=restoreSegmentFromPrototype(wm,segmentRoot);
   if (smem != null) {
-    for (    NetworkNode node : smem.getNodesInSegment()) {
-      wm.getNodeMemory((MemoryFactory)node).setSegmentMemory(smem);
-    }
-    updateRiaAndTerminalMemory(segmentRoot,segmentRoot,smem,wm);
     return smem;
   }
   List<PathMemory> pmems=new ArrayList<PathMemory>();
@@ -69,6 +65,13 @@ tupleSource=(LeftTupleSource)sink;
 Memory memory=wm.getNodeMemory((MemoryFactory)sink);
 if (sink.getType() == NodeTypeEnums.RightInputAdaterNode) {
 smem.getNodeMemories().add(((RiaNodeMemory)memory).getRiaPathMemory());
+RightInputAdapterNode rian=(RightInputAdapterNode)sink;
+ObjectSink[] nodes=rian.getSinkPropagator().getSinks();
+for (ObjectSink node : nodes) {
+if (NodeTypeEnums.isLeftTupleSource(node)) {
+createSegmentMemory((LeftTupleSource)node,wm);
+}
+}
 }
  else if (NodeTypeEnums.isTerminalNode(sink)) {
 smem.getNodeMemories().add((PathMemory)memory);
@@ -99,7 +102,7 @@ smem.setPos(counter);
 if (smem.getRootNode().getType() != NodeTypeEnums.LeftInputAdapterNode && ((LeftTupleSource)smem.getRootNode()).getLeftTupleSource().getType() == NodeTypeEnums.LeftInputAdapterNode) {
 smem.setStagedTuples(new SynchronizedLeftTupleSets());
 }
-updateRiaAndTerminalMemory(tupleSource,tupleSource,smem,wm);
+updateRiaAndTerminalMemory(tupleSource,tupleSource,smem,wm,false);
 ((ReteooRuleBase)wm.getRuleBase()).registerSegmentPrototype(segmentRoot,smem);
 return smem;
 }

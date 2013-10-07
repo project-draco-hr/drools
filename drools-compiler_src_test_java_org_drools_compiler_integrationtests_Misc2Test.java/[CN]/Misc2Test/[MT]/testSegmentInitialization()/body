@@ -1,0 +1,8 @@
+{
+  String str="import " + Misc2Test.Resource.class.getCanonicalName() + "\n"+ "import "+ Misc2Test.ResourceRequirement.class.getCanonicalName()+ "\n"+ "import "+ Misc2Test.Allocation.class.getCanonicalName()+ "\n"+ "rule R"+ "    when\n"+ "        $resource : Resource($capacity : capacity)\n"+ "        $used : Number(intValue > $capacity) from accumulate(\n"+ "            ResourceRequirement(resource == $resource,\n"+ "                    $executionMode : executionMode)\n"+ "            and Allocation(executionMode == $executionMode),\n"+ "            sum($executionMode)\n"+ "        )\n"+ "    then\n"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.insert(new ResourceRequirement(new Resource(2),3));
+  ksession.insert(new Allocation(3));
+  ksession.fireAllRules();
+}
