@@ -1,0 +1,14 @@
+{
+  RuleModel m=new RuleModel();
+  m.name="boo";
+  FactPattern p=new FactPattern("Person");
+  p.addConstraint(new SingleFieldConstraint("field1"));
+  m.addLhsItem(p);
+  String actual=RuleModelDRLPersistenceImpl.getInstance().marshal(m);
+  String expected="rule \"boo\" \tdialect \"mvel\"\n when Person() then end";
+  checkMarshallUnmarshall(expected,m);
+  SingleFieldConstraint con=(SingleFieldConstraint)p.getConstraintList().getConstraint(0);
+  con.setFieldBinding("q");
+  expected="rule \"boo\" dialect \"mvel\" when Person(q : field1) then end";
+  checkMarshallUnmarshall(expected,m);
+}

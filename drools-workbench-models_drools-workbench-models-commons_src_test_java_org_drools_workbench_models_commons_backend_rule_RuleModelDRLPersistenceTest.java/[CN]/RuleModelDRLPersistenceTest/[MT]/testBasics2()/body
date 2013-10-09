@@ -1,0 +1,22 @@
+{
+  final RuleModelPersistence p=RuleModelDRLPersistenceImpl.getInstance();
+  final RuleModel m=new RuleModel();
+  m.addLhsItem(new FactPattern("Person"));
+  m.addLhsItem(new FactPattern("Accident"));
+  m.addAttribute(new RuleAttribute("no-loop","true"));
+  m.addRhsItem(new ActionInsertFact("Report"));
+  ActionGlobalCollectionAdd ag=new ActionGlobalCollectionAdd();
+  ag.setFactName("x");
+  ag.setGlobalName("g");
+  m.addRhsItem(ag);
+  m.name="my rule";
+  final String drl=p.marshal(m);
+  assertTrue(drl.indexOf("Person( )") > -1);
+  assertTrue(drl.indexOf("Accident( )") > -1);
+  assertTrue(drl.indexOf("no-loop true") > -1);
+  assertTrue(drl.indexOf("org.kie") == -1);
+  assertTrue(drl.indexOf("g.add( x );") > -1);
+  PackageDataModelOracle dmo=mock(PackageDataModelOracle.class);
+  RuleModel rm_=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,dmo);
+  assertEquals(2,rm_.rhs.length);
+}

@@ -1,0 +1,20 @@
+{
+  final RuleModel m=new RuleModel();
+  m.name="model";
+  final DSLSentence sen=new DSLSentence();
+  sen.setDefinition("A DSL phrase");
+  m.addLhsItem(sen);
+  final FactPattern fp1=new FactPattern("Data");
+  fp1.setBoundName("$d");
+  m.addLhsItem(fp1);
+  final CompositeFactPattern cp=new CompositeFactPattern(CompositeFactPattern.COMPOSITE_TYPE_NOT);
+  final FactPattern fp2=new FactPattern("Person");
+  final FromCompositeFactPattern ffp1=new FromCompositeFactPattern();
+  ffp1.setExpression(new ExpressionFormLine(new ExpressionVariable(fp1)));
+  ffp1.setFactPattern(fp2);
+  cp.addFactPattern(ffp1);
+  m.addLhsItem(cp);
+  final String actual=RuleModelDRLPersistenceImpl.getInstance().marshal(m);
+  final String expected="rule \"model\"\n" + "dialect \"mvel\"\n" + "when\n"+ "A DSL phrase\n"+ ">$d : Data( )\n"+ ">not ( Person( ) from $d\n"+ ")\n"+ "then\n"+ "end\n";
+  assertEqualsIgnoreWhitespace(expected,actual);
+}

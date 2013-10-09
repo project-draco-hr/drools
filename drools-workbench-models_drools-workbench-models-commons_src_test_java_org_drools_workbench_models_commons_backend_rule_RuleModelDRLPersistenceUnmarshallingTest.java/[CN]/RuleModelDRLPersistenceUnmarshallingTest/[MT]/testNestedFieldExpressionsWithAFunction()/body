@@ -1,0 +1,38 @@
+{
+  String drl="rule rule1\n" + "when\n" + "Person( address.postalCode == myFunction() )\n"+ "then\n"+ "end";
+  addModelField("org.test.Person","address","Address","org.test.Address");
+  addModelField("org.test.Address","postalCode","Integer","java.lang.Integer");
+  RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,dmo);
+  assertNotNull(m);
+  assertEquals(1,m.lhs.length);
+  assertTrue(m.lhs[0] instanceof FactPattern);
+  assertTrue(((FactPattern)m.lhs[0]).getFieldConstraints()[0] instanceof SingleFieldConstraintEBLeftSide);
+  SingleFieldConstraintEBLeftSide ebLeftSide=(SingleFieldConstraintEBLeftSide)((FactPattern)m.lhs[0]).getFieldConstraints()[0];
+  assertEquals("postalCode",ebLeftSide.getFieldName());
+  assertEquals("java.lang.Integer",ebLeftSide.getFieldType());
+  assertEquals("==",ebLeftSide.getOperator());
+  assertEquals("myFunction()",ebLeftSide.getValue());
+  assertEquals(3,ebLeftSide.getExpressionLeftSide().getParts().size());
+  assertTrue(ebLeftSide.getExpressionLeftSide().getParts().get(0) instanceof ExpressionUnboundFact);
+  ExpressionUnboundFact expressionUnboundFact=((ExpressionUnboundFact)ebLeftSide.getExpressionLeftSide().getParts().get(0));
+  assertEquals("Person",expressionUnboundFact.getName());
+  assertEquals("org.test.Person",expressionUnboundFact.getClassType());
+  assertEquals("Person",expressionUnboundFact.getGenericType());
+  assertEquals(m.lhs[0],expressionUnboundFact.getFact());
+  assertEquals(null,expressionUnboundFact.getPrevious());
+  assertEquals(ebLeftSide.getExpressionLeftSide().getParts().get(1),expressionUnboundFact.getNext());
+  assertTrue(ebLeftSide.getExpressionLeftSide().getParts().get(1) instanceof ExpressionField);
+  ExpressionField expressionField1=(ExpressionField)ebLeftSide.getExpressionLeftSide().getParts().get(1);
+  assertEquals("address",expressionField1.getName());
+  assertEquals("org.test.Address",expressionField1.getClassType());
+  assertEquals("Address",expressionField1.getGenericType());
+  assertEquals(ebLeftSide.getExpressionLeftSide().getParts().get(0),expressionField1.getPrevious());
+  assertEquals(ebLeftSide.getExpressionLeftSide().getParts().get(2),expressionField1.getNext());
+  assertTrue(ebLeftSide.getExpressionLeftSide().getParts().get(2) instanceof ExpressionField);
+  ExpressionField expressionField2=(ExpressionField)ebLeftSide.getExpressionLeftSide().getParts().get(2);
+  assertEquals("postalCode",expressionField2.getName());
+  assertEquals("java.lang.Integer",expressionField2.getClassType());
+  assertEquals("Integer",expressionField2.getGenericType());
+  assertEquals(ebLeftSide.getExpressionLeftSide().getParts().get(1),expressionField2.getPrevious());
+  assertEquals(null,expressionField2.getNext());
+}

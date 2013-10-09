@@ -1,0 +1,32 @@
+{
+  String drl="rule \"rule1\"\n" + "dialect \"mvel\"\n" + "when\n"+ "( Person( age == 42 ) or Person( age == 43 ) )\n"+ "then\n"+ "end";
+  RuleModel m=new RuleModel();
+  m.name="rule1";
+  CompositeFactPattern cfp=new CompositeFactPattern();
+  cfp.setType(CompositeFactPattern.COMPOSITE_TYPE_OR);
+  FactPattern fp1=new FactPattern();
+  fp1.setFactType("Person");
+  SingleFieldConstraint cfp_sfp1=new SingleFieldConstraint();
+  cfp_sfp1.setFactType("Person");
+  cfp_sfp1.setFieldName("age");
+  cfp_sfp1.setOperator("==");
+  cfp_sfp1.setValue("42");
+  cfp_sfp1.setFieldType(DataType.TYPE_NUMERIC_INTEGER);
+  cfp_sfp1.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  fp1.addConstraint(cfp_sfp1);
+  cfp.addFactPattern(fp1);
+  FactPattern fp2=new FactPattern();
+  fp2.setFactType("Person");
+  SingleFieldConstraint cfp_sfp2=new SingleFieldConstraint();
+  cfp_sfp2.setFactType("Person");
+  cfp_sfp2.setFieldName("age");
+  cfp_sfp2.setOperator("==");
+  cfp_sfp2.setValue("43");
+  cfp_sfp2.setFieldType(DataType.TYPE_NUMERIC_INTEGER);
+  cfp_sfp2.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  fp2.addConstraint(cfp_sfp2);
+  cfp.addFactPattern(fp2);
+  m.addLhsItem(cfp);
+  String actualDrl=RuleModelDRLPersistenceImpl.getInstance().marshal(m);
+  assertEqualsIgnoreWhitespace(drl,actualDrl);
+}

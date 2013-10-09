@@ -1,0 +1,24 @@
+{
+  String drl="rule \"rule1\"\n" + "dialect \"mvel\"\n" + "when\n"+ "$e : Event()\n"+ "Event( this after[1d] $e )\n"+ "then\n"+ "end";
+  RuleModel m=new RuleModel();
+  m.name="rule1";
+  FactPattern fp1=new FactPattern();
+  fp1.setFactType("Event");
+  fp1.setBoundName("$e");
+  FactPattern fp2=new FactPattern();
+  fp2.setFactType("Event");
+  SingleFieldConstraint sfp=new SingleFieldConstraint();
+  sfp.setFactType("Event");
+  sfp.setFieldName("this");
+  sfp.setOperator("after");
+  sfp.setValue("$e");
+  sfp.setConstraintValueType(BaseSingleFieldConstraint.TYPE_VARIABLE);
+  sfp.getParameters().put("0","1d");
+  sfp.getParameters().put("org.drools.workbench.models.commons.backend.rule.visibleParameterSet","1");
+  sfp.getParameters().put("org.drools.workbench.models.commons.backend.rule.operatorParameterGenerator","org.drools.workbench.models.commons.backend.rule.CEPOperatorParameterDRLBuilder");
+  fp2.addConstraint(sfp);
+  m.addLhsItem(fp1);
+  m.addLhsItem(fp2);
+  String actualDrl=RuleModelDRLPersistenceImpl.getInstance().marshal(m);
+  assertEqualsIgnoreWhitespace(drl,actualDrl);
+}

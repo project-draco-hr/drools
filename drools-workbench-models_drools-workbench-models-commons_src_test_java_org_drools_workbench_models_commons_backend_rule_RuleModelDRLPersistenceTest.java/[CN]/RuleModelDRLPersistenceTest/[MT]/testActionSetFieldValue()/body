@@ -1,0 +1,19 @@
+{
+  final String drl="rule \"r0\"\n" + "dialect \"mvel\"" + "when\n"+ "$a : Applicant( )\n"+ "then\n"+ "$a.setName( \"Michael\" );\n"+ "end\n";
+  PackageDataModelOracle dmo=mock(PackageDataModelOracle.class);
+  final RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,dmo);
+  assertNotNull(m);
+  assertEquals(1,m.lhs.length);
+  assertTrue(m.lhs[0] instanceof FactPattern);
+  final FactPattern p=(FactPattern)m.lhs[0];
+  assertEquals("$a",p.getBoundName());
+  assertEquals("Applicant",p.getFactType());
+  assertEquals(1,m.rhs.length);
+  assertTrue(m.rhs[0] instanceof ActionSetField);
+  final ActionSetField a=(ActionSetField)m.rhs[0];
+  assertEquals("$a",a.getVariable());
+  assertEquals(1,a.getFieldValues().length);
+  final ActionFieldValue fv=a.getFieldValues()[0];
+  assertEquals("name",fv.getField());
+  assertEquals("Michael",fv.getValue());
+}

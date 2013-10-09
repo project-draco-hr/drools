@@ -1,0 +1,54 @@
+{
+  RuleModel m=new RuleModel();
+  m.name="and composite complex";
+  FactPattern p=new FactPattern("Goober");
+  m.addLhsItem(p);
+  CompositeFieldConstraint comp=new CompositeFieldConstraint();
+  comp.setCompositeJunctionType(CompositeFieldConstraint.COMPOSITE_TYPE_AND);
+  p.addConstraint(comp);
+  final SingleFieldConstraint sfc1=new SingleFieldConstraint();
+  sfc1.setFactType("Goober");
+  sfc1.setFieldName("gooField");
+  sfc1.setFieldType(DataType.TYPE_STRING);
+  sfc1.setConstraintValueType(SingleFieldConstraint.TYPE_LITERAL);
+  sfc1.setValue("gooValue");
+  sfc1.setOperator("==");
+  comp.addConstraint(sfc1);
+  final SingleFieldConstraint sfc2=new SingleFieldConstraint();
+  sfc2.setFactType("Goober");
+  sfc2.setFieldName("fooField");
+  sfc2.setFieldType(DataType.TYPE_OBJECT);
+  sfc2.setConstraintValueType(SingleFieldConstraint.TYPE_LITERAL);
+  sfc2.setOperator("!= null");
+  comp.addConstraint(sfc2);
+  final SingleFieldConstraint sfc3=new SingleFieldConstraint();
+  sfc1.setFactType("Bar");
+  sfc3.setFieldName("barField");
+  sfc3.setParent(sfc2);
+  sfc3.setFieldType(DataType.TYPE_STRING);
+  sfc3.setConstraintValueType(SingleFieldConstraint.TYPE_LITERAL);
+  sfc3.setValue("barValue");
+  sfc3.setOperator("==");
+  comp.addConstraint(sfc3);
+  final SingleFieldConstraint sfc4=new SingleFieldConstraint();
+  sfc4.setFactType("Goober");
+  sfc4.setFieldName("zooField");
+  sfc4.setFieldType(DataType.TYPE_STRING);
+  sfc4.setConstraintValueType(SingleFieldConstraint.TYPE_LITERAL);
+  sfc4.setValue("zooValue");
+  sfc4.setOperator("==");
+  p.addConstraint(sfc4);
+  ActionInsertFact ass=new ActionInsertFact("Whee");
+  m.addRhsItem(ass);
+  String actual=RuleModelDRLPersistenceImpl.getInstance().marshal(m);
+  String expected="rule \"and composite complex\"" + "dialect \"mvel\"\n" + "when\n"+ "Goober( gooField == \"gooValue\" && fooField != null && fooField.barField == \"barValue\", zooField == \"zooValue\" )\n"+ "then\n"+ "insert( new Whee() );\n"+ "end";
+  PackageDataModelOracle dmo=mock(PackageDataModelOracle.class);
+  when(dmo.getProjectModelFields()).thenReturn(new HashMap<String,ModelField[]>(){
+{
+      put("Goober",new ModelField[]{new ModelField("gooField","Goo",ModelField.FIELD_CLASS_TYPE.TYPE_DECLARATION_CLASS,ModelField.FIELD_ORIGIN.DECLARED,FieldAccessorsAndMutators.BOTH,"Goo"),new ModelField("fooField","Foo",ModelField.FIELD_CLASS_TYPE.TYPE_DECLARATION_CLASS,ModelField.FIELD_ORIGIN.DECLARED,FieldAccessorsAndMutators.BOTH,"Foo"),new ModelField("zooField","Zoo",ModelField.FIELD_CLASS_TYPE.TYPE_DECLARATION_CLASS,ModelField.FIELD_ORIGIN.DECLARED,FieldAccessorsAndMutators.BOTH,"Zoo")});
+      put("Foo",new ModelField[]{new ModelField("barField","Bar",ModelField.FIELD_CLASS_TYPE.TYPE_DECLARATION_CLASS,ModelField.FIELD_ORIGIN.DECLARED,FieldAccessorsAndMutators.BOTH,"Bar")});
+    }
+  }
+);
+  checkMarshallUnmarshall(expected,m,dmo);
+}
