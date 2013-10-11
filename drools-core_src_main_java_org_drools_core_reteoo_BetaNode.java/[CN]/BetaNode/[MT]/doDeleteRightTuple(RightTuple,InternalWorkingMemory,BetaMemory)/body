@@ -3,7 +3,9 @@
   boolean stagedDeleteWasEmpty=false;
   if (isStreamMode()) {
     stagedDeleteWasEmpty=memory.getSegmentMemory().getTupleQueue().isEmpty();
-    memory.getSegmentMemory().getTupleQueue().add(new RightTupleEntry(rightTuple,rightTuple.getPropagationContext(),memory));
+    PropagationContext pctx=rightTuple.getPropagationContext();
+    int propagationType=pctx.getType() == PropagationContext.MODIFICATION ? PropagationContext.DELETION : pctx.getType();
+    memory.getSegmentMemory().getTupleQueue().add(new RightTupleEntry(rightTuple,pctx,memory,propagationType));
     if (log.isTraceEnabled()) {
       log.trace("JoinNode delete queue={} size={} pctx={} lt={}",System.identityHashCode(memory.getSegmentMemory().getTupleQueue()),memory.getSegmentMemory().getTupleQueue().size(),PhreakPropagationContext.intEnumToString(rightTuple.getPropagationContext()),rightTuple);
     }

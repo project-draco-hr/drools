@@ -1,12 +1,13 @@
 {
   LeftTupleSets leftTuples=sm.getStagedLeftTuples();
-  leftTuple.setPropagationContext(context);
+  leftTuple.setPropagationContext(pctx);
   boolean stagedDeleteWasEmpty=false;
   if (((BaseNode)sm.getRootNode()).isStreamMode() && sm.getTupleQueue() != null) {
     stagedDeleteWasEmpty=sm.getTupleQueue().isEmpty();
-    sm.getTupleQueue().add(new LeftTupleEntry(leftTuple,context.compareTypeAndClone(PropagationContext.MODIFICATION,PropagationContext.DELETION),sm.getNodeMemories().getFirst()));
+    int propagationType=pctx.getType() == PropagationContext.MODIFICATION ? PropagationContext.DELETION : pctx.getType();
+    sm.getTupleQueue().add(new LeftTupleEntry(leftTuple,pctx,sm.getNodeMemories().getFirst(),propagationType));
     if (log.isTraceEnabled()) {
-      log.trace("LeftInputAdapterNode delete size={}  queue={} pctx={} lt={}",System.identityHashCode(sm.getTupleQueue()),sm.getTupleQueue().size(),PhreakPropagationContext.intEnumToString(context),leftTuple);
+      log.trace("LeftInputAdapterNode delete size={}  queue={} pctx={} lt={}",System.identityHashCode(sm.getTupleQueue()),sm.getTupleQueue().size(),PhreakPropagationContext.intEnumToString(pctx),leftTuple);
     }
   }
  else {
