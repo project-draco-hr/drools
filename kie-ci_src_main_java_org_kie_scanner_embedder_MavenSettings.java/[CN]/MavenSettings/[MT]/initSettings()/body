@@ -1,0 +1,41 @@
+{
+  SettingsBuilder settingsBuilder=new DefaultSettingsBuilderFactory().newInstance();
+  DefaultSettingsBuildingRequest request=new DefaultSettingsBuildingRequest();
+  String userHome=System.getProperty("user.home");
+  if (userHome != null) {
+    File userSettingsFile=new File(userHome + "/.m2/settings.xml");
+    if (userSettingsFile.exists()) {
+      request.setUserSettingsFile(userSettingsFile);
+    }
+  }
+ else {
+    log.warn("User home is not set");
+  }
+  String mavenHome=System.getenv("M2_HOME");
+  if (mavenHome != null) {
+    File globalSettingsFile=new File(mavenHome + "/conf/settings.xml");
+    if (globalSettingsFile.exists()) {
+      request.setGlobalSettingsFile(globalSettingsFile);
+    }
+  }
+ else {
+    log.warn("Environment variable M2_HOME is not set");
+  }
+  request.setSystemProperties(System.getProperties());
+  Settings settings=null;
+  try {
+    settings=settingsBuilder.build(request).getEffectiveSettings();
+  }
+ catch (  SettingsBuildingException e) {
+    new RuntimeException(e);
+  }
+  if (settings.getLocalRepository() == null) {
+    if (userHome != null) {
+      settings.setLocalRepository(userHome + "/.m2/repository");
+    }
+ else {
+      log.error("Cannot find maven local repository");
+    }
+  }
+  return settings;
+}
