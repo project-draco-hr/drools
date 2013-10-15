@@ -12,7 +12,12 @@
   try {
     Thread.currentThread().setContextClassLoader(this.plexusContainer.getContainerRealm());
     ProjectBuilder projectBuilder=lookup(ProjectBuilder.class);
-    return projectBuilder.build(modelSource,getProjectBuildingRequest()).getProject();
+    ProjectBuildingResult result=projectBuilder.build(modelSource,getProjectBuildingRequest());
+    if (result != null && result.getDependencyResolutionResult() != null && !result.getDependencyResolutionResult().getCollectionErrors().isEmpty()) {
+      Exception depedencyResolutionException=result.getDependencyResolutionResult().getCollectionErrors().get(0);
+      if (depedencyResolutionException != null)       throw new MavenEmbedderException(depedencyResolutionException.getMessage(),depedencyResolutionException);
+    }
+    return result.getProject();
   }
  catch (  ComponentLookupException e) {
     throw new MavenEmbedderException(e.getMessage(),e);
