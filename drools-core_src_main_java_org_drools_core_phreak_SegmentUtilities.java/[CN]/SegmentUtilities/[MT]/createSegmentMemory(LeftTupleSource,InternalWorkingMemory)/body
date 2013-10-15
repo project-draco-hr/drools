@@ -3,10 +3,6 @@
   if (smem != null) {
     return smem;
   }
-  boolean initRtn=false;
-  if (tupleSource.getType() == NodeTypeEnums.LeftInputAdapterNode) {
-    initRtn=true;
-  }
   while (tupleSource.getType() != NodeTypeEnums.LeftInputAdapterNode && SegmentUtilities.parentInSameSegment(tupleSource,null)) {
     tupleSource=tupleSource.getLeftTupleSource();
   }
@@ -15,20 +11,14 @@
   if (smem != null) {
     return smem;
   }
-  List<PathMemory> pmems=new ArrayList<PathMemory>();
-  if (initRtn) {
-    initialiseRtnMemory(segmentRoot,wm,pmems);
-  }
   smem=new SegmentMemory(segmentRoot);
   long nodePosMask=1;
   long allLinkedTestMask=0;
   boolean updateNodeBit=true;
   while (true) {
     if (tupleSource.isStreamMode() && smem.getTupleQueue() == null) {
-      if (pmems.isEmpty()) {
-        initialiseRtnMemory(segmentRoot,wm,pmems);
-      }
-      smem.setTupleQueue(pmems.get(0).getQueue());
+      Queue<TupleEntry> queue=initAndGetTupleQueue(tupleSource,wm);
+      smem.setTupleQueue(queue);
     }
     if (NodeTypeEnums.isBetaNode(tupleSource)) {
       allLinkedTestMask=processBetaNode(tupleSource,wm,smem,nodePosMask,allLinkedTestMask,updateNodeBit);
@@ -64,12 +54,13 @@ tupleSource=(LeftTupleSource)sink;
  else {
 Memory memory=wm.getNodeMemory((MemoryFactory)sink);
 if (sink.getType() == NodeTypeEnums.RightInputAdaterNode) {
-smem.getNodeMemories().add(((RiaNodeMemory)memory).getRiaPathMemory());
+PathMemory riaPmem=((RiaNodeMemory)memory).getRiaPathMemory();
+smem.getNodeMemories().add(riaPmem);
 RightInputAdapterNode rian=(RightInputAdapterNode)sink;
 ObjectSink[] nodes=rian.getSinkPropagator().getSinks();
 for (ObjectSink node : nodes) {
 if (NodeTypeEnums.isLeftTupleSource(node)) {
-createSegmentMemory((LeftTupleSource)node,wm);
+SegmentMemory parentSmem=createSegmentMemory((LeftTupleSource)node,wm);
 }
 }
 }

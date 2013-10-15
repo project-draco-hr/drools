@@ -1,0 +1,32 @@
+{
+  LeftTupleSink sink=null;
+  if (!(NodeTypeEnums.isTerminalNode(node) || NodeTypeEnums.RightInputAdaterNode == node.getType())) {
+    sink=((LeftTupleSource)node).getSinkPropagator().getLastLeftTupleSink();
+    while (sink.getType() != NodeTypeEnums.RightInputAdaterNode && !NodeTypeEnums.isTerminalNode(sink)) {
+      sink=((LeftTupleSource)sink).getSinkPropagator().getLastLeftTupleSink();
+    }
+  }
+ else {
+    sink=(LeftTupleSink)node;
+  }
+  Queue<TupleEntry> queue=null;
+  if (NodeTypeEnums.RightInputAdaterNode == sink.getType()) {
+    RightInputAdapterNode rian=(RightInputAdapterNode)sink;
+    RiaNodeMemory riaMem=(RiaNodeMemory)wm.getNodeMemory((MemoryFactory)sink);
+    RiaPathMemory pmem=riaMem.getRiaPathMemory();
+    queue=pmem.getTupleQueue();
+    if (queue == null) {
+      ObjectSink[] nodes=rian.getSinkPropagator().getSinks();
+      queue=initAndGetTupleQueue((LeftTupleSource)nodes[0],wm);
+    }
+  }
+ else   if (NodeTypeEnums.isTerminalNode(sink)) {
+    PathMemory pmem=(PathMemory)wm.getNodeMemory((MemoryFactory)sink);
+    queue=pmem.getTupleQueue();
+    if (queue == null) {
+      pmem.initQueue();
+      queue=pmem.getTupleQueue();
+    }
+  }
+  return queue;
+}
