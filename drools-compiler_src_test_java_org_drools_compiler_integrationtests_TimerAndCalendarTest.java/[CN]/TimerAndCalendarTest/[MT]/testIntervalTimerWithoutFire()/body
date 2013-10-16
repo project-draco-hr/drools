@@ -12,31 +12,45 @@
   conf.setOption(ClockTypeOption.get("pseudo"));
   KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
   KieSession ksession=createKnowledgeSession(kbase,conf);
-  final BlockingQueue<TimedRuleExecution> queue=new LinkedBlockingQueue<TimedRuleExecution>();
-  ((StatefulKnowledgeSessionImpl)ksession).session.setTimedExecutionsQueue(queue);
   final CyclicBarrier barrier=new CyclicBarrier(2);
-  final AtomicBoolean run=new AtomicBoolean(true);
-  Thread t=new Thread(new Runnable(){
-    public void run(){
+  AgendaEventListener agendaEventListener=new AgendaEventListener(){
+    public void matchCreated(    org.kie.api.event.rule.MatchCreatedEvent event){
+    }
+    public void matchCancelled(    org.kie.api.event.rule.MatchCancelledEvent event){
+    }
+    public void beforeMatchFired(    org.kie.api.event.rule.BeforeMatchFiredEvent event){
+    }
+    public void afterMatchFired(    org.kie.api.event.rule.AfterMatchFiredEvent event){
       try {
-        while (run.get()) {
-          queue.take().evauateAndFireRule();
-          try {
-            barrier.await();
-          }
- catch (          BrokenBarrierException e) {
-            throw new RuntimeException(e);
-          }
-        }
+        barrier.await();
       }
- catch (      InterruptedException e) {
+ catch (      Exception e) {
         throw new RuntimeException(e);
       }
     }
+    public void agendaGroupPopped(    org.kie.api.event.rule.AgendaGroupPoppedEvent event){
+    }
+    public void agendaGroupPushed(    org.kie.api.event.rule.AgendaGroupPushedEvent event){
+    }
+    public void beforeRuleFlowGroupActivated(    org.kie.api.event.rule.RuleFlowGroupActivatedEvent event){
+    }
+    public void afterRuleFlowGroupActivated(    org.kie.api.event.rule.RuleFlowGroupActivatedEvent event){
+    }
+    public void beforeRuleFlowGroupDeactivated(    org.kie.api.event.rule.RuleFlowGroupDeactivatedEvent event){
+    }
+    public void afterRuleFlowGroupDeactivated(    org.kie.api.event.rule.RuleFlowGroupDeactivatedEvent event){
+    }
+  }
+;
+  ksession.addEventListener(agendaEventListener);
+  final BlockingQueue<TimedRuleExecution> queue=new LinkedBlockingQueue<TimedRuleExecution>();
+  ksession.setTimedRuleExecutionFilter(new TimedRuleExecutionFilter(){
+    @Override public boolean accept(    Rule[] rule){
+      assertEquals("xxx",rule[0].getName());
+      return true;
+    }
   }
 );
-  t.setDaemon(true);
-  t.start();
   List list=new ArrayList();
   PseudoClockScheduler timeService=(PseudoClockScheduler)ksession.<SessionClock>getSessionClock();
   timeService.advanceTime(new Date().getTime(),TimeUnit.MILLISECONDS);
@@ -55,6 +69,4 @@
   barrier.await();
   barrier.reset();
   assertEquals(3,list.size());
-  run.set(false);
-  barrier.reset();
 }
