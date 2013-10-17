@@ -1,10 +1,16 @@
 {
+  if (workingMemory.getSessionConfiguration().isForceEagerActivation()) {
+    item.getRuleExecutor().evaluateNetwork(workingMemory);
+    return;
+  }
   if (item.isInList()) {
     return;
   }
   if (log.isTraceEnabled()) {
     log.trace("Added {} to eager evaluation list.",item.getRule().getName());
   }
-  eager.add(item);
+synchronized (eager) {
+    eager.add(item);
+  }
   notifyHalt();
 }

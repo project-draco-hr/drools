@@ -1,25 +1,11 @@
 {
-  String str="";
-  str+="package org.simple \n";
-  str+="global java.util.List list \n";
-  str+="rule xxx \n";
-  str+="  timer (int:30s 10s) ";
-  str+="when \n";
-  str+="then \n";
-  str+="  list.add(\"fired\"); \n";
-  str+="end  \n";
+  String str="package org.simple \n" + "global java.util.List list \n" + "rule xxx \n"+ "  timer (int:30s 10s) "+ "when \n"+ "then \n"+ "  list.add(\"fired\"); \n"+ "end  \n";
   KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
   conf.setOption(ClockTypeOption.get("pseudo"));
   KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
   KieSession ksession=createKnowledgeSession(kbase,conf);
   final CyclicBarrier barrier=new CyclicBarrier(2);
-  AgendaEventListener agendaEventListener=new AgendaEventListener(){
-    public void matchCreated(    org.kie.api.event.rule.MatchCreatedEvent event){
-    }
-    public void matchCancelled(    org.kie.api.event.rule.MatchCancelledEvent event){
-    }
-    public void beforeMatchFired(    org.kie.api.event.rule.BeforeMatchFiredEvent event){
-    }
+  AgendaEventListener agendaEventListener=new DefaultAgendaEventListener(){
     public void afterMatchFired(    org.kie.api.event.rule.AfterMatchFiredEvent event){
       try {
         barrier.await();
@@ -27,18 +13,6 @@
  catch (      Exception e) {
         throw new RuntimeException(e);
       }
-    }
-    public void agendaGroupPopped(    org.kie.api.event.rule.AgendaGroupPoppedEvent event){
-    }
-    public void agendaGroupPushed(    org.kie.api.event.rule.AgendaGroupPushedEvent event){
-    }
-    public void beforeRuleFlowGroupActivated(    org.kie.api.event.rule.RuleFlowGroupActivatedEvent event){
-    }
-    public void afterRuleFlowGroupActivated(    org.kie.api.event.rule.RuleFlowGroupActivatedEvent event){
-    }
-    public void beforeRuleFlowGroupDeactivated(    org.kie.api.event.rule.RuleFlowGroupDeactivatedEvent event){
-    }
-    public void afterRuleFlowGroupDeactivated(    org.kie.api.event.rule.RuleFlowGroupDeactivatedEvent event){
     }
   }
 ;

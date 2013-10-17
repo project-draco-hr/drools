@@ -1,0 +1,17 @@
+{
+  String str="package org.simple \n" + "rule xxx @Eager(true) \n" + "when \n"+ "  $s : String()\n"+ "then \n"+ "end  \n";
+  KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  conf.setOption(ForceEagerActivationOption.YES);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  KieSession ksession=createKnowledgeSession(kbase,conf);
+  final List list=new ArrayList();
+  AgendaEventListener agendaEventListener=new DefaultAgendaEventListener(){
+    public void matchCreated(    org.kie.api.event.rule.MatchCreatedEvent event){
+      list.add("activated");
+    }
+  }
+;
+  ksession.addEventListener(agendaEventListener);
+  ksession.insert("test");
+  assertEquals(1,list.size());
+}
