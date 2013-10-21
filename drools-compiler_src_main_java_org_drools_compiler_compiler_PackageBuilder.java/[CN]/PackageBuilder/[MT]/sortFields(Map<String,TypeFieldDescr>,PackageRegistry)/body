@@ -1,20 +1,36 @@
 {
-  PriorityQueue<FieldDefinition> queue=new PriorityQueue<FieldDefinition>();
-  int last=0;
+  PriorityQueue<FieldDefinition> queue=new PriorityQueue<FieldDefinition>(flds.size());
+  int maxDeclaredPos=0;
+  int curr=0;
+  BitSet occupiedPositions=new BitSet(flds.size());
   for (  TypeFieldDescr field : flds.values()) {
-    last=Math.max(last,field.getIndex());
+    int pos=field.getIndex();
+    if (pos >= 0) {
+      occupiedPositions.set(pos);
+    }
+    maxDeclaredPos=Math.max(maxDeclaredPos,pos);
   }
   for (  TypeFieldDescr field : flds.values()) {
-    if (field.getIndex() < 0) {
-      field.setIndex(++last);
-    }
     try {
       String typeName=field.getPattern().getObjectType();
       String fullFieldType=generatedTypes.contains(typeName) ? typeName : pkgRegistry.getTypeResolver().resolveType(typeName).getName();
       FieldDefinition fieldDef=new FieldDefinition(field.getFieldName(),fullFieldType);
       boolean isKey=field.getAnnotation(TypeDeclaration.ATTR_KEY) != null;
       fieldDef.setKey(isKey);
-      fieldDef.setIndex(field.getIndex());
+      fieldDef.setDeclIndex(field.getIndex());
+      if (field.getIndex() < 0) {
+        int freePos=occupiedPositions.nextClearBit(0);
+        if (freePos < maxDeclaredPos) {
+          occupiedPositions.set(freePos);
+        }
+ else {
+          freePos=maxDeclaredPos + 1;
+        }
+        fieldDef.setPriority(freePos * 256 + curr++);
+      }
+ else {
+        fieldDef.setPriority(field.getIndex() * 256 + curr++);
+      }
       fieldDef.setInherited(field.isInherited());
       fieldDef.setInitExpr(field.getInitExpr());
       for (      String annotationName : field.getAnnotationNames()) {
