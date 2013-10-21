@@ -1,7 +1,12 @@
 {
   String str="package org.simple \n" + "rule xxx @Eager(true) \n" + "when \n"+ "  $s : String()\n"+ "then \n"+ "end  \n"+ "rule yyy @Eager(true) \n"+ "when \n"+ "  $s : String()\n"+ "then \n"+ "end  \n";
   KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
-  conf.setOption(ForceEagerActivationOption.YES);
+  conf.setOption(new ForceEagerActivationOption.FILTERED(new ForceEagerActivationFilter(){
+    @Override public boolean accept(    Rule rule){
+      return rule.getName().equals("xxx");
+    }
+  }
+));
   KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
   KieSession ksession=createKnowledgeSession(kbase,conf);
   final List list=new ArrayList();
@@ -13,5 +18,5 @@
 ;
   ksession.addEventListener(agendaEventListener);
   ksession.insert("test");
-  assertEquals(2,list.size());
+  assertEquals(1,list.size());
 }

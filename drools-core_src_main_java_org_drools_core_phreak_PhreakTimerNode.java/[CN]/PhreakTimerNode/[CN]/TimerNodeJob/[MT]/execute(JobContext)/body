@@ -18,11 +18,11 @@ synchronized (leftTuples) {
   }
   timerJobCtx.getTimerNodeMemory().setNodeDirtyWithoutNotify();
   pmem.queueRuleAgendaItem(timerJobCtx.getWorkingMemory());
-  final TimedRuleExecutionFilter timedRuleExecutionFilter=timerJobCtx.getWorkingMemory().getTimedRuleExecutionFilter();
-  if (timedRuleExecutionFilter != null) {
+  final TimedRuleExecutionFilter filter=timerJobCtx.getWorkingMemory().getSessionConfiguration().getTimedRuleExecutionFilter();
+  if (filter != null) {
     ExecutorHolder.executor.execute(new Runnable(){
       @Override public void run(){
-        if (timedRuleExecutionFilter.accept(new Rule[]{pmem.getRule()})) {
+        if (filter.accept(new Rule[]{pmem.getRule()})) {
           new Executor(pmem,timerJobCtx.getWorkingMemory(),timerJobCtx.getSink(),timerJobCtx.getTimerNodeMemory()).evauateAndFireRule();
         }
       }

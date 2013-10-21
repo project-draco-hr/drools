@@ -2,6 +2,7 @@
   String str="package org.simple \n" + "global java.util.List list \n" + "rule xxx \n"+ "  timer (int:30s 10s) "+ "when \n"+ "then \n"+ "  list.add(\"fired\"); \n"+ "end  \n";
   KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
   conf.setOption(ClockTypeOption.get("pseudo"));
+  conf.setOption(TimedRuleExectionOption.YES);
   KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
   KieSession ksession=createKnowledgeSession(kbase,conf);
   final CyclicBarrier barrier=new CyclicBarrier(2);
@@ -17,14 +18,6 @@
   }
 ;
   ksession.addEventListener(agendaEventListener);
-  final BlockingQueue<TimedRuleExecution> queue=new LinkedBlockingQueue<TimedRuleExecution>();
-  ksession.setTimedRuleExecutionFilter(new TimedRuleExecutionFilter(){
-    @Override public boolean accept(    Rule[] rule){
-      assertEquals("xxx",rule[0].getName());
-      return true;
-    }
-  }
-);
   List list=new ArrayList();
   PseudoClockScheduler timeService=(PseudoClockScheduler)ksession.<SessionClock>getSessionClock();
   timeService.advanceTime(new Date().getTime(),TimeUnit.MILLISECONDS);
