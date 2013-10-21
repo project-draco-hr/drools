@@ -8,4 +8,20 @@
   Declaration declr=pattern.addDeclaration(fieldBindingDescr.getVariable());
   final InternalReadAccessor extractor=getFieldReadAccessor(context,fieldBindingDescr,pattern.getObjectType(),fieldBindingDescr.getExpression(),declr,true);
   declr.setReadAccessor(extractor);
+  if (extractor instanceof ClassFieldReader) {
+    ObjectType patternType=pattern.getObjectType();
+    if (patternType instanceof ClassObjectType) {
+      Class<?> patternClass=((ClassObjectType)patternType).getClassType();
+      TypeDeclaration typeDeclaration=context.getPackageBuilder().getTypeDeclaration(patternClass);
+      String fieldName=((ClassFieldReader)extractor).getFieldName();
+      if (typeDeclaration.getSettableProperties().contains(fieldName)) {
+        List<String> watchlist=pattern.getListenedProperties();
+        if (watchlist == null) {
+          watchlist=new ArrayList<String>();
+          pattern.setListenedProperties(watchlist);
+        }
+        watchlist.add(fieldName);
+      }
+    }
+  }
 }
