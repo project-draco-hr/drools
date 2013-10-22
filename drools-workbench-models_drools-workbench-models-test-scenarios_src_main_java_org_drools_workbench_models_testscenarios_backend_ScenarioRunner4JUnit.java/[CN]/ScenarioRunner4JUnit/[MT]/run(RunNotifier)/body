@@ -5,14 +5,19 @@
     EachTestNotifier eachNotifier=new EachTestNotifier(notifier,childDescription);
     try {
       eachNotifier.fireTestStarted();
-      ScenarioRunner runner=new ScenarioRunner(ksession,maxRuleFirings);
-      runner.run(scenario);
-      if (!scenario.wasSuccessful()) {
-        StringBuilder builder=new StringBuilder();
-        for (        String message : scenario.getFailureMessages()) {
-          builder.append(message).append("\n");
+      if (ksession == null) {
+        throw new NullKieSessionException("Unable to get a Session to run tests. Check the project for build errors.");
+      }
+ else {
+        final ScenarioRunner runner=new ScenarioRunner(ksession,maxRuleFirings);
+        runner.run(scenario);
+        if (!scenario.wasSuccessful()) {
+          StringBuilder builder=new StringBuilder();
+          for (          String message : scenario.getFailureMessages()) {
+            builder.append(message).append("\n");
+          }
+          eachNotifier.addFailedAssumption(new AssumptionViolatedException(builder.toString()));
         }
-        eachNotifier.addFailedAssumption(new AssumptionViolatedException(builder.toString()));
       }
     }
  catch (    Throwable t) {
