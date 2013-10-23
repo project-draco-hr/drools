@@ -1,0 +1,12 @@
+{
+  String str="import org.drools.reteoo.integrationtests.Misc2Test.SQLTimestamped;\n" + "" + "global java.util.List list;"+ "\n"+ "declare SQLTimestamped @role(event) @timestamp(start) end \n"+ ""+ "rule \"Init\" when\n"+ "   $s1 : SQLTimestamped() \n"+ "   $s2 : SQLTimestamped( this != $s1, this after $s1 ) \n"+ "then\n"+ "   list.add( \"ok\" ); \n"+ "end\n"+ "";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ArrayList list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.insert(new SQLTimestamped());
+  Thread.sleep(100);
+  ksession.insert(new SQLTimestamped());
+  ksession.fireAllRules();
+  assertEquals(Arrays.asList("ok"),list);
+}
