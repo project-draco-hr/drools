@@ -1,0 +1,39 @@
+{
+  String drl="package droolsfusioneval\n" + "" + "global java.util.List list; \n"+ ""+ "import org.drools.compiler.integrationtests.CepEspTest.ProbeEvent;\n"+ "import org.drools.compiler.integrationtests.CepEspTest.ProbeCounter;\n"+ "\n"+ "declare ProbeEvent\n"+ "    @role (event)\n"+ "    @expires(1ms)\n"+ "end\n"+ "\n"+ "rule \"Probe rule\"\n"+ "when\n"+ "    $pe : ProbeEvent () from entry-point ep01\n"+ "    $pc : ProbeCounter ()\n"+ "then\n"+ "   list.add( $pe.getValue() ); \n"+ "    $pc.addValue ();\n"+ "end";
+  KieBaseConfiguration kbconfig=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kbconfig.setOption(EventProcessingOption.STREAM);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kbconfig);
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    System.err.println(kbuilder.getErrors().toString());
+  }
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  final StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  session.setGlobal("list",list);
+  EntryPoint ep01=session.getEntryPoint("ep01");
+  new Thread(){
+    public void run(){
+      session.fireUntilHalt();
+    }
+  }
+.start();
+  int eventLimit=5000;
+  ProbeCounter pc=new ProbeCounter();
+  long myTotal=0;
+  try {
+    FactHandle pch=session.insert(pc);
+    for (int i=0; i < eventLimit; i++) {
+      ep01.insert(new ProbeEvent(i));
+      myTotal++;
+    }
+    Thread.sleep(2500);
+  }
+ catch (  Throwable t) {
+    fail(t.getMessage());
+  }
+  assertEquals(eventLimit,myTotal);
+  assertEquals(eventLimit,list.size());
+  assertEquals(0,session.getEntryPoint("ep01").getObjects().size());
+}
