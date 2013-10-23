@@ -3,12 +3,14 @@
     throw new RuntimeException("ExistOrTransformation expected 'OR' but instead found '" + parent.getChildren().get(0).getClass().getName() + "'");
   }
   final GroupElement or=(GroupElement)parent.getChildren().get(0);
-  parent.setType(GroupElement.OR);
+  parent.setType(GroupElement.NOT);
   parent.getChildren().clear();
+  final GroupElement and=GroupElementFactory.newAndInstance();
   for (  RuleConditionElement ruleConditionElement : or.getChildren()) {
-    final GroupElement newExists=GroupElementFactory.newExistsInstance();
-    newExists.addChild(ruleConditionElement);
-    parent.addChild(newExists);
+    final GroupElement newNot=GroupElementFactory.newNotInstance();
+    newNot.addChild(ruleConditionElement);
+    and.addChild(newNot);
   }
+  parent.addChild(and);
   parent.pack();
 }
