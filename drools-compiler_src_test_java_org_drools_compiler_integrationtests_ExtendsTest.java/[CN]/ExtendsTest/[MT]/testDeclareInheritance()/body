@@ -1,0 +1,14 @@
+{
+  String s1="package org.drools;\n" + "import org.drools.compiler.integrationtests.ExtendsTest.*;\n" + "\n"+ "declare A \n"+ " @role( event )"+ " @typesafe( false )\n"+ "end\n"+ ""+ "declare C @role( event ) @typesafe( false ) end \n"+ ""+ "rule R \n"+ "when "+ "   $x : C( this.x == 1 ) \n"+ "then\n"+ "   System.out.println( $x ); \n"+ "end\n"+ "";
+  KnowledgeBuilder kBuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kBuilder.add(new ByteArrayResource(s1.getBytes()),ResourceType.DRL);
+  if (kBuilder.hasErrors()) {
+    System.err.println(kBuilder.getErrors());
+  }
+  assertFalse(kBuilder.hasErrors());
+  KnowledgeBase knowledgeBase=KnowledgeBaseFactory.newKnowledgeBase();
+  knowledgeBase.addKnowledgePackages(kBuilder.getKnowledgePackages());
+  StatefulKnowledgeSession knowledgeSession=knowledgeBase.newStatefulKnowledgeSession();
+  FactHandle h=knowledgeSession.insert(new X());
+  assertTrue(((InternalFactHandle)h).isEvent());
+}
