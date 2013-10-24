@@ -1,9 +1,18 @@
 {
   PMMLCompiler compiler=getPMMLCompiler();
   if (compiler != null) {
-    this.resource=resource;
-    addPackage(pmmlModelToPackageDescr(compiler,resource));
-    this.resource=null;
+    if (compiler.getResults().isEmpty()) {
+      this.resource=resource;
+      PackageDescr descr=pmmlModelToPackageDescr(compiler,resource);
+      if (descr != null) {
+        addPackage(descr);
+      }
+      this.resource=null;
+    }
+ else {
+      this.results.addAll(compiler.getResults());
+    }
+    compiler.clearResults();
   }
  else {
     addPackageForExternalType(resource,type,configuration);
