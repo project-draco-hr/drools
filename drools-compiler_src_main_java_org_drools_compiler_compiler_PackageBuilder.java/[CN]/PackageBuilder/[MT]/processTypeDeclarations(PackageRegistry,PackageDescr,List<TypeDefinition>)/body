@@ -74,6 +74,9 @@
   for (  AbstractClassTypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
     registerGeneratedType(typeDescr);
   }
+  if (hasErrors()) {
+    return Collections.emptyList();
+  }
   for (  AbstractClassTypeDeclarationDescr typeDescr : sortedTypeDescriptors) {
     if (!typeDescr.getNamespace().equals(packageDescr.getNamespace())) {
       continue;
@@ -104,8 +107,13 @@
       PackageRegistry sup=pkgRegistryMap.get(typeDescr.getSuperTypeNamespace());
       if (sup != null) {
         parent=sup.getPackage().getTypeDeclaration(typeDescr.getSuperTypeName());
-        if (parent.getNature() == TypeDeclaration.Nature.DECLARATION && ruleBase != null) {
-          parent=ruleBase.getPackagesMap().get(typeDescr.getSuperTypeNamespace()).getTypeDeclaration(typeDescr.getSuperTypeName());
+        if (parent == null) {
+          this.results.add(new TypeDeclarationError(typeDescr,"Declared class " + typeDescr.getTypeName() + " can't extend class "+ typeDescr.getSuperTypeName()+ ", it should be declared"));
+        }
+ else {
+          if (parent.getNature() == TypeDeclaration.Nature.DECLARATION && ruleBase != null) {
+            parent=ruleBase.getPackagesMap().get(typeDescr.getSuperTypeNamespace()).getTypeDeclaration(typeDescr.getSuperTypeName());
+          }
         }
       }
     }
@@ -144,9 +152,11 @@
       className=type.getTypeName();
     }
     try {
-      generateDeclaredBean(typeDescr,type,pkgRegistry,unresolvedTypes);
-      Class<?> clazz=pkgRegistry.getTypeResolver().resolveType(typeDescr.getType().getFullName());
-      type.setTypeClass(clazz);
+      if (!hasErrors()) {
+        generateDeclaredBean(typeDescr,type,pkgRegistry,unresolvedTypes);
+        Class<?> clazz=pkgRegistry.getTypeResolver().resolveType(typeDescr.getType().getFullName());
+        type.setTypeClass(clazz);
+      }
     }
  catch (    final ClassNotFoundException e) {
       this.results.add(new TypeDeclarationError(typeDescr,"Class '" + className + "' not found for type declaration of '"+ type.getTypeName()+ "'"));
