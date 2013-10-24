@@ -1,0 +1,10 @@
+{
+  String str="package org.drools.test;\n" + "\n" + "import org.drools.compiler.integrationtests.PropertyReactivityTest.Klass3;\n"+ "\n"+ "global java.util.List list;\n"+ "\n"+ "rule \"Init\"\n"+ "when\n"+ "then\n"+ "  insert( new Klass3( \"XXX\", \"White\" ) );\n"+ "end\n"+ "rule \"Get Person name\"\n"+ "salience 1\n"+ "when\n"+ "  $x : Klass3( $fullName: fullName ) @watch( name, lastName)\n"+ "then\n"+ "  list.add( $fullName );\n"+ "end\n"+ "rule \"XXX -> Walter\"\n"+ "when\n"+ "  $x : Klass3( name == 'XXX' )\n"+ "then\n"+ "  modify($x){ setName('Walter') };\n"+ "end\n"+ "\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+  assertEquals(Arrays.asList("XXX White","Walter White"),list);
+}
