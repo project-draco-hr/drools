@@ -1,10 +1,14 @@
 {
-  String str="package org.drools\n" + "declare StockTick @role(event) end\n" + "rule R\n"+ " duration(1s)"+ "when\n"+ " accumulate( $st : StockTick() over window:time(2s)\n"+ "             from entry-point X,\n"+ "             $c : count(1) )"+ "then\n"+ "    //System.out.println( $c );\n"+ "end";
+  String str="package org.drools\n" + "global java.util.List list; \n" + "declare StockTick @role(event) end\n"+ ""+ ""+ "rule R\n"+ " duration(200ms)"+ "when\n"+ " accumulate( $st : StockTick() over window:time(400ms)\n"+ "             from entry-point X,\n"+ "             $c : count(1) )"+ "then\n"+ "   System.out.println( $c );\n"+ "   list.add( $c ); \n"+ "end \n";
+  final List<Exception> errors=new ArrayList<Exception>();
   KieBaseConfiguration kbconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
   kbconf.setOption(EventProcessingOption.STREAM);
+  kbconf.setOption(RuleEngineOption.PHREAK);
   KnowledgeBase kbase=loadKnowledgeBaseFromString(kbconf,str);
   final StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   final EntryPoint ep=ksession.getEntryPoint("X");
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
   Executor executor=Executors.newCachedThreadPool(new ThreadFactory(){
     public Thread newThread(    Runnable r){
       Thread t=new Thread(r);
@@ -13,7 +17,7 @@
     }
   }
 );
-  final int RUN_TIME=10000;
+  final int RUN_TIME=5000;
   final int THREAD_NR=2;
   CompletionService<Boolean> ecs=new ExecutorCompletionService<Boolean>(executor);
   ecs.submit(new Callable<Boolean>(){
@@ -23,6 +27,7 @@
         return true;
       }
  catch (      Exception e) {
+        errors.add(e);
         e.printStackTrace();
         return false;
       }
@@ -33,14 +38,17 @@
     ecs.submit(new Callable<Boolean>(){
       public Boolean call() throws Exception {
         try {
+          final String s=Thread.currentThread().getName();
           long endTS=System.currentTimeMillis() + RUN_TIME;
+          int j=0;
           while (System.currentTimeMillis() < endTS) {
-            ep.insert(new StockTick());
+            ep.insert(new StockTick(j++,s,0.0,0));
             Thread.sleep(1);
           }
           return true;
         }
  catch (        Exception e) {
+          errors.add(e);
           e.printStackTrace();
           return false;
         }
@@ -54,7 +62,7 @@
       success=ecs.take().get() && success;
     }
  catch (    Exception e) {
-      throw new RuntimeException(e);
+      errors.add(e);
     }
   }
   ksession.halt();
@@ -62,8 +70,14 @@
     success=ecs.take().get() && success;
   }
  catch (  Exception e) {
-    throw new RuntimeException(e);
+    errors.add(e);
   }
+  for (  Exception e : errors) {
+    e.printStackTrace();
+  }
+  assertTrue(errors.isEmpty());
   assertTrue(success);
+  System.out.print(list);
+  assertTrue(!list.isEmpty() && ((Number)list.get(list.size() - 1)).intValue() > 200);
   ksession.dispose();
 }
