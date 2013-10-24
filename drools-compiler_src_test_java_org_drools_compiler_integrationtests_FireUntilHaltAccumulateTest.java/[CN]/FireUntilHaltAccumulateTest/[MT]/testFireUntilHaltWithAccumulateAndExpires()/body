@@ -1,0 +1,19 @@
+{
+  final ExecutorService executor=Executors.newSingleThreadExecutor();
+  final Future sessionFuture=executor.submit(new Runnable(){
+    public void run(){
+      statefulSession.fireUntilHalt();
+    }
+  }
+);
+  try {
+    for (int iteration=0; iteration < 100; iteration++) {
+      this.populateSessionWithStocks();
+    }
+    Thread.sleep(2000);
+  }
+  finally {
+    statefulSession.halt();
+    sessionFuture.get();
+  }
+}

@@ -1,0 +1,15 @@
+{
+  final KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    System.err.println(kbuilder.getErrors().toString());
+  }
+  final KieBaseConfiguration config=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  config.setOption(EventProcessingOption.STREAM);
+  final KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(config);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  final KieSessionConfiguration sessionConfig=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  sessionConfig.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  this.statefulSession=kbase.newStatefulKnowledgeSession(sessionConfig,null);
+  this.stockFactory=new StockFactory(kbase);
+}
