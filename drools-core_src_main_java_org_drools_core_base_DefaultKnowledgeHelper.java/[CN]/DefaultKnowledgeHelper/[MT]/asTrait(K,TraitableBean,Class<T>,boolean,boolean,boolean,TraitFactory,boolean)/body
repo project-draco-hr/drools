@@ -1,0 +1,30 @@
+{
+  T thing;
+  if (needsProxy) {
+    thing=(T)inner;
+    inner.addTrait(trait.getName(),(Thing<K>)core);
+  }
+ else   if (hasTrait) {
+    thing=(T)inner.getTrait(trait.getName());
+  }
+ else {
+    thing=(T)builder.getProxy(inner,trait,logical);
+  }
+  if (needsUpdate) {
+    InternalFactHandle h=(InternalFactHandle)lookupFactHandle(core);
+    if (h == null) {
+      h=lookupHandleForWrapper(core);
+    }
+    if (h == null) {
+      throw new FactException("Update error: handle not found for object: " + core + ". Is it in the working memory?");
+    }
+    if (!h.isTraitOrTraitable()) {
+      throw new IllegalStateException("A traited working memory element is being used with a default fact handle. " + "Please verify that its class was declared as @Traitable : " + core.getClass().getName());
+    }
+    this.update(h,inner);
+  }
+  if (!inner.hasTrait(Thing.class.getName())) {
+    don(inner,Thing.class,false);
+  }
+  return thing;
+}

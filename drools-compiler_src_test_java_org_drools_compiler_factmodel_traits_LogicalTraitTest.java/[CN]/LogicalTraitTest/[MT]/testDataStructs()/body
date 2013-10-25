@@ -1,0 +1,37 @@
+{
+  String drl="package org.drools.test; \n" + "" + "global java.util.List list; \n"+ "global java.util.List list2; \n"+ ""+ "declare trait T \n"+ "  hardString : String = \"x\" \n"+ "  hardString : String = \"x\" \n"+ "  softString : String = \"x\" \n"+ "  hardFloat : float = 5.9f \n"+ "end \n"+ ""+ "declare X @Traitable( logical = true ) \n"+ "  id : int @key \n"+ "  hardString : String  = \"a\" \n"+ "  hardInt    : int  = 12 \n"+ "  hardDouble : double  = 42.0 \n"+ "  hardFloat : float  = 2.3f \n"+ "end \n"+ ""+ "rule Init \n"+ "when \n"+ "then \n"+ "  X x = new X( 1 ); \n"+ "  x.setHardFloat( 8.42f ); \n"+ "  insert( x ); \n"+ "      x.setHardDouble( -11.2 ); \n"+ "  X x2 = new X( 2, \"b\", 13, 44.0, 16.5f ); \n"+ "      x2.setHardInt( -1 ); \n"+ "  insert( x2 ); \n"+ "  don( x, T.class ); \n"+ "  don( x2, T.class ); \n"+ "end \n"+ "";
+  KnowledgeBase knowledgeBase=loadKnowledgeBaseFromString(drl);
+  TraitFactory.setMode(mode,knowledgeBase);
+  StatefulKnowledgeSession knowledgeSession=knowledgeBase.newStatefulKnowledgeSession();
+  knowledgeSession.fireAllRules();
+  FactType X=knowledgeBase.getFactType("org.drools.test","X");
+  for (  Object o : knowledgeSession.getObjects()) {
+    if (X.getFactClass().isInstance(o)) {
+switch ((Integer)X.get(o,"id")) {
+case 1:
+        assertEquals("a",X.get(o,"hardString"));
+      assertEquals(12,X.get(o,"hardInt"));
+    assertEquals(-11.2,X.get(o,"hardDouble"));
+  assertEquals(8.42f,X.get(o,"hardFloat"));
+break;
+case 2:
+assertEquals("b",X.get(o,"hardString"));
+assertEquals(-1,X.get(o,"hardInt"));
+assertEquals(44.0,X.get(o,"hardDouble"));
+assertEquals(16.5f,X.get(o,"hardFloat"));
+break;
+default :
+fail("Unexpected id ");
+}
+}
+System.out.println(o);
+}
+try {
+knowledgeSession=SerializationHelper.getSerialisedStatefulKnowledgeSession(knowledgeSession,true);
+}
+ catch (Exception e) {
+e.printStackTrace();
+fail(e.getMessage());
+}
+knowledgeSession.dispose();
+}

@@ -1,0 +1,27 @@
+{
+  KnowledgeBuilder kbuilderImpl=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilderImpl.add(ResourceFactory.newClassPathResource("org/drools/compiler/factmodel/traits/testTraitedAliasing.drl"),ResourceType.DRL);
+  if (kbuilderImpl.hasErrors()) {
+    fail(kbuilderImpl.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilderImpl.getKnowledgePackages());
+  TraitFactory.setMode(mode,kbase);
+  StatefulKnowledgeSession ks=kbase.newStatefulKnowledgeSession();
+  ArrayList list=new ArrayList();
+  ks.setGlobal("list",list);
+  ks.fireAllRules();
+  for (  Object o : ks.getObjects()) {
+    System.out.println(o);
+  }
+  try {
+    ks=SerializationHelper.getSerialisedStatefulKnowledgeSession(ks,true);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+  System.out.println(list);
+  assertFalse(list.contains(false));
+  assertEquals(8,list.size());
+}

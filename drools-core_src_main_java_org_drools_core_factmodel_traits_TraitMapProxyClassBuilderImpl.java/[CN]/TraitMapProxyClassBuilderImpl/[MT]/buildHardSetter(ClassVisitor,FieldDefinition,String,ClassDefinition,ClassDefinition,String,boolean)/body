@@ -1,0 +1,56 @@
+{
+  MethodVisitor mv=cw.visitMethod(protect ? ACC_PROTECTED : ACC_PUBLIC,setterName,"(" + Type.getDescriptor(field.getType()) + ")V",null,null);
+  mv.visitCode();
+  if (core.isFullTraiting()) {
+    FieldDefinition hardField=core.getFieldByAlias(field.resolveAlias());
+    if (!field.getType().isPrimitive() && !field.getTypeName().equals(hardField.getTypeName())) {
+      boolean isCoreTrait=hardField.getType().getAnnotation(Trait.class) != null;
+      boolean isTraitTrait=field.getType().getAnnotation(Trait.class) != null;
+      Label l0=new Label();
+      mv.visitVarInsn(ALOAD,1);
+      mv.visitJumpInsn(IFNULL,l0);
+      if (isCoreTrait && !isTraitTrait) {
+        mv.visitVarInsn(ALOAD,1);
+        mv.visitTypeInsn(CHECKCAST,Type.getInternalName(TraitableBean.class));
+        mv.visitLdcInsn(hardField.getTypeName());
+        mv.visitMethodInsn(INVOKEINTERFACE,Type.getInternalName(TraitableBean.class),"getTrait",Type.getMethodDescriptor(Type.getType(Thing.class),new Type[]{Type.getType(String.class)}));
+        mv.visitVarInsn(ASTORE,1);
+      }
+ else       if (!isCoreTrait && isTraitTrait) {
+        mv.visitVarInsn(ALOAD,1);
+        mv.visitTypeInsn(CHECKCAST,Type.getInternalName(TraitProxy.class));
+        mv.visitMethodInsn(INVOKEVIRTUAL,Type.getInternalName(TraitProxy.class),"getObject",Type.getMethodDescriptor(Type.getType(TraitableBean.class),new Type[]{}));
+        mv.visitVarInsn(ASTORE,1);
+      }
+ else       if (isCoreTrait && isTraitTrait) {
+        mv.visitVarInsn(ALOAD,1);
+        mv.visitTypeInsn(CHECKCAST,Type.getInternalName(TraitProxy.class));
+        mv.visitMethodInsn(INVOKEVIRTUAL,Type.getInternalName(TraitProxy.class),"getObject",Type.getMethodDescriptor(Type.getType(TraitableBean.class),new Type[]{}));
+        mv.visitTypeInsn(CHECKCAST,Type.getInternalName(TraitableBean.class));
+        mv.visitLdcInsn(hardField.getTypeName());
+        mv.visitMethodInsn(INVOKEINTERFACE,Type.getInternalName(TraitableBean.class),"getTrait",Type.getMethodDescriptor(Type.getType(Thing.class),new Type[]{Type.getType(String.class)}));
+        mv.visitVarInsn(ASTORE,1);
+      }
+ else {
+        if (!hardField.getType().isAssignableFrom(field.getType())) {
+          mv.visitInsn(RETURN);
+        }
+      }
+      Label l1=new Label();
+      mv.visitJumpInsn(GOTO,l1);
+      mv.visitLabel(l0);
+      mv.visitInsn(ACONST_NULL);
+      mv.visitVarInsn(ASTORE,1);
+      mv.visitLabel(l1);
+    }
+ else     if (field.getType().isPrimitive()) {
+      if (!hardField.getType().equals(field.getType())) {
+        mv.visitInsn(RETURN);
+      }
+    }
+  }
+  TraitFactory.invokeInjector(mv,masterName,trait,core,field,false,1);
+  mv.visitInsn(RETURN);
+  mv.visitMaxs(0,0);
+  mv.visitEnd();
+}

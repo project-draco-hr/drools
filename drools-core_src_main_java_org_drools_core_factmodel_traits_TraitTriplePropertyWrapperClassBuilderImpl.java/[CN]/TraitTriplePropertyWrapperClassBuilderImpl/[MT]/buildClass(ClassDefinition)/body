@@ -2,22 +2,12 @@
   ClassWriter cw=new ClassWriter(ClassWriter.COMPUTE_MAXS);
   FieldVisitor fv;
   MethodVisitor mv;
-  long mask=traitRegistry.getFieldMask(trait.getName(),core.getDefinedClass().getName());
+  BitSet mask=traitRegistry.getFieldMask(trait.getName(),core.getDefinedClass().getName());
   String name=TraitFactory.getPropertyWrapperName(trait,core);
   String masterName=TraitFactory.getProxyName(trait,core);
   String internalWrapper=BuildUtils.getInternalType(name);
   String descrCore=Type.getDescriptor(core.getDefinedClass());
   String internalCore=Type.getInternalName(core.getDefinedClass());
-  aliases=new HashMap<String,FieldDefinition>();
-  for (  FieldDefinition tfld : trait.getFieldsDefinitions()) {
-    if (tfld.hasAlias()) {
-      String alias=tfld.getAlias();
-      FieldDefinition coreField=core.getField(alias);
-      if (coreField != null) {
-        aliases.put(tfld.getName(),coreField);
-      }
-    }
-  }
   cw.visit(ClassGenerator.JAVA_VERSION,ACC_PUBLIC + ACC_SUPER,internalWrapper,null,Type.getInternalName(TripleBasedStruct.class),new String[]{Type.getInternalName(Serializable.class)});
   cw.visitInnerClass(Type.getInternalName(Map.Entry.class),Type.getInternalName(Map.class),"Entry",ACC_PUBLIC + ACC_STATIC + ACC_ABSTRACT+ ACC_INTERFACE);
   for (  FieldDefinition fld : core.getFieldsDefinitions()) {
@@ -63,7 +53,7 @@
     mv.visitMaxs(0,0);
     mv.visitEnd();
   }
-  buildInitSoftFields(cw,internalWrapper,trait,mask);
+  buildInitSoftFields(cw,internalWrapper,trait,core,mask);
   buildClearSoftFields(cw,internalWrapper,trait,mask);
   buildSize(cw,name,core.getClassName(),trait,core,mask);
   buildIsEmpty(cw,name,core.getClassName(),trait,core,mask);

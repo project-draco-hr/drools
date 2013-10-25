@@ -1,0 +1,43 @@
+{
+  mv.visitVarInsn(ALOAD,0);
+  mv.visitFieldInsn(GETFIELD,BuildUtils.getInternalType(proxyName),"object",Type.getDescriptor(core.getDefinedClass()));
+  mv.visitTypeInsn(CHECKCAST,Type.getInternalName(TraitableBean.class));
+  mv.visitMethodInsn(INVOKEINTERFACE,Type.getInternalName(TraitableBean.class),"_getFieldTMS",Type.getMethodDescriptor(Type.getType(TraitFieldTMS.class),new Type[]{}));
+  mv.visitVarInsn(ASTORE,2);
+  mv.visitVarInsn(ALOAD,2);
+  mv.visitLdcInsn(fld.resolveAlias());
+  mv.visitVarInsn(ALOAD,0);
+  if (fld.getInitExpr() != null) {
+    mv.visitLdcInsn(fld.getInitExpr());
+  }
+ else {
+    mv.visitInsn(ACONST_NULL);
+  }
+  if (BuildUtils.isPrimitive(fld.getTypeName())) {
+    mv.visitLdcInsn(Type.getType(BuildUtils.getTypeDescriptor(BuildUtils.box(fld.getTypeName()))));
+  }
+ else {
+    mv.visitLdcInsn(Type.getType(Type.getDescriptor(fld.getType())));
+  }
+  mv.visitVarInsn(ILOAD,1);
+  mv.visitMethodInsn(INVOKEINTERFACE,Type.getInternalName(TraitFieldTMS.class),"donField",Type.getMethodDescriptor(Type.getType(Object.class),new Type[]{Type.getType(String.class),Type.getType(TraitType.class),Type.getType(String.class),Type.getType(Class.class),Type.BOOLEAN_TYPE}));
+  mv.visitVarInsn(ASTORE,j);
+  mv.visitVarInsn(ALOAD,0);
+  mv.visitVarInsn(ALOAD,j);
+  if (BuildUtils.isPrimitive(fld.getTypeName())) {
+    Label l0=new Label();
+    mv.visitJumpInsn(IFNULL,l0);
+    mv.visitVarInsn(ALOAD,j);
+    mv.visitTypeInsn(CHECKCAST,BuildUtils.getInternalType(BuildUtils.box(fld.getTypeName())));
+    mv.visitMethodInsn(INVOKEVIRTUAL,BuildUtils.getInternalType(BuildUtils.box(fld.getTypeName())),BuildUtils.numericMorph(BuildUtils.box(fld.getTypeName())),Type.getMethodDescriptor(Type.getType(fld.getType()),new Type[]{}));
+    Label l1=new Label();
+    mv.visitJumpInsn(GOTO,l1);
+    mv.visitLabel(l0);
+    mv.visitInsn(BuildUtils.zero(fld.getTypeName()));
+    mv.visitLabel(l1);
+  }
+ else {
+    mv.visitTypeInsn(CHECKCAST,Type.getInternalName(fld.getType()));
+  }
+  mv.visitMethodInsn(INVOKEVIRTUAL,BuildUtils.getInternalType(proxyName),BuildUtils.setterName(fld.getName(),fld.getTypeName()),"(" + BuildUtils.getTypeDescriptor(fld.getTypeName()) + ")"+ Type.getDescriptor(void.class));
+}

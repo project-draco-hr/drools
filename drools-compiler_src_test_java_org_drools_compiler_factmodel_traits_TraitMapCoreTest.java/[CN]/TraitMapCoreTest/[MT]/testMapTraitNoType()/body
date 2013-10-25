@@ -1,0 +1,12 @@
+{
+  String drl="" + "package openehr.test;//org.drools.core.factmodel.traits;\n" + "\n"+ "import org.drools.core.factmodel.traits.Traitable;\n"+ "import org.drools.core.factmodel.traits.Trait;\n"+ "import org.drools.core.factmodel.traits.Alias;\n"+ "import java.util.*;\n"+ "\n"+ "global java.util.List list;\n"+ "\n"+ "declare HashMap @Traitable end \n"+ "\n"+ "declare trait ChildTrait\n"+ "@propertyReactive\n"+ "    naam : String = \"kudak\"\n"+ "    id : int = 1020\n"+ "end\n"+ "\n"+ "rule \"don\"\n"+ "no-loop\n"+ "when\n"+ "    $map : Map()"+ "then\n"+ "    don( $map , ChildTrait.class );\n"+ "    list.add(\"correct1\");\n"+ "end\n"+ "\n"+ "rule \"check\"\n"+ "no-loop\n"+ "when\n"+ "    $c : ChildTrait($n : naam == \"kudak\", id == 1020 )\n"+ "    $p : Map( this[\"naam\"] == $n )\n"+ "then\n"+ "    System.out.println($p);\n"+ "    System.out.println($c);\n"+ "    list.add(\"correct2\");\n"+ "end";
+  StatefulKnowledgeSession ksession=loadKnowledgeBaseFromString(drl).newStatefulKnowledgeSession();
+  TraitFactory.setMode(TraitFactory.VirtualPropertyMode.MAP,ksession.getKieBase());
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  Map<String,Object> map=new HashMap<String,Object>();
+  ksession.insert(map);
+  ksession.fireAllRules();
+  assertTrue(list.contains("correct1"));
+  assertTrue(list.contains("correct2"));
+}

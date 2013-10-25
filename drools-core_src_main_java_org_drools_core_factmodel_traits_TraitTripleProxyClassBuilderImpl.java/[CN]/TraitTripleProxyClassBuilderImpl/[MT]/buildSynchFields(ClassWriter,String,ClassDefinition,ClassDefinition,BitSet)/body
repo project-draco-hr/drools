@@ -1,0 +1,24 @@
+{
+{
+    MethodVisitor mv=cw.visitMethod(ACC_PRIVATE,"synchFields",Type.getMethodDescriptor(Type.VOID_TYPE,new Type[]{Type.BOOLEAN_TYPE}),null,null);
+    mv.visitCode();
+    if (core.isFullTraiting()) {
+      Iterator<FieldDefinition> iter=trait.getFieldsDefinitions().iterator();
+      for (int j=0; j < trait.getFieldsDefinitions().size(); j++) {
+        FieldDefinition fld=iter.next();
+        boolean hardField=!TraitRegistry.isSoftField(fld,j,mask);
+        synchFieldLogical(mv,fld,proxyName,trait,core,hardField,j + 3);
+      }
+    }
+ else {
+      for (      FieldDefinition fld : trait.getFieldsDefinitions()) {
+        if (fld.getInitExpr() != null) {
+          synchField(mv,fld,proxyName);
+        }
+      }
+    }
+    mv.visitInsn(RETURN);
+    mv.visitMaxs(0,0);
+    mv.visitEnd();
+  }
+}

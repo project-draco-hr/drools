@@ -1,0 +1,23 @@
+{
+  String drl="package org.drools.test; \n" + "import org.drools.core.factmodel.traits.*; \n" + "import org.drools.core.factmodel.traits.Trait; \n"+ ""+ "global java.util.List list; \n"+ ""+ "declare trait VIP \n"+ "@Trait( logical=true ) \n"+ "  friend : VIP \n"+ "end \n"+ ""+ "declare Pers \n"+ "@Traitable( logical = true ) \n"+ "  friend : Pers \n"+ "end \n"+ ""+ "rule Don \n"+ "when \n"+ "then \n"+ "  Pers p = new Pers(); "+ "  p.setFriend( p ); \n\n"+ "  don( p, VIP.class ); \n"+ "end \n"+ ""+ "rule Check \n"+ "salience 1 \n"+ "when \n"+ "  $x : Pers( friend isA VIP ) \n"+ "then \n"+ "  list.add( \"ok1\" );"+ "end \n"+ ""+ "";
+  KnowledgeBuilder kbuilderImpl=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilderImpl.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  if (kbuilderImpl.hasErrors()) {
+    fail(kbuilderImpl.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilderImpl.getKnowledgePackages());
+  TraitFactory.setMode(mode,kbase);
+  StatefulKnowledgeSession ks=kbase.newStatefulKnowledgeSession();
+  ArrayList list=new ArrayList();
+  ks.setGlobal("list",list);
+  ks.fireAllRules();
+  assertEquals(Arrays.asList("ok1"),list);
+  try {
+    ks=SerializationHelper.getSerialisedStatefulKnowledgeSession(ks,true);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}

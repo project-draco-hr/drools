@@ -1,0 +1,48 @@
+{
+  disableExplicitSet();
+  Class<?> klass=wrapper.getKlass();
+  if (defaultValue != null) {
+    if (defaultValuesByTraits == null) {
+      defaultValuesByTraits=new TypeHierarchy<Object>();
+    }
+    defaultValuesByTraits.addMember(defaultValue,trait.getTypeCode());
+    if (defaultValuesByTraits.getBottomCode() == null) {
+      defaultValuesByTraits.setBottomCode((BitSet)trait.getTypeCode().clone());
+    }
+ else {
+      defaultValuesByTraits.getBottomCode().or(trait.getTypeCode());
+    }
+  }
+  try {
+    rangeTypes.offer(wrapper);
+    if (value != null) {
+      if (klass.isInstance(value)) {
+      }
+ else       if (value instanceof TraitableBean) {
+        return donTraitable((TraitableBean)value,klass,logical,wm);
+      }
+ else       if (value instanceof TraitProxy) {
+        TraitableBean core=(TraitableBean)((TraitProxy)value).getObject();
+        return donTraitable(core,klass,logical,wm);
+      }
+ else {
+        boolean isFullyTraitable=inspectForTraitability(value,wm);
+        if (isFullyTraitable) {
+          TraitProxy proxy=(TraitProxy)don(value,klass,logical,wm);
+          value=proxy.getObject();
+          return proxy;
+        }
+ else {
+          manageInconsistentValue(klass);
+        }
+      }
+    }
+  }
+ catch (  IllegalStateException ise) {
+    throw new UnsupportedOperationException("Unable to apply field traiting, incompatible type.",ise);
+  }
+  if (!isExplicitlySet) {
+    return getDefault();
+  }
+  return this.value;
+}

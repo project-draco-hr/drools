@@ -1,0 +1,26 @@
+{
+  String drl="package org.drools.test; \n" + "" + "global java.util.List list; \n"+ "global java.util.List list2; \n"+ ""+ "declare trait A rate : double = 1.0 age : int = 18 end \n"+ "declare trait B rate : double = 5.0 age : int = 50 end \n"+ "declare trait C extends A,B rate : double = 7 age : int = 37 end \n"+ ""+ "declare X @Traitable( logical = true ) rate : double end \n"+ ""+ ""+ "rule Init \n"+ "when \n"+ "then \n"+ "  X x = new X(); \n"+ "  A a = don( x, A.class ); \n"+ "      list.add( x.getRate() ); \n"+ "      list2.add( a.getAge() ); \n"+ "  B b = don( x, B.class ); \n"+ "      list.add( x.getRate() ); \n"+ "      list2.add( b.getAge() ); \n"+ "end \n"+ ""+ "rule Later \n"+ "no-loop \n"+ "when \n"+ "  $x : X() \n"+ "then \n"+ "  $x.setRate( 16.3 ); \n"+ "      list.add( $x.getRate() ); \n"+ "  C c = don( $x, C.class ); \n"+ "      list.add( $x.getRate() ); \n"+ "      list2.add( c.getAge() ); \n"+ "  $x.setRate( 0.0 ); \n"+ "  c.setAge( 99 ); \n"+ "      list.add( $x.getRate() ); \n"+ "      list2.add( c.getAge() ); \n"+ "  c.setRate( -0.72 ); \n"+ "  c.setAge( 0 ); \n"+ "      list.add( $x.getRate() ); \n"+ "      list2.add( c.getAge() ); \n"+ "end \n"+ ""+ "";
+  KnowledgeBase knowledgeBase=loadKnowledgeBaseFromString(drl);
+  TraitFactory.setMode(mode,knowledgeBase);
+  StatefulKnowledgeSession knowledgeSession=knowledgeBase.newStatefulKnowledgeSession();
+  ArrayList list=new ArrayList();
+  ArrayList list2=new ArrayList();
+  knowledgeSession.setGlobal("list",list);
+  knowledgeSession.setGlobal("list2",list2);
+  knowledgeSession.fireAllRules();
+  for (  Object o : knowledgeSession.getObjects()) {
+    System.out.println(o);
+  }
+  System.out.println(list);
+  System.out.println(list2);
+  assertEquals(Arrays.asList(1.0,0.0,16.3,16.3,0.0,-0.72),list);
+  assertEquals(Arrays.asList(18,0,37,99,0),list2);
+  try {
+    knowledgeSession=SerializationHelper.getSerialisedStatefulKnowledgeSession(knowledgeSession,true);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+  knowledgeSession.dispose();
+}

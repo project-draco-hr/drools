@@ -7,16 +7,22 @@
       mv.visitVarInsn(ALOAD,1);
       mv.visitVarInsn(ALOAD,0);
       visitFieldOrGetter(mv,classDef,field);
-      mv.visitMethodInsn(INVOKEINTERFACE,"java/io/ObjectOutput",BuildUtils.serializationWriterName(field.getTypeName()),"(" + (BuildUtils.isPrimitive(field.getTypeName()) ? BuildUtils.getTypeDescriptor(field.getTypeName()) : "Ljava/lang/Object;") + ")V");
+      mv.visitMethodInsn(INVOKEINTERFACE,"java/io/ObjectOutput",BuildUtils.serializationWriterName(field.getTypeName()),"(" + (BuildUtils.isPrimitive(field.getTypeName()) ? BuildUtils.getTypeDescriptor(BuildUtils.serializationType(field.getTypeName())) : "Ljava/lang/Object;") + ")V");
     }
-    mv.visitVarInsn(ALOAD,1);
-    mv.visitVarInsn(ALOAD,0);
-    mv.visitFieldInsn(Opcodes.GETFIELD,BuildUtils.getInternalType(classDef.getClassName()),TraitableBean.MAP_FIELD_NAME,Type.getDescriptor(Map.class));
-    mv.visitMethodInsn(INVOKEINTERFACE,"java/io/ObjectOutput","writeObject","(Ljava/lang/Object;)V");
-    mv.visitVarInsn(ALOAD,1);
-    mv.visitVarInsn(ALOAD,0);
-    mv.visitFieldInsn(Opcodes.GETFIELD,BuildUtils.getInternalType(classDef.getClassName()),TraitableBean.TRAITSET_FIELD_NAME,Type.getDescriptor(Map.class));
-    mv.visitMethodInsn(INVOKEINTERFACE,"java/io/ObjectOutput","writeObject","(Ljava/lang/Object;)V");
+    if (classDef.isTraitable()) {
+      mv.visitVarInsn(ALOAD,1);
+      mv.visitVarInsn(ALOAD,0);
+      mv.visitFieldInsn(Opcodes.GETFIELD,BuildUtils.getInternalType(classDef.getClassName()),TraitableBean.MAP_FIELD_NAME,Type.getDescriptor(Map.class));
+      mv.visitMethodInsn(INVOKEINTERFACE,"java/io/ObjectOutput","writeObject","(Ljava/lang/Object;)V");
+      mv.visitVarInsn(ALOAD,1);
+      mv.visitVarInsn(ALOAD,0);
+      mv.visitFieldInsn(Opcodes.GETFIELD,BuildUtils.getInternalType(classDef.getClassName()),TraitableBean.TRAITSET_FIELD_NAME,Type.getDescriptor(Map.class));
+      mv.visitMethodInsn(INVOKEINTERFACE,"java/io/ObjectOutput","writeObject","(Ljava/lang/Object;)V");
+      mv.visitVarInsn(ALOAD,1);
+      mv.visitVarInsn(ALOAD,0);
+      mv.visitFieldInsn(Opcodes.GETFIELD,BuildUtils.getInternalType(classDef.getClassName()),TraitableBean.FIELDTMS_FIELD_NAME,Type.getDescriptor(TraitFieldTMS.class));
+      mv.visitMethodInsn(INVOKEINTERFACE,"java/io/ObjectOutput","writeObject","(Ljava/lang/Object;)V");
+    }
     mv.visitInsn(RETURN);
     mv.visitMaxs(0,0);
     mv.visitEnd();
@@ -33,16 +39,23 @@
       }
       mv.visitMethodInsn(INVOKEVIRTUAL,BuildUtils.getInternalType(classDef.getName()),BuildUtils.setterName(field.getName(),field.getTypeName()),"(" + BuildUtils.getTypeDescriptor(field.getTypeName()) + ")V");
     }
-    mv.visitVarInsn(ALOAD,0);
-    mv.visitVarInsn(ALOAD,1);
-    mv.visitMethodInsn(INVOKEINTERFACE,"java/io/ObjectInput","readObject","()Ljava/lang/Object;");
-    mv.visitTypeInsn(CHECKCAST,"java/util/Map");
-    mv.visitFieldInsn(Opcodes.PUTFIELD,BuildUtils.getInternalType(classDef.getClassName()),TraitableBean.MAP_FIELD_NAME,Type.getDescriptor(Map.class));
-    mv.visitVarInsn(ALOAD,0);
-    mv.visitVarInsn(ALOAD,1);
-    mv.visitMethodInsn(INVOKEINTERFACE,"java/io/ObjectInput","readObject","()Ljava/lang/Object;");
-    mv.visitTypeInsn(CHECKCAST,"java/util/Map");
-    mv.visitFieldInsn(Opcodes.PUTFIELD,BuildUtils.getInternalType(classDef.getClassName()),TraitableBean.TRAITSET_FIELD_NAME,Type.getDescriptor(Map.class));
+    if (classDef.isTraitable()) {
+      mv.visitVarInsn(ALOAD,0);
+      mv.visitVarInsn(ALOAD,1);
+      mv.visitMethodInsn(INVOKEINTERFACE,"java/io/ObjectInput","readObject","()Ljava/lang/Object;");
+      mv.visitTypeInsn(CHECKCAST,"java/util/Map");
+      mv.visitFieldInsn(Opcodes.PUTFIELD,BuildUtils.getInternalType(classDef.getClassName()),TraitableBean.MAP_FIELD_NAME,Type.getDescriptor(Map.class));
+      mv.visitVarInsn(ALOAD,0);
+      mv.visitVarInsn(ALOAD,1);
+      mv.visitMethodInsn(INVOKEINTERFACE,"java/io/ObjectInput","readObject","()Ljava/lang/Object;");
+      mv.visitTypeInsn(CHECKCAST,"java/util/Map");
+      mv.visitFieldInsn(Opcodes.PUTFIELD,BuildUtils.getInternalType(classDef.getClassName()),TraitableBean.TRAITSET_FIELD_NAME,Type.getDescriptor(Map.class));
+      mv.visitVarInsn(ALOAD,0);
+      mv.visitVarInsn(ALOAD,1);
+      mv.visitMethodInsn(INVOKEINTERFACE,"java/io/ObjectInput","readObject","()Ljava/lang/Object;");
+      mv.visitTypeInsn(CHECKCAST,Type.getInternalName(TraitFieldTMS.class));
+      mv.visitFieldInsn(Opcodes.PUTFIELD,BuildUtils.getInternalType(classDef.getClassName()),TraitableBean.FIELDTMS_FIELD_NAME,Type.getDescriptor(TraitFieldTMS.class));
+    }
     mv.visitInsn(RETURN);
     mv.visitMaxs(0,0);
     mv.visitEnd();

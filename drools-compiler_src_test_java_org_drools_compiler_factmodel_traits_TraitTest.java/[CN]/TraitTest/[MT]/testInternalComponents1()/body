@@ -1,0 +1,45 @@
+{
+  String source="org/drools/compiler/factmodel/traits/testTraitDon.drl";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  Resource res=ResourceFactory.newClassPathResource(source);
+  assertNotNull(res);
+  kbuilder.add(res,ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kb=KnowledgeBaseFactory.newKnowledgeBase();
+  kb.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  TraitFactory.setMode(mode,kb);
+  TraitFactory tFactory=((ReteooRuleBase)((KnowledgeBaseImpl)kb).getRuleBase()).getConfiguration().getComponentFactory().getTraitFactory();
+  try {
+    FactType impClass=kb.getFactType("org.drools.compiler.trait.test","Imp");
+    TraitableBean imp=(TraitableBean)impClass.newInstance();
+    FactType traitClass=kb.getFactType("org.drools.compiler.trait.test","Student");
+    Class trait=traitClass.getFactClass();
+    TraitProxy proxy=(TraitProxy)tFactory.getProxy(imp,trait);
+    Object proxyFields=proxy.getFields();
+    Object coreTraits=imp._getTraitMap();
+    Object coreProperties=imp._getDynamicProperties();
+    assertTrue(proxy.getObject() instanceof TraitableBean);
+    assertNotNull(proxyFields);
+    assertNotNull(coreTraits);
+    assertNotNull(coreProperties);
+    if (mode == TraitFactory.VirtualPropertyMode.MAP) {
+      assertTrue(proxyFields instanceof MapWrapper);
+      assertTrue(coreTraits instanceof TraitTypeMap);
+      assertTrue(coreProperties instanceof HashMap);
+    }
+ else {
+      assertEquals("org.drools.compiler.trait.test.Student.org.drools.compiler.trait.test.Imp_ProxyWrapper",proxyFields.getClass().getName());
+      assertTrue(proxyFields instanceof TripleBasedStruct);
+      assertTrue(coreTraits instanceof TraitTypeMap);
+      assertTrue(coreProperties instanceof TripleBasedBean);
+    }
+    StudentProxy2 sp2=new StudentProxy2(new Imp2(),null);
+    System.out.println(sp2.toString());
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}

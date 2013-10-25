@@ -1,15 +1,17 @@
 {
   if (trait.isAssignableFrom(core.getClass())) {
-    core.removeTrait(trait.getName());
-    update(core,Long.MIN_VALUE,core.getClass());
-    updateTraits(core,Long.MIN_VALUE,null,core.getClass(),null);
+    Collection removedTraits=core.removeTrait(trait.getName());
+    if (!removedTraits.isEmpty()) {
+      update(core,Long.MIN_VALUE,core.getClass());
+      updateTraits(core,Long.MIN_VALUE,null,core.getClass(),null,((TraitableBean)core).getMostSpecificTraits());
+    }
     return (Thing<K>)core;
   }
  else {
     Collection<Thing<K>> removedTypes;
     Thing<K> thing=core.getTrait(Thing.class.getName());
     if (trait == Thing.class) {
-      removedTypes=new ArrayList(core._getTraitMap().values());
+      removedTypes=new ArrayList<Thing<K>>(core._getTraitMap().values());
       for (      Thing t : removedTypes) {
         if (!((TraitType)t).isVirtual()) {
           retract(t);
@@ -19,7 +21,7 @@
       core._setTraitMap(null);
       return thing;
     }
-    if (core.hasTrait(trait.getName())) {
+ else     if (core.hasTrait(trait.getName())) {
       removedTypes=core.removeTrait(trait.getName());
     }
  else {
@@ -33,8 +35,10 @@
         retract(t);
       }
     }
-    update(core,Long.MIN_VALUE,core.getClass());
-    updateTraits(core,Long.MIN_VALUE,null,core.getClass(),null);
+    if (!removedTypes.isEmpty()) {
+      update(core,Long.MIN_VALUE,core.getClass());
+      updateTraits(core,Long.MIN_VALUE,null,core.getClass(),null,((TraitableBean)core).getMostSpecificTraits());
+    }
     return thing;
   }
 }

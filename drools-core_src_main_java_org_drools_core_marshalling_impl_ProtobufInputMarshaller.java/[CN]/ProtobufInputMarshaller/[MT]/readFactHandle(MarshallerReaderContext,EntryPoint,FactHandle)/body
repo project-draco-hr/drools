@@ -5,11 +5,19 @@
     strategy=context.usedStrategies.get(_handle.getStrategyIndex());
     object=strategy.unmarshal(context.strategyContexts.get(strategy),context,_handle.getObject().toByteArray(),(context.ruleBase == null) ? null : context.ruleBase.getRootClassLoader());
   }
+  EntryPointId confEP;
+  if (entryPoint != null) {
+    confEP=((NamedEntryPoint)entryPoint).getEntryPoint();
+  }
+ else {
+    confEP=context.wm.getEntryPoint();
+  }
+  ObjectTypeConf typeConf=context.wm.getObjectTypeConfigurationRegistry().getObjectTypeConf(confEP,object);
   InternalFactHandle handle=null;
 switch (_handle.getType()) {
 case FACT:
 {
-      handle=new DefaultFactHandle(_handle.getId(),object,_handle.getRecency(),entryPoint);
+      handle=new DefaultFactHandle(_handle.getId(),object,_handle.getRecency(),entryPoint,typeConf != null && typeConf.isTrait());
       break;
     }
 case QUERY:
@@ -19,7 +27,7 @@ case QUERY:
   }
 case EVENT:
 {
-  handle=new EventFactHandle(_handle.getId(),object,_handle.getRecency(),_handle.getTimestamp(),_handle.getDuration(),entryPoint);
+  handle=new EventFactHandle(_handle.getId(),object,_handle.getRecency(),_handle.getTimestamp(),_handle.getDuration(),entryPoint,typeConf != null && typeConf.isTrait());
   ((EventFactHandle)handle).setExpired(_handle.getIsExpired());
   break;
 }

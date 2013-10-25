@@ -1,0 +1,9 @@
+{
+  String drl="" + "package org.drools.core.factmodel.traits.test;\n" + "\n"+ "import org.drools.core.factmodel.traits.Thing;\n"+ "import org.drools.core.factmodel.traits.Traitable;\n"+ "import org.drools.core.factmodel.traits.Trait;\n"+ "import org.drools.core.factmodel.traits.Alias;\n"+ "\n"+ "global java.util.List list;\n"+ "\n"+ "\n"+ ""+ "declare Parent\n"+ "@Traitable( logical = true )\n"+ "@propertyReactive\n"+ "    id : int\n"+ "end\n"+ "\n"+ "declare trait ParentTrait\n"+ "@Trait( logical = true )"+ "@propertyReactive\n"+ "    id : float\n"+ "end\n"+ "\n"+ "rule \"init\"\n"+ "when\n"+ "then\n"+ "    Parent p = new Parent(1010);\n"+ "    insert( p );\n"+ "end\n"+ "\n"+ "rule \"don\"\n"+ "when\n"+ "    $p : Parent(id > 1000)\n"+ "then\n"+ "    Thing t = don( $p , ParentTrait.class );\n"+ "    list.add( t );\n"+ "end";
+  StatefulKnowledgeSession ksession=loadKnowledgeBaseFromString(drl).newStatefulKnowledgeSession();
+  TraitFactory.setMode(mode,ksession.getKieBase());
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
+  assertTrue(list.size() == 1 && list.contains(null));
+}

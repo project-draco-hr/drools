@@ -1,0 +1,25 @@
+{
+  String drl="package org.drools.test; \n" + "" + "global java.util.List list; \n"+ "global java.util.List list2; \n"+ ""+ "declare trait A name : String = \"1\" age : Integer = 18 end \n"+ "declare trait B name : String = \"5\" age : Integer = 50 end \n"+ "declare trait C extends A,B name : String = \"7\" age : Integer = 37 end \n"+ ""+ "declare X @Traitable( logical = true ) name : String end \n"+ ""+ ""+ "rule Init \n"+ "when \n"+ "then \n"+ "  X x = new X(); \n"+ "  A a = don( x, A.class ); \n"+ "      list.add( x.getName() ); \n"+ "      list2.add( a.getAge() ); \n"+ "  B b = don( x, B.class ); \n"+ "      list.add( x.getName() ); \n"+ "      list2.add( b.getAge() ); \n"+ "end \n"+ ""+ "rule Later \n"+ "no-loop \n"+ "when \n"+ "  $x : X() \n"+ "then \n"+ "  $x.setName( \"xyz\" ); \n"+ "      list.add( $x.getName() ); \n"+ "  C c = don( $x, C.class ); \n"+ "      list.add( $x.getName() ); \n"+ "      list2.add( c.getAge() ); \n"+ "  $x.setName( null ); \n"+ "  c.setAge( 99 ); \n"+ "      list.add( $x.getName() ); \n"+ "      list2.add( c.getAge() ); \n"+ "  c.setName( \"aaa\" ); \n"+ "  c.setAge( null ); \n"+ "      list.add( $x.getName() ); \n"+ "      list2.add( c.getAge() ); \n"+ "end \n"+ ""+ "";
+  KnowledgeBase knowledgeBase=loadKnowledgeBaseFromString(drl);
+  TraitFactory.setMode(mode,knowledgeBase);
+  StatefulKnowledgeSession knowledgeSession=knowledgeBase.newStatefulKnowledgeSession();
+  ArrayList list=new ArrayList();
+  ArrayList list2=new ArrayList();
+  knowledgeSession.setGlobal("list",list);
+  knowledgeSession.setGlobal("list2",list2);
+  knowledgeSession.fireAllRules();
+  for (  Object o : knowledgeSession.getObjects()) {
+    System.out.println(o);
+  }
+  System.out.println(list);
+  System.out.println(list2);
+  assertEquals(Arrays.asList("1",null,"xyz","xyz","7","aaa"),list);
+  assertEquals(Arrays.asList(18,null,37,99,37),list2);
+  try {
+    knowledgeSession=SerializationHelper.getSerialisedStatefulKnowledgeSession(knowledgeSession,true);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}

@@ -1,0 +1,13 @@
+{
+  String fieldName=field.getName();
+  Class fieldType=field.getType();
+  MethodVisitor mv=cw.visitMethod(protect ? ACC_PROTECTED : ACC_PUBLIC,getterName,"()" + Type.getDescriptor(field.getType()),null,null);
+  mv.visitCode();
+  TraitFactory.invokeExtractor(mv,masterName,proxy,core,field);
+  if (!BuildUtils.isPrimitive(field.getTypeName())) {
+    mv.visitTypeInsn(CHECKCAST,Type.getInternalName(fieldType));
+  }
+  mv.visitInsn(BuildUtils.returnType(field.getTypeName()));
+  mv.visitMaxs(0,0);
+  mv.visitEnd();
+}

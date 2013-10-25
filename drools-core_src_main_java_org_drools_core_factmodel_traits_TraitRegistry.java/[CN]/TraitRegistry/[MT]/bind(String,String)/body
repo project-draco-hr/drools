@@ -8,16 +8,15 @@
     throw new UnsupportedOperationException(" Unable to apply trait " + trait + " to class "+ traitable+ " : not a traitable ");
   }
   int j=0;
-  long bitmask=0;
+  BitSet bitmask=new BitSet(traitDef.getFields().size());
   for (  FactField field : traitDef.getFields()) {
-    FieldDefinition fdef=(FieldDefinition)field;
-    boolean isAliased=fdef.hasAlias();
-    String alias=((FieldDefinition)field).resolveAlias(traitableDef);
-    FieldDefinition concreteField=traitableDef.getField(alias);
-    Class concreteType=concreteField != null ? concreteField.getType() : null;
-    Class virtualType=field.getType();
-    if ((concreteType != null && concreteType.isAssignableFrom(virtualType)) || (traits.containsKey(virtualType.getName()) && ((FieldDefinition)field).hasAlias())) {
-      bitmask|=1 << j;
+    String alias=((FieldDefinition)field).resolveAlias();
+    FieldDefinition concreteField=traitableDef.getFieldByAlias(alias);
+    if (concreteField != null) {
+      if (!traitableDef.isFullTraiting() && !concreteField.getType().isAssignableFrom(field.getType())) {
+        throw new UnsupportedOperationException(" Unable to apply trait " + trait + " to class "+ traitable+ " :"+ " trait field "+ field.getName()+ ":"+ ((FieldDefinition)field).getTypeName()+ " is incompatible with"+ " concrete hard field "+ concreteField.getName()+ ":"+ concreteField.getTypeName()+ ". Consider enabling logical traiting"+ " mode using @Traitable( logical = true )");
+      }
+      bitmask.set(j);
     }
     j++;
   }

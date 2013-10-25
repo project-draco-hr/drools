@@ -1,0 +1,17 @@
+{
+  String s1="package test;\n" + "import org.drools.core.factmodel.traits.*;\n" + "global java.util.List list; \n"+ ""+ "declare trait Student @propertyReactive name : String end\n"+ "declare trait Worker @propertyReactive name : String end\n"+ "declare trait StudentWorker extends Student, Worker @propertyReactive name : String end\n"+ "declare trait Assistant extends Student, Worker @propertyReactive name : String end\n"+ "declare Person @Traitable @propertyReactive name : String end\n"+ ""+ "rule \"Init\" \n"+ "when \n"+ "then \n"+ "  Person p = new Person( \"john\" ); \n"+ "  insert( p ); \n"+ "end \n"+ ""+ "rule \"Don\" \n"+ "when \n"+ "  $p : Person( name == \"john\" ) \n"+ "then \n"+ "  System.out.println( \">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DON WORKER \" + $p  ); \n"+ "  don( $p, Worker.class ); \n"+ "  System.out.println( \">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DON STUDWORKER \" + $p ); \n"+ "  don( $p, StudentWorker.class ); \n"+ "end \n"+ ""+ "rule \"Log W\" \n"+ "when \n"+ "  $t : Worker( this isA StudentWorker ) @watch( name ) \n"+ "then \n"+ "  System.out.println( \"@@Worker >> \" + $t ); \n"+ "  list.add( true ); \n"+ "end \n"+ "rule \"Log SW\" \n"+ "when \n"+ "  $t : StudentWorker() @watch( name ) \n"+ "then \n"+ "  System.out.println( \"@@StudentWorker >> \" + $t ); \n"+ "end \n"+ "";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(new ByteArrayResource(s1.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  TraitFactory.setMode(mode,kbase);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ArrayList list=new ArrayList();
+  ksession.setGlobal("list",list);
+  int k=ksession.fireAllRules();
+  assertTrue(list.contains(true));
+  assertEquals(1,list.size());
+}

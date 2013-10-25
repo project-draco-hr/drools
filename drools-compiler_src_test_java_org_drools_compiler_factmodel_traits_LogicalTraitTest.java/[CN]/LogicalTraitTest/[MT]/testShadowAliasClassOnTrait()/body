@@ -1,0 +1,26 @@
+{
+  String drl="package org.drools.test; \n" + "import org.drools.core.factmodel.traits.*; \n" + "import org.drools.core.factmodel.traits.Trait; \n"+ ""+ "global java.util.List list; \n"+ ""+ "declare trait X \n"+ "  fld : K \n"+ "end \n"+ ""+ "declare Y \n"+ "@Traitable( logical = true ) \n"+ "  fld : T \n"+ "end \n"+ ""+ "declare trait T @Trait( logical=true ) end \n"+ "declare K @Traitable() end \n"+ ""+ "rule Don \n"+ "when \n"+ "then \n"+ "  K k = new K(); \n"+ "  T t = don( k, T.class ); \n"+ "  Y y = new Y( t ); \n"+ "  don( y, X.class ); \n"+ "end \n"+ ""+ "rule Check \n"+ "salience 1 \n"+ "when \n"+ "  $x : Y( fld isA T ) \n"+ "then \n"+ "  System.err.println( $x.getFld() ); \n"+ "  list.add( \"ok1\" );"+ "end \n"+ ""+ "rule Check2 \n"+ "when \n"+ "  $x : X( fld isA T ) \n"+ "then \n"+ "  System.err.println( $x.getFld() ); \n"+ "  list.add( \"ok2\" );"+ "end \n"+ ""+ "";
+  KnowledgeBuilder kbuilderImpl=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilderImpl.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  if (kbuilderImpl.hasErrors()) {
+    fail(kbuilderImpl.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilderImpl.getKnowledgePackages());
+  TraitFactory.setMode(mode,kbase);
+  StatefulKnowledgeSession ks=kbase.newStatefulKnowledgeSession();
+  ArrayList list=new ArrayList();
+  ks.setGlobal("list",list);
+  ks.fireAllRules();
+  for (  Object o : ks.getObjects()) {
+    System.out.println(o);
+  }
+  assertEquals(Arrays.asList("ok1","ok2"),list);
+  try {
+    ks=SerializationHelper.getSerialisedStatefulKnowledgeSession(ks,true);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}

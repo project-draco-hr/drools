@@ -1,0 +1,31 @@
+{
+  String drl="package org.drools.test; \n" + "import org.drools.core.factmodel.traits.*; \n" + "import org.drools.core.factmodel.traits.Trait; \n"+ ""+ "global java.util.List list; \n"+ ""+ "declare trait X \n"+ "  fld : K \n"+ "  fld2 : K \n"+ "end \n"+ ""+ "declare trait W \n"+ "  fld : Q \n"+ "end \n"+ "declare trait V \n"+ "  fld2 : T \n"+ "end \n"+ ""+ "declare Y \n"+ "@Traitable( logical = true ) \n"+ "  fld : T \n"+ "  fld2 : Q \n"+ "end \n"+ ""+ "declare trait T @Trait( logical=true ) id : int end \n"+ "declare trait Q @Trait( logical=true ) id : int end \n"+ "declare K @Traitable() id : int end \n"+ ""+ "rule Don \n"+ "when \n"+ "  $s : String( this == \"go\" ) \n"+ "then \n"+ "  K k1 = new K( 1 ); \n"+ "  K k2 = new K( 2 ); \n"+ "  T t = don( k1, T.class ); \n"+ "  Q q = don( k2, Q.class ); \n"+ "  Y y = new Y( t, q ); \n"+ "  insert( y ); \n"+ ""+ "  don( y, X.class, true ); \n"+ "end \n"+ ""+ "rule Check \n"+ "when \n"+ "  String( this == \"go\" ) \n"+ "  $x : X( $f1 : fld, $f2 : fld2 ) \n"+ "then \n"+ "  list.add( $f1.getId() );"+ "  list.add( $f2.getId() );"+ "end \n"+ ""+ "rule Check2\n"+ "when \n"+ "  not String( this == \"go\" ) \n"+ "  $x : Y( $f1 : fld, $f2 : fld2 ) \n"+ "then \n"+ "  list.add( $f1.getId() );"+ "  list.add( $f2.getId() );"+ "end \n"+ "";
+  KnowledgeBuilder kbuilderImpl=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilderImpl.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  if (kbuilderImpl.hasErrors()) {
+    fail(kbuilderImpl.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilderImpl.getKnowledgePackages());
+  TraitFactory.setMode(mode,kbase);
+  StatefulKnowledgeSession ks=kbase.newStatefulKnowledgeSession();
+  ArrayList list=new ArrayList();
+  ks.setGlobal("list",list);
+  FactHandle handle=ks.insert("go");
+  ks.fireAllRules();
+  assertEquals(Arrays.asList(1,2),list);
+  ks.retract(handle);
+  ks.fireAllRules();
+  for (  Object o : ks.getObjects(new ClassObjectFilter(ks.getKieBase().getFactType("org.drools.test","Y").getFactClass()))) {
+    assertTrue(o instanceof TraitableBean);
+  }
+  try {
+    ks=SerializationHelper.getSerialisedStatefulKnowledgeSession(ks,true);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+  System.out.println(list);
+  assertEquals(Arrays.asList(1,2,1,2),list);
+}

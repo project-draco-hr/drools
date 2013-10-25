@@ -6,13 +6,30 @@
   }
   context.setObjectType(objectType);
   if (compiledNetwork != null) {
-    compiledNetwork.modifyObject(factHandle,modifyPreviousTuples,context.getModificationMask() > 0L ? context.adaptModificationMaskForObjectType(objectType,workingMemory) : context,workingMemory);
+    compiledNetwork.modifyObject(factHandle,modifyPreviousTuples,context.adaptModificationMaskForObjectType(objectType,workingMemory),workingMemory);
   }
  else {
-    if (factHandle.getObject() instanceof TraitProxy && typeMask != null) {
-      BitSet vetoMask=((TraitProxy)factHandle.getObject()).getTypeFilter();
+    if (factHandle.getObject() instanceof TraitProxy) {
+      TraitProxy proxy=((TraitProxy)factHandle.getObject());
+      BitSet vetoMask=proxy.getTypeFilter();
       if (vetoMask == null || typeMask.isEmpty() || !HierarchyEncoderImpl.supersetOrEqualset(vetoMask,this.typeMask)) {
-        this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context.getModificationMask() > 0L ? context.adaptModificationMaskForObjectType(objectType,workingMemory) : context,workingMemory);
+        if (context.getModificationMask() == Long.MIN_VALUE) {
+          TraitableBean txBean=(TraitableBean)proxy.getObject();
+          TraitTypeMap tMap=(TraitTypeMap)txBean._getTraitMap();
+          Collection<Key<Thing>> x=tMap.immediateParents(this.typeMask);
+          Key<Thing> k=x.iterator().next();
+          long originalMask=context.getModificationMask();
+          if (!k.getValue().isTop()) {
+            context.setModificationMask(-1L);
+          }
+          this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context.adaptModificationMaskForObjectType(objectType,workingMemory),workingMemory);
+          context.setModificationMask(originalMask);
+        }
+ else {
+          this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context.adaptModificationMaskForObjectType(objectType,workingMemory),workingMemory);
+        }
+      }
+ else {
       }
     }
  else {

@@ -1,0 +1,13 @@
+{
+  String source="package org.drools.core.factmodel.traits.test;\n" + "\n" + "import java.util.*;\n"+ "import org.drools.core.factmodel.traits.*;\n"+ ""+ "global List list;\n "+ ""+ "declare HashMap @Traitable( logical = true ) end \n"+ "\n"+ "global List list; \n"+ "\n"+ "declare trait PersonMap\n"+ "@propertyReactive  \n"+ "   name : String  \n"+ "   age  : Integer  @Alias( \"years\" ) \n"+ "   eta  : Integer  @Alias( \"years\" ) \n"+ "   height : Double  @Alias( \"tall\" ) \n"+ "   sen : String @Alias(\"years\") \n "+ "end\n"+ "\n"+ "rule Don  \n"+ "when  \n"+ "  $m : Map()\n"+ "then  \n"+ "  PersonMap pm = don( $m, PersonMap.class ); \n"+ "  list.add ( pm ); \n"+ "\n"+ "end\n"+ "\n"+ ""+ "\n";
+  StatefulKnowledgeSession ks=loadKnowledgeBaseFromString(source).newStatefulKnowledgeSession();
+  TraitFactory.setMode(TraitFactory.VirtualPropertyMode.MAP,ks.getKieBase());
+  List list=new ArrayList();
+  ks.setGlobal("list",list);
+  Map<String,Object> map=new HashMap<String,Object>();
+  map.put("name","john");
+  map.put("years",new Integer(18));
+  ks.insert(map);
+  ks.fireAllRules();
+  assertTrue(list.size() == 1 && list.get(0) == null);
+}

@@ -1,0 +1,29 @@
+{
+  if (range.isInstance(value)) {
+    return true;
+  }
+  TraitableBean obj=null;
+  if (value instanceof TraitableBean) {
+    obj=(TraitableBean)value;
+  }
+ else   if (value instanceof TraitProxy) {
+    obj=(TraitableBean)((TraitProxy)value).getObject();
+  }
+  if (obj == null) {
+    return false;
+  }
+  if (range.isInstance(obj)) {
+    return true;
+  }
+ else   if (obj.hasTrait(range.getName())) {
+    return true;
+  }
+ else {
+    Trait trait=range.getAnnotation(Trait.class);
+    if (trait != null && trait.logical()) {
+      Object newTrait=don(obj,range,false,wm);
+      return newTrait != null;
+    }
+  }
+  return false;
+}
