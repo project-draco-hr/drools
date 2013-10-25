@@ -1,5 +1,5 @@
 {
-  String str="package org.drools\n" + "global java.util.List list; \n" + "declare StockTick @role(event) end\n"+ ""+ ""+ "rule R\n"+ " duration(200ms)"+ "when\n"+ " accumulate( $st : StockTick() over window:time(400ms)\n"+ "             from entry-point X,\n"+ "             $c : count(1) )"+ "then\n"+ "   System.out.println( $c );\n"+ "   list.add( $c ); \n"+ "end \n";
+  String str="package org.drools\n" + "global java.util.List list; \n" + "import org.drools.compiler.StockTick; \n"+ ""+ "declare StockTick @role(event) end\n"+ ""+ "rule R\n"+ "when\n"+ " accumulate( $st : StockTick() over window:time(400ms)\n"+ "             from entry-point X,\n"+ "             $c : count(1) )"+ "then\n"+ "   list.add( $c ); \n"+ "end \n";
   final List<Exception> errors=new ArrayList<Exception>();
   KieBaseConfiguration kbconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
   kbconf.setOption(EventProcessingOption.STREAM);
@@ -77,7 +77,6 @@
   }
   assertTrue(errors.isEmpty());
   assertTrue(success);
-  System.out.print(list);
   assertTrue(!list.isEmpty() && ((Number)list.get(list.size() - 1)).intValue() > 200);
   ksession.dispose();
 }
