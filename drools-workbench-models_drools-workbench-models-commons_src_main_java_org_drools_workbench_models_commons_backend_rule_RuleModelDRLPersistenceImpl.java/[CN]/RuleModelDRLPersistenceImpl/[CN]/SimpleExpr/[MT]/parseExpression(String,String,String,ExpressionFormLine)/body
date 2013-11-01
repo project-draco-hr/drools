@@ -10,20 +10,21 @@
   for (int i=0; i < splits.length - 1; i++) {
     String expressionPart=splits[i].trim();
     if ("this".equals(expressionPart)) {
-      expression.appendPart(new ExpressionField(expressionPart,factType,DataType.TYPE_THIS));
+      expression.appendPart(new ExpressionField(expressionPart,getSimpleFactType(factType,dmo),DataType.TYPE_THIS));
     }
  else     if (isBoundParam) {
-      expression.appendPart(new ExpressionVariable(expressionPart,factType,factType));
+      ModelField currentFact=findFact(modelFields,factType);
+      expression.appendPart(new ExpressionVariable(expressionPart,getSimpleFactType(currentFact.getClassName(),dmo),getSimpleFactType(currentFact.getType(),dmo)));
       isBoundParam=false;
     }
  else {
       ModelField currentField=findField(typeFields,expressionPart);
-      expression.appendPart(new ExpressionField(expressionPart,currentField.getType(),currentField.getClassName()));
-      typeFields=modelFields.get(currentField.getType());
+      expression.appendPart(new ExpressionField(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo)));
+      typeFields=modelFields.get(currentField.getClassName());
     }
   }
   String expressionPart=splits[splits.length - 1].trim();
   ModelField currentField=findField(typeFields,expressionPart);
-  expression.appendPart(new ExpressionField(expressionPart,currentField.getType(),currentField.getClassName()));
+  expression.appendPart(new ExpressionField(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo)));
   return expression;
 }
