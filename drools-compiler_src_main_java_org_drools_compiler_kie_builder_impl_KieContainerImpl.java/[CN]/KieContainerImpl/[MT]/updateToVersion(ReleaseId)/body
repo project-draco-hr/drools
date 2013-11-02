@@ -32,7 +32,17 @@
         if (!rcs.getChangeType().equals(ChangeType.REMOVED)) {
           String resourceName=rcs.getResourceName();
           if (KieBuilderImpl.filterFileInKBase(kieBaseModel,resourceName) && !resourceName.endsWith(".properties")) {
-            fileCount+=AbstractKieModule.addFile(ckbuilder,newKM,resourceName) ? 1 : 0;
+            Resource resource=currentKM.getResource(rcs.getResourceName());
+            List<ResourceChange> changes=rcs.getChanges();
+            if (!changes.isEmpty()) {
+              fileCount+=AbstractKieModule.updateResource(ckbuilder,newKM,resourceName,rcs) ? 1 : 0;
+            }
+ else {
+              if (rcs.getChangeType().equals(ChangeType.UPDATED)) {
+                pkgbuilder.removeObjectsGeneratedFromResource(resource);
+              }
+              fileCount+=AbstractKieModule.addFile(ckbuilder,newKM,resourceName) ? 1 : 0;
+            }
           }
         }
       }

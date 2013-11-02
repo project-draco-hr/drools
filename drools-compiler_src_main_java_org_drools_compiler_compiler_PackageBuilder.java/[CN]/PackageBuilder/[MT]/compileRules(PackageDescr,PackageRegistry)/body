@@ -2,18 +2,24 @@
   List<FunctionDescr> functions=packageDescr.getFunctions();
   if (!functions.isEmpty()) {
     for (    FunctionDescr functionDescr : functions) {
-      if (isEmpty(functionDescr.getNamespace())) {
-        functionDescr.setNamespace(packageDescr.getNamespace());
+      if (filterAccepts(functionDescr.getNamespace(),functionDescr.getName())) {
+        if (isEmpty(functionDescr.getNamespace())) {
+          functionDescr.setNamespace(packageDescr.getNamespace());
+        }
+        functionDescr.setDialect("java");
+        preCompileAddFunction(functionDescr);
       }
-      functionDescr.setDialect("java");
-      preCompileAddFunction(functionDescr);
     }
     for (    FunctionDescr functionDescr : functions) {
-      addFunction(functionDescr);
+      if (filterAccepts(functionDescr.getNamespace(),functionDescr.getName())) {
+        addFunction(functionDescr);
+      }
     }
     compileAll();
     for (    FunctionDescr functionDescr : functions) {
-      postCompileAddFunction(functionDescr);
+      if (filterAccepts(functionDescr.getNamespace(),functionDescr.getName())) {
+        postCompileAddFunction(functionDescr);
+      }
     }
   }
   sortRulesByDependency(packageDescr);
@@ -29,6 +35,8 @@
   }
   Map<String,RuleBuildContext> ruleCxts=preProcessRules(packageDescr,pkgRegistry);
   for (  RuleDescr ruleDescr : packageDescr.getRules()) {
-    addRule(ruleCxts.get(ruleDescr.getName()));
+    if (filterAccepts(ruleDescr.getNamespace(),ruleDescr.getName())) {
+      addRule(ruleCxts.get(ruleDescr.getName()));
+    }
   }
 }

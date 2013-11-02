@@ -1,0 +1,13 @@
+{
+  String drl1="package org.drools.compiler\n" + "rule R1 when\n" + "   $m : Message()\n"+ "then\n"+ "end\n";
+  String drl2="rule R2 when\n" + "   $m : Message( message == \"Hi Universe\" )\n" + "then\n"+ "end\n";
+  String drl3="rule R3 when\n" + "   $m : Message( message == \"Hello World\" )\n" + "then\n"+ "end\n";
+  InternalKieModule kieJar1=createKieJar(drl1 + drl2 + drl3);
+  InternalKieModule kieJar2=createKieJar(drl1 + drl3);
+  ChangeSetBuilder builder=new ChangeSetBuilder();
+  KieJarChangeSet changes=builder.build(kieJar1,kieJar2);
+  assertEquals(1,changes.getChanges().size());
+  ResourceChangeSet rcs=changes.getChanges().values().iterator().next();
+  assertEquals(1,rcs.getChanges().size());
+  assertEquals(ChangeType.REMOVED,rcs.getChanges().get(0).getChangeType());
+}
