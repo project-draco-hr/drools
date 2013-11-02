@@ -2,24 +2,32 @@
   Map<String,RuleBuildContext> ruleCxts=buildRuleBuilderContext(packageDescr.getRules());
   Package pkg=pkgRegistry.getPackage();
   if (this.ruleBase != null) {
+    boolean needsRemoval=false;
     for (    Rule rule : pkg.getRules()) {
       if (filterAcceptsRemoval(rule.getPackageName(),rule.getName())) {
-        this.ruleBase.removeRule(pkg,pkg.getRule(rule.getName()));
-        pkg.removeRule(rule);
+        needsRemoval=true;
+        break;
       }
     }
-    boolean needsRemoval=false;
-    for (    RuleDescr ruleDescr : packageDescr.getRules()) {
-      if (filterAccepts(ruleDescr.getNamespace(),ruleDescr.getName())) {
-        if (pkg.getRule(ruleDescr.getName()) != null) {
-          needsRemoval=true;
-          break;
+    if (!needsRemoval) {
+      for (      RuleDescr ruleDescr : packageDescr.getRules()) {
+        if (filterAccepts(ruleDescr.getNamespace(),ruleDescr.getName())) {
+          if (pkg.getRule(ruleDescr.getName()) != null) {
+            needsRemoval=true;
+            break;
+          }
         }
       }
     }
     if (needsRemoval) {
       try {
         this.ruleBase.lock();
+        for (        Rule rule : pkg.getRules()) {
+          if (filterAcceptsRemoval(rule.getPackageName(),rule.getName())) {
+            this.ruleBase.removeRule(pkg,pkg.getRule(rule.getName()));
+            pkg.removeRule(rule);
+          }
+        }
         for (        RuleDescr ruleDescr : packageDescr.getRules()) {
           if (filterAccepts(ruleDescr.getNamespace(),ruleDescr.getName())) {
             if (pkg.getRule(ruleDescr.getName()) != null) {
