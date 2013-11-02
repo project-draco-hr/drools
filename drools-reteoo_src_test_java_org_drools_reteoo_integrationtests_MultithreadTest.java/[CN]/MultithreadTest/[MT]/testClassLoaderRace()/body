@@ -1,0 +1,24 @@
+{
+  String drl="package org.drools.integrationtests;\n" + "" + "rule \"average temperature\"\n"+ "when\n"+ " $avg := Number( ) from accumulate ( "+ "      $x : Integer ( ) "+ "      average ($x) )\n"+ "then\n"+ "  System.out.println( $avg );\n"+ "end\n"+ "\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(drl);
+  final StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  Thread t=new Thread(){
+    public void run(){
+      session.fireUntilHalt();
+    }
+  }
+;
+  t.start();
+  session.fireAllRules();
+  for (int j=0; j < 100; j++) {
+    session.insert(j);
+  }
+  try {
+    Thread.sleep(1000);
+    System.out.println("Halting ..");
+    session.halt();
+  }
+ catch (  Exception e) {
+    fail(e.getMessage());
+  }
+}

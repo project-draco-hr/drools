@@ -1,0 +1,31 @@
+{
+  String drl="package org.drools.integrationtests;\n" + "" + "import org.drools.compiler.integrationtests.MultithreadTest.IntEvent; \n"+ "import org.drools.compiler.integrationtests.MultithreadTest.Server; \n"+ ""+ "declare IntEvent\n"+ "  @role ( event )\n"+ "  @expires( 15s )\n"+ "end\n"+ "\n"+ ""+ "rule \"average temperature\"\n"+ "when\n"+ "  $s : Server (hostname == \"hiwaesdk\")\n"+ " $avg := Number( ) from accumulate ( "+ "      IntEvent ( $temp : data ) over window:length(10) from entry-point ep01, "+ "      average ($temp)\n"+ "  )\n"+ "then\n"+ "  $s.avgTemp = $avg.intValue();\n"+ "  System.out.println( $avg );\n"+ "end\n"+ "\n";
+  KieBaseConfiguration kbconfig=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kbconfig.setOption(EventProcessingOption.STREAM);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(kbconfig,drl);
+  final StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  EntryPoint ep01=session.getEntryPoint("ep01");
+  Runner t=new Runner(session);
+  t.start();
+  Thread.sleep(1000);
+  Server hiwaesdk=new Server("hiwaesdk");
+  session.insert(hiwaesdk);
+  long LIMIT=20;
+  for (long i=LIMIT; i > 0; i--) {
+    ep01.insert(new IntEvent((int)i));
+    if (i % 1000 == 0) {
+      System.out.println(i);
+    }
+  }
+  try {
+    Thread.sleep(1000);
+    System.out.println("Halting ..");
+    session.halt();
+  }
+ catch (  Exception e) {
+    fail(e.getMessage());
+  }
+  if (t.getError() != null) {
+    fail(t.getError().getMessage());
+  }
+}
