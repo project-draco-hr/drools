@@ -1,5 +1,11 @@
 {
   ConditionalBranchDescr conditionalBranch=(ConditionalBranchDescr)descr;
+  String consequenceName=conditionalBranch.getConsequence().getName();
+  if (!context.getRuleDescr().getNamedConsequences().keySet().contains(consequenceName)) {
+    DroolsError err=new RuleBuildError(context.getRule(),context.getParentDescr(),null,"Unknown consequence name: " + consequenceName);
+    context.addError(err);
+    return null;
+  }
   RuleConditionBuilder evalBuilder=(RuleConditionBuilder)context.getDialect().getBuilder(EvalDescr.class);
   EvalCondition condition=(EvalCondition)evalBuilder.build(context,conditionalBranch.getCondition(),getLastPattern(context));
   NamedConsequenceBuilder namedConsequenceBuilder=(NamedConsequenceBuilder)context.getDialect().getBuilder(NamedConsequenceDescr.class);
