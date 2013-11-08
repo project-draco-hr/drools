@@ -1,0 +1,16 @@
+{
+  ClassLoader parentCL=parent == null ? Thread.currentThread().getContextClassLoader() : parent;
+  Set<ClassLoader> usedCLs=new HashSet<ClassLoader>();
+  usedCLs.add(parentCL);
+  ClassRealm parentRealm=new ClassRealm(classWorld,"maven-parent",parentCL);
+  int i=1;
+  ClassRealm lastParent=parentRealm;
+  for (  Class c : requiredClasses) {
+    if (usedCLs.add(c.getClassLoader())) {
+      ClassRealm newParent=new ClassRealm(classWorld,"maven-parent" + i++,c.getClassLoader());
+      lastParent.setParentRealm(newParent);
+      lastParent=newParent;
+    }
+  }
+  return parentRealm;
+}
