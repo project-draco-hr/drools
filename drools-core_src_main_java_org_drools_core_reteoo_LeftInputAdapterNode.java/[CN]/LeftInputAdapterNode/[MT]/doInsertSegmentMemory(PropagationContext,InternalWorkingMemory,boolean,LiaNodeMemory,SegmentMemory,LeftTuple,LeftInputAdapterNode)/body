@@ -1,0 +1,17 @@
+{
+  boolean stagedInsertWasEmpty=false;
+  if (liaNode.isStreamMode() && sm.getTupleQueue() != null) {
+    stagedInsertWasEmpty=sm.getTupleQueue().isEmpty();
+    int propagationType=pctx.getType() == PropagationContext.MODIFICATION ? PropagationContext.INSERTION : pctx.getType();
+    sm.getTupleQueue().add(new LeftTupleEntry(leftTuple,pctx,sm.getNodeMemories().getFirst(),propagationType));
+    if (log.isTraceEnabled()) {
+      log.trace("LeftInputAdapterNode insert size={}  queue={} pctx={} lt={}",System.identityHashCode(sm.getTupleQueue()),sm.getTupleQueue().size(),PhreakPropagationContext.intEnumToString(pctx),leftTuple);
+    }
+  }
+ else {
+    stagedInsertWasEmpty=sm.getStagedLeftTuples().addInsert(leftTuple);
+  }
+  if (stagedInsertWasEmpty && linkOrNotify) {
+    lm.setNodeDirty(wm);
+  }
+}

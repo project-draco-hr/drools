@@ -1,0 +1,19 @@
+{
+  String drl="import org.drools.compiler.integrationtests.Misc2Test.Hero;\n" + "import org.drools.compiler.integrationtests.Misc2Test.StepForwardCommand;\n" + "import org.drools.compiler.integrationtests.Misc2Test.ChangeDirectionCommand;\n"+ "global java.util.List list; \n "+ "\n"+ "rule RotateLeft when\n"+ "    $h  : Hero( goingRight == true )\n"+ "    $dc : ChangeDirectionCommand()\n"+ "then\n"+ "    retract ( $dc );   \n"+ "    modify ( $h ) { setGoingRight( false ) };\n"+ "    list.add( 'RotateLeft' );\n"+ "end\n"+ "\n"+ "\n"+ "rule StepLeft when\n"+ "    $h  : Hero( goingRight == false )\n"+ "    $sc : StepForwardCommand()\n"+ "then\n"+ "    retract ( $sc );   \n"+ "    modify ( $h ) { setPos( $h.getPos()-1 ) };\n"+ "    list.add( 'StepLeft' );\n"+ "end\n"+ "\n"+ "rule StepRight when\n"+ "    $h  : Hero( goingRight == true )\n"+ "    $sc : StepForwardCommand()\n"+ "then\n"+ "    retract ( $sc );\n"+ "    modify ( $h ) { setPos( $h.getPos()+1 ) };\n"+ "    list.add( 'StepRight' );\n"+ "end\n";
+  KnowledgeBuilderConfiguration kbConf=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration();
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(kbConf,drl);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  Hero hero=new Hero(1);
+  ksession.insert(hero);
+  ksession.fireAllRules();
+  ksession.insert(new StepForwardCommand());
+  ksession.fireAllRules();
+  assertEquals(2,hero.getPos());
+  ksession.insert(new ChangeDirectionCommand());
+  ksession.fireAllRules();
+  ksession.insert(new StepForwardCommand());
+  ksession.fireAllRules();
+  assertEquals(1,hero.getPos());
+}
