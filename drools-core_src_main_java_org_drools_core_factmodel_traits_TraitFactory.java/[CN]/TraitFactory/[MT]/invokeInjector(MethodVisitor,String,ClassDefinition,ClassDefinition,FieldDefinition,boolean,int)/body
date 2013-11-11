@@ -1,15 +1,18 @@
 {
-  String fieldName=field.getName();
-  String fieldType=field.getTypeName();
-  mv.visitFieldInsn(GETSTATIC,BuildUtils.getInternalType(masterName),fieldName + "_writer",Type.getDescriptor(WriteAccessor.class));
+  FieldDefinition tgtField=core.getFieldByAlias(field.resolveAlias());
+  String fieldType=tgtField.getTypeName();
+  String fieldName=tgtField.getName();
+  String returnType=BuildUtils.getTypeDescriptor(fieldType);
   mv.visitVarInsn(ALOAD,0);
-  mv.visitFieldInsn(GETFIELD,BuildUtils.getInternalType(masterName),"object",BuildUtils.getTypeDescriptor(target.getName()));
+  mv.visitFieldInsn(GETFIELD,BuildUtils.getInternalType(masterName),"object",BuildUtils.getTypeDescriptor(core.getName()));
   if (toNull) {
     mv.visitInsn(BuildUtils.zero(field.getTypeName()));
   }
  else {
     mv.visitVarInsn(BuildUtils.varType(fieldType),pointer);
   }
-  String argType=BuildUtils.isPrimitive(fieldType) ? BuildUtils.getTypeDescriptor(fieldType) : "Ljava/lang/Object;";
-  mv.visitMethodInsn(INVOKEINTERFACE,Type.getInternalName(WriteAccessor.class),BuildUtils.injector(fieldType),"(Ljava/lang/Object;" + argType + ")V");
+  if (!BuildUtils.isPrimitive(fieldType)) {
+    mv.visitTypeInsn(CHECKCAST,BuildUtils.getInternalType(fieldType));
+  }
+  mv.visitMethodInsn(INVOKEVIRTUAL,Type.getInternalName(core.getDefinedClass()),BuildUtils.setterName(fieldName,fieldType),Type.getMethodDescriptor(Type.getType(void.class),new Type[]{Type.getType(returnType)}));
 }
