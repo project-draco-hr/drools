@@ -1,17 +1,19 @@
 {
-  Collection<Key<Thing<C>>> subs=this.lowerDescendants(code);
-  List<Thing<C>> ret=new ArrayList<Thing<C>>(subs.size());
-  for (  Key<Thing<C>> t : subs) {
+  Collection<K> subs=this.lowerDescendants(code);
+  List<K> ret=new ArrayList<K>(subs.size());
+  for (  K k : subs) {
+    Key<K> t=new BitMaskKey<K>(System.identityHashCode(k),k);
     TraitType tt=(TraitType)t.getValue();
     if (!tt.isVirtual()) {
       ret.add(t.getValue());
       removeMember(tt.getTypeCode());
-      Thing<C> thing=innerMap.remove(tt.getTraitName());
+      K thing=innerMap.remove(tt.getTraitName());
       if (thing instanceof TraitProxy) {
         ((TraitProxy)thing).shed();
       }
     }
   }
+  mostSpecificTraits=null;
   resetCurrentCode();
   return ret;
 }
