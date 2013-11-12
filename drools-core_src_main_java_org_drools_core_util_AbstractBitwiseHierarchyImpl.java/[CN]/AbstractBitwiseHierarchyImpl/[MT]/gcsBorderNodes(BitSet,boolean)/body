@@ -1,0 +1,38 @@
+{
+  List<J> border=new LinkedList<J>();
+  int l=key.length();
+  int n=line.size() != 0 ? line.lastKey().length() : 0;
+  BitSet start=new BitSet(n);
+  BitSet end=new BitSet(n);
+  start.or(key);
+  if (l > n) {
+    return border;
+  }
+  if (l > 0) {
+    start.set(l - 1);
+  }
+  end.set(n);
+  for (  J val : line.subMap(start,end).values()) {
+    BitSet candidate=val.getBitMask();
+    boolean minimal=true;
+    int check=superset(candidate,key);
+    if ((includeEquals && check >= 0) || (!includeEquals && check > 0)) {
+      for (int k=0; k < border.size(); k++) {
+        J ex=border.get(k);
+        if (ex != null) {
+          if (superset(candidate,ex.getBitMask()) >= 0) {
+            minimal=false;
+            break;
+          }
+ else           if (superset(ex.getBitMask(),candidate) > 0) {
+            border.set(k,null);
+          }
+        }
+      }
+      if (minimal) {
+        border.add(val);
+      }
+    }
+  }
+  return border;
+}
