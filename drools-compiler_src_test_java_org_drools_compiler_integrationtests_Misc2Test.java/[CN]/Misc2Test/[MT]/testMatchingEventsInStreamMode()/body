@@ -1,0 +1,20 @@
+{
+  String drl="import org.drools.compiler.integrationtests.Misc2Test.SimpleEvent\n" + "declare SimpleEvent\n" + "    @role(event)\n"+ "end\n"+ "\n"+ "rule \"RuleA\"\n"+ "salience 5\n"+ "when\n"+ "    $f : SimpleEvent( )\n"+ "then\n"+ "    delete ($f);\n"+ "end\n"+ "\n"+ "rule \"RuleB\"\n"+ "when\n"+ "    $f : SimpleEvent( )\n"+ "then\n"+ "end\n";
+  KieBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(EventProcessingOption.STREAM);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(kconf,drl);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  final AtomicInteger i=new AtomicInteger(0);
+  ksession.addEventListener(new DefaultAgendaEventListener(){
+    public void matchCreated(    MatchCreatedEvent event){
+      i.incrementAndGet();
+    }
+    public void matchCancelled(    MatchCancelledEvent event){
+      i.decrementAndGet();
+    }
+  }
+);
+  ksession.insert(new SimpleEvent());
+  ksession.fireAllRules();
+  assertEquals(1,i.get());
+}
