@@ -1,9 +1,8 @@
 {
-  String drl="import org.drools.compiler.integrationtests.Misc2Test.SimpleMessage\n" + "\n" + "rule R1\n"+ "    salience ( $index )\n"+ "    when\n"+ "        $m : SimpleMessage( status == SimpleMessage.Status.ENRICHED, $index : index)\n"+ "        Number() from accumulate ( SimpleMessage(), count(1) )\n"+ "    then\n"+ "        System.out.println(\"R1: \" + $m);\n"+ "        modify($m) { setStatus(SimpleMessage.Status.FILTERED) }\n"+ "end\n";
-  KnowledgeBuilderConfiguration kbConf=KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration();
-  KnowledgeBase kbase=loadKnowledgeBaseFromString(kbConf,drl);
+  String drl="import org.drools.compiler.integrationtests.Misc2Test.SimpleMessage\n" + "\n" + "rule R1\n"+ "    salience ( $index )\n"+ "    when\n"+ "        $m : SimpleMessage( status == SimpleMessage.Status.ENRICHED, $index : index)\n"+ "        Number() from accumulate ( SimpleMessage(), count(1) )\n"+ "    then\n"+ "        System.out.println(\"R1: \" + $m);\n"+ "        modify($m) { setStatus(SimpleMessage.Status.FILTERED) }\n"+ "end\n"+ "\n"+ "rule R2\n"+ "    salience( -$index )"+ "    when"+ "        $m : SimpleMessage( status == SimpleMessage.Status.FILTERED, $index : index)\n"+ "    then"+ "        delete( $m );"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(drl);
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
-  SimpleMessage[] msgs=new SimpleMessage[]{new SimpleMessage(0),new SimpleMessage(1),new SimpleMessage(2)};
+  SimpleMessage[] msgs=new SimpleMessage[]{new SimpleMessage(0),new SimpleMessage(1),new SimpleMessage(2),new SimpleMessage(3)};
   for (  SimpleMessage msg : msgs) {
     ksession.insert(msg);
   }
@@ -11,4 +10,5 @@
   for (  SimpleMessage msg : msgs) {
     assertEquals(SimpleMessage.Status.FILTERED,msg.getStatus());
   }
+  assertEquals(0,ksession.getFactCount());
 }

@@ -1,0 +1,13 @@
+{
+  String drl="import java.util.List\n" + "\n" + "global List list\n"+ "\n"+ " declare Item\n"+ "     code: int\n"+ "     price: int\n"+ "     present: boolean\n"+ " end\n"+ "\n"+ " rule \"Init\"\n"+ " when\n"+ " then\n"+ "     insert(new Item(1,40,false));\n"+ "     insert(new Item(2,40,false));\n"+ "     insert(new Item(3,40,false));\n"+ "     insert(new Item(4,40,false));\n"+ " end\n"+ "\n"+ " rule \"CollectAndAccumulateRule\"\n"+ " when\n"+ "     //At least two items that aren't presents\n"+ "     objList: List(size>=2) from collect( Item(present==false))\n"+ "     //Total price bigger than 100\n"+ "     price: Number(intValue>=100) from accumulate( Item($w:price, present==false), sum($w))\n"+ " then\n"+ "\n"+ "     list.add(price);\n"+ "     list.add(objList.size());\n"+ "     \n"+ "     //Look for the minor price item\n"+ "     Item min = null;\n"+ "     for(Object obj: objList){\n"+ "         if (min!=null){\n"+ "             min = (min.getPrice()>((Item)obj).getPrice())?(Item)obj:min;\n"+ "         }\n"+ "         else {\n"+ "             min = (Item)obj;\n"+ "         }\n"+ "     }\n"+ "     \n"+ "     //And make it a present\n"+ "     if (min!=null){\n"+ "         modify(min){setPresent(true)};\n"+ "     }\n"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(drl);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
+  assertEquals(4,list.size());
+  assertEquals(160.0,list.get(0));
+  assertEquals(4,list.get(1));
+  assertEquals(120.0,list.get(2));
+  assertEquals(3,list.get(3));
+}
