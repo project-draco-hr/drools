@@ -1,0 +1,28 @@
+{
+  final KieServices ks=new KieServicesImpl(){
+    @Override public KieRepository getRepository(){
+      return new KieRepositoryImpl();
+    }
+  }
+;
+  ReleaseId dependency=ks.newReleaseId("org.drools","drools-core","${drools.version}");
+  ReleaseId releaseId=ks.newReleaseId("org.kie.test","maven-test","1.0-SNAPSHOT");
+  InternalKieModule kJar1=createKieJarWithProperties(ks,releaseId,true,"6.0.0.CR4",new ReleaseId[]{dependency},"rule1","rule2");
+  String pomText=generatePomXmlWithProperties(releaseId,"6.0.0.CR4",dependency);
+  File pomFile=new File(System.getProperty("java.io.tmpdir"),MavenRepository.toFileName(releaseId,null) + ".pom");
+  try {
+    FileOutputStream fos=new FileOutputStream(pomFile);
+    fos.write(pomText.getBytes());
+    fos.flush();
+    fos.close();
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+  MavenRepository.getMavenRepository().deployArtifact(releaseId,kJar1,pomFile);
+  KieContainer kieContainer=ks.newKieContainer(releaseId);
+  KieBaseModel kbaseModel=((KieContainerImpl)kieContainer).getKieProject().getDefaultKieBaseModel();
+  assertNotNull("Default kbase was not found",kbaseModel);
+  String kbaseName=kbaseModel.getName();
+  assertEquals("KBase1",kbaseName);
+}
