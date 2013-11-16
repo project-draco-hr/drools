@@ -7,10 +7,38 @@
   pattern.addConstraint(constraint);
   ObjectType argsObjectType=ClassObjectType.DroolsQuery_ObjectType;
   InternalReadAccessor arrayExtractor=PatternBuilder.getFieldReadAccessor(context,queryDescr,argsObjectType,"elements",null,true);
-  String[] params=queryDescr.getParameters();
-  String[] types=queryDescr.getParameterTypes();
-  int i=0;
+  Query query=((Query)context.getRule());
+  String[] params;
+  String[] types;
+  int numParams=queryDescr.getParameters().length;
+  if (query.isAbductive()) {
+    params=Arrays.copyOf(queryDescr.getParameters(),queryDescr.getParameters().length + 1);
+    types=Arrays.copyOf(queryDescr.getParameterTypes(),queryDescr.getParameterTypes().length + 1);
+  }
+ else {
+    params=queryDescr.getParameters();
+    types=queryDescr.getParameterTypes();
+  }
   Declaration[] declarations=new Declaration[params.length];
+  if (query.isAbductive()) {
+    AnnotationDescr ann=queryDescr.getAnnotation(Abductive.class.getSimpleName());
+    String returnName=ann.getValue("target");
+    try {
+      Class<?> returnKlass=context.getPkg().getTypeResolver().resolveType(returnName.replace(".class",""));
+      ClassObjectType objectType=new ClassObjectType(returnKlass,false);
+      objectType=context.getPkg().getClassFieldAccessorStore().getClassObjectType(objectType,(AbductiveQuery)query);
+      params[numParams]="";
+      types[numParams]=returnKlass.getName();
+      ((AbductiveQuery)query).setReturnType(objectType,params);
+    }
+ catch (    ClassNotFoundException e) {
+      context.addError(new DescrBuildError(context.getParentDescr(),queryDescr,e,"Unable to resolve abducible type : " + returnName));
+    }
+catch (    NoSuchMethodException e) {
+      context.addError(new DescrBuildError(context.getParentDescr(),queryDescr,e,"Unable to resolve abducible constructor for type : " + returnName + " with types "+ types));
+    }
+  }
+  int i=0;
   try {
     for (i=0; i < params.length; i++) {
       Declaration declr=pattern.addDeclaration(params[i]);
@@ -19,7 +47,7 @@
       declr.setReadAccessor(reader);
       declarations[i]=declr;
     }
-    ((Query)context.getRule()).setParameters(declarations);
+    query.setParameters(declarations);
   }
  catch (  ClassNotFoundException e) {
     context.addError(new DescrBuildError(context.getParentDescr(),queryDescr,e,"Unable to resolve type '" + types[i] + " for parameter"+ params[i]));

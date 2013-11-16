@@ -1,0 +1,29 @@
+{
+  String droolsSource="package org.drools.tms.test; \n" + "import " + Abducible.class.getName() + "; \n"+ ""+ "declare Foo "+ "   @Abducible "+ "   id : String "+ "end "+ "query foo( String $s ) "+ "   @Abductive( target=Foo.class ) \n"+ "end \n "+ "query bar( String $s, Foo $foo ) "+ "   $foo := Foo() "+ "end \n "+ "rule MoveAround "+ "when "+ "   $s : String() "+ "   $f : foo( $s ; ) "+ "   bar( $s, $f ; ) "+ "then "+ "   delete( $s ); "+ "   System.out.println( 'Foo ' + $f ); "+ "end "+ "";
+  KieSession session=getSessionFromString(droolsSource);
+  session.insert("faa");
+  session.fireAllRules();
+  for (  Object o : session.getObjects()) {
+    System.out.println(">>> " + o);
+  }
+  assertEquals(1,session.getObjects().size());
+  Query q1=session.getKieBase().getQuery("org.drools.tms.test","foo");
+  Query q2=session.getKieBase().getQuery("org.drools.tms.test","bar");
+  assertNotNull(q1);
+  assertNotNull(q2);
+  QueryResults q10res=session.getQueryResults("foo","foo");
+  QueryResults q11res=session.getQueryResults("foo","foo",Variable.v);
+  QueryResults q20res=session.getQueryResults("bar","foo",Variable.v);
+  assertEquals(1,q10res.size());
+  assertEquals(1,q11res.size());
+  assertEquals(1,q20res.size());
+  QueryResultsRow row10=q10res.iterator().next();
+  QueryResultsRow row11=q11res.iterator().next();
+  QueryResultsRow row20=q20res.iterator().next();
+  assertEquals("foo",row10.get("$s"));
+  assertEquals("foo",row11.get("$s"));
+  assertEquals("foo",row20.get("$s"));
+  Object foo=row20.get("$foo");
+  assertSame(foo,session.getObjects().iterator().next());
+  assertNull(row11.get(""));
+}

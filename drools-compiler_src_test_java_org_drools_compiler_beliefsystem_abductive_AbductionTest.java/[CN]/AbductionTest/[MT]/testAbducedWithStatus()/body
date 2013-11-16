@@ -1,0 +1,21 @@
+{
+  String droolsSource="package org.drools.tms.test; \n" + "" + "import " + Bean.class.getCanonicalName() + ";"+ "global java.util.Map map; \n"+ ""+ "query foo( Integer $i ) \n"+ "   @Abductive( target=Bean.class ) \n"+ "   $i := Integer() "+ "end \n"+ "rule R1 "+ "when "+ "   $x : foo( $v ; ) "+ "then "+ "   map.put( $v, $x ); "+ "end \n"+ ""+ "";
+  KieSession session=getSessionFromString(droolsSource);
+  Map map=new HashMap();
+  session.setGlobal("map",map);
+  session.insert(42);
+  session.insert(11);
+  Bean b=new Bean(11);
+  session.insert(b);
+  session.fireAllRules();
+  System.out.println(map);
+  assertTrue(map.keySet().containsAll(Arrays.asList(11,42)));
+  assertEquals(2,map.size());
+  Bean b11=(Bean)map.get(11);
+  InternalFactHandle f11=((InternalFactHandle)session.getFactHandle(b11));
+  assertEquals(EqualityKey.STATED,f11.getEqualityKey().getStatus());
+  assertSame(b,b11);
+  Bean b42=(Bean)map.get(42);
+  InternalFactHandle f42=(InternalFactHandle)session.getFactHandle(b42);
+  assertEquals(EqualityKey.JUSTIFIED,f42.getEqualityKey().getStatus());
+}
