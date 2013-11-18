@@ -78,6 +78,7 @@
       }
     }
  else {
+      boolean exitInnerEval=false;
 switch (node.getType()) {
 case NodeTypeEnums.EvalConditionNode:
 {
@@ -91,10 +92,7 @@ case NodeTypeEnums.FromNode:
       }
 case NodeTypeEnums.QueryElementNode:
 {
-      boolean exitInnerEval=evalQueryNode(liaNode,pmem,node,bit,nodeMem,smems,smemIndex,trgTuples,wm,stack,visitedRules,srcTuples,sink);
-      if (exitInnerEval) {
-        break;
-      }
+      exitInnerEval=evalQueryNode(liaNode,pmem,node,bit,nodeMem,smems,smemIndex,trgTuples,wm,stack,visitedRules,srcTuples,sink);
       break;
     }
 case NodeTypeEnums.TimerConditionNode:
@@ -107,6 +105,9 @@ case NodeTypeEnums.ConditionalBranchNode:
   pBranchNode.doNode((ConditionalBranchNode)node,(ConditionalBranchMemory)nodeMem,sink,wm,srcTuples,trgTuples,stagedLeftTuples,executor);
   break;
 }
+}
+if (exitInnerEval && trgTuples.isEmpty()) {
+break;
 }
 }
 if (node != smem.getTipNode()) {
