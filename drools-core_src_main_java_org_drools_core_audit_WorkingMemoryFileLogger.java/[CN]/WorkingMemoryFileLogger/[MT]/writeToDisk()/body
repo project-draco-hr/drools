@@ -6,14 +6,12 @@
   try {
     fileWriter=new FileWriter(this.fileName + (this.nbOfFile == 0 ? ".log" : this.nbOfFile + ".log"),true);
     final XStream xstream=new XStream();
-    List<LogEvent> eventsToWrite=null;
+    WorkingMemoryLog log=null;
 synchronized (this.events) {
-      eventsToWrite=new ArrayList<LogEvent>(this.events);
+      log=new WorkingMemoryLog(new ArrayList<LogEvent>(this.events),isPhreak ? "PHREAK" : "RETEOO");
       clear();
     }
-    for (    LogEvent event : eventsToWrite) {
-      fileWriter.write(xstream.toXML(event) + "\n");
-    }
+    fileWriter.write(xstream.toXML(log) + "\n");
   }
  catch (  final FileNotFoundException exc) {
     throw new RuntimeException("Could not create the log file.  Please make sure that directory that the log file should be placed in does exist.");
