@@ -1,0 +1,35 @@
+{
+  final KieServices kieServices=KieServices.Factory.get();
+  ReleaseId releaseId=kieServices.newReleaseId("org.kie.test","sync-scanner-test","1.0.0");
+  createAndDeployJar(kieServices,releaseId,createDRL("rule0"));
+  final KieContainer kieContainer=kieServices.newKieContainer(releaseId);
+  KieSession kieSession=kieContainer.newKieSession();
+  List<String> list=new ArrayList<String>();
+  kieSession.setGlobal("list",list);
+  kieSession.fireAllRules();
+  kieSession.dispose();
+  assertEquals(1,list.size());
+  Thread t=new Thread(new Runnable(){
+    @Override public void run(){
+      for (int i=1; i < 10; i++) {
+        ReleaseId releaseId=kieServices.newReleaseId("org.kie.test","sync-scanner-test","1.0." + i);
+        createAndDeployJar(kieServices,releaseId,createDRL("rule" + i));
+        kieContainer.updateToVersion(releaseId);
+      }
+    }
+  }
+);
+  t.setDaemon(true);
+  t.start();
+  while (true) {
+    kieSession=kieContainer.newKieSession();
+    list=new ArrayList<String>();
+    kieSession.setGlobal("list",list);
+    kieSession.fireAllRules();
+    kieSession.dispose();
+    assertEquals(1,list.size());
+    if (list.get(0).equals("rule9")) {
+      break;
+    }
+  }
+}

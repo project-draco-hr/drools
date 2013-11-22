@@ -21,14 +21,6 @@
       CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
       int fileCount=0;
       for (      ResourceChangeSet rcs : cs.getChanges().values()) {
-        if (rcs.getChangeType().equals(ChangeType.REMOVED)) {
-          String resourceName=rcs.getResourceName();
-          if (KieBuilderImpl.filterFileInKBase(kieBaseModel,resourceName) && !resourceName.endsWith(".properties")) {
-            pkgbuilder.removeObjectsGeneratedFromResource(currentKM.getResource(resourceName));
-          }
-        }
-      }
-      for (      ResourceChangeSet rcs : cs.getChanges().values()) {
         if (!rcs.getChangeType().equals(ChangeType.REMOVED)) {
           String resourceName=rcs.getResourceName();
           if (KieBuilderImpl.filterFileInKBase(kieBaseModel,resourceName) && !resourceName.endsWith(".properties")) {
@@ -53,8 +45,22 @@
           }
         }
       }
-      if (fileCount > 0) {
-        ckbuilder.build();
+      pkgbuilder.startPackageUpdate();
+      try {
+        for (        ResourceChangeSet rcs : cs.getChanges().values()) {
+          if (rcs.getChangeType().equals(ChangeType.REMOVED)) {
+            String resourceName=rcs.getResourceName();
+            if (KieBuilderImpl.filterFileInKBase(kieBaseModel,resourceName) && !resourceName.endsWith(".properties")) {
+              pkgbuilder.removeObjectsGeneratedFromResource(currentKM.getResource(resourceName));
+            }
+          }
+        }
+        if (fileCount > 0) {
+          ckbuilder.build();
+        }
+      }
+  finally {
+        pkgbuilder.completePackageUpdate();
       }
     }
   }
