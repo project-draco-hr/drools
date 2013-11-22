@@ -1,0 +1,27 @@
+{
+  ScorecardCompiler scorecardCompiler=new ScorecardCompiler(INTERNAL_DECLARED_TYPES);
+  InputStream inputStream=PMMLDocumentTest.class.getResourceAsStream("/scoremodel_scoring_strategies.xls");
+  boolean compileResult=scorecardCompiler.compileFromExcel(inputStream,sheetName);
+  if (!compileResult) {
+    for (    ScorecardError error : scorecardCompiler.getScorecardParseErrors()) {
+      System.err.println("Scorecard Compiler Error :" + error.getErrorLocation() + "->"+ error.getErrorMessage());
+    }
+    return -999999;
+  }
+  String drl=scorecardCompiler.getDRL();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  for (  KnowledgeBuilderError error : kbuilder.getErrors()) {
+    System.out.println(error.getMessage());
+  }
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  assertNotNull(kbase);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatelessKieSession session=kbase.newStatelessKnowledgeSession();
+  FactType scorecardType=kbase.getFactType("org.drools.scorecards.example","SampleScore");
+  DroolsScorecard scorecard=(DroolsScorecard)scorecardType.newInstance();
+  scorecardType.set(scorecard,"age",10);
+  session.execute(scorecard);
+  return scorecard.getCalculatedScore();
+}

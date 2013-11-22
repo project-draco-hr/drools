@@ -1,0 +1,21 @@
+{
+  PMML pmmlDocument;
+  ScorecardCompiler scorecardCompiler=new ScorecardCompiler(INTERNAL_DECLARED_TYPES);
+  if (scorecardCompiler.compileFromExcel(PMMLDocumentTest.class.getResourceAsStream("/scoremodel_scoring_strategies.xls"))) {
+    pmmlDocument=scorecardCompiler.getPMMLDocument();
+    assertNotNull(pmmlDocument);
+    String drl=scorecardCompiler.getDRL();
+    assertNotNull(drl);
+    for (    Object serializable : pmmlDocument.getAssociationModelsAndBaselineModelsAndClusteringModels()) {
+      if (serializable instanceof Scorecard) {
+        Scorecard scorecard=(Scorecard)serializable;
+        assertEquals("Sample Score",scorecard.getModelName());
+        Extension extension=ScorecardPMMLUtils.getExtension(scorecard.getExtensionsAndCharacteristicsAndMiningSchemas(),PMMLExtensionNames.SCORECARD_SCORING_STRATEGY);
+        assertNotNull(extension);
+        assertEquals(extension.getValue(),ScoringStrategy.AGGREGATE_SCORE.toString());
+        return;
+      }
+    }
+  }
+  fail();
+}

@@ -4,13 +4,21 @@
   String objectClass=scorecard.getModelName().replaceAll(" ","");
   String setter="insertLogical(new PartialScore(\"";
   String field=ScorecardPMMLUtils.extractFieldNameFromCharacteristic(c);
-  stringBuilder.append(setter).append(objectClass).append("\",\"").append(field).append("\",").append(scoreAttribute.getPartialScore());
+  ScoringStrategy scoringStrategy=getScoringStrategy(scorecard);
+  if (scoringStrategy.toString().startsWith("WEIGHTED")) {
+    String weight=ScorecardPMMLUtils.getExtensionValue(scoreAttribute.getExtensions(),PMMLExtensionNames.CHARACTERTISTIC_WEIGHT);
+    stringBuilder.append(setter).append(objectClass).append("\",\"").append(field).append("\",(").append(scoreAttribute.getPartialScore()).append("*").append(weight).append(")");
+  }
+ else {
+    stringBuilder.append(setter).append(objectClass).append("\",\"").append(field).append("\",").append(scoreAttribute.getPartialScore());
+  }
   if (scorecard.isUseReasonCodes()) {
     String reasonCode=scoreAttribute.getReasonCode();
     if (reasonCode == null || StringUtils.isEmpty(reasonCode)) {
       reasonCode=c.getReasonCode();
     }
-    stringBuilder.append(",\"").append(reasonCode).append("\", ").append(position);
+    stringBuilder.append(",\"").append(reasonCode).append("\", ").append(c.getBaselineScore());
+    stringBuilder.append(",").append(position);
   }
   stringBuilder.append("));");
   consequence.setSnippet(stringBuilder.toString());

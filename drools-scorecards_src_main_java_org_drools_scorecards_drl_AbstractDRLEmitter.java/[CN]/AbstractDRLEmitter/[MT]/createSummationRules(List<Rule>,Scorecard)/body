@@ -3,30 +3,56 @@
   Rule calcTotalRule=new Rule(objectClass + "_calculateTotalScore",1,1);
   StringBuilder stringBuilder=new StringBuilder();
   Condition condition=new Condition();
-  stringBuilder.append("$calculatedScore : Double() from accumulate (PartialScore(scorecardName ==\"").append(objectClass).append("\", $partialScore:score), sum($partialScore))");
-  condition.setSnippet(stringBuilder.toString());
-  calcTotalRule.addCondition(condition);
-  if (scorecard.getInitialScore() > 0) {
-    condition=new Condition();
-    stringBuilder=new StringBuilder();
-    stringBuilder.append("InitialScore(scorecardName == \"").append(objectClass).append("\", $initialScore:score)");
-    condition.setSnippet(stringBuilder.toString());
-    calcTotalRule.addCondition(condition);
+  ScoringStrategy strategy=getScoringStrategy(scorecard);
+switch (strategy) {
+case WEIGHTED_AGGREGATE_SCORE:
+case AGGREGATE_SCORE:
+{
+      stringBuilder.append("$calculatedScore : Double() from accumulate (PartialScore(scorecardName ==\"").append(objectClass).append("\", $partialScore:score), sum($partialScore))");
+      break;
+    }
+case WEIGHTED_AVERAGE_SCORE:
+case AVERAGE_SCORE:
+{
+    stringBuilder.append("$calculatedScore : Double() from accumulate (PartialScore(scorecardName ==\"").append(objectClass).append("\", $partialScore:score), average($partialScore))");
+    break;
   }
-  ruleList.add(calcTotalRule);
-  if (scorecard.isUseReasonCodes()) {
-    String ruleName=objectClass + "_collectReasonCodes";
-    Rule rule=new Rule(ruleName,1,1);
-    rule.setDescription("collect and sort the reason codes as per the specified algorithm");
-    condition=new Condition();
-    stringBuilder=new StringBuilder();
-    stringBuilder.append("$reasons : List() from accumulate ( PartialScore(scorecardName == \"").append(objectClass).append("\", $reasonCode : reasoncode ); collectList($reasonCode) )");
-    condition.setSnippet(stringBuilder.toString());
-    rule.addCondition(condition);
-    ruleList.add(rule);
-    addAdditionalReasonCodeCondition(rule,scorecard);
-    addAdditionalReasonCodeConsequence(rule,scorecard);
-  }
-  addAdditionalSummationCondition(calcTotalRule,scorecard);
-  addAdditionalSummationConsequence(calcTotalRule,scorecard);
+case WEIGHTED_MAXIMUM_SCORE:
+case MAXIMUM_SCORE:
+{
+  stringBuilder.append("$calculatedScore : Double() from accumulate (PartialScore(scorecardName ==\"").append(objectClass).append("\", $partialScore:score), max($partialScore))");
+  break;
+}
+case WEIGHTED_MINIMUM_SCORE:
+case MINIMUM_SCORE:
+{
+stringBuilder.append("$calculatedScore : Double() from accumulate (PartialScore(scorecardName ==\"").append(objectClass).append("\", $partialScore:score), min($partialScore))");
+break;
+}
+}
+condition.setSnippet(stringBuilder.toString());
+calcTotalRule.addCondition(condition);
+if (scorecard.getInitialScore() > 0) {
+condition=new Condition();
+stringBuilder=new StringBuilder();
+stringBuilder.append("InitialScore(scorecardName == \"").append(objectClass).append("\", $initialScore:score)");
+condition.setSnippet(stringBuilder.toString());
+calcTotalRule.addCondition(condition);
+}
+ruleList.add(calcTotalRule);
+if (scorecard.isUseReasonCodes()) {
+String ruleName=objectClass + "_collectReasonCodes";
+Rule rule=new Rule(ruleName,1,1);
+rule.setDescription("collect and sort the reason codes as per the specified algorithm");
+condition=new Condition();
+stringBuilder=new StringBuilder();
+stringBuilder.append("$partialScoresList : List() from collect ( PartialScore(scorecardName == \"").append(objectClass).append("\"))");
+condition.setSnippet(stringBuilder.toString());
+rule.addCondition(condition);
+ruleList.add(rule);
+addAdditionalReasonCodeCondition(rule,scorecard);
+addAdditionalReasonCodeConsequence(rule,scorecard);
+}
+addAdditionalSummationCondition(calcTotalRule,scorecard);
+addAdditionalSummationConsequence(calcTotalRule,scorecard);
 }

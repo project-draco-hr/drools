@@ -1,0 +1,28 @@
+{
+  setReasonCodeAlgorithm(reasonCodeAlgorithm);
+  TreeMap<Double,String> distanceMap=new TreeMap<Double,String>();
+  for (  PartialScore partialScore : partialScores) {
+    double baseline=partialScore.getBaselineScore();
+    double distance=0;
+    if (getReasonCodeAlgorithm() == REASON_CODE_ALGORITHM_POINTSABOVE) {
+      distance=(baseline - partialScore.getScore()) + partialScore.getPosition();
+      if (distance >= baseline) {
+        distanceMap.put(distance,partialScore.getReasoncode());
+      }
+    }
+ else     if (getReasonCodeAlgorithm() == REASON_CODE_ALGORITHM_POINTSBELOW) {
+      distance=(partialScore.getScore() - baseline) + partialScore.getPosition();
+      if (distance <= baseline) {
+        distanceMap.put(distance,partialScore.getReasoncode());
+      }
+    }
+  }
+  List<String> reasonCodes=new ArrayList<String>();
+  for (  Double distance : distanceMap.descendingKeySet()) {
+    reasonCodes.add(distanceMap.get(distance));
+  }
+  while (reasonCodes.size() < partialScores.size()) {
+    reasonCodes.add(reasonCodes.get(reasonCodes.size() - 1));
+  }
+  setReasonCodes(reasonCodes);
+}
