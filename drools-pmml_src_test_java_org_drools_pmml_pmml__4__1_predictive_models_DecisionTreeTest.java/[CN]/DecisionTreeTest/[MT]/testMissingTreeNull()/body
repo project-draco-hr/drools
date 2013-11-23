@@ -1,0 +1,30 @@
+{
+  PMML4Compiler compiler=new PMML4Compiler();
+  PMML pmml=compiler.loadModel(PMML,ResourceFactory.newClassPathResource(source2).getInputStream());
+  for (  Object o : pmml.getAssociationModelsAndBaselineModelsAndClusteringModels()) {
+    if (o instanceof TreeModel) {
+      TreeModel tree=(TreeModel)o;
+      tree.setMissingValueStrategy(MISSINGVALUESTRATEGY.NULL_PREDICTION);
+    }
+  }
+  String theory=compiler.generateTheory(pmml);
+  if (VERBOSE) {
+    System.out.println(theory);
+  }
+  KieSession kSession=getSession(theory);
+  setKSession(kSession);
+  setKbase(getKSession().getKieBase());
+  kSession.fireAllRules();
+  FactType tgt=kSession.getKieBase().getFactType(packageName,"Fld9");
+  FactType tok=kSession.getKieBase().getFactType(packageName,"TreeToken");
+  kSession.getEntryPoint("in_Fld1").insert(-1.0);
+  kSession.getEntryPoint("in_Fld2").insert(-1.0);
+  kSession.getEntryPoint("in_Fld3").insert("optA");
+  kSession.fireAllRules();
+  System.err.println(reportWMObjects(kSession));
+  Object token=getToken(kSession);
+  assertEquals(0.0,(Double)tok.get(token,"confidence"),1e-6);
+  assertEquals("null",tok.get(token,"current"));
+  assertEquals(0.0,tok.get(token,"totalCount"));
+  assertEquals(0,getKSession().getObjects(new ClassObjectFilter(tgt.getFactClass())).size());
+}

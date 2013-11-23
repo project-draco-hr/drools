@@ -1,0 +1,27 @@
+{
+  setKSession(getModelSession(source2,VERBOSE));
+  setKbase(getKSession().getKieBase());
+  FactType userAge1=getKbase().getFactType(packageName,"UserAge");
+  FactType userAge2=getKbase().getFactType(packageName,"UserAgeComplex");
+  FactHandle h=getKSession().getEntryPoint("in_Age").insert(10.0);
+  getKSession().fireAllRules();
+  System.err.println(reportWMObjects(getKSession()));
+  checkFirstDataFieldOfTypeStatus(userAge1,true,false,null,6270.0);
+  checkFirstDataFieldOfTypeStatus(userAge2,true,false,null,44.1);
+  System.out.println("_________________________________________________________________");
+  FactType age=getKbase().getFactType(packageName,"Age");
+  Object aged=getKSession().getObjects(new ClassObjectFilter(age.getFactClass())).iterator().next();
+  getKSession().retract(getKSession().getFactHandle(aged));
+  getKSession().fireAllRules();
+  assertEquals(0,getKSession().getFactCount());
+  getKSession().getEntryPoint("in_Age").insert(20.0);
+  getKSession().fireAllRules();
+  checkFirstDataFieldOfTypeStatus(userAge1,true,false,null,9570.0);
+  checkFirstDataFieldOfTypeStatus(userAge2,true,false,null,115.2);
+  getKSession().getEntryPoint("in_Age").insert(30.0);
+  getKSession().fireAllRules();
+  checkFirstDataFieldOfTypeStatus(userAge1,true,false,null,12870.0);
+  checkFirstDataFieldOfTypeStatus(userAge2,true,false,null,306.3);
+  System.err.println(reportWMObjects(getKSession()));
+  assertEquals(4,getKSession().getFactCount());
+}

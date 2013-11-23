@@ -1,0 +1,23 @@
+{
+  try {
+    SchemaFactory sf=SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+    Schema schema=null;
+    try {
+      schema=sf.newSchema(Thread.currentThread().getContextClassLoader().getResource(SCHEMA_PATH));
+    }
+ catch (    SAXException e) {
+      e.printStackTrace();
+      visitorBuildResults.add(new PMMLWarning(ResourceFactory.newInputStreamResource(source),"Could not validate PMML document :" + e.getMessage()));
+    }
+    JAXBContext jc=JAXBContext.newInstance(model);
+    Unmarshaller unmarshaller=jc.createUnmarshaller();
+    if (schema != null) {
+      unmarshaller.setSchema(schema);
+    }
+    return (PMML)unmarshaller.unmarshal(source);
+  }
+ catch (  JAXBException e) {
+    this.results.add(new PMMLError(e.toString()));
+    return null;
+  }
+}

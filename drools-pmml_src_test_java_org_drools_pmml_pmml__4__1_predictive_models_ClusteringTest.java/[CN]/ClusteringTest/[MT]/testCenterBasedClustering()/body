@@ -1,0 +1,27 @@
+{
+  setKSession(getModelSession(source1,VERBOSE));
+  setKbase(getKSession().getKieBase());
+  KieSession kSession=getKSession();
+  kSession.fireAllRules();
+  kSession.getEntryPoint("in_Fld0").insert("y");
+  kSession.getEntryPoint("in_Fld1").insert(2.0);
+  kSession.getEntryPoint("in_Fld2").insert(-1.0);
+  kSession.fireAllRules();
+  System.err.println(reportWMObjects(kSession));
+  FactType mu=kSession.getKieBase().getFactType(packageName,"DistanceMembership");
+  Collection mus=kSession.getObjects(new ClassObjectFilter(mu.getFactClass()));
+  assertTrue(mus.size() > 0);
+  for (  Object x : mus) {
+    Integer ix=(Integer)mu.get(x,"index");
+    String lab=(String)mu.get(x,"label");
+    Double m=(Double)mu.get(x,"mu");
+    if (ix == 0) {
+      assertEquals("Klust1",lab);
+      assertEquals(41.1,m,0.001);
+    }
+ else     if (ix == 1) {
+      assertEquals("Klust2",lab);
+      assertEquals(14704.428,m,0.001);
+    }
+  }
+}

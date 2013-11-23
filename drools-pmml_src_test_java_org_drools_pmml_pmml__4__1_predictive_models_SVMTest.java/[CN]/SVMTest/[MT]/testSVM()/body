@@ -1,0 +1,26 @@
+{
+  setKSession(getModelSession(source1,VERBOSE));
+  setKbase(getKSession().getKieBase());
+  KieSession kSession=getKSession();
+  kSession.fireAllRules();
+  FactType ztype=kSession.getKieBase().getFactType(packageName,"Z");
+  assertNotNull(ztype);
+  kSession.getEntryPoint("in_X").insert(0.0);
+  kSession.getEntryPoint("in_Y").insert(0.0);
+  kSession.fireAllRules();
+  checkFirstDataFieldOfTypeStatus(ztype,true,false,"SVMXORMODEL","yes");
+  kSession.getEntryPoint("in_X").insert(0.23);
+  kSession.getEntryPoint("in_Y").insert(0.75);
+  kSession.fireAllRules();
+  checkFirstDataFieldOfTypeStatus(ztype,true,false,"SVMXORMODEL","no");
+  kSession.getEntryPoint("in_X").insert(0.85);
+  kSession.fireAllRules();
+  checkFirstDataFieldOfTypeStatus(ztype,true,false,"SVMXORMODEL","yes");
+  System.err.println(reportWMObjects(kSession));
+  kSession.getEntryPoint("in_Y").insert(-0.12);
+  kSession.fireAllRules();
+  checkFirstDataFieldOfTypeStatus(ztype,true,false,"SVMXORMODEL","no");
+  kSession.getEntryPoint("in_X").insert(7.85);
+  kSession.fireAllRules();
+  checkFirstDataFieldOfTypeStatus(ztype,true,false,"SVMXORMODEL","yes");
+}

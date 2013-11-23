@@ -1,0 +1,17 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.write("src/main/resources/" + source1.replace(".xml",".pmml"),ResourceFactory.newClassPathResource(source1).setResourceType(ResourceType.PMML));
+  KieBuilder kb=ks.newKieBuilder(kfs);
+  kb.buildAll();
+  KieContainer kc=ks.newKieContainer(ks.getRepository().getDefaultReleaseId());
+  KieSession kSession=kc.newKieSession();
+  String source2Path="src/main/resources/" + source2.replace(".xml",".pmml");
+  kfs.write(source2Path,ResourceFactory.newClassPathResource(source2).setResourceType(ResourceType.PMML));
+  ((InternalKieBuilder)kb).createFileSet(source2Path).build();
+  kSession.fireAllRules();
+  System.err.println(reportWMObjects(kSession));
+  assertEquals(2,kSession.getObjects(new ClassObjectFilter(ModelMarker.class)).size());
+  assertEquals(11,kSession.getObjects(new ClassObjectFilter(kSession.getKieBase().getFactType(packageName,"Synapse").getFactClass())).size());
+  kSession.dispose();
+}
