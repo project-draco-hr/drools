@@ -1,11 +1,12 @@
 {
   final Rule rule=context.getRule();
   final RuleDescr ruleDescr=context.getRuleDescr();
-  boolean lockOnActive=false;
+  boolean enforceEager=false;
   for (  final AttributeDescr attributeDescr : ruleDescr.getAttributes().values()) {
     final String name=attributeDescr.getName();
     if (name.equals("no-loop")) {
       rule.setNoLoop(getBooleanValue(attributeDescr,true));
+      enforceEager=true;
     }
  else     if (name.equals("auto-focus")) {
       rule.setAutoFocus(getBooleanValue(attributeDescr,true));
@@ -23,8 +24,9 @@
       rule.setAgendaGroup(attributeDescr.getValue());
     }
  else     if (name.equals("lock-on-active")) {
-      lockOnActive=getBooleanValue(attributeDescr,true);
+      boolean lockOnActive=getBooleanValue(attributeDescr,true);
       rule.setLockOnActive(lockOnActive);
+      enforceEager|=lockOnActive;
     }
  else     if (name.equals(DroolsSoftKeywords.DURATION) || name.equals(DroolsSoftKeywords.TIMER)) {
       String duration=attributeDescr.getValue();
@@ -65,7 +67,7 @@
     rule.setActivationListener(MVEL.evalToString(ann.getSingleValue()));
   }
   ann=ruleDescr.getAnnotation("Eager");
-  if (lockOnActive || (ann != null && !StringUtils.isEmpty(ann.getSingleValue()))) {
+  if (enforceEager || (ann != null && !StringUtils.isEmpty(ann.getSingleValue()))) {
     rule.setEager(true);
   }
 }
