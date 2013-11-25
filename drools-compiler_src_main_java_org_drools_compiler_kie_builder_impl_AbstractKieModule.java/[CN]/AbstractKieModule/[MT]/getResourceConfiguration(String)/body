@@ -1,9 +1,12 @@
 {
-  ResourceConfiguration conf=null;
-  if (kieModule.isAvailable(fileName + ".properties")) {
+  ResourceConfiguration conf=resourceConfigurationCache.get(fileName);
+  if (conf != null) {
+    return conf;
+  }
+  if (isAvailable(fileName + ".properties")) {
     Properties prop=new Properties();
     try {
-      prop.load(new ByteArrayInputStream(kieModule.getBytes(fileName + ".properties")));
+      prop.load(new ByteArrayInputStream(getBytes(fileName + ".properties")));
     }
  catch (    IOException e) {
       log.error("Error loading resource configuration from file: " + fileName + ".properties");
@@ -18,5 +21,6 @@
       conf=ResourceTypeImpl.fromProperties(prop);
     }
   }
+  resourceConfigurationCache.put(fileName,conf);
   return conf;
 }
