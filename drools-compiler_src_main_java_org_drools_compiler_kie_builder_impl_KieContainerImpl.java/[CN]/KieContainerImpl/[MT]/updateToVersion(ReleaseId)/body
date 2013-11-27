@@ -19,22 +19,27 @@
       KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder((KnowledgeBase)kBaseEntry.getValue());
       PackageBuilder pkgbuilder=kbuilder instanceof PackageBuilder ? ((PackageBuilder)kbuilder) : ((KnowledgeBuilderImpl)kbuilder).getPackageBuilder();
       CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
+      List<String> modifiedClasses=new ArrayList<String>();
       int fileCount=0;
       for (      ResourceChangeSet rcs : cs.getChanges().values()) {
-        if (!rcs.getChangeType().equals(ChangeType.REMOVED)) {
+        if (rcs.getChangeType() != ChangeType.REMOVED) {
           String resourceName=rcs.getResourceName();
           if (!resourceName.endsWith(".properties") && filterFileInKBase(newKM,kieBaseModel,resourceName)) {
-            Resource resource=currentKM.getResource(rcs.getResourceName());
+            Resource resource=currentKM.getResource(resourceName);
             List<ResourceChange> changes=rcs.getChanges();
             if (!changes.isEmpty()) {
               fileCount+=AbstractKieModule.updateResource(ckbuilder,newKM,resourceName,rcs) ? 1 : 0;
             }
  else {
-              if (rcs.getChangeType().equals(ChangeType.UPDATED)) {
+              if (rcs.getChangeType() == ChangeType.UPDATED) {
                 pkgbuilder.removeObjectsGeneratedFromResource(resource);
               }
               fileCount+=AbstractKieModule.addFile(ckbuilder,newKM,resourceName) ? 1 : 0;
             }
+          }
+ else           if (resourceName.endsWith(".class")) {
+            modifiedClasses.add(resourceName);
+            fileCount++;
           }
         }
         KieBase kBase=kBaseEntry.getValue();
@@ -48,7 +53,7 @@
       pkgbuilder.startPackageUpdate();
       try {
         for (        ResourceChangeSet rcs : cs.getChanges().values()) {
-          if (rcs.getChangeType().equals(ChangeType.REMOVED)) {
+          if (rcs.getChangeType() == ChangeType.REMOVED) {
             String resourceName=rcs.getResourceName();
             if (!resourceName.endsWith(".properties") && filterFileInKBase(newKM,kieBaseModel,resourceName)) {
               pkgbuilder.removeObjectsGeneratedFromResource(currentKM.getResource(resourceName));
@@ -56,7 +61,25 @@
           }
         }
         if (fileCount > 0) {
+          Set<String> modifiedPackages=new HashSet<String>();
+          if (!modifiedClasses.isEmpty()) {
+            ClassLoader rootClassLoader=pkgbuilder.getRootClassLoader();
+            if (rootClassLoader instanceof ProjectClassLoader) {
+              ProjectClassLoader projectClassLoader=(ProjectClassLoader)rootClassLoader;
+              projectClassLoader.reinitTypes();
+              for (              String resourceName : modifiedClasses) {
+                String className=convertResourceToClassName(resourceName);
+                byte[] bytes=newKM.getBytes(resourceName);
+                Class<?> clazz=projectClassLoader.defineClass(className,resourceName,bytes);
+                modifiedPackages.add(clazz.getPackage().getName());
+              }
+              pkgbuilder.setAllRuntimesDirty(modifiedPackages);
+            }
+          }
           ckbuilder.build();
+          if (!modifiedClasses.isEmpty()) {
+            pkgbuilder.rewireClassObjectTypes(modifiedPackages);
+          }
         }
       }
   finally {
