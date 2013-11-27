@@ -1,0 +1,58 @@
+{
+  String str="";
+  str+="package org.domain.test \n";
+  str+="import " + Match.class.getName() + "\n";
+  str+="global java.util.List list \n";
+  str+="dialect 'mvel' \n";
+  str+="rule rule1 @department(sales) \n";
+  str+="when \n";
+  str+="     $s : String( this == 'go1' ) \n";
+  str+="then \n";
+  str+="    list.add( kcontext.rule.name + ':' + $s ); \n";
+  str+="end \n";
+  str+="rule blockerAllSalesRules @activationListener('direct') \n";
+  str+="when \n";
+  str+="     $s : String( this == 'go2' ) \n";
+  str+="     $i : Match( department == 'sales' ) \n";
+  str+="then \n";
+  str+="    kcontext.cancelMatch( $i ); \n";
+  str+="end \n";
+  KieBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(DeclarativeAgendaOption.ENABLED);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(kconf,str);
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  final List cancelled=new ArrayList();
+  ksession.addEventListener(new AgendaEventListener(){
+    public void beforeMatchFired(    BeforeMatchFiredEvent event){
+    }
+    public void agendaGroupPushed(    AgendaGroupPushedEvent event){
+    }
+    public void agendaGroupPopped(    AgendaGroupPoppedEvent event){
+    }
+    public void afterMatchFired(    AfterMatchFiredEvent event){
+    }
+    public void matchCreated(    MatchCreatedEvent event){
+    }
+    public void beforeRuleFlowGroupActivated(    RuleFlowGroupActivatedEvent event){
+    }
+    public void afterRuleFlowGroupActivated(    RuleFlowGroupActivatedEvent event){
+    }
+    public void beforeRuleFlowGroupDeactivated(    RuleFlowGroupDeactivatedEvent event){
+    }
+    public void afterRuleFlowGroupDeactivated(    RuleFlowGroupDeactivatedEvent event){
+    }
+    public void matchCancelled(    MatchCancelledEvent event){
+      cancelled.add(event);
+    }
+  }
+);
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.insert("go1");
+  FactHandle go2=ksession.insert("go2");
+  ksession.fireAllRules();
+  assertEquals(0,list.size());
+  assertEquals(1,cancelled.size());
+  assertEquals("rule1",((MatchCancelledEvent)cancelled.get(0)).getMatch().getRule().getName());
+  ksession.dispose();
+}

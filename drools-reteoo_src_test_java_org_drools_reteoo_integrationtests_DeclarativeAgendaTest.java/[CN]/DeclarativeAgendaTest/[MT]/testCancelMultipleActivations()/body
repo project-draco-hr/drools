@@ -1,0 +1,14 @@
+{
+  String str="package org.domain.test\n" + "import " + Match.class.getName() + "\n"+ "global java.util.List list\n"+ "rule sales1 @department('sales')\n"+ "when\n"+ "    String( this == 'fireRules' )\n"+ "then\n"+ "    list.add(\"sales1\");\n"+ "end\n"+ "\n"+ "rule sales2 @department('sales') \n"+ "when\n"+ "    String( this == 'fireRules' )\n"+ "then\n"+ "    list.add(\"sales2\");\n"+ "end\n"+ "\n"+ "rule salesCancel @activationListener('direct')\n"+ "when\n"+ "    $i : Match( department == 'sales' )\n"+ "then\n"+ "    kcontext.cancelMatch($i);\n"+ "end";
+  KieBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kconf.setOption(DeclarativeAgendaOption.ENABLED);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(kconf,str);
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.insert("fireRules");
+  ksession.fireAllRules();
+  System.out.println(list);
+  assertEquals(0,list.size());
+  ksession.dispose();
+}
