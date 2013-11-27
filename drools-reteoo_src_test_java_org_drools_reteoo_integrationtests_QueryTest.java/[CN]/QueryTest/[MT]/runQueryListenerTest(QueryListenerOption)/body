@@ -1,0 +1,22 @@
+{
+  String str="";
+  str+="package org.drools.compiler.integrationtests\n";
+  str+="import " + Cheese.class.getCanonicalName() + " \n";
+  str+="query cheeses(String $type) \n";
+  str+="    $cheese : Cheese(type == $type) \n";
+  str+="end\n";
+  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(str));
+  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase,option);
+  for (int i=0; i < 10000; i++) {
+    ksession.insert(new Cheese(i % 2 == 0 ? "stilton" : "brie"));
+  }
+  List<Cheese> cheeses;
+  for (int i=0; i < 100; i++) {
+    org.kie.api.runtime.rule.QueryResults queryResults=ksession.getQueryResults("cheeses",new Object[]{"stilton"});
+    cheeses=new ArrayList<Cheese>();
+    for (    QueryResultsRow row : queryResults) {
+      cheeses.add((Cheese)row.get("$cheese"));
+    }
+    assertEquals(5000,cheeses.size());
+  }
+}
