@@ -1,4 +1,16 @@
 {
+  PMML pmmlDocument=null;
+  String drl=null;
+  if (scorecardCompiler.compileFromExcel(PMMLDocumentTest.class.getResourceAsStream("/scoremodel_externalmodel.xls"))) {
+    pmmlDocument=scorecardCompiler.getPMMLDocument();
+    assertNotNull(pmmlDocument);
+    PMML4Compiler.dumpModel(pmmlDocument,System.out);
+    drl=scorecardCompiler.getDRL();
+    assertTrue(drl != null && !drl.isEmpty());
+  }
+ else {
+    fail("failed to parse scoremodel Excel.");
+  }
   for (  Object serializable : pmmlDocument.getAssociationModelsAndBaselineModelsAndClusteringModels()) {
     if (serializable instanceof Scorecard) {
       Scorecard scorecard=(Scorecard)serializable;
@@ -13,7 +25,7 @@
           assertEquals("Final Score",outputField.getDisplayName());
           assertEquals("double",outputField.getDataType().value());
           assertEquals("predictedValue",outputField.getFeature().value());
-          final Extension extension=ScorecardPMMLUtils.getExtension(outputField.getExtensions(),PMMLExtensionNames.SCORECARD_RESULTANT_SCORE_CLASS);
+          final Extension extension=ScorecardPMMLUtils.getExtension(outputField.getExtensions(),PMMLExtensionNames.EXTERNAL_CLASS);
           assertNotNull(extension);
           assertEquals("org.drools.scorecards.example.Applicant",extension.getValue());
           return;
