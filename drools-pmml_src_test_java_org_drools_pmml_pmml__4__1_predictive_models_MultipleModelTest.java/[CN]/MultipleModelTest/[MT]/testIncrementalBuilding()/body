@@ -1,14 +1,17 @@
 {
+  ReleaseId releaseId1=KieServices.Factory.get().newReleaseId("org.test","test","1.0.0-SNAPSHOT");
   KieServices ks=KieServices.Factory.get();
   KieFileSystem kfs=ks.newKieFileSystem();
-  kfs.write("src/main/resources/" + source1.replace(".xml",".pmml"),ResourceFactory.newClassPathResource(source1).setResourceType(ResourceType.PMML));
   KieBuilder kb=ks.newKieBuilder(kfs);
+  kfs.generateAndWritePomXML(releaseId1);
+  kfs.write(ResourceFactory.newClassPathResource(source1).setResourceType(ResourceType.PMML));
   kb.buildAll();
-  KieContainer kc=ks.newKieContainer(ks.getRepository().getDefaultReleaseId());
+  KieContainer kc=ks.newKieContainer(releaseId1);
   KieSession kSession=kc.newKieSession();
-  String source2Path="src/main/resources/" + source2.replace(".xml",".pmml");
-  kfs.write(source2Path,ResourceFactory.newClassPathResource(source2).setResourceType(ResourceType.PMML));
-  ((InternalKieBuilder)kb).createFileSet(source2Path).build();
+  kSession.fireAllRules();
+  kfs.write(ResourceFactory.newClassPathResource(source2).setResourceType(ResourceType.PMML));
+  IncrementalResults results=((InternalKieBuilder)kb).incrementalBuild();
+  kc.updateToVersion(releaseId1);
   kSession.fireAllRules();
   System.err.println(reportWMObjects(kSession));
   assertEquals(2,kSession.getObjects(new ClassObjectFilter(ModelMarker.class)).size());

@@ -2,8 +2,8 @@
   String extraDrl="package org.drools.pmml.pmml_4_1.test;" + "" + "import org.drools.core.factmodel.traits.Entity;"+ ""+ "rule \"Init\" "+ "when "+ "   $s : String( this == \"trigger\" ) "+ "then "+ "   System.out.println( \"Trig\" ); "+ "   Entity o = new Entity(); "+ "   insert( o ); \n"+ ""+ ""+ "   MockColdTrait input = don( o, MockColdTrait.class ); "+ "   modify( input ) { "+ "       setTemp( 22.0 );"+ "   } "+ "end "+ ""+ ""+ "rule Log when $x : MockColdTrait() then System.out.println( \"IN \" + $x ); end "+ "rule Log2 when $x : Cold() then System.out.println( \"OUT \" + $x ); end ";
   KieServices ks=KieServices.Factory.get();
   KieFileSystem kfs=ks.newKieFileSystem();
-  kfs.write("src/main/resources/" + pmmlSource.replace(".xml",".pmml"),ResourceFactory.newClassPathResource(pmmlSource).setResourceType(ResourceType.PMML));
-  kfs.write("src/main/resources/" + "extra.drl",ResourceFactory.newByteArrayResource(extraDrl.getBytes()).setResourceType(ResourceType.DRL));
+  kfs.write(ResourceFactory.newClassPathResource(pmmlSource).setResourceType(ResourceType.PMML));
+  kfs.write(ResourceFactory.newByteArrayResource(extraDrl.getBytes()).setSourcePath("rules.drl").setResourceType(ResourceType.DRL));
   Results res=ks.newKieBuilder(kfs).buildAll().getResults();
   if (res.hasMessages(Message.Level.ERROR)) {
     System.out.println(res.getMessages(Message.Level.ERROR));
