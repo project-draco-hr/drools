@@ -5,7 +5,7 @@
   KieFileSystem kfs=ks.newKieFileSystem();
   KieBuilder kieBuilder=ks.newKieBuilder(kfs);
   kfs.generateAndWritePomXML(releaseId1);
-  kfs.write("src/main/resources/drl1.drl",drl1);
+  kfs.write(ks.getResources().newReaderResource(new StringReader(drl1)).setResourceType(ResourceType.DRL).setSourcePath("drl1.txt"));
   kieBuilder.buildAll();
   KieModule kieModule=kieBuilder.getKieModule();
   assertEquals(releaseId1,kieModule.getReleaseId());
@@ -19,9 +19,8 @@
   assertTrue(list.containsAll(asList("000","aFoo")));
   list.clear();
   kfs.generateAndWritePomXML(releaseId2);
-  kfs.write("src/main/resources/drl2.drl",drl2);
-  KieBuilderSet kbSet=((InternalKieBuilder)kieBuilder).createFileSet("src/main/resources/drl2.drl");
-  IncrementalResults results=kbSet.build();
+  kfs.write(ks.getResources().newReaderResource(new StringReader(drl2)).setResourceType(ResourceType.DRL).setSourcePath("drl2.txt"));
+  IncrementalResults results=((InternalKieBuilder)kieBuilder).incrementalBuild();
   assertEquals(0,results.getAddedMessages().size());
   kieModule=kieBuilder.getKieModule();
   assertEquals(releaseId2,kieModule.getReleaseId());

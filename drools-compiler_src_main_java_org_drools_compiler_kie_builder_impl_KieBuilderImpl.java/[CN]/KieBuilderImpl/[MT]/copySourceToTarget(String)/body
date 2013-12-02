@@ -3,16 +3,18 @@
     return;
   }
   byte[] bytes=srcMfs.getBytes(fileName);
-  fileName=fileName.substring(RESOURCES_ROOT.length() - 1);
+  String trgFileName=fileName.substring(RESOURCES_ROOT.length() - 1);
   if (bytes != null) {
-    FormatConverter formatConverter=FormatsManager.get().getConverterFor(fileName);
-    if (formatConverter == null) {
-      return;
+    FormatConverter formatConverter=FormatsManager.get().getConverterFor(trgFileName);
+    if (formatConverter != null) {
+      FormatConversionResult result=formatConverter.convert(trgFileName,bytes);
+      trgMfs.write(result.getConvertedName(),result.getContent(),true);
     }
-    FormatConversionResult result=formatConverter.convert(fileName,bytes);
-    trgMfs.write(result.getConvertedName(),result.getContent(),true);
+ else     if (getResourceType(fileName) != null) {
+      trgMfs.write(trgFileName,bytes,true);
+    }
   }
  else {
-    trgMfs.remove(fileName);
+    trgMfs.remove(trgFileName);
   }
 }

@@ -1,10 +1,14 @@
 {
-  if (files == null || files.length == 0) {
+  Collection<String> filesToBuild=files != null ? asList(files) : kieBuilder.getModifiedResourcesSinceLastMark();
+  if (filesToBuild.isEmpty()) {
     return new IncrementalResultsImpl();
   }
   kieBuilder.cloneKieModuleForIncrementalCompilation();
-  for (  String file : files) {
+  for (  String file : filesToBuild) {
     kieBuilder.copySourceToTarget(file);
   }
-  return buildChanges();
+  IncrementalResults result=buildChanges(filesToBuild);
+  files=null;
+  kieBuilder.markSource();
+  return result;
 }
