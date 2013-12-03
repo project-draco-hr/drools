@@ -2,6 +2,7 @@
   if (kProject instanceof ClasspathKieProject) {
     throw new UnsupportedOperationException("It is not possible to update a classpath container to a new version.");
   }
+  ResultsImpl results=new ResultsImpl();
   ReleaseId currentReleaseId=kProject.getGAV();
   InternalKieModule currentKM=currentReleaseId.equals(newReleaseId) && !currentReleaseId.equals(kr.getDefaultReleaseId()) ? (InternalKieModule)((KieRepositoryImpl)kr).getOldKieModule(currentReleaseId) : (InternalKieModule)kr.getKieModule(currentReleaseId);
   InternalKieModule newKM=(InternalKieModule)kr.getKieModule(newReleaseId);
@@ -77,6 +78,13 @@
             }
           }
           ckbuilder.build();
+          PackageBuilderErrors errors=pkgbuilder.getErrors();
+          if (!errors.isEmpty()) {
+            for (            KnowledgeBuilderError error : errors.getErrors()) {
+              results.addMessage(error);
+            }
+            log.error("Unable to update KieBase: " + kieBaseModel.getName() + " to release "+ newReleaseId+ "\n"+ errors.toString());
+          }
           if (!modifiedClasses.isEmpty()) {
             pkgbuilder.rewireClassObjectTypes(modifiedPackages);
           }
@@ -102,4 +110,5 @@
       it.remove();
     }
   }
+  return results;
 }
