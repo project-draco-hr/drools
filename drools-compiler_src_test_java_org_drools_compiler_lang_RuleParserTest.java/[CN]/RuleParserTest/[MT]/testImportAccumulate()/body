@@ -1,0 +1,28 @@
+{
+  String drl="package org.drools.compiler\n" + "import acc foo.Bar baz\n" + "import accumulate foo.Bar2 baz2\n"+ "rule \"Accumulate 1\"\n"+ "when\n"+ "     acc( Cheese( $price : price ),\n"+ "          $v1 : baz( $price ), \n"+ "          $v2 : baz2( $price ) )\n"+ "then\n"+ "end\n";
+  final PackageDescr pkg=(PackageDescr)parse("compilationUnit",drl);
+  assertEquals(2,pkg.getAccumulateImports().size());
+  AccumulateImportDescr imp=(AccumulateImportDescr)pkg.getAccumulateImports().get(0);
+  assertEquals("foo.Bar",imp.getTarget());
+  assertEquals("baz",imp.getFunctionName());
+  imp=(AccumulateImportDescr)pkg.getAccumulateImports().get(1);
+  assertEquals("foo.Bar2",imp.getTarget());
+  assertEquals("baz2",imp.getFunctionName());
+  assertEquals(1,pkg.getRules().size());
+  RuleDescr rule=(RuleDescr)pkg.getRules().get(0);
+  assertEquals(1,rule.getLhs().getDescrs().size());
+  PatternDescr out=(PatternDescr)rule.getLhs().getDescrs().get(0);
+  assertEquals("Object[]",out.getObjectType());
+  AccumulateDescr accum=(AccumulateDescr)out.getSource();
+  assertTrue(accum.isExternalFunction());
+  List<AccumulateFunctionCallDescr> functions=accum.getFunctions();
+  assertEquals(2,functions.size());
+  assertEquals("baz",functions.get(0).getFunction());
+  assertEquals("$v1",functions.get(0).getBind());
+  assertEquals("$price",functions.get(0).getParams()[0]);
+  assertEquals("baz2",functions.get(1).getFunction());
+  assertEquals("$v2",functions.get(1).getBind());
+  assertEquals("$price",functions.get(1).getParams()[0]);
+  final PatternDescr pattern=(PatternDescr)accum.getInputPattern();
+  assertEquals("Cheese",pattern.getObjectType());
+}

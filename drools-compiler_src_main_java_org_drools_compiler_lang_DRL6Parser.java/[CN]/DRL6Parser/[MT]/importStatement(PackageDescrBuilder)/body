@@ -1,30 +1,54 @@
 {
-  ImportDescrBuilder imp=null;
   try {
-    imp=helper.start(pkg,ImportDescrBuilder.class,null);
-    match(input,DRL6Lexer.ID,DroolsSoftKeywords.IMPORT,null,DroolsEditorType.KEYWORD);
-    if (state.failed)     return null;
     String kwd;
-    if (helper.validateIdentifierKey(kwd=DroolsSoftKeywords.FUNCTION) || helper.validateIdentifierKey(kwd=DroolsSoftKeywords.STATIC)) {
-      match(input,DRL6Lexer.ID,kwd,null,DroolsEditorType.KEYWORD);
-      if (state.failed)       return null;
+    if (helper.validateLT(2,kwd=DroolsSoftKeywords.ACC) || helper.validateLT(2,kwd=DroolsSoftKeywords.ACCUMULATE)) {
+      AccumulateImportDescrBuilder imp=helper.start(pkg,AccumulateImportDescrBuilder.class,null);
+      try {
+        match(input,DRL6Lexer.ID,DroolsSoftKeywords.IMPORT,null,DroolsEditorType.KEYWORD);
+        if (state.failed)         return null;
+        match(input,DRL6Lexer.ID,kwd,null,DroolsEditorType.KEYWORD);
+        if (state.failed)         return null;
+        String target=qualifiedIdentifier();
+        if (state.failed)         return null;
+        Token id=match(input,DRL6Lexer.ID,null,null,DroolsEditorType.IDENTIFIER);
+        if (state.failed)         return null;
+        if (state.backtracking == 0) {
+          imp.target(target).functionName(id.getText());
+        }
+        return (imp != null) ? imp.getDescr() : null;
+      }
+  finally {
+        helper.end(AccumulateImportDescrBuilder.class,imp);
+      }
     }
-    String target=qualifiedIdentifier();
-    if (state.failed)     return null;
-    if (input.LA(1) == DRL6Lexer.DOT && input.LA(2) == DRL6Lexer.STAR) {
-      match(input,DRL6Lexer.DOT,null,null,DroolsEditorType.IDENTIFIER);
-      if (state.failed)       return null;
-      match(input,DRL6Lexer.STAR,null,null,DroolsEditorType.IDENTIFIER);
-      if (state.failed)       return null;
-      target+=".*";
+ else {
+      ImportDescrBuilder imp=helper.start(pkg,ImportDescrBuilder.class,null);
+      try {
+        match(input,DRL6Lexer.ID,DroolsSoftKeywords.IMPORT,null,DroolsEditorType.KEYWORD);
+        if (state.failed)         return null;
+        if (helper.validateIdentifierKey(kwd=DroolsSoftKeywords.FUNCTION) || helper.validateIdentifierKey(kwd=DroolsSoftKeywords.STATIC)) {
+          match(input,DRL6Lexer.ID,kwd,null,DroolsEditorType.KEYWORD);
+          if (state.failed)           return null;
+        }
+        String target=qualifiedIdentifier();
+        if (state.failed)         return null;
+        if (input.LA(1) == DRL6Lexer.DOT && input.LA(2) == DRL6Lexer.STAR) {
+          match(input,DRL6Lexer.DOT,null,null,DroolsEditorType.IDENTIFIER);
+          if (state.failed)           return null;
+          match(input,DRL6Lexer.STAR,null,null,DroolsEditorType.IDENTIFIER);
+          if (state.failed)           return null;
+          target+=".*";
+        }
+        if (state.backtracking == 0)         imp.target(target);
+        return (imp != null) ? imp.getDescr() : null;
+      }
+  finally {
+        helper.end(ImportDescrBuilder.class,imp);
+      }
     }
-    if (state.backtracking == 0)     imp.target(target);
   }
  catch (  RecognitionException re) {
     reportError(re);
   }
- finally {
-    helper.end(ImportDescrBuilder.class,imp);
-  }
-  return (imp != null) ? imp.getDescr() : null;
+  return null;
 }
