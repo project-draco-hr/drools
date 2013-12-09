@@ -1,6 +1,17 @@
 {
+  if (definedTypes == null) {
+    definedTypes=new HashMap<String,ClassBytecode>();
+  }
+ else {
+    ClassBytecode existingClass=definedTypes.get(name);
+    if (existingClass != null && Arrays.equals(bytecode,existingClass.bytes)) {
+      return existingClass.clazz;
+    }
+  }
   if (typesClassLoader == null) {
     typesClassLoader=new InternalTypesClassLoader(this);
   }
-  return typesClassLoader.defineClass(name,bytecode);
+  Class<?> clazz=typesClassLoader.defineClass(name,bytecode);
+  definedTypes.put(name,new ClassBytecode(clazz,bytecode));
+  return clazz;
 }
