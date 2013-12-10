@@ -26,12 +26,12 @@
     expression.firstExpression=analyzeNode(main);
     if (accessor instanceof DynamicGetAccessor) {
       AccessorNode accessorNode=(AccessorNode)((DynamicGetAccessor)accessor).getSafeAccessor();
-      expression.addInvocation(analyzeAccessor(accessorNode,null));
+      expression.addInvocation(analyzeAccessorInvocation(accessorNode,node,null));
     }
  else     if (accessor instanceof AccessorNode) {
       AccessorNode accessorNode=(AccessorNode)accessor;
       while (accessorNode != null) {
-        expression.addInvocation(analyzeAccessor(accessorNode,null));
+        expression.addInvocation(analyzeAccessorInvocation(accessorNode,node,null));
         accessorNode=accessorNode.getNextNode();
       }
     }
@@ -59,7 +59,7 @@
       variableName=variableName.substring(0,dot);
     }
     Class<?> variableType=getVariableType(variableName);
-    return new VariableExpression(variableName,analyzeExpressionNode(((AccessorNode)accessor).getNextNode()),variableType != null ? variableType : node.getEgressType());
+    return new VariableExpression(variableName,analyzeExpressionNode(((AccessorNode)accessor).getNextNode(),node),variableType != null ? variableType : node.getEgressType());
   }
   if (accessor == null && node instanceof NewObjectNode) {
     accessor=((NewObjectNode)node).getNewObjectOptimizer();
@@ -71,7 +71,7 @@
       String variableName=(String)(variableAccessor.getProperty());
       Class<?> variableType=getVariableType(variableName);
       if (variableType != null) {
-        return new VariableExpression(variableName,analyzeExpressionNode(accessorNode),variableType);
+        return new VariableExpression(variableName,analyzeExpressionNode(accessorNode,node),variableType);
       }
  else {
         if (node.getLiteralValue() instanceof ParserContext) {
@@ -96,5 +96,5 @@
   if (accessor == null) {
     throw new RuntimeException("Null accessor on node: " + node);
   }
-  return analyzeAccessor(accessor);
+  return analyzeNodeAccessor(accessor,node);
 }
