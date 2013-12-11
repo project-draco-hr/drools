@@ -1,0 +1,15 @@
+{
+  String drl="" + "rule \"Borked\"\n" + "  dialect \"mvel\"\n"+ "  when\n"+ "    c : Company( )\n"+ "  then\n"+ "    c.setEmps( [\"item1\", \"item2\"] );\n"+ "end";
+  addModelField("Company","emps","java.util.List","List");
+  RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,dmo);
+  assertEquals(1,m.rhs.length);
+  assertTrue(m.rhs[0] instanceof ActionSetField);
+  ActionSetField actionSetField=(ActionSetField)m.rhs[0];
+  assertEquals("c",actionSetField.getVariable());
+  assertEquals(1,actionSetField.getFieldValues().length);
+  ActionFieldValue actionFieldValue=actionSetField.getFieldValues()[0];
+  assertEquals("[\"item1\", \"item2\"]",actionFieldValue.getValue());
+  assertEquals("emps",actionFieldValue.getField());
+  assertEquals(FieldNatureType.TYPE_FORMULA,actionFieldValue.getNature());
+  assertEquals("Collection",actionFieldValue.getType());
+}
