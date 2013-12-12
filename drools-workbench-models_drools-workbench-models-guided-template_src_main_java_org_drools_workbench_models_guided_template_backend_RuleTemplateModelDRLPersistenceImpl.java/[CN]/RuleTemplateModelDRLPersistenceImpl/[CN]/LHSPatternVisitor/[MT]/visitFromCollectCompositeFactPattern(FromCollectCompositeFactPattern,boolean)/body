@@ -1,0 +1,30 @@
+{
+  if (pattern.getRightPattern() instanceof FreeFormLine) {
+    final FreeFormLine ffl=(FreeFormLine)pattern.getRightPattern();
+    final Matcher matcherTemplateKey=patternTemplateKey.matcher(ffl.getText());
+    boolean found=matcherTemplateKey.find();
+    if (found) {
+      buf.append("@if{");
+      boolean addAnd=false;
+      while (found) {
+        String varName=matcherTemplateKey.group(1);
+        if (addAnd) {
+          buf.append(" && ");
+        }
+        buf.append(varName + " != empty");
+        addAnd=true;
+        found=matcherTemplateKey.find();
+      }
+      buf.append("}");
+      super.visitFromCollectCompositeFactPattern(pattern,isSubPattern);
+      buf.append("@end{}");
+      found=matcherTemplateKey.find();
+    }
+ else {
+      super.visitFromCollectCompositeFactPattern(pattern,isSubPattern);
+    }
+  }
+ else {
+    super.visitFromCollectCompositeFactPattern(pattern,isSubPattern);
+  }
+}

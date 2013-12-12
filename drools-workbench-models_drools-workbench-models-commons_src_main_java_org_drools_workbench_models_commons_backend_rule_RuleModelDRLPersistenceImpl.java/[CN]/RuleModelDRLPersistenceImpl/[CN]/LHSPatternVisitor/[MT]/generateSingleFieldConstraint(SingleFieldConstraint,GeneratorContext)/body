@@ -1,0 +1,44 @@
+{
+  if (constr.getConstraintValueType() == BaseSingleFieldConstraint.TYPE_PREDICATE) {
+    buf.append("eval( ");
+    buf.append(constr.getValue());
+    buf.append(" )");
+  }
+ else {
+    if (constr.isBound()) {
+      bindingsFields.put(constr.getFieldBinding(),constr);
+      buf.append(constr.getFieldBinding());
+      buf.append(" : ");
+    }
+    assertConstraintValue(constr);
+    if (isConstraintComplete(constr)) {
+      SingleFieldConstraint parent=(SingleFieldConstraint)constr.getParent();
+      StringBuilder parentBuf=new StringBuilder();
+      while (parent != null) {
+        String fieldName=parent.getFieldName();
+        parentBuf.insert(0,fieldName + ".");
+        parent=(SingleFieldConstraint)parent.getParent();
+      }
+      buf.append(parentBuf);
+      if (constr instanceof SingleFieldConstraintEBLeftSide) {
+        buf.append(((SingleFieldConstraintEBLeftSide)constr).getExpressionLeftSide().getText());
+      }
+ else {
+        String fieldName=constr.getFieldName();
+        buf.append(fieldName);
+      }
+      Map<String,String> parameters=null;
+      if (constr instanceof HasParameterizedOperator) {
+        HasParameterizedOperator hop=constr;
+        parameters=hop.getParameters();
+      }
+      if (constr.getConnectives() == null) {
+        generateNormalFieldRestriction(constr,parameters);
+      }
+ else {
+        generateConnectiveFieldRestriction(constr,parameters,gctx);
+      }
+      gctx.setHasOutput(true);
+    }
+  }
+}

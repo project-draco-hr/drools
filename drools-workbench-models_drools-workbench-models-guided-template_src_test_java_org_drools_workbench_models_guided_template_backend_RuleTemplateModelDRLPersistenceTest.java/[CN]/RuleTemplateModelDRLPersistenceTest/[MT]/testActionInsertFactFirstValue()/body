@@ -1,0 +1,23 @@
+{
+  TemplateModel m=new TemplateModel();
+  m.name="r1";
+  FactPattern fp=new FactPattern("Person");
+  fp.setBoundName("$p");
+  m.addLhsItem(fp);
+  ActionInsertFact aif=new ActionInsertFact("Present");
+  aif.setBoundName("f0");
+  ActionFieldValue afv0=new ActionFieldValue();
+  afv0.setNature(FieldNatureType.TYPE_TEMPLATE);
+  afv0.setField("field1");
+  afv0.setValue("$f1");
+  aif.addFieldValue(afv0);
+  ActionFieldValue afv1=new ActionFieldValue();
+  afv1.setNature(FieldNatureType.TYPE_TEMPLATE);
+  afv1.setField("field2");
+  afv1.setValue("$f2");
+  aif.addFieldValue(afv1);
+  m.addRhsItem(aif);
+  String expected="rule \"r1_0\"\n" + "dialect \"mvel\"\n" + "when\n"+ "$p : Person()\n"+ "then\n"+ "Present f0 = new Present();\n"+ "f0.setField1(\"foo\");\n"+ "insert(f0);\n"+ "end";
+  m.addRow(new String[]{"foo",null});
+  checkMarshall(expected,m);
+}

@@ -1,0 +1,27 @@
+{
+  TemplateModel m=new TemplateModel();
+  m.name="t1";
+  CompositeFactPattern cp=new CompositeFactPattern(CompositeFactPattern.COMPOSITE_TYPE_OR);
+  FactPattern p1=new FactPattern("Person");
+  SingleFieldConstraint sfc1=new SingleFieldConstraint();
+  sfc1.setFieldName("field1");
+  sfc1.setFieldType(DataType.TYPE_STRING);
+  sfc1.setConstraintValueType(SingleFieldConstraint.TYPE_TEMPLATE);
+  sfc1.setValue("$f1");
+  sfc1.setOperator("==");
+  p1.addConstraint(sfc1);
+  FactPattern p2=new FactPattern("Person");
+  SingleFieldConstraint sfc2=new SingleFieldConstraint();
+  sfc2.setFieldName("field2");
+  sfc2.setFieldType(DataType.TYPE_STRING);
+  sfc2.setConstraintValueType(SingleFieldConstraint.TYPE_TEMPLATE);
+  sfc2.setValue("$f2");
+  sfc2.setOperator("==");
+  p2.addConstraint(sfc2);
+  cp.addFactPattern(p1);
+  cp.addFactPattern(p2);
+  m.addLhsItem(cp);
+  String expected="rule \"t1_0\"\n" + "dialect \"mvel\"\n" + "when\n"+ "(\n"+ "Person( )\n"+ "or\n"+ "Person( field2 == \"bar\" )\n"+ ")\n"+ "then\n"+ "end\n";
+  m.addRow(new String[]{null,"bar"});
+  checkMarshall(expected,m);
+}

@@ -1,0 +1,18 @@
+{
+  TemplateModel m=new TemplateModel();
+  m.name="r1";
+  FactPattern fp=new FactPattern("Person");
+  SingleFieldConstraint sfc=new SingleFieldConstraint("field1");
+  sfc.setConstraintValueType(SingleFieldConstraint.TYPE_TEMPLATE);
+  sfc.setFieldType(DataType.TYPE_STRING);
+  sfc.setOperator("==");
+  sfc.setValue("$f1");
+  fp.addConstraint(sfc);
+  FromCollectCompositeFactPattern fac=new FromCollectCompositeFactPattern();
+  fac.setRightPattern(fp);
+  fac.setFactPattern(new FactPattern("java.util.List"));
+  m.addLhsItem(fac);
+  String expected="rule \"r1_0\"\n" + "dialect \"mvel\"\n" + "when\n"+ "java.util.List( ) from collect ( Person( field1 == \"foo\" ) ) \n"+ "then\n"+ "end";
+  m.addRow(new String[]{"foo"});
+  checkMarshall(expected,m);
+}

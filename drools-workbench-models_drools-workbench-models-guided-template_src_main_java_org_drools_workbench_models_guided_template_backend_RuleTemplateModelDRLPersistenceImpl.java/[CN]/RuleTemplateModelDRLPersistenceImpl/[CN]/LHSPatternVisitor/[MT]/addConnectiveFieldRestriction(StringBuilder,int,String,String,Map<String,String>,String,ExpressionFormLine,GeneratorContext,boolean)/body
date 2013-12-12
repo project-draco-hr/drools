@@ -1,0 +1,18 @@
+{
+  boolean generateTemplateCheck=type == BaseSingleFieldConstraint.TYPE_TEMPLATE;
+  if (generateTemplateCheck) {
+    buf.append("@if{" + value + " != empty}");
+  }
+  if (generateTemplateCheck && operator.startsWith("||") || operator.startsWith("&&")) {
+    spaceBeforeOperator=false;
+    buf.append("@if{ hasOutput" + gctx.getDepth() + "_"+ gctx.getOffset()+ "} ");
+    buf.append(operator.substring(0,2));
+    buf.append("@end{}");
+    operator=operator.substring(2);
+  }
+  super.addConnectiveFieldRestriction(buf,type,fieldType,operator,parameters,value,expression,gctx,spaceBeforeOperator);
+  if (generateTemplateCheck) {
+    buf.append("@code{hasOutput" + gctx.getDepth() + "_"+ gctx.getOffset()+ " = true}");
+    buf.append("@end{}");
+  }
+}

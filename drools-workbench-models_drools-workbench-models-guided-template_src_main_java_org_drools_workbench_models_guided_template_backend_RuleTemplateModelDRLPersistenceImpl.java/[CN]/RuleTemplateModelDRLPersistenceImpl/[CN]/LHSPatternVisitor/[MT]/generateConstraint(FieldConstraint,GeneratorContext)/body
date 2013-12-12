@@ -1,0 +1,24 @@
+{
+  boolean generateTemplateCheck=isTemplateKey(constr);
+  if (generateTemplateCheck) {
+    if (constr instanceof SingleFieldConstraint && ((SingleFieldConstraint)constr).getConnectives() != null) {
+      SingleFieldConstraint sconstr=(SingleFieldConstraint)constr;
+      buf.append("@if{" + ((SingleFieldConstraint)constr).getValue() + " != empty");
+      for (int j=0; j < sconstr.getConnectives().length; j++) {
+        final ConnectiveConstraint conn=sconstr.getConnectives()[j];
+        if (conn.getConstraintValueType() == BaseSingleFieldConstraint.TYPE_TEMPLATE) {
+          buf.append(" || " + conn.getValue() + " != empty");
+        }
+      }
+      buf.append("}");
+    }
+ else {
+      buf.append("@if{" + ((SingleFieldConstraint)constr).getValue() + " != empty}");
+    }
+  }
+  super.generateConstraint(constr,gctx);
+  buf.append("@code{hasOutput" + gctx.getDepth() + "_"+ gctx.getOffset()+ " = true}");
+  if (generateTemplateCheck) {
+    buf.append("@end{}");
+  }
+}

@@ -3,7 +3,8 @@
   bindingsPatterns=new HashMap<String,IFactPattern>();
   bindingsFields=new HashMap<String,FieldConstraint>();
   StringBuilder buf=new StringBuilder();
-  this.marshalRuleHeader(model,buf);
+  StringBuilder header=new StringBuilder();
+  this.marshalRuleHeader(model,header);
   super.marshalMetadata(buf,model);
   super.marshalAttributes(buf,model);
   buf.append("\twhen\n");
@@ -11,5 +12,8 @@
   buf.append("\tthen\n");
   super.marshalRHS(buf,model,isDSLEnhanced);
   this.marshalFooter(buf);
-  return buf.toString();
+  for (  GeneratorContext gc : GeneratorContextFactory.getGeneratorContexts()) {
+    header.append("@code{hasNonTemplateOutput" + gc.getDepth() + "_"+ gc.getOffset()+ " = "+ gc.hasNonTemplateOutput()+ "}");
+  }
+  return header.append(buf).toString();
 }

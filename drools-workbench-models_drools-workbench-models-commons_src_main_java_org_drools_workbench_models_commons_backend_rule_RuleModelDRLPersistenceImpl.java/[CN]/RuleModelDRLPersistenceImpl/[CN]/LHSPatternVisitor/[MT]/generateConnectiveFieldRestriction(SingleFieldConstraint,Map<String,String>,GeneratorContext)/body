@@ -1,0 +1,20 @@
+{
+  GeneratorContext cctx=gctx.createChild();
+  preGenerateConstraints(cctx);
+  cctx.setFieldConstraint(constr);
+  if (constr instanceof SingleFieldConstraintEBLeftSide) {
+    SingleFieldConstraintEBLeftSide sfexp=(SingleFieldConstraintEBLeftSide)constr;
+    addConnectiveFieldRestriction(buf,sfexp.getConstraintValueType(),sfexp.getExpressionLeftSide().getGenericType(),sfexp.getOperator(),parameters,sfexp.getValue(),sfexp.getExpressionValue(),cctx,true);
+  }
+ else {
+    addConnectiveFieldRestriction(buf,constr.getConstraintValueType(),constr.getFieldType(),constr.getOperator(),parameters,constr.getValue(),constr.getExpressionValue(),cctx,true);
+  }
+  for (int j=0; j < constr.getConnectives().length; j++) {
+    final ConnectiveConstraint conn=constr.getConnectives()[j];
+    if (conn instanceof HasParameterizedOperator) {
+      HasParameterizedOperator hop=(HasParameterizedOperator)conn;
+      parameters=hop.getParameters();
+    }
+    addConnectiveFieldRestriction(buf,conn.getConstraintValueType(),conn.getFieldType(),conn.getOperator(),parameters,conn.getValue(),conn.getExpressionValue(),cctx,true);
+  }
+}

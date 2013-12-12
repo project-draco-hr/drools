@@ -1,0 +1,23 @@
+{
+  TemplateModel m=new TemplateModel();
+  m.name="t1";
+  FactPattern p1=new FactPattern("Person");
+  m.addLhsItem(p1);
+  final SingleFieldConstraint X=new SingleFieldConstraint();
+  X.setFieldName("field1");
+  X.setFieldType(DataType.TYPE_STRING);
+  X.setConstraintValueType(SingleFieldConstraint.TYPE_TEMPLATE);
+  X.setValue("$f1");
+  X.setOperator("==");
+  p1.addConstraint(X);
+  ConnectiveConstraint connective=new ConnectiveConstraint();
+  connective.setConstraintValueType(BaseSingleFieldConstraint.TYPE_TEMPLATE);
+  connective.setFieldType(DataType.TYPE_STRING);
+  connective.setOperator("|| ==");
+  connective.setValue("$f2");
+  X.setConnectives(new ConnectiveConstraint[1]);
+  X.getConnectives()[0]=connective;
+  String expected="rule \"t1_0\"\n" + "dialect \"mvel\"\n" + "when\n"+ "Person( field1 == \"bar\" )\n"+ "then\n"+ "end\n";
+  m.addRow(new String[]{null,"bar"});
+  checkMarshall(expected,m);
+}
