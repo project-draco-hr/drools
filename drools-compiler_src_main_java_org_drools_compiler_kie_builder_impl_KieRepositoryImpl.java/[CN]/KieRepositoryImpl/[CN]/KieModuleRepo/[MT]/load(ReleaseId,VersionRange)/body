@@ -1,27 +1,46 @@
 {
   String ga=releaseId.getGroupId() + ":" + releaseId.getArtifactId();
-  TreeMap<ComparableVersion,KieModule> artifactMap=kieModules.get(ga);
+  TreeMap<ComparableVersion,WeakReference<KieModule>> artifactMap=kieModules.get(ga);
   if (artifactMap == null) {
     return null;
   }
   if (versionRange.fixed) {
-    KieModule kieModule=artifactMap.get(new ComparableVersion(releaseId.getVersion()));
-    if (kieModule != null && releaseId.isSnapshot()) {
-      String oldSnapshotVersion=((ReleaseIdImpl)kieModule.getReleaseId()).getSnapshotVersion();
-      String currentSnapshotVersion=kieScanner.getArtifactVersion(releaseId);
-      if (oldSnapshotVersion != null && currentSnapshotVersion != null && new ComparableVersion(currentSnapshotVersion).compareTo(new ComparableVersion(oldSnapshotVersion)) > 0) {
-        return null;
+    ComparableVersion version=new ComparableVersion(releaseId.getVersion());
+    WeakReference<KieModule> kieModuleWeakReference=artifactMap.get(version);
+    KieModule kieModule=null;
+    if (kieModuleWeakReference != null) {
+      kieModule=kieModuleWeakReference.get();
+      if (kieModule == null) {
+        artifactMap.remove(version);
+        if (artifactMap.isEmpty()) {
+          kieModules.remove(ga);
+        }
+      }
+ else       if (releaseId.isSnapshot()) {
+        String oldSnapshotVersion=((ReleaseIdImpl)kieModule.getReleaseId()).getSnapshotVersion();
+        String currentSnapshotVersion=kieScanner.getArtifactVersion(releaseId);
+        if (oldSnapshotVersion != null && currentSnapshotVersion != null && new ComparableVersion(currentSnapshotVersion).compareTo(new ComparableVersion(oldSnapshotVersion)) > 0) {
+          return null;
+        }
       }
     }
     return kieModule;
   }
-  Map.Entry<ComparableVersion,KieModule> entry=versionRange.upperBound == null ? artifactMap.lastEntry() : versionRange.upperInclusive ? artifactMap.floorEntry(new ComparableVersion(versionRange.upperBound)) : artifactMap.lowerEntry(new ComparableVersion(versionRange.upperBound));
+  Map.Entry<ComparableVersion,WeakReference<KieModule>> entry=versionRange.upperBound == null ? artifactMap.lastEntry() : versionRange.upperInclusive ? artifactMap.floorEntry(new ComparableVersion(versionRange.upperBound)) : artifactMap.lowerEntry(new ComparableVersion(versionRange.upperBound));
   if (entry == null) {
     return null;
   }
+  KieModule kieModule=entry.getValue().get();
+  if (kieModule == null) {
+    artifactMap.remove(entry.getKey());
+    if (artifactMap.isEmpty()) {
+      kieModules.remove(ga);
+    }
+    return null;
+  }
   if (versionRange.lowerBound == null) {
-    return entry.getValue();
+    return kieModule;
   }
   int comparison=entry.getKey().compareTo(new ComparableVersion(versionRange.lowerBound));
-  return comparison > 0 || (comparison == 0 && versionRange.lowerInclusive) ? entry.getValue() : null;
+  return comparison > 0 || (comparison == 0 && versionRange.lowerInclusive) ? kieModule : null;
 }

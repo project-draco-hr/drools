@@ -1,14 +1,17 @@
 {
   ReleaseId releaseId=kieModule.getReleaseId();
   String ga=releaseId.getGroupId() + ":" + releaseId.getArtifactId();
-  TreeMap<ComparableVersion,KieModule> artifactMap=kieModules.get(ga);
+  TreeMap<ComparableVersion,WeakReference<KieModule>> artifactMap=kieModules.get(ga);
   if (artifactMap == null) {
-    artifactMap=new TreeMap<ComparableVersion,KieModule>();
+    artifactMap=new TreeMap<ComparableVersion,WeakReference<KieModule>>();
     kieModules.put(ga,artifactMap);
   }
   ComparableVersion comparableVersion=new ComparableVersion(releaseId.getVersion());
   if (oldKieModules.get(releaseId) == null) {
-    oldKieModules.put(releaseId,artifactMap.get(comparableVersion));
+    WeakReference<KieModule> kieModuleWeakReference=artifactMap.get(comparableVersion);
+    if (kieModuleWeakReference != null && kieModuleWeakReference.get() != null) {
+      oldKieModules.put(releaseId,kieModuleWeakReference.get());
+    }
   }
-  artifactMap.put(comparableVersion,kieModule);
+  artifactMap.put(comparableVersion,new WeakReference<KieModule>(kieModule));
 }
