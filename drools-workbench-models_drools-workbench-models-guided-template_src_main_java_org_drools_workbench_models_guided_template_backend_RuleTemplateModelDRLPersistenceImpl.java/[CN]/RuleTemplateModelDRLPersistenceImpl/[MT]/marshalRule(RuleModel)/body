@@ -4,15 +4,16 @@
   bindingsFields=new HashMap<String,FieldConstraint>();
   StringBuilder buf=new StringBuilder();
   StringBuilder header=new StringBuilder();
+  GeneratorContextFactory generatorContextFactory=new GeneratorContextFactory();
   this.marshalRuleHeader(model,header);
   super.marshalMetadata(buf,model);
   super.marshalAttributes(buf,model);
   buf.append("\twhen\n");
-  super.marshalLHS(buf,model,isDSLEnhanced);
+  super.marshalLHS(buf,model,isDSLEnhanced,generatorContextFactory);
   buf.append("\tthen\n");
   super.marshalRHS(buf,model,isDSLEnhanced);
   this.marshalFooter(buf);
-  for (  GeneratorContext gc : GeneratorContextFactory.getGeneratorContexts()) {
+  for (  GeneratorContext gc : generatorContextFactory.getGeneratorContexts()) {
     header.append("@code{hasNonTemplateOutput" + gc.getDepth() + "_"+ gc.getOffset()+ " = "+ gc.hasNonTemplateOutput()+ "}");
   }
   return header.append(buf).toString();
