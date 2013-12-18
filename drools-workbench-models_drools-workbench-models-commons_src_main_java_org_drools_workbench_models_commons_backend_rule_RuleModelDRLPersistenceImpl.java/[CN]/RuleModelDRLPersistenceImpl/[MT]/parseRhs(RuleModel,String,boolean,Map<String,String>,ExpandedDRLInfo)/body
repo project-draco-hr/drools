@@ -3,7 +3,8 @@
   Map<String,List<String>> setStatements=new HashMap<String,List<String>>();
   Map<String,String> factsType=new HashMap<String,String>();
   int lineCounter=-1;
-  for (  String line : rhs.split("\n")) {
+  String[] lines=rhs.split("\n");
+  for (  String line : lines) {
     lineCounter++;
     if (expandedDRLInfo.hasDsl) {
       String dslLine=expandedDRLInfo.dslStatementsInRhs.get(lineCounter);
@@ -106,14 +107,19 @@
         }
       }
       int eqPos=line.indexOf('=');
+      boolean addFreeFormLine=line.trim().length() > 0;
       if (eqPos > 0) {
         String field=line.substring(0,eqPos).trim();
+        if ("java.text.SimpleDateFormat sdf".equals(field) || "org.drools.core.process.instance.WorkItemManager wim".equals(field)) {
+          addFreeFormLine=false;
+        }
         String[] split=field.split(" ");
         if (split.length == 2) {
           factsType.put(split[1],split[0]);
+          addFreeFormLine&=!isInsertedFact(lines,lineCounter,split[1]);
         }
       }
- else       if (line.trim().length() > 0) {
+      if (addFreeFormLine) {
         FreeFormLine ffl=new FreeFormLine();
         ffl.setText(line);
         m.addRhsItem(ffl);
