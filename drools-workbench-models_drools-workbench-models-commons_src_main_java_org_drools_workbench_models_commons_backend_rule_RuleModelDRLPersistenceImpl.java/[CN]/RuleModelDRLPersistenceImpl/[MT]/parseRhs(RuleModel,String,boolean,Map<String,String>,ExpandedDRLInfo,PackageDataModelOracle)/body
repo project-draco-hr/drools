@@ -93,14 +93,30 @@
             acm.setVariable(variable);
             acm.setState(1);
             m.addRhsItem(acm);
-            String params=unwrapParenthesis(line);
-            for (            String param : params.split(",")) {
+            String[] params=unwrapParenthesis(line).split(",");
+            MethodInfo methodInfo=null;
+            String variableType=boundParams.get(variable);
+            if (variableType != null) {
+              List<MethodInfo> methods=getMethodInfosForType(m,dmo,variableType);
+              if (methods != null) {
+                for (                MethodInfo method : methods) {
+                  if (method.getName().equals(methodName) && method.getParams().size() == params.length) {
+                    methodInfo=method;
+                    break;
+                  }
+                }
+              }
+            }
+            int i=0;
+            for (            String param : params) {
               param=param.trim();
               if (param.length() == 0) {
                 continue;
               }
-              String dataType=inferDataType(param,isJavaDialect);
-              acm.addFieldValue(new ActionFieldFunction(null,adjustParam(dataType,param,isJavaDialect),dataType));
+              String dataType=methodInfo == null ? inferDataType(param,isJavaDialect) : methodInfo.getParams().get(i++);
+              ActionFieldFunction actionFiled=new ActionFieldFunction(null,adjustParam(dataType,param,isJavaDialect),dataType);
+              actionFiled.setNature(inferFieldNature(param,boundParams));
+              acm.addFieldValue(actionFiled);
             }
           }
           continue;
