@@ -1,0 +1,26 @@
+{
+  String drl="" + "package org.mortgages;\n" + "import org.mortgages.LoanApplication;\n"+ "import java.util.Map;\n"+ "rule \"my rule\"\n"+ "  dialect \"mvel\"\n"+ "  when\n"+ "    a : LoanApplication( )\n"+ "    m : Map()\n"+ "  then\n"+ "    m.put(\"key\", a );\n"+ "end\n";
+  Map<String,List<MethodInfo>> methodInformation=new HashMap<String,List<MethodInfo>>();
+  List<MethodInfo> mapMethodInformation=new ArrayList<MethodInfo>();
+  mapMethodInformation.add(new MethodInfo("put",Arrays.asList(new String[]{"java.lang.Object","java.lang.Object"}),"void","void","java.util.Map"));
+  methodInformation.put("java.util.Map",mapMethodInformation);
+  when(dmo.getProjectMethodInformation()).thenReturn(methodInformation);
+  RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,dmo);
+  assertTrue(m.rhs[0] instanceof ActionCallMethod);
+  ActionCallMethod mc=(ActionCallMethod)m.rhs[0];
+  assertEquals("put",mc.getMethodName());
+  assertEquals("m",mc.getVariable());
+  assertEquals(1,mc.getState());
+  assertEquals(2,mc.getFieldValues().length);
+  ActionFieldValue f1=mc.getFieldValue(0);
+  assertEquals("key",f1.getValue());
+  assertEquals("java.lang.Object",f1.getType());
+  assertEquals(FieldNatureType.TYPE_LITERAL,f1.getNature());
+  ActionFieldValue f2=mc.getFieldValue(1);
+  assertEquals("a",f2.getValue());
+  assertEquals("java.lang.Object",f2.getType());
+  assertEquals(FieldNatureType.TYPE_VARIABLE,f2.getNature());
+  String marshalled=RuleModelDRLPersistenceImpl.getInstance().marshal(m);
+  System.out.println(marshalled);
+  assertEqualsIgnoreWhitespace(drl,marshalled);
+}

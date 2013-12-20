@@ -1,0 +1,22 @@
+{
+  String drl="" + "package org.mortgages;\n" + "import org.mortgages.MyType;\n"+ "rule \"my rule\"\n"+ "  dialect \"mvel\"\n"+ "  when\n"+ "    i : Integer( )\n"+ "    t : MyType( )\n"+ "  then\n"+ "    t.doSomething( i );\n"+ "end\n";
+  Map<String,List<MethodInfo>> methodInformation=new HashMap<String,List<MethodInfo>>();
+  List<MethodInfo> mapMethodInformation=new ArrayList<MethodInfo>();
+  mapMethodInformation.add(new MethodInfo("doSomething",Arrays.asList(new String[]{DataType.TYPE_NUMERIC_INTEGER}),"void","void","org.mortgages.MyType"));
+  methodInformation.put("org.mortgages.MyType",mapMethodInformation);
+  when(dmo.getProjectMethodInformation()).thenReturn(methodInformation);
+  RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,dmo);
+  assertTrue(m.rhs[0] instanceof ActionCallMethod);
+  ActionCallMethod mc=(ActionCallMethod)m.rhs[0];
+  assertEquals("doSomething",mc.getMethodName());
+  assertEquals("t",mc.getVariable());
+  assertEquals(1,mc.getState());
+  assertEquals(1,mc.getFieldValues().length);
+  ActionFieldValue f1=mc.getFieldValue(0);
+  assertEquals("i",f1.getValue());
+  assertEquals(DataType.TYPE_NUMERIC_INTEGER,f1.getType());
+  assertEquals(FieldNatureType.TYPE_VARIABLE,f1.getNature());
+  String marshalled=RuleModelDRLPersistenceImpl.getInstance().marshal(m);
+  System.out.println(marshalled);
+  assertEqualsIgnoreWhitespace(drl,marshalled);
+}
