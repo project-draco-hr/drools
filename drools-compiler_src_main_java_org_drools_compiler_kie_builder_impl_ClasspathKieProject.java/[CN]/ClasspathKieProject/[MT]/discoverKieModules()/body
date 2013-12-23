@@ -3,7 +3,7 @@
   for (  String configFile : configFiles) {
     final Enumeration<URL> e;
     try {
-      e=cl.getResources(configFile);
+      e=classLoader.getResources(configFile);
     }
  catch (    IOException exc) {
       log.error("Unable to find and build index of " + configFile + "."+ exc.getMessage());
@@ -11,14 +11,14 @@
     }
     while (e.hasMoreElements()) {
       URL url=e.nextElement();
-      log.info("Found kmodule: " + url);
+      notifyKieModuleFound(url);
       try {
         InternalKieModule kModule=fetchKModule(url);
         if (kModule != null) {
           ReleaseId releaseId=kModule.getReleaseId();
           kieModules.put(releaseId,kModule);
           log.debug("Discovered classpath module " + releaseId.toExternalForm());
-          kr.addKieModule(kModule);
+          kieRepository.addKieModule(kModule);
         }
       }
  catch (      Exception exc) {

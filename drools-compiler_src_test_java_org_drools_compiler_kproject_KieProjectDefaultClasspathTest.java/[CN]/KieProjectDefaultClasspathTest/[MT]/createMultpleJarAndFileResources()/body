@@ -17,8 +17,19 @@
     assertNotNull(cls);
     cls=Thread.currentThread().getContextClassLoader().loadClass("org.drools.compiler.cdi.test.KProjectTestClassjar3");
     assertNotNull(cls);
-    ClasspathKieProject kProject=new ClasspathKieProject();
-    KieContainer kContainer=new KieContainerImpl(kProject,null);
+    InternalKieServices ks=(InternalKieServices)KieServices.Factory.get();
+    final AtomicInteger kieModulesCounter=new AtomicInteger(0);
+    KieServicesEventListerner listener=new AbstractKieServicesEventListerner(){
+      @Override public void onKieModuleDiscovered(      KieModuleDiscovered event){
+        if (!event.getKieModuleUrl().contains("test-classes")) {
+          kieModulesCounter.incrementAndGet();
+        }
+      }
+    }
+;
+    ks.registerListener(listener);
+    KieContainer kContainer=ks.getKieClasspathContainer();
+    assertEquals(4,kieModulesCounter.get());
     testEntry(new KProjectTestClassImpl("jar1",kContainer),"jar1");
     testEntry(new KProjectTestClassImpl("jar2",kContainer),"jar2");
     testEntry(new KProjectTestClassImpl("jar3",kContainer),"jar3");
