@@ -1,0 +1,18 @@
+{
+  String drl="import org.drools.workbench.models.commons.backend.rule.TestEnum;\n" + "rule \"r1\"\n" + "dialect \"mvel\"\n"+ "when\n"+ "OuterClassWithEnums( outerField == TestEnum.VALUE1 )\n"+ "then\n"+ "end";
+  addModelField("OuterClassWithEnums","outerField",TestEnum.class.getSimpleName(),DataType.TYPE_COMPARABLE);
+  addJavaEnumDefinition("OuterClassWithEnums","outerField",new String[]{"TestEnum.VALUE1=TestEnum.VALUE1","TestEnum.VALUE2=TestEnum.VALUE2"});
+  RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,dmo);
+  FactPattern pattern=(FactPattern)m.lhs[0];
+  assertEquals(1,pattern.getNumberOfConstraints());
+  assertTrue(pattern.getConstraint(0) instanceof SingleFieldConstraint);
+  SingleFieldConstraint constraint=(SingleFieldConstraint)pattern.getConstraint(0);
+  assertEquals("OuterClassWithEnums",constraint.getFactType());
+  assertEquals("outerField",constraint.getFieldName());
+  assertEquals(DataType.TYPE_COMPARABLE,constraint.getFieldType());
+  assertEquals("==",constraint.getOperator());
+  assertEquals("TestEnum.VALUE1",constraint.getValue());
+  assertEquals(BaseSingleFieldConstraint.TYPE_ENUM,constraint.getConstraintValueType());
+  final String drl2=RuleModelDRLPersistenceImpl.getInstance().marshal(m);
+  assertEqualsIgnoreWhitespace(drl,drl2);
+}

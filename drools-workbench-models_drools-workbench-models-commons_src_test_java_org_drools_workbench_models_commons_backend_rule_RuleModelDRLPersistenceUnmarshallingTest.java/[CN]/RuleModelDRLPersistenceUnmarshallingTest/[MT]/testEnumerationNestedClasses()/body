@@ -1,0 +1,35 @@
+{
+  String drl="import org.drools.workbench.models.commons.backend.rule.TestEnum;\n" + "rule \"r1\"\n" + "dialect \"mvel\"\n"+ "when\n"+ "OuterClassWithEnums( innerClass.innerField == TestEnum.VALUE1 )\n"+ "then\n"+ "end";
+  addModelField("OuterClassWithEnums","innerClass","InnerClassWithEnums","InnerClassWithEnums");
+  addModelField("InnerClassWithEnums","innerField",TestEnum.class.getSimpleName(),DataType.TYPE_COMPARABLE);
+  addJavaEnumDefinition("InnerClassWithEnums","innerField",new String[]{"TestEnum.VALUE1=TestEnum.VALUE1","TestEnum.VALUE2=TestEnum.VALUE2"});
+  RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,dmo);
+  FactPattern pattern=(FactPattern)m.lhs[0];
+  assertEquals(1,pattern.getNumberOfConstraints());
+  assertTrue(pattern.getConstraint(0) instanceof SingleFieldConstraintEBLeftSide);
+  final SingleFieldConstraintEBLeftSide constraint=(SingleFieldConstraintEBLeftSide)pattern.getConstraint(0);
+  assertEquals(3,constraint.getExpressionLeftSide().getParts().size());
+  assertTrue(constraint.getExpressionLeftSide().getParts().get(0) instanceof ExpressionUnboundFact);
+  final ExpressionUnboundFact eubf=((ExpressionUnboundFact)constraint.getExpressionLeftSide().getParts().get(0));
+  assertEquals("OuterClassWithEnums",eubf.getName());
+  assertEquals("OuterClassWithEnums",eubf.getClassType());
+  assertEquals("OuterClassWithEnums",eubf.getGenericType());
+  assertTrue(constraint.getExpressionLeftSide().getParts().get(1) instanceof ExpressionField);
+  final ExpressionField ef1=((ExpressionField)constraint.getExpressionLeftSide().getParts().get(1));
+  assertEquals("innerClass",ef1.getName());
+  assertEquals("InnerClassWithEnums",ef1.getClassType());
+  assertEquals("InnerClassWithEnums",ef1.getGenericType());
+  assertTrue(constraint.getExpressionLeftSide().getParts().get(2) instanceof ExpressionField);
+  final ExpressionField ef2=((ExpressionField)constraint.getExpressionLeftSide().getParts().get(2));
+  assertEquals("innerField",ef2.getName());
+  assertEquals("TestEnum",ef2.getClassType());
+  assertEquals(DataType.TYPE_COMPARABLE,ef2.getGenericType());
+  assertEquals("OuterClassWithEnums",constraint.getFactType());
+  assertEquals("innerField",constraint.getFieldName());
+  assertEquals("TestEnum",constraint.getFieldType());
+  assertEquals("==",constraint.getOperator());
+  assertEquals("TestEnum.VALUE1",constraint.getValue());
+  assertEquals(BaseSingleFieldConstraint.TYPE_ENUM,constraint.getConstraintValueType());
+  final String drl2=RuleModelDRLPersistenceImpl.getInstance().marshal(m);
+  assertEqualsIgnoreWhitespace(drl,drl2);
+}
