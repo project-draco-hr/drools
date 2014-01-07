@@ -1,0 +1,29 @@
+{
+  String[] splits=fieldName.split("\\.");
+  boolean isBoundParam=false;
+  if (factType == null) {
+    factType=getFQFactType(boundParams.get(splits[0].trim()));
+    isBoundParam=true;
+  }
+  ModelField[] typeFields=findFields(m,factType);
+  for (int i=0; i < splits.length - 1; i++) {
+    String expressionPart=normalizeExpressionPart(splits[i]);
+    if ("this".equals(expressionPart)) {
+      expression.appendPart(new ExpressionField(expressionPart,getSimpleFactType(factType,dmo),DataType.TYPE_THIS));
+    }
+ else     if (isBoundParam) {
+      ModelField currentFact=findFact(dmo.getProjectModelFields(),factType);
+      expression.appendPart(new ExpressionVariable(expressionPart,getSimpleFactType(currentFact.getClassName(),dmo),getSimpleFactType(currentFact.getType(),dmo)));
+      isBoundParam=false;
+    }
+ else {
+      ModelField currentField=findField(typeFields,expressionPart);
+      expression.appendPart(new ExpressionField(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo)));
+      typeFields=findFields(m,currentField.getClassName());
+    }
+  }
+  String expressionPart=normalizeExpressionPart(splits[splits.length - 1]);
+  ModelField currentField=findField(typeFields,expressionPart);
+  expression.appendPart(new ExpressionField(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo)));
+  return expression;
+}
