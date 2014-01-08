@@ -1,7 +1,7 @@
 {
   Object actualObject=((GenericCommand)command).execute(context);
   if (this.mvelString != null) {
-    actualObject=MVEL.eval(this.mvelString,actualObject);
+    actualObject=MVELSafeHelper.getEvaluator().eval(this.mvelString,actualObject);
   }
   if (this.expectedIdentifier != null) {
     this.expectedObject=context.get(this.expectedIdentifier);
@@ -9,7 +9,7 @@
   Map vars=new HashMap();
   vars.put("expected",expectedObject);
   vars.put("actual",actualObject);
-  if (((Boolean)MVEL.eval("expected != actual",vars))) {
+  if (((Boolean)MVELSafeHelper.getEvaluator().eval("expected != actual",vars))) {
     throw new AssertionError(format(this.message,expectedObject,actualObject));
   }
   return null;
