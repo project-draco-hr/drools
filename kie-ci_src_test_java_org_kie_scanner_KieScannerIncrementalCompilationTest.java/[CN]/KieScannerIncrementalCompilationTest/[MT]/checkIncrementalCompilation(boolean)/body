@@ -1,0 +1,14 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  MavenRepository repository=getMavenRepository();
+  InternalKieModule kJar1=createKieJarWithClass(ks,releaseId,FIRST_VALUE,useJavaInDrl);
+  repository.deployArtifact(releaseId,kJar1,kPom);
+  KieContainer kieContainer=ks.newKieContainer(releaseId);
+  KieScanner scanner=ks.newKieScanner(kieContainer);
+  checkValue(kieContainer,FIRST_VALUE);
+  InternalKieModule kJar2=createKieJarWithClass(ks,releaseId,SECOND_VALUE,useJavaInDrl);
+  repository.deployArtifact(releaseId,kJar2,kPom);
+  scanner.scanNow();
+  checkValue(kieContainer,SECOND_VALUE);
+  ks.getRepository().removeKieModule(releaseId);
+}

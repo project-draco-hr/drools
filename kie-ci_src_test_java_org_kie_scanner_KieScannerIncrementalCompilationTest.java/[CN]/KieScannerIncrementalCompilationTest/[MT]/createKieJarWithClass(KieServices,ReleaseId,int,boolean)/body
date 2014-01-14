@@ -1,0 +1,14 @@
+{
+  KieFileSystem kfs=createKieFileSystemWithKProject(ks,false);
+  kfs.writePomXML(getPom(releaseId));
+  if (useJavaInDrl) {
+    kfs.write("src/main/resources/KBase1/rule1.drl",createDRLForJavaSource());
+  }
+ else {
+    kfs.write("src/main/resources/KBase1/rule1.drl",createDRLNotUsingJava(value));
+  }
+  kfs.write("src/main/java/org/kie/test/Value.java",createJavaSource(value));
+  KieBuilder kieBuilder=ks.newKieBuilder(kfs);
+  assertTrue("",kieBuilder.buildAll().getResults().getMessages().isEmpty());
+  return (InternalKieModule)kieBuilder.getKieModule();
+}

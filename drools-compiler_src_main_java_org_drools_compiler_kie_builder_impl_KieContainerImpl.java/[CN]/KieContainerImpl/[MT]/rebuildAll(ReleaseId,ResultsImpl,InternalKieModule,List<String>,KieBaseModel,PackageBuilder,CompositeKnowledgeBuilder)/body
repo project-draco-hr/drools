@@ -1,0 +1,28 @@
+{
+  Set<String> modifiedPackages=new HashSet<String>();
+  if (!modifiedClasses.isEmpty()) {
+    ClassLoader rootClassLoader=pkgbuilder.getRootClassLoader();
+    if (rootClassLoader instanceof ProjectClassLoader) {
+      ProjectClassLoader projectClassLoader=(ProjectClassLoader)rootClassLoader;
+      projectClassLoader.reinitTypes();
+      for (      String resourceName : modifiedClasses) {
+        String className=convertResourceToClassName(resourceName);
+        byte[] bytes=newKM.getBytes(resourceName);
+        Class<?> clazz=projectClassLoader.defineClass(className,resourceName,bytes);
+        modifiedPackages.add(clazz.getPackage().getName());
+      }
+      pkgbuilder.setAllRuntimesDirty(modifiedPackages);
+    }
+  }
+  ckbuilder.build();
+  PackageBuilderErrors errors=pkgbuilder.getErrors();
+  if (!errors.isEmpty()) {
+    for (    KnowledgeBuilderError error : errors.getErrors()) {
+      results.addMessage(error);
+    }
+    log.error("Unable to update KieBase: " + kieBaseModel.getName() + " to release "+ newReleaseId+ "\n"+ errors.toString());
+  }
+  if (!modifiedClasses.isEmpty()) {
+    pkgbuilder.rewireClassObjectTypes(modifiedPackages);
+  }
+}
