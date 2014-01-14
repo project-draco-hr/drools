@@ -1,0 +1,69 @@
+{
+  InternalKieModule currentKM=currentReleaseId.equals(newReleaseId) && !currentReleaseId.equals(kr.getDefaultReleaseId()) ? (InternalKieModule)((KieRepositoryImpl)kr).getOldKieModule(currentReleaseId) : (InternalKieModule)kr.getKieModule(currentReleaseId);
+  InternalKieModule newKM=(InternalKieModule)kr.getKieModule(newReleaseId);
+  ChangeSetBuilder csb=new ChangeSetBuilder();
+  KieJarChangeSet cs=csb.build(currentKM,newKM);
+  List<String> modifiedClasses=getModifiedClasses(cs);
+  ((KieModuleKieProject)kProject).updateToModule(newKM);
+  ResultsImpl results=new ResultsImpl();
+  List<String> kbasesToRemove=new ArrayList<String>();
+  for (  Entry<String,KieBase> kBaseEntry : kBases.entrySet()) {
+    String kbaseName=kBaseEntry.getKey();
+    KieBaseModel kieBaseModel=kProject.getKieBaseModel(kbaseName);
+    if (kieBaseModel == null) {
+      kbasesToRemove.add(kbaseName);
+    }
+ else {
+      KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder((KnowledgeBase)kBaseEntry.getValue());
+      PackageBuilder pkgbuilder=kbuilder instanceof PackageBuilder ? ((PackageBuilder)kbuilder) : ((KnowledgeBuilderImpl)kbuilder).getPackageBuilder();
+      CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
+      boolean modifyingUsedClass=false;
+      for (      String modifiedClass : modifiedClasses) {
+        if (pkgbuilder.isClassInUse(convertResourceToClassName(modifiedClass))) {
+          modifyingUsedClass=true;
+          break;
+        }
+      }
+      boolean shouldRebuild=modifyingUsedClass;
+      if (modifyingUsedClass) {
+        updateAllResources(currentKM,newKM,kieBaseModel,pkgbuilder,ckbuilder);
+      }
+ else {
+        shouldRebuild=updateResourcesIncrementally(currentKM,newKM,cs,modifiedClasses,kBaseEntry,kieBaseModel,pkgbuilder,ckbuilder) > 0;
+      }
+      pkgbuilder.startPackageUpdate();
+      try {
+        for (        ResourceChangeSet rcs : cs.getChanges().values()) {
+          if (rcs.getChangeType() == ChangeType.REMOVED) {
+            String resourceName=rcs.getResourceName();
+            if (!resourceName.endsWith(".properties") && filterFileInKBase(newKM,kieBaseModel,resourceName)) {
+              pkgbuilder.removeObjectsGeneratedFromResource(currentKM.getResource(resourceName));
+            }
+          }
+        }
+        if (shouldRebuild) {
+          rebuildAll(newReleaseId,results,newKM,modifiedClasses,kieBaseModel,pkgbuilder,ckbuilder);
+        }
+      }
+  finally {
+        pkgbuilder.completePackageUpdate();
+      }
+    }
+  }
+  for (  String kbaseToRemove : kbasesToRemove) {
+    kBases.remove(kbaseToRemove);
+  }
+  for (Iterator<Entry<String,KieSession>> it=this.kSessions.entrySet().iterator(); it.hasNext(); ) {
+    Entry<String,KieSession> ksession=it.next();
+    if (kProject.getKieSessionModel(ksession.getKey()) == null) {
+      it.remove();
+    }
+  }
+  for (Iterator<Entry<String,StatelessKieSession>> it=this.statelessKSessions.entrySet().iterator(); it.hasNext(); ) {
+    Entry<String,StatelessKieSession> ksession=it.next();
+    if (kProject.getKieSessionModel(ksession.getKey()) == null) {
+      it.remove();
+    }
+  }
+  return results;
+}
