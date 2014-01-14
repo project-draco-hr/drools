@@ -1,0 +1,15 @@
+{
+  if (qualifier != null) {
+    throw new IllegalArgumentException("Cannot use a qualifier without a CDI container");
+  }
+  ParserConfiguration config=new ParserConfiguration();
+  config.setClassLoader(cl);
+  ParserContext ctx=new ParserContext(config);
+  if (parameters != null) {
+    for (    Map.Entry<String,Object> entry : parameters.entrySet()) {
+      ctx.addVariable(entry.getKey(),entry.getValue().getClass());
+    }
+  }
+  Object compiledExpression=MVEL.compileExpression(type,ctx);
+  return (T)MVELSafeHelper.getEvaluator().executeExpression(compiledExpression,parameters);
+}
