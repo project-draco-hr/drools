@@ -1,4 +1,13 @@
 {
   KieSession ksession=((KnowledgeCommandContext)context).getKieSession();
-  return ksession.getEntryPoints();
+  Collection<? extends EntryPoint> eps=ksession.getEntryPoints();
+  EntryPointCreator epCreator=(EntryPointCreator)context.get(EntryPointCreator.class.getName());
+  if (epCreator == null) {
+    return eps;
+  }
+  Collection<EntryPoint> result=new ArrayList<EntryPoint>();
+  for (  EntryPoint ep : eps) {
+    result.add(epCreator.getEntryPoint(ep.getEntryPointId()));
+  }
+  return result;
 }
