@@ -1,0 +1,13 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  MavenRepository repository=getMavenRepository();
+  ReleaseId releaseId=ks.newReleaseId("org.kie","scanner-test","1.0");
+  ReleaseId missingDep=ks.newReleaseId("org.kie","missing-dep","1.0");
+  KieFileSystem kfs=createKieFileSystemWithKProject(ks,false);
+  kfs.writePomXML(getPom(releaseId,missingDep));
+  kfs.write("src/main/resources/KBase1/rule1.drl",createDRLWithTypeDeclaration(1,1));
+  KieBuilder kieBuilder=ks.newKieBuilder(kfs);
+  List<Message> messages=kieBuilder.buildAll().getResults().getMessages();
+  assertEquals(1,messages.size());
+  assertTrue(messages.get(0).toString().contains("missing-dep"));
+}
