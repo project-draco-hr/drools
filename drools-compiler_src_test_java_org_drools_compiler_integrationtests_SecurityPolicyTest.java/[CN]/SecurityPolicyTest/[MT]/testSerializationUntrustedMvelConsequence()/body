@@ -1,0 +1,16 @@
+{
+  String drl="package org.foo.bar\n" + "rule R1 dialect \"mvel\" when\n" + "then\n"+ "    System.exit(0);"+ "end\n";
+  try {
+    KieServices ks=KieServices.Factory.get();
+    KieFileSystem kfs=ks.newKieFileSystem().write(ResourceFactory.newByteArrayResource(drl.getBytes()).setSourcePath("org/foo/bar/r1.drl"));
+    ks.newKieBuilder(kfs).buildAll();
+    ReleaseId releaseId=ks.getRepository().getDefaultReleaseId();
+    KieContainer kc=ks.newKieContainer(releaseId);
+    KieBase kbase=kc.getKieBase();
+    kbase=SerializationHelper.serializeObject(kbase);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    Assert.fail(e.toString());
+  }
+}
