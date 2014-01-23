@@ -1,0 +1,26 @@
+{
+  if (pat instanceof FromCompositeFactPattern) {
+    pat=((FromCompositeFactPattern)pat).getFactPattern();
+  }
+  if (pat instanceof CompositeFactPattern) {
+    for (    IPattern iPattern : ((CompositeFactPattern)pat).getPatterns()) {
+      SingleFieldConstraint fieldConstraint=getLHSBoundField(iPattern,var);
+      if (fieldConstraint != null) {
+        return fieldConstraint;
+      }
+    }
+  }
+  if (pat instanceof FactPattern) {
+    final FactPattern p=(FactPattern)pat;
+    for (int j=0; j < p.getFieldConstraints().length; j++) {
+      if (p.getFieldConstraints()[j] instanceof SingleFieldConstraint) {
+        SingleFieldConstraint fc=(SingleFieldConstraint)p.getFieldConstraints()[j];
+        List<String> fieldBindings=getFieldBinding(fc);
+        if (fieldBindings.contains(var)) {
+          return fc;
+        }
+      }
+    }
+  }
+  return null;
+}
