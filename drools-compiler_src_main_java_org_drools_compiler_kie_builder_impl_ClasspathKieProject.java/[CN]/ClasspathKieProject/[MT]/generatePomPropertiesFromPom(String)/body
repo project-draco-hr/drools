@@ -1,0 +1,39 @@
+{
+  File file=null;
+  for (File folder=new File(rootPath); folder.getParent() != null; folder=new File(folder.getParent())) {
+    file=new File(folder,"pom.xml");
+    if (file.exists()) {
+      break;
+    }
+    file=null;
+  }
+  if (file != null) {
+    FileInputStream fis=null;
+    try {
+      fis=new FileInputStream(file);
+      PomModel pomModel=PomModel.Parser.parse(rootPath + "/pom.xml",fis);
+      KieBuilderImpl.validatePomModel(pomModel);
+      ReleaseIdImpl gav=(ReleaseIdImpl)pomModel.getReleaseId();
+      String str=KieBuilderImpl.generatePomProperties(gav);
+      log.info("Recursed up folders,  found and used pom.xml " + file);
+      return str;
+    }
+ catch (    Exception e) {
+      log.error("As folder project tried to fall back to pom.xml " + file + "\nbut failed with exception:\n"+ e.getMessage());
+    }
+ finally {
+      if (fis != null) {
+        try {
+          fis.close();
+        }
+ catch (        IOException e) {
+          log.error("Error when closing InputStream to " + file + "\n"+ e.getMessage());
+        }
+      }
+    }
+  }
+ else {
+    log.warn("As folder project tried to fall back to pom.xml, but could not find one for " + file);
+  }
+  return null;
+}

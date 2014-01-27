@@ -1,0 +1,31 @@
+{
+  File actualZipFile=new File(rootPath);
+  if (!actualZipFile.exists()) {
+    log.error("Unable to load pom.properties from" + rootPath + " as jarPath cannot be found\n"+ rootPath);
+  }
+  ZipFile zipFile=null;
+  try {
+    zipFile=new ZipFile(actualZipFile);
+    String file=KieBuilderImpl.findPomProperties(zipFile);
+    if (file == null) {
+      log.warn("Unable to find pom.properties in " + rootPath);
+      return null;
+    }
+    ZipEntry zipEntry=zipFile.getEntry(file);
+    String pomProps=StringUtils.readFileAsString(new InputStreamReader(zipFile.getInputStream(zipEntry)));
+    log.debug("Found and used pom.properties " + file);
+    return pomProps;
+  }
+ catch (  Exception e) {
+    log.error("Unable to load pom.properties from " + rootPath + "\n"+ e.getMessage());
+  }
+ finally {
+    try {
+      zipFile.close();
+    }
+ catch (    IOException e) {
+      log.error("Error when closing InputStream to " + rootPath + "\n"+ e.getMessage());
+    }
+  }
+  return null;
+}
