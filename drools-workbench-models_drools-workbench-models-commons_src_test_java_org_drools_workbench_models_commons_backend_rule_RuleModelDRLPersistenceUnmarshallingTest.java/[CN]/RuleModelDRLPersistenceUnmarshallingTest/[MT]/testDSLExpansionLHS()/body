@@ -1,0 +1,15 @@
+{
+  String drl="rule \"rule1\"\n" + "when\n" + "The credit rating is AA\n"+ "then\n"+ "end\n";
+  final String dslDefinition="The credit rating is {rating:ENUM:Applicant.creditRating}";
+  final String dslFile="[when]" + dslDefinition + "=Applicant( creditRating == {rating} )";
+  final RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshalUsingDSL(drl,new ArrayList<String>(),dmo,new String[]{dslFile});
+  assertNotNull(m);
+  assertTrue(m.lhs[0] instanceof DSLSentence);
+  DSLSentence dslSentence=(DSLSentence)m.lhs[0];
+  assertEquals(dslDefinition,dslSentence.getDefinition());
+  assertEquals(1,dslSentence.getValues().size());
+  assertTrue(dslSentence.getValues().get(0) instanceof DSLComplexVariableValue);
+  DSLComplexVariableValue dslComplexVariableValue=(DSLComplexVariableValue)dslSentence.getValues().get(0);
+  assertEquals("AA",dslComplexVariableValue.getValue());
+  assertEquals("ENUM:Applicant.creditRating",dslComplexVariableValue.getId());
+}

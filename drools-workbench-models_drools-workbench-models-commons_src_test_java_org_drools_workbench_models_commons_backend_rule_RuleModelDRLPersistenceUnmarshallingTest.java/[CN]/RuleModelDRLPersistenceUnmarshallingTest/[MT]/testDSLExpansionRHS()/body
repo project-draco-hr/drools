@@ -1,0 +1,19 @@
+{
+  String drl="rule \"rule1\"\n" + "when\n" + "$a : Applicant()"+ "then\n"+ "Set applicant name to Bob"+ "end\n";
+  final String dslDefinition="Set applicant name to {name:\\w+ \\w+}";
+  final String dslFile="[then]" + dslDefinition + "=$a.setName( \"{name}\" )";
+  final RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshalUsingDSL(drl,new ArrayList<String>(),dmo,new String[]{dslFile});
+  assertNotNull(m);
+  assertTrue(m.lhs[0] instanceof FactPattern);
+  FactPattern pattern=(FactPattern)m.lhs[0];
+  assertEquals("Applicant",pattern.getFactType());
+  assertEquals("$a",pattern.getBoundName());
+  assertTrue(m.rhs[0] instanceof DSLSentence);
+  DSLSentence dslSentence=(DSLSentence)m.rhs[0];
+  assertEquals(dslDefinition,dslSentence.getDefinition());
+  assertEquals(1,dslSentence.getValues().size());
+  assertTrue(dslSentence.getValues().get(0) instanceof DSLComplexVariableValue);
+  DSLComplexVariableValue dslComplexVariableValue=(DSLComplexVariableValue)dslSentence.getValues().get(0);
+  assertEquals("Bob",dslComplexVariableValue.getValue());
+  assertEquals("\\w+ \\w+",dslComplexVariableValue.getId());
+}
