@@ -1,0 +1,29 @@
+{
+  String str="rule R1 when\n" + "    String( this == \"this\" )\n" + "    String( this == \"that\" )\n"+ "then\n"+ "end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  ksession.fireAllRules();
+  for (int i=0; i < 10; i++) {
+    FactHandle fh=ksession.insert("this");
+    ksession.fireAllRules();
+    ksession.delete(fh);
+    ksession.fireAllRules();
+  }
+  Rete rete=((InternalRuleBase)((KnowledgeBaseImpl)kbase).ruleBase).getRete();
+  LeftInputAdapterNode liaNode=null;
+  for (  ObjectTypeNode otn : rete.getObjectTypeNodes()) {
+    if (String.class == otn.getObjectType().getValueType().getClassType()) {
+      AlphaNode alphaNode=(AlphaNode)otn.getSinkPropagator().getSinks()[0];
+      liaNode=(LeftInputAdapterNode)alphaNode.getSinkPropagator().getSinks()[0];
+      break;
+    }
+  }
+  assertNotNull(liaNode);
+  InternalWorkingMemory wm=((StatefulKnowledgeSessionImpl)ksession).session;
+  LeftInputAdapterNode.LiaNodeMemory memory=(LeftInputAdapterNode.LiaNodeMemory)wm.getNodeMemory(liaNode);
+  LeftTupleSets stagedLeftTuples=memory.getSegmentMemory().getStagedLeftTuples();
+  assertEquals(0,stagedLeftTuples.deleteSize());
+  assertNull(stagedLeftTuples.getDeleteFirst());
+  assertEquals(0,stagedLeftTuples.insertSize());
+  assertNull(stagedLeftTuples.getInsertFirst());
+}
