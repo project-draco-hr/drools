@@ -1,5 +1,5 @@
 {
-  String drl="package org.foo.bar\n" + "import " + MaliciousExitHelper.class.getName().replace('$','.') + " \n"+ "rule R1 salience( MaliciousExitHelper.exit() ) \n"+ "when\n"+ "then\n"+ "end\n";
+  String drl="package org.foo.bar\n" + "import " + MaliciousExitHelper.class.getName().replace('$','.') + " \n"+ "rule R1 dialect \"mvel\" enabled( MaliciousExitHelper.isEnabled() ) \n"+ "when\n"+ "then\n"+ "end\n";
   try {
     KieServices ks=KieServices.Factory.get();
     KieFileSystem kfs=ks.newKieFileSystem().write(ResourceFactory.newByteArrayResource(drl.getBytes()).setSourcePath("org/foo/bar/r1.drl"));
@@ -10,9 +10,11 @@
     ksession.fireAllRules();
     Assert.fail("The security policy for the rule should have prevented this from executing...");
   }
- catch (  ShouldHavePrevented e) {
-    Assert.fail("The security policy for the rule should have prevented this from executing...");
-  }
-catch (  Exception e) {
+ catch (  PropertyAccessException e) {
+    if (e.toString().contains("The security policy should have prevented")) {
+      Assert.fail("The security policy for the rule should have prevented this from executing...");
+    }
+ else {
+    }
   }
 }
