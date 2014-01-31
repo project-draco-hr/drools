@@ -5,11 +5,15 @@
     if (pkg == null) {
       throw new IllegalArgumentException("Package name '" + packageName + "' does not exist for this Rule Base.");
     }
-    if (!pkg.getFunctions().containsKey(functionName)) {
+    Function function=pkg.getFunctions().get(functionName);
+    if (function == null) {
       throw new IllegalArgumentException("function name '" + packageName + "' does not exist in the Package '"+ packageName+ "'.");
     }
     removeFunction(pkg,functionName);
     pkg.removeFunction(functionName);
+    if (rootClassLoader instanceof ProjectClassLoader) {
+      ((ProjectClassLoader)rootClassLoader).undefineClass(function.getClassName());
+    }
     addReloadDialectDatas(pkg.getDialectRuntimeRegistry());
   }
   finally {
