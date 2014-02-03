@@ -1,0 +1,27 @@
+{
+  try {
+    Enumeration<URL> urlEnumeration=classLoader.getResources(packageName.replace('.','/'));
+    if (!urlEnumeration.hasMoreElements()) {
+      return Collections.emptyList();
+    }
+    List<JavaFileObject> result=null;
+    while (urlEnumeration.hasMoreElements()) {
+      URL packageFolderURL=urlEnumeration.nextElement();
+      if (!new File(packageFolderURL.getFile()).isDirectory()) {
+        if (result == null) {
+          result=processJar(packageFolderURL);
+        }
+ else {
+          List<JavaFileObject> classesInJar=processJar(packageFolderURL);
+          if (classesInJar != null) {
+            result.addAll(classesInJar);
+          }
+        }
+      }
+    }
+    return result == null ? Collections.<JavaFileObject>emptyList() : result;
+  }
+ catch (  IOException e) {
+    return Collections.emptyList();
+  }
+}

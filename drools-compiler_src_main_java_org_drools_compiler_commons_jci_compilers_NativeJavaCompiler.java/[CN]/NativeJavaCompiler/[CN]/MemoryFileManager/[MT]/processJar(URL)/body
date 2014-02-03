@@ -1,0 +1,24 @@
+{
+  String jarUri=packageFolderURL.toExternalForm();
+  int separator=jarUri.indexOf('!');
+  if (separator >= 0) {
+    jarUri=jarUri.substring(0,separator);
+  }
+  JarURLConnection jarConn=(JarURLConnection)packageFolderURL.openConnection();
+  String rootEntryName=jarConn.getEntryName();
+  int rootEnd=rootEntryName.length() + 1;
+  List<JavaFileObject> result=null;
+  Enumeration<JarEntry> entryEnum=jarConn.getJarFile().entries();
+  while (entryEnum.hasMoreElements()) {
+    String name=entryEnum.nextElement().getName();
+    if (name.startsWith(rootEntryName) && name.indexOf('/',rootEnd) == -1 && name.endsWith(".class")) {
+      URI uri=URI.create(jarUri + "!/" + name);
+      String binaryName=name.substring(0,name.length() - 6).replace('/','.');
+      if (result == null) {
+        result=new ArrayList<JavaFileObject>();
+      }
+      result.add(new CustomJavaFileObject(binaryName,uri));
+    }
+  }
+  return result;
+}

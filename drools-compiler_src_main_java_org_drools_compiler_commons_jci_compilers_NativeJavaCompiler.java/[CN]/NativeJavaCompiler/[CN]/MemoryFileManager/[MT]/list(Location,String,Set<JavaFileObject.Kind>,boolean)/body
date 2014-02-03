@@ -1,0 +1,9 @@
+{
+  Iterable<JavaFileObject> fileManagerList=super.list(location,packageName,kinds,recurse);
+  if (location != StandardLocation.CLASS_PATH || packageName.startsWith("java.") || packageName.equals("java")) {
+    return fileManagerList;
+  }
+  List<JavaFileObject> externalClasses=findCompiledClassInPackage(packageName);
+  externalClasses.addAll(findClassesInExternalJars(packageName));
+  return externalClasses.isEmpty() ? fileManagerList : new AggregatingIterable<JavaFileObject>(fileManagerList,externalClasses);
+}
