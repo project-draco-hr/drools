@@ -1,0 +1,16 @@
+{
+  String drl="\n" + "import java.util.*; " + "global List list; "+ "declare Delivery "+ "  effectiveDate : Date "+ "end "+ "declare Config "+ "  todate : Date "+ "end "+ "rule Control "+ "when "+ "  $dpo: Delivery( $eff : effectiveDate ) "+ "  $gCfg: Config( todate == null || todate after[ 0d ] $eff ) "+ "then "+ "  list.add( 0 ); "+ "end "+ "rule Init "+ "when "+ "then "+ "  Delivery dpo = new Delivery( new Date( 1000 ) ); "+ "  Config gCfg = new Config(); "+ "      gCfg.setTodate( new Date( 2000 ) ); "+ "  "+ "  insert( dpo ); "+ "  insert( gCfg ); "+ "end "+ "";
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.write(ResourceFactory.newByteArrayResource(drl.getBytes()).setTargetPath("rules.drl"));
+  KieBuilder kbuilder=KieServices.Factory.get().newKieBuilder(kfs);
+  kbuilder.buildAll();
+  assertEquals(0,kbuilder.getResults().getMessages().size());
+  KieSession ksession=ks.newKieContainer(kbuilder.getKieModule().getReleaseId()).newKieSession();
+  assertNotNull(ksession);
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  ksession.dispose();
+}

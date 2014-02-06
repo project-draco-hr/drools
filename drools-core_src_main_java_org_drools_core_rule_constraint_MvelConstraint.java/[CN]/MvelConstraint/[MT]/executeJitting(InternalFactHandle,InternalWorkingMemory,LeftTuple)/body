@@ -1,0 +1,27 @@
+{
+  InternalRuleBase ruleBase=((InternalRuleBase)workingMemory.getRuleBase());
+  if (MemoryUtil.permGenStats.isUsageThresholdExceeded(ruleBase.getConfiguration().getPermGenThreshold())) {
+    return;
+  }
+  try {
+    ClassLoader classLoader=ruleBase.getRootClassLoader();
+    if (analyzedCondition == null) {
+      analyzedCondition=((MvelConditionEvaluator)conditionEvaluator).getAnalyzedCondition(handle,workingMemory,leftTuple);
+    }
+    conditionEvaluator=ASMConditionEvaluatorJitter.jitEvaluator(expression,analyzedCondition,declarations,classLoader,leftTuple);
+  }
+ catch (  Throwable t) {
+    if (TEST_JITTING) {
+      if (analyzedCondition == null) {
+        logger.error("Unable to analize condition for expression: " + expression,t);
+      }
+ else {
+        throw new RuntimeException(t);
+      }
+    }
+ else {
+      t.printStackTrace();
+      logger.warn("Exception jitting: " + expression,t.getMessage());
+    }
+  }
+}
