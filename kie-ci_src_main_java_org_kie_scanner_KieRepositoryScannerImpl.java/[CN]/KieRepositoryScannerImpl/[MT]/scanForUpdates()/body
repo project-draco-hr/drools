@@ -1,0 +1,20 @@
+{
+  Map<ReleaseId,DependencyDescriptor> replacedArtifacts=new HashMap<ReleaseId,DependencyDescriptor>();
+  Map<DependencyDescriptor,Artifact> newArtifacts=new HashMap<DependencyDescriptor,Artifact>();
+  ArtifactResolver artifactResolver=getArtifactResolver();
+  for (  Map.Entry<ReleaseId,DependencyDescriptor> entry : usedDependencies.entrySet()) {
+    Artifact newArtifact=artifactResolver.resolveArtifact(entry.getKey());
+    if (newArtifact == null) {
+      continue;
+    }
+    DependencyDescriptor resolvedDep=new DependencyDescriptor(newArtifact);
+    if (resolvedDep.isNewerThan(entry.getValue())) {
+      newArtifacts.put(entry.getValue(),newArtifact);
+      replacedArtifacts.put(entry.getKey(),resolvedDep);
+    }
+  }
+  for (  Map.Entry<ReleaseId,DependencyDescriptor> entry : replacedArtifacts.entrySet()) {
+    usedDependencies.put(entry.getKey(),entry.getValue());
+  }
+  return newArtifacts;
+}
