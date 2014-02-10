@@ -3,10 +3,37 @@
   ClassDefinition tdef=ruleBase.getTraitRegistry().getTrait(trait.getName());
   ClassDefinition cdef=ruleBase.getTraitRegistry().getTraitable(coreKlass.getName());
   if (tdef == null) {
-    throw new RuntimeDroolsException("Unable to find Trait definition for class " + trait.getName() + ". It should have been DECLARED as a trait");
+    if (trait.getAnnotation(Trait.class) != null) {
+      try {
+        if (Thing.class.isAssignableFrom(trait)) {
+          tdef=buildClassDefinition(trait,null);
+        }
+ else {
+          throw new RuntimeDroolsException("Unable to create definition for class " + trait + " : trait interfaces should extend "+ Thing.class.getName()+ " or be DECLARED as traits explicitly");
+        }
+      }
+ catch (      IOException e) {
+        throw new RuntimeDroolsException("Unable to create definition for class " + trait + " : "+ e.getMessage());
+      }
+      ruleBase.getTraitRegistry().addTrait(tdef);
+    }
+ else {
+      throw new RuntimeDroolsException("Unable to find Trait definition for class " + trait.getName() + ". It should have been DECLARED as a trait");
+    }
   }
   if (cdef == null) {
-    throw new RuntimeDroolsException("Unable to find Core class definition for class " + coreKlass.getName() + ". It should have been DECLARED as a trait");
+    if (core.getClass().getAnnotation(Traitable.class) != null) {
+      try {
+        cdef=buildClassDefinition(core.getClass(),core.getClass());
+      }
+ catch (      IOException e) {
+        throw new RuntimeDroolsException("Unable to create definition for class " + coreKlass.getName() + " : "+ e.getMessage());
+      }
+      ruleBase.getTraitRegistry().addTraitable(cdef);
+    }
+ else {
+      throw new RuntimeDroolsException("Unable to find Core class definition for class " + coreKlass.getName() + ". It should have been DECLARED as a trait");
+    }
   }
   String proxyName=getProxyName(tdef,cdef);
   String wrapperName=getPropertyWrapperName(tdef,cdef);

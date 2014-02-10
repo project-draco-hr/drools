@@ -1,0 +1,10 @@
+{
+  String droolsSource="package org.drools.tms.test; \n" + "" + "import " + Abducible.class.getName() + "; \n"+ "global java.util.List list; \n"+ ""+ "declare Root id : String @key end \n"+ "declare TypeA extends Root @Abducible end \n"+ "declare TypeB extends Root @Abducible end \n"+ "query factory( String $type, String $arg, Root $out ) \n"+ "   ( String( this == \"A\" ) from $type "+ "     and"+ "     $out := typeA( $arg ; ) "+ "   ) "+ "   or "+ "   ( String( this == \"B\" ) from $type "+ "     and "+ "     $out := typeB( $arg ; ) "+ "   ) "+ "end \n"+ "query typeA( String $x ) \n"+ "   @Abductive( target=TypeA.class ) \n"+ "end \n"+ "query typeB( String $x ) \n"+ "   @Abductive( target=TypeB.class ) \n"+ "end \n"+ "rule Main\n"+ "when \n"+ "   $s : String() "+ "   factory( $s, \"foo\", $x ; ) "+ "   Root( id == \"foo\" ) from $x "+ "then \n"+ "   System.out.println( \">>>>>\" + $x ); \n"+ "   list.add( $x ); \n"+ "end \n"+ "";
+  KieSession session=getSessionFromString(droolsSource);
+  List list=new ArrayList();
+  session.setGlobal("list",list);
+  session.insert("A");
+  session.fireAllRules();
+  assertEquals(1,list.size());
+  assertEquals("TypeA",list.get(0).getClass().getSimpleName());
+}

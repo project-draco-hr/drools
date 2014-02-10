@@ -1,0 +1,16 @@
+{
+  String drl="\n" + "import java.util.*; " + "global List list; "+ "declare Delivery "+ "  @role( event ) @timestamp( effectiveDate ) "+ "  effectiveDate : Date "+ "  configs : List "+ "end "+ "declare Config "+ "  @role( event ) @timestamp( todate ) "+ "  todate : Date "+ "end "+ "rule Control "+ "when "+ "  $dpo: Delivery() "+ "  $gCfg: Config( todate == null || this after[ 0d ] $dpo ) from $dpo.configs "+ "then "+ "  list.add( 0 ); "+ "end "+ "rule Init "+ "when "+ "then "+ "  Delivery dpo = new Delivery( new Date(), new ArrayList() ); "+ "  Config gCfg = new Config(); "+ "      gCfg.setTodate( new Date( new Date().getTime() + 1000 ) ); "+ "  dpo.getConfigs().add( gCfg ); "+ "  "+ "  insert( dpo ); "+ "end "+ "";
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.write(ResourceFactory.newByteArrayResource(drl.getBytes()).setTargetPath("rules.drl"));
+  KieBuilder kbuilder=KieServices.Factory.get().newKieBuilder(kfs);
+  kbuilder.buildAll();
+  assertEquals(0,kbuilder.getResults().getMessages().size());
+  KieSession ksession=ks.newKieContainer(kbuilder.getKieModule().getReleaseId()).newKieSession();
+  assertNotNull(ksession);
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  ksession.dispose();
+}

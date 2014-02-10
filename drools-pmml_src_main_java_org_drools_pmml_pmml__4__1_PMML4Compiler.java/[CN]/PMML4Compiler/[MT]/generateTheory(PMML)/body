@@ -1,0 +1,22 @@
+{
+  StringBuilder sb=new StringBuilder();
+  KieBase visitor;
+  try {
+    visitor=checkBuildingResources(pmml);
+  }
+ catch (  IOException e) {
+    this.results.add(new PMMLError(e.getMessage()));
+    return null;
+  }
+  KieSession visitorSession=visitor.newKieSession();
+  helper.reset();
+  visitorSession.setGlobal("registry",registry);
+  visitorSession.setGlobal("fld2var",new HashMap());
+  visitorSession.setGlobal("utils",helper);
+  visitorSession.setGlobal("theory",sb);
+  visitorSession.insert(pmml);
+  visitorSession.fireAllRules();
+  String modelEvaluatingRules=sb.toString();
+  visitorSession.dispose();
+  return modelEvaluatingRules;
+}

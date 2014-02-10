@@ -1,0 +1,20 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  KieRepository kr=ks.getRepository();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  for (int j=0; j < pmmlSources.length; j++) {
+    Resource res=ResourceFactory.newClassPathResource(pmmlSources[j]).setResourceType(ResourceType.PMML);
+    kfs.write(res);
+  }
+  KieModuleModel model=ks.newKieModuleModel();
+  KieBaseModel kbModel=model.newKieBaseModel(DEFAULT_KIEBASE).setDefault(true).addPackage(BASE_PACK).setEventProcessingMode(EventProcessingOption.STREAM);
+  kfs.writeKModuleXML(model.toXML());
+  KieBuilder kb=ks.newKieBuilder(kfs);
+  kb.buildAll();
+  if (kb.getResults().hasMessages(Message.Level.ERROR)) {
+    throw new RuntimeException("Build Errors:\n" + kb.getResults().toString());
+  }
+  KieContainer kContainer=ks.newKieContainer(kr.getDefaultReleaseId());
+  KieBase kieBase=kContainer.getKieBase();
+  return kieBase.newKieSession();
+}

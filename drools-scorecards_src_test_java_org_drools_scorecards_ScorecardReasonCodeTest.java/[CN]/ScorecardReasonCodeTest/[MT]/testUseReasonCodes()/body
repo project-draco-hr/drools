@@ -1,8 +1,16 @@
 {
+  scorecardCompiler=new ScorecardCompiler(INTERNAL_DECLARED_TYPES);
+  boolean compileResult=scorecardCompiler.compileFromExcel(PMMLDocumentTest.class.getResourceAsStream("/scoremodel_reasoncodes.xls"));
+  if (!compileResult) {
+    for (    ScorecardError error : scorecardCompiler.getScorecardParseErrors()) {
+      System.out.println("setup :" + error.getErrorLocation() + "->"+ error.getErrorMessage());
+    }
+  }
+  pmmlDocument=scorecardCompiler.getPMMLDocument();
   for (  Object serializable : pmmlDocument.getAssociationModelsAndBaselineModelsAndClusteringModels()) {
     if (serializable instanceof Scorecard) {
       assertTrue(((Scorecard)serializable).isUseReasonCodes());
-      assertEquals(100.0,((Scorecard)serializable).getInitialScore());
+      assertEquals(100.0,((Scorecard)serializable).getInitialScore(),0.0);
       assertEquals("pointsBelow",((Scorecard)serializable).getReasonCodeAlgorithm());
     }
   }

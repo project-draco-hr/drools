@@ -1,0 +1,41 @@
+{
+  Characteristics characteristics=null;
+  for (  Object obj : pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas()) {
+    if (obj instanceof Characteristics) {
+      characteristics=(Characteristics)obj;
+      break;
+    }
+  }
+  for (  Object obj : pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas()) {
+    if (obj instanceof MiningSchema) {
+      MiningSchema schema=(MiningSchema)obj;
+      Extension adapter=new Extension();
+      adapter.setName(PMMLExtensionNames.IO_ADAPTER);
+      adapter.setValue(PMMLIOAdapterMode.BEAN.name());
+      schema.getExtensions().add(adapter);
+      for (      MiningField miningField : schema.getMiningFields()) {
+        String fieldName=miningField.getName();
+        for (        Characteristic characteristic : characteristics.getCharacteristics()) {
+          String characteristicName=ScorecardPMMLUtils.extractFieldNameFromCharacteristic(characteristic);
+          if (fieldName.equalsIgnoreCase(characteristicName)) {
+            Extension extension=ScorecardPMMLUtils.getExtension(characteristic.getExtensions(),PMMLExtensionNames.EXTERNAL_CLASS);
+            if (extension != null) {
+              characteristic.getExtensions().remove(extension);
+              miningField.getExtensions().add(extension);
+            }
+          }
+        }
+      }
+      MiningField targetField=new MiningField();
+      targetField.setName(ScorecardPMMLExtensionNames.DEFAULT_PREDICTED_FIELD);
+      targetField.setUsageType(FIELDUSAGETYPE.PREDICTED);
+      schema.getMiningFields().add(targetField);
+    }
+ else     if (obj instanceof Output) {
+      Extension adapter=new Extension();
+      adapter.setName(PMMLExtensionNames.IO_ADAPTER);
+      adapter.setValue(PMMLIOAdapterMode.BEAN.name());
+      ((Output)obj).getExtensions().add(adapter);
+    }
+  }
+}

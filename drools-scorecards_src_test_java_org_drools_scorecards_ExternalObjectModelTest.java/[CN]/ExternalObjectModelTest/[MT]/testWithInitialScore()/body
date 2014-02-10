@@ -6,9 +6,44 @@
     pmmlDocument2=scorecardCompiler2.getPMMLDocument();
     assertNotNull(pmmlDocument2);
     drl2=scorecardCompiler2.getDRL();
+    PMML4Compiler.dumpModel(pmmlDocument2,System.out);
   }
  else {
     fail("failed to parse scoremodel Excel.");
   }
-  testDRLExecutionWithInitialScore(drl2);
+  assertNotNull(pmmlDocument2);
+  assertTrue(drl2 != null && !drl2.isEmpty());
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.write(ks.getResources().newByteArrayResource(drl2.getBytes()).setSourcePath("test_scorecard_rules.drl").setResourceType(ResourceType.DRL));
+  KieBuilder kieBuilder=ks.newKieBuilder(kfs);
+  Results res=kieBuilder.buildAll().getResults();
+  System.err.println(res.getMessages());
+  KieContainer kieContainer=ks.newKieContainer(kieBuilder.getKieModule().getReleaseId());
+  KieBase kbase=kieContainer.getKieBase();
+  KieSession session=kbase.newKieSession();
+  Applicant applicant=new Applicant();
+  applicant.setAge(10);
+  session.insert(applicant);
+  session.fireAllRules();
+  session.dispose();
+  assertEquals(129.0,applicant.getTotalScore());
+  session=kbase.newKieSession();
+  applicant=new Applicant();
+  applicant.setOccupation("SKYDIVER");
+  applicant.setAge(0);
+  session.insert(applicant);
+  session.fireAllRules();
+  session.dispose();
+  assertEquals(99.0,applicant.getTotalScore());
+  session=kbase.newKieSession();
+  applicant=new Applicant();
+  applicant.setResidenceState("AP");
+  applicant.setOccupation("TEACHER");
+  applicant.setAge(20);
+  applicant.setValidLicense(true);
+  session.insert(applicant);
+  session.fireAllRules();
+  session.dispose();
+  assertEquals(141.0,applicant.getTotalScore());
 }

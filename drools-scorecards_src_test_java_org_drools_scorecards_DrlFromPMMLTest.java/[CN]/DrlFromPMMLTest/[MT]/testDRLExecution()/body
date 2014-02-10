@@ -1,30 +1,29 @@
 {
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
-  for (  KnowledgeBuilderError error : kbuilder.getErrors()) {
-    System.out.println(error.getMessage());
-  }
-  assertFalse(kbuilder.hasErrors());
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.write(ks.getResources().newByteArrayResource(drl.getBytes()).setSourcePath("test_scorecard_rules.drl").setResourceType(ResourceType.DRL));
+  KieBuilder kieBuilder=ks.newKieBuilder(kfs);
+  Results res=kieBuilder.buildAll().getResults();
+  KieContainer kieContainer=ks.newKieContainer(kieBuilder.getKieModule().getReleaseId());
+  KieBase kbase=kieContainer.getKieBase();
+  KieSession session=kbase.newKieSession();
   FactType scorecardType=kbase.getFactType("org.drools.scorecards.example","SampleScore");
-  DroolsScorecard scorecard=(DroolsScorecard)scorecardType.newInstance();
+  Object scorecard=scorecardType.newInstance();
   scorecardType.set(scorecard,"age",10);
   session.insert(scorecard);
   session.fireAllRules();
   session.dispose();
-  assertEquals(29.0,scorecard.getCalculatedScore());
-  session=kbase.newStatefulKnowledgeSession();
-  scorecard=(DroolsScorecard)scorecardType.newInstance();
+  assertEquals(29.0,scorecardType.get(scorecard,"scorecard__calculatedScore"));
+  session=kbase.newKieSession();
+  scorecard=scorecardType.newInstance();
   scorecardType.set(scorecard,"occupation","SKYDIVER");
   scorecardType.set(scorecard,"age",0);
   session.insert(scorecard);
   session.fireAllRules();
   session.dispose();
-  assertTrue(-1 == scorecard.getCalculatedScore());
-  session=kbase.newStatefulKnowledgeSession();
-  scorecard=(DroolsScorecard)scorecardType.newInstance();
+  assertEquals(-1.0,scorecardType.get(scorecard,"scorecard__calculatedScore"));
+  session=kbase.newKieSession();
+  scorecard=scorecardType.newInstance();
   scorecardType.set(scorecard,"residenceState","AP");
   scorecardType.set(scorecard,"occupation","TEACHER");
   scorecardType.set(scorecard,"age",20);
@@ -32,5 +31,5 @@
   session.insert(scorecard);
   session.fireAllRules();
   session.dispose();
-  assertEquals(41.0,scorecard.getCalculatedScore());
+  assertEquals(41.0,scorecardType.get(scorecard,"scorecard__calculatedScore"));
 }

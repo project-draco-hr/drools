@@ -1,0 +1,22 @@
+{
+  setKSession(getModelSession(source2,VERBOSE));
+  setKbase(getKSession().getKieBase());
+  getKSession().fireAllRules();
+  Assert.assertEquals(21,getNumAssertedSynapses());
+  getKSession().getEntryPoint("in_PetalLen").insert(2.2);
+  getKSession().getEntryPoint("in_PetalWid").insert(4.1);
+  getKSession().getEntryPoint("in_SepalLen").insert(2.3);
+  getKSession().getEntryPoint("in_SepalWid").insert(1.8);
+  getKSession().fireAllRules();
+  FactType t7=getKbase().getFactType(packageName,"Test_MLP_7");
+  FactType t8=getKbase().getFactType(packageName,"Test_MLP_8");
+  FactType t9=getKbase().getFactType(packageName,"Test_MLP_9");
+  FactType s1=getKbase().getFactType(packageName,"Cspecies_virginica");
+  Assert.assertEquals(0.001,truncN(getDoubleFieldValue(t7),3),1e-4);
+  Assert.assertEquals(0.282,truncN(getDoubleFieldValue(t8),3),1e-4);
+  Assert.assertEquals(0.716,truncN(getDoubleFieldValue(t9),3),1e-4);
+  checkFirstDataFieldOfTypeStatus(getKbase().getFactType(packageName,"SpecSetosa"),true,false,"Test_MLP",0.001111);
+  checkFirstDataFieldOfTypeStatus(getKbase().getFactType(packageName,"SpecVirgin"),true,false,"Test_MLP",0.716639);
+  checkFirstDataFieldOfTypeStatus(getKbase().getFactType(packageName,"SpecVersic"),true,false,"Test_MLP",0.282249);
+  checkFirstDataFieldOfTypeStatus(getKbase().getFactType(packageName,"SpecOut"),true,false,"Test_MLP","virginica");
+}

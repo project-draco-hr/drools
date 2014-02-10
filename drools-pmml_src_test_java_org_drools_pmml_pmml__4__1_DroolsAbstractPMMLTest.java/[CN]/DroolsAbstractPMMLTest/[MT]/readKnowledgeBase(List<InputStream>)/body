@@ -1,0 +1,19 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  KieRepository kr=ks.getRepository();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  for (int j=0; j < theory.size(); j++) {
+    Resource res=ks.getResources().newInputStreamResource(theory.get(j));
+    kfs.write(RESOURCE_PATH + "source_" + j+ ".drl",res);
+  }
+  KieModuleModel model=ks.newKieModuleModel();
+  KieBaseModel kbModel=model.newKieBaseModel(DEFAULT_KIEBASE).setDefault(true).addPackage(BASE_PACK).setEventProcessingMode(EventProcessingOption.STREAM);
+  kfs.writeKModuleXML(model.toXML());
+  KieBuilder kb=ks.newKieBuilder(kfs);
+  kb.buildAll();
+  if (kb.getResults().hasMessages(Message.Level.ERROR)) {
+    throw new RuntimeException("Build Errors:\n" + kb.getResults().toString());
+  }
+  KieContainer kContainer=ks.newKieContainer(kr.getDefaultReleaseId());
+  return kContainer.getKieBase();
+}

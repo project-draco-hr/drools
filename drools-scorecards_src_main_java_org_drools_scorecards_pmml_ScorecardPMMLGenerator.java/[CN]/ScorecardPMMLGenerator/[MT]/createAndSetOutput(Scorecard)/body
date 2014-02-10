@@ -1,0 +1,42 @@
+{
+  Extension classExtension=ScorecardPMMLUtils.getExtension(pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas(),PMMLExtensionNames.EXTERNAL_CLASS);
+  Extension fieldExtension=ScorecardPMMLUtils.getExtension(pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas(),ScorecardPMMLExtensionNames.SCORECARD_RESULTANT_SCORE_FIELD);
+  Extension reasonCodeExtension=ScorecardPMMLUtils.getExtension(pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas(),ScorecardPMMLExtensionNames.SCORECARD_RESULTANT_REASONCODES_FIELD);
+  for (  Object obj : pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas()) {
+    if (obj instanceof Output) {
+      Output output=(Output)obj;
+      OutputField outputField=new OutputField();
+      outputField.setDataType(DATATYPE.DOUBLE);
+      outputField.setFeature(RESULTFEATURE.PREDICTED_VALUE);
+      outputField.setDisplayName("Final Score");
+      if (fieldExtension != null) {
+        pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas().remove(fieldExtension);
+        outputField.setName(fieldExtension.getValue());
+      }
+ else {
+        outputField.setName("calculatedScore");
+      }
+      if (classExtension != null) {
+        pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas().remove(classExtension);
+        outputField.getExtensions().add(classExtension);
+      }
+      output.getOutputFields().add(outputField);
+      if (pmmlScorecard.isUseReasonCodes()) {
+        OutputField reasonCodeField=new OutputField();
+        reasonCodeField.setDataType(DATATYPE.STRING);
+        reasonCodeField.setFeature(RESULTFEATURE.REASON_CODE);
+        reasonCodeField.setDisplayName("Principal Reason Code");
+        if (reasonCodeExtension != null) {
+          pmmlScorecard.getExtensionsAndCharacteristicsAndMiningSchemas().remove(reasonCodeExtension);
+          reasonCodeField.getExtensions().add(classExtension);
+          reasonCodeField.setName(reasonCodeExtension.getValue());
+        }
+ else {
+          reasonCodeField.setName("reasonCode");
+        }
+        output.getOutputFields().add(reasonCodeField);
+      }
+      break;
+    }
+  }
+}

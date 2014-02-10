@@ -1,15 +1,23 @@
 {
+  ScorecardCompiler scorecardCompiler=new ScorecardCompiler(INTERNAL_DECLARED_TYPES);
+  boolean compileResult=scorecardCompiler.compileFromExcel(PMMLDocumentTest.class.getResourceAsStream("/scoremodel_reasoncodes.xls"));
+  if (!compileResult) {
+    for (    ScorecardError error : scorecardCompiler.getScorecardParseErrors()) {
+      System.out.println("setup :" + error.getErrorLocation() + "->"+ error.getErrorMessage());
+    }
+  }
+  pmmlDocument=scorecardCompiler.getPMMLDocument();
   for (  Object serializable : pmmlDocument.getAssociationModelsAndBaselineModelsAndClusteringModels()) {
     if (serializable instanceof Scorecard) {
       for (      Object obj : ((Scorecard)serializable).getExtensionsAndCharacteristicsAndMiningSchemas()) {
         if (obj instanceof Characteristics) {
           Characteristics characteristics=(Characteristics)obj;
           assertEquals(4,characteristics.getCharacteristics().size());
-          assertEquals(10.0,characteristics.getCharacteristics().get(0).getBaselineScore());
-          assertEquals(99.0,characteristics.getCharacteristics().get(1).getBaselineScore());
-          assertEquals(12.0,characteristics.getCharacteristics().get(2).getBaselineScore());
-          assertEquals(0.0,characteristics.getCharacteristics().get(3).getBaselineScore());
-          assertEquals(25.0,((Scorecard)serializable).getBaselineScore());
+          assertEquals(10.0,characteristics.getCharacteristics().get(0).getBaselineScore(),0.0);
+          assertEquals(99.0,characteristics.getCharacteristics().get(1).getBaselineScore(),0.0);
+          assertEquals(12.0,characteristics.getCharacteristics().get(2).getBaselineScore(),0.0);
+          assertEquals(15.0,characteristics.getCharacteristics().get(3).getBaselineScore(),0.0);
+          assertEquals(25.0,((Scorecard)serializable).getBaselineScore(),0.0);
           return;
         }
       }

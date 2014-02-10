@@ -1,0 +1,25 @@
+{
+  int N=params.length - 1;
+  constructor=null;
+  List<Class> availableArgs=new ArrayList<Class>(N);
+  for (int j=0; j < N; j++) {
+    Declaration decl=getDeclaration(params[j]);
+    if (decl != null) {
+      availableArgs.add(decl.getExtractor().getExtractToClass());
+    }
+  }
+  Class klass=returnType.getClassType();
+  while (constructor == null) {
+    try {
+      constructor=klass.getConstructor(availableArgs.toArray(new Class[availableArgs.size()]));
+    }
+ catch (    NoSuchMethodException nsme) {
+      if (klass == Object.class) {
+        throw nsme;
+      }
+ else {
+        klass=klass.getSuperclass();
+      }
+    }
+  }
+}

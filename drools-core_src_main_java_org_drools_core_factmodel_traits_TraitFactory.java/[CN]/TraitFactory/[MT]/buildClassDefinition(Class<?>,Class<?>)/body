@@ -1,0 +1,43 @@
+{
+  ClassFieldInspector inspector=new ClassFieldInspector(klazz);
+  Package traitPackage=ruleBase.getPackagesMap().get(pack);
+  if (traitPackage == null) {
+    traitPackage=new Package(pack);
+    traitPackage.setClassFieldAccessorCache(ruleBase.getClassFieldAccessorCache());
+    ruleBase.getPackagesMap().put(pack,traitPackage);
+  }
+  ClassFieldAccessorStore store=traitPackage.getClassFieldAccessorStore();
+  ClassDefinition def;
+  if (!klazz.isInterface()) {
+    String className=wrapperClass.getName();
+    String superClass=wrapperClass != klazz ? klazz.getName() : klazz.getSuperclass().getName();
+    String[] interfaces=new String[]{CoreWrapper.class.getName()};
+    def=new ClassDefinition(className,superClass,interfaces);
+    def.setDefinedClass(wrapperClass);
+    Traitable tbl=wrapperClass.getAnnotation(Traitable.class);
+    def.setTraitable(true,tbl != null && tbl.logical());
+  }
+ else {
+    String className=klazz.getName();
+    String superClass=Object.class.getName();
+    String[] interfaces=new String[klazz.getInterfaces().length];
+    for (int j=0; j < klazz.getInterfaces().length; j++) {
+      interfaces[j]=klazz.getInterfaces()[j].getName();
+    }
+    def=new ClassDefinition(className,superClass,interfaces);
+    def.setDefinedClass(klazz);
+  }
+  Map<String,Field> fields=inspector.getFieldTypesField();
+  for (  Field f : fields.values()) {
+    if (f != null) {
+      FieldDefinition fld=new FieldDefinition();
+      fld.setName(f.getName());
+      fld.setTypeName(f.getType().getName());
+      fld.setInherited(true);
+      ClassFieldAccessor accessor=store.getAccessor(def.getDefinedClass().getName(),fld.getName());
+      fld.setReadWriteAccessor(accessor);
+      def.addField(fld);
+    }
+  }
+  return def;
+}
