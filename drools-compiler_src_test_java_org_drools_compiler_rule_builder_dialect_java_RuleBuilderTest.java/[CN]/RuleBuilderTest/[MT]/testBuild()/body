@@ -1,8 +1,8 @@
 {
   final DrlParser parser=new DrlParser(LanguageLevelOption.DRL5);
-  final PackageBuilder pkgBuilder=new PackageBuilder();
-  pkgBuilder.addPackage(new PackageDescr("org.drools"));
-  Package pkg=pkgBuilder.getPackage();
+  final KnowledgeBuilderImpl kBuilder=new KnowledgeBuilderImpl();
+  kBuilder.addPackage(new PackageDescr("org.drools"));
+  InternalKnowledgePackage pkg=kBuilder.getPackage();
   final PackageDescr pkgDescr=parser.parse(new InputStreamReader(getClass().getResourceAsStream("nestedConditionalElements.drl")));
   assertFalse(parser.getErrors().toString(),parser.hasErrors());
   pkg.addGlobal("results",List.class);
@@ -10,9 +10,9 @@
   final String ruleClassName="RuleClassName.java";
   ruleDescr.setClassName(ruleClassName);
   ruleDescr.addAttribute(new AttributeDescr("dialect","java"));
-  pkgBuilder.addPackage(pkgDescr);
-  assertTrue(pkgBuilder.getErrors().toString(),pkgBuilder.getErrors().isEmpty());
-  final Rule rule=pkgBuilder.getPackage().getRule("test nested CEs");
+  kBuilder.addPackage(pkgDescr);
+  assertTrue(kBuilder.getErrors().toString(),kBuilder.getErrors().isEmpty());
+  final RuleImpl rule=kBuilder.getPackage().getRule("test nested CEs");
   assertEquals("There should be 2 rule level declarations",2,rule.getDeclarations().size());
   final GroupElement not=(GroupElement)rule.getLhs().getChildren().get(1);
   assertTrue(not.isNot());

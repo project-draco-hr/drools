@@ -1,14 +1,14 @@
 {
-  final Rule rule1=new Rule("test-rule1");
-  IdGenerator idGenerator=ruleBase.getReteooBuilder().getIdGenerator();
-  final Rete rete=ruleBase.getRete();
+  final RuleImpl rule1=new RuleImpl("test-rule1");
+  IdGenerator idGenerator=kBase.getReteooBuilder().getIdGenerator();
+  final Rete rete=kBase.getRete();
   final ObjectTypeNode objectTypeNode=new ObjectTypeNode(idGenerator.getNextId(),this.entryPoint,new ClassObjectType(String.class),buildContext);
   objectTypeNode.attach(buildContext);
   final MockObjectSink sink=new MockObjectSink();
   objectTypeNode.addObjectSink(sink);
   final RuleTerminalNode node=new RuleTerminalNode(idGenerator.getNextId(),new MockTupleSource(idGenerator.getNextId()),rule1,rule1.getLhs(),0,buildContext);
-  final AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)ruleBase.newStatefulSession();
-  final Agenda agenda=workingMemory.getAgenda();
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  final Agenda agenda=ksession.getAgenda();
   final Consequence consequence=new Consequence(){
     private static final long serialVersionUID=510l;
     public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory){
@@ -32,15 +32,15 @@
   final DefaultFactHandle handle1=new DefaultFactHandle(1,"cheese");
   final RuleTerminalNodeLeftTuple tuple1=new RuleTerminalNodeLeftTuple(handle1,node,true);
   final PropagationContext context1=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,new DefaultFactHandle());
-  node.assertLeftTuple(tuple1,context1,workingMemory);
+  node.assertLeftTuple(tuple1,context1,ksession);
   final Cheese cheese=new Cheese("brie",10);
-  final FactHandle cheeseHandle=workingMemory.insert(cheese,null,false,true,rule1,(Activation)tuple1.getObject());
+  final FactHandle cheeseHandle=ksession.insert(cheese,null,false,true,rule1,(Activation)tuple1.getObject());
   cheese.setType("cheddar");
   cheese.setPrice(20);
-  TruthMaintenanceSystem tms=((NamedEntryPoint)workingMemory.getWorkingMemoryEntryPoint(EntryPointId.DEFAULT.getEntryPointId())).getTruthMaintenanceSystem();
+  TruthMaintenanceSystem tms=((NamedEntryPoint)ksession.getWorkingMemoryEntryPoint(EntryPointId.DEFAULT.getEntryPointId())).getTruthMaintenanceSystem();
   assertEquals(1,getLogicalCount(tms));
   assertEquals(1,tms.getEqualityKeyMap().size());
-  workingMemory.retract(cheeseHandle);
+  ksession.retract(cheeseHandle);
   assertEquals(0,getLogicalCount(tms));
   assertEquals(0,tms.getEqualityKeyMap().size());
 }

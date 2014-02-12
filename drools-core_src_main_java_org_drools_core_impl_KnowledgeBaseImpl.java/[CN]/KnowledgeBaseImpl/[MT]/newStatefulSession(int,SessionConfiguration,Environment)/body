@@ -1,0 +1,17 @@
+{
+  if (this.getConfiguration().isSequential()) {
+    throw new RuntimeException("Cannot have a stateful rule session, with sequential configuration set to true");
+  }
+  readLock();
+  try {
+    WorkingMemoryFactory wmFactory=kieComponentFactory.getWorkingMemoryFactory();
+    StatefulKnowledgeSessionImpl session=(StatefulKnowledgeSessionImpl)wmFactory.createWorkingMemory(id,this,sessionConfig,environment);
+    if (sessionConfig.isKeepReference()) {
+      addStatefulSession(session);
+    }
+    return session;
+  }
+  finally {
+    readUnlock();
+  }
+}

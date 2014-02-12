@@ -1,13 +1,13 @@
 {
-  final Rule rule1=new Rule("test-rule1");
-  IdGenerator idGenerator=ruleBase.getReteooBuilder().getIdGenerator();
-  final Rete rete=ruleBase.getRete();
+  final RuleImpl rule1=new RuleImpl("test-rule1");
+  IdGenerator idGenerator=kBase.getReteooBuilder().getIdGenerator();
+  final Rete rete=kBase.getRete();
   final ObjectTypeNode objectTypeNode=new ObjectTypeNode(idGenerator.getNextId(),this.entryPoint,new ClassObjectType(String.class),buildContext);
   objectTypeNode.attach(buildContext);
   MockRightTupleSink sink=new MockRightTupleSink();
   final RuleTerminalNode node=new RuleTerminalNode(idGenerator.getNextId(),new MockTupleSource(idGenerator.getNextId()),rule1,rule1.getLhs(),0,buildContext);
-  final AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)ruleBase.newStatefulSession();
-  final Agenda agenda=workingMemory.getAgenda();
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  final Agenda agenda=ksession.getAgenda();
   final Consequence consequence=new Consequence(){
     private static final long serialVersionUID=510l;
     public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory){
@@ -31,31 +31,31 @@
   final DefaultFactHandle handle1=new DefaultFactHandle(1,"cheese");
   final RuleTerminalNodeLeftTuple tuple1=new RuleTerminalNodeLeftTuple(handle1,node,true);
   final PropagationContext context1=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,new DefaultFactHandle());
-  node.assertLeftTuple(tuple1,context1,workingMemory);
-  final Rule rule2=new Rule("test-rule2");
+  node.assertLeftTuple(tuple1,context1,ksession);
+  final RuleImpl rule2=new RuleImpl("test-rule2");
   final RuleTerminalNode node2=new RuleTerminalNode(idGenerator.getNextId(),new MockTupleSource(idGenerator.getNextId()),rule2,rule2.getLhs(),0,buildContext);
   rule2.setConsequence(consequence);
   final DefaultFactHandle handle2=new DefaultFactHandle(2,"cheese");
   final RuleTerminalNodeLeftTuple tuple2=new RuleTerminalNodeLeftTuple(handle2,node2,true);
   final PropagationContext context2=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,new DefaultFactHandle());
-  node2.assertLeftTuple(tuple2,context2,workingMemory);
+  node2.assertLeftTuple(tuple2,context2,ksession);
   final String logicalString1=new String("logical");
-  final InternalFactHandle logicalHandle1=(InternalFactHandle)workingMemory.insert(logicalString1,"value1",false,true,rule1,(Activation)tuple1.getObject());
+  final InternalFactHandle logicalHandle1=(InternalFactHandle)ksession.insert(logicalString1,"value1",false,true,rule1,(Activation)tuple1.getObject());
   new RightTuple(logicalHandle1,sink);
   final String logicalString2=new String("logical");
-  final InternalFactHandle logicalHandle2=(InternalFactHandle)workingMemory.insert(logicalString2,"value2",false,true,rule2,(Activation)tuple2.getObject());
+  final InternalFactHandle logicalHandle2=(InternalFactHandle)ksession.insert(logicalString2,"value2",false,true,rule2,(Activation)tuple2.getObject());
   assertSame(logicalHandle1,logicalHandle2);
-  TruthMaintenanceSystem tms=((NamedEntryPoint)workingMemory.getWorkingMemoryEntryPoint(EntryPointId.DEFAULT.getEntryPointId())).getTruthMaintenanceSystem();
+  TruthMaintenanceSystem tms=((NamedEntryPoint)ksession.getWorkingMemoryEntryPoint(EntryPointId.DEFAULT.getEntryPointId())).getTruthMaintenanceSystem();
   assertEquals(1,getLogicalCount(tms));
   BeliefSet bs=(BeliefSet)logicalHandle2.getEqualityKey().getBeliefSet();
   assertEquals("value1",((LogicalDependency)((LinkedListEntry)bs.getFirst()).getObject()).getValue());
   assertEquals("value2",((LogicalDependency)((LinkedListEntry)bs.getFirst().getNext()).getObject()).getValue());
-  node2.retractLeftTuple(tuple2,context2,workingMemory);
-  workingMemory.executeQueuedActions();
+  node2.retractLeftTuple(tuple2,context2,ksession);
+  ksession.executeQueuedActions();
   assertLength(0,sink.getRetracted());
   assertEquals(1,getLogicalCount((tms)));
-  node.retractLeftTuple(tuple1,context1,workingMemory);
-  workingMemory.executeQueuedActions();
+  node.retractLeftTuple(tuple1,context1,ksession);
+  ksession.executeQueuedActions();
   assertLength(1,sink.getRetracted());
   assertEquals(0,getLogicalCount(tms));
 }

@@ -1,9 +1,9 @@
 {
   try {
     this.lock.lock();
-    this.ruleBase.readLock();
+    this.kBase.readLock();
     this.wm.startOperation();
-    this.ruleBase.executeQueuedActions();
+    this.kBase.executeQueuedActions();
     if (handle.isDisconnected()) {
       handle=this.objectStore.reconnect(handle);
     }
@@ -22,13 +22,13 @@
     if (activation != null) {
       activation.getPropagationContext().releaseResources();
     }
-    if (originalObject != object || !AssertBehaviour.IDENTITY.equals(this.ruleBase.getConfiguration().getAssertBehaviour())) {
+    if (originalObject != object || !AssertBehaviour.IDENTITY.equals(this.kBase.getConfiguration().getAssertBehaviour())) {
       this.objectStore.removeHandle(handle);
       handle.setObject(object);
       this.objectStore.addHandle(handle,object);
     }
     this.handleFactory.increaseFactHandleRecency(handle);
-    Rule rule=activation == null ? null : activation.getRule();
+    RuleImpl rule=activation == null ? null : activation.getRule();
     final PropagationContext propagationContext=pctxFactory.createPropagationContext(this.wm.getNextPropagationIdCounter(),PropagationContext.MODIFICATION,rule,(activation == null) ? null : activation.getTuple(),handle,entryPoint,mask,modifiedClass,null);
     if (typeConf.isTMSEnabled()) {
       EqualityKey newKey=tms.get(object);
@@ -62,15 +62,15 @@
     }
     this.entryPointNode.modifyObject(handle,propagationContext,typeConf,this.wm);
     propagationContext.evaluateActionQueue(this.wm);
-    this.wm.workingMemoryEventSupport.fireObjectUpdated(propagationContext,handle,originalObject,object,this.wm);
+    this.wm.getRuleRuntimeEventSupport().fireObjectUpdated(propagationContext,handle,originalObject,object,this.wm);
     this.wm.executeQueuedActions();
     if (rule == null) {
-      this.wm.getAgenda().unstageActivations();
+      ((InternalAgenda)this.wm.getAgenda()).unstageActivations();
     }
   }
   finally {
     this.wm.endOperation();
-    this.ruleBase.readUnlock();
+    this.kBase.readUnlock();
     this.lock.unlock();
   }
   return handle;

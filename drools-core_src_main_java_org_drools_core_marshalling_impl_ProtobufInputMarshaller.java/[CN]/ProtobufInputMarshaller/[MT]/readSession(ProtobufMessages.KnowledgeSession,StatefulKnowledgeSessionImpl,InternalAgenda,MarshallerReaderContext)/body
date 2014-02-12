@@ -1,0 +1,54 @@
+{
+  GlobalResolver globalResolver=(GlobalResolver)context.env.get(EnvironmentName.GLOBALS);
+  if (globalResolver != null) {
+    session.setGlobalResolver(globalResolver);
+  }
+  if (session.getTimerService() instanceof PseudoClockScheduler) {
+    PseudoClockScheduler clock=(PseudoClockScheduler)session.getTimerService();
+    clock.advanceTime(_session.getTime(),TimeUnit.MILLISECONDS);
+  }
+  context.wm=session;
+  readNodeMemories(context,_session.getRuleData());
+  List<PropagationContext> pctxs=new ArrayList<PropagationContext>();
+  if (context.kBase.getConfiguration().isPhreakEnabled() || _session.getRuleData().hasInitialFact()) {
+    ((StatefulKnowledgeSessionImpl)context.wm).initInitialFact(context.kBase,context);
+    context.handles.put(session.getInitialFactHandle().getId(),session.getInitialFactHandle());
+  }
+  for (  ProtobufMessages.EntryPoint _ep : _session.getRuleData().getEntryPointList()) {
+    EntryPoint wmep=((StatefulKnowledgeSessionImpl)context.wm).getEntryPointMap().get(_ep.getEntryPointId());
+    readFactHandles(context,_ep,((InternalWorkingMemoryEntryPoint)wmep).getObjectStore(),pctxs);
+    readTruthMaintenanceSystem(context,wmep,_ep,pctxs);
+  }
+  cleanReaderContexts(pctxs);
+  readActionQueue(context,_session.getRuleData());
+  if (processMarshaller != null) {
+    if (_session.hasProcessData()) {
+      context.parameterObject=_session.getProcessData();
+      processMarshaller.readProcessInstances(context);
+      context.parameterObject=_session.getProcessData();
+      processMarshaller.readWorkItems(context);
+      context.parameterObject=_session.getProcessData();
+      processMarshaller.readProcessTimers(context);
+    }
+  }
+ else {
+    if (_session.hasProcessData()) {
+      throw new IllegalStateException("No process marshaller, unable to unmarshall process data.");
+    }
+  }
+  if (_session.hasTimers()) {
+    for (    ProtobufMessages.Timers.Timer _timer : _session.getTimers().getTimerList()) {
+      readTimer(context,_timer);
+    }
+  }
+  if (!context.timerNodeSchedulers.isEmpty()) {
+    for (    Map<TupleKey,Scheduler> schedulers : context.timerNodeSchedulers.values()) {
+      for (      Scheduler scheduler : schedulers.values()) {
+        scheduler.schedule(scheduler.getTrigger());
+      }
+    }
+    context.timerNodeSchedulers.clear();
+  }
+  agenda.setActivationsFilter(null);
+  return session;
+}

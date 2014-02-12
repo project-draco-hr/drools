@@ -1,6 +1,5 @@
 {
-  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Rules.drl"));
-  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Rule that is always true"));
+  KieSession session=getStatelessKieSession(this.getClass().getResourceAsStream("Rules.drl"));
   VerifierReport result=VerifierReportFactory.newVerifierReport();
   Collection<Object> data=new ArrayList<Object>();
   session.setGlobal("result",result);
@@ -22,7 +21,10 @@
   data.add(rp3);
   data.add(rp4);
   data.add(alwaysTrue4);
-  session.executeWithResults(data);
+  for (  Object o : data) {
+    session.insert(o);
+  }
+  session.fireAllRules(new RuleNameMatchesAgendaFilter("Rule that is always true"));
   Iterator<VerifierMessageBase> iter=result.getBySeverity(Severity.WARNING).iterator();
   boolean works=false;
   while (iter.hasNext()) {

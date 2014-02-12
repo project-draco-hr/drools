@@ -1,11 +1,13 @@
 {
   InputStream in=getClass().getResourceAsStream("Consequence.drl");
-  StatelessSession session=getStatelessSession(in);
-  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("No action - possibly commented out"));
+  KieSession session=getStatelessKieSession(in);
   VerifierReport result=VerifierReportFactory.newVerifierReport();
   Collection<? extends Object> testData=getTestData(this.getClass().getResourceAsStream("ConsequenceTest2.drl"),result.getVerifierData());
   session.setGlobal("result",result);
-  session.executeWithResults(testData);
+  for (  Object o : testData) {
+    session.insert(o);
+  }
+  session.fireAllRules(new RuleNameMatchesAgendaFilter("No action - possibly commented out"));
   Iterator<VerifierMessageBase> iterator=result.getBySeverity(Severity.WARNING).iterator();
   Set<String> rulesThatHadErrors=new HashSet<String>();
   while (iterator.hasNext()) {

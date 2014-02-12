@@ -1,3 +1,16 @@
 {
-  this.ruleBase.removeProcess(processId);
+  Process process=this.processes.get(id);
+  if (process == null) {
+    throw new IllegalArgumentException("Process '" + id + "' does not exist for this Rule Base.");
+  }
+  this.eventSupport.fireBeforeProcessRemoved(process);
+  lock();
+  try {
+    this.processes.remove(id);
+    this.pkgs.get(process.getPackageName()).removeRuleFlow(id);
+  }
+  finally {
+    unlock();
+  }
+  this.eventSupport.fireAfterProcessRemoved(process);
 }

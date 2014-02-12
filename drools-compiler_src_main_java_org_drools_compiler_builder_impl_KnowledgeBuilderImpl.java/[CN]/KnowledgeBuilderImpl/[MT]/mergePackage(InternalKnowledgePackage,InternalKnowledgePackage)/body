@@ -1,0 +1,42 @@
+{
+  final Map<String,ImportDeclaration> imports=pkg.getImports();
+  imports.putAll(newPkg.getImports());
+  String lastType=null;
+  try {
+    if (newPkg.getGlobals() != null && newPkg.getGlobals() != Collections.EMPTY_MAP) {
+      Map<String,String> globals=pkg.getGlobals();
+      for (      final Map.Entry<String,String> entry : newPkg.getGlobals().entrySet()) {
+        final String identifier=entry.getKey();
+        final String type=entry.getValue();
+        lastType=type;
+        if (globals.containsKey(identifier) && !globals.get(identifier).equals(type)) {
+          throw new RuntimeException(pkg.getName() + " cannot be integrated");
+        }
+ else {
+          pkg.addGlobal(identifier,this.rootClassLoader.loadClass(type));
+          this.globals.put(identifier,this.rootClassLoader.loadClass(type));
+        }
+      }
+    }
+  }
+ catch (  ClassNotFoundException e) {
+    throw new RuntimeException("Unable to resolve class '" + lastType + "'");
+  }
+  if (newPkg.getTypeDeclarations() != null) {
+    for (    TypeDeclaration type : newPkg.getTypeDeclarations().values()) {
+      if (!pkg.getTypeDeclarations().containsKey(type.getTypeName())) {
+        pkg.addTypeDeclaration(type);
+      }
+    }
+  }
+  for (  final org.kie.api.definition.rule.Rule newRule : newPkg.getRules()) {
+    pkg.addRule(((RuleImpl)newRule));
+  }
+  if (newPkg.getRuleFlows() != null) {
+    final Map flows=newPkg.getRuleFlows();
+    for (    Object o : flows.values()) {
+      final Process flow=(Process)o;
+      pkg.addProcess(flow);
+    }
+  }
+}

@@ -1,8 +1,8 @@
 {
-  IdGenerator idGenerator=ruleBase.getReteooBuilder().getIdGenerator();
-  final AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)ruleBase.newStatefulSession();
-  final Agenda agenda=workingMemory.getAgenda();
-  final Rule rule=new Rule("test-rule");
+  IdGenerator idGenerator=kBase.getReteooBuilder().getIdGenerator();
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  final Agenda agenda=ksession.getAgenda();
+  final RuleImpl rule=new RuleImpl("test-rule");
   final RuleTerminalNode node=new RuleTerminalNode(idGenerator.getNextId(),new MockTupleSource(idGenerator.getNextId()),rule,rule.getLhs(),0,buildContext);
   final List data=new ArrayList();
   rule.setConsequence(new org.drools.core.spi.Consequence(){
@@ -11,7 +11,7 @@
       if (data.size() < 3) {
         final PropagationContext context2=pctxFactory.createPropagationContext(0,0,rule,(RuleTerminalNodeLeftTuple)knowledgeHelper.getTuple(),null);
         final RuleTerminalNodeLeftTuple tuple2=new RuleTerminalNodeLeftTuple(new DefaultFactHandle(2,"cheese"),node,true);
-        node.assertLeftTuple(tuple2,context2,(AbstractWorkingMemory)workingMemory);
+        node.assertLeftTuple(tuple2,context2,(StatefulKnowledgeSessionImpl)workingMemory);
       }
       data.add("tested");
     }
@@ -27,9 +27,9 @@
   final PropagationContext context1=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,null);
   final RuleTerminalNodeLeftTuple tuple1=new RuleTerminalNodeLeftTuple(new DefaultFactHandle(1,"cheese"),node,true);
   rule.setTimer(new DurationTimer(50));
-  node.assertLeftTuple(tuple1,context1,workingMemory);
+  node.assertLeftTuple(tuple1,context1,ksession);
   assertEquals(0,data.size());
-  workingMemory.fireAllRules();
+  ksession.fireAllRules();
   Thread.sleep(2000);
   assertEquals(4,data.size());
 }

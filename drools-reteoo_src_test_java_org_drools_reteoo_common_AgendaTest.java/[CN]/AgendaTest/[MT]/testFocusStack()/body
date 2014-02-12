@@ -1,5 +1,5 @@
 {
-  final AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)ruleBase.newStatefulSession();
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
   final Consequence consequence=new Consequence(){
     private static final long serialVersionUID=510l;
     public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory){
@@ -13,19 +13,19 @@
     }
   }
 ;
-  final Rule rule0=new Rule("test-rule0");
+  final RuleImpl rule0=new RuleImpl("test-rule0");
   final RuleTerminalNode node0=new RuleTerminalNode(3,new MockTupleSource(2),rule0,rule0.getLhs(),0,buildContext);
   rule0.setConsequence(consequence);
   final PropagationContext context0=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,rule0,null,new DefaultFactHandle());
-  final Rule rule1=new Rule("test-rule1","agendaGroup1");
+  final RuleImpl rule1=new RuleImpl("test-rule1","agendaGroup1");
   final RuleTerminalNode node1=new RuleTerminalNode(5,new MockTupleSource(4),rule1,rule1.getLhs(),0,buildContext);
   rule1.setConsequence(consequence);
   final PropagationContext context1=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,rule1,null,new DefaultFactHandle());
-  final Rule rule2=new Rule("test-rule2","agendaGroup2");
+  final RuleImpl rule2=new RuleImpl("test-rule2","agendaGroup2");
   final RuleTerminalNode node2=new RuleTerminalNode(7,new MockTupleSource(6),rule2,rule2.getLhs(),0,buildContext);
   rule2.setConsequence(consequence);
   final PropagationContext context2=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,rule2,null,new DefaultFactHandle());
-  final Rule rule3=new Rule("test-rule3","agendaGroup3");
+  final RuleImpl rule3=new RuleImpl("test-rule3","agendaGroup3");
   final RuleTerminalNode node3=new RuleTerminalNode(9,new MockTupleSource(8),rule3,rule3.getLhs(),0,buildContext);
   rule3.setConsequence(consequence);
   final PropagationContext context3=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,rule3,null,new DefaultFactHandle());
@@ -34,25 +34,25 @@
   final RuleTerminalNodeLeftTuple tuple3=new RuleTerminalNodeLeftTuple(new DefaultFactHandle(3,"cheese"),node2,true);
   final RuleTerminalNodeLeftTuple tuple4=new RuleTerminalNodeLeftTuple(new DefaultFactHandle(4,"cheese"),node3,true);
   final RuleTerminalNodeLeftTuple tuple5=new RuleTerminalNodeLeftTuple(new DefaultFactHandle(5,"cheese"),node3,true);
-  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
-  final AgendaGroup agendaGroup1=new AgendaGroupQueueImpl("agendaGroup1",ruleBase);
+  final InternalAgenda agenda=(InternalAgenda)ksession.getAgenda();
+  final AgendaGroup agendaGroup1=new AgendaGroupQueueImpl("agendaGroup1",kBase);
   agenda.addAgendaGroup(agendaGroup1);
-  final AgendaGroup agendaGroup2=new AgendaGroupQueueImpl("agendaGroup2",ruleBase);
+  final AgendaGroup agendaGroup2=new AgendaGroupQueueImpl("agendaGroup2",kBase);
   agenda.addAgendaGroup(agendaGroup2);
-  final AgendaGroup agendaGroup3=new AgendaGroupQueueImpl("agendaGroup3",ruleBase);
+  final AgendaGroup agendaGroup3=new AgendaGroupQueueImpl("agendaGroup3",kBase);
   agenda.addAgendaGroup(agendaGroup3);
   assertEquals(0,agenda.focusStackSize());
-  node0.assertLeftTuple(tuple1,context0,workingMemory);
+  node0.assertLeftTuple(tuple1,context0,ksession);
   agenda.unstageActivations();
   final AgendaGroup main=agenda.getAgendaGroup(AgendaGroup.MAIN);
   assertEquals(agenda.getFocus(),main);
   assertEquals(1,agenda.getFocus().size());
-  node2.assertLeftTuple(tuple2,context2,workingMemory);
+  node2.assertLeftTuple(tuple2,context2,ksession);
   agenda.unstageActivations();
   assertEquals(1,agenda.getFocus().size());
   assertEquals(1,agendaGroup2.size());
   assertEquals(2,agenda.agendaSize());
-  node2.assertLeftTuple(tuple3,context2,workingMemory);
+  node2.assertLeftTuple(tuple3,context2,ksession);
   agenda.unstageActivations();
   assertEquals(1,agenda.getFocus().size());
   assertEquals(2,agendaGroup2.size());
@@ -61,10 +61,10 @@
   agenda.setFocus("agendaGroup2");
   agenda.setFocus("agendaGroup3");
   assertEquals(0,agenda.getFocus().size());
-  node3.assertLeftTuple(tuple4,context3,workingMemory);
+  node3.assertLeftTuple(tuple4,context3,ksession);
   agenda.unstageActivations();
   assertEquals(1,agenda.getFocus().size());
-  node3.assertLeftTuple(tuple5,context3,workingMemory);
+  node3.assertLeftTuple(tuple5,context3,ksession);
   agenda.unstageActivations();
   assertEquals(2,agenda.getFocus().size());
   assertEquals(5,agenda.agendaSize());

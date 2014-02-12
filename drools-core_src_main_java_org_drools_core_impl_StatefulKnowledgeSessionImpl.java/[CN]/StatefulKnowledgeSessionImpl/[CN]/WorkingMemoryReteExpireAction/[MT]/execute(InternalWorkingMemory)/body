@@ -1,0 +1,13 @@
+{
+  if (this.factHandle.isValid()) {
+    PropagationContextFactory pctxFactory=workingMemory.getKnowledgeBase().getConfiguration().getComponentFactory().getPropagationContextFactory();
+    final PropagationContext context=pctxFactory.createPropagationContext(workingMemory.getNextPropagationIdCounter(),PropagationContext.EXPIRATION,null,null,this.factHandle);
+    ((EventFactHandle)factHandle).setExpired(true);
+    this.node.retractObject(factHandle,context,workingMemory);
+    context.evaluateActionQueue(workingMemory);
+    if (((EventFactHandle)factHandle).getActivationsCount() == 0) {
+      ((EventFactHandle)factHandle).getEntryPoint().retract(factHandle);
+    }
+    context.evaluateActionQueue(workingMemory);
+  }
+}

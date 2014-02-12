@@ -1,30 +1,21 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LogicalInsertionsWithUpdate.drl")));
-  if (builder.hasErrors()) {
-    fail(builder.getErrors().toString());
-  }
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  StatefulSession workingMemory=ruleBase.newStatefulSession();
-  List l;
+  KieBase kbase=loadKnowledgeBase("test_LogicalInsertionsWithUpdate.drl");
+  KieSession ksession=kbase.newKieSession();
   final Person p=new Person("person");
   p.setAge(2);
-  FactHandle h=workingMemory.insert(p);
-  assertEquals(1,IteratorToList.convert(workingMemory.iterateObjects()).size());
-  workingMemory.fireAllRules();
-  workingMemory=getSerialisedStatefulSession(workingMemory);
-  assertEquals(2,IteratorToList.convert(workingMemory.iterateObjects()).size());
-  l=IteratorToList.convert(workingMemory.iterateObjects(new ClassObjectFilter(CheeseEqual.class)));
+  FactHandle h=ksession.insert(p);
+  assertEquals(1,ksession.getObjects().size());
+  ksession.fireAllRules();
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,false);
+  assertEquals(2,ksession.getObjects().size());
+  Collection l=ksession.getObjects(new ClassObjectFilter(CheeseEqual.class));
   assertEquals(1,l.size());
-  assertEquals(2,((CheeseEqual)l.get(0)).getPrice());
-  h=getFactHandle(h,workingMemory);
-  workingMemory.retract(h);
-  workingMemory=getSerialisedStatefulSession(workingMemory);
-  assertEquals(0,IteratorToList.convert(workingMemory.iterateObjects()).size());
-  TruthMaintenanceSystem tms=((NamedEntryPoint)workingMemory.getWorkingMemoryEntryPoint(EntryPointId.DEFAULT.getEntryPointId())).getTruthMaintenanceSystem();
+  assertEquals(2,((CheeseEqual)l.iterator().next()).getPrice());
+  h=getFactHandle(h,ksession);
+  ksession.retract(h);
+  ksession=SerializationHelper.getSerialisedStatefulKnowledgeSession(ksession,false);
+  assertEquals(0,ksession.getObjects().size());
+  TruthMaintenanceSystem tms=((NamedEntryPoint)ksession.getEntryPoint(EntryPointId.DEFAULT.getEntryPointId())).getTruthMaintenanceSystem();
   final java.lang.reflect.Field field=tms.getClass().getDeclaredField("equalityKeyMap");
   field.setAccessible(true);
   final ObjectHashMap m=(ObjectHashMap)field.get(tms);

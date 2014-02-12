@@ -1,0 +1,110 @@
+{
+  if (typeDescr.getAnnotation(Traitable.class.getSimpleName()) != null || (!type.getKind().equals(TypeDeclaration.Kind.TRAIT) && kbuilder.getPackageRegistry().containsKey(def.getSuperClass()) && kbuilder.getPackageRegistry(def.getSuperClass()).getTraitRegistry().getTraitables().containsKey(def.getSuperClass()))) {
+    if (!isNovelClass(typeDescr)) {
+      try {
+        PackageRegistry reg=kbuilder.getPackageRegistry(typeDescr.getNamespace());
+        String availableName=typeDescr.getType().getFullName();
+        Class<?> resolvedType=reg.getTypeResolver().resolveType(availableName);
+        updateTraitDefinition(type,resolvedType);
+      }
+ catch (      ClassNotFoundException cnfe) {
+      }
+    }
+    pkgRegistry.getTraitRegistry().addTraitable(def);
+  }
+ else   if (type.getKind().equals(TypeDeclaration.Kind.TRAIT) || typeDescr.getAnnotation(Trait.class.getSimpleName()) != null) {
+    if (!type.isNovel()) {
+      try {
+        PackageRegistry reg=kbuilder.getPackageRegistry(typeDescr.getNamespace());
+        String availableName=typeDescr.getType().getFullName();
+        Class<?> resolvedType=reg.getTypeResolver().resolveType(availableName);
+        if (!Thing.class.isAssignableFrom(resolvedType)) {
+          updateTraitDefinition(type,resolvedType);
+          String target=typeDescr.getTypeName() + TraitFactory.SUFFIX;
+          TypeDeclarationDescr tempDescr=new TypeDeclarationDescr();
+          tempDescr.setNamespace(typeDescr.getNamespace());
+          tempDescr.setFields(typeDescr.getFields());
+          tempDescr.setType(target,typeDescr.getNamespace());
+          tempDescr.addSuperType(typeDescr.getType());
+          TypeDeclaration tempDeclr=new TypeDeclaration(target);
+          tempDeclr.setKind(TypeDeclaration.Kind.TRAIT);
+          tempDeclr.setTypesafe(type.isTypesafe());
+          tempDeclr.setNovel(true);
+          tempDeclr.setTypeClassName(tempDescr.getType().getFullName());
+          tempDeclr.setResource(type.getResource());
+          ClassDefinition tempDef=new ClassDefinition(target);
+          tempDef.setClassName(tempDescr.getType().getFullName());
+          tempDef.setTraitable(false);
+          for (          FieldDefinition fld : def.getFieldsDefinitions()) {
+            tempDef.addField(fld);
+          }
+          tempDef.setInterfaces(def.getInterfaces());
+          tempDef.setSuperClass(def.getClassName());
+          tempDef.setDefinedClass(resolvedType);
+          tempDef.setAbstrakt(true);
+          tempDeclr.setTypeClassDef(tempDef);
+          type.setKind(TypeDeclaration.Kind.CLASS);
+          generateDeclaredBean(tempDescr,tempDeclr,pkgRegistry,tempDef);
+          try {
+            Class<?> clazz=pkgRegistry.getTypeResolver().resolveType(tempDescr.getType().getFullName());
+            tempDeclr.setTypeClass(clazz);
+          }
+ catch (          ClassNotFoundException cnfe) {
+            kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Internal Trait extension Class '" + target + "' could not be generated correctly'"));
+          }
+ finally {
+            pkgRegistry.getPackage().addTypeDeclaration(tempDeclr);
+          }
+        }
+ else {
+          updateTraitDefinition(type,resolvedType);
+          pkgRegistry.getTraitRegistry().addTrait(def);
+        }
+      }
+ catch (      ClassNotFoundException cnfe) {
+      }
+    }
+ else {
+      if (def.getClassName().endsWith(TraitFactory.SUFFIX)) {
+        pkgRegistry.getTraitRegistry().addTrait(def.getClassName().replace(TraitFactory.SUFFIX,""),def);
+      }
+ else {
+        pkgRegistry.getTraitRegistry().addTrait(def);
+      }
+    }
+  }
+  if (type.isNovel()) {
+    String fullName=typeDescr.getType().getFullName();
+    JavaDialectRuntimeData dialect=(JavaDialectRuntimeData)pkgRegistry.getDialectRuntimeRegistry().getDialectData("java");
+switch (type.getKind()) {
+case TRAIT:
+      try {
+        buildClass(def,fullName,dialect,kbuilder.getBuilderConfiguration().getClassBuilderFactory().getTraitBuilder());
+      }
+ catch (      Exception e) {
+        e.printStackTrace();
+        kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Unable to compile declared trait " + fullName + ": "+ e.getMessage()+ ";"));
+      }
+    break;
+case ENUM:
+  try {
+    buildClass(def,fullName,dialect,kbuilder.getBuilderConfiguration().getClassBuilderFactory().getEnumClassBuilder());
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Unable to compile declared enum " + fullName + ": "+ e.getMessage()+ ";"));
+  }
+break;
+case CLASS:
+default :
+try {
+buildClass(def,fullName,dialect,kbuilder.getBuilderConfiguration().getClassBuilderFactory().getBeanClassBuilder());
+}
+ catch (Exception e) {
+e.printStackTrace();
+kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Unable to create a class for declared type " + fullName + ": "+ e.getMessage()+ ";"));
+}
+break;
+}
+}
+}

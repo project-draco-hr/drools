@@ -1,0 +1,28 @@
+{
+  final KnowledgeBuilderImpl builder=new KnowledgeBuilderImpl();
+  final PackageDescr packageDescr=new PackageDescr("p1");
+  final TypeDeclarationDescr typeDeclDescr=new TypeDeclarationDescr(StockTick.class.getName());
+  typeDeclDescr.addAnnotation("role","event");
+  packageDescr.addTypeDeclaration(typeDeclDescr);
+  final RuleDescr ruleDescr=new RuleDescr("rule-1");
+  packageDescr.addRule(ruleDescr);
+  final AndDescr lhs=new AndDescr();
+  ruleDescr.setLhs(lhs);
+  final PatternDescr patternDescr=new PatternDescr(StockTick.class.getName(),"$tick");
+  final BehaviorDescr windowDescr=new BehaviorDescr("window");
+  windowDescr.setSubType("time");
+  windowDescr.setParameters(Collections.singletonList("60000"));
+  patternDescr.addBehavior(windowDescr);
+  lhs.addDescr(patternDescr);
+  ruleDescr.setConsequence("System.out.println( $tick );");
+  builder.addPackage(packageDescr);
+  assertLength(0,builder.getErrors().getErrors());
+  InternalKnowledgePackage pkg=builder.getPackage();
+  final RuleImpl rule=pkg.getRule("rule-1");
+  assertNotNull(rule);
+  final Pattern pattern=(Pattern)rule.getLhs().getChildren().get(0);
+  assertEquals(StockTick.class.getName(),((ClassObjectType)pattern.getObjectType()).getClassType().getName());
+  final Behavior window=pattern.getBehaviors().get(0);
+  assertEquals(Behavior.BehaviorType.TIME_WINDOW,window.getType());
+  assertEquals(60000,((SlidingTimeWindow)window).getSize());
+}

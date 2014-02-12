@@ -1,10 +1,8 @@
 {
-  final Reader reader=new InputStreamReader(getClass().getResourceAsStream(TEST_RULE_FILE));
-  final RuleBase ruleBase=loadRuleBase(reader);
-  final WorkingMemory wm=ruleBase.newStatefulSession();
-  final SimpleEventGenerator myGenerator;
-  myGenerator=new SimpleEventGenerator(wm,new SimpleEventListener(wm));
+  KieBase kbase=loadKnowledgeBase(TEST_RULE_FILE);
+  KieSession ksession=kbase.newKieSession();
+  SimpleEventGenerator myGenerator=new SimpleEventGenerator(ksession,new SimpleEventListener(ksession));
   myGenerator.addDelayedEventSource("Conveyor1",new Event(EventType.CUSTOM,null),PseudoSessionClock.timeInSeconds(4),PseudoSessionClock.timeInSeconds(6),PseudoSessionClock.timeInMinutes(2),0,10);
   myGenerator.generate();
-  assertEquals(wm.getQueryResults("all inserted events").size(),10);
+  assertEquals(ksession.getQueryResults("all inserted events").size(),10);
 }

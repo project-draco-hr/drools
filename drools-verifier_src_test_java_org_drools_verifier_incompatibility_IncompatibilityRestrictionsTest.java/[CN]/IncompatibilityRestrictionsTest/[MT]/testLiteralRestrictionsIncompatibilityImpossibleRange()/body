@@ -1,6 +1,5 @@
 {
-  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Restrictions.drl"));
-  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Incompatible LiteralRestrictions with ranges in pattern possibility, impossible range"));
+  KieSession session=getStatelessKieSession(this.getClass().getResourceAsStream("Restrictions.drl"));
   Collection<Object> data=new ArrayList<Object>();
   Pattern pattern1=VerifierComponentMockFactory.createPattern1();
   Pattern pattern2=VerifierComponentMockFactory.createPattern2();
@@ -24,8 +23,11 @@
   data.add(r2);
   data.add(r3);
   data.add(r4);
-  StatelessSessionResult sessionResult=session.executeWithResults(data);
-  Map<Cause,Set<Cause>> map=createIncompatibilityMap(VerifierComponentType.RESTRICTION,sessionResult.iterateObjects());
+  for (  Object o : data) {
+    session.insert(o);
+  }
+  session.fireAllRules(new RuleNameMatchesAgendaFilter("Incompatible LiteralRestrictions with ranges in pattern possibility, impossible range"));
+  Map<Cause,Set<Cause>> map=createIncompatibilityMap(VerifierComponentType.RESTRICTION,(Iterator<Object>)session.getObjects().iterator());
   assertTrue((TestBaseOld.causeMapContains(map,r1,r2) ^ TestBaseOld.causeMapContains(map,r2,r1)));
   if (!map.isEmpty()) {
     fail("More incompatibilities than was expected.");

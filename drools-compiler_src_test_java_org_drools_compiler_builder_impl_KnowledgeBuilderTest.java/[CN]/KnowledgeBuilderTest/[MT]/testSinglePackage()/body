@@ -1,0 +1,22 @@
+{
+  KnowledgeBuilderConfigurationImpl cfg=new KnowledgeBuilderConfigurationImpl();
+  cfg.setAllowMultipleNamespaces(false);
+  KnowledgeBuilderImpl bldr=new KnowledgeBuilderImpl(cfg);
+  bldr.addPackageFromDrl(new StringReader("package whee\n import org.drools.compiler.Cheese"));
+  assertFalse(bldr.hasErrors());
+  bldr.addPackageFromDrl(new StringReader("package whee\n import org.drools.compiler.Person"));
+  assertFalse(bldr.hasErrors());
+  bldr.addPackageFromDrl(new StringReader("package whee2\n import org.drools.compiler.Person"));
+  assertFalse(bldr.hasErrors());
+  assertEquals(1,bldr.getPackages().length);
+  cfg=new KnowledgeBuilderConfigurationImpl();
+  assertEquals(true,cfg.isAllowMultipleNamespaces());
+  bldr=new KnowledgeBuilderImpl(cfg);
+  bldr.addPackageFromDrl(new StringReader("package whee\n import org.drools.compiler.Cheese"));
+  assertFalse(bldr.hasErrors());
+  bldr.addPackageFromDrl(new StringReader("import org.drools.compiler.Person"));
+  assertFalse(bldr.hasErrors());
+  bldr.addPackageFromDrl(new StringReader("package whee2\n import org.drools.compiler.Person"));
+  assertFalse(bldr.hasErrors());
+  assertEquals(3,bldr.getPackages().length);
+}

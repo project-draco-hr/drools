@@ -1,19 +1,20 @@
 {
   setUp(EXISTS_NODE);
   assertEquals(ExistsNode.class,n3.getClass());
-  KieBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  KieBaseConfiguration kconf=org.kie.internal.KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
   kconf.setOption(RuleEngineOption.PHREAK);
-  AbstractWorkingMemory wm=new AbstractWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase((RuleBaseConfiguration)kconf));
-  DefaultFactHandle f1=(DefaultFactHandle)wm.insert("test1");
-  n3.assertObject(f1,context,wm);
-  BetaMemory bm=(BetaMemory)wm.getNodeMemory(n3);
+  InternalKnowledgeBase kBase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase(kconf);
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  DefaultFactHandle f1=(DefaultFactHandle)ksession.insert("test1");
+  n3.assertObject(f1,context,ksession);
+  BetaMemory bm=(BetaMemory)ksession.getNodeMemory(n3);
   assertFalse(bm.getSegmentMemory().isSegmentLinked());
-  n4.assertObject(f1,context,wm);
+  n4.assertObject(f1,context,ksession);
   assertFalse(bm.getSegmentMemory().isSegmentLinked());
-  n5.assertObject(f1,context,wm);
+  n5.assertObject(f1,context,ksession);
   assertFalse(bm.getSegmentMemory().isSegmentLinked());
-  n6.assertObject(f1,context,wm);
+  n6.assertObject(f1,context,ksession);
   assertTrue(bm.getSegmentMemory().isSegmentLinked());
-  n6.retractRightTuple(f1.getLastRightTuple(),context,wm);
+  n6.retractRightTuple(f1.getLastRightTuple(),context,ksession);
   assertFalse(bm.getSegmentMemory().isSegmentLinked());
 }

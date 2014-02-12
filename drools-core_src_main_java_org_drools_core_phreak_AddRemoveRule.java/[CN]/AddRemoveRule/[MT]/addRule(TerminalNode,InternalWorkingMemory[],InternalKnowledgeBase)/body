@@ -1,0 +1,52 @@
+{
+  if (log.isTraceEnabled()) {
+    log.trace("Adding Rule {}",tn.getRule().getName());
+  }
+  LeftTupleSource splitStartLeftTupleSource=getNetworkSplitPoint(tn);
+  kBase.invalidateSegmentPrototype(splitStartLeftTupleSource);
+  for (  InternalWorkingMemory wm : wms) {
+    if (splitStartLeftTupleSource.getAssociations().size() > 1) {
+      List<PathMemory> pathMems=new ArrayList<PathMemory>();
+      collectRtnPathMemories(splitStartLeftTupleSource,wm,pathMems,tn);
+      PathMemory newPmem=(PathMemory)wm.getNodeMemory((MemoryFactory)tn);
+      int s=getSegmentPos(splitStartLeftTupleSource,null);
+      LeftTupleSink[] sinks=splitStartLeftTupleSource.getSinkPropagator().getSinks();
+      if (sinks.length == 2 || (sinks.length == 3 && NodeTypeEnums.isBetaNode(sinks[2])) && ((BetaNode)sinks[2]).isRightInputIsRiaNode()) {
+        List<SegmentMemory[]> previousSmems=reInitPathMemories(wm,pathMems,null);
+        int p=0;
+        SegmentMemory splitSmem=null;
+        for (        PathMemory pmem : pathMems) {
+          SegmentMemory[] smems=previousSmems.get(p);
+          for (int i=0; i < smems.length; i++) {
+            SegmentMemory sm=smems[i];
+            if (sm == null) {
+              continue;
+            }
+            if (i < s) {
+              correctSegmentBeforeSplitOnAdd(wm,newPmem,p,pmem,sm);
+            }
+ else             if (i == s) {
+              splitSmem=correctSegmentOnSplitOnAdd(splitStartLeftTupleSource,wm,newPmem,p,splitSmem,pmem,sm);
+            }
+ else             if (i > s) {
+              correctSegmentAfterSplitOnAdd(wm,pmem,i,sm);
+            }
+          }
+          p++;
+        }
+      }
+ else {
+        SegmentMemory sm=pathMems.get(0).getSegmentMemories()[s];
+        if (sm == null) {
+          continue;
+        }
+        initNewSegment(splitStartLeftTupleSource,wm,sm);
+        correctSegmentBeforeSplitOnAdd(wm,newPmem,0,pathMems.get(0),sm);
+      }
+    }
+    if (NodeTypeEnums.LeftInputAdapterNode == splitStartLeftTupleSource.getType() && splitStartLeftTupleSource.getAssociations().size() == 1) {
+      insertLiaFacts(splitStartLeftTupleSource,wm);
+    }
+    insertFacts(splitStartLeftTupleSource.getSinkPropagator().getLastLeftTupleSink(),wm);
+  }
+}

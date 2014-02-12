@@ -1,6 +1,5 @@
 {
-  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Restrictions.drl"));
-  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Opposite LiteralRestrictions"));
+  KieSession session=getStatelessKieSession(this.getClass().getResourceAsStream("Restrictions.drl"));
   Collection<Object> data=new ArrayList<Object>();
   Pattern pattern=VerifierComponentMockFactory.createPattern1();
   LiteralRestriction r1=LiteralRestriction.createRestriction(pattern,"1");
@@ -23,8 +22,11 @@
   data.add(r2);
   data.add(r3);
   data.add(r4);
-  StatelessSessionResult sessionResult=session.executeWithResults(data);
-  Map<Cause,Set<Cause>> map=createOppositesMap(VerifierComponentType.RESTRICTION,sessionResult.iterateObjects());
+  for (  Object o : data) {
+    session.insert(o);
+  }
+  session.fireAllRules(new RuleNameMatchesAgendaFilter("Opposite LiteralRestrictions"));
+  Map<Cause,Set<Cause>> map=createOppositesMap(VerifierComponentType.RESTRICTION,(Iterator<Object>)session.getObjects().iterator());
   assertTrue((TestBaseOld.causeMapContains(map,r1,r2) ^ TestBaseOld.causeMapContains(map,r2,r1)));
   assertTrue((TestBaseOld.causeMapContains(map,r3,r4) ^ TestBaseOld.causeMapContains(map,r4,r3)));
   if (!map.isEmpty()) {

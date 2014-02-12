@@ -1,0 +1,29 @@
+{
+  final Set<String> names=new HashSet<String>();
+  PackageRegistry packageRegistry=this.pkgRegistryMap.get(packageDescr.getNamespace());
+  InternalKnowledgePackage pkg=null;
+  if (packageRegistry != null) {
+    pkg=packageRegistry.getPackage();
+  }
+  for (  final RuleDescr rule : packageDescr.getRules()) {
+    validateRule(packageDescr,rule);
+    final String name=rule.getName();
+    if (names.contains(name)) {
+      addBuilderResult(new ParserError(rule.getResource(),"Duplicate rule name: " + name,rule.getLine(),rule.getColumn(),packageDescr.getNamespace()));
+    }
+    if (pkg != null) {
+      RuleImpl duplicatedRule=pkg.getRule(name);
+      if (duplicatedRule != null) {
+        Resource resource=rule.getResource();
+        Resource duplicatedResource=duplicatedRule.getResource();
+        if (resource == null || duplicatedResource == null || duplicatedResource.getSourcePath() == null || duplicatedResource.getSourcePath().equals(resource.getSourcePath())) {
+          addBuilderResult(new DuplicateRule(rule,packageDescr,this.configuration));
+        }
+ else {
+          addBuilderResult(new ParserError(rule.getResource(),"Duplicate rule name: " + name,rule.getLine(),rule.getColumn(),packageDescr.getNamespace()));
+        }
+      }
+    }
+    names.add(name);
+  }
+}

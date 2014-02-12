@@ -2,10 +2,10 @@
   Properties properties=new Properties();
   properties.setProperty("drools.shadowProxyExcludes","org.drools.core.test.model.Cheese");
   RuleBaseConfiguration conf=new RuleBaseConfiguration(properties);
-  final ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase(conf);
-  buildContext=new BuildContext(ruleBase,((ReteooRuleBase)ruleBase).getReteooBuilder().getIdGenerator());
-  final AbstractWorkingMemory workingMemory=new AbstractWorkingMemory(1,ruleBase);
-  final Rete rete=ruleBase.getRete();
+  InternalKnowledgeBase kBase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase(conf);
+  buildContext=new BuildContext(kBase,kBase.getReteooBuilder().getIdGenerator());
+  final StatefulKnowledgeSessionImpl workingMemory=new StatefulKnowledgeSessionImpl(1,kBase);
+  final Rete rete=kBase.getRete();
   final EntryPointNode entryPoint=new EntryPointNode(0,rete,buildContext);
   entryPoint.attach(buildContext);
   final ObjectTypeNode objectTypeNode=new ObjectTypeNode(1,entryPoint,new ClassObjectType(Cheese.class),buildContext);
@@ -16,5 +16,4 @@
   final DefaultFactHandle h1=new DefaultFactHandle(1,cheese);
   rete.assertObject(h1,pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,null),workingMemory);
   final Object[] results=(Object[])sink1.getAsserted().get(0);
-  assertFalse(((DefaultFactHandle)results[0]).getObject() instanceof ShadowProxy);
 }

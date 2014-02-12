@@ -1,32 +1,31 @@
 {
   if (session instanceof StatefulKnowledgeSessionImpl) {
     StatefulKnowledgeSessionImpl statefulSession=((StatefulKnowledgeSessionImpl)session);
-    isPhreak=((ReteooRuleBase)statefulSession.getRuleBase()).getConfig().isPhreakEnabled();
-    WorkingMemoryEventManager eventManager=statefulSession.session;
-    eventManager.addEventListener((WorkingMemoryEventListener)this);
+    isPhreak=statefulSession.getKnowledgeBase().getConfiguration().isPhreakEnabled();
+    WorkingMemoryEventManager eventManager=statefulSession;
+    eventManager.addEventListener((RuleRuntimeEventListener)this);
     eventManager.addEventListener((AgendaEventListener)this);
-    eventManager.addEventListener((RuleBaseEventListener)this);
-    InternalProcessRuntime processRuntime=((StatefulKnowledgeSessionImpl)session).session.getProcessRuntime();
+    eventManager.addEventListener((KieBaseEventListener)this);
+    InternalProcessRuntime processRuntime=((StatefulKnowledgeSessionImpl)session).getProcessRuntime();
     if (processRuntime != null) {
       processRuntime.addEventListener(this);
     }
   }
  else   if (session instanceof StatelessKnowledgeSessionImpl) {
     StatelessKnowledgeSessionImpl statelessSession=((StatelessKnowledgeSessionImpl)session);
-    isPhreak=((ReteooRuleBase)statelessSession.getRuleBase()).getConfig().isPhreakEnabled();
-    statelessSession.addWorkingMemoryEventListener(this);
-    statelessSession.addAgendaEventListener(this);
-    statelessSession.addEventListener(this);
-    statelessSession.getRuleBase().addEventListener(this);
+    isPhreak=statelessSession.getKnowledgeBase().getConfiguration().isPhreakEnabled();
+    statelessSession.addEventListener((RuleRuntimeEventListener)this);
+    statelessSession.addEventListener((AgendaEventListener)this);
+    statelessSession.getKnowledgeBase().addEventListener((KieBaseEventListener)this);
   }
  else   if (session instanceof CommandBasedStatefulKnowledgeSession) {
     StatefulKnowledgeSessionImpl statefulSession=((StatefulKnowledgeSessionImpl)((KnowledgeCommandContext)((CommandBasedStatefulKnowledgeSession)session).getCommandService().getContext()).getKieSession());
-    isPhreak=((ReteooRuleBase)statefulSession.getRuleBase()).getConfig().isPhreakEnabled();
-    ReteooWorkingMemoryInterface eventManager=statefulSession.session;
-    eventManager.addEventListener((WorkingMemoryEventListener)this);
+    isPhreak=statefulSession.getKnowledgeBase().getConfiguration().isPhreakEnabled();
+    ReteooWorkingMemoryInterface eventManager=statefulSession;
+    eventManager.addEventListener((RuleRuntimeEventListener)this);
     eventManager.addEventListener((AgendaEventListener)this);
     InternalProcessRuntime processRuntime=eventManager.getProcessRuntime();
-    eventManager.addEventListener((RuleBaseEventListener)this);
+    eventManager.addEventListener((KieBaseEventListener)this);
     if (processRuntime != null) {
       processRuntime.addEventListener(this);
     }

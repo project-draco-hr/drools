@@ -1,36 +1,33 @@
 {
-  final Reader reader=new InputStreamReader(getClass().getResourceAsStream("test_UpdateActivationCreationNoLoop.drl"));
-  RuleBase ruleBase=loadRuleBase(reader);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final InternalWorkingMemoryActions wm=(InternalWorkingMemoryActions)ruleBase.newStatefulSession();
+  KieBase kbase=loadKnowledgeBase("test_UpdateActivationCreationNoLoop.drl");
+  KieSession ksession=kbase.newKieSession();
   final List created=new ArrayList();
   final List cancelled=new ArrayList();
   final AgendaEventListener l=new DefaultAgendaEventListener(){
-    @Override public void activationCreated(    ActivationCreatedEvent event,    WorkingMemory workingMemory){
+    @Override public void matchCreated(    MatchCreatedEvent event){
       created.add(event);
     }
-    @Override public void activationCancelled(    ActivationCancelledEvent event,    WorkingMemory workingMemory){
+    @Override public void matchCancelled(    MatchCancelledEvent event){
       cancelled.add(event);
     }
   }
 ;
-  wm.addEventListener(l);
+  ksession.addEventListener(l);
   final Cheese stilton=new Cheese("stilton",15);
-  final FactHandle stiltonHandle=wm.insert(stilton);
+  final FactHandle stiltonHandle=ksession.insert(stilton);
   final Person p1=new Person("p1");
   p1.setCheese(stilton);
-  wm.insert(p1);
+  ksession.insert(p1);
   final Person p2=new Person("p2");
   p2.setCheese(stilton);
-  wm.insert(p2);
+  ksession.insert(p2);
   final Person p3=new Person("p3");
   p3.setCheese(stilton);
-  wm.insert(p3);
-  wm.fireAllRules();
+  ksession.insert(p3);
+  ksession.fireAllRules();
   assertEquals(3,created.size());
   assertEquals(0,cancelled.size());
-  final Activation item=((ActivationCreatedEvent)created.get(2)).getActivation();
-  wm.update(stiltonHandle,stilton,Long.MAX_VALUE,Object.class,item);
+  ksession.update(stiltonHandle,stilton);
   assertEquals(3,created.size());
   assertEquals(0,cancelled.size());
 }

@@ -1,19 +1,16 @@
 {
   final ExternalSpreadsheetCompiler converter=new ExternalSpreadsheetCompiler();
   final String drl=converter.compile("/data/IntegrationExampleTest.xls","/templates/test_integration.drl",18,3);
-  System.out.println(drl);
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new StringReader(drl));
-  final org.drools.core.rule.Package pkg=builder.getPackage();
-  assertNotNull(pkg);
-  assertEquals(0,builder.getErrors().getErrors().length);
-  final RuleBase rb=RuleBaseFactory.newRuleBase();
-  rb.addPackage(pkg);
-  final WorkingMemory wm=rb.newStatefulSession();
-  wm.insert(new Cheese("stilton",42));
-  wm.insert(new Person("michael","stilton",42));
-  final List<String> list=new ArrayList<String>();
-  wm.setGlobal("list",list);
-  wm.fireAllRules();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  assertFalse(kbuilder.hasErrors());
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession kSession=kbase.newStatefulKnowledgeSession();
+  kSession.insert(new Cheese("stilton",42));
+  kSession.insert(new Person("michael","stilton",42));
+  List<String> list=new ArrayList<String>();
+  kSession.setGlobal("list",list);
+  kSession.fireAllRules();
   assertEquals(1,list.size());
 }

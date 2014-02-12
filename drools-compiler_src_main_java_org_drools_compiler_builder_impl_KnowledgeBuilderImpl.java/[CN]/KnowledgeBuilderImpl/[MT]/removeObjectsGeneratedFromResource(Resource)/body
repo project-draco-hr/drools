@@ -1,0 +1,39 @@
+{
+  boolean modified=false;
+  if (pkgRegistryMap != null) {
+    for (    PackageRegistry packageRegistry : pkgRegistryMap.values()) {
+      modified=packageRegistry.removeObjectsGeneratedFromResource(resource) || modified;
+    }
+  }
+  if (results != null) {
+    Iterator<KnowledgeBuilderResult> i=results.iterator();
+    while (i.hasNext()) {
+      if (resource.equals(i.next().getResource())) {
+        i.remove();
+      }
+    }
+  }
+  if (processBuilder != null && processBuilder.getErrors() != null) {
+    Iterator<? extends KnowledgeBuilderResult> i=processBuilder.getErrors().iterator();
+    while (i.hasNext()) {
+      if (resource.equals(i.next().getResource())) {
+        i.remove();
+      }
+    }
+  }
+  if (results.size() == 0) {
+    for (    PackageRegistry packageRegistry : pkgRegistryMap.values()) {
+      packageRegistry.getPackage().resetErrors();
+    }
+  }
+  typeBuilder.removeTypesGeneratedFromResource(resource);
+  for (  List<PackageDescr> pkgDescrs : packages.values()) {
+    for (    PackageDescr pkgDescr : pkgDescrs) {
+      pkgDescr.removeObjectsGeneratedFromResource(resource);
+    }
+  }
+  if (kBase != null) {
+    kBase.removeObjectsGeneratedFromResource(resource);
+  }
+  return modified;
+}

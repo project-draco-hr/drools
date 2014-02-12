@@ -1,6 +1,5 @@
 {
-  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Restrictions.drl"));
-  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Opposite LiteralRestrictions with ranges, less or equal - greater or equal for ints and dates"));
+  KieSession session=getStatelessKieSession(this.getClass().getResourceAsStream("Restrictions.drl"));
   Collection<Object> data=new ArrayList<Object>();
   Pattern pattern=VerifierComponentMockFactory.createPattern1();
   LiteralRestriction r1=LiteralRestriction.createRestriction(pattern,"1");
@@ -13,8 +12,11 @@
   r2.setOrderNumber(1);
   data.add(r1);
   data.add(r2);
-  StatelessSessionResult sessionResult=session.executeWithResults(data);
-  Map<Cause,Set<Cause>> map=createOppositesMap(VerifierComponentType.RESTRICTION,sessionResult.iterateObjects());
+  for (  Object o : data) {
+    session.insert(o);
+  }
+  session.fireAllRules(new RuleNameMatchesAgendaFilter("Opposite LiteralRestrictions with ranges, less or equal - greater or equal for ints and dates"));
+  Map<Cause,Set<Cause>> map=createOppositesMap(VerifierComponentType.RESTRICTION,(Iterator<Object>)session.getObjects().iterator());
   assertTrue((TestBaseOld.causeMapContains(map,r1,r2) ^ TestBaseOld.causeMapContains(map,r2,r1)));
   if (!map.isEmpty()) {
     fail("More opposites than was expected.");

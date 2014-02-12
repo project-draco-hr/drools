@@ -1,0 +1,31 @@
+{
+  PackageRegistry pkgReg;
+  TypeDeclaration tdecl=this.builtinTypes.get((cls.getName()));
+  if (tdecl == null) {
+    pkgReg=kbuilder.getPackageRegistry(ClassUtils.getPackage(cls));
+    if (pkgReg != null) {
+      tdecl=pkgReg.getPackage().getTypeDeclaration(cls.getSimpleName());
+    }
+  }
+  if (tdecl != null) {
+    if (!tdecls.add(tdecl)) {
+      return false;
+    }
+  }
+  Class<?>[] intfs=cls.getInterfaces();
+  for (  Class<?> intf : intfs) {
+    pkgReg=kbuilder.getPackageRegistry(ClassUtils.getPackage(intf));
+    if (pkgReg != null) {
+      tdecl=pkgReg.getPackage().getTypeDeclaration(intf.getSimpleName());
+    }
+    if (tdecl != null) {
+      tdecls.add(tdecl);
+    }
+  }
+  for (  Class<?> intf : intfs) {
+    if (!buildTypeDeclarationInterfaces(intf,tdecls)) {
+      return false;
+    }
+  }
+  return true;
+}

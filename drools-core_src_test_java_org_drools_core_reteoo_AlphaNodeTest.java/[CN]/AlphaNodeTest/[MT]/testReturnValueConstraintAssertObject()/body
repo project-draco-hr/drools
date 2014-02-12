@@ -1,9 +1,9 @@
 {
-  ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
-  BuildContext buildContext=new BuildContext(ruleBase,((ReteooRuleBase)ruleBase).getReteooBuilder().getIdGenerator());
-  AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)ruleBase.newStatefulSession();
-  final Rule rule=new Rule("test-rule");
-  PropagationContextFactory pctxFactory=ruleBase.getConfiguration().getComponentFactory().getPropagationContextFactory();
+  InternalKnowledgeBase kBase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase();
+  BuildContext buildContext=new BuildContext(kBase,kBase.getReteooBuilder().getIdGenerator());
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  final RuleImpl rule=new RuleImpl("test-rule");
+  PropagationContextFactory pctxFactory=kBase.getConfiguration().getComponentFactory().getPropagationContextFactory();
   final PropagationContext context=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,null);
   final MockObjectSource source=new MockObjectSource(buildContext.getNextId());
   final InternalReadAccessor extractor=store.getReader(Cheese.class,"type",getClass().getClassLoader());
@@ -13,15 +13,15 @@
   final MockObjectSink sink=new MockObjectSink();
   alphaNode.addObjectSink(sink);
   final Cheese cheddar=new Cheese("cheddar",5);
-  final DefaultFactHandle f0=(DefaultFactHandle)workingMemory.insert(cheddar);
+  final DefaultFactHandle f0=(DefaultFactHandle)ksession.insert(cheddar);
   assertLength(0,sink.getAsserted());
-  alphaNode.assertObject(f0,context,workingMemory);
+  alphaNode.assertObject(f0,context,ksession);
   assertLength(1,sink.getAsserted());
   final Object[] list=(Object[])sink.getAsserted().get(0);
-  assertSame(cheddar,workingMemory.getObject((DefaultFactHandle)list[0]));
+  assertSame(cheddar,ksession.getObject((DefaultFactHandle)list[0]));
   final Cheese stilton=new Cheese("stilton",6);
   f0.setObject(stilton);
   sink.getAsserted().clear();
-  alphaNode.assertObject(f0,context,workingMemory);
+  alphaNode.assertObject(f0,context,ksession);
   assertLength(0,sink.getAsserted());
 }

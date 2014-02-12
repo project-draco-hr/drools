@@ -1,8 +1,8 @@
 {
-  final Package pkg=new Package("pkg1");
+  InternalKnowledgePackage pkg=new KnowledgePackageImpl("pkg1");
   final RuleDescr ruleDescr=new RuleDescr("rule 1");
-  PackageBuilder pkgBuilder=new PackageBuilder(pkg);
-  final PackageBuilderConfiguration conf=pkgBuilder.getPackageBuilderConfiguration();
+  KnowledgeBuilderImpl pkgBuilder=new KnowledgeBuilderImpl(pkg);
+  final KnowledgeBuilderConfigurationImpl conf=pkgBuilder.getBuilderConfiguration();
   DialectCompiletimeRegistry dialectRegistry=pkgBuilder.getPackageRegistry(pkg.getName()).getDialectCompiletimeRegistry();
   MVELDialect mvelDialect=(MVELDialect)dialectRegistry.getDialect("mvel");
   final InstrumentedBuildContent context=new InstrumentedBuildContent(pkgBuilder,ruleDescr,dialectRegistry,pkg,mvelDialect);
@@ -19,16 +19,16 @@
   final MVELEvalBuilder builder=new MVELEvalBuilder();
   final EvalCondition eval=(EvalCondition)builder.build(context,evalDescr);
   ((MVELEvalExpression)eval.getEvalExpression()).compile((MVELDialectRuntimeData)pkgBuilder.getPackageRegistry(pkg.getName()).getDialectRuntimeRegistry().getDialectData("mvel"));
-  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
-  final InternalWorkingMemory wm=(InternalWorkingMemory)ruleBase.newStatefulSession();
+  InternalKnowledgeBase kBase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase();
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
   MockLeftTupleSink sink=new MockLeftTupleSink();
   final Cheese cheddar=new Cheese("cheddar",10);
-  final InternalFactHandle f0=(InternalFactHandle)wm.insert(cheddar);
+  final InternalFactHandle f0=(InternalFactHandle)ksession.insert(cheddar);
   final LeftTupleImpl tuple=new LeftTupleImpl(f0,sink,true);
   f0.removeLeftTuple(tuple);
   Object evalContext=eval.createContext();
-  assertTrue(eval.isAllowed(tuple,wm,evalContext));
+  assertTrue(eval.isAllowed(tuple,ksession,evalContext));
   cheddar.setPrice(9);
-  wm.update(f0,cheddar);
-  assertFalse(eval.isAllowed(tuple,wm,evalContext));
+  ksession.update(f0,cheddar);
+  assertFalse(eval.isAllowed(tuple,ksession,evalContext));
 }

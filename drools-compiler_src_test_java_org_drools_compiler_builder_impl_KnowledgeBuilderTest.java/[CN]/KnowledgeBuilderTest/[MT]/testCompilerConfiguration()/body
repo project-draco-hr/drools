@@ -1,0 +1,49 @@
+{
+  KnowledgeBuilderImpl builder=new KnowledgeBuilderImpl();
+  PackageDescr pkgDescr=new PackageDescr("org.drools.compiler.test");
+  builder.addPackage(pkgDescr);
+  DialectCompiletimeRegistry reg=builder.getPackageRegistry(pkgDescr.getName()).getDialectCompiletimeRegistry();
+  final Field dialectField=builder.getClass().getDeclaredField("defaultDialect");
+  dialectField.setAccessible(true);
+  String dialectName=(String)dialectField.get(builder);
+  reg=builder.getPackageRegistry(pkgDescr.getName()).getDialectCompiletimeRegistry();
+  Dialect dialect=reg.getDialect(dialectName);
+  final Field compilerField=dialect.getClass().getDeclaredField("compiler");
+  compilerField.setAccessible(true);
+  JavaCompiler compiler=(JavaCompiler)compilerField.get(dialect);
+  KnowledgeBuilderConfigurationImpl conf=new KnowledgeBuilderConfigurationImpl();
+  JavaDialectConfiguration javaConf=(JavaDialectConfiguration)conf.getDialectConfiguration("java");
+switch (javaConf.getCompiler()) {
+case JavaDialectConfiguration.NATIVE:
+    assertSame(NativeJavaCompiler.class,compiler.getClass());
+  break;
+case JavaDialectConfiguration.ECLIPSE:
+assertSame(EclipseJavaCompiler.class,compiler.getClass());
+break;
+case JavaDialectConfiguration.JANINO:
+assertSame(JaninoJavaCompiler.class,compiler.getClass());
+break;
+default :
+fail("Unrecognized java compiler");
+}
+conf=new KnowledgeBuilderConfigurationImpl();
+javaConf=(JavaDialectConfiguration)conf.getDialectConfiguration("java");
+javaConf.setCompiler(JavaDialectConfiguration.JANINO);
+builder=new KnowledgeBuilderImpl(conf);
+builder.addPackage(pkgDescr);
+dialectName=(String)dialectField.get(builder);
+reg=builder.getPackageRegistry(pkgDescr.getName()).getDialectCompiletimeRegistry();
+dialect=reg.getDialect(dialectName);
+compiler=(JavaCompiler)compilerField.get(dialect);
+assertSame(JaninoJavaCompiler.class,compiler.getClass());
+conf=new KnowledgeBuilderConfigurationImpl();
+javaConf=(JavaDialectConfiguration)conf.getDialectConfiguration("java");
+javaConf.setCompiler(JavaDialectConfiguration.ECLIPSE);
+builder=new KnowledgeBuilderImpl(conf);
+builder.addPackage(pkgDescr);
+dialectName=(String)dialectField.get(builder);
+reg=builder.getPackageRegistry(pkgDescr.getName()).getDialectCompiletimeRegistry();
+dialect=reg.getDialect(dialectName);
+compiler=(JavaCompiler)compilerField.get(dialect);
+assertSame(EclipseJavaCompiler.class,compiler.getClass());
+}

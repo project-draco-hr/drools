@@ -1,0 +1,24 @@
+{
+  if (configuration == null) {
+    this.configuration=new KnowledgeBuilderConfigurationImpl();
+  }
+ else {
+    this.configuration=configuration;
+  }
+  this.dateFormats=null;
+  if (this.dateFormats == null) {
+    this.dateFormats=new DateFormatsImpl();
+  }
+  this.rootClassLoader=this.configuration.getClassLoader();
+  this.defaultDialect=this.configuration.getDefaultDialect();
+  this.pkgRegistryMap=new LinkedHashMap<String,PackageRegistry>();
+  this.results=new ArrayList<KnowledgeBuilderResult>();
+  PackageRegistry pkgRegistry=new PackageRegistry(rootClassLoader,this.configuration,pkg);
+  pkgRegistry.setDialect(this.defaultDialect);
+  this.pkgRegistryMap.put(pkg.getName(),pkgRegistry);
+  for (  final ImportDeclaration implDecl : pkg.getImports().values()) {
+    pkgRegistry.addImport(new ImportDescr(implDecl.getTarget()));
+  }
+  processBuilder=createProcessBuilder();
+  typeBuilder=new TypeDeclarationBuilder(this);
+}

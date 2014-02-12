@@ -13,11 +13,10 @@
   text+="then\n";
   text+="    $fact.applyValueAddPromo(1,2,3,4,\"mvel\");\n";
   text+="end";
-  RuleBase ruleBase=RuleBaseFactory.newRuleBase();
-  ruleBase.addPackage(compileRule(text.replaceAll("mvel","java")));
-  ruleBase.addPackage(compileRule(text));
+  KieBase kieBase=loadKnowledgeBaseFromString(text.replaceAll("mvel","java"),text);
+  StatelessKieSession statelessKieSession=kieBase.newStatelessKieSession();
   List<String> list=new ArrayList<String>();
-  ruleBase.newStatelessSession().execute(new TestObject(list));
+  statelessKieSession.execute(new TestObject(list));
   assertEquals(6,list.size());
   assertTrue(list.containsAll(Arrays.asList("TestObject.checkHighestPriority: java|2","TestObject.stayHasDaysOfWeek: java|false|[2008-04-01, 2008-04-10]","TestObject.checkHighestPriority: mvel|2","TestObject.stayHasDaysOfWeek: mvel|false|[2008-04-01, 2008-04-10]","TestObject.applyValueAddPromo: 1|2|3|4|mvel","TestObject.applyValueAddPromo: 1|2|3|4|java")));
 }

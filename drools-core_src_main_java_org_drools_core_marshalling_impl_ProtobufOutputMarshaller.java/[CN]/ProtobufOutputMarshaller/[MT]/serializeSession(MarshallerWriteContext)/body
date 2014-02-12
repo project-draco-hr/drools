@@ -1,13 +1,13 @@
 {
-  AbstractWorkingMemory wm=(AbstractWorkingMemory)context.wm;
+  StatefulKnowledgeSessionImpl wm=(StatefulKnowledgeSessionImpl)context.wm;
   try {
     wm.getLock().lock();
-    for (    WorkingMemoryEntryPoint ep : wm.getEntryPoints().values()) {
+    for (    WorkingMemoryEntryPoint ep : wm.getWorkingMemoryEntryPoints().values()) {
       if (ep instanceof NamedEntryPoint) {
         ((NamedEntryPoint)ep).lock();
       }
     }
-    wm.getAgenda().unstageActivations();
+    ((InternalAgenda)wm.getAgenda()).unstageActivations();
     evaluateRuleActivations(wm);
     ProtobufMessages.RuleData.Builder _ruleData=ProtobufMessages.RuleData.newBuilder();
     long time=0;
@@ -23,7 +23,7 @@
     }
     writeAgenda(context,_ruleData);
     writeNodeMemories(context,_ruleData);
-    for (    EntryPoint wmep : wm.getEntryPoints().values()) {
+    for (    EntryPoint wmep : wm.getWorkingMemoryEntryPoints().values()) {
       org.drools.core.marshalling.impl.ProtobufMessages.EntryPoint.Builder _epb=ProtobufMessages.EntryPoint.newBuilder();
       _epb.setEntryPointId(wmep.getEntryPointId());
       writeObjectTypeConfiguration(context,((InternalWorkingMemoryEntryPoint)wmep).getObjectTypeConfigurationRegistry(),_epb);
@@ -54,7 +54,7 @@
     return _session.build();
   }
   finally {
-    for (    WorkingMemoryEntryPoint ep : wm.getEntryPoints().values()) {
+    for (    WorkingMemoryEntryPoint ep : wm.getWorkingMemoryEntryPoints().values()) {
       if (ep instanceof NamedEntryPoint) {
         ((NamedEntryPoint)ep).unlock();
       }

@@ -6,6 +6,23 @@
  catch (    Exception e) {
     }
   }
-  this.session.dispose();
-  this.session=DisposedReteooWorkingMemory.INSTANCE;
+  this.kBase.disposeStatefulSession(this);
+  if (this.kBase.getConfiguration().isMBeansEnabled()) {
+    DroolsManagementAgent.getInstance().unregisterKnowledgeSession(this);
+  }
+  for (  WorkingMemoryEntryPoint ep : this.entryPoints.values()) {
+    ep.dispose();
+  }
+  this.ruleRuntimeEventSupport.reset();
+  this.agendaEventSupport.reset();
+  for (  KieBaseEventListener listener : kieBaseEventListeners) {
+    this.kBase.removeEventListener(listener);
+  }
+  if (processRuntime != null) {
+    this.processRuntime.dispose();
+  }
+  if (timerService != null) {
+    this.timerService.shutdown();
+  }
+  alive=false;
 }

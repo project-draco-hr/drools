@@ -1,0 +1,22 @@
+{
+  for (  CompositePackageDescr packageDescr : packages) {
+    for (    TypeDeclarationDescr typeDeclarationDescr : packageDescr.getTypeDeclarations()) {
+      if (isEmpty(typeDeclarationDescr.getNamespace())) {
+        typeDeclarationDescr.setNamespace(packageDescr.getNamespace());
+      }
+      kBuilder.getTypeBuilder().registerGeneratedType(typeDeclarationDescr);
+    }
+  }
+  List<TypeDefinition> unresolvedTypes=new ArrayList<TypeDefinition>();
+  for (  CompositePackageDescr packageDescr : packages) {
+    buildTypeDeclarations(packageDescr,unresolvedTypes);
+  }
+  for (  TypeDefinition unresolvedType : unresolvedTypes) {
+    kBuilder.getTypeBuilder().processUnresolvedType(kBuilder.getPackageRegistry(unresolvedType.getNamespace()),unresolvedType);
+  }
+  for (  CompositePackageDescr packageDescr : packages) {
+    for (    ImportDescr importDescr : packageDescr.getImports()) {
+      kBuilder.getPackageRegistry(packageDescr.getNamespace()).addImport(importDescr);
+    }
+  }
+}

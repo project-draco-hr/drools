@@ -1,6 +1,6 @@
 {
-  final ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
-  final InternalWorkingMemory workingMemory=(InternalWorkingMemory)ruleBase.newStatefulSession();
+  InternalKnowledgeBase kBase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase();
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
   final InternalReadAccessor priceExtractor=store.getReader(Cheese.class,"price",getClass().getClassLoader());
   Pattern pattern=new Pattern(0,new ClassObjectType(Cheese.class));
   final Declaration price1Declaration=new Declaration("price1",priceExtractor,pattern);
@@ -24,12 +24,12 @@
 ;
   final PredicateConstraint constraint1=new PredicateConstraint(evaluator,new Declaration[]{price1Declaration},new Declaration[]{price2Declaration},new String[]{},new String[]{});
   final Cheese cheddar0=new Cheese("cheddar",5);
-  final InternalFactHandle f0=(InternalFactHandle)workingMemory.insert(cheddar0);
+  final InternalFactHandle f0=(InternalFactHandle)ksession.insert(cheddar0);
   LeftTupleImpl tuple=new LeftTupleImpl(f0,null,true);
   final Cheese cheddar1=new Cheese("cheddar",10);
-  final InternalFactHandle f1=(InternalFactHandle)workingMemory.insert(cheddar1);
+  final InternalFactHandle f1=(InternalFactHandle)ksession.insert(cheddar1);
   tuple=new LeftTupleImpl(tuple,new RightTuple(f1,null),null,true);
   final PredicateContextEntry context=(PredicateContextEntry)constraint1.createContextEntry();
-  context.updateFromTuple(workingMemory,tuple);
+  context.updateFromTuple(ksession,tuple);
   assertTrue(constraint1.isAllowedCachedLeft(context,f1));
 }

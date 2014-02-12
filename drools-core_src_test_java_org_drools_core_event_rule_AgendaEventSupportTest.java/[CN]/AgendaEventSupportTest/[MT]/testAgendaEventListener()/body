@@ -1,7 +1,7 @@
 {
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  final Package pkg=new Package("org.drools.test");
-  final Rule rule=new Rule("test1");
+  InternalKnowledgePackage pkg=new KnowledgePackageImpl("org.drools.test");
+  final RuleImpl rule=new RuleImpl("test1");
   rule.setEager(true);
   rule.setAgendaGroup("test group");
   final ClassObjectType cheeseObjectType=new ClassObjectType(Cheese.class);
@@ -27,7 +27,7 @@
 );
   pkg.addRule(rule);
   List<KnowledgePackage> pkgs=new ArrayList<KnowledgePackage>();
-  pkgs.add(new KnowledgePackageImp(pkg));
+  pkgs.add(pkg);
   kbase.addKnowledgePackages(pkgs);
   StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
   final List agendaList=new ArrayList();
@@ -78,7 +78,7 @@
   assertEquals(1,ksession.getAgendaEventListeners().size());
   final Cheese cheddar=new Cheese("cheddar",15);
   FactHandle cheddarHandle=ksession.insert(cheddar);
-  InternalAgenda agenda=(InternalAgenda)((AgendaImpl)ksession.getAgenda()).getAgenda();
+  InternalAgenda agenda=(InternalAgenda)ksession.getAgenda();
   agenda.evaluateEagerList();
   assertEquals(1,agendaList.size());
   MatchCreatedEvent createdEvent=(MatchCreatedEvent)agendaList.get(0);

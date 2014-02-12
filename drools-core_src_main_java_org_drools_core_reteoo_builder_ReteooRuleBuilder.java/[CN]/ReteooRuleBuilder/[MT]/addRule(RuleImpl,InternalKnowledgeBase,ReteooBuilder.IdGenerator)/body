@@ -1,0 +1,23 @@
+{
+  final List<TerminalNode> nodes=new ArrayList<TerminalNode>();
+  final GroupElement[] subrules=rule.getTransformedLhs(kBase.getConfiguration().getComponentFactory().getLogicTransformerFactory().getLogicTransformer());
+  for (int i=0; i < subrules.length; i++) {
+    final BuildContext context=new BuildContext(kBase,idGenerator);
+    context.setRule(rule);
+    if (EventProcessingOption.STREAM.equals(kBase.getConfiguration().getEventProcessingMode())) {
+      TemporalDependencyMatrix temporal=this.utils.calculateTemporalDistance(subrules[i]);
+      context.setTemporalDistance(temporal);
+    }
+    if (kBase.getConfiguration().isSequential()) {
+      context.setTupleMemoryEnabled(false);
+      context.setObjectTypeNodeMemoryEnabled(false);
+    }
+ else {
+      context.setTupleMemoryEnabled(true);
+      context.setObjectTypeNodeMemoryEnabled(true);
+    }
+    final TerminalNode node=this.addSubRule(context,subrules[i],i,rule);
+    nodes.add(node);
+  }
+  return nodes;
+}

@@ -1,18 +1,18 @@
 {
-  ReteooRuleBase ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase();
-  IdGenerator idGenerator=ruleBase.getReteooBuilder().getIdGenerator();
+  InternalKnowledgeBase kBase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase();
+  IdGenerator idGenerator=kBase.getReteooBuilder().getIdGenerator();
   final PropagationContext context=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,null);
-  final AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)ruleBase.newStatefulSession();
-  final Rete source=new Rete((InternalRuleBase)ruleBase);
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  final Rete source=new Rete(kBase);
   final ObjectTypeNode objectTypeNode=new ObjectTypeNode(idGenerator.getNextId(),this.entryPoint,new ClassObjectType(String.class),buildContext);
   final MockObjectSink sink=new MockObjectSink();
   objectTypeNode.addObjectSink(sink);
   final Object string1="cheese";
   final DefaultFactHandle handle1=new DefaultFactHandle(1,string1);
-  objectTypeNode.assertObject(handle1,context,workingMemory);
-  final ObjectTypeNodeMemory memory=(ObjectTypeNodeMemory)workingMemory.getNodeMemory(objectTypeNode);
+  objectTypeNode.assertObject(handle1,context,ksession);
+  final ObjectTypeNodeMemory memory=(ObjectTypeNodeMemory)ksession.getNodeMemory(objectTypeNode);
   assertEquals(1,memory.memory.size());
-  objectTypeNode.retractObject(handle1,context,workingMemory);
+  objectTypeNode.retractObject(handle1,context,ksession);
   assertEquals(0,memory.memory.size());
   final List retracted=sink.getRetracted();
   assertLength(1,retracted);

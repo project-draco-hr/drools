@@ -1,8 +1,8 @@
 {
-  final Package pkg=new Package("pkg1");
+  InternalKnowledgePackage pkg=new KnowledgePackageImpl("pkg1");
   final RuleDescr ruleDescr=new RuleDescr("rule 1");
-  PackageBuilder pkgBuilder=new PackageBuilder(pkg);
-  final PackageBuilderConfiguration conf=pkgBuilder.getPackageBuilderConfiguration();
+  KnowledgeBuilderImpl pkgBuilder=new KnowledgeBuilderImpl(pkg);
+  final KnowledgeBuilderConfigurationImpl conf=pkgBuilder.getBuilderConfiguration();
   PackageRegistry pkgRegistry=pkgBuilder.getPackageRegistry(pkg.getName());
   MVELDialect mvelDialect=(MVELDialect)pkgRegistry.getDialectCompiletimeRegistry().getDialect("mvel");
   final InstrumentedBuildContent context=new InstrumentedBuildContent(pkgBuilder,ruleDescr,pkgRegistry.getDialectCompiletimeRegistry(),pkg,mvelDialect);
@@ -25,11 +25,12 @@
   final Declaration[] previousDeclarations=new Declaration[]{a};
   final Declaration[] localDeclarations=new Declaration[]{b};
   final PredicateConstraint predicate=new PredicateConstraint(null,localDeclarations);
-  AnalysisResult analysis=context.getDialect().analyzeExpression(context,predicateDescr,predicateDescr.getContent(),new BoundIdentifiers(declarationResolver.getDeclarationClasses((Rule)null),new HashMap(),null,Cheese.class));
-  builder.build(context,new BoundIdentifiers(declarationResolver.getDeclarationClasses((Rule)null),new HashMap()),previousDeclarations,localDeclarations,predicate,predicateDescr,analysis);
+  AnalysisResult analysis=context.getDialect().analyzeExpression(context,predicateDescr,predicateDescr.getContent(),new BoundIdentifiers(declarationResolver.getDeclarationClasses((RuleImpl)null),new HashMap(),null,Cheese.class));
+  builder.build(context,new BoundIdentifiers(declarationResolver.getDeclarationClasses((RuleImpl)null),new HashMap()),previousDeclarations,localDeclarations,predicate,predicateDescr,analysis);
   ((MVELPredicateExpression)predicate.getPredicateExpression()).compile((MVELDialectRuntimeData)pkgRegistry.getDialectRuntimeRegistry().getDialectData("mvel"));
-  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
-  final InternalWorkingMemory wm=(InternalWorkingMemory)ruleBase.newStatefulSession();
+  InternalKnowledgeBase kBase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase();
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  InternalWorkingMemory wm=ksession;
   final Cheese stilton=new Cheese("stilton",10);
   final Cheese cheddar=new Cheese("cheddar",10);
   MockLeftTupleSink sink=new MockLeftTupleSink();

@@ -1,0 +1,34 @@
+{
+  StatefulKnowledgeSessionImpl session=null;
+  try {
+    readLock();
+    try {
+      ObjectInputStream ois=new ObjectInputStream(stream);
+      StatefulKnowledgeSessionImpl rsession=(StatefulKnowledgeSessionImpl)ois.readObject();
+      ByteArrayInputStream bais=new ByteArrayInputStream(rsession.bytes);
+      Marshaller marshaller=MarshallerFactory.newMarshaller(this,new ObjectMarshallingStrategy[]{MarshallerFactory.newSerializeMarshallingStrategy()});
+      Environment environment=EnvironmentFactory.newEnvironment();
+      KieSession ksession=marshaller.unmarshall(bais,conf,environment);
+      session=(StatefulKnowledgeSessionImpl)ksession;
+      if (keepReference) {
+        addStatefulSession(session);
+      }
+      bais.close();
+    }
+  finally {
+      readUnlock();
+    }
+  }
+ catch (  Exception e) {
+    throw new RuntimeException("Unable to unmarshall session",e);
+  }
+ finally {
+    try {
+      stream.close();
+    }
+ catch (    IOException e) {
+      throw new RuntimeException("Unable to close stream",e);
+    }
+  }
+  return session;
+}

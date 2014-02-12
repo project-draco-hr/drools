@@ -1,0 +1,18 @@
+{
+  this.kBase.executeQueuedActions();
+  this.wm.executeQueuedActions();
+  if (activation != null) {
+    activation.getPropagationContext().releaseResources();
+  }
+  PropagationContext propagationContext=pctx;
+  if (pctx == null) {
+    propagationContext=pctxFactory.createPropagationContext(this.wm.getNextPropagationIdCounter(),PropagationContext.INSERTION,rule,(activation == null) ? null : activation.getTuple(),handle,entryPoint);
+  }
+  this.entryPointNode.assertObject(handle,propagationContext,typeConf,this.wm);
+  propagationContext.evaluateActionQueue(this.wm);
+  this.wm.getRuleRuntimeEventSupport().fireObjectInserted(propagationContext,handle,object,this.wm);
+  this.wm.executeQueuedActions();
+  if (rule == null) {
+    ((InternalAgenda)this.wm.getAgenda()).unstageActivations();
+  }
+}

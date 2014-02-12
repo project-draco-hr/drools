@@ -1,0 +1,20 @@
+{
+  boolean dirty=true;
+  while (dirty) {
+    for (    Activation activation : ((InternalAgenda)wm.getAgenda()).getActivations()) {
+      if (activation.isRuleAgendaItem()) {
+        ((RuleAgendaItem)activation).getRuleExecutor().reEvaluateNetwork(wm,null,false);
+        ((RuleAgendaItem)activation).getRuleExecutor().removeRuleAgendaItemWhenEmpty(wm);
+      }
+    }
+    dirty=false;
+    if (wm.getKnowledgeBase().getConfiguration().isPhreakEnabled()) {
+      for (      Activation activation : ((InternalAgenda)wm.getAgenda()).getActivations()) {
+        if (activation.isRuleAgendaItem() && ((RuleAgendaItem)activation).getRuleExecutor().isDirty()) {
+          dirty=true;
+          break;
+        }
+      }
+    }
+  }
+}

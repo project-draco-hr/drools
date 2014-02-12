@@ -1,6 +1,6 @@
 {
-  KnowledgeBase kbase=loadKnowledgeBase("test_LockOnActiveWithModify.drl");
-  KieSession ksession=createKnowledgeSession(kbase);
+  KieBase kbase=loadKnowledgeBase("test_LockOnActiveWithModify.drl");
+  KieSession ksession=kbase.newKieSession();
   final int size=3;
   Cell[][] cells=new Cell[size][];
   FactHandle[][] handles=new FactHandle[size][];
@@ -34,7 +34,7 @@
   ksession.getAgenda().getAgendaGroup("calculate").setFocus();
   fired=ksession.fireAllRules(100);
   assertEquals(0,fired);
-  assertEquals("MAIN",((AgendaImpl)ksession.getAgenda()).getAgenda().getFocusName());
+  assertEquals("MAIN",((InternalAgenda)ksession.getAgenda()).getFocusName());
   cells[0][0].setState(Cell.LIVE);
   ksession.update(handles[0][0],cells[0][0]);
   ksession.getAgenda().getAgendaGroup("birth").setFocus();
@@ -42,25 +42,25 @@
   fired=ksession.fireAllRules(100);
   int[][] expected=new int[][]{{0,1,0},{1,1,0},{0,0,0}};
   assertEqualsMatrix(size,cells,expected);
-  assertEquals("MAIN",((AgendaImpl)ksession.getAgenda()).getAgenda().getFocusName());
+  assertEquals("MAIN",((InternalAgenda)ksession.getAgenda()).getFocusName());
   cells[1][1].setState(Cell.LIVE);
   ksession.update(handles[1][1],cells[1][1]);
   ksession.getAgenda().getAgendaGroup("calculate").setFocus();
   ksession.fireAllRules(100);
   expected=new int[][]{{1,2,1},{2,1,1},{1,1,1}};
   assertEqualsMatrix(size,cells,expected);
-  assertEquals("MAIN",((AgendaImpl)ksession.getAgenda()).getAgenda().getFocusName());
+  assertEquals("MAIN",((InternalAgenda)ksession.getAgenda()).getFocusName());
   ksession.getAgenda().getAgendaGroup("birth").setFocus();
   ksession.fireAllRules(100);
   expected=new int[][]{{1,2,1},{2,1,1},{1,1,1}};
   assertEqualsMatrix(size,cells,expected);
-  assertEquals("MAIN",((AgendaImpl)ksession.getAgenda()).getAgenda().getFocusName());
+  assertEquals("MAIN",((InternalAgenda)ksession.getAgenda()).getFocusName());
   System.out.println("--------");
   ksession.getAgenda().getAgendaGroup("calculate").setFocus();
   ksession.fireAllRules(100);
   expected=new int[][]{{3,3,2},{3,3,2},{2,2,1}};
   assertEqualsMatrix(size,cells,expected);
-  assertEquals("MAIN",((AgendaImpl)ksession.getAgenda()).getAgenda().getFocusName());
+  assertEquals("MAIN",((InternalAgenda)ksession.getAgenda()).getFocusName());
   System.out.println("--------");
   cells[0][0].setState(Cell.DEAD);
   ksession.update(handles[0][0],cells[0][0]);
@@ -68,5 +68,5 @@
   ksession.fireAllRules(100);
   expected=new int[][]{{3,2,2},{2,2,2},{2,2,1}};
   assertEqualsMatrix(size,cells,expected);
-  assertEquals("MAIN",((AgendaImpl)ksession.getAgenda()).getAgenda().getFocusName());
+  assertEquals("MAIN",((InternalAgenda)ksession.getAgenda()).getFocusName());
 }

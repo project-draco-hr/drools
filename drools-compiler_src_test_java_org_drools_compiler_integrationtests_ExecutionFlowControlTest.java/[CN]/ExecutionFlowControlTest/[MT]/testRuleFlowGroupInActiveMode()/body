@@ -1,6 +1,6 @@
 {
-  KnowledgeBase kbase=loadKnowledgeBase("ruleflowgroup.drl");
-  final KieSession ksession=createKnowledgeSession(kbase);
+  KieBase kbase=loadKnowledgeBase("ruleflowgroup.drl");
+  final KieSession ksession=kbase.newKieSession();
   final List list=new ArrayList();
   ksession.setGlobal("list",list);
   final AtomicBoolean fired=new AtomicBoolean(false);
@@ -21,7 +21,7 @@ synchronized (fired) {
 ).start();
   ksession.insert("Test");
   assertEquals(0,list.size());
-  ((AgendaImpl)ksession.getAgenda()).getAgenda().activateRuleFlowGroup("Group1");
+  ((InternalAgenda)ksession.getAgenda()).activateRuleFlowGroup("Group1");
 synchronized (fired) {
     if (!fired.get()) {
       fired.wait();

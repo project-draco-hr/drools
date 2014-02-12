@@ -1,6 +1,5 @@
 {
-  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Patterns.drl"));
-  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Pattern possibility that is always true"));
+  KieSession session=getStatelessKieSession(this.getClass().getResourceAsStream("Patterns.drl"));
   VerifierReport result=VerifierReportFactory.newVerifierReport();
   Collection<Object> data=new ArrayList<Object>();
   session.setGlobal("result",result);
@@ -46,14 +45,15 @@
   data.add(o4);
   data.add(pp3);
   data.add(pp4);
-  StatelessSessionResult sessionResult=session.executeWithResults(data);
-  Iterator iter=sessionResult.iterateObjects();
+  for (  Object o : data) {
+    session.insert(o);
+  }
+  session.fireAllRules(new RuleNameMatchesAgendaFilter("Pattern possibility that is always true"));
   boolean pp1true=false;
   boolean pp2true=false;
   boolean pp3true=false;
   boolean pp4true=false;
-  while (iter.hasNext()) {
-    Object o=(Object)iter.next();
+  for (  Object o : session.getObjects()) {
     if (o instanceof AlwaysTrue) {
       AlwaysTrue alwaysTrue=(AlwaysTrue)o;
       if (!pp1true) {

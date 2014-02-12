@@ -1,0 +1,24 @@
+{
+  InternalKnowledgePackage pkg;
+  if (this.kBase == null || (pkg=this.kBase.getPackage(packageDescr.getName())) == null) {
+    pkg=new KnowledgePackageImpl(packageDescr.getName());
+    pkg.setClassFieldAccessorCache(new ClassFieldAccessorCache(this.rootClassLoader));
+    if (this.kBase != null) {
+      this.kBase.lock();
+      try {
+        this.kBase.addPackage(pkg);
+        pkg=this.kBase.getPackage(packageDescr.getName());
+      }
+  finally {
+        this.kBase.unlock();
+      }
+    }
+ else {
+      pkg.getDialectRuntimeRegistry().onAdd(this.rootClassLoader);
+    }
+  }
+  PackageRegistry pkgRegistry=new PackageRegistry(rootClassLoader,configuration,pkg);
+  pkgRegistry.addImport(new ImportDescr(packageDescr.getNamespace() + ".*"));
+  this.pkgRegistryMap.put(packageDescr.getName(),pkgRegistry);
+  return pkgRegistry;
+}

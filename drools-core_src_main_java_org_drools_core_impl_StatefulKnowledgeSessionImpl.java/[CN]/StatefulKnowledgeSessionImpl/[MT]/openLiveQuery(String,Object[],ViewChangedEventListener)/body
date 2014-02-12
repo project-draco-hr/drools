@@ -1,3 +1,20 @@
 {
-  return this.session.openLiveQuery(query,arguments,listener);
+  try {
+    startOperation();
+    this.kBase.readLock();
+    this.lock.lock();
+    this.kBase.executeQueuedActions();
+    executeQueuedActions();
+    DroolsQuery queryObject=new DroolsQuery(query,arguments,new OpenQueryViewChangedEventListenerAdapter(listener),true,null,null,null,null,null);
+    InternalFactHandle handle=this.handleFactory.newFactHandle(queryObject,null,this,this);
+    final PropagationContext pCtx=pctxFactory.createPropagationContext(getNextPropagationIdCounter(),PropagationContext.INSERTION,null,null,handle,getEntryPoint());
+    BaseNode[] tnodes=evalQuery(queryObject.getName(),queryObject,handle,pCtx);
+    executeQueuedActions();
+    return new LiveQueryImpl(this,handle);
+  }
+  finally {
+    this.lock.unlock();
+    this.kBase.readUnlock();
+    endOperation();
+  }
 }

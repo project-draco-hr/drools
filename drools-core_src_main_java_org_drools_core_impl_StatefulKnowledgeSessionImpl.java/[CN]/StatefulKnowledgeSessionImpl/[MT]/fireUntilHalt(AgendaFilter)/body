@@ -1,3 +1,16 @@
 {
-  this.session.fireUntilHalt(new AgendaFilterWrapper(agendaFilter));
+  if (isSequential()) {
+    throw new IllegalStateException("fireUntilHalt() can not be called in sequential mode.");
+  }
+  if (this.firing.compareAndSet(false,true)) {
+    try {
+synchronized (this) {
+        executeQueuedActions();
+        this.agenda.fireUntilHalt(agendaFilter);
+      }
+    }
+  finally {
+      this.firing.set(false);
+    }
+  }
 }

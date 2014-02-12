@@ -1,17 +1,12 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_LogicalInsertionsNotPingPong.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
-  final WorkingMemory workingMemory=ruleBase.newStatefulSession();
+  KieBase kbase=loadKnowledgeBase("test_LogicalInsertionsNotPingPong.drl");
+  KieSession ksession=kbase.newKieSession();
   final List list=new ArrayList();
   final Person person=new Person("person");
   final Cheese cheese=new Cheese("cheese",0);
-  workingMemory.setGlobal("cheese",cheese);
-  workingMemory.setGlobal("person",person);
-  workingMemory.setGlobal("list",list);
-  workingMemory.fireAllRules();
+  ksession.setGlobal("cheese",cheese);
+  ksession.setGlobal("person",person);
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
   assertEquals("Rules have not fired (looped) expected number of times",10,list.size());
 }

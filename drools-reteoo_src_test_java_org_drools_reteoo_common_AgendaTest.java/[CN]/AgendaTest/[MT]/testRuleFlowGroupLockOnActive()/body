@@ -1,8 +1,8 @@
 {
-  final AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)ruleBase.newStatefulSession();
-  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  final InternalAgenda agenda=(InternalAgenda)ksession.getAgenda();
   final RuleFlowGroup ruleFlowGroup=(RuleFlowGroup)agenda.getRuleFlowGroup("rule-flow-group-0");
-  final Rule rule=new Rule("test-rule");
+  final RuleImpl rule=new RuleImpl("test-rule");
   rule.setAgendaGroup("rule-flow-group-0");
   final RuleTerminalNode node=new RuleTerminalNode(2,new MockTupleSource(2),rule,rule.getLhs(),0,buildContext);
   final RuleTerminalNodeLeftTuple tuple1=new RuleTerminalNodeLeftTuple(new DefaultFactHandle(1,"cheese"),node,true);
@@ -12,15 +12,15 @@
   rule.setLockOnActive(true);
   ruleFlowGroup.setAutoDeactivate(false);
   ((InternalRuleFlowGroup)ruleFlowGroup).setActive(true);
-  node.assertLeftTuple(tuple1,context,workingMemory);
+  node.assertLeftTuple(tuple1,context,ksession);
   assertEquals(0,ruleFlowGroup.size());
   rule.setLockOnActive(false);
-  node.assertLeftTuple(tuple2,context,workingMemory);
+  node.assertLeftTuple(tuple2,context,ksession);
   agenda.unstageActivations();
   assertEquals(1,ruleFlowGroup.size());
   rule.setLockOnActive(true);
   ((InternalAgendaGroup)ruleFlowGroup).setActive(false);
-  node.assertLeftTuple(tuple3,context,workingMemory);
+  node.assertLeftTuple(tuple3,context,ksession);
   agenda.unstageActivations();
   assertEquals(2,ruleFlowGroup.size());
 }

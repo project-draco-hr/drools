@@ -2,11 +2,11 @@
   BaseNode node=null;
   RuleBasePartitionId partition=null;
   if (candidate.getType() == NodeTypeEnums.EntryPointNode) {
-    node=context.getRuleBase().getRete().getEntryPointNode(((EntryPointNode)candidate).getEntryPoint());
+    node=context.getKnowledgeBase().getRete().getEntryPointNode(((EntryPointNode)candidate).getEntryPoint());
     partition=RuleBasePartitionId.MAIN_PARTITION;
   }
  else   if (candidate.getType() == NodeTypeEnums.ObjectTypeNode) {
-    Map<ObjectType,ObjectTypeNode> map=context.getRuleBase().getRete().getObjectTypeNodes(context.getCurrentEntryPoint());
+    Map<ObjectType,ObjectTypeNode> map=context.getKnowledgeBase().getRete().getObjectTypeNodes(context.getCurrentEntryPoint());
     if (map != null) {
       ObjectTypeNode otn=map.get(((ObjectTypeNode)candidate).getObjectType());
       if (otn != null) {
@@ -24,14 +24,14 @@
       node=context.getObjectSource().getSinkPropagator().getMatchingNode(candidate);
     }
  else {
-      throw new RuntimeDroolsException("This is a bug on node sharing verification. Please report to development team.");
+      throw new RuntimeException("This is a bug on node sharing verification. Please report to development team.");
     }
   }
   if (node == null || node.isStreamMode()) {
     node=candidate;
     if (partition == null) {
       if (context.getPartitionId() == null) {
-        context.setPartitionId(context.getRuleBase().createNewPartitionId());
+        context.setPartitionId(context.getKnowledgeBase().createNewPartitionId());
       }
       partition=context.getPartitionId();
     }

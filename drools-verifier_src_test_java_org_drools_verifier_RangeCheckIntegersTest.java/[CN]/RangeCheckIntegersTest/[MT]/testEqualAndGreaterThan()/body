@@ -1,14 +1,14 @@
 {
-  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("rangeChecks/Integers.drl"));
-  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Range check for integers, equal and greater than"));
+  KieSession session=getStatelessKieSession(this.getClass().getResourceAsStream("rangeChecks/Integers.drl"));
   VerifierReport result=VerifierReportFactory.newVerifierReport();
   Collection<? extends Object> testData=getTestData(this.getClass().getResourceAsStream("MissingRangesForInts.drl"),result.getVerifierData());
   session.setGlobal("result",result);
-  StatelessSessionResult sessionResult=session.executeWithResults(testData);
-  Iterator<Object> iter=sessionResult.iterateObjects();
+  for (  Object o : testData) {
+    session.insert(o);
+  }
+  session.fireAllRules(new RuleNameMatchesAgendaFilter("Range check for integers, equal and greater than"));
   Set<String> rulesThatHadErrors=new HashSet<String>();
-  while (iter.hasNext()) {
-    Object o=(Object)iter.next();
+  for (  Object o : session.getObjects()) {
     if (o instanceof Gap) {
       rulesThatHadErrors.add(((Gap)o).getRuleName());
     }

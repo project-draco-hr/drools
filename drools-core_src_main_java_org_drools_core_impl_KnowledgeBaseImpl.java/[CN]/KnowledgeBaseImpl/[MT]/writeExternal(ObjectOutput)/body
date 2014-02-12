@@ -1,3 +1,34 @@
 {
-  this.ruleBase.writeExternal(out);
+  ObjectOutput droolsStream;
+  boolean isDrools=out instanceof DroolsObjectOutputStream;
+  ByteArrayOutputStream bytes;
+  out.writeBoolean(isDrools);
+  if (isDrools) {
+    droolsStream=out;
+    bytes=null;
+  }
+ else {
+    bytes=new ByteArrayOutputStream();
+    droolsStream=new DroolsObjectOutputStream(bytes);
+  }
+  droolsStream.writeBoolean(this.config.isClassLoaderCacheEnabled());
+  droolsStream.writeObject(((ProjectClassLoader)rootClassLoader).getStore());
+  droolsStream.writeObject(this.config);
+  droolsStream.writeObject(this.pkgs);
+  droolsStream.writeObject(this.id);
+  droolsStream.writeInt(this.workingMemoryCounter.get());
+  droolsStream.writeObject(this.processes);
+  droolsStream.writeUTF(this.factHandleFactory.getClass().getName());
+  droolsStream.writeObject(buildGlobalMapForSerialization());
+  droolsStream.writeObject(this.partitionIDs);
+  this.eventSupport.removeEventListener(KieBaseEventListener.class);
+  droolsStream.writeObject(this.eventSupport);
+  droolsStream.writeObject(this.reteooBuilder);
+  droolsStream.writeObject(this.rete);
+  if (!isDrools) {
+    droolsStream.flush();
+    droolsStream.close();
+    bytes.close();
+    out.writeObject(bytes.toByteArray());
+  }
 }

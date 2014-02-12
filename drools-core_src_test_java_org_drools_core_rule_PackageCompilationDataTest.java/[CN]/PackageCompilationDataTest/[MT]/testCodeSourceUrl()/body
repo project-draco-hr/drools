@@ -1,12 +1,12 @@
 {
   final String className=TestEvalExpression.class.getName();
-  ReteooRuleBase rb=new ReteooRuleBase("xxx",null);
-  Package pkg=new Package("org.drools");
+  KnowledgeBaseImpl kBase=new KnowledgeBaseImpl("xxx",null);
+  InternalKnowledgePackage pkg=new KnowledgePackageImpl("org.drools");
   pkg.setClassFieldAccessorCache(new ClassFieldAccessorCache(Thread.currentThread().getContextClassLoader()));
   JavaDialectRuntimeData data=new JavaDialectRuntimeData();
-  data.onAdd(pkg.getDialectRuntimeRegistry(),rb.getRootClassLoader());
+  data.onAdd(pkg.getDialectRuntimeRegistry(),kBase.getRootClassLoader());
   pkg.getDialectRuntimeRegistry().setDialectData("java",data);
-  rb.addPackage(pkg);
+  kBase.addPackage(pkg);
   final JavaDialectRuntimeData pcData=(JavaDialectRuntimeData)pkg.getDialectRuntimeRegistry().getDialectData("java");
   final EvalCondition invoker=new EvalCondition(null);
   pcData.putInvoker(className,invoker);
@@ -17,9 +17,9 @@
   finally {
     is.close();
   }
-  pcData.onAdd(pkg.getDialectRuntimeRegistry(),rb.getRootClassLoader());
+  pcData.onAdd(pkg.getDialectRuntimeRegistry(),kBase.getRootClassLoader());
   pcData.onBeforeExecute();
-  Class cls=((InternalRuleBase)rb).getRootClassLoader().loadClass("org.drools.core.rule.PackageCompilationDataTest$TestEvalExpression");
+  Class cls=kBase.getRootClassLoader().loadClass("org.drools.core.rule.PackageCompilationDataTest$TestEvalExpression");
   final CodeSource codeSource=invoker.getEvalExpression().getClass().getProtectionDomain().getCodeSource();
   assertNotNull(codeSource.getLocation());
 }

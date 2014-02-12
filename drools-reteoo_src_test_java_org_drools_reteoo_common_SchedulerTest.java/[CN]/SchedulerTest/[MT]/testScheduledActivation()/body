@@ -1,7 +1,7 @@
 {
-  IdGenerator idGenerator=ruleBase.getReteooBuilder().getIdGenerator();
-  InternalWorkingMemory workingMemory=(InternalWorkingMemory)ruleBase.newStatefulSession();
-  final Rule rule=new Rule("test-rule");
+  IdGenerator idGenerator=kBase.getReteooBuilder().getIdGenerator();
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  final RuleImpl rule=new RuleImpl("test-rule");
   final RuleTerminalNode node=new RuleTerminalNode(idGenerator.getNextId(),new MockTupleSource(idGenerator.getNextId()),rule,rule.getLhs(),0,buildContext);
   final List data=new ArrayList();
   rule.setConsequence(new org.drools.core.spi.Consequence(){
@@ -22,8 +22,8 @@
   final PropagationContext context=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,null);
   final RuleTerminalNodeLeftTuple tuple=new RuleTerminalNodeLeftTuple(new DefaultFactHandle(1,"cheese"),node,true);
   assertEquals(0,data.size());
-  node.assertLeftTuple(tuple,context,workingMemory);
-  workingMemory.fireAllRules();
+  node.assertLeftTuple(tuple,context,ksession);
+  ksession.fireAllRules();
   Thread.sleep(300);
   assertEquals(1,data.size());
 }

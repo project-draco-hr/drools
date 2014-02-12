@@ -16,8 +16,8 @@
         context.addError(new DescrBuildError(context.getParentDescr(),patternDescr,null,"The class '" + patternDescr.getObjectType() + "' is not public"));
         return null;
       }
-      PackageRegistry pkgr=context.getPackageBuilder().getPackageRegistry(ClassUtils.getPackage(userProvidedClass));
-      org.drools.core.rule.Package pkg=pkgr == null ? context.getPkg() : pkgr.getPackage();
+      PackageRegistry pkgr=context.getKnowledgeBuilder().getPackageRegistry(ClassUtils.getPackage(userProvidedClass));
+      InternalKnowledgePackage pkg=pkgr == null ? context.getPkg() : pkgr.getPackage();
       final boolean isEvent=pkg.isEvent(userProvidedClass);
       objectType=new ClassObjectType(userProvidedClass,isEvent);
     }
@@ -28,25 +28,25 @@
     RuleConditionElement rce=null;
     if (context.getRule().getName().equals(patternDescr.getObjectType())) {
       QueryElementBuilder qeBuilder=QueryElementBuilder.getInstance();
-      rce=qeBuilder.build(context,descr,prefixPattern,(Query)context.getRule());
+      rce=qeBuilder.build(context,descr,prefixPattern,(QueryImpl)context.getRule());
     }
     if (rce == null) {
-      Rule rule=context.getPkg().getRule(patternDescr.getObjectType());
-      if (rule instanceof Query) {
+      RuleImpl rule=context.getPkg().getRule(patternDescr.getObjectType());
+      if (rule instanceof QueryImpl) {
         QueryElementBuilder qeBuilder=QueryElementBuilder.getInstance();
-        rce=qeBuilder.build(context,descr,prefixPattern,(Query)rule);
+        rce=qeBuilder.build(context,descr,prefixPattern,(QueryImpl)rule);
       }
       for (      String importName : context.getDialect().getTypeResolver().getImports()) {
         importName=importName.trim();
         int pos=importName.indexOf('*');
         if (pos >= 0) {
           String pkgName=importName.substring(0,pos - 1);
-          PackageRegistry pkgReg=context.getPackageBuilder().getPackageRegistry(pkgName);
+          PackageRegistry pkgReg=context.getKnowledgeBuilder().getPackageRegistry(pkgName);
           if (pkgReg != null) {
             rule=pkgReg.getPackage().getRule(patternDescr.getObjectType());
-            if (rule instanceof Query) {
+            if (rule instanceof QueryImpl) {
               QueryElementBuilder qeBuilder=QueryElementBuilder.getInstance();
-              rce=qeBuilder.build(context,descr,prefixPattern,(Query)rule);
+              rce=qeBuilder.build(context,descr,prefixPattern,(QueryImpl)rule);
               break;
             }
           }
@@ -85,7 +85,7 @@
   if (pattern.getObjectType() instanceof ClassObjectType) {
     Class<?> cls=((ClassObjectType)pattern.getObjectType()).getClassType();
     if (cls.getPackage() != null && !cls.getPackage().getName().equals("java.lang")) {
-      TypeDeclaration typeDeclr=context.getPackageBuilder().getAndRegisterTypeDeclaration(cls,cls.getPackage().getName());
+      TypeDeclaration typeDeclr=context.getKnowledgeBuilder().getAndRegisterTypeDeclaration(cls,cls.getPackage().getName());
       context.setTypesafe(typeDeclr == null || typeDeclr.isTypesafe());
     }
  else {

@@ -1,0 +1,22 @@
+{
+  pkgRegistry.setDialect(getPackageDialect(packageDescr));
+  if (!hasErrors()) {
+    compileRules(packageDescr,pkgRegistry);
+  }
+  compileAll();
+  try {
+    reloadAll();
+  }
+ catch (  Exception e) {
+    addBuilderResult(new DialectError(null,"Unable to wire compiled classes, probably related to compilation failures:" + e.getMessage()));
+  }
+  updateResults();
+  if (!hasErrors() && this.kBase != null) {
+    for (    RuleDescr ruleDescr : packageDescr.getRules()) {
+      if (filterAccepts(ruleDescr.getNamespace(),ruleDescr.getName())) {
+        pkgRegistry=this.pkgRegistryMap.get(ruleDescr.getNamespace());
+        this.kBase.addRule(pkgRegistry.getPackage(),pkgRegistry.getPackage().getRule(ruleDescr.getName()));
+      }
+    }
+  }
+}

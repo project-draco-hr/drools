@@ -1,0 +1,26 @@
+{
+  for (  WindowDeclarationDescr wd : packageDescr.getWindowDeclarations()) {
+    WindowDeclaration window=new WindowDeclaration(wd.getName(),packageDescr.getName());
+    InternalKnowledgePackage pkg=pkgRegistry.getPackage();
+    DialectCompiletimeRegistry ctr=pkgRegistry.getDialectCompiletimeRegistry();
+    RuleDescr dummy=new RuleDescr(wd.getName() + " Window Declaration");
+    dummy.addAttribute(new AttributeDescr("dialect","java"));
+    RuleBuildContext context=new RuleBuildContext(this,dummy,ctr,pkg,ctr.getDialect(pkgRegistry.getDialect()));
+    final RuleConditionBuilder builder=(RuleConditionBuilder)context.getDialect().getBuilder(wd.getPattern().getClass());
+    if (builder != null) {
+      final Pattern pattern=(Pattern)builder.build(context,wd.getPattern(),null);
+      window.setPattern(pattern);
+    }
+ else {
+      throw new RuntimeException("BUG: builder not found for descriptor class " + wd.getPattern().getClass());
+    }
+    if (!context.getErrors().isEmpty()) {
+      for (      DroolsError error : context.getErrors()) {
+        addBuilderResult(error);
+      }
+    }
+ else {
+      pkgRegistry.getPackage().addWindowDeclaration(window);
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
-  final AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)ruleBase.newStatefulSession();
-  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
+  final StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  final InternalAgenda agenda=(InternalAgenda)ksession.getAgenda();
   final Consequence consequence1=new Consequence(){
     private static final long serialVersionUID=510l;
     public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory workingMemory){
@@ -14,7 +14,7 @@
     }
   }
 ;
-  final Rule rule1=new Rule("test-rule1");
+  final RuleImpl rule1=new RuleImpl("test-rule1");
   rule1.setAgendaGroup("rule-flow-group-0");
   rule1.setConsequence(consequence1);
   final RuleTerminalNode node1=new RuleTerminalNode(4,new MockTupleSource(2),rule1,rule1.getLhs(),0,buildContext);
@@ -23,7 +23,7 @@
     private static final long serialVersionUID=510l;
     public void evaluate(    KnowledgeHelper knowledgeHelper,    WorkingMemory w){
       final RuleTerminalNodeLeftTuple tuple1=new RuleTerminalNodeLeftTuple(new DefaultFactHandle(1,"cheese"),node1,true);
-      node1.assertLeftTuple(tuple1,context0,workingMemory);
+      node1.assertLeftTuple(tuple1,context0,ksession);
     }
     public void readExternal(    ObjectInput in) throws IOException, ClassNotFoundException {
     }
@@ -34,13 +34,13 @@
     }
   }
 ;
-  final Rule rule0=new Rule("test-rule0");
+  final RuleImpl rule0=new RuleImpl("test-rule0");
   rule0.setAgendaGroup("rule-flow-group-0");
   rule0.setConsequence(consequence0);
   final RuleTerminalNode node0=new RuleTerminalNode(3,new MockTupleSource(2),rule0,rule0.getLhs(),0,buildContext);
   final RuleFlowGroup ruleFlowGroup0=agenda.getRuleFlowGroup("rule-flow-group-0");
   final RuleTerminalNodeLeftTuple tuple0=new RuleTerminalNodeLeftTuple(new DefaultFactHandle(1,"cheese"),node0,true);
-  node0.assertLeftTuple(tuple0,context0,workingMemory);
+  node0.assertLeftTuple(tuple0,context0,ksession);
   agenda.unstageActivations();
   assertEquals(1,ruleFlowGroup0.size());
   agenda.activateRuleFlowGroup("rule-flow-group-0");

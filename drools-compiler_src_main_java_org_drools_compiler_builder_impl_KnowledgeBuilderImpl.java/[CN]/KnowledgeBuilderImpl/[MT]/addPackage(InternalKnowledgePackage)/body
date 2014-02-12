@@ -1,0 +1,37 @@
+{
+  PackageRegistry pkgRegistry=this.pkgRegistryMap.get(newPkg.getName());
+  InternalKnowledgePackage pkg=null;
+  if (pkgRegistry != null) {
+    pkg=pkgRegistry.getPackage();
+  }
+  if (pkg == null) {
+    PackageDescr packageDescr=new PackageDescr(newPkg.getName());
+    pkgRegistry=newPackage(packageDescr);
+    mergePackage(this.pkgRegistryMap.get(packageDescr.getNamespace()),packageDescr);
+    pkg=pkgRegistry.getPackage();
+  }
+  pkg.getDialectRuntimeRegistry().merge(newPkg.getDialectRuntimeRegistry(),this.rootClassLoader);
+  if (newPkg.getFunctions() != null) {
+    for (    Map.Entry<String,Function> entry : newPkg.getFunctions().entrySet()) {
+      if (pkg.getFunctions().containsKey(entry.getKey())) {
+        addBuilderResult(new DuplicateFunction(entry.getValue(),this.configuration));
+      }
+      pkg.addFunction(entry.getValue());
+    }
+  }
+  pkg.getClassFieldAccessorStore().merge(newPkg.getClassFieldAccessorStore());
+  pkg.getDialectRuntimeRegistry().onBeforeExecute();
+  TypeDeclaration lastType=null;
+  try {
+    if (newPkg.getTypeDeclarations() != null) {
+      for (      TypeDeclaration type : newPkg.getTypeDeclarations().values()) {
+        lastType=type;
+        type.setTypeClass(this.rootClassLoader.loadClass(type.getTypeClassName()));
+      }
+    }
+  }
+ catch (  ClassNotFoundException e) {
+    throw new RuntimeException("unable to resolve Type Declaration class '" + lastType.getTypeName() + "'");
+  }
+  mergePackage(pkg,newPkg);
+}

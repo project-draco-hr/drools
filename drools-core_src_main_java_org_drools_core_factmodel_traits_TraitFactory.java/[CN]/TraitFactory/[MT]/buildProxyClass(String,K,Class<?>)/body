@@ -1,7 +1,7 @@
 {
   Class coreKlass=core.getClass();
-  ClassDefinition tdef=ruleBase.getTraitRegistry().getTrait(trait.getName());
-  ClassDefinition cdef=ruleBase.getTraitRegistry().getTraitable(coreKlass.getName());
+  ClassDefinition tdef=kBase.getTraitRegistry().getTrait(trait.getName());
+  ClassDefinition cdef=kBase.getTraitRegistry().getTraitable(coreKlass.getName());
   if (tdef == null) {
     if (trait.getAnnotation(Trait.class) != null) {
       try {
@@ -9,16 +9,16 @@
           tdef=buildClassDefinition(trait,null);
         }
  else {
-          throw new RuntimeDroolsException("Unable to create definition for class " + trait + " : trait interfaces should extend "+ Thing.class.getName()+ " or be DECLARED as traits explicitly");
+          throw new RuntimeException("Unable to create definition for class " + trait + " : trait interfaces should extend "+ Thing.class.getName()+ " or be DECLARED as traits explicitly");
         }
       }
  catch (      IOException e) {
-        throw new RuntimeDroolsException("Unable to create definition for class " + trait + " : "+ e.getMessage());
+        throw new RuntimeException("Unable to create definition for class " + trait + " : "+ e.getMessage());
       }
-      ruleBase.getTraitRegistry().addTrait(tdef);
+      kBase.getTraitRegistry().addTrait(tdef);
     }
  else {
-      throw new RuntimeDroolsException("Unable to find Trait definition for class " + trait.getName() + ". It should have been DECLARED as a trait");
+      throw new RuntimeException("Unable to find Trait definition for class " + trait.getName() + ". It should have been DECLARED as a trait");
     }
   }
   if (cdef == null) {
@@ -27,39 +27,39 @@
         cdef=buildClassDefinition(core.getClass(),core.getClass());
       }
  catch (      IOException e) {
-        throw new RuntimeDroolsException("Unable to create definition for class " + coreKlass.getName() + " : "+ e.getMessage());
+        throw new RuntimeException("Unable to create definition for class " + coreKlass.getName() + " : "+ e.getMessage());
       }
-      ruleBase.getTraitRegistry().addTraitable(cdef);
+      kBase.getTraitRegistry().addTraitable(cdef);
     }
  else {
-      throw new RuntimeDroolsException("Unable to find Core class definition for class " + coreKlass.getName() + ". It should have been DECLARED as a trait");
+      throw new RuntimeException("Unable to find Core class definition for class " + coreKlass.getName() + ". It should have been DECLARED as a trait");
     }
   }
   String proxyName=getProxyName(tdef,cdef);
   String wrapperName=getPropertyWrapperName(tdef,cdef);
-  KieComponentFactory rcf=ruleBase.getConfiguration().getComponentFactory();
+  KieComponentFactory rcf=kBase.getConfiguration().getComponentFactory();
   TraitPropertyWrapperClassBuilder propWrapperBuilder=(TraitPropertyWrapperClassBuilder)rcf.getClassBuilderFactory().getPropertyWrapperBuilder();
-  propWrapperBuilder.init(tdef,ruleBase.getTraitRegistry());
+  propWrapperBuilder.init(tdef,kBase.getTraitRegistry());
   try {
-    byte[] propWrapper=propWrapperBuilder.buildClass(cdef,ruleBase.getRootClassLoader());
-    ruleBase.registerAndLoadTypeDefinition(wrapperName,propWrapper);
+    byte[] propWrapper=propWrapperBuilder.buildClass(cdef,kBase.getRootClassLoader());
+    kBase.registerAndLoadTypeDefinition(wrapperName,propWrapper);
   }
  catch (  Exception e) {
     e.printStackTrace();
   }
   TraitProxyClassBuilder proxyBuilder=(TraitProxyClassBuilder)rcf.getClassBuilderFactory().getTraitProxyBuilder();
-  proxyBuilder.init(tdef,rcf.getBaseTraitProxyClass(),ruleBase.getTraitRegistry());
+  proxyBuilder.init(tdef,rcf.getBaseTraitProxyClass(),kBase.getTraitRegistry());
   try {
-    byte[] proxy=proxyBuilder.buildClass(cdef,ruleBase.getRootClassLoader());
-    ruleBase.registerAndLoadTypeDefinition(proxyName,proxy);
+    byte[] proxy=proxyBuilder.buildClass(cdef,kBase.getRootClassLoader());
+    kBase.registerAndLoadTypeDefinition(proxyName,proxy);
   }
  catch (  Exception e) {
     e.printStackTrace();
   }
   try {
-    BitSet mask=ruleBase.getTraitRegistry().getFieldMask(trait.getName(),cdef.getDefinedClass().getName());
-    Class<T> wrapperClass=(Class<T>)ruleBase.getRootClassLoader().loadClass(wrapperName);
-    Class<T> proxyClass=(Class<T>)ruleBase.getRootClassLoader().loadClass(proxyName);
+    BitSet mask=kBase.getTraitRegistry().getFieldMask(trait.getName(),cdef.getDefinedClass().getName());
+    Class<T> wrapperClass=(Class<T>)kBase.getRootClassLoader().loadClass(wrapperName);
+    Class<T> proxyClass=(Class<T>)kBase.getRootClassLoader().loadClass(proxyName);
     return proxyClass;
   }
  catch (  ClassNotFoundException e) {

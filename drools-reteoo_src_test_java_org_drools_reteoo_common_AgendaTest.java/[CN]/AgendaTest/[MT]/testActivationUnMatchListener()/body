@@ -1,7 +1,7 @@
 {
-  final AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)ruleBase.newStatefulSession();
-  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
-  final Rule rule1=new Rule("test-rule1");
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  final InternalAgenda agenda=(InternalAgenda)ksession.getAgenda();
+  final RuleImpl rule1=new RuleImpl("test-rule1");
   final RuleTerminalNode node1=new RuleTerminalNode(3,new MockTupleSource(2),rule1,rule1.getLhs(),0,buildContext);
   Cheese cheese=new Cheese();
   cheese.setPrice(50);
@@ -31,11 +31,11 @@
   }
 );
   assertEquals(50,cheese.getPrice());
-  node1.assertLeftTuple(tuple,context1,workingMemory);
+  node1.assertLeftTuple(tuple,context1,ksession);
   agenda.unstageActivations();
   agenda.fireNextItem(null,0,-1);
   assertEquals(100,cheese.getPrice());
   final PropagationContext context0=pctxFactory.createPropagationContext(0,PropagationContext.DELETION,rule1,null,new DefaultFactHandle());
-  node1.retractLeftTuple(tuple,context0,workingMemory);
+  node1.retractLeftTuple(tuple,context0,ksession);
   assertEquals(50,cheese.getPrice());
 }

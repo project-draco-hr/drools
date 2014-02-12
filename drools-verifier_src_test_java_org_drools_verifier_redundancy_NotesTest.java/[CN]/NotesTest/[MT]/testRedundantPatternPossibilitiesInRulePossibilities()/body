@@ -1,6 +1,5 @@
 {
-  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Notes.drl"));
-  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Find redundant pattern possibilities from rule possibilities"));
+  KieSession session=getStatelessKieSession(this.getClass().getResourceAsStream("Notes.drl"));
   VerifierRule rule=VerifierComponentMockFactory.createRule1();
   Pattern pattern=VerifierComponentMockFactory.createPattern1();
   Collection<Object> objects=new ArrayList<Object>();
@@ -16,7 +15,10 @@
   objects.add(possibility);
   VerifierReport result=VerifierReportFactory.newVerifierReport();
   session.setGlobal("result",result);
-  session.executeWithResults(objects);
+  for (  Object o : objects) {
+    session.insert(o);
+  }
+  session.fireAllRules(new RuleNameMatchesAgendaFilter("Find redundant pattern possibilities from rule possibilities"));
   Collection<VerifierMessageBase> notes=result.getBySeverity(Severity.NOTE);
   assertEquals(1,notes.size());
   VerifierMessageBase note=notes.iterator().next();

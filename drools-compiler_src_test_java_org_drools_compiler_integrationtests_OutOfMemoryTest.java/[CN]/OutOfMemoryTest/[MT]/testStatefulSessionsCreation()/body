@@ -1,17 +1,12 @@
 {
-  final PackageBuilder builder=new PackageBuilder();
-  builder.addPackageFromDrl(new InputStreamReader(getClass().getResourceAsStream("test_OutOfMemoryError.drl")));
-  final Package pkg=builder.getPackage();
-  RuleBase ruleBase=getRuleBase();
-  ruleBase.addPackage(pkg);
-  ruleBase=SerializationHelper.serializeObject(ruleBase);
+  KieBase kbase=loadKnowledgeBase("test_OutOfMemoryError.drl");
   int i=0;
   SessionConfiguration conf=new SessionConfiguration();
   conf.setKeepReference(true);
   try {
     for (i=0; i < 300000; i++) {
-      final StatefulSession session=ruleBase.newStatefulSession(conf,null);
-      session.dispose();
+      KieSession ksession=kbase.newKieSession(conf,null);
+      ksession.dispose();
     }
   }
  catch (  Throwable e) {

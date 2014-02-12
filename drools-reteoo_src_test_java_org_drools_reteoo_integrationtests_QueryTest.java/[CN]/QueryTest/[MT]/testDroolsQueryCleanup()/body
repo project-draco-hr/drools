@@ -5,7 +5,7 @@
   String workerId="B1234";
   Worker worker=new Worker();
   worker.setId(workerId);
-  org.kie.api.runtime.rule.FactHandle handle=ksession.insert(worker);
+  FactHandle handle=ksession.insert(worker);
   ksession.fireAllRules();
   assertNotNull(handle);
   Object retractedWorker=null;
@@ -14,10 +14,7 @@
   }
   assertNotNull(retractedWorker);
   StatefulKnowledgeSessionImpl sessionImpl=(StatefulKnowledgeSessionImpl)ksession;
-  ReteooWorkingMemoryInterface reteWorkingMemory=sessionImpl.session;
-  AbstractWorkingMemory abstractWorkingMemory=(AbstractWorkingMemory)reteWorkingMemory;
-  InternalRuleBase ruleBase=(InternalRuleBase)abstractWorkingMemory.getRuleBase();
-  Collection<EntryPointNode> entryPointNodes=ruleBase.getRete().getEntryPointNodes().values();
+  Collection<EntryPointNode> entryPointNodes=sessionImpl.getKnowledgeBase().getRete().getEntryPointNodes().values();
   EntryPointNode defaultEntryPointNode=null;
   for (  EntryPointNode epNode : entryPointNodes) {
     if (epNode.getEntryPoint().getEntryPointId().equals("DEFAULT")) {
@@ -29,7 +26,7 @@
   Map<ObjectType,ObjectTypeNode> obnodes=defaultEntryPointNode.getObjectTypeNodes();
   ObjectType key=new ClassObjectType(DroolsQuery.class);
   ObjectTypeNode droolsQueryNode=obnodes.get(key);
-  ObjectHashSet droolsQueryMemory=((ObjectTypeNodeMemory)abstractWorkingMemory.getNodeMemory(droolsQueryNode)).memory;
+  ObjectHashSet droolsQueryMemory=((ObjectTypeNodeMemory)sessionImpl.getNodeMemory(droolsQueryNode)).memory;
   assertEquals(0,droolsQueryMemory.size());
   Entry[] entries=droolsQueryMemory.getTable();
   int entryCounter=0;

@@ -1,0 +1,35 @@
+{
+  if (objectTypeNode == null) {
+    throw new IllegalArgumentException("ObjectTypeNode cannot be null!");
+  }
+  if (kBuilder == null) {
+    throw new IllegalArgumentException("PackageBuilder cannot be null!");
+  }
+  ObjectTypeNodeCompiler compiler=new ObjectTypeNodeCompiler(objectTypeNode);
+  String packageName=compiler.getPackageName();
+  PackageRegistry pkgReg=kBuilder.getPackageRegistry(packageName);
+  if (pkgReg == null) {
+    kBuilder.addPackage(new PackageDescr(packageName));
+    pkgReg=kBuilder.getPackageRegistry(packageName);
+  }
+  String source=compiler.generateSource();
+  String generatedSourceName=compiler.getName();
+  JavaDialect dialect=(JavaDialect)pkgReg.getDialectCompiletimeRegistry().getDialect("java");
+  dialect.addSrc(compiler.getBinaryName(),source.getBytes());
+  kBuilder.compileAll();
+  kBuilder.updateResults();
+  CompiledNetwork network;
+  try {
+    network=(CompiledNetwork)Class.forName(generatedSourceName,true,kBuilder.getRootClassLoader()).newInstance();
+  }
+ catch (  ClassNotFoundException e) {
+    throw new RuntimeException("This is a bug. Please contact the development team",e);
+  }
+catch (  IllegalAccessException e) {
+    throw new RuntimeException("This is a bug. Please contact the development team",e);
+  }
+catch (  InstantiationException e) {
+    throw new RuntimeException("This is a bug. Please contact the development team",e);
+  }
+  return network;
+}

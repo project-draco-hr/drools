@@ -1,13 +1,13 @@
 {
   String str="" + "package org.drools.compiler.integrationtests;\n" + "\n"+ "import org.drools.compiler.Father;\n"+ "import org.drools.compiler.TotalHolder;\n"+ "\n"+ "import org.drools.core.common.AgendaItem;\n"+ "import org.kie.internal.event.rule.ActivationUnMatchListener;\n"+ "import org.kie.api.runtime.rule.RuleRuntime;\n"+ "import org.kie.api.runtime.rule.Match;\n"+ "\n"+ "global TotalHolder totalHolder;\n"+ "\n"+ "rule \"sumWeightOfFather\"\n"+ "when\n"+ "    $h: Father(father != null, $wf : weightOfFather)\n"+ "then\n"+ "    totalHolder.add($wf);\n"+ "    final TotalHolder finalTotalHolder = totalHolder;\n"+ "    final int finalWf = $wf;\n"+ "    AgendaItem agendaItem = (AgendaItem) kcontext.getMatch();"+ "    if (agendaItem.getActivationUnMatchListener() != null) {\n"+ "        RuleRuntime session = null; // Should not be used by the undoListener anyway\n"+ "        agendaItem.getActivationUnMatchListener().unMatch(session, agendaItem);\n"+ "    }"+ "    agendaItem.setActivationUnMatchListener(new ActivationUnMatchListener() {"+ "            public void unMatch(RuleRuntime session, Match match) {"+ "                finalTotalHolder.subtract(finalWf);"+ "            }"+ "    });"+ "end";
-  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
-  KieSession ksession=createKnowledgeSession(kbase);
+  KieBase kbase=loadKnowledgeBaseFromString(str);
+  KieSession ksession=kbase.newKieSession();
   ksession.setGlobal("totalHolder",new TotalHolder());
   Father abraham=new Father("abraham",null,100);
   Father homer=new Father("homer",null,20);
   Father bart=new Father("bart",null,3);
-  org.kie.api.runtime.rule.FactHandle abrahamHandle=ksession.insert(abraham);
-  org.kie.api.runtime.rule.FactHandle bartHandle=ksession.insert(bart);
+  FactHandle abrahamHandle=ksession.insert(abraham);
+  FactHandle bartHandle=ksession.insert(bart);
   ksession.fireAllRules();
   assertEquals(0,((TotalHolder)ksession.getGlobal("totalHolder")).getTotal());
   bart.setFather(abraham);
@@ -22,7 +22,7 @@
   ksession.update(bartHandle,bart);
   ksession.fireAllRules();
   assertEquals(100,((TotalHolder)ksession.getGlobal("totalHolder")).getTotal());
-  org.kie.api.runtime.rule.FactHandle homerHandle=ksession.insert(homer);
+  FactHandle homerHandle=ksession.insert(homer);
   homer.setFather(abraham);
   ksession.update(homerHandle,homer);
   bart.setFather(homer);

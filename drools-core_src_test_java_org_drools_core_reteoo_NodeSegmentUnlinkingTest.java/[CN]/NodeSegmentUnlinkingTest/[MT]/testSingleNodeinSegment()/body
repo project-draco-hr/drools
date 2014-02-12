@@ -1,11 +1,11 @@
 {
-  rule1=new Rule("rule1");
-  rule2=new Rule("rule2");
-  rule3=new Rule("rule3");
+  rule1=new RuleImpl("rule1");
+  rule2=new RuleImpl("rule2");
+  rule3=new RuleImpl("rule3");
   KieBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
   kconf.setOption(RuleEngineOption.PHREAK);
-  ruleBase=(ReteooRuleBase)RuleBaseFactory.newRuleBase((RuleBaseConfiguration)kconf);
-  BuildContext buildContext=new BuildContext(ruleBase,ruleBase.getReteooBuilder().getIdGenerator());
+  kBase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase(kconf);
+  BuildContext buildContext=new BuildContext(kBase,kBase.getReteooBuilder().getIdGenerator());
   MockObjectSource mockObjectSource=new MockObjectSource(8);
   MockTupleSource mockTupleSource=new MockTupleSource(9);
   ObjectTypeNode otn=new ObjectTypeNode(2,null,new ClassObjectType(String.class),buildContext);
@@ -29,15 +29,15 @@
   n3.attach();
   n4.attach();
   n5.attach();
-  AbstractWorkingMemory wm=new AbstractWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase((RuleBaseConfiguration)kconf));
-  createSegmentMemory(n2,wm);
-  BetaMemory bm=(BetaMemory)wm.getNodeMemory(n1);
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  createSegmentMemory(n2,ksession);
+  BetaMemory bm=(BetaMemory)ksession.getNodeMemory(n1);
   assertNull(bm.getSegmentMemory());
-  bm=(BetaMemory)wm.getNodeMemory(n3);
+  bm=(BetaMemory)ksession.getNodeMemory(n3);
   assertNull(bm.getSegmentMemory());
-  bm=(BetaMemory)wm.getNodeMemory(n4);
+  bm=(BetaMemory)ksession.getNodeMemory(n4);
   assertNull(bm.getSegmentMemory());
-  bm=(BetaMemory)wm.getNodeMemory(n2);
+  bm=(BetaMemory)ksession.getNodeMemory(n2);
   assertEquals(1,bm.getNodePosMaskBit());
   assertEquals(1,bm.getSegmentMemory().getAllLinkedMaskTest());
 }

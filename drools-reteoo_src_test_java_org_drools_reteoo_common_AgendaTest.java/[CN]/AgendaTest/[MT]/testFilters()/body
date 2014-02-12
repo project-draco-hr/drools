@@ -1,8 +1,8 @@
 {
-  final AbstractWorkingMemory workingMemory=(AbstractWorkingMemory)ruleBase.newStatefulSession();
-  final InternalAgenda agenda=(InternalAgenda)workingMemory.getAgenda();
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  final InternalAgenda agenda=(InternalAgenda)ksession.getAgenda();
   final Boolean[] filtered=new Boolean[]{false};
-  workingMemory.addEventListener(new DefaultAgendaEventListener(){
+  ksession.addEventListener(new DefaultAgendaEventListener(){
     public void activationCancelled(    ActivationCancelledEvent event,    WorkingMemory workingMemory){
       if (event.getCause() == MatchCancelledCause.FILTER) {
         filtered[0]=true;
@@ -10,7 +10,7 @@
     }
   }
 );
-  final Rule rule=new Rule("test-rule");
+  final RuleImpl rule=new RuleImpl("test-rule");
   final RuleTerminalNode node=new RuleTerminalNode(3,new MockTupleSource(2),rule,rule.getLhs(),0,buildContext);
   final Map results=new HashMap();
   rule.setConsequence(new org.drools.core.spi.Consequence(){
@@ -31,13 +31,13 @@
   final PropagationContext context=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,rule,null,new DefaultFactHandle());
   assertEquals(0,agenda.getFocus().size());
   final AgendaFilter filterTrue=new AgendaFilter(){
-    public boolean accept(    Activation item){
+    public boolean accept(    Match item){
       return true;
     }
   }
 ;
   rule.setNoLoop(false);
-  node.assertLeftTuple(tuple,context,workingMemory);
+  node.assertLeftTuple(tuple,context,ksession);
   agenda.unstageActivations();
   assertEquals(1,agenda.getFocus().size());
   agenda.fireNextItem(filterTrue,0,-1);
@@ -47,13 +47,13 @@
   agenda.clearAndCancel();
   results.clear();
   final AgendaFilter filterFalse=new AgendaFilter(){
-    public boolean accept(    Activation item){
+    public boolean accept(    Match item){
       return false;
     }
   }
 ;
   rule.setNoLoop(false);
-  node.assertLeftTuple(tuple,context,workingMemory);
+  node.assertLeftTuple(tuple,context,ksession);
   agenda.unstageActivations();
   assertEquals(1,agenda.getFocus().size());
   agenda.fireNextItem(filterFalse,0,-1);

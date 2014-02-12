@@ -1,12 +1,12 @@
 {
-  final Package pkg=new Package("pkg1");
+  InternalKnowledgePackage pkg=new KnowledgePackageImpl("pkg1");
   final RuleDescr ruleDescr=new RuleDescr("rule 1");
   ruleDescr.setConsequence("if (cheese.price == 10) { cheese.price = 5; }");
   Properties properties=new Properties();
   properties.setProperty("drools.dialect.default","mvel");
-  PackageBuilderConfiguration cfg1=new PackageBuilderConfiguration(properties);
-  PackageBuilder pkgBuilder=new PackageBuilder(pkg,cfg1);
-  final PackageBuilderConfiguration conf=pkgBuilder.getPackageBuilderConfiguration();
+  KnowledgeBuilderConfigurationImpl cfg1=new KnowledgeBuilderConfigurationImpl(properties);
+  KnowledgeBuilderImpl pkgBuilder=new KnowledgeBuilderImpl(pkg,cfg1);
+  final KnowledgeBuilderConfigurationImpl conf=pkgBuilder.getBuilderConfiguration();
   PackageRegistry pkgRegistry=pkgBuilder.getPackageRegistry(pkg.getName());
   DialectCompiletimeRegistry dialectRegistry=pkgBuilder.getPackageRegistry(pkg.getName()).getDialectCompiletimeRegistry();
   MVELDialect mvelDialect=(MVELDialect)dialectRegistry.getDialect(pkgRegistry.getDialect());
@@ -21,18 +21,18 @@
   declarationResolver.setDeclarations(map);
   context.setDeclarationResolver(declarationResolver);
   final MVELConsequenceBuilder builder=new MVELConsequenceBuilder();
-  builder.build(context,Rule.DEFAULT_CONSEQUENCE_NAME);
-  final RuleBase ruleBase=RuleBaseFactory.newRuleBase();
-  final WorkingMemory wm=ruleBase.newStatefulSession();
+  builder.build(context,RuleImpl.DEFAULT_CONSEQUENCE_NAME);
+  InternalKnowledgeBase kBase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase();
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
   final Cheese cheddar=new Cheese("cheddar",10);
-  final InternalFactHandle f0=(InternalFactHandle)wm.insert(cheddar);
+  final InternalFactHandle f0=(InternalFactHandle)ksession.insert(cheddar);
   final LeftTupleImpl tuple=new LeftTupleImpl(f0,null,true);
   final AgendaItem item=new AgendaItemImpl(0,tuple,10,null,null,null,null);
-  final DefaultKnowledgeHelper kbHelper=new DefaultKnowledgeHelper(wm);
+  final DefaultKnowledgeHelper kbHelper=new DefaultKnowledgeHelper(ksession);
   kbHelper.setActivation(item);
   try {
     ((MVELConsequence)context.getRule().getConsequence()).compile((MVELDialectRuntimeData)pkgBuilder.getPackageRegistry(pkg.getName()).getDialectRuntimeRegistry().getDialectData("mvel"));
-    context.getRule().getConsequence().evaluate(kbHelper,wm);
+    context.getRule().getConsequence().evaluate(kbHelper,ksession);
     fail("should throw an exception, as 'if' is not allowed");
   }
  catch (  Exception e) {

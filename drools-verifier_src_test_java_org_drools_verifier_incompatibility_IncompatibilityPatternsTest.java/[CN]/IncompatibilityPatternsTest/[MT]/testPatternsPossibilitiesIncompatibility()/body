@@ -1,6 +1,5 @@
 {
-  StatelessSession session=getStatelessSession(this.getClass().getResourceAsStream("Patterns.drl"));
-  session.setAgendaFilter(new RuleNameMatchesAgendaFilter("Incompatible Patterns"));
+  KieSession session=getStatelessKieSession(this.getClass().getResourceAsStream("Patterns.drl"));
   Collection<Object> data=new ArrayList<Object>();
   Pattern pattern1=VerifierComponentMockFactory.createPattern1();
   Pattern pattern2=VerifierComponentMockFactory.createPattern2();
@@ -44,8 +43,11 @@
   data.add(o1);
   data.add(o2);
   data.add(o3);
-  StatelessSessionResult sessionResult=session.executeWithResults(data);
-  Map<Cause,Set<Cause>> map=createIncompatibilityMap(VerifierComponentType.SUB_PATTERN,sessionResult.iterateObjects());
+  for (  Object o : data) {
+    session.insert(o);
+  }
+  session.fireAllRules(new RuleNameMatchesAgendaFilter("Incompatible Patterns"));
+  Map<Cause,Set<Cause>> map=createIncompatibilityMap(VerifierComponentType.SUB_PATTERN,(Iterator<Object>)session.getObjects().iterator());
   assertTrue((TestBaseOld.causeMapContains(map,pp1,pp2) ^ TestBaseOld.causeMapContains(map,pp2,pp1)));
   assertTrue((TestBaseOld.causeMapContains(map,pp3,pp4) ^ TestBaseOld.causeMapContains(map,pp4,pp3)));
   if (!map.isEmpty()) {

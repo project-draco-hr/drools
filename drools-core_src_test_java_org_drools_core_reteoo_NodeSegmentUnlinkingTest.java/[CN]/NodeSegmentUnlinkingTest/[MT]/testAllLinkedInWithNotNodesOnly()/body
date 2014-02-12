@@ -1,16 +1,17 @@
 {
   setUp(NOT_NODE);
   assertEquals(NotNode.class,n3.getClass());
-  KieBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  KieBaseConfiguration kconf=org.kie.internal.KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
   kconf.setOption(RuleEngineOption.PHREAK);
-  AbstractWorkingMemory wm=new AbstractWorkingMemory(1,(ReteooRuleBase)RuleBaseFactory.newRuleBase((RuleBaseConfiguration)kconf));
-  BetaMemory bm=(BetaMemory)wm.getNodeMemory(n3);
-  createSegmentMemory(n3,wm);
+  InternalKnowledgeBase kBase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase(kconf);
+  StatefulKnowledgeSessionImpl ksession=(StatefulKnowledgeSessionImpl)kBase.newStatefulKnowledgeSession();
+  BetaMemory bm=(BetaMemory)ksession.getNodeMemory(n3);
+  createSegmentMemory(n3,ksession);
   assertTrue(bm.getSegmentMemory().isSegmentLinked());
-  DefaultFactHandle f1=(DefaultFactHandle)wm.insert("test1");
-  n3.assertObject(f1,context,wm);
-  PhreakNotNode.unlinkNotNodeOnRightInsert((NotNode)n3,bm,wm);
+  DefaultFactHandle f1=(DefaultFactHandle)ksession.insert("test1");
+  n3.assertObject(f1,context,ksession);
+  PhreakNotNode.unlinkNotNodeOnRightInsert((NotNode)n3,bm,ksession);
   assertFalse(bm.getSegmentMemory().isSegmentLinked());
-  n3.retractRightTuple(f1.getFirstRightTuple(),context,wm);
+  n3.retractRightTuple(f1.getFirstRightTuple(),context,ksession);
   assertTrue(bm.getSegmentMemory().isSegmentLinked());
 }

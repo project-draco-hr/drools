@@ -1,0 +1,23 @@
+{
+  for (  QualifiedName qname : typeDescr.getSuperTypes()) {
+    String declaredSuperType=qname.getFullName();
+    if (declaredSuperType != null) {
+      int separator=declaredSuperType.lastIndexOf(".");
+      boolean qualified=separator > 0;
+      if (!qualified) {
+        declaredSuperType=resolveType(declaredSuperType,packageDescr,kbuilder.getPackageRegistry(typeDescr.getNamespace()));
+        declaredSuperType=typeName2ClassName(declaredSuperType);
+        separator=declaredSuperType.lastIndexOf(".");
+        if (separator < 0) {
+          kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Cannot resolve supertype '" + declaredSuperType + "'"));
+          qname.setName(null);
+          qname.setNamespace(null);
+        }
+ else {
+          qname.setName(declaredSuperType.substring(separator + 1));
+          qname.setNamespace(declaredSuperType.substring(0,separator));
+        }
+      }
+    }
+  }
+}
