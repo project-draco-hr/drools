@@ -1,0 +1,68 @@
+{
+  ClassWriter cw=new ClassGenerator.InternalClassWriter(classLoader,ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+  FieldVisitor fv;
+  MethodVisitor mv;
+  BitSet mask=traitRegistry.getFieldMask(trait.getName(),core.getDefinedClass().getName());
+  String name=TraitFactory.getPropertyWrapperName(trait,core);
+  String masterName=TraitFactory.getProxyName(trait,core);
+  String internalWrapper=BuildUtils.getInternalType(name);
+  String descrCore=Type.getDescriptor(core.getDefinedClass());
+  String internalCore=Type.getInternalName(core.getDefinedClass());
+  cw.visit(ClassGenerator.JAVA_VERSION,ACC_PUBLIC + ACC_SUPER,internalWrapper,null,Type.getInternalName(TripleBasedStruct.class),new String[]{Type.getInternalName(Serializable.class)});
+  cw.visitInnerClass(Type.getInternalName(Map.Entry.class),Type.getInternalName(Map.class),"Entry",ACC_PUBLIC + ACC_STATIC + ACC_ABSTRACT+ ACC_INTERFACE);
+{
+    fv=cw.visitField(0,"object",descrCore,null,null);
+    fv.visitEnd();
+  }
+{
+    mv=cw.visitMethod(ACC_PUBLIC,"<init>","()V",null,null);
+    mv.visitCode();
+    mv.visitVarInsn(ALOAD,0);
+    mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(TripleBasedStruct.class),"<init>","()V");
+    mv.visitInsn(RETURN);
+    mv.visitMaxs(0,0);
+    mv.visitEnd();
+  }
+{
+    mv=cw.visitMethod(ACC_PUBLIC,"<init>","(" + descrCore + Type.getDescriptor(TripleStore.class)+ Type.getDescriptor(TripleFactory.class)+ ")V",null,null);
+    mv.visitCode();
+    mv.visitVarInsn(ALOAD,0);
+    mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(TripleBasedStruct.class),"<init>","()V");
+    mv.visitVarInsn(ALOAD,0);
+    mv.visitVarInsn(ALOAD,1);
+    mv.visitFieldInsn(PUTFIELD,internalWrapper,"object",descrCore);
+    mv.visitVarInsn(ALOAD,0);
+    mv.visitVarInsn(ALOAD,2);
+    mv.visitFieldInsn(PUTFIELD,internalWrapper,"store",Type.getDescriptor(TripleStore.class));
+    mv.visitVarInsn(ALOAD,0);
+    mv.visitVarInsn(ALOAD,3);
+    mv.visitMethodInsn(INVOKEVIRTUAL,Type.getInternalName(TripleBasedStruct.class),"setTripleFactory","(" + Type.getDescriptor(TripleFactory.class) + ")V");
+    mv.visitVarInsn(ALOAD,0);
+    mv.visitVarInsn(ALOAD,2);
+    mv.visitMethodInsn(INVOKEVIRTUAL,Type.getInternalName(TripleStore.class),"getId","()" + Type.getDescriptor(String.class));
+    mv.visitFieldInsn(PUTFIELD,internalWrapper,"storeId",Type.getDescriptor(String.class));
+    mv.visitVarInsn(ALOAD,0);
+    mv.visitMethodInsn(INVOKESPECIAL,internalWrapper,"initSoftFields","()V");
+    mv.visitInsn(RETURN);
+    mv.visitMaxs(0,0);
+    mv.visitEnd();
+  }
+  buildInitSoftFields(cw,internalWrapper,trait,core,mask);
+  buildClearSoftFields(cw,internalWrapper,trait,mask);
+  buildSize(cw,name,core.getClassName(),trait,core,mask);
+  buildIsEmpty(cw,name,core.getClassName(),trait,core,mask);
+  buildGet(cw,name,core.getClassName(),trait,core,mask);
+  buildPut(cw,name,core.getClassName(),trait,core,mask);
+  buildClear(cw,name,core.getClassName(),trait,core,mask);
+  buildRemove(cw,name,core.getClassName(),trait,core,mask);
+  buildContainsKey(cw,name,core.getClassName(),trait,core,mask);
+  buildContainsValue(cw,name,core.getClassName(),trait,core,mask);
+  buildKeyset(cw,name,core.getClassName(),trait,core,mask);
+  buildValues(cw,name,core.getClassName(),trait,core,mask);
+  buildEntryset(cw,name,core.getClassName(),trait,core,mask);
+  buildCommonMethods(cw,name);
+  buildSpecificMethods(cw,name,core);
+  buildExtensionMethods(cw,name,core);
+  cw.visitEnd();
+  return cw.toByteArray();
+}
