@@ -1,4 +1,13 @@
 {
-  MavenProject mavenProject=parseMavenPom(pomFile);
-  return new ArtifactResolver(mavenProject);
+  try {
+    return new ArtifactResolver(parseMavenPom(pomFile));
+  }
+ catch (  RuntimeException e) {
+    log.warn("Cannot use native maven pom parser, fall back to the internal one",e);
+    PomParser pomParser=createInternalPomParser(pomFile);
+    if (pomParser != null) {
+      return new ArtifactResolver(pomParser);
+    }
+  }
+  return null;
 }
