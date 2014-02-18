@@ -1,0 +1,32 @@
+{
+  try {
+    if (typeDescr.getFields().isEmpty()) {
+      return true;
+    }
+    Class<?> sup=typeClass.getSuperclass();
+    if (sup == null) {
+      return true;
+    }
+    if (!sup.getName().equals(typeDescr.getSupertTypeFullName())) {
+      return false;
+    }
+    ClassFieldInspector cfi=new ClassFieldInspector(typeClass,false);
+    if (cfi.getGetterMethods().size() != typeDescr.getFields().size()) {
+      return false;
+    }
+    for (    String fieldName : cfi.getFieldTypes().keySet()) {
+      if (!typeDescr.getFields().containsKey(fieldName)) {
+        return false;
+      }
+      String fieldTypeName=typeDescr.getFields().get(fieldName).getPattern().getObjectType();
+      Class fieldType=cfi.getFieldTypes().get(fieldName);
+      if (!fieldTypeName.equals(fieldType.getName()) || !fieldTypeName.equals(fieldType.getSimpleName())) {
+        return false;
+      }
+    }
+  }
+ catch (  IOException e) {
+    return false;
+  }
+  return true;
+}
