@@ -1,0 +1,21 @@
+{
+  if (!active) {
+    return executeNext(command);
+  }
+  boolean locked=false;
+  if (!lock.isHeldByCurrentThread()) {
+    logger.debug("About to get a lock on command service by {}",Thread.currentThread().getName());
+    lock.lock();
+    locked=true;
+    logger.debug("Lock taken by {}",Thread.currentThread().getName());
+  }
+  try {
+    return executeNext(command);
+  }
+  finally {
+    if (locked) {
+      logger.debug("About to register lock release handler by {}",Thread.currentThread().getName());
+      release((TransactionManager)environment.get(EnvironmentName.TRANSACTION_MANAGER));
+    }
+  }
+}

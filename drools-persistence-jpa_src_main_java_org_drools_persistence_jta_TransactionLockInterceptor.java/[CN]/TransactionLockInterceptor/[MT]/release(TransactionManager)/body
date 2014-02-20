@@ -1,0 +1,18 @@
+{
+  try {
+    TransactionManagerHelper.registerTransactionSyncInContainer(txm,new OrderedTransactionSynchronization(100){
+      @Override public void beforeCompletion(){
+      }
+      @Override public void afterCompletion(      int status){
+        logger.debug("Releasing on transaction completion by {}",Thread.currentThread().getName());
+        lock.unlock();
+        logger.debug("Successfully released lock by {}",Thread.currentThread().getName());
+      }
+    }
+);
+  }
+ catch (  Throwable e) {
+    logger.debug("Error happened releasing directly by {} due to {}",Thread.currentThread().getName(),e.getMessage());
+    lock.unlock();
+  }
+}
