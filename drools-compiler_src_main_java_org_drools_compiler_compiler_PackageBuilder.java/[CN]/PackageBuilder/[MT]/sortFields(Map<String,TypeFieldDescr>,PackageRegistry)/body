@@ -13,7 +13,12 @@
   for (  TypeFieldDescr field : flds.values()) {
     try {
       String typeName=field.getPattern().getObjectType();
-      String fullFieldType=generatedTypes.contains(typeName) ? typeName : pkgRegistry.getTypeResolver().resolveType(typeName).getName();
+      String typeNameKey=typeName;
+      int arrayIndex=typeName.indexOf("[");
+      if (arrayIndex >= 0) {
+        typeNameKey=typeName.substring(0,arrayIndex);
+      }
+      String fullFieldType=generatedTypes.contains(typeNameKey) ? BuildUtils.resolveDeclaredType(typeName) : pkgRegistry.getTypeResolver().resolveType(typeName).getName();
       FieldDefinition fieldDef=new FieldDefinition(field.getFieldName(),fullFieldType);
       boolean isKey=field.getAnnotation(TypeDeclaration.ATTR_KEY) != null;
       fieldDef.setKey(isKey);

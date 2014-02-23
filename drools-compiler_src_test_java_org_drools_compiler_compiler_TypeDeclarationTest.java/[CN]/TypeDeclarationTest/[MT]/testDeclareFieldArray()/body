@@ -1,0 +1,26 @@
+{
+  String str1="" + "package org.drools " + "declare Test end "+ "declare Pet "+ "    owners : Owner[] "+ "    twoDimArray : Foo[][] "+ "    friends : Pet[] "+ "    ages : int[] "+ "end "+ "declare Owner "+ "     name : String "+ "end "+ "declare Foo end "+ "";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str1.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  for (  KnowledgePackage kp : kbuilder.getKnowledgePackages()) {
+    if (kp.getName().equals("org.drools")) {
+      Collection<FactType> types=kp.getFactTypes();
+      for (      FactType type : types) {
+        if ("org.drools.Pet".equals(type.getName())) {
+          assertEquals(4,type.getFields().size());
+          FactField owners=type.getField("owners");
+          assertTrue(owners != null && owners.getType().getSimpleName().equals("Owner[]") && owners.getType().isArray());
+          FactField twoDim=type.getField("twoDimArray");
+          assertTrue(twoDim != null && twoDim.getType().getSimpleName().equals("Foo[][]") && twoDim.getType().isArray());
+          FactField friends=type.getField("friends");
+          assertTrue(friends != null && friends.getType().getSimpleName().equals("Pet[]") && friends.getType().isArray());
+          FactField ages=type.getField("ages");
+          assertTrue(ages != null && ages.getType().getSimpleName().equals("int[]") && ages.getType().isArray());
+        }
+      }
+    }
+  }
+}
