@@ -1,0 +1,36 @@
+{
+  ReleaseId[] releaseIds={};
+  if (dependencies != null && dependencies.size() > 0) {
+    List<ReleaseId> depReleaseIds=new ArrayList<ReleaseId>();
+    for (    String dep : dependencies) {
+      String[] gav=dep.split(":");
+      if (gav.length != 3) {
+        throw new IllegalArgumentException("Dependendency id '" + dep + "' does not conform to the format <groupId>:<artifactId>:<version> (Classifiers are not accepted).");
+      }
+      depReleaseIds.add(new ReleaseIdImpl(gav[0],gav[1],gav[2]));
+    }
+    releaseIds=depReleaseIds.toArray(new ReleaseId[depReleaseIds.size()]);
+  }
+  config.pomText=getPomText(releaseId,releaseIds);
+  KieFileSystem kfs=createKieFileSystemWithKProject(kbaseName,ksessionName);
+  kfs.writePomXML(this.config.pomText);
+  List<KJarResource> resourceFiles=loadResources(resourceFilePaths);
+  for (  KJarResource resource : resourceFiles) {
+    kfs.write("src/main/resources/" + kbaseName + "/"+ resource.name,resource.content);
+  }
+  if (classes != null) {
+    for (    Class<?> userClass : classes) {
+      addClass(userClass,kfs);
+    }
+  }
+  KieBuilder kieBuilder=config.getKieServicesInstance().newKieBuilder(kfs);
+  int buildMsgs=0;
+  for (  Message buildMsg : kieBuilder.buildAll().getResults().getMessages()) {
+    System.out.println(buildMsg.getPath() + " : " + buildMsg.getText());
+    ++buildMsgs;
+  }
+  if (buildMsgs > 0) {
+    throw new RuntimeException("Unable to build KieModule, see the " + buildMsgs + " messages above.");
+  }
+  return (InternalKieModule)kieBuilder.getKieModule();
+}

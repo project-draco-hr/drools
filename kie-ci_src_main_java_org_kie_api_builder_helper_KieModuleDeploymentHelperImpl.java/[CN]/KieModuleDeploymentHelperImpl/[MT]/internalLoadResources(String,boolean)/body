@@ -1,0 +1,74 @@
+{
+  if (!path.startsWith("/")) {
+    path="/" + path;
+  }
+  List<KJarResource> output=new ArrayList<KJarResource>();
+  URL url=KieModuleDeploymentHelperImpl.class.getResource(path);
+  if (fromDir) {
+    if (url == null) {
+      File folder=new File(path);
+      if (folder.exists()) {
+        for (        File folderFile : folder.listFiles()) {
+          if (folderFile.isDirectory()) {
+            continue;
+          }
+          String content=convertFileToString(new FileInputStream(folderFile));
+          output.add(new KJarResource(folderFile.getName(),content));
+        }
+      }
+ else {
+        throw new IllegalArgumentException("Directory + '" + path + "' does not exist.");
+      }
+    }
+ else     if ("file".equals(url.getProtocol())) {
+      File folder=new File(url.toURI());
+      if (folder.isDirectory()) {
+        for (        File folderFile : folder.listFiles()) {
+          if (folderFile.getName().endsWith(".class") || folderFile.isDirectory()) {
+            continue;
+          }
+          String content=convertFileToString(new FileInputStream(folderFile));
+          output.add(new KJarResource(folderFile.getName(),content));
+        }
+      }
+ else {
+        throw new IllegalStateException("'" + path + "' is not an existing directory.");
+      }
+    }
+ else     if ("jar".equals(url.getProtocol())) {
+      String urlString=url.toExternalForm();
+      int jarPathIndex=urlString.lastIndexOf(".jar!") + 4;
+      String resourcePath=urlString.substring(jarPathIndex + 1);
+      if (resourcePath.startsWith("/")) {
+        resourcePath=resourcePath.substring(1);
+      }
+      int depth=resourcePath.split(File.separator).length + 1;
+      String jarUrlString=urlString.substring("jar:".length(),jarPathIndex);
+      url=new URL(jarUrlString);
+      ZipInputStream zip=new ZipInputStream(url.openStream());
+      ZipEntry ze=zip.getNextEntry();
+      while (ze != null) {
+        String name=ze.getName();
+        if (name.startsWith(resourcePath) && !name.endsWith(File.separator) && (name.split(File.separator).length == depth)) {
+          String shortName=name.substring(name.lastIndexOf("/") + 1);
+          String content=convertFileToString(zip);
+          output.add(new KJarResource(shortName,content));
+        }
+        ze=zip.getNextEntry();
+      }
+    }
+ else {
+      throw new IllegalArgumentException("Unable to find resource directory '" + path + "'");
+    }
+  }
+ else {
+    InputStream is=KieModuleDeploymentHelperImpl.class.getResourceAsStream(path);
+    if (is == null) {
+      is=new FileInputStream(new File(path));
+    }
+    String content=convertFileToString(is);
+    String name=path.substring(path.lastIndexOf("/") + 1);
+    output.add(new KJarResource(name,content));
+  }
+  return output;
+}
