@@ -1,0 +1,26 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId releaseId=ks.newReleaseId("org.kie","scanner-test","1.0-SNAPSHOT");
+  InternalKieModule kJar1=createKieJar(ks,releaseId,"rule1","rule2");
+  KieContainer kieContainer=ks.newKieContainer(releaseId);
+  MavenRepository repository=getMavenRepository();
+  repository.deployArtifact(releaseId,kJar1,kPom);
+  KieSession ksession=kieContainer.newKieSession("KSession1");
+  checkKSession(ksession,"rule1","rule2");
+  KieRepositoryScannerImpl scanner=(KieRepositoryScannerImpl)ks.newKieScanner(kieContainer);
+  KieScannerMBeanImpl mBean=(KieScannerMBeanImpl)scanner.getMBean();
+  ObjectName mbeanName=mBean.getMBeanName();
+  Assert.assertEquals(releaseId.toExternalForm(),MBeanUtils.getAttribute(mbeanName,"ScannerReleaseId"));
+  Assert.assertEquals(releaseId.toExternalForm(),MBeanUtils.getAttribute(mbeanName,"CurrentReleaseId"));
+  Assert.assertEquals(InternalKieScanner.Status.STOPPED.toString(),MBeanUtils.getAttribute(mbeanName,"Status"));
+  MBeanUtils.invoke(mbeanName,"start",new Object[]{Long.valueOf(10000)},new String[]{"long"});
+  Assert.assertEquals(InternalKieScanner.Status.RUNNING.toString(),MBeanUtils.getAttribute(mbeanName,"Status"));
+  MBeanUtils.invoke(mbeanName,"stop",new Object[]{},new String[]{});
+  Assert.assertEquals(InternalKieScanner.Status.STOPPED.toString(),MBeanUtils.getAttribute(mbeanName,"Status"));
+  InternalKieModule kJar2=createKieJar(ks,releaseId,"rule2","rule3");
+  repository.deployArtifact(releaseId,kJar2,kPom);
+  MBeanUtils.invoke(mbeanName,"scanNow",new Object[]{},new String[]{});
+  KieSession ksession2=kieContainer.newKieSession("KSession1");
+  checkKSession(ksession2,"rule2","rule3");
+  ks.getRepository().removeKieModule(releaseId);
+}
