@@ -13,24 +13,17 @@
           trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,rightTuple,childLeftTuple,null,sink,true));
         }
  else {
-switch (childLeftTuple.getStagedType()) {
-case LeftTuple.INSERT:
-            stagedLeftTuples.removeInsert(childLeftTuple);
-          break;
-case LeftTuple.UPDATE:
-        stagedLeftTuples.removeUpdate(childLeftTuple);
-      break;
+          childLeftTuple.setPropagationContext(rightTuple.getPropagationContext());
+          updateChildLeftTuple(childLeftTuple,stagedLeftTuples,trgLeftTuples);
+          LeftTuple nextChildLeftTuple=childLeftTuple.getLeftParentNext();
+          childLeftTuple.reAddRight();
+          childLeftTuple=nextChildLeftTuple;
+        }
+      }
+ else       if (childLeftTuple != null && childLeftTuple.getRightParent() == rightTuple) {
+        childLeftTuple=RuleNetworkEvaluator.deleteLeftChild(childLeftTuple,trgLeftTuples,stagedLeftTuples);
+      }
+    }
   }
-  trgLeftTuples.addUpdate(childLeftTuple);
-  LeftTuple nextChildLeftTuple=childLeftTuple.getLeftParentNext();
-  childLeftTuple.reAddRight();
-  childLeftTuple=nextChildLeftTuple;
-}
-}
- else if (childLeftTuple != null && childLeftTuple.getRightParent() == rightTuple) {
-childLeftTuple=RuleNetworkEvaluator.deleteLeftChild(childLeftTuple,trgLeftTuples,stagedLeftTuples);
-}
-}
-}
-return childLeftTuple;
+  return childLeftTuple;
 }

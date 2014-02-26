@@ -58,23 +58,15 @@
       if (leftTuple.getFirstChild() != null) {
         LeftTuple childLeftTuple=leftTuple.getFirstChild();
         while (childLeftTuple != null) {
-switch (childLeftTuple.getStagedType()) {
-case LeftTuple.INSERT:
-            stagedLeftTuples.removeInsert(childLeftTuple);
-          break;
-case LeftTuple.UPDATE:
-        stagedLeftTuples.removeUpdate(childLeftTuple);
-      break;
+          childLeftTuple.setPropagationContext(leftTuple.getBlocker().getPropagationContext());
+          updateChildLeftTuple(childLeftTuple,stagedLeftTuples,trgLeftTuples);
+          childLeftTuple.reAddRight();
+          childLeftTuple=childLeftTuple.getLeftParentNext();
+        }
+      }
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
   }
-  childLeftTuple.setPropagationContext(leftTuple.getBlocker().getPropagationContext());
-  trgLeftTuples.addUpdate(childLeftTuple);
-  childLeftTuple.reAddRight();
-  childLeftTuple=childLeftTuple.getLeftParentNext();
-}
-}
-}
-leftTuple.clearStaged();
-leftTuple=next;
-}
-constraints.resetTuple(contextEntry);
+  constraints.resetTuple(contextEntry);
 }
