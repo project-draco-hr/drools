@@ -19,11 +19,13 @@
     mv.visitTryCatchBlock(beforeTry,tryOk,inCatch,"java/lang/NumberFormatException");
     mv.visitLabel(beforeTry);
   }
-  mv.visitTypeInsn(NEW,internalName(toType));
-  mv.visitInsn(DUP);
-  load(regNr);
-  coerceByConstructor(fromType,toType);
-  store(regNr,toType);
+  if (!toType.isAssignableFrom(fromType)) {
+    mv.visitTypeInsn(NEW,internalName(toType));
+    mv.visitInsn(DUP);
+    load(regNr);
+    coerceByConstructor(fromType,toType);
+    store(regNr,toType);
+  }
   if (isNumber) {
     Label afterCatch=new Label();
     mv.visitLabel(tryOk);
