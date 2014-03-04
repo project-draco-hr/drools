@@ -1,13 +1,8 @@
 {
+  nodeTypesInSegment=checkSegmentBoundary(lt,wm,nodeTypesInSegment);
   for (  LeftTupleSink sink : lt.getSinkPropagator().getSinks()) {
     if (NodeTypeEnums.isLeftTupleSource(sink)) {
-      if (NodeTypeEnums.NotNode == sink.getType() && ((NotNode)sink).isEmptyBetaConstraints()) {
-        BetaMemory bm=(BetaMemory)wm.getNodeMemory((MemoryFactory)sink);
-        if (bm.getSegmentMemory() == null) {
-          createSegmentMemory((NotNode)sink,wm);
-        }
-      }
-      updateRiaAndTerminalMemory((LeftTupleSource)sink,originalLt,smem,wm,fromPrototype);
+      nodeTypesInSegment=updateRiaAndTerminalMemory((LeftTupleSource)sink,originalLt,smem,wm,fromPrototype,nodeTypesInSegment);
     }
  else     if (sink.getType() == NodeTypeEnums.RightInputAdaterNode) {
       if (inSubNetwork((RightInputAdapterNode)sink,originalLt)) {
@@ -19,7 +14,7 @@
           ObjectSink[] nodes=((RightInputAdapterNode)sink).getSinkPropagator().getSinks();
           for (          ObjectSink node : nodes) {
             if (NodeTypeEnums.isLeftTupleSource(node) && wm.getNodeMemory((MemoryFactory)node).getSegmentMemory() == null) {
-              restoreSegmentFromPrototype(wm,(LeftTupleSource)node);
+              restoreSegmentFromPrototype(wm,(LeftTupleSource)node,nodeTypesInSegment);
             }
           }
         }
@@ -41,6 +36,8 @@
       if (smem.isSegmentLinked()) {
         smem.notifyRuleLinkSegment(wm);
       }
+      checkEagerSegmentCreation(((TerminalNode)sink).getLeftTupleSource(),wm,nodeTypesInSegment);
     }
   }
+  return nodeTypesInSegment;
 }

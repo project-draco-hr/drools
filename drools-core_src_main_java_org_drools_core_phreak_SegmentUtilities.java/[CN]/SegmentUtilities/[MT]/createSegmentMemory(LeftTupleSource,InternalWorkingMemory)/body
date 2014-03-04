@@ -7,7 +7,8 @@
     tupleSource=tupleSource.getLeftTupleSource();
   }
   LeftTupleSource segmentRoot=tupleSource;
-  smem=restoreSegmentFromPrototype(wm,segmentRoot);
+  int nodeTypesInSegment=0;
+  smem=restoreSegmentFromPrototype(wm,segmentRoot,nodeTypesInSegment);
   if (smem != null) {
     return smem;
   }
@@ -16,6 +17,7 @@
   long allLinkedTestMask=0;
   boolean updateNodeBit=true;
   while (true) {
+    nodeTypesInSegment=updateNodeTypesMask(tupleSource,nodeTypesInSegment);
     if (tupleSource.isStreamMode() && smem.getTupleQueue() == null) {
       Queue<TupleEntry> queue=initAndGetTupleQueue(tupleSource,wm);
       smem.setTupleQueue(queue);
@@ -93,7 +95,7 @@ smem.setPos(counter);
 if (smem.getRootNode().getType() != NodeTypeEnums.LeftInputAdapterNode && ((LeftTupleSource)smem.getRootNode()).getLeftTupleSource().getType() == NodeTypeEnums.LeftInputAdapterNode) {
 smem.setStagedTuples(new SynchronizedLeftTupleSets());
 }
-updateRiaAndTerminalMemory(tupleSource,tupleSource,smem,wm,false);
+nodeTypesInSegment=updateRiaAndTerminalMemory(tupleSource,tupleSource,smem,wm,false,nodeTypesInSegment);
 ((ReteooRuleBase)wm.getRuleBase()).registerSegmentPrototype(segmentRoot,smem);
 return smem;
 }
