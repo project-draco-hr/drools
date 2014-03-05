@@ -1,10 +1,8 @@
 {
-  boolean hasDsl=false;
   StringBuilder drl=new StringBuilder();
   String thenLine=null;
   List<String> lhsStatements=new ArrayList<String>();
   List<String> rhsStatements=new ArrayList<String>();
-  int statementsWithoutParanthesis=0;
   String[] lines=str.split("\n");
   RuleSection ruleSection=RuleSection.HEADER;
   int lhsParenthesisBalance=0;
@@ -21,12 +19,6 @@
       ruleSection=RuleSection.RHS;
       continue;
     }
-    if (line.trim().startsWith(">")) {
-      hasDsl=true;
-    }
- else     if (line.indexOf('(') < 0) {
-      statementsWithoutParanthesis++;
-    }
     if (ruleSection == RuleSection.LHS) {
       if (lhsParenthesisBalance == 0) {
         lhsStatements.add(line);
@@ -35,12 +27,11 @@
         String oldLine=lhsStatements.remove(lhsStatements.size() - 1);
         lhsStatements.add(oldLine + " " + line);
       }
-      lhsParenthesisBalance+=paranthesisBalance(line);
+      lhsParenthesisBalance+=parenthesisBalance(line);
     }
  else {
       rhsStatements.add(line);
     }
   }
-  hasDsl|=statementsWithoutParanthesis == lhsStatements.size() + rhsStatements.size();
   return createExpandedDRLInfo(hasDsl,drl,thenLine,lhsStatements,rhsStatements);
 }
