@@ -1,14 +1,21 @@
 {
-  status=Status.SCANNING;
-  Map<DependencyDescriptor,Artifact> updatedArtifacts=scanForUpdates();
-  if (updatedArtifacts.isEmpty()) {
+  if (getStatus() == Status.SHUTDOWN) {
+    throw new IllegalStateException("The scanner was already shut down and can no longer be used.");
+  }
+  try {
+    status=Status.SCANNING;
+    Map<DependencyDescriptor,Artifact> updatedArtifacts=scanForUpdates();
+    if (updatedArtifacts.isEmpty()) {
+      status=Status.STOPPED;
+      return;
+    }
+    status=Status.UPDATING;
+    for (    Map.Entry<DependencyDescriptor,Artifact> entry : updatedArtifacts.entrySet()) {
+      updateKieModule(entry.getKey(),entry.getValue());
+    }
+    log.info("The following artifacts have been updated: " + updatedArtifacts);
+  }
+  finally {
     status=Status.STOPPED;
-    return;
   }
-  status=Status.UPDATING;
-  for (  Map.Entry<DependencyDescriptor,Artifact> entry : updatedArtifacts.entrySet()) {
-    updateKieModule(entry.getKey(),entry.getValue());
-  }
-  log.info("The following artifacts have been updated: " + updatedArtifacts);
-  status=Status.STOPPED;
 }
