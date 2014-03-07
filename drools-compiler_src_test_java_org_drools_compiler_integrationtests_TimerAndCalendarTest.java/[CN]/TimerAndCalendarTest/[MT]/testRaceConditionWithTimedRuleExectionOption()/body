@@ -1,0 +1,68 @@
+{
+  String str="package org.simple \n" + "global java.util.List list \n" + "rule xxx @Eager(true)\n"+ "  timer (int:30s 10s) "+ "when \n"+ "  $s: String()\n"+ "then \n"+ "  list.add($s); \n"+ "end  \n";
+  KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  conf.setOption(ClockTypeOption.get("pseudo"));
+  conf.setOption(TimedRuleExectionOption.YES);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  KieSession ksession=createKnowledgeSession(kbase,conf);
+  final CyclicBarrier barrier=new CyclicBarrier(2);
+  final AtomicBoolean aBool=new AtomicBoolean(true);
+  AgendaEventListener agendaEventListener=new DefaultAgendaEventListener(){
+    public void afterMatchFired(    org.kie.api.event.rule.AfterMatchFiredEvent event){
+      try {
+        if (aBool.get()) {
+          barrier.await();
+          aBool.set(false);
+        }
+      }
+ catch (      Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+;
+  ksession.addEventListener(agendaEventListener);
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  SessionClock clock=ksession.getSessionClock();
+  SessionPseudoClock pseudoClock=(SessionPseudoClock)clock;
+  String eventOne="one";
+  ksession.insert(eventOne);
+  pseudoClock.advanceTime(10000,TimeUnit.MILLISECONDS);
+  ksession.fireAllRules();
+  pseudoClock.advanceTime(30000,TimeUnit.MILLISECONDS);
+  barrier.await();
+  barrier.reset();
+  aBool.set(true);
+  pseudoClock.advanceTime(10000,TimeUnit.MILLISECONDS);
+  barrier.await();
+  barrier.reset();
+  aBool.set(true);
+  String eventTwo="two";
+  ksession.insert(eventTwo);
+  ksession.fireAllRules();
+  pseudoClock.advanceTime(10000,TimeUnit.MILLISECONDS);
+  barrier.await();
+  barrier.reset();
+  aBool.set(true);
+  pseudoClock.advanceTime(10000,TimeUnit.MILLISECONDS);
+  barrier.await();
+  barrier.reset();
+  aBool.set(true);
+  pseudoClock.advanceTime(10000,TimeUnit.MILLISECONDS);
+  barrier.await();
+  barrier.reset();
+  aBool.set(true);
+  pseudoClock.advanceTime(20000,TimeUnit.MILLISECONDS);
+  barrier.await();
+  barrier.reset();
+  pseudoClock.advanceTime(20000,TimeUnit.MILLISECONDS);
+  aBool.set(true);
+  barrier.await();
+  barrier.reset();
+  pseudoClock.advanceTime(20000,TimeUnit.MILLISECONDS);
+  aBool.set(true);
+  barrier.await();
+  barrier.reset();
+  ksession.destroy();
+}
