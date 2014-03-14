@@ -5,7 +5,8 @@
     for (    String element : project.getCompileClasspathElements()) {
       urls.add(new File(element).toURI().toURL());
     }
-    for (    Artifact artifact : project.getDependencyArtifacts()) {
+    project.setArtifactFilter(new CumulativeScopeArtifactFilter(Arrays.asList("compile","runtime")));
+    for (    Artifact artifact : project.getArtifacts()) {
       File file=artifact.getFile();
       if (file != null) {
         urls.add(file.toURI().toURL());
@@ -14,6 +15,10 @@
     urls.add(outputDirectory.toURI().toURL());
     ClassLoader projectClassLoader=URLClassLoader.newInstance(urls.toArray(new URL[0]),Thread.currentThread().getContextClassLoader());
     Thread.currentThread().setContextClassLoader(projectClassLoader);
+    BPMN2ProcessFactory.loadProvider(projectClassLoader);
+    DecisionTableFactory.loadProvider(projectClassLoader);
+    ProcessBuilderFactory.loadProvider(projectClassLoader);
+    PMMLCompilerFactory.loadProvider(projectClassLoader);
   }
  catch (  DependencyResolutionRequiredException e) {
     throw new RuntimeException(e);
