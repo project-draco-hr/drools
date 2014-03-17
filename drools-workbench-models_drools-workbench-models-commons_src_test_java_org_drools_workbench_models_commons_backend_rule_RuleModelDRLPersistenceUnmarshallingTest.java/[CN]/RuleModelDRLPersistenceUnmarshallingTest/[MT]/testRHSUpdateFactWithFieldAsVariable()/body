@@ -1,0 +1,32 @@
+{
+  String drl="package org.mortgages\n" + "import org.test.Person\n" + "rule \"variable\"\n"+ "dialect \"mvel\"\n"+ "when\n"+ "$p : Person( $f : field1 == 44 )\n"+ "then\n"+ "$p.setField1( $f );\n"+ "update( $p );\n"+ "end";
+  addModelField("org.test.Person","field1","java.lang.Integer",DataType.TYPE_NUMERIC_INTEGER);
+  final RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,new ArrayList<String>(),dmo);
+  assertNotNull(m);
+  assertEquals(1,m.lhs.length);
+  IPattern p=m.lhs[0];
+  assertTrue(p instanceof FactPattern);
+  FactPattern fp=(FactPattern)p;
+  assertEquals("Person",fp.getFactType());
+  assertEquals("$p",fp.getBoundName());
+  assertEquals(1,fp.getConstraintList().getConstraints().length);
+  assertTrue(fp.getConstraint(0) instanceof SingleFieldConstraint);
+  SingleFieldConstraint sfp=(SingleFieldConstraint)fp.getConstraint(0);
+  assertEquals("Person",sfp.getFactType());
+  assertEquals("field1",sfp.getFieldName());
+  assertEquals("==",sfp.getOperator());
+  assertEquals("44",sfp.getValue());
+  assertEquals(BaseSingleFieldConstraint.TYPE_LITERAL,sfp.getConstraintValueType());
+  assertEquals("$f",sfp.getFieldBinding());
+  assertEquals(1,m.rhs.length);
+  IAction a=m.rhs[0];
+  assertTrue(a instanceof ActionUpdateField);
+  ActionUpdateField ap=(ActionUpdateField)a;
+  assertEquals("$p",ap.getVariable());
+  assertEquals(1,ap.getFieldValues().length);
+  ActionFieldValue afv=ap.getFieldValues()[0];
+  assertEquals("field1",afv.getField());
+  assertEquals(FieldNatureType.TYPE_VARIABLE,afv.getNature());
+  assertEquals("=$f",afv.getValue());
+  assertEquals(DataType.TYPE_NUMERIC_INTEGER,afv.getType());
+}

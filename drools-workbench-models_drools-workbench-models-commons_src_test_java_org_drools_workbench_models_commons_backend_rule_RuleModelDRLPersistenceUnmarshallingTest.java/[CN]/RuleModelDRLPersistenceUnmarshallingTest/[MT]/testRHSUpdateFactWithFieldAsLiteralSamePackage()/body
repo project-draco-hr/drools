@@ -1,0 +1,24 @@
+{
+  String drl="package org.test\n" + "rule \"variable\"\n" + "dialect \"mvel\"\n"+ "when\n"+ "$p : Person()\n"+ "then\n"+ "$p.setField1( 55 );\n"+ "update( $p );\n"+ "end";
+  addModelField("org.test.Person","field1","java.lang.Integer",DataType.TYPE_NUMERIC_INTEGER);
+  when(dmo.getPackageName()).thenReturn("org.test");
+  final RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,new ArrayList<String>(),dmo);
+  assertNotNull(m);
+  assertEquals(1,m.lhs.length);
+  IPattern p=m.lhs[0];
+  assertTrue(p instanceof FactPattern);
+  FactPattern fp=(FactPattern)p;
+  assertEquals("Person",fp.getFactType());
+  assertEquals(0,fp.getNumberOfConstraints());
+  assertEquals(1,m.rhs.length);
+  IAction a=m.rhs[0];
+  assertTrue(a instanceof ActionUpdateField);
+  ActionUpdateField ap=(ActionUpdateField)a;
+  assertEquals("$p",ap.getVariable());
+  assertEquals(1,ap.getFieldValues().length);
+  ActionFieldValue afv=ap.getFieldValues()[0];
+  assertEquals("field1",afv.getField());
+  assertEquals(FieldNatureType.TYPE_LITERAL,afv.getNature());
+  assertEquals("55",afv.getValue());
+  assertEquals(DataType.TYPE_NUMERIC_INTEGER,afv.getType());
+}

@@ -1,0 +1,37 @@
+{
+  String factType=null;
+  if (action instanceof ActionInsertFact) {
+    factType=((ActionInsertFact)action).getFactType();
+  }
+ else   if (action instanceof ActionSetField) {
+    String boundParam=((ActionSetField)action).getVariable();
+    factType=boundParams.get(boundParam);
+  }
+  if (factType == null) {
+    return null;
+  }
+  ModelField[] modelFields=dmo.getProjectModelFields().get(factType);
+  if (modelFields == null) {
+    String fqcn=dmo.getPackageName() + "." + factType;
+    modelFields=dmo.getProjectModelFields().get(fqcn);
+  }
+  if (modelFields == null) {
+    for (    Import item : imports.getImports()) {
+      if (item.getType().endsWith(factType)) {
+        modelFields=dmo.getProjectModelFields().get(item.getType());
+        if (modelFields != null) {
+          break;
+        }
+      }
+    }
+  }
+  if (modelFields == null) {
+    return null;
+  }
+  for (  ModelField modelField : modelFields) {
+    if (modelField.getName().equals(field)) {
+      return modelField.getType();
+    }
+  }
+  return null;
+}

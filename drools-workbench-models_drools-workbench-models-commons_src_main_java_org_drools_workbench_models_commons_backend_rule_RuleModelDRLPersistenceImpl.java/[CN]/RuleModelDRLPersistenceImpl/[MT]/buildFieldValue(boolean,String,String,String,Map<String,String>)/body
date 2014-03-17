@@ -1,0 +1,27 @@
+{
+  if (value.contains("wiWorkItem.getResult")) {
+    field=field.substring(0,1).toUpperCase() + field.substring(1);
+    String wiParam=field.substring("Results".length());
+    if (wiParam.equals("BooleanResult")) {
+      return new ActionWorkItemFieldValue(field,DataType.TYPE_BOOLEAN,"WorkItem",wiParam,Boolean.class.getName());
+    }
+ else     if (wiParam.equals("StringResult")) {
+      return new ActionWorkItemFieldValue(field,DataType.TYPE_STRING,"WorkItem",wiParam,String.class.getName());
+    }
+ else     if (wiParam.equals("IntegerResult")) {
+      return new ActionWorkItemFieldValue(field,DataType.TYPE_NUMERIC_INTEGER,"WorkItem",wiParam,Integer.class.getName());
+    }
+ else     if (wiParam.equals("FloatResult")) {
+      return new ActionWorkItemFieldValue(field,DataType.TYPE_NUMERIC_FLOAT,"WorkItem",wiParam,Float.class.getName());
+    }
+  }
+  ActionFieldValue fieldValue=new ActionFieldValue(field,adjustParam(dataType,value,boundParams,isJavaDialect),dataType);
+  fieldValue.setNature(FieldNatureType.TYPE_LITERAL);
+  if (dataType == DataType.TYPE_COLLECTION || dataType == DataType.TYPE_NUMERIC) {
+    fieldValue.setNature(FieldNatureType.TYPE_FORMULA);
+  }
+ else   if (boundParams.containsKey(value)) {
+    fieldValue.setNature(FieldNatureType.TYPE_VARIABLE);
+  }
+  return fieldValue;
+}
