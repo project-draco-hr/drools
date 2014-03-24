@@ -1,0 +1,24 @@
+{
+  String drl="package org.test;\n" + "rule \"r1\"\n" + "dialect \"mvel\"\n"+ "when\n"+ "$sc : ShoppingCart( )\n"+ "then\n"+ "$sc.setCartItemPromoSavings( ($sc.cartItemPromoSavings == 0.0) ? 0.0 : $sc.cartItemPromoSavings * -1 );\n"+ "update( $sc );\n"+ "end\n";
+  addModelField("org.test.ShoppingCart","cartItemPromoSavings","java.lang.Double",DataType.TYPE_NUMERIC_DOUBLE);
+  when(dmo.getPackageName()).thenReturn("org.test");
+  final RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,new ArrayList<String>(),dmo);
+  assertNotNull(m);
+  assertEquals(1,m.lhs.length);
+  IPattern p=m.lhs[0];
+  assertTrue(p instanceof FactPattern);
+  FactPattern fp=(FactPattern)p;
+  assertEquals("ShoppingCart",fp.getFactType());
+  assertEquals("$sc",fp.getBoundName());
+  assertEquals(0,fp.getNumberOfConstraints());
+  assertEquals(1,m.rhs.length);
+  IAction a=m.rhs[0];
+  assertTrue(a instanceof ActionUpdateField);
+  ActionUpdateField ap=(ActionUpdateField)a;
+  assertEquals("$sc",ap.getVariable());
+  assertEquals(1,ap.getFieldValues().length);
+  ActionFieldValue afv=ap.getFieldValues()[0];
+  assertEquals("cartItemPromoSavings",afv.getField());
+  assertEquals("($sc.cartItemPromoSavings == 0.0) ? 0.0 : $sc.cartItemPromoSavings * -1",afv.getValue());
+  assertEquals(FieldNatureType.TYPE_FORMULA,afv.getNature());
+}
