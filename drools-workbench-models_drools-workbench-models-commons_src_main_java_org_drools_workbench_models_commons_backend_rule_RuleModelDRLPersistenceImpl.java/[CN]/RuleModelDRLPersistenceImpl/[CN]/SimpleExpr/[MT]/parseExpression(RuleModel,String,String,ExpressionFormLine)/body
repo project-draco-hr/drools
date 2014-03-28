@@ -18,14 +18,19 @@
     }
  else {
       ModelField currentField=findField(typeFields,expressionPart);
-      expression.appendPart(new ExpressionField(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo)));
+      if ("Collection".equals(currentField.getType())) {
+        expression.appendPart(new ExpressionCollection(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo),dmo.getProjectFieldParametersType().get(factType + "#" + expressionPart)));
+      }
+ else {
+        expression.appendPart(new ExpressionField(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo)));
+      }
       typeFields=findFields(dmo,m,currentField.getClassName());
     }
   }
   String expressionPart=normalizeExpressionPart(splits[splits.length - 1]);
   ModelField currentField=findField(typeFields,expressionPart);
-  if (currentField == null) {
-    expression.appendPart(new ExpressionField(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo)));
+  if (fieldName.endsWith(")")) {
+    expression.appendPart(new ExpressionMethod(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo)));
   }
  else {
     expression.appendPart(new ExpressionField(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo)));
