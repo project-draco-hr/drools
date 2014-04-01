@@ -2,15 +2,22 @@
   long timeSinceLastFire=0;
   Declaration[] startDeclarations=declrs[0];
   Declaration[] endDeclarations=declrs[1];
+  Date lastFireTime=null;
+  Date createdTime=null;
+  long newDelay=delay;
   if (jh != null) {
     IntervalTrigger preTrig=(IntervalTrigger)jh.getTimerJobInstance().getTrigger();
-    if (preTrig.getLastFireTime() != null) {
-      timeSinceLastFire=timestamp - preTrig.getLastFireTime().getTime();
+    lastFireTime=preTrig.getLastFireTime();
+    createdTime=preTrig.getCreatedTime();
+    if (lastFireTime != null) {
+      newDelay=period - timestamp + lastFireTime.getTime();
+    }
+ else {
+      newDelay=delay - timestamp + createdTime.getTime();
     }
   }
-  long newDelay=timeSinceLastFire > 0 ? period - timeSinceLastFire : delay;
   if (newDelay < 0) {
     newDelay=0;
   }
-  return new IntervalTrigger(timestamp,evalDateExpression(this.startTime,leftTuple,startDeclarations,wm),evalDateExpression(this.endTime,leftTuple,startDeclarations,wm),this.repeatLimit,newDelay,this.period,calendarNames,calendars);
+  return new IntervalTrigger(timestamp,evalDateExpression(this.startTime,leftTuple,startDeclarations,wm),evalDateExpression(this.endTime,leftTuple,startDeclarations,wm),this.repeatLimit,newDelay,this.period,calendarNames,calendars,createdTime,lastFireTime);
 }

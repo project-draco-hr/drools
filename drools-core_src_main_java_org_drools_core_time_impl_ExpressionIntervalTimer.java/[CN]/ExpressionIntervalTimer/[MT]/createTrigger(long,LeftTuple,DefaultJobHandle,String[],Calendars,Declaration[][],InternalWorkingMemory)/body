@@ -4,15 +4,25 @@
   Declaration[] periodDeclarations=declrs[1];
   Declaration[] startDeclarations=declrs[2];
   Declaration[] endDeclarations=declrs[3];
+  Date lastFireTime=null;
+  Date createdTime=null;
+  long newDelay=0;
   if (jh != null) {
     IntervalTrigger preTrig=(IntervalTrigger)jh.getTimerJobInstance().getTrigger();
-    if (preTrig.getLastFireTime() != null) {
-      timeSinceLastFire=timestamp - preTrig.getLastFireTime().getTime();
+    lastFireTime=preTrig.getLastFireTime();
+    createdTime=preTrig.getCreatedTime();
+    if (lastFireTime != null) {
+      newDelay=evalTimeExpression(this.period,leftTuple,delayDeclarations,wm) - timestamp + lastFireTime.getTime();
+    }
+ else {
+      newDelay=evalTimeExpression(this.delay,leftTuple,delayDeclarations,wm) - timestamp + createdTime.getTime();
     }
   }
-  long newDelay=(delay != null ? evalTimeExpression(this.delay,leftTuple,delayDeclarations,wm) : 0) - timeSinceLastFire;
+ else {
+    newDelay=evalTimeExpression(this.delay,leftTuple,delayDeclarations,wm);
+  }
   if (newDelay < 0) {
     newDelay=0;
   }
-  return new IntervalTrigger(timestamp,evalDateExpression(this.startTime,leftTuple,startDeclarations,wm),evalDateExpression(this.endTime,leftTuple,startDeclarations,wm),this.repeatLimit,newDelay,period != null ? evalTimeExpression(this.period,leftTuple,periodDeclarations,wm) : 0,calendarNames,calendars);
+  return new IntervalTrigger(timestamp,evalDateExpression(this.startTime,leftTuple,startDeclarations,wm),evalDateExpression(this.endTime,leftTuple,startDeclarations,wm),this.repeatLimit,newDelay,period != null ? evalTimeExpression(this.period,leftTuple,periodDeclarations,wm) : 0,calendarNames,calendars,createdTime,lastFireTime);
 }
