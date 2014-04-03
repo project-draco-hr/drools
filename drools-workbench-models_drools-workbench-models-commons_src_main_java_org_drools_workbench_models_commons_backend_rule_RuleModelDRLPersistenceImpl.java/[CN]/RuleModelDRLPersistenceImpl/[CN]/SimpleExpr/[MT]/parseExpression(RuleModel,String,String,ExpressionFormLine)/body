@@ -9,31 +9,21 @@
   for (int i=0; i < splits.length - 1; i++) {
     String expressionPart=normalizeExpressionPart(splits[i]);
     if ("this".equals(expressionPart)) {
-      expression.appendPart(new ExpressionField(expressionPart,getSimpleFactType(factType,dmo),DataType.TYPE_THIS));
+      expression.appendPart(new ExpressionField(expressionPart,factType,DataType.TYPE_THIS));
     }
  else     if (isBoundParam) {
       ModelField currentFact=findFact(dmo.getProjectModelFields(),factType);
-      expression.appendPart(new ExpressionVariable(expressionPart,getSimpleFactType(currentFact.getClassName(),dmo),getSimpleFactType(currentFact.getType(),dmo)));
+      expression.appendPart(new ExpressionVariable(expressionPart,currentFact.getClassName(),currentFact.getType()));
       isBoundParam=false;
     }
  else {
       ModelField currentField=findField(typeFields,expressionPart);
-      if ("Collection".equals(currentField.getType())) {
-        expression.appendPart(new ExpressionCollection(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo),dmo.getProjectFieldParametersType().get(factType + "#" + expressionPart)));
-      }
- else {
-        expression.appendPart(new ExpressionField(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo)));
-      }
+      processExpressionPart(factType,currentField,expression,expressionPart);
       typeFields=findFields(dmo,m,currentField.getClassName());
     }
   }
   String expressionPart=normalizeExpressionPart(splits[splits.length - 1]);
   ModelField currentField=findField(typeFields,expressionPart);
-  if (fieldName.endsWith(")")) {
-    expression.appendPart(new ExpressionMethod(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo)));
-  }
- else {
-    expression.appendPart(new ExpressionField(expressionPart,getSimpleFactType(currentField.getClassName(),dmo),getSimpleFactType(currentField.getType(),dmo)));
-  }
+  processExpressionPart(factType,currentField,expression,expressionPart);
   return expression;
 }

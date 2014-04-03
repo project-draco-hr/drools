@@ -30,7 +30,7 @@
     CollectDescr collect=(CollectDescr)patternSource;
     FromCollectCompositeFactPattern fac=new FromCollectCompositeFactPattern();
     fac.setRightPattern(parseBaseDescr(m,collect.getInputPattern(),boundParams,dmo));
-    fac.setFactPattern(new FactPattern(pattern.getObjectType()));
+    fac.setFactPattern(getFactPattern(m,pattern,boundParams,dmo));
     return fac;
   }
  else   if (patternSource instanceof EntryPointDescr) {
@@ -67,8 +67,27 @@
             break;
           }
         }
-        expression.appendPart(new ExpressionField(sourcePart,modelField.getClassName(),modelField.getType()));
-        fields=findFields(dmo,m,modelField.getClassName());
+        if (modelField == null) {
+          final String previousClassName=expression.getClassType();
+          final List<MethodInfo> mis=dmo.getProjectMethodInformation().get(previousClassName);
+          boolean isMethod=false;
+          if (mis != null) {
+            for (            MethodInfo mi : mis) {
+              if (mi.getName().equals(sourcePart)) {
+                expression.appendPart(new ExpressionMethod(mi.getName(),mi.getReturnClassType(),mi.getGenericType(),mi.getParametricReturnType()));
+                isMethod=true;
+                break;
+              }
+            }
+          }
+          if (isMethod == false) {
+            expression.appendPart(new ExpressionText(sourcePart));
+          }
+        }
+ else {
+          expression.appendPart(new ExpressionField(sourcePart,modelField.getClassName(),modelField.getType()));
+          fields=findFields(dmo,m,modelField.getClassName());
+        }
       }
     }
     return fcfp;

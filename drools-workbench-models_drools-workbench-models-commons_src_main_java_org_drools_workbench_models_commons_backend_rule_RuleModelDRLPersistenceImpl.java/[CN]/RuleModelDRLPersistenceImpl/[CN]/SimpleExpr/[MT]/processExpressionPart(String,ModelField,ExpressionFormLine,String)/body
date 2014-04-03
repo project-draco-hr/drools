@@ -1,0 +1,25 @@
+{
+  if (currentField == null) {
+    final String previousClassName=expression.getClassType();
+    final List<MethodInfo> mis=dmo.getProjectMethodInformation().get(previousClassName);
+    boolean isMethod=false;
+    if (mis != null) {
+      for (      MethodInfo mi : mis) {
+        if (mi.getName().equals(expressionPart)) {
+          expression.appendPart(new ExpressionMethod(mi.getName(),mi.getReturnClassType(),mi.getGenericType(),mi.getParametricReturnType()));
+          isMethod=true;
+          break;
+        }
+      }
+    }
+    if (isMethod == false) {
+      expression.appendPart(new ExpressionText(expressionPart));
+    }
+  }
+ else   if ("Collection".equals(currentField.getType())) {
+    expression.appendPart(new ExpressionCollection(expressionPart,currentField.getClassName(),currentField.getType(),dmo.getProjectFieldParametersType().get(factType + "#" + expressionPart)));
+  }
+ else {
+    expression.appendPart(new ExpressionField(expressionPart,currentField.getClassName(),currentField.getType()));
+  }
+}
