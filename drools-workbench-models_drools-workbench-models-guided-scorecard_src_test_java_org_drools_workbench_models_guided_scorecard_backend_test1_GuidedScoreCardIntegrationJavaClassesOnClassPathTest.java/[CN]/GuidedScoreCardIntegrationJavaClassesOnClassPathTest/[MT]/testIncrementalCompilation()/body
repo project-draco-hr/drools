@@ -1,18 +1,21 @@
 {
-  String xml1_1=createEmptyGuidedScoreCardXML();
-  String xml1_2=createGuidedScoreCardXML();
+  String xml1_1=Helper.createEmptyGuidedScoreCardXML();
+  String xml1_2=Helper.createGuidedScoreCardXML();
   KieServices ks=KieServices.Factory.get();
-  KieFileSystem kfs=ks.newKieFileSystem().write("src/main/resources/sc1.scgd",xml1_1);
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.write("pom.xml",Helper.getPom());
+  kfs.write("src/main/resources/META-INF/kmodule.xml",Helper.getKModule());
+  kfs.write("src/main/resources/sc1.scgd",xml1_1);
   KieBuilder kieBuilder=ks.newKieBuilder(kfs).buildAll();
   final List<Message> messages=kieBuilder.getResults().getMessages();
-  dumpMessages(messages);
+  Helper.dumpMessages(messages);
   assertEquals(0,messages.size());
   kfs.write("src/main/resources/sc1.scgd",xml1_2);
   IncrementalResults results=((InternalKieBuilder)kieBuilder).incrementalBuild();
   final List<Message> addedMessages=results.getAddedMessages();
   final List<Message> removedMessages=results.getRemovedMessages();
-  dumpMessages(addedMessages);
+  Helper.dumpMessages(addedMessages);
   assertEquals(0,addedMessages.size());
-  dumpMessages(removedMessages);
+  Helper.dumpMessages(removedMessages);
   assertEquals(0,removedMessages.size());
 }
