@@ -1,0 +1,21 @@
+{
+  RuleModel m=new RuleModel();
+  m.name="test";
+  FactPattern p=new FactPattern("Number");
+  m.addLhsItem(p);
+  SingleFieldConstraint con1=new SingleFieldConstraint();
+  con1.setFieldType(DataType.TYPE_NUMERIC_INTEGER);
+  con1.setFieldName("this");
+  con1.setOperator("!= null");
+  con1.setConstraintValueType(SingleFieldConstraint.TYPE_LITERAL);
+  p.addConstraint(con1);
+  SingleFieldConstraintEBLeftSide con2=new SingleFieldConstraintEBLeftSide();
+  con2.getExpressionLeftSide().appendPart(new ExpressionUnboundFact(p));
+  con2.getExpressionLeftSide().appendPart(new ExpressionMethod("intValue","int",DataType.TYPE_NUMERIC_INTEGER));
+  con2.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  con2.setOperator("==");
+  con2.setValue("0");
+  p.addConstraint(con2);
+  String expected="rule \"test\"\n" + "dialect \"mvel\"\n" + "when\n"+ "Number( this != null, intValue() == 0 )\n"+ "then\n"+ "end";
+  checkMarshallUnmarshall(expected,m);
+}
