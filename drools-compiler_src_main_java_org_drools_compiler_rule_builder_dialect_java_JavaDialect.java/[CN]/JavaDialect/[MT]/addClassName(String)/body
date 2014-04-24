@@ -1,12 +1,14 @@
 {
   boolean found=false;
   if (pkgConf.isPreCompiled()) {
-    Map<String,byte[]> cache=pkgConf.getCompilationCache().get(ID);
+    Map<String,List<CompilationCacheEntry>> cache=pkgConf.getCompilationCache().getCacheForDialect(ID);
     if (cache != null) {
       String resourceName=className.replace(".java",".class");
-      byte[] bytecode=cache.get(resourceName);
-      if (bytecode != null) {
-        this.packageStoreWrapper.write(resourceName,bytecode);
+      List<CompilationCacheEntry> bytecodes=cache.get(resourceName);
+      if (bytecodes != null) {
+        for (        CompilationCacheEntry entry : bytecodes) {
+          this.packageStoreWrapper.write(entry.className,entry.bytecode);
+        }
         found=true;
       }
     }

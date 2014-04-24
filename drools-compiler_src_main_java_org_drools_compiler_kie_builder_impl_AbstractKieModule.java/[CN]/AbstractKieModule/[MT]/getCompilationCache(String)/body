@@ -1,5 +1,5 @@
 {
-  Map<String,Map<String,byte[]>> cache=compilationCache.get(kbaseName);
+  CompilationCache cache=compilationCache.get(kbaseName);
   if (cache == null) {
     byte[] fileContents=getBytes(KieBuilderImpl.getCompilationCachePath(releaseId,kbaseName));
     if (fileContents != null) {
@@ -7,12 +7,10 @@
       try {
         Header _header=KieModuleCacheHelper.readFromStreamWithHeaderPreloaded(new ByteArrayInputStream(fileContents),registry);
         KModuleCache _cache=KModuleCache.parseFrom(_header.getPayload());
-        cache=new HashMap<String,Map<String,byte[]>>();
+        cache=new CompilationCache();
         for (        CompilationData _data : _cache.getCompilationDataList()) {
-          Map<String,byte[]> bytecode=new HashMap<String,byte[]>();
-          cache.put(_data.getDialect(),bytecode);
           for (          CompDataEntry _entry : _data.getEntryList()) {
-            bytecode.put(_entry.getId(),_entry.getData().toByteArray());
+            cache.addEntry(_data.getDialect(),_entry.getId(),_entry.getData().toByteArray());
           }
         }
         compilationCache.put(kbaseName,cache);
