@@ -1,0 +1,16 @@
+{
+  InternalKieModule kjar=(InternalKieModule)internalCreateKieJar(releaseId,kbaseName,ksessionName,resourceFilePaths,classes,dependencies);
+  String pomFileName=MavenRepository.toFileName(releaseId,null) + ".pom";
+  File pomFile=new File(System.getProperty("java.io.tmpdir"),pomFileName);
+  try {
+    FileOutputStream fos=new FileOutputStream(pomFile);
+    fos.write(config.pomText.getBytes());
+    fos.flush();
+    fos.close();
+  }
+ catch (  IOException ioe) {
+    throw new RuntimeException("Unable to write pom.xml to temporary file : " + ioe.getMessage(),ioe);
+  }
+  MavenRepository repository=getMavenRepository();
+  repository.deployArtifact(releaseId,kjar,pomFile);
+}

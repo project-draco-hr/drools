@@ -1,0 +1,47 @@
+{
+  String classSimpleName=userClass.getSimpleName();
+  URL classFileUrl=userClass.getResource(classSimpleName + ".class");
+  if (classFileUrl == null) {
+    throw new RuntimeException("Class " + userClass.getCanonicalName() + " can not be found on the classpath.");
+  }
+  byte[] classByteCode=null;
+  if ("file".equalsIgnoreCase(classFileUrl.getProtocol())) {
+    File classFile=new File(classFileUrl.getPath());
+    if (!classFile.exists()) {
+      throw new RuntimeException("Unable to find path for class " + userClass.getCanonicalName() + " that should be here: "+ classFileUrl.toExternalForm());
+    }
+    try {
+      classByteCode=readStream(new FileInputStream(classFile));
+    }
+ catch (    Exception e) {
+      throw new RuntimeException("Unable to read in " + classFile.getAbsolutePath(),e);
+    }
+    if (classByteCode.length == 0) {
+      throw new RuntimeException("No bytes retrieved from " + classFile.getAbsolutePath());
+    }
+  }
+ else   if ("jar".equalsIgnoreCase(classFileUrl.getProtocol())) {
+    String path=classFileUrl.getPath();
+    int bangIndex=path.indexOf('!');
+    String jarPath=path.substring("file:".length(),bangIndex);
+    String classPath=path.substring(bangIndex + 2);
+    try {
+      ZipFile zip=new ZipFile(new File(jarPath));
+      ZipEntry entry=zip.getEntry(classPath);
+      InputStream zipStream=zip.getInputStream(entry);
+      classByteCode=readStream(zipStream);
+    }
+ catch (    Exception e) {
+      throw new RuntimeException("Unable to read from " + jarPath,e);
+    }
+  }
+  String pkgFolder=userClass.getPackage().toString();
+  pkgFolder=pkgFolder.replace("package ","");
+  pkgFolder=pkgFolder.replaceAll(",.+$","");
+  pkgFolder=pkgFolder.replaceAll("\\.",File.separator);
+  String classFilePath=pkgFolder + "/" + classSimpleName+ ".class";
+  if (classFilePath.contains(" ")) {
+    throw new RuntimeException("Invalid class name ('" + classFilePath + "'), contact the developers.");
+  }
+  kfs.write(classFilePath,classByteCode);
+}

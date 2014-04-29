@@ -1,0 +1,51 @@
+{
+  int numFiles=0;
+  int numDirs=0;
+  String content="test file created by " + this.getClass().getSimpleName();
+  File tempFile=File.createTempFile(UUID.randomUUID().toString(),".tst");
+  tempFile.deleteOnExit();
+  FileOutputStream fos=new FileOutputStream(tempFile);
+  fos.write(content.getBytes());
+  fos.close();
+  FluentKieModuleDeploymentHelper deploymentHelper=KieModuleDeploymentHelper.newFluentInstance();
+  String groupId="org.kie.api.builder.fluent";
+  String artifactId="test-kjar";
+  String version="0.1-SNAPSHOT";
+  deploymentHelper=deploymentHelper.setGroupId(groupId).setArtifactId(artifactId).setVersion(version).addResourceFilePath("builder/test/","builder/simple_query_test.drl").addResourceFilePath(tempFile.getAbsolutePath()).addResourceFilePath("/META-INF/WorkDefinitions.conf").addClass(KieModuleDeploymentHelperTest.class).addClass(KieModule.class).addClass(org.drools.compiler.Cheese.class);
+  numDirs+=5;
+  numDirs+=2;
+  numFiles+=3;
+  numFiles+=2;
+  numFiles+=2;
+  numFiles+=3;
+  ++numFiles;
+  numFiles+=3;
+  numDirs+=4;
+  numDirs+=2;
+  KieBaseModel kbaseModel=deploymentHelper.getKieModuleModel().newKieBaseModel("otherKieBase");
+  kbaseModel.setEqualsBehavior(EqualityBehaviorOption.EQUALITY).setEventProcessingMode(EventProcessingOption.STREAM);
+  kbaseModel.newKieSessionModel("otherKieSession").setClockType(ClockTypeOption.get("realtime"));
+  ++numDirs;
+  deploymentHelper.getKieModuleModel().getKieBaseModels().get("defaultKieBase").newKieSessionModel("secondKieSession");
+  deploymentHelper.createKieJarAndDeployToMaven();
+  File artifactFile=MavenRepository.getMavenRepository().resolveArtifact(groupId + ":" + artifactId+ ":"+ version).getFile();
+  zip=new ZipInputStream(new FileInputStream(artifactFile));
+  Set<String> jarFiles=new HashSet<String>();
+  Set<String> jarDirs=new HashSet<String>();
+  ZipEntry ze=zip.getNextEntry();
+  logger.debug("Getting files form deployed jar: ");
+  while (ze != null) {
+    String fileName=ze.getName();
+    if (fileName.endsWith("drl") || fileName.endsWith("class") || fileName.endsWith("tst")|| fileName.endsWith("conf")|| fileName.endsWith("xml")|| fileName.endsWith("info")|| fileName.endsWith("properties")|| fileName.endsWith("cache")) {
+      jarFiles.add(fileName);
+      logger.debug("> " + fileName);
+    }
+ else {
+      jarDirs.add(fileName);
+      logger.debug("] " + fileName);
+    }
+    ze=zip.getNextEntry();
+  }
+  assertEquals("Num files in kjar",numFiles,jarFiles.size());
+  assertEquals("Num dirs in kjar",numDirs,jarDirs.size());
+}
