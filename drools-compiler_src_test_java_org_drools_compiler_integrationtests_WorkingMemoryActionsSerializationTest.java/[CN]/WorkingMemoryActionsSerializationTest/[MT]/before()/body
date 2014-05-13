@@ -1,0 +1,34 @@
+{
+  ruleCalls.clear();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  ksession=kbase.newStatefulKnowledgeSession();
+  ksession.addEventListener(new DefaultAgendaEventListener(){
+    @Override public void afterMatchFired(    final AfterMatchFiredEvent event){
+      final String name=event.getMatch().getRule().getName();
+      System.out.println(name + " fired!");
+synchronized (ruleCalls) {
+        Integer calls=ruleCalls.get(name);
+        if (calls == null) {
+          calls=1;
+        }
+ else {
+          calls++;
+        }
+        ruleCalls.put(name,calls);
+      }
+    }
+  }
+);
+  new Thread(new Runnable(){
+    @Override public void run(){
+      ksession.fireUntilHalt();
+    }
+  }
+).start();
+}
