@@ -1,0 +1,12 @@
+{
+  String str="import " + Fact.class.getCanonicalName() + ";\n"+ "global java.util.List results;\n"+ "rule R1 salience( -$id ) when\n"+ "    fact : Fact( status == Fact.Status.UNKNOWN, $id : id)\n"+ "    count : Long() from accumulate ( $s:Fact(this != fact, status==Fact.Status.NO, id < fact.id), count( $s ) )"+ "    if (count.intValue() > 1) break[yes]\n"+ "then\n"+ "    results.add(\"n\" + $id);"+ "    fact.setStatus(Fact.Status.NO);\n"+ "    update(fact);\n"+ "then[yes]\n"+ "    results.add(\"y\" + $id);"+ "    fact.setStatus(Fact.Status.YES);\n"+ "    update(fact);\n"+ "end\n"+ "    \n"+ "rule R2 salience 1 when\n"+ "    fact : Fact( status == Fact.Status.NO, $id : id )\n"+ "    Fact( status == Fact.Status.YES, id > $id )\n"+ "then\n"+ "    delete(fact);\n"+ "end";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List<String> results=new ArrayList<String>();
+  ksession.setGlobal("results",results);
+  for (int i=1; i < 7; i++) {
+    ksession.insert(new Fact(i));
+  }
+  ksession.fireAllRules();
+  assertEquals(Arrays.asList("n1","n2","y3","n4","n5","y6"),results);
+}
