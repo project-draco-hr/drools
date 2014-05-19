@@ -1,0 +1,34 @@
+{
+  String name=bif.getNetwork().getName();
+  String packageName="default";
+  List<String> props=bif.getNetwork().getProperties();
+  if (props != null) {
+    for (    String prop : props) {
+      prop=prop.trim();
+      if (prop.startsWith("package")) {
+        packageName=prop.substring(prop.indexOf('=') + 1).trim();
+      }
+    }
+  }
+  BayesNetwork graph=new BayesNetwork(name,packageName);
+  Map<String,GraphNode<BayesVariable>> map=new HashMap<String,GraphNode<BayesVariable>>();
+  for (  Definition def : bif.getNetwork().getDefinitions()) {
+    GraphNode<BayesVariable> node=graph.addNode();
+    BayesVariable var=buildVariable(def,bif.getNetwork(),node.getId());
+    node.setContent(var);
+    map.put(var.getName(),node);
+  }
+  for (  Entry<String,GraphNode<BayesVariable>> entry : map.entrySet()) {
+    GraphNode<BayesVariable> node=entry.getValue();
+    BayesVariable var=node.getContent();
+    if (var.getGiven() != null && var.getGiven().length > 0) {
+      for (      String given : var.getGiven()) {
+        GraphNode<BayesVariable> givenNode=map.get(given);
+        EdgeImpl e=new EdgeImpl();
+        e.setOutGraphNode(givenNode);
+        e.setInGraphNode(node);
+      }
+    }
+  }
+  return graph;
+}

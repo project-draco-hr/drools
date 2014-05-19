@@ -1,0 +1,34 @@
+{
+  Graph<BayesVariable> graph=new BayesNetwork();
+  GraphNode x0=addNode(graph);
+  GraphNode x1=addNode(graph);
+  GraphNode x2=addNode(graph);
+  GraphNode x3=addNode(graph);
+  GraphNode x4=addNode(graph);
+  GraphNode x5=addNode(graph);
+  GraphNode x6=addNode(graph);
+  GraphNode x7=addNode(graph);
+  List<OpenBitSet> list=new ArrayList<OpenBitSet>();
+  OpenBitSet OpenBitSet1=bitSet("00001111");
+  OpenBitSet OpenBitSet2=bitSet("00111100");
+  OpenBitSet OpenBitSet3=bitSet("11100001");
+  OpenBitSet intersect1And2=((OpenBitSet)OpenBitSet2.clone());
+  intersect1And2.and(OpenBitSet1);
+  OpenBitSet intersect2And3=((OpenBitSet)OpenBitSet2.clone());
+  intersect2And3.and(OpenBitSet3);
+  list.add(OpenBitSet1);
+  list.add(OpenBitSet2);
+  list.add(OpenBitSet3);
+  JunctionTreeBuilder jtBuilder=new JunctionTreeBuilder(graph);
+  JunctionTreeClique jtNode=jtBuilder.junctionTree(list,false).getRoot();
+  assertEquals(OpenBitSet1,jtNode.getBitSet());
+  assertEquals(2,jtNode.getChildren().size());
+  JunctionTreeSeparator sep=jtNode.getChildren().get(0);
+  assertEquals(OpenBitSet1,sep.getParent().getBitSet());
+  assertEquals(OpenBitSet2,sep.getChild().getBitSet());
+  assertEquals(0,sep.getChild().getChildren().size());
+  sep=jtNode.getChildren().get(1);
+  assertEquals(OpenBitSet1,sep.getParent().getBitSet());
+  assertEquals(OpenBitSet3,sep.getChild().getBitSet());
+  assertEquals(0,sep.getChild().getChildren().size());
+}

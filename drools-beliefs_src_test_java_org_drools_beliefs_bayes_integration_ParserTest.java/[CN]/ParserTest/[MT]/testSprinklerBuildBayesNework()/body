@@ -1,0 +1,27 @@
+{
+  Bif bif=(Bif)XmlBifParser.loadBif(ParserTest.class.getResource("Garden.xmlbif"));
+  BayesNetwork network=XmlBifParser.buildBayesNetwork(bif);
+  Map<String,GraphNode<BayesVariable>> map=nodeToMap(network);
+  GraphNode<BayesVariable> node=map.get("WetGrass");
+  BayesVariable wetGrass=node.getContent();
+  assertEquals(Arrays.asList(new String[]{"false","true"}),Arrays.asList(wetGrass.getOutcomes()));
+  assertEquals(2,wetGrass.getGiven().length);
+  assertEquals(Arrays.asList(wetGrass.getGiven()),Arrays.asList(new String[]{"Sprinkler","Rain"}));
+  assertTrue(Arrays.deepEquals(new double[][]{{1.0,0.0},{0.1,0.9},{0.1,0.9},{0.01,0.99}},wetGrass.getProbabilityTable()));
+  node=map.get("Sprinkler");
+  BayesVariable sprinkler=node.getContent();
+  assertEquals(Arrays.asList(new String[]{"false","true"}),Arrays.asList(sprinkler.getOutcomes()));
+  assertEquals(1,sprinkler.getGiven().length);
+  assertEquals("Cloudy",sprinkler.getGiven()[0]);
+  assertTrue(Arrays.deepEquals(new double[][]{{0.5,0.5},{0.9,0.1}},sprinkler.getProbabilityTable()));
+  node=map.get("Cloudy");
+  BayesVariable cloudy=node.getContent();
+  assertEquals(Arrays.asList(new String[]{"false","true"}),Arrays.asList(cloudy.getOutcomes()));
+  assertEquals(0,cloudy.getGiven().length);
+  assertTrue(Arrays.deepEquals(new double[][]{{0.5,0.5}},cloudy.getProbabilityTable()));
+  node=map.get("Rain");
+  BayesVariable rain=node.getContent();
+  assertEquals(Arrays.asList(new String[]{"false","true"}),Arrays.asList(rain.getOutcomes()));
+  assertEquals(0,rain.getGiven().length);
+  assertTrue(Arrays.deepEquals(new double[][]{{0.5,0.5}},rain.getProbabilityTable()));
+}

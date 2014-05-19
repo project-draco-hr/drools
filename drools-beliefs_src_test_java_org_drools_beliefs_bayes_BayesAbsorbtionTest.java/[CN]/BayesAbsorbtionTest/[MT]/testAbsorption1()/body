@@ -1,0 +1,32 @@
+{
+  BayesVariable a=new BayesVariable<String>("A",0,new String[]{"A1","A2"},null);
+  BayesVariable b=new BayesVariable<String>("B",1,new String[]{"B1","B2"},null);
+  Graph<BayesVariable> graph=new BayesNetwork();
+  GraphNode x0=addNode(graph);
+  GraphNode x1=addNode(graph);
+  x0.setContent(a);
+  x1.setContent(b);
+  JunctionTreeClique node1=new JunctionTreeClique(0,graph,bitSet("0011"));
+  JunctionTreeClique node2=new JunctionTreeClique(1,graph,bitSet("0011"));
+  SeparatorState sep=new JunctionTreeSeparator(0,node1,node2,bitSet("0011"),graph).createState();
+  BayesVariable[] vars=new BayesVariable[]{a,b};
+  BayesVariable[] sepVars=new BayesVariable[]{a,b};
+  int[] sepVarPos=PotentialMultiplier.createSubsetVarPos(vars,sepVars);
+  int sepVarNumberOfStates=PotentialMultiplier.createNumberOfStates(sepVars);
+  int[] sepVarMultipliers=PotentialMultiplier.createIndexMultipliers(sepVars,sepVarNumberOfStates);
+  double v=0.44;
+  for (int i=0; i < node1.getPotentials().length; i++) {
+    node1.getPotentials()[i]=v;
+    v+=+0.4;
+  }
+  double[] oldSepPotentials=new double[sep.getPotentials().length];
+  Arrays.fill(oldSepPotentials,0.2);
+  v=0.5;
+  for (int i=0; i < sep.getPotentials().length; i++) {
+    sep.getPotentials()[i]=v;
+    v+=+0.5;
+  }
+  BayesAbsorption p=new BayesAbsorption(sepVarPos,oldSepPotentials,sep.getPotentials(),sepVarMultipliers,vars,node1.getPotentials());
+  p.absorb();
+  assertArray(new double[]{0.035,0.135,0.3,0.529},scaleDouble(3,node1.getPotentials()));
+}

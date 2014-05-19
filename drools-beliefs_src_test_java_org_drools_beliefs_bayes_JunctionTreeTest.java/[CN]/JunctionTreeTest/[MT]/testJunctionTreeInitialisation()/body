@@ -1,0 +1,28 @@
+{
+  BayesVariable a=new BayesVariable<String>("A",0,new String[]{"A1","A2"},new double[][]{{0.1,0.2}});
+  BayesVariable b=new BayesVariable<String>("B",1,new String[]{"B1","B2"},new double[][]{{0.1,0.2}});
+  BayesVariable c=new BayesVariable<String>("C",2,new String[]{"C1","C2"},new double[][]{{0.1,0.2}});
+  BayesVariable d=new BayesVariable<String>("D",3,new String[]{"D1","D2"},new double[][]{{0.1,0.2},{0.3,0.4}});
+  Graph<BayesVariable> graph=new BayesNetwork();
+  GraphNode x0=addNode(graph);
+  GraphNode x1=addNode(graph);
+  GraphNode x2=addNode(graph);
+  GraphNode x3=addNode(graph);
+  connectParentToChildren(x2,x3);
+  x0.setContent(a);
+  x1.setContent(b);
+  x2.setContent(c);
+  x3.setContent(d);
+  JunctionTreeClique node1=new JunctionTreeClique(0,graph,bitSet("0011"));
+  JunctionTreeClique node2=new JunctionTreeClique(1,graph,bitSet("1100"));
+  new JunctionTreeSeparator(0,node1,node2,new OpenBitSet(),graph);
+  node1.addToFamily(b);
+  b.setFamily(node1.getId());
+  node2.addToFamily(c);
+  c.setFamily(node2.getId());
+  node2.addToFamily(d);
+  d.setFamily(node2.getId());
+  JunctionTree jtree=new JunctionTree(graph,node1,new JunctionTreeClique[]{node1,node2},null);
+  assertArray(new double[]{0.1,0.2,0.1,0.2},scaleDouble(3,node1.getPotentials()));
+  assertArray(new double[]{0.01,0.02,0.06,0.08},scaleDouble(3,node2.getPotentials()));
+}

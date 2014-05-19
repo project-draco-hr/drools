@@ -1,0 +1,20 @@
+{
+  boolean wasFirst=getFirst() == node;
+  super.remove(node);
+  LogicalDependency ld=(LogicalDependency)((LinkedListEntry)node).getObject();
+  BayesHardEvidence evidence=(BayesHardEvidence)ld.getValue();
+  BayesHardEvidence firstEvidence=(BayesHardEvidence)((SimpleLogicalDependency)((LinkedListEntry)getFirst()).getObject()).getValue();
+  if (wasFirst) {
+    conflictCounter=0;
+    for (Entry entry=node.getNext(); entry != null; entry=entry.getNext()) {
+      LogicalDependency currentDep=(LogicalDependency)((LinkedListEntry)entry).getObject();
+      BayesHardEvidence currentEvidence=(BayesHardEvidence)((SimpleLogicalDependency)((LinkedListEntry)currentDep).getObject()).getValue();
+      if (!Arrays.equals(firstEvidence.getDistribution(),currentEvidence.getDistribution())) {
+        conflictCounter++;
+      }
+    }
+  }
+ else   if (!Arrays.equals(evidence.getDistribution(),firstEvidence.getDistribution())) {
+    conflictCounter--;
+  }
+}

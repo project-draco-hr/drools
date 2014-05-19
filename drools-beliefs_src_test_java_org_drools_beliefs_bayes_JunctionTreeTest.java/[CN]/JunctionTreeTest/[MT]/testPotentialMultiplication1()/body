@@ -1,0 +1,20 @@
+{
+  BayesVariable a=new BayesVariable<String>("A",0,new String[]{"A1","A2"},null);
+  BayesVariable b=new BayesVariable<String>("B",0,new String[]{"B1","B2"},new double[][]{{0.1,0.2},{0.3,0.4}});
+  BayesVariable[] vars=new BayesVariable[]{a,b};
+  int numberOfStates=PotentialMultiplier.createNumberOfStates(vars);
+  int[] multipliers=PotentialMultiplier.createIndexMultipliers(vars,numberOfStates);
+  assertEquals(4,numberOfStates);
+  assertIndexToKeyMapping(numberOfStates,multipliers);
+  double[] potentials=new double[numberOfStates];
+  Arrays.fill(potentials,1);
+  BayesVariable[] parents=new BayesVariable[]{a};
+  int[] parentVarPos=PotentialMultiplier.createSubsetVarPos(vars,parents);
+  int parentsNumberOfStates=PotentialMultiplier.createNumberOfStates(parents);
+  int[] parentIndexMultipliers=PotentialMultiplier.createIndexMultipliers(parents,parentsNumberOfStates);
+  PotentialMultiplier m=new PotentialMultiplier(b.getProbabilityTable(),1,parentVarPos,parentIndexMultipliers,vars,multipliers,potentials);
+  m.multiple();
+  assertArray(new double[]{0.1,0.2,0.3,0.4},potentials);
+  m.multiple();
+  assertArray(new double[]{0.01,0.04,0.09,0.16},scaleDouble(3,potentials));
+}

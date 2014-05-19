@@ -1,0 +1,36 @@
+{
+  List<SeparatorSet> list=new ArrayList<SeparatorSet>();
+  for (int i=0; i < cliques.size(); i++) {
+    for (int j=i + 1; j < cliques.size(); j++) {
+      SeparatorSet separatorSet=new SeparatorSet(cliques.get(i),i,cliques.get(j),j,graph);
+      if (separatorSet.getMass() > 0) {
+        list.add(separatorSet);
+      }
+    }
+  }
+  list.addAll(list);
+  Collections.sort(list);
+  SeparatorSet[][][] sepGraphs=new SeparatorSet[cliques.size()][][];
+  JunctionTreeClique[] jtNodes=new JunctionTreeClique[cliques.size()];
+  JunctionTreeSeparator[] jtSeps=new JunctionTreeSeparator[cliques.size() - 1];
+  OpenBitSet[] varNodeToCliques=new OpenBitSet[graph.size()];
+  for (int i=0, length=cliques.size(); i < length; i++) {
+    JunctionTreeClique node=new JunctionTreeClique(i,graph,cliques.get(i));
+    jtNodes[i]=node;
+    sepGraphs[i]=new SeparatorSet[graph.size()][graph.size()];
+    mapVarNodeToCliques(varNodeToCliques,i,cliques.get(i));
+  }
+  for (int i=0, j=0, length=cliques.size() - 1; i < length; ) {
+    SeparatorSet separatorSet=list.get(j++);
+    JunctionTreeClique node1=jtNodes[separatorSet.getId1()];
+    JunctionTreeClique node2=jtNodes[separatorSet.getId2()];
+    if (sepGraphs[node1.getId()] == sepGraphs[node2.getId()]) {
+      continue;
+    }
+    mergeGraphs(sepGraphs,separatorSet);
+    i++;
+  }
+  createJunctionTreeGraph(sepGraphs[0],jtNodes[0],jtNodes,jtSeps,0);
+  mapNodeToCliqueFamily(varNodeToCliques,jtNodes);
+  return new JunctionTree(graph,jtNodes[0],jtNodes,jtSeps,init);
+}

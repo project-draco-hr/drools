@@ -1,0 +1,31 @@
+{
+  for (int i=0; i < varNodeToCliques.length; i++) {
+    GraphNode<BayesVariable> varNode=graph.getNode(i);
+    OpenBitSet parents=new OpenBitSet();
+    int count=0;
+    for (    Edge edge : varNode.getInEdges()) {
+      parents.set(edge.getOutGraphNode().getId());
+      count++;
+    }
+    if (count == 0) {
+    }
+    OpenBitSet cliques=varNodeToCliques[i];
+    if (cliques == null) {
+      throw new IllegalStateException("Node exists, that is not part of a clique. " + varNode.toString());
+    }
+    int bestWeight=-1;
+    int clique=-1;
+    for (int j=cliques.nextSetBit(0); j >= 0; j=cliques.nextSetBit(j + 1)) {
+      JunctionTreeClique jtNode=jtNodes[j];
+      if ((count == 0 || OpenBitSet.andNotCount(parents,jtNode.getBitSet()) == 0) && (clique == -1 || jtNode.getBitSet().cardinality() < bestWeight)) {
+        bestWeight=(int)jtNode.getBitSet().cardinality();
+        clique=j;
+      }
+    }
+    if (clique == -1) {
+      throw new IllegalStateException("No clique for node found." + varNode.toString());
+    }
+    varNode.getContent().setFamily(clique);
+    jtNodes[clique].addToFamily(varNode.getContent());
+  }
+}

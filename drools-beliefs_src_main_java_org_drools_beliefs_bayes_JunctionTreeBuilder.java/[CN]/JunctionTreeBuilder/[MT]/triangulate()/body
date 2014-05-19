@@ -1,0 +1,20 @@
+{
+  boolean[][] clonedAdjMatrix=cloneAdjacencyMarix(adjacencyMatrix);
+  PriorityQueue<EliminationCandidate> p=new PriorityQueue<EliminationCandidate>(graph.size());
+  Map<Integer,EliminationCandidate> elmVertMap=new HashMap<Integer,EliminationCandidate>();
+  for (  GraphNode<BayesVariable> v : graph) {
+    EliminationCandidate elmCandVert=new EliminationCandidate(graph,clonedAdjMatrix,v);
+    p.add(elmCandVert);
+    elmVertMap.put(v.getId(),elmCandVert);
+  }
+  List<OpenBitSet> cliques=new ArrayList<OpenBitSet>();
+  while (!p.isEmpty()) {
+    EliminationCandidate v=p.remove();
+    updateCliques(cliques,v.getCliqueBitSit());
+    Set<Integer> verticesToUpdate=new HashSet<Integer>();
+    boolean[] adjList=clonedAdjMatrix[v.getV().getId()];
+    createClique(v.getV().getId(),clonedAdjMatrix,verticesToUpdate,adjList);
+    eliminateVertex(p,elmVertMap,clonedAdjMatrix,adjList,verticesToUpdate,v);
+  }
+  return cliques;
+}

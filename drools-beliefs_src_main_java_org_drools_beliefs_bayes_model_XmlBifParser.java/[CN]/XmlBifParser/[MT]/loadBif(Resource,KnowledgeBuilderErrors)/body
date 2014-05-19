@@ -1,0 +1,27 @@
+{
+  InputStream is=null;
+  try {
+    is=resource.getInputStream();
+  }
+ catch (  IOException e) {
+    errors.add(new ParserError(resource,"Exception opening Stream:\n" + e.toString(),0,0));
+    return null;
+  }
+  try {
+    String encoding=resource instanceof InternalResource ? ((InternalResource)resource).getEncoding() : null;
+    XStream xstream;
+    if (encoding != null) {
+      xstream=new XStream(new DomDriver(encoding));
+    }
+ else {
+      xstream=new XStream();
+    }
+    initXStream(xstream);
+    Bif bif=(Bif)xstream.fromXML(is);
+    return bif;
+  }
+ catch (  Exception e) {
+    errors.add(new BayesNetworkAssemblerError(resource,"Unable to parse opening Stream:\n" + e.toString()));
+    return null;
+  }
+}
