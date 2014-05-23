@@ -1,0 +1,20 @@
+{
+  String drl="package org.test\n" + "rule \"in\"\n" + "dialect \"mvel\"\n"+ "when\n"+ "Person( rating in (1, 2) )\n"+ "then\n"+ "end";
+  addModelField("org.test.Person","rating","java.lang.Integer",DataType.TYPE_NUMERIC_INTEGER);
+  when(dmo.getPackageName()).thenReturn("org.test");
+  final RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,new ArrayList<String>(),dmo);
+  assertNotNull(m);
+  assertEquals(1,m.lhs.length);
+  IPattern p=m.lhs[0];
+  assertTrue(p instanceof FactPattern);
+  FactPattern fp=(FactPattern)p;
+  assertEquals("Person",fp.getFactType());
+  assertEquals(1,fp.getConstraintList().getConstraints().length);
+  assertTrue(fp.getConstraint(0) instanceof SingleFieldConstraint);
+  SingleFieldConstraint sfp=(SingleFieldConstraint)fp.getConstraint(0);
+  assertEquals("Person",sfp.getFactType());
+  assertEquals("rating",sfp.getFieldName());
+  assertEquals("in",sfp.getOperator());
+  assertEquals("1, 2",sfp.getValue());
+  assertEquals(BaseSingleFieldConstraint.TYPE_LITERAL,sfp.getConstraintValueType());
+}
