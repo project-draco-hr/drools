@@ -1,0 +1,28 @@
+{
+  String extName=trait.getName() + TraitFactory.SUFFIX;
+  if (!classLoader.isClassInUse(extName)) {
+    try {
+      ClassDefinition extDef=new ClassDefinition(extName);
+      extDef.setSuperClass(Object.class.getName());
+      AnnotationDefinition annot=new AnnotationDefinition(Trait.class.getName());
+      extDef.addAnnotation(annot);
+      String[] supers=new String[]{Thing.class.getName(),trait.getName()};
+      extDef.setInterfaces(supers);
+      byte[] ext=getComponentFactory().getClassBuilderFactory().getTraitBuilder().buildClass(extDef,classLoader);
+      Class<?> klass=registerAndLoadTypeDefinition(extName,ext);
+      ClassDefinition tDef=buildClassDefinition(trait,trait);
+      tDef.setDefinedClass(klass);
+      getTraitRegistry().addTrait(tDef);
+    }
+ catch (    Exception e) {
+      e.printStackTrace();
+    }
+  }
+  try {
+    return (Class<T>)Class.forName(extName,false,classLoader);
+  }
+ catch (  ClassNotFoundException e) {
+    e.printStackTrace();
+  }
+  return null;
+}
