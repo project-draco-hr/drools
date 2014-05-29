@@ -1,0 +1,39 @@
+{
+  String traitName=trait.getName();
+  if (core.hasTrait(traitName)) {
+    return (T)core.getTrait(traitName);
+  }
+  String key=getKey(core.getClass(),trait);
+  Constructor<T> konst;
+synchronized (factoryCache) {
+    konst=factoryCache.get(key);
+    if (konst == null) {
+      konst=cacheConstructor(key,core,trait);
+    }
+  }
+  T proxy=null;
+  HierarchyEncoder hier=getHierarchyEncoder();
+  try {
+switch (mode) {
+case MAP:
+      proxy=konst.newInstance(core,core._getDynamicProperties(),hier.getCode(trait.getName()),hier.getBottom(),logical);
+    break;
+case TRIPLES:
+  proxy=konst.newInstance(core,getTripleStore(),getTripleFactory(),hier.getCode(trait.getName()),hier.getBottom(),logical);
+break;
+default :
+throw new RuntimeException(" This should not happen : unexpected property wrapping method " + mode);
+}
+return proxy;
+}
+ catch (InstantiationException e) {
+e.printStackTrace();
+}
+catch (IllegalAccessException e) {
+e.printStackTrace();
+}
+catch (InvocationTargetException e) {
+e.printStackTrace();
+}
+throw new LogicalTypeInconsistencyException("Could not apply trait " + trait + " to object "+ core,trait,core.getClass());
+}

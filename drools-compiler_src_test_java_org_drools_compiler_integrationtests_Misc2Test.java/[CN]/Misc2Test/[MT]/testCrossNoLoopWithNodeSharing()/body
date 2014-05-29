@@ -1,0 +1,13 @@
+{
+  String drl="package org.drools.compiler.loop " + "rule 'Rule 1' " + "  agenda-group 'Start' "+ "  no-loop "+ "  when "+ "      $thing1 : String() "+ "      $thing2 : Integer() "+ "  then\n"+ "      System.out.println( 'At 1' ); "+ "      update( $thing2 ); "+ "end "+ "rule 'Rule 2' "+ "  agenda-group 'End' "+ "  no-loop "+ "  when "+ "      $thing1 : String() "+ "      $thing2 : Integer() "+ "  then "+ "      System.out.println( 'At 2' ); "+ "      update( $thing2 ); "+ "end";
+  KieHelper helper=new KieHelper();
+  helper.addContent(drl,ResourceType.DRL);
+  KieSession session=helper.build().newKieSession();
+  session.insert("hello");
+  session.insert(new Integer(42));
+  session.getAgenda().getAgendaGroup("End").setFocus();
+  session.getAgenda().getAgendaGroup("Start").setFocus();
+  int x=session.fireAllRules(10);
+  assertEquals(2,x);
+  session.dispose();
+}

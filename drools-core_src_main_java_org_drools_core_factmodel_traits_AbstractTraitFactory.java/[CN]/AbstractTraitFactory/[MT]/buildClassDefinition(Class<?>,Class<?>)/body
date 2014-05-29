@@ -1,0 +1,53 @@
+{
+  ClassFieldInspector inspector=new ClassFieldInspector(klazz);
+  ClassFieldAccessorStore store=getClassFieldAccessorStore();
+  ClassDefinition def;
+  if (!klazz.isInterface()) {
+    String className=wrapperClass.getName();
+    String superClass=wrapperClass != klazz ? klazz.getName() : klazz.getSuperclass().getName();
+    String[] interfaces=new String[klazz.getInterfaces().length + 1];
+    for (int j=0; j < klazz.getInterfaces().length; j++) {
+      interfaces[j]=klazz.getInterfaces()[j].getName();
+    }
+    interfaces[interfaces.length - 1]=CoreWrapper.class.getName();
+    def=new ClassDefinition(className,superClass,interfaces);
+    def.setDefinedClass(wrapperClass);
+    Traitable tbl=wrapperClass.getAnnotation(Traitable.class);
+    def.setTraitable(true,tbl != null && tbl.logical());
+    Map<String,Field> fields=inspector.getFieldTypesField();
+    for (    Field f : fields.values()) {
+      if (f != null) {
+        FieldDefinition fld=new FieldDefinition();
+        fld.setName(f.getName());
+        fld.setTypeName(f.getType().getName());
+        fld.setInherited(true);
+        ClassFieldAccessor accessor=store.getAccessor(def.getDefinedClass().getName(),fld.getName());
+        fld.setReadWriteAccessor(accessor);
+        def.addField(fld);
+      }
+    }
+  }
+ else {
+    String className=klazz.getName();
+    String superClass=Object.class.getName();
+    String[] interfaces=new String[klazz.getInterfaces().length];
+    for (int j=0; j < klazz.getInterfaces().length; j++) {
+      interfaces[j]=klazz.getInterfaces()[j].getName();
+    }
+    def=new ClassDefinition(className,superClass,interfaces);
+    def.setDefinedClass(klazz);
+    Map<String,Method> properties=inspector.getGetterMethods();
+    for (    Method m : properties.values()) {
+      if (m != null && m.getDeclaringClass() != TraitType.class && m.getDeclaringClass() != Thing.class) {
+        FieldDefinition fld=new FieldDefinition();
+        fld.setName(getterToFieldName(m.getName()));
+        fld.setTypeName(m.getReturnType().getName());
+        fld.setInherited(true);
+        ClassFieldAccessor accessor=store.getAccessor(def.getDefinedClass().getName(),fld.getName());
+        fld.setReadWriteAccessor(accessor);
+        def.addField(fld);
+      }
+    }
+  }
+  return def;
+}
