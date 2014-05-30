@@ -1,19 +1,5 @@
 {
   final BetaMemory memory=(BetaMemory)workingMemory.getNodeMemory(this);
   rightTuple.setPropagationContext(pctx);
-  RightTupleSets stagedRightTuples=memory.getStagedRightTuples();
-  boolean stagedDeleteWasEmpty=false;
-  if (streamMode) {
-    stagedDeleteWasEmpty=memory.getSegmentMemory().getTupleQueue().isEmpty();
-    memory.getSegmentMemory().getTupleQueue().add(new RightTupleEntry(rightTuple,pctx,memory,pctx.getType()));
-  }
- else {
-    stagedDeleteWasEmpty=stagedRightTuples.addDelete(rightTuple);
-  }
-  if (memory.getAndDecCounter() == 1 && isEmptyBetaConstraints()) {
-    memory.linkNode(workingMemory);
-  }
- else   if (stagedDeleteWasEmpty) {
-    memory.setNodeDirty(workingMemory);
-  }
+  doDeleteRightTuple(rightTuple,workingMemory,memory);
 }

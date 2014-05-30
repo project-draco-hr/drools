@@ -1,0 +1,18 @@
+{
+  RightTupleSets stagedRightTuples=memory.getStagedRightTuples();
+  boolean stagedDeleteWasEmpty=false;
+  if (streamMode) {
+    PropagationContext pctx=rightTuple.getPropagationContext();
+    stagedDeleteWasEmpty=memory.getSegmentMemory().getTupleQueue().isEmpty();
+    memory.getSegmentMemory().getTupleQueue().add(new RightTupleEntry(rightTuple,pctx,memory,pctx.getType()));
+  }
+ else {
+    stagedDeleteWasEmpty=stagedRightTuples.addDelete(rightTuple);
+  }
+  if (memory.getAndDecCounter() == 1 && isEmptyBetaConstraints()) {
+    memory.linkNode(wm);
+  }
+ else   if (stagedDeleteWasEmpty) {
+    memory.setNodeDirty(wm);
+  }
+}
