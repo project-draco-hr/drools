@@ -10,30 +10,36 @@
   for (int i=0; i < cs.length; i++) {
     char c=cs[i];
 switch (c) {
+case ' ':
+case '\t':
+      if (!inString && lookAhead(cs,i + 1) == '.') {
+        continue;
+      }
+    break;
 case '\"':
-      if (i == 0 || cs[i - 1] != '\\') {
-        inString=!inString;
-      }
-    break;
+  if (i == 0 || cs[i - 1] != '\\') {
+    inString=!inString;
+  }
+break;
 case '/':
-  if (i < cs.length - 1 && cs[i + 1] == '*' && !inString) {
-    int start=i;
-    i+=2;
-    for (; i < cs.length; i++) {
-      if (cs[i] == '*' && i < cs.length - 1 && cs[i + 1] == '/') {
-        i++;
-        break;
-      }
- else       if (cs[i] == '\n' || cs[i] == '\r') {
-        lastNonWhite=checkAndAddSemiColon(result,inString,brace,sqre,crly,lastNonWhite);
-      }
-    }
-    result.append(cs,start,i - start);
+if (i < cs.length - 1 && cs[i + 1] == '*' && !inString) {
+int start=i;
+i+=2;
+for (; i < cs.length; i++) {
+  if (cs[i] == '*' && i < cs.length - 1 && cs[i + 1] == '/') {
+    i++;
     break;
   }
- else   if (i < cs.length - 1 && cs[i + 1] != '/') {
-    break;
+ else   if (cs[i] == '\n' || cs[i] == '\r') {
+    lastNonWhite=checkAndAddSemiColon(result,inString,brace,sqre,crly,lastNonWhite);
   }
+}
+result.append(cs,start,i - start);
+break;
+}
+ else if (i < cs.length - 1 && cs[i + 1] != '/') {
+break;
+}
 case '#':
 lastNonWhite=checkAndAddSemiColon(result,inString,brace,sqre,crly,lastNonWhite);
 i=processLineComment(cs,i,result);
