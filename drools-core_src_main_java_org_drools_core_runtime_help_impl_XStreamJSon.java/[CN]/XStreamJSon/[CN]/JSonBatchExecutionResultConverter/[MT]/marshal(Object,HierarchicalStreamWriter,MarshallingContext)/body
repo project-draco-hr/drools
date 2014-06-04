@@ -2,10 +2,11 @@
   ExecutionResults result=(ExecutionResults)object;
   writer.startNode("results");
   if (!result.getIdentifiers().isEmpty()) {
-    Collection<String> col=result.getIdentifiers();
-    String[] identifiers=col.toArray(new String[col.size()]);
+    Collection<String> identifiers=result.getIdentifiers();
     if (SORT_MAPS) {
-      Arrays.sort(identifiers);
+      String[] array=identifiers.toArray(new String[identifiers.size()]);
+      Arrays.sort(array);
+      identifiers=Arrays.asList(array);
     }
     for (    String identifier : identifiers) {
       writer.startNode("result");
@@ -27,7 +28,13 @@
       writer.endNode();
     }
   }
-  for (  String identifier : ((ExecutionResultImpl)result).getFactHandles().keySet()) {
+  Collection<String> handles=((ExecutionResultImpl)result).getFactHandles().keySet();
+  if (SORT_MAPS) {
+    String[] array=handles.toArray(new String[handles.size()]);
+    Arrays.sort(array);
+    handles=Arrays.asList(array);
+  }
+  for (  String identifier : handles) {
     Object handle=result.getFactHandle(identifier);
     if (handle instanceof FactHandle) {
       writer.startNode("fact-handle");
