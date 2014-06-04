@@ -38,8 +38,15 @@
       if (smem != null) {
         LeftTuple peer=leftTuple;
         for (; smem != null; smem=smem.getNext()) {
-          peer=((LeftTupleSink)smem.getRootNode()).createPeer(peer);
-          smem.getStagedLeftTuples().addInsert(peer);
+          if (peer.getPeer() != null) {
+            peer=peer.getPeer();
+            peer.setPropagationContext(leftTuple.getPropagationContext());
+            PhreakJoinNode.updateChildLeftTuple(peer,smem.getStagedLeftTuples(),smem.getStagedLeftTuples());
+          }
+ else {
+            peer=((LeftTupleSink)smem.getRootNode()).createPeer(peer);
+            smem.getStagedLeftTuples().addInsert(peer);
+          }
         }
       }
     }
