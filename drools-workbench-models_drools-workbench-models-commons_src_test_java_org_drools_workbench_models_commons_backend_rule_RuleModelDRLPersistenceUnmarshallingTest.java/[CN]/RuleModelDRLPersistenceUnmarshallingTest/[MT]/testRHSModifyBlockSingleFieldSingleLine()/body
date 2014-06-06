@@ -1,0 +1,16 @@
+{
+  String drl="rule \"modify1\"\n" + "  dialect \"mvel\"\n" + "  when\n"+ "    $p : Person( )\n"+ "  then\n"+ "  modify( $p ) { setFirstName( \",)\" ) }\n"+ "end";
+  addModelField("Person","firstName","java.lang.String",DataType.TYPE_STRING);
+  RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,Collections.EMPTY_LIST,dmo);
+  assertEquals(1,m.rhs.length);
+  assertTrue(m.rhs[0] instanceof ActionUpdateField);
+  ActionUpdateField field=(ActionUpdateField)m.rhs[0];
+  assertEquals("$p",field.getVariable());
+  assertTrue(field.getFieldValues()[0] instanceof ActionFieldValue);
+  assertEquals(1,field.getFieldValues().length);
+  ActionFieldValue value=field.getFieldValues()[0];
+  assertEquals("firstName",value.getField());
+  assertEquals(",)",value.getValue());
+  assertEquals(FieldNatureType.TYPE_LITERAL,value.getNature());
+  assertEquals(DataType.TYPE_STRING,value.getType());
+}
