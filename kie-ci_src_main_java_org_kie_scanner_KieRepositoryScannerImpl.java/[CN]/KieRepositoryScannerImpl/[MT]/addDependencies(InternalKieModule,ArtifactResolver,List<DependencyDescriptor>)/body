@@ -1,11 +1,17 @@
 {
   for (  DependencyDescriptor dep : dependencies) {
-    Artifact depArtifact=resolver.resolveArtifact(dep.getReleaseId());
-    if (depArtifact != null && isKJar(depArtifact.getFile())) {
-      ReleaseId depReleaseId=new DependencyDescriptor(depArtifact).getReleaseId();
-      ZipKieModule zipKieModule=createZipKieModule(depReleaseId,depArtifact.getFile());
-      if (zipKieModule != null) {
-        kieModule.addKieDependency(zipKieModule);
+    InternalKieModule dependency=(InternalKieModule)KieServices.Factory.get().getRepository().getKieModule(dep.getReleaseId());
+    if (dependency != null) {
+      kieModule.addKieDependency(dependency);
+    }
+ else {
+      Artifact depArtifact=resolver.resolveArtifact(dep.getReleaseId());
+      if (depArtifact != null && isKJar(depArtifact.getFile())) {
+        ReleaseId depReleaseId=new DependencyDescriptor(depArtifact).getReleaseId();
+        ZipKieModule zipKieModule=createZipKieModule(depReleaseId,depArtifact.getFile());
+        if (zipKieModule != null) {
+          kieModule.addKieDependency(zipKieModule);
+        }
       }
     }
   }

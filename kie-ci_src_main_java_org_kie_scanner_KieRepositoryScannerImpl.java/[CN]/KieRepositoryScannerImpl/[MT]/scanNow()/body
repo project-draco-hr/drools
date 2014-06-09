@@ -10,8 +10,17 @@
       return;
     }
     status=Status.UPDATING;
+    Map.Entry<DependencyDescriptor,Artifact> containerEntry=null;
     for (    Map.Entry<DependencyDescriptor,Artifact> entry : updatedArtifacts.entrySet()) {
-      updateKieModule(entry.getKey(),entry.getValue());
+      if (entry.getKey().isSameArtifact(kieContainer.getContainerReleaseId())) {
+        containerEntry=entry;
+      }
+ else {
+        updateKieModule(entry.getKey(),entry.getValue());
+      }
+    }
+    if (containerEntry != null) {
+      updateKieModule(containerEntry.getKey(),containerEntry.getValue());
     }
     log.info("The following artifacts have been updated: " + updatedArtifacts);
   }
