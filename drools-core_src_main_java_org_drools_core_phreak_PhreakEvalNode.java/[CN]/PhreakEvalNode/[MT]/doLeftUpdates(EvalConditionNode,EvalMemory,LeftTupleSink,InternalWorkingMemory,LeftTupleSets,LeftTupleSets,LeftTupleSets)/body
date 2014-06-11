@@ -2,9 +2,10 @@
   EvalCondition condition=evalNode.getCondition();
   for (LeftTuple leftTuple=srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
-    boolean wasPropagated=leftTuple.getFirstChild() != null;
+    boolean wasPropagated=leftTuple.getFirstChild() != null && leftTuple.getObject() != EVAL_LEFT_TUPLE_DELETED;
     boolean allowed=condition.isAllowed(leftTuple,wm,em.context);
     if (allowed) {
+      leftTuple.setObject(null);
       if (wasPropagated) {
         LeftTuple childLeftTuple=leftTuple.getFirstChild();
         childLeftTuple.setPropagationContext(leftTuple.getPropagationContext());
@@ -24,6 +25,7 @@ trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,sink,leftTuple.getPropaga
 }
  else {
 if (wasPropagated) {
+leftTuple.setObject(EVAL_LEFT_TUPLE_DELETED);
 LeftTuple childLeftTuple=leftTuple.getFirstChild();
 childLeftTuple.setPropagationContext(leftTuple.getPropagationContext());
 switch (childLeftTuple.getStagedType()) {
