@@ -3,6 +3,8 @@
   Map<String,List<String>> setStatements=new HashMap<String,List<String>>();
   Map<String,Integer> setStatementsPosition=new HashMap<String,Integer>();
   Map<String,String> factsType=new HashMap<String,String>();
+  String modifiedVariable=null;
+  String modifiers=null;
   int lineCounter=-1;
   String[] lines=rhs.split("\n");
   for (  String line : lines) {
@@ -15,7 +17,24 @@
       }
     }
     line=line.trim();
-    if (line.startsWith("insertLogical")) {
+    if (modifiedVariable != null) {
+      int modifyBlockEnd=line.lastIndexOf('}');
+      if (modifiers == null) {
+        modifiers=modifyBlockEnd > 0 ? line.substring(line.indexOf('{') + 1,modifyBlockEnd).trim() : line.substring(line.indexOf('{') + 1).trim();
+      }
+ else       if (modifyBlockEnd != 0) {
+        modifiers+=modifyBlockEnd > 0 ? line.substring(0,modifyBlockEnd).trim() : line;
+      }
+      if (modifyBlockEnd >= 0) {
+        ActionUpdateField action=new ActionUpdateField();
+        action.setVariable(modifiedVariable);
+        m.addRhsItem(action);
+        addModifiersToAction(modifiedVariable,modifiers,action,boundParams,dmo,m.getImports(),isJavaDialect);
+        modifiedVariable=null;
+        modifiers=null;
+      }
+    }
+ else     if (line.startsWith("insertLogical")) {
       String fact=unwrapParenthesis(line);
       String type=getStatementType(fact,factsType);
       if (type != null) {
@@ -45,7 +64,24 @@
       m.addRhsItem(action);
       addSettersToAction(setStatements,variable,action,boundParams,dmo,m.getImports(),isJavaDialect);
     }
- else     if (line.startsWith("retract")) {
+ else     if (line.startsWith("modify")) {
+      int modifyBlockEnd=line.lastIndexOf('}');
+      if (modifyBlockEnd > 0) {
+        String variable=line.substring(line.indexOf('(') + 1,line.indexOf(')')).trim();
+        ActionUpdateField action=new ActionUpdateField();
+        action.setVariable(variable);
+        m.addRhsItem(action);
+        addModifiersToAction(variable,line.substring(line.indexOf('{') + 1,modifyBlockEnd).trim(),action,boundParams,dmo,m.getImports(),isJavaDialect);
+      }
+ else {
+        modifiedVariable=line.substring(line.indexOf('(') + 1,line.indexOf(')')).trim();
+        int modifyBlockStart=line.indexOf('{');
+        if (modifyBlockStart > 0) {
+          modifiers=line.substring(modifyBlockStart + 1).trim();
+        }
+      }
+    }
+ else     if (line.startsWith("retract") || line.startsWith("delete")) {
       String variable=unwrapParenthesis(line);
       m.addRhsItem(new ActionRetractFact(variable));
     }
