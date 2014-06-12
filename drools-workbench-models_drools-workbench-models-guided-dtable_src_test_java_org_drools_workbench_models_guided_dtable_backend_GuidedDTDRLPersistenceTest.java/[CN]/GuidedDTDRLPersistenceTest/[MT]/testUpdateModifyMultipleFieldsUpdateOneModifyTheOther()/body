@@ -1,0 +1,35 @@
+{
+  GuidedDecisionTable52 dt=new GuidedDecisionTable52();
+  Pattern52 p1=new Pattern52();
+  p1.setBoundName("x");
+  p1.setFactType("Context");
+  ConditionCol52 c=new ConditionCol52();
+  c.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  p1.getChildColumns().add(c);
+  dt.getConditions().add(p1);
+  ActionSetFieldCol52 asf1=new ActionSetFieldCol52();
+  asf1.setBoundName("x");
+  asf1.setFactField("age");
+  asf1.setType(DataType.TYPE_NUMERIC_INTEGER);
+  asf1.setUpdate(true);
+  dt.getActionCols().add(asf1);
+  ActionSetFieldCol52 asf2=new ActionSetFieldCol52();
+  asf2.setBoundName("x");
+  asf2.setFactField("name");
+  asf2.setType(DataType.TYPE_STRING);
+  asf2.setUpdate(false);
+  dt.getActionCols().add(asf2);
+  String[][] data=new String[][]{new String[]{"1","desc","x","55","Fred"}};
+  dt.setData(DataUtilities.makeDataLists(data));
+  String drl=GuidedDTDRLPersistence.getInstance().marshal(dt);
+  final String expected1="//from row number: 1\n" + "//desc\n" + "rule \"Row 1 null\"\n"+ "dialect \"mvel\"\n"+ "when\n"+ "  x : Context( )\n"+ "then\n"+ "  modify( x ) {\n"+ "    setAge( 55 ) \n"+ "}\n"+ "x.setName( \"Fred\" );\n"+ "end\n";
+  assertEqualsIgnoreWhitespace(expected1,drl);
+  dt.setData(DataUtilities.makeDataLists(new String[][]{new String[]{"1","desc","x","","Fred"}}));
+  drl=GuidedDTDRLPersistence.getInstance().marshal(dt);
+  final String expected2="//from row number: 1\n" + "//desc\n" + "rule \"Row 1 null\"\n"+ "dialect \"mvel\"\n"+ "when\n"+ "  x : Context( )\n"+ "then\n"+ "x.setName( \"Fred\" );\n"+ "end\n";
+  assertEqualsIgnoreWhitespace(expected2,drl);
+  dt.setData(DataUtilities.makeDataLists(new String[][]{new String[]{"1","desc","x","55",""}}));
+  drl=GuidedDTDRLPersistence.getInstance().marshal(dt);
+  final String expected3="//from row number: 1\n" + "//desc\n" + "rule \"Row 1 null\"\n"+ "dialect \"mvel\"\n"+ "when\n"+ "  x : Context( )\n"+ "then\n"+ "  modify( x ) {\n"+ "    setAge( 55 ) \n"+ "}\n"+ "end\n";
+  assertEqualsIgnoreWhitespace(expected3,drl);
+}

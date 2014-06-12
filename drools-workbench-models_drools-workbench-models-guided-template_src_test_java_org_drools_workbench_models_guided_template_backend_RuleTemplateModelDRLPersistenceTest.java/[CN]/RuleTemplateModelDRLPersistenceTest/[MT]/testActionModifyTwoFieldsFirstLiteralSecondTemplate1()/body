@@ -1,0 +1,22 @@
+{
+  TemplateModel m=new TemplateModel();
+  m.name="r1";
+  FactPattern fp=new FactPattern("Person");
+  fp.setBoundName("$p");
+  m.addLhsItem(fp);
+  ActionUpdateField auf1=new ActionUpdateField("$p");
+  ActionFieldValue afv0=new ActionFieldValue();
+  afv0.setNature(FieldNatureType.TYPE_LITERAL);
+  afv0.setField("field1");
+  afv0.setValue("foo");
+  auf1.addFieldValue(afv0);
+  ActionFieldValue afv1=new ActionFieldValue();
+  afv1.setNature(FieldNatureType.TYPE_TEMPLATE);
+  afv1.setField("field2");
+  afv1.setValue("$f2");
+  auf1.addFieldValue(afv1);
+  m.addRhsItem(auf1);
+  String expected="rule \"r1_0\"\n" + "dialect \"mvel\"\n" + "when\n"+ "  $p : Person()\n"+ "then\n"+ "  modify( $p ) {\n"+ "    setField1(\"foo\"),\n"+ "    setField2(\"bar\")\n"+ "  }\n"+ "end";
+  m.addRow(new String[]{"bar"});
+  checkMarshall(expected,m);
+}

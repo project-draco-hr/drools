@@ -1,0 +1,27 @@
+{
+  String expected="" + "rule \"my rule\" \n" + "  dialect \"mvel\"\n"+ "  when\n"+ "    $p : Person()\n"+ "  then\n"+ "    modify( $p ) {\n"+ "      setName( \"Fred\" )\n"+ "    }\n"+ "  $p.setAge( 55 );\n"+ "end\n";
+  final RuleModel m=new RuleModel();
+  FactPattern factPattern=new FactPattern();
+  factPattern.setFactType("Person");
+  factPattern.setBoundName("$p");
+  m.lhs=new IPattern[]{factPattern};
+  ActionUpdateField auf=new ActionUpdateField();
+  auf.setVariable("$p");
+  ActionFieldValue afv1=new ActionFieldValue();
+  afv1.setField("name");
+  afv1.setType(DataType.TYPE_STRING);
+  afv1.setNature(FieldNatureType.TYPE_LITERAL);
+  afv1.setValue("Fred");
+  auf.setFieldValues(new ActionFieldValue[]{afv1});
+  ActionSetField asf=new ActionSetField();
+  asf.setVariable("$p");
+  ActionFieldValue afv2=new ActionFieldValue();
+  afv2.setField("age");
+  afv2.setType(DataType.TYPE_NUMERIC_INTEGER);
+  afv2.setNature(FieldNatureType.TYPE_LITERAL);
+  afv2.setValue("55");
+  asf.setFieldValues(new ActionFieldValue[]{afv2});
+  m.rhs=new IAction[]{auf,asf};
+  m.name="my rule";
+  checkMarshallUnmarshall(expected,m);
+}

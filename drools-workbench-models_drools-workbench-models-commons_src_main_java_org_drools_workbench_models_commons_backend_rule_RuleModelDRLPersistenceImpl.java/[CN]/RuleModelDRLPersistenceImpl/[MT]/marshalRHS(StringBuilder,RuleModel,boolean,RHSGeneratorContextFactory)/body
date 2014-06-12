@@ -1,0 +1,49 @@
+{
+  String indentation="\t\t";
+  if (model.rhs != null) {
+    Map<String,List<ActionFieldValue>> classes=getRHSClassDependencies(model);
+    if (classes.containsKey(DataType.TYPE_DATE)) {
+      buf.append(indentation);
+      buf.append("java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"" + System.getProperty("drools.dateformat") + "\");\n");
+    }
+    if (!getRHSWorkItemDependencies(model).isEmpty()) {
+      buf.append(indentation);
+      buf.append("org.drools.core.process.instance.WorkItemManager wim = (org.drools.core.process.instance.WorkItemManager) drools.getWorkingMemory().getWorkItemManager();\n");
+    }
+    RHSActionVisitor actionVisitor=getRHSActionVisitor(isDSLEnhanced,buf,indentation,generatorContextFactory);
+    final List<IAction> actions=new ArrayList<IAction>();
+    for (    IAction action : model.rhs) {
+      if (action instanceof ActionSetField) {
+        final ActionSetField asf=(ActionSetField)action;
+        final ActionSetFieldWrapper afw=findExistingAction(asf,actions);
+        if (afw == null) {
+          actions.add(new ActionSetFieldWrapper(asf,(asf instanceof ActionUpdateField)));
+        }
+ else {
+          final List<ActionFieldValue> existingActionFieldValue=new ArrayList<ActionFieldValue>(Arrays.asList(afw.getAction().getFieldValues()));
+          for (          ActionFieldValue afv : asf.getFieldValues()) {
+            existingActionFieldValue.add(afv);
+          }
+          final ActionFieldValue[] temp=new ActionFieldValue[existingActionFieldValue.size()];
+          afw.getAction().setFieldValues(existingActionFieldValue.toArray(temp));
+        }
+      }
+ else {
+        actions.add(action);
+      }
+    }
+    model.rhs=new IAction[actions.size()];
+    for (int i=0; i < actions.size(); i++) {
+      final IAction action=actions.get(i);
+      if (action instanceof ActionSetFieldWrapper) {
+        model.rhs[i]=((ActionSetFieldWrapper)action).getAction();
+      }
+ else {
+        model.rhs[i]=action;
+      }
+    }
+    for (    IAction action : model.rhs) {
+      actionVisitor.visit(action);
+    }
+  }
+}

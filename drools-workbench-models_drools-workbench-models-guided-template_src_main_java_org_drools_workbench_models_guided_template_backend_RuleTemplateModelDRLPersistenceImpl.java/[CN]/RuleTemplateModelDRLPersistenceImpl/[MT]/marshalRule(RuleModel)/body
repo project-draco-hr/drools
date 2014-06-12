@@ -5,17 +5,21 @@
   fixActionInsertFactBindings(model.rhs);
   StringBuilder buf=new StringBuilder();
   StringBuilder header=new StringBuilder();
-  GeneratorContextFactory generatorContextFactory=new GeneratorContextFactory();
+  LHSGeneratorContextFactory lhsGeneratorContextFactory=new LHSGeneratorContextFactory();
+  RHSGeneratorContextFactory rhsGeneratorContextFactory=new RHSGeneratorContextFactory();
   this.marshalRuleHeader(model,header);
   super.marshalMetadata(buf,model);
   super.marshalAttributes(buf,model);
   buf.append("\twhen\n");
-  super.marshalLHS(buf,model,isDSLEnhanced,generatorContextFactory);
+  super.marshalLHS(buf,model,isDSLEnhanced,lhsGeneratorContextFactory);
   buf.append("\tthen\n");
-  super.marshalRHS(buf,model,isDSLEnhanced);
+  super.marshalRHS(buf,model,isDSLEnhanced,rhsGeneratorContextFactory);
   this.marshalFooter(buf);
-  for (  GeneratorContext gc : generatorContextFactory.getGeneratorContexts()) {
+  for (  LHSGeneratorContext gc : lhsGeneratorContextFactory.getGeneratorContexts()) {
     header.append("@code{hasNonTemplateOutput" + gc.getDepth() + "_"+ gc.getOffset()+ " = "+ gc.hasNonTemplateOutput()+ "}");
+  }
+  for (  RHSGeneratorContext gc : rhsGeneratorContextFactory.getGeneratorContexts()) {
+    header.append("@code{hasOutput" + gc.getOffset() + " = false}");
   }
   return header.append(buf).toString();
 }

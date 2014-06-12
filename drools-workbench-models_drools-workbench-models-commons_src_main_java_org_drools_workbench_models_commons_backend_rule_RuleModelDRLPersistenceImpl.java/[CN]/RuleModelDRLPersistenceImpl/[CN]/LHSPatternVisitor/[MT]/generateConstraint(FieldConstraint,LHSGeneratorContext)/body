@@ -1,0 +1,28 @@
+{
+  generateSeparator(con,gctx);
+  if (con instanceof CompositeFieldConstraint) {
+    CompositeFieldConstraint cfc=(CompositeFieldConstraint)con;
+    FieldConstraint[] nestedConstraints=cfc.getConstraints();
+    if (nestedConstraints != null) {
+      LHSGeneratorContext nestedGctx=generatorContextFactory.newChildGeneratorContext(gctx);
+      preGenerateConstraints(nestedGctx);
+      preGenerateNestedConstraint(gctx);
+      if (gctx.getDepth() > 0) {
+        buf.append("( ");
+      }
+      for (int nestedConstraintIndex=0; nestedConstraintIndex < nestedConstraints.length; nestedConstraintIndex++) {
+        FieldConstraint nestedConstr=nestedConstraints[nestedConstraintIndex];
+        nestedGctx.setFieldConstraint(nestedConstr);
+        generateConstraint(nestedConstr,nestedGctx);
+      }
+      gctx.setHasOutput(nestedGctx.isHasOutput());
+      if (gctx.getDepth() > 0) {
+        buf.append(")");
+      }
+      postGenerateNestedConstraint(gctx);
+    }
+  }
+ else {
+    generateSingleFieldConstraint((SingleFieldConstraint)con,gctx);
+  }
+}
