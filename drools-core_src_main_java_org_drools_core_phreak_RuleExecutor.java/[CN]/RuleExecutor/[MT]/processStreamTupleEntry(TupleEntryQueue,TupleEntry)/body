@@ -1,0 +1,46 @@
+{
+  boolean isNonNormalizedDelete=false;
+  if (log.isTraceEnabled()) {
+    log.trace("Stream removed entry {} {} size {}",System.identityHashCode(tupleQueue),tupleEntry,tupleQueue.size());
+  }
+  if (tupleEntry.getLeftTuple() != null) {
+    SegmentMemory sm=tupleEntry.getNodeMemory().getSegmentMemory();
+    LeftTupleSets tuples=sm.getStagedLeftTuples();
+    tupleEntry.getLeftTuple().setPropagationContext(tupleEntry.getPropagationContext());
+switch (tupleEntry.getPropagationType()) {
+case PropagationContext.INSERTION:
+case PropagationContext.RULE_ADDITION:
+      tuples.addInsert(tupleEntry.getLeftTuple());
+    break;
+case PropagationContext.MODIFICATION:
+  tuples.addUpdate(tupleEntry.getLeftTuple());
+break;
+case PropagationContext.DELETION:
+case PropagationContext.EXPIRATION:
+case PropagationContext.RULE_REMOVAL:
+isNonNormalizedDelete=tupleEntry.getLeftTuple().getStagedType() == LeftTuple.NONE;
+tuples.addDelete(tupleEntry.getLeftTuple());
+break;
+}
+}
+ else {
+BetaMemory bm=(BetaMemory)tupleEntry.getNodeMemory();
+tupleEntry.getRightTuple().setPropagationContext(tupleEntry.getPropagationContext());
+switch (tupleEntry.getPropagationType()) {
+case PropagationContext.INSERTION:
+case PropagationContext.RULE_ADDITION:
+bm.getStagedRightTuples().addInsert(tupleEntry.getRightTuple());
+break;
+case PropagationContext.MODIFICATION:
+bm.getStagedRightTuples().addUpdate(tupleEntry.getRightTuple());
+break;
+case PropagationContext.DELETION:
+case PropagationContext.EXPIRATION:
+case PropagationContext.RULE_REMOVAL:
+isNonNormalizedDelete=tupleEntry.getRightTuple().getStagedType() == LeftTuple.NONE;
+bm.getStagedRightTuples().addDelete(tupleEntry.getRightTuple());
+break;
+}
+}
+return isNonNormalizedDelete;
+}

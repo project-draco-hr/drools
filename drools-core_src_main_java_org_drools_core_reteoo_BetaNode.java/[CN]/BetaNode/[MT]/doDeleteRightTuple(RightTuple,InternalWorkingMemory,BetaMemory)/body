@@ -2,12 +2,22 @@
   RightTupleSets stagedRightTuples=memory.getStagedRightTuples();
   boolean stagedDeleteWasEmpty=false;
   if (isStreamMode()) {
-    stagedDeleteWasEmpty=memory.getSegmentMemory().getTupleQueue().isEmpty();
     PropagationContext pctx=rightTuple.getPropagationContext();
     int propagationType=pctx.getType() == PropagationContext.MODIFICATION ? PropagationContext.DELETION : pctx.getType();
-    memory.getSegmentMemory().getTupleQueue().add(new RightTupleEntry(rightTuple,pctx,memory,propagationType));
+    stagedDeleteWasEmpty=memory.getSegmentMemory().getStreamQueue().addDelete(new RightTupleEntry(rightTuple,pctx,memory,propagationType));
     if (log.isTraceEnabled()) {
-      log.trace("{} delete queue={} size={} pctx={} lt={}",getClass().getSimpleName(),System.identityHashCode(memory.getSegmentMemory().getTupleQueue()),memory.getSegmentMemory().getTupleQueue().size(),PhreakPropagationContext.intEnumToString(rightTuple.getPropagationContext()),rightTuple);
+      log.trace("{} delete queue={} size={} pctx={} lt={}",getClass().getSimpleName(),System.identityHashCode(memory.getSegmentMemory().getStreamQueue()),memory.getSegmentMemory().getStreamQueue().size(),PhreakPropagationContext.intEnumToString(rightTuple.getPropagationContext()),rightTuple);
+    }
+    if (stagedDeleteWasEmpty && !memory.getSegmentMemory().isSegmentLinked()) {
+      GarbageCollector garbageCollector=((InternalAgenda)wm.getAgenda()).getGarbageCollector();
+synchronized (garbageCollector) {
+        for (        PathMemory pmem : memory.getSegmentMemory().getPathMemories()) {
+          if (pmem.getNodeType() == NodeTypeEnums.RuleTerminalNode) {
+            garbageCollector.add(pmem.getOrCreateRuleAgendaItem(wm));
+          }
+        }
+        garbageCollector.increaseDeleteCounter();
+      }
     }
   }
  else {

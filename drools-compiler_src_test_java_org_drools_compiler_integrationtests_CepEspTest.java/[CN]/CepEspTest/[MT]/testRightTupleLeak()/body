@@ -1,0 +1,33 @@
+{
+  String drl="declare Integer @role(event) end\n" + "declare Long @role(event) end\n" + "\n"+ "rule R1 when\n"+ " $long : Long()\n"+ " Integer( this > $long )\n"+ "then\n"+ "end\n"+ "\n"+ "rule R2 when\n"+ " $i : Integer()\n"+ "then\n"+ " retract( $i );\n"+ "end";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  KieBaseConfiguration baseConfig=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  baseConfig.setOption(EventProcessingOption.STREAM);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(baseConfig);
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  KieSession ksession=kbase.newKieSession();
+  for (int i=0; i < 10; i++) {
+    ksession.insert(new Integer(i));
+    ksession.fireAllRules();
+  }
+  ((DefaultAgenda)ksession.getAgenda()).getGarbageCollector().forceGcUnlinkedRules();
+  Rete rete=((KnowledgeBaseImpl)kbase).getRete();
+  JoinNode joinNode=null;
+  for (  ObjectTypeNode otn : rete.getObjectTypeNodes()) {
+    if (Integer.class == otn.getObjectType().getValueType().getClassType()) {
+      joinNode=(JoinNode)otn.getSinkPropagator().getSinks()[0];
+      break;
+    }
+  }
+  assertNotNull(joinNode);
+  InternalWorkingMemory wm=(InternalWorkingMemory)ksession;
+  BetaMemory memory=(BetaMemory)wm.getNodeMemory(joinNode);
+  assertEquals(0,memory.getSegmentMemory().getStreamQueue().size());
+  RightTupleSets stagedRightTuples=memory.getStagedRightTuples();
+  assertEquals(0,stagedRightTuples.deleteSize());
+  assertEquals(0,stagedRightTuples.insertSize());
+}
