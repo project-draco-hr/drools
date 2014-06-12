@@ -1,11 +1,17 @@
 {
   if (clazz == null) {
     byte[] bytecode=generateBytecode();
-    try {
-      clazz=(Class<?>)defineClassMethod.invoke(classLoader,className,bytecode,0,bytecode.length);
+    if (ClassUtils.isAndroid()) {
+      ByteArrayClassLoader cl=(ByteArrayClassLoader)ClassUtils.instantiateObject("org.drools.android.MultiDexClassLoader",null,classLoader);
+      clazz=cl.defineClass(className,bytecode,null);
     }
- catch (    Exception e) {
-      clazz=new InternalClassLoader(classLoader).defineClass(className,bytecode);
+ else {
+      try {
+        clazz=(Class<?>)defineClassMethod.invoke(classLoader,className,bytecode,0,bytecode.length);
+      }
+ catch (      Exception e) {
+        clazz=new InternalClassLoader(classLoader).defineClass(className,bytecode);
+      }
     }
   }
   return clazz;
