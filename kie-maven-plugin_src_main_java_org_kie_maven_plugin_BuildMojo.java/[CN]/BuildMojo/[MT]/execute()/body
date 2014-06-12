@@ -1,5 +1,6 @@
 {
   ClassLoader contextClassLoader=Thread.currentThread().getContextClassLoader();
+  List<InternalKieModule> kmoduleDeps=new ArrayList<InternalKieModule>();
   try {
     Set<URL> urls=new HashSet<URL>();
     for (    String element : project.getCompileClasspathElements()) {
@@ -10,6 +11,11 @@
       File file=artifact.getFile();
       if (file != null) {
         urls.add(file.toURI().toURL());
+        KieModuleModel depModel=getDependencyKieModel(file);
+        if (depModel != null) {
+          ReleaseId releaseId=new ReleaseIdImpl(artifact.getGroupId(),artifact.getArtifactId(),artifact.getVersion());
+          kmoduleDeps.add(new ZipKieModule(releaseId,depModel,file));
+        }
       }
     }
     urls.add(outputDirectory.toURI().toURL());
@@ -29,7 +35,10 @@ catch (  MalformedURLException e) {
   KieServices ks=KieServices.Factory.get();
   try {
     KieRepository kr=ks.getRepository();
-    KieModule kModule=kr.addKieModule(ks.getResources().newFileSystemResource(sourceFolder));
+    InternalKieModule kModule=(InternalKieModule)kr.addKieModule(ks.getResources().newFileSystemResource(sourceFolder));
+    for (    InternalKieModule kmoduleDep : kmoduleDeps) {
+      kModule.addKieDependency(kmoduleDep);
+    }
     KieContainerImpl kContainer=(KieContainerImpl)ks.newKieContainer(kModule.getReleaseId());
     KieProject kieProject=kContainer.getKieProject();
     ResultsImpl messages=kieProject.verify();
