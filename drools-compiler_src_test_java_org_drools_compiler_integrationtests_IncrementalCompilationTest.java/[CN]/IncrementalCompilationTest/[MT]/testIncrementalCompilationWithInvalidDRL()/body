@@ -1,0 +1,23 @@
+{
+  String drl1="Smurf";
+  String drl2_1="package org.drools.compiler\n" + "rule R2\n" + "when\n"+ "   $m : Mesage()\n"+ "then\n"+ "end\n";
+  String drl2_2="package org.drools.compiler\n" + "rule R2\n" + "when\n"+ "   $m : Message()\n"+ "then\n"+ "end\n";
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.write("src/main/resources/r1.drl",drl1);
+  KieBuilder kieBuilder=ks.newKieBuilder(kfs).buildAll();
+  Results results1=kieBuilder.getResults();
+  assertEquals(2,results1.getMessages().size());
+  kfs.write("src/main/resources/r2.drl",drl2_1);
+  IncrementalResults results2=((InternalKieBuilder)kieBuilder).createFileSet("src/main/resources/r2.drl").build();
+  assertEquals(1,results2.getAddedMessages().size());
+  assertEquals(0,results2.getRemovedMessages().size());
+  kfs.write("src/main/resources/r2.drl",drl2_2);
+  IncrementalResults results3=((InternalKieBuilder)kieBuilder).createFileSet("src/main/resources/r2.drl").build();
+  assertEquals(0,results3.getAddedMessages().size());
+  assertEquals(1,results3.getRemovedMessages().size());
+  kfs.delete("src/main/resources/r1.drl");
+  IncrementalResults results4=((InternalKieBuilder)kieBuilder).createFileSet("src/main/resources/r1.drl").build();
+  assertEquals(0,results4.getAddedMessages().size());
+  assertEquals(1,results4.getRemovedMessages().size());
+}
