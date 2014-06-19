@@ -1,9 +1,61 @@
 {
-  if (otherColumn == null)   return null;
+  if (otherColumn == null) {
+    return null;
+  }
   List<BaseColumnFieldDiff> result=super.diff(otherColumn);
   ActionWorkItemCol52 other=(ActionWorkItemCol52)otherColumn;
-  if (!isEqualOrNull(this.getWorkItemDefinition(),other.getWorkItemDefinition())) {
-    result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION,this.getWorkItemDefinition(),other.getWorkItemDefinition()));
+  final PortableWorkDefinition thisDefinition=this.getWorkItemDefinition();
+  final PortableWorkDefinition otherDefinition=other.getWorkItemDefinition();
+  if (thisDefinition == null && otherDefinition == null) {
+    return result;
+  }
+ else   if (thisDefinition != null && otherDefinition == null) {
+    result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_NAME,thisDefinition.getName(),null));
+    result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_DISPLAY_NAME,thisDefinition.getDisplayName(),null));
+    for (    PortableParameterDefinition parameter : thisDefinition.getParameters()) {
+      result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_PARAMETER_NAME,parameter.getName(),null));
+      result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_PARAMETER_VALUE,parameter.asString(),null));
+    }
+  }
+ else   if (thisDefinition == null && otherDefinition != null) {
+    result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_NAME,null,otherDefinition.getName()));
+    result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_DISPLAY_NAME,null,otherDefinition.getDisplayName()));
+    for (    PortableParameterDefinition parameter : otherDefinition.getParameters()) {
+      result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_PARAMETER_NAME,null,parameter.getName()));
+      result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_PARAMETER_VALUE,null,parameter.asString()));
+    }
+  }
+ else {
+    if (!thisDefinition.getName().equals(otherDefinition.getName())) {
+      result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_NAME,thisDefinition.getName(),otherDefinition.getName()));
+    }
+    if (!thisDefinition.getDisplayName().equals(otherDefinition.getDisplayName())) {
+      result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_DISPLAY_NAME,thisDefinition.getDisplayName(),otherDefinition.getDisplayName()));
+    }
+    final List<String> thisDefinitionParameterNames=Arrays.asList(thisDefinition.getParameterNames());
+    final List<String> otherDefinitionParameterNames=Arrays.asList(otherDefinition.getParameterNames());
+    final List<String> parameterNamesDeleted=new ArrayList<String>(thisDefinitionParameterNames);
+    parameterNamesDeleted.removeAll(otherDefinitionParameterNames);
+    for (    String parameterName : parameterNamesDeleted) {
+      result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_PARAMETER_NAME,thisDefinition.getParameter(parameterName).getName(),null));
+      result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_PARAMETER_VALUE,thisDefinition.getParameter(parameterName).asString(),null));
+    }
+    final List<String> parameterNamesAdded=new ArrayList<String>(otherDefinitionParameterNames);
+    parameterNamesAdded.removeAll(thisDefinitionParameterNames);
+    for (    String parameterName : parameterNamesAdded) {
+      result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_PARAMETER_NAME,null,otherDefinition.getParameter(parameterName).getName()));
+      result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_PARAMETER_VALUE,null,otherDefinition.getParameter(parameterName).asString()));
+    }
+    final List<String> parameterNamesUpdated=new ArrayList<String>(thisDefinitionParameterNames);
+    parameterNamesUpdated.retainAll(otherDefinitionParameterNames);
+    for (    String parameterName : parameterNamesUpdated) {
+      if (!isEqualOrNull(thisDefinition.getParameter(parameterName).getName(),otherDefinition.getParameter(parameterName).getName())) {
+        result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_PARAMETER_NAME,thisDefinition.getParameter(parameterName).getName(),otherDefinition.getParameter(parameterName).getName()));
+      }
+      if (!isEqualOrNull(thisDefinition.getParameter(parameterName).asString(),otherDefinition.getParameter(parameterName).asString())) {
+        result.add(new BaseColumnFieldDiffImpl(FIELD_WORKITEM_DEFINITION_PARAMETER_VALUE,thisDefinition.getParameter(parameterName).asString(),otherDefinition.getParameter(parameterName).asString()));
+      }
+    }
   }
   return result;
 }
