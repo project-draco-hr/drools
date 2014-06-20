@@ -6,6 +6,10 @@
       ExtensionRegistry registry=KieModuleCacheHelper.buildRegistry();
       try {
         Header _header=KieModuleCacheHelper.readFromStreamWithHeaderPreloaded(new ByteArrayInputStream(fileContents),registry);
+        if (!Drools.isCompatible(_header.getVersion().getVersionMajor(),_header.getVersion().getVersionMinor(),_header.getVersion().getVersionRevision())) {
+          log.warn("Compilation cache has been built with an incompatible version, so don't use it");
+          return null;
+        }
         KModuleCache _cache=KModuleCache.parseFrom(_header.getPayload());
         cache=new CompilationCache();
         for (        CompilationData _data : _cache.getCompilationDataList()) {
