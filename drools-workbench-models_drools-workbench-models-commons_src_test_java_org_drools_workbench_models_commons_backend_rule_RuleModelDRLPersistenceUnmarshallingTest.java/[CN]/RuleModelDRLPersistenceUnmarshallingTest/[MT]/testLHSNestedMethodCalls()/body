@@ -1,0 +1,31 @@
+{
+  String drl="package org.mortgages;\n" + "rule \"test\"\n" + " dialect \"mvel\"\n"+ " when\n"+ "  Parent( methodToGetChild1().methodToGetChild2().field1 > 5 )\n"+ " then\n"+ "end";
+  addMethodInformation("Parent","methodToGetChild1",Collections.EMPTY_LIST,"Child1",null,"Child1");
+  addMethodInformation("Child1","methodToGetChild2",Collections.EMPTY_LIST,"Child2",null,"Child2");
+  addModelField("Child2","field1","int",DataType.TYPE_NUMERIC_INTEGER);
+  final RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,new ArrayList<String>(),dmo);
+  assertNotNull(m);
+  assertEquals(1,m.lhs.length);
+  assertTrue(m.lhs[0] instanceof FactPattern);
+  final FactPattern fp=(FactPattern)m.lhs[0];
+  assertEquals("Parent",fp.getFactType());
+  assertEquals(1,fp.getNumberOfConstraints());
+  assertTrue(fp.getConstraint(0) instanceof SingleFieldConstraintEBLeftSide);
+  final SingleFieldConstraintEBLeftSide exp=(SingleFieldConstraintEBLeftSide)fp.getConstraint(0);
+  assertEquals("int",exp.getFieldType());
+  assertEquals(">",exp.getOperator());
+  assertEquals("5",exp.getValue());
+  assertEquals(4,exp.getExpressionLeftSide().getParts().size());
+  assertTrue(exp.getExpressionLeftSide().getParts().get(0) instanceof ExpressionUnboundFact);
+  final ExpressionUnboundFact expPart0=(ExpressionUnboundFact)exp.getExpressionLeftSide().getParts().get(0);
+  assertEquals("Parent",expPart0.getFact().getFactType());
+  assertTrue(exp.getExpressionLeftSide().getParts().get(1) instanceof ExpressionMethod);
+  final ExpressionMethod expPart1=(ExpressionMethod)exp.getExpressionLeftSide().getParts().get(1);
+  assertEquals("methodToGetChild1",expPart1.getName());
+  assertTrue(exp.getExpressionLeftSide().getParts().get(2) instanceof ExpressionMethod);
+  final ExpressionMethod expPart2=(ExpressionMethod)exp.getExpressionLeftSide().getParts().get(2);
+  assertEquals("methodToGetChild2",expPart2.getName());
+  assertTrue(exp.getExpressionLeftSide().getParts().get(3) instanceof ExpressionField);
+  final ExpressionField expPart3=(ExpressionField)exp.getExpressionLeftSide().getParts().get(3);
+  assertEquals("field1",expPart3.getName());
+}

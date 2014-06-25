@@ -5,7 +5,8 @@
     factType=getFQFactType(m,boundParams.get(splits[0].trim()));
     isBoundParam=true;
   }
-  ModelField[] typeFields=findFields(dmo,m,factType);
+  ModelField[] typeFields=findFields(m,dmo,factType);
+  List<MethodInfo> methodInfos=getMethodInfosForType(m,dmo,factType);
   for (int i=0; i < splits.length - 1; i++) {
     String expressionPart=normalizeExpressionPart(splits[i]);
     if ("this".equals(expressionPart)) {
@@ -17,13 +18,23 @@
       isBoundParam=false;
     }
  else {
+      String currentClassName=null;
       ModelField currentField=findField(typeFields,expressionPart);
-      processExpressionPart(factType,currentField,expression,expressionPart);
-      typeFields=findFields(dmo,m,currentField.getClassName());
+      if (currentField != null) {
+        currentClassName=currentField.getClassName();
+      }
+      MethodInfo currentMethodInfo=findMethodInfo(methodInfos,expressionPart);
+      if (currentMethodInfo != null) {
+        currentClassName=currentMethodInfo.getReturnClassType();
+      }
+      processExpressionPart(m,factType,currentField,currentMethodInfo,expression,expressionPart);
+      typeFields=findFields(m,dmo,currentClassName);
+      methodInfos=getMethodInfosForType(m,dmo,currentClassName);
     }
   }
   String expressionPart=normalizeExpressionPart(splits[splits.length - 1]);
   ModelField currentField=findField(typeFields,expressionPart);
-  processExpressionPart(factType,currentField,expression,expressionPart);
+  MethodInfo currentMethodInfo=findMethodInfo(methodInfos,expressionPart);
+  processExpressionPart(m,factType,currentField,currentMethodInfo,expression,expressionPart);
   return expression;
 }
