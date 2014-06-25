@@ -2,16 +2,17 @@
   if (!initialized) {
     initializeLog();
   }
-  FileWriter fileWriter=null;
+  Writer writer=null;
   try {
-    fileWriter=new FileWriter(this.fileName + (this.nbOfFile == 0 ? ".log" : this.nbOfFile + ".log"),true);
+    FileOutputStream fileOut=new FileOutputStream(this.fileName + (this.nbOfFile == 0 ? ".log" : this.nbOfFile + ".log"),true);
+    writer=new OutputStreamWriter(fileOut,IoUtils.UTF8_CHARSET);
     final XStream xstream=new XStream();
     WorkingMemoryLog log=null;
 synchronized (this.events) {
       log=new WorkingMemoryLog(new ArrayList<LogEvent>(this.events),isPhreak ? "PHREAK" : "RETEOO");
       clear();
     }
-    fileWriter.write(xstream.toXML(log) + "\n");
+    writer.write(xstream.toXML(log) + "\n");
   }
  catch (  final FileNotFoundException exc) {
     throw new RuntimeException("Could not create the log file.  Please make sure that directory that the log file should be placed in does exist.");
@@ -20,9 +21,9 @@ catch (  final Throwable t) {
     logger.error("error",t);
   }
  finally {
-    if (fileWriter != null) {
+    if (writer != null) {
       try {
-        fileWriter.close();
+        writer.close();
       }
  catch (      Exception e) {
       }
