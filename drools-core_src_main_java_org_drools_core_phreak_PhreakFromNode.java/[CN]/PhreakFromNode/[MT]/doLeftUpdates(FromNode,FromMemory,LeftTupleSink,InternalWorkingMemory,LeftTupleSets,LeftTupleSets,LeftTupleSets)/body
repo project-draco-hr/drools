@@ -34,25 +34,11 @@
     }
     for (    RightTuple rightTuple : previousMatches.values()) {
       for (RightTuple current=rightTuple; current != null; current=(RightTuple)rightIt.next(current)) {
-        LeftTuple childLeftTuple=current.getFirstChild();
-        if (childLeftTuple != null) {
-          childLeftTuple.unlinkFromLeftParent();
-          childLeftTuple.unlinkFromRightParent();
-switch (childLeftTuple.getStagedType()) {
-case LeftTuple.INSERT:
-            stagedLeftTuples.removeInsert(childLeftTuple);
-          break;
-case LeftTuple.UPDATE:
-        stagedLeftTuples.removeUpdate(childLeftTuple);
-      break;
+        deleteChildLeftTuple(propagationContext,trgLeftTuples,stagedLeftTuples,current.getFirstChild());
+      }
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
   }
-  childLeftTuple.setPropagationContext(propagationContext);
-  trgLeftTuples.addDelete(childLeftTuple);
-}
-}
-}
-leftTuple.clearStaged();
-leftTuple=next;
-}
-betaConstraints.resetTuple(context);
+  betaConstraints.resetTuple(context);
 }
