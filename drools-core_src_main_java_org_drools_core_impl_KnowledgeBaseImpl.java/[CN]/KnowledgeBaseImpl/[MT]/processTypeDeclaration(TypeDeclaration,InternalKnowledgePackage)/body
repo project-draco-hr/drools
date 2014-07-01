@@ -1,0 +1,26 @@
+{
+  JavaDialectRuntimeData runtime=((JavaDialectRuntimeData)newPkg.getDialectRuntimeRegistry().getDialectData("java"));
+  TypeDeclaration typeDeclaration=this.classTypeDeclaration.get(newDecl.getTypeClassName());
+  if (typeDeclaration == null) {
+    String className=newDecl.getTypeClassName();
+    byte[] def=runtime.getClassDefinition(convertClassToResourcePath(className));
+    Class<?> definedKlass=registerAndLoadTypeDefinition(className,def);
+    if (definedKlass == null && typeDeclaration.isNovel()) {
+      throw new RuntimeException("Registering null bytes for class " + className);
+    }
+    if (newDecl.getTypeClassDef() == null) {
+      newDecl.setTypeClassDef(new ClassDefinition());
+    }
+    newDecl.getTypeClassDef().setDefinedClass(definedKlass);
+    newDecl.setTypeClass(definedKlass);
+    this.classTypeDeclaration.put(className,newDecl);
+    typeDeclaration=newDecl;
+  }
+ else {
+    Class<?> definedKlass=typeDeclaration.getTypeClass();
+    newDecl.getTypeClassDef().setDefinedClass(definedKlass);
+    newDecl.setTypeClass(definedKlass);
+    mergeTypeDeclarations(typeDeclaration,newDecl);
+  }
+  updateDependentTypes(newPkg,typeDeclaration);
+}
