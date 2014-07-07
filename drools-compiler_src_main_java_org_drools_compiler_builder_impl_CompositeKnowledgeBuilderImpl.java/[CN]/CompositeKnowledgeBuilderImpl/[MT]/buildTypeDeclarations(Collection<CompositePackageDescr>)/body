@@ -15,7 +15,7 @@
     buildTypeDeclarations(packageDescr,unresolvedTypes,unprocesseableDescrs);
   }
   if (!unprocesseableDescrs.isEmpty()) {
-    List<AbstractClassTypeDeclarationDescr> sortedDescrs=new ArrayList<AbstractClassTypeDeclarationDescr>(unprocesseableDescrs.values());
+    Collection<AbstractClassTypeDeclarationDescr> sortedDescrs=TypeDeclarationBuilder.sortByHierarchy(kBuilder,unprocesseableDescrs.values());
     for (    AbstractClassTypeDeclarationDescr descr : sortedDescrs) {
       unprocesseableDescrs.remove(descr.getType().getFullName());
       PackageRegistry pkg=kBuilder.getPackageRegistry().get(descr.getType().getNamespace());
@@ -25,11 +25,9 @@
   for (  TypeDefinition unresolvedType : unresolvedTypes) {
     kBuilder.getTypeBuilder().processUnresolvedType(kBuilder.getPackageRegistry(unresolvedType.getNamespace()),unresolvedType);
   }
-  Collection<AbstractClassTypeDeclarationDescr> sorted=kBuilder.getTypeBuilder().sortByHierarchy(allDescrs);
   int j=0;
-  for (  AbstractClassTypeDeclarationDescr descr : sorted) {
-    TypeDeclaration decl=kBuilder.getPackageRegistry(descr.getNamespace()).getPackage().getTypeDeclaration(descr.getTypeName());
-    decl.setOrder(j++);
+  for (  AbstractClassTypeDeclarationDescr descr : TypeDeclarationBuilder.sortByHierarchy(kBuilder,allDescrs)) {
+    kBuilder.getPackageRegistry(descr.getNamespace()).getPackage().getTypeDeclaration(descr.getTypeName()).setOrder(j++);
   }
   for (  CompositePackageDescr packageDescr : packages) {
     for (    ImportDescr importDescr : packageDescr.getImports()) {
