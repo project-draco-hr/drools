@@ -1,3 +1,16 @@
 {
-  return resolveArtifact(artifactName,true);
+  Artifact artifact=new DefaultArtifact(artifactName);
+  ArtifactRequest artifactRequest=new ArtifactRequest();
+  artifactRequest.setArtifact(artifact);
+  for (  RemoteRepository repo : remoteRepositoriesForRequest) {
+    artifactRequest.addRepository(repo);
+  }
+  try {
+    ArtifactResult artifactResult=aether.getSystem().resolveArtifact(aether.getSession(),artifactRequest);
+    return artifactResult.getArtifact();
+  }
+ catch (  ArtifactResolutionException e) {
+    log.warn("Unable to resolve artifact: " + artifactName,e);
+    return null;
+  }
 }
