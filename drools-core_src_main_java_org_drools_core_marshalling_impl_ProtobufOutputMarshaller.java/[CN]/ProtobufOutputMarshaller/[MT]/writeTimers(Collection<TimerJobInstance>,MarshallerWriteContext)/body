@@ -10,6 +10,9 @@
     ProtobufMessages.Timers.Builder _timers=ProtobufMessages.Timers.newBuilder();
     for (    TimerJobInstance timer : sortedTimers) {
       JobContext jctx=((SelfRemovalJobContext)timer.getJobContext()).getJobContext();
+      if (jctx instanceof ObjectTypeNode.ExpireJobContext && !((ObjectTypeNode.ExpireJobContext)jctx).getExpireAction().getFactHandle().isValid()) {
+        continue;
+      }
       TimersOutputMarshaller writer=outCtx.writersByClass.get(jctx.getClass());
       Timer _timer=writer.serialize(jctx,outCtx);
       if (_timer != null) {
