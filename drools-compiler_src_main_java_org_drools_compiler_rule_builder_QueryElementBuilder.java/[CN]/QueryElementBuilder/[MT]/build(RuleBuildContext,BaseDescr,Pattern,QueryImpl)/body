@@ -85,5 +85,14 @@
   for (int i=0; i < varIndexesArray.length; i++) {
     varIndexesArray[i]=varIndexes.get(i);
   }
+  for (  Integer declIndex : declrIndexes) {
+    Declaration knownInputArg=(Declaration)arguments.get(declIndex);
+    Declaration formalArgument=query.getParameters()[declIndex];
+    Class actual=knownInputArg.getExtractor().getExtractToClass();
+    Class formal=formalArgument.getExtractor().getExtractToClass();
+    if (!isCompatible(actual,formal) && !isCompatible(formal,actual)) {
+      context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Query is being invoked with known argument of type " + actual + " at position "+ declIndex+ ", but the expected query argument is of type "+ formal));
+    }
+  }
   return new QueryElement(pattern,query.getName(),arguments.toArray(new Object[arguments.size()]),declrsArray,declrIndexArray,varIndexesArray,!patternDescr.isQuery(),query.isAbductive());
 }
