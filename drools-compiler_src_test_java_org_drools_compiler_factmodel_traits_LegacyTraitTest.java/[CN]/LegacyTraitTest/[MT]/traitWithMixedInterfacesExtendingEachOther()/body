@@ -1,0 +1,12 @@
+{
+  String source="package org.drools.compiler.test;" + "import " + LegacyTraitTest.class.getName() + ".BarImpl; "+ "import "+ LegacyTraitTest.class.getName()+ ".Foo; "+ "import "+ LegacyTraitTest.class.getName()+ ".Trunk; "+ "global java.util.List list; "+ "declare trait Foo end "+ "declare trait Root end "+ "declare trait Foo2 extends Foo "+ "  @propertyReactive "+ "end "+ "rule 'Bar Don' "+ "when "+ "   $b : BarImpl( this isA Foo.class, this not isA Foo2.class ) "+ "then "+ "   list.add( 3 ); "+ "   retract( $b ); "+ "end "+ "rule 'Don Bar' "+ "no-loop "+ "when "+ "    $b : Foo( ) "+ "then "+ "    list.add( 1 ); "+ "    don( $b, Foo2.class ); "+ "end "+ "rule 'Cant really shed Foo but Foo2' "+ "when "+ "   $b : Foo2() "+ "then "+ "   list.add( 2 ); "+ "   shed( $b, Foo.class ); "+ "end "+ "";
+  StatefulKnowledgeSession ks=getSessionFromString(source);
+  TraitFactory.setMode(mode,ks.getKieBase());
+  ArrayList list=new ArrayList();
+  ks.setGlobal("list",list);
+  ks.insert(new BarImpl());
+  int n=ks.fireAllRules();
+  System.out.println(list);
+  assertEquals(Arrays.asList(1,2,3),list);
+  assertEquals(3,n);
+}

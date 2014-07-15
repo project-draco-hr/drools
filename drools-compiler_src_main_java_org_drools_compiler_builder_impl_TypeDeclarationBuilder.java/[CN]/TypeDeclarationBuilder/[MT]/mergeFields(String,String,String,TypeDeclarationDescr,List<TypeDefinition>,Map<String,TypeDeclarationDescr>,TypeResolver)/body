@@ -1,13 +1,16 @@
 {
   Map<String,TypeFieldDescr> fieldMap=new LinkedHashMap<String,TypeFieldDescr>();
+  boolean isNovel=isNovelClass(typeDescr);
   PackageRegistry registry=kbuilder.getPackageRegistry(superTypePackageName);
-  InternalKnowledgePackage pack;
+  InternalKnowledgePackage pack=null;
   if (registry != null) {
     pack=registry.getPackage();
   }
  else {
-    unprocessableDescrs.put(typeDescr.getType().getFullName(),typeDescr);
-    return false;
+    if (isNovel) {
+      unprocessableDescrs.put(typeDescr.getType().getFullName(),typeDescr);
+      return false;
+    }
   }
   if (unprocessableDescrs.containsKey(fullSuper)) {
     unprocessableDescrs.put(typeDescr.getType().getFullName(),typeDescr);
@@ -44,7 +47,13 @@
   }
   if (!isSuperClassDeclared || isSuperClassTagged) {
     try {
-      Class superKlass=registry.getTypeResolver().resolveType(fullSuper);
+      Class superKlass;
+      if (registry != null) {
+        superKlass=registry.getTypeResolver().resolveType(fullSuper);
+      }
+ else {
+        superKlass=resolver.resolveType(fullSuper);
+      }
       ClassFieldInspector inspector=new ClassFieldInspector(superKlass);
       for (      String name : inspector.getGetterMethods().keySet()) {
         if (inspector.getSetterMethods().containsKey(name)) {
