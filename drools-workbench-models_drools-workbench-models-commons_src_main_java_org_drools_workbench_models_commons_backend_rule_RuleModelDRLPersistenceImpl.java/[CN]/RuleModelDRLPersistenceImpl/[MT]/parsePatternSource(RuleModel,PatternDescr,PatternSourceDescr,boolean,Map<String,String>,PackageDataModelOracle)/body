@@ -1,0 +1,96 @@
+{
+  if (patternSource instanceof AccumulateDescr) {
+    AccumulateDescr accumulate=(AccumulateDescr)patternSource;
+    FromAccumulateCompositeFactPattern fac=new FromAccumulateCompositeFactPattern();
+    fac.setSourcePattern(parseBaseDescr(m,accumulate.getInput(),isJavaDialect,boundParams,dmo));
+    FactPattern factPattern=new FactPattern(pattern.getObjectType());
+    factPattern.setBoundName(pattern.getIdentifier());
+    boundParams.put(factPattern.getBoundName(),factPattern.getFactType());
+    parseConstraint(m,factPattern,pattern.getConstraint(),isJavaDialect,boundParams,dmo);
+    fac.setFactPattern(factPattern);
+    for (    AccumulateDescr.AccumulateFunctionCallDescr func : accumulate.getFunctions()) {
+      String funcName=func.getFunction();
+      boolean first=true;
+      StringBuilder sb=new StringBuilder();
+      for (      String param : func.getParams()) {
+        if (first) {
+          first=false;
+        }
+ else {
+          sb.append(", ");
+        }
+        sb.append(param);
+      }
+      fac.setFunction(funcName + "(" + sb+ ")");
+      break;
+    }
+    return fac;
+  }
+ else   if (patternSource instanceof CollectDescr) {
+    CollectDescr collect=(CollectDescr)patternSource;
+    FromCollectCompositeFactPattern fac=new FromCollectCompositeFactPattern();
+    fac.setRightPattern(parseBaseDescr(m,collect.getInputPattern(),isJavaDialect,boundParams,dmo));
+    fac.setFactPattern(getFactPattern(m,pattern,isJavaDialect,boundParams,dmo));
+    return fac;
+  }
+ else   if (patternSource instanceof EntryPointDescr) {
+    EntryPointDescr entryPoint=(EntryPointDescr)patternSource;
+    FromEntryPointFactPattern fep=new FromEntryPointFactPattern();
+    fep.setEntryPointName(entryPoint.getText());
+    fep.setFactPattern(getFactPattern(m,pattern,isJavaDialect,boundParams,dmo));
+    return fep;
+  }
+ else   if (patternSource instanceof FromDescr) {
+    FromDescr from=(FromDescr)patternSource;
+    FromCompositeFactPattern fcfp=new FromCompositeFactPattern();
+    FactPattern factPattern=new FactPattern(pattern.getObjectType());
+    factPattern.setBoundName(pattern.getIdentifier());
+    parseConstraint(m,factPattern,pattern.getConstraint(),isJavaDialect,boundParams,dmo);
+    fcfp.setFactPattern(factPattern);
+    ExpressionFormLine expression=new ExpressionFormLine();
+    fcfp.setExpression(expression);
+    String dataSource=from.getDataSource().toString();
+    String[] splitSource=dataSource.split("\\.");
+    ModelField[] fields=null;
+    for (int i=0; i < splitSource.length; i++) {
+      String sourcePart=splitSource[i];
+      if (i == 0) {
+        String type=boundParams.get(sourcePart);
+        expression.appendPart(new ExpressionVariable(sourcePart,type,DataType.TYPE_NUMERIC));
+        fields=findFields(m,dmo,type);
+      }
+ else {
+        ModelField modelField=null;
+        for (        ModelField field : fields) {
+          if (field.getName().equals(sourcePart)) {
+            modelField=field;
+            break;
+          }
+        }
+        if (modelField == null) {
+          final String previousClassName=expression.getClassType();
+          final List<MethodInfo> mis=dmo.getProjectMethodInformation().get(previousClassName);
+          boolean isMethod=false;
+          if (mis != null) {
+            for (            MethodInfo mi : mis) {
+              if (mi.getName().equals(sourcePart)) {
+                expression.appendPart(new ExpressionMethod(mi.getName(),mi.getReturnClassType(),mi.getGenericType(),mi.getParametricReturnType()));
+                isMethod=true;
+                break;
+              }
+            }
+          }
+          if (isMethod == false) {
+            expression.appendPart(new ExpressionText(sourcePart));
+          }
+        }
+ else {
+          expression.appendPart(new ExpressionField(sourcePart,modelField.getClassName(),modelField.getType()));
+          fields=findFields(m,dmo,modelField.getClassName());
+        }
+      }
+    }
+    return fcfp;
+  }
+  throw new RuntimeException("Unknown pattern source " + patternSource);
+}

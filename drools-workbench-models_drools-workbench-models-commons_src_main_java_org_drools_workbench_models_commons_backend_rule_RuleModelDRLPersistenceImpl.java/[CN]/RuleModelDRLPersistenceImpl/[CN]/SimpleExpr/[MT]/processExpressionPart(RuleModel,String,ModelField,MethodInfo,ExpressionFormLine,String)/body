@@ -2,7 +2,18 @@
   if (currentField == null) {
     boolean isMethod=currentMethodInfo != null;
     if (isMethod) {
-      expression.appendPart(new ExpressionMethod(currentMethodInfo.getName(),currentMethodInfo.getReturnClassType(),currentMethodInfo.getGenericType(),currentMethodInfo.getParametricReturnType()));
+      final ExpressionMethod em=new ExpressionMethod(currentMethodInfo.getName(),currentMethodInfo.getReturnClassType(),currentMethodInfo.getGenericType(),currentMethodInfo.getParametricReturnType());
+      final List<String> parameters=parseExpressionParameters(expressionPart);
+      for (int index=0; index < currentMethodInfo.getParams().size(); index++) {
+        final String paramDataType=currentMethodInfo.getParams().get(index);
+        final String paramValue=getParameterValue(paramDataType,parameters,index);
+        if (paramValue != null) {
+          final ExpressionFormLine param=new ExpressionFormLine(index);
+          param.appendPart(new ExpressionMethodParameter(paramValue,paramDataType,paramDataType));
+          em.putParam(paramDataType,param);
+        }
+      }
+      expression.appendPart(em);
     }
  else {
       expression.appendPart(new ExpressionText(expressionPart));

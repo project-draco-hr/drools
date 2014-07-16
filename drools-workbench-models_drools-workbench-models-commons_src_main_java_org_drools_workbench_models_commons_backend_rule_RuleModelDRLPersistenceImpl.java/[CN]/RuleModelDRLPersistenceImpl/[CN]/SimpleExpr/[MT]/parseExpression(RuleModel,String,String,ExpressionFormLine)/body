@@ -8,7 +8,13 @@
   ModelField[] typeFields=findFields(m,dmo,factType);
   List<MethodInfo> methodInfos=getMethodInfosForType(m,dmo,factType);
   for (int i=0; i < splits.length - 1; i++) {
-    String expressionPart=normalizeExpressionPart(splits[i]);
+    String expressionPart=splits[i];
+    if (boundParams.containsKey(expressionPart)) {
+      factType=getFQFactType(m,boundParams.get(expressionPart));
+      isBoundParam=true;
+      typeFields=findFields(m,dmo,factType);
+      methodInfos=getMethodInfosForType(m,dmo,factType);
+    }
     if ("this".equals(expressionPart)) {
       expression.appendPart(new ExpressionField(expressionPart,factType,DataType.TYPE_THIS));
     }
@@ -32,7 +38,7 @@
       methodInfos=getMethodInfosForType(m,dmo,currentClassName);
     }
   }
-  String expressionPart=normalizeExpressionPart(splits[splits.length - 1]);
+  String expressionPart=splits[splits.length - 1];
   ModelField currentField=findField(typeFields,expressionPart);
   MethodInfo currentMethodInfo=findMethodInfo(methodInfos,expressionPart);
   processExpressionPart(m,factType,currentField,currentMethodInfo,expression,expressionPart);
