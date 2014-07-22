@@ -1,0 +1,26 @@
+{
+  PatternDescr fldType=new PatternDescr();
+  TypeFieldDescr inheritedFldDescr=new TypeFieldDescr();
+  inheritedFldDescr.setFieldName(fld.getName());
+  fldType.setObjectType(((FieldDefinition)fld).getTypeName());
+  inheritedFldDescr.setPattern(fldType);
+  if (fld.isKey()) {
+    inheritedFldDescr.getAnnotations().put(TypeDeclaration.ATTR_KEY,new AnnotationDescr(TypeDeclaration.ATTR_KEY));
+  }
+  inheritedFldDescr.setIndex(((FieldDefinition)fld).getDeclIndex());
+  inheritedFldDescr.setInherited(true);
+  String initExprOverride=((FieldDefinition)fld).getInitExpr();
+  int overrideCount=0;
+  for (  TypeFieldDescr localField : typeDescr.getFields().values()) {
+    AnnotationDescr ann=localField.getAnnotation("Alias");
+    if (ann != null && fld.getName().equals(ann.getSingleValue().replaceAll("\"","")) && localField.getInitExpr() != null) {
+      overrideCount++;
+      initExprOverride=localField.getInitExpr();
+    }
+  }
+  if (overrideCount > 1) {
+    initExprOverride=null;
+  }
+  inheritedFldDescr.setInitExpr(initExprOverride);
+  return inheritedFldDescr;
+}

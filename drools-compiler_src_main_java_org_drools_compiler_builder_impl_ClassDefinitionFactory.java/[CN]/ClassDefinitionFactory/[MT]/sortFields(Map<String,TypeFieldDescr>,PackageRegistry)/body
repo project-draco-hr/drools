@@ -1,0 +1,55 @@
+{
+  PriorityQueue<FieldDefinition> queue=new PriorityQueue<FieldDefinition>(flds.size());
+  int maxDeclaredPos=0;
+  int curr=0;
+  BitSet occupiedPositions=new BitSet(flds.size());
+  for (  TypeFieldDescr field : flds.values()) {
+    int pos=field.getIndex();
+    if (pos >= 0) {
+      occupiedPositions.set(pos);
+    }
+    maxDeclaredPos=Math.max(maxDeclaredPos,pos);
+  }
+  for (  TypeFieldDescr field : flds.values()) {
+    String typeName=field.getPattern().getObjectType();
+    String typeNameKey=typeName;
+    String fullFieldType=TypeDeclarationUtils.toBuildableType(typeNameKey,kbuilder.getRootClassLoader());
+    FieldDefinition fieldDef=new FieldDefinition(field.getFieldName(),fullFieldType);
+    boolean isKey=field.getAnnotation(TypeDeclaration.ATTR_KEY) != null;
+    fieldDef.setKey(isKey);
+    fieldDef.setDeclIndex(field.getIndex());
+    if (field.getIndex() < 0) {
+      int freePos=occupiedPositions.nextClearBit(0);
+      if (freePos < maxDeclaredPos) {
+        occupiedPositions.set(freePos);
+      }
+ else {
+        freePos=maxDeclaredPos + 1;
+      }
+      fieldDef.setPriority(freePos * 256 + curr++);
+    }
+ else {
+      fieldDef.setPriority(field.getIndex() * 256 + curr++);
+    }
+    fieldDef.setInherited(field.isInherited());
+    fieldDef.setRecursive(field.isRecursive());
+    fieldDef.setInitExpr(TypeDeclarationUtils.rewriteInitExprWithImports(field.getInitExpr(),pkgRegistry.getTypeResolver()));
+    for (    String annotationName : field.getAnnotationNames()) {
+      Class annotation=TypeDeclarationUtils.resolveAnnotation(annotationName,pkgRegistry.getTypeResolver());
+      if (annotation != null && annotation.isAnnotation()) {
+        try {
+          AnnotationDefinition annotationDefinition=AnnotationDefinition.build(annotation,field.getAnnotations().get(annotationName).getValueMap(),pkgRegistry.getTypeResolver());
+          fieldDef.addAnnotation(annotationDefinition);
+        }
+ catch (        NoSuchMethodException nsme) {
+          kbuilder.addBuilderResult(new TypeDeclarationError(field,"Annotated field " + field.getFieldName() + "  - undefined property in @annotation "+ annotationName+ ": "+ nsme.getMessage()+ ";"));
+        }
+      }
+      if (annotation == null || annotation == Key.class || annotation == Position.class) {
+        fieldDef.addMetaData(annotationName,field.getAnnotation(annotationName).getSingleValue());
+      }
+    }
+    queue.add(fieldDef);
+  }
+  return queue;
+}

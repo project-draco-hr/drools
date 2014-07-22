@@ -1,0 +1,19 @@
+{
+  Collection<QualifiedName> parents=taxonomy.get(new QualifiedName(type.getFullName()));
+  int index=getSortedDescriptors().indexOf(typeDescr);
+  if (parents != null && !parents.isEmpty()) {
+    for (    QualifiedName parentName : parents) {
+      String nameSpace=parentName.getNamespace();
+      String name=parentName.getName();
+      PackageRegistry parentPkgRegistry=pkgRegistryMap.get(nameSpace);
+      if (parentPkgRegistry != null) {
+        TypeDeclaration parentDeclaration=parentPkgRegistry.getPackage().getTypeDeclaration(name);
+        if (parentDeclaration != null && parentDeclaration.getNature() == TypeDeclaration.Nature.DEFINITION) {
+          index=Math.max(index,parentDeclaration.getOrder());
+        }
+      }
+    }
+  }
+  type.setOrder(index + 1);
+  tgtPackage.addTypeDeclaration(type);
+}

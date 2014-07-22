@@ -1,0 +1,39 @@
+{
+  Class<?> typeClass=null;
+  if (isQualified(name)) {
+    typeClass=getClassForType(name,loader);
+  }
+  if (typeClass == null) {
+    for (    ImportDescr id : packageDescr.getImports()) {
+      String imp=id.getTarget();
+      int separator=imp.lastIndexOf('.');
+      String tail=imp.substring(separator + 1);
+      if (tail.equals(name)) {
+        typeClass=getClassForType(imp,loader);
+        if (typeClass != null) {
+          return typeClass.getCanonicalName();
+        }
+ else {
+          return imp;
+        }
+      }
+ else       if (tail.equals("*")) {
+        typeClass=getClassForType(imp.substring(0,imp.length() - 1) + name,loader);
+        if (typeClass != null) {
+          String resolvedNamespace=imp.substring(0,separator);
+          if (resolvedNamespace.equals(typeDescr.getNamespace())) {
+            break;
+          }
+ else           if (name.equals(typeDescr.getType().getName()) && !isCompatible(typeClass,typeDescr)) {
+            typeClass=null;
+          }
+ else {
+            break;
+          }
+        }
+      }
+    }
+  }
+  String className=typeClass != null ? typeClass.getName() : name;
+  return className;
+}

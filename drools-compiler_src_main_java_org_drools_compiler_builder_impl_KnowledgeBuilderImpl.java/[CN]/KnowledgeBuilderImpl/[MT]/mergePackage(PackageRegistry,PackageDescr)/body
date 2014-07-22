@@ -4,9 +4,17 @@
   }
   processAccumulateFunctions(pkgRegistry,packageDescr);
   processEntryPointDeclarations(pkgRegistry,packageDescr);
-  Map<String,TypeDeclarationDescr> unprocessableDescrs=new HashMap<String,TypeDeclarationDescr>();
-  typeBuilder.processTypes(pkgRegistry,packageDescr,unprocessableDescrs);
-  for (  TypeDeclarationDescr descr : unprocessableDescrs.values()) {
+  Map<String,AbstractClassTypeDeclarationDescr> unprocesseableDescrs=new HashMap<String,AbstractClassTypeDeclarationDescr>();
+  List<TypeDefinition> unresolvedTypes=new ArrayList<TypeDefinition>();
+  List<AbstractClassTypeDeclarationDescr> unsortedDescrs=new ArrayList<AbstractClassTypeDeclarationDescr>();
+  for (  TypeDeclarationDescr typeDeclarationDescr : packageDescr.getTypeDeclarations()) {
+    unsortedDescrs.add(typeDeclarationDescr);
+  }
+  for (  EnumDeclarationDescr enumDeclarationDescr : packageDescr.getEnumDeclarations()) {
+    unsortedDescrs.add(enumDeclarationDescr);
+  }
+  typeBuilder.processTypeDeclarations(Arrays.asList(packageDescr),unsortedDescrs,unresolvedTypes,unprocesseableDescrs);
+  for (  AbstractClassTypeDeclarationDescr descr : unprocesseableDescrs.values()) {
     this.addBuilderResult(new TypeDeclarationError(descr,"Unable to process type " + descr.getTypeName()));
   }
   processOtherDeclarations(pkgRegistry,packageDescr);

@@ -1,0 +1,26 @@
+{
+  TypeDeclarationDescr tDescr=(TypeDeclarationDescr)typeDescr;
+  boolean isNovel=TypeDeclarationUtils.isNovelClass(typeDescr,pkgRegistry);
+  boolean inferFields=!isNovel && typeDescr.getFields().isEmpty();
+  for (  QualifiedName qname : tDescr.getSuperTypes()) {
+    if (mergeInheritedFields(tDescr,unresolvedTypes,unprocessableDescrs,pkgRegistry.getTypeResolver())) {
+    }
+  }
+  if (inferFields) {
+    try {
+      Class existingClass=TypeDeclarationUtils.getExistingDeclarationClass(typeDescr,pkgRegistry);
+      ClassFieldInspector inspector=new ClassFieldInspector(existingClass);
+      for (      String name : inspector.getGetterMethods().keySet()) {
+        if (inspector.getSetterMethods().containsKey(name)) {
+          if (!inspector.isNonGetter(name) && !"class".equals(name)) {
+            TypeFieldDescr inheritedFlDescr=new TypeFieldDescr(name,new PatternDescr(inspector.getFieldTypes().get(name).getName()));
+            inheritedFlDescr.setInherited(!Modifier.isAbstract(inspector.getGetterMethods().get(name).getModifiers()));
+            if (!tDescr.getFields().containsKey(inheritedFlDescr.getFieldName()))             tDescr.getFields().put(inheritedFlDescr.getFieldName(),inheritedFlDescr);
+          }
+        }
+      }
+    }
+ catch (    Exception e) {
+    }
+  }
+}

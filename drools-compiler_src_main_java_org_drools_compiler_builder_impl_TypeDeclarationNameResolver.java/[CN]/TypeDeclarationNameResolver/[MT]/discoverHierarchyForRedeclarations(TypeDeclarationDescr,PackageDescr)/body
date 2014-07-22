@@ -1,0 +1,14 @@
+{
+  PackageRegistry pkReg=kbuilder.getPackageRegistry(packageDescr.getName());
+  if (!TypeDeclarationUtils.isNovelClass(typeDescr,pkReg)) {
+    Class typeClass=TypeDeclarationUtils.getExistingDeclarationClass(typeDescr,pkReg);
+    AnnotationDescr kind=typeDescr.getAnnotation(TypeDeclaration.Kind.ID);
+    if (typeClass != null && kind != null && kind.hasValue() && TypeDeclaration.Kind.TRAIT == TypeDeclaration.Kind.parseKind(kind.getSingleValue())) {
+      fillStaticInterfaces(typeDescr,typeClass);
+    }
+ else {
+      typeDescr.getSuperTypes().clear();
+      typeDescr.addSuperType(typeClass.isInterface() || typeClass == Object.class ? Object.class.getName() : typeClass.getSuperclass().getName());
+    }
+  }
+}

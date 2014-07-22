@@ -1,0 +1,23 @@
+{
+  for (  PackageDescr packageDescr : packageDescrs) {
+    if (kbuilder.getPackageRegistry(packageDescr.getName()) == null) {
+      kbuilder.createPackageRegistry(packageDescr);
+    }
+  }
+  setResourcesInDescriptors(packageDescrs);
+  typeDeclarationNameResolver.resolveTypes(packageDescrs,unsortedDescrs,unresolvedTypes,unprocesseableDescrs);
+  for (  PackageDescr packageDescr : packageDescrs) {
+    normalizeForeignPackages(packageDescr);
+  }
+  ClassHierarchyManager classHierarchyManager=new ClassHierarchyManager(unsortedDescrs,kbuilder);
+  for (  AbstractClassTypeDeclarationDescr typeDescr : classHierarchyManager.getSortedDescriptors()) {
+    PackageRegistry pkgRegistry=kbuilder.getPackageRegistry(typeDescr.getNamespace());
+    createBean(typeDescr,pkgRegistry,classHierarchyManager,unresolvedTypes,unprocesseableDescrs);
+  }
+  for (  AbstractClassTypeDeclarationDescr typeDescr : classHierarchyManager.getSortedDescriptors()) {
+    if (!unprocesseableDescrs.containsKey(typeDescr.getType().getFullName())) {
+      PackageRegistry pkgRegistry=kbuilder.getPackageRegistry(typeDescr.getNamespace());
+      typeDeclarationConfigurator.wireFieldAccessors(pkgRegistry,typeDescr,pkgRegistry.getPackage().getTypeDeclaration(typeDescr.getType().getName()));
+    }
+  }
+}

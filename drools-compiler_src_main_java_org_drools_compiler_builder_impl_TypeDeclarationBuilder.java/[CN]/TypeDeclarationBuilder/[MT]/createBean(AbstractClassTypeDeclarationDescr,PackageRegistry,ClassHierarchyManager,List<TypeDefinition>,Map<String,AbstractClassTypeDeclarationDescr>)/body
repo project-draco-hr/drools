@@ -1,0 +1,45 @@
+{
+  if (typeDescr instanceof TypeDeclarationDescr) {
+    hierarchyManager.inheritFields(pkgRegistry,typeDescr,hierarchyManager.getSortedDescriptors(),unresolvedTypes,unprocesseableDescrs);
+  }
+  TypeDeclaration type=typeDeclarationFactory.processTypeDeclaration(pkgRegistry,typeDescr,unresolvedTypes,unprocesseableDescrs);
+  boolean success=!kbuilder.hasErrors();
+  try {
+    ClassDefinition def=null;
+    if (success) {
+      def=classDefinitionFactory.generateDeclaredBean(typeDescr,type,pkgRegistry,unresolvedTypes,unprocesseableDescrs);
+      if (!type.isNovel()) {
+        typeDeclarationFactory.checkRedeclaration(typeDescr,type,pkgRegistry);
+      }
+    }
+    success=(def != null) && (!kbuilder.hasErrors());
+    if (success) {
+      updateTraitInformation(typeDescr,type,def,pkgRegistry);
+    }
+    success=!kbuilder.hasErrors();
+    if (success) {
+      declaredClassBuilder.generateBeanFromDefinition(typeDescr,type,pkgRegistry,def);
+    }
+    success=!kbuilder.hasErrors();
+    if (success) {
+      Class<?> clazz=pkgRegistry.getTypeResolver().resolveType(typeDescr.getType().getFullName());
+      type.setTypeClass(clazz);
+      type.setValid(true);
+    }
+ else {
+      unprocesseableDescrs.put(typeDescr.getType().getFullName(),typeDescr);
+      type.setValid(false);
+    }
+    typeDeclarationConfigurator.finalize(type,typeDescr,pkgRegistry,kbuilder.getPackageRegistry(),hierarchyManager);
+  }
+ catch (  final ClassNotFoundException e) {
+    unprocesseableDescrs.put(typeDescr.getType().getFullName(),typeDescr);
+    kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Class '" + type.getTypeClassName() + "' not found for type declaration of '"+ type.getTypeName()+ "'"));
+  }
+  if (!success) {
+    unresolvedTypes.add(new TypeDefinition(type,typeDescr));
+  }
+ else {
+    registerGeneratedType(typeDescr);
+  }
+}

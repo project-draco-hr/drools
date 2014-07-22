@@ -1,0 +1,26 @@
+{
+  if (!TypeDeclarationUtils.isQualified(type)) {
+    type=TypeDeclarationUtils.lookupSimpleNameByImports(type,typeDescr,packageDescr,kbuilder.getRootClassLoader());
+  }
+  if (!TypeDeclarationUtils.isQualified(type)) {
+    type=TypeDeclarationUtils.resolveType(type,packageDescr,kbuilder.getPackageRegistry(packageDescr.getNamespace()));
+  }
+  if (!TypeDeclarationUtils.isQualified(type)) {
+    try {
+      Class klass=typeResolver.resolveType(type);
+      type=klass.getCanonicalName();
+      return type;
+    }
+ catch (    ClassNotFoundException e) {
+    }
+  }
+ else {
+    type=TypeDeclarationUtils.typeName2ClassName(type,kbuilder.getRootClassLoader());
+  }
+  if (forceResolution && !TypeDeclarationUtils.isQualified(type)) {
+    TypeDeclaration temp=new TypeDeclaration(type);
+    temp.setTypeClassName(type);
+    unresolvedTypes.add(new TypeDefinition(temp,null));
+  }
+  return TypeDeclarationUtils.isQualified(type) ? type : null;
+}

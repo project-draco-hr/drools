@@ -1,0 +1,32 @@
+{
+  Map<String,PackageDescr> foreignPackages=null;
+  for (  AbstractClassTypeDeclarationDescr typeDescr : packageDescr.getClassAndEnumDeclarationDescrs()) {
+    if (kbuilder.filterAccepts(typeDescr.getNamespace(),typeDescr.getTypeName())) {
+      if (!typeDescr.getNamespace().equals(packageDescr.getNamespace())) {
+        PackageDescr altDescr;
+        if (foreignPackages == null) {
+          foreignPackages=new HashMap<String,PackageDescr>();
+        }
+        if (foreignPackages.containsKey(typeDescr.getNamespace())) {
+          altDescr=foreignPackages.get(typeDescr.getNamespace());
+        }
+ else {
+          altDescr=new PackageDescr(typeDescr.getNamespace());
+          foreignPackages.put(typeDescr.getNamespace(),altDescr);
+        }
+        if (typeDescr instanceof TypeDeclarationDescr) {
+          altDescr.addTypeDeclaration((TypeDeclarationDescr)typeDescr);
+        }
+ else         if (typeDescr instanceof EnumDeclarationDescr) {
+          altDescr.addEnumDeclaration((EnumDeclarationDescr)typeDescr);
+        }
+        for (        ImportDescr imp : packageDescr.getImports()) {
+          altDescr.addImport(imp);
+        }
+        if (!kbuilder.getPackageRegistry().containsKey(altDescr.getNamespace())) {
+          kbuilder.createPackageRegistry(altDescr);
+        }
+      }
+    }
+  }
+}

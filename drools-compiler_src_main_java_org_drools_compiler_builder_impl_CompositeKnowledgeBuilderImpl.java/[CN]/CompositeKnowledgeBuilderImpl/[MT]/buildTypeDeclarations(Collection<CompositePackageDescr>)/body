@@ -1,36 +1,24 @@
 {
-  List<AbstractClassTypeDeclarationDescr> allDescrs=new ArrayList<AbstractClassTypeDeclarationDescr>();
+  for (  CompositePackageDescr packageDescr : packages) {
+    if (kBuilder.getPackageRegistry(packageDescr.getName()) == null) {
+      if (StringUtils.isEmpty(packageDescr.getName())) {
+        packageDescr.setName(kBuilder.getBuilderConfiguration().getDefaultPackageName());
+      }
+      kBuilder.createPackageRegistry(packageDescr);
+    }
+  }
+  Map<String,AbstractClassTypeDeclarationDescr> unprocesseableDescrs=new HashMap<String,AbstractClassTypeDeclarationDescr>();
+  List<TypeDefinition> unresolvedTypes=new ArrayList<TypeDefinition>();
+  List<AbstractClassTypeDeclarationDescr> unsortedDescrs=new ArrayList<AbstractClassTypeDeclarationDescr>();
   for (  CompositePackageDescr packageDescr : packages) {
     for (    TypeDeclarationDescr typeDeclarationDescr : packageDescr.getTypeDeclarations()) {
-      if (isEmpty(typeDeclarationDescr.getNamespace())) {
-        typeDeclarationDescr.setNamespace(packageDescr.getNamespace());
-      }
-      kBuilder.getTypeBuilder().registerGeneratedType(typeDeclarationDescr);
-      allDescrs.add(typeDeclarationDescr);
+      unsortedDescrs.add(typeDeclarationDescr);
+    }
+    for (    EnumDeclarationDescr enumDeclarationDescr : packageDescr.getEnumDeclarations()) {
+      unsortedDescrs.add(enumDeclarationDescr);
     }
   }
-  Map<String,TypeDeclarationDescr> unprocesseableDescrs=new HashMap<String,TypeDeclarationDescr>();
-  List<TypeDefinition> unresolvedTypes=new ArrayList<TypeDefinition>();
-  for (  CompositePackageDescr packageDescr : packages) {
-    buildTypeDeclarations(packageDescr,unresolvedTypes,unprocesseableDescrs);
-  }
-  if (!unprocesseableDescrs.isEmpty()) {
-    Collection<AbstractClassTypeDeclarationDescr> sortedDescrs=TypeDeclarationBuilder.sortByHierarchy(kBuilder,unprocesseableDescrs.values());
-    for (    AbstractClassTypeDeclarationDescr descr : sortedDescrs) {
-      unprocesseableDescrs.remove(descr.getType().getFullName());
-      PackageRegistry pkg=kBuilder.getPackageRegistry().get(descr.getType().getNamespace());
-      kBuilder.getTypeBuilder().processTypeDeclaration(pkg,descr,sortedDescrs,unresolvedTypes,unprocesseableDescrs);
-    }
-  }
-  for (  TypeDefinition unresolvedType : unresolvedTypes) {
-    kBuilder.getTypeBuilder().processUnresolvedType(kBuilder.getPackageRegistry(unresolvedType.getNamespace()),unresolvedType);
-  }
-  if (!kBuilder.hasErrors()) {
-    int j=0;
-    for (    AbstractClassTypeDeclarationDescr descr : TypeDeclarationBuilder.sortByHierarchy(kBuilder,allDescrs)) {
-      kBuilder.getPackageRegistry(descr.getNamespace()).getPackage().getTypeDeclaration(descr.getTypeName()).setOrder(j++);
-    }
-  }
+  kBuilder.getTypeBuilder().processTypeDeclarations(packages,unsortedDescrs,unresolvedTypes,unprocesseableDescrs);
   for (  CompositePackageDescr packageDescr : packages) {
     for (    ImportDescr importDescr : packageDescr.getImports()) {
       kBuilder.getPackageRegistry(packageDescr.getNamespace()).addImport(importDescr);

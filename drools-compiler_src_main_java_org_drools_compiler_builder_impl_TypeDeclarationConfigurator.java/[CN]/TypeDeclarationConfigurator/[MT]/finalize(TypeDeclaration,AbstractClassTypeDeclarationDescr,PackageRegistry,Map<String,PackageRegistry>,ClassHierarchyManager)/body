@@ -1,0 +1,30 @@
+{
+  if (type.getNature() == TypeDeclaration.Nature.DEFINITION) {
+    hierarchyManager.addDeclarationToPackagePreservingOrder(type,typeDescr,pkgRegistry.getPackage(),pkgRegistryMap);
+  }
+ else {
+    TypeDeclaration oldType=pkgRegistry.getPackage().getTypeDeclaration(type.getTypeName());
+    if (oldType == null) {
+      pkgRegistry.getPackage().addTypeDeclaration(type);
+    }
+ else {
+      if (type.getRole() == TypeDeclaration.Role.EVENT) {
+        oldType.setRole(TypeDeclaration.Role.EVENT);
+        if (type.getDurationAttribute() != null) {
+          oldType.setDurationAttribute(type.getDurationAttribute());
+          oldType.setDurationExtractor(type.getDurationExtractor());
+        }
+        if (type.getTimestampAttribute() != null) {
+          oldType.setTimestampAttribute(type.getTimestampAttribute());
+          oldType.setTimestampExtractor(type.getTimestampExtractor());
+        }
+        if (type.getExpirationOffset() >= 0) {
+          oldType.setExpirationOffset(type.getExpirationOffset());
+        }
+      }
+      if (type.isPropertyReactive()) {
+        oldType.setPropertyReactive(true);
+      }
+    }
+  }
+}

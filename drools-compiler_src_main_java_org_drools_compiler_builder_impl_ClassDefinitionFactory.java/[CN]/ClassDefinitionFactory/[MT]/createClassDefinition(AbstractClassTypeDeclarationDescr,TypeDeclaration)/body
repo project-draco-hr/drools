@@ -1,0 +1,41 @@
+{
+  String fullName=typeDescr.getType().getFullName();
+  if (type.getKind().equals(TypeDeclaration.Kind.CLASS)) {
+    TypeDeclarationDescr tdescr=(TypeDeclarationDescr)typeDescr;
+    if (tdescr.getSuperTypes().size() > 1) {
+      kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Declared class " + fullName + "  - has more than one supertype;"));
+      return null;
+    }
+ else     if (tdescr.getSuperTypes().isEmpty()) {
+      tdescr.addSuperType("java.lang.Object");
+    }
+  }
+  AnnotationDescr traitableAnn=typeDescr.getAnnotation(Traitable.class.getSimpleName());
+  boolean traitable=traitableAnn != null;
+  String[] fullSuperTypes=new String[typeDescr.getSuperTypes().size() + 1];
+  int j=0;
+  for (  QualifiedName qname : typeDescr.getSuperTypes()) {
+    fullSuperTypes[j++]=qname.getFullName();
+  }
+  fullSuperTypes[j]=Thing.class.getName();
+  List<String> interfaceList=new ArrayList<String>();
+  interfaceList.add(traitable ? Externalizable.class.getName() : Serializable.class.getName());
+  if (traitable) {
+    interfaceList.add(TraitableBean.class.getName());
+  }
+  String[] interfaces=interfaceList.toArray(new String[interfaceList.size()]);
+  ClassDefinition def;
+switch (type.getKind()) {
+case TRAIT:
+    def=new ClassDefinition(fullName,Object.class.getName(),fullSuperTypes);
+  break;
+case ENUM:
+def=new EnumClassDefinition(fullName,fullSuperTypes[0],null);
+break;
+case CLASS:
+default :
+def=new ClassDefinition(fullName,fullSuperTypes[0],interfaces);
+def.setTraitable(traitable,traitableAnn != null && traitableAnn.getValue("logical") != null && Boolean.valueOf(traitableAnn.getValue("logical")));
+}
+return def;
+}

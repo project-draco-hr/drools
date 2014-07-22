@@ -1,0 +1,18 @@
+{
+  for (  String annotationName : typeDescr.getAnnotationNames()) {
+    Class annotation=TypeDeclarationUtils.resolveAnnotation(annotationName,resolver);
+    if (annotation != null && annotation.isAnnotation()) {
+      try {
+        AnnotationDefinition annotationDefinition=AnnotationDefinition.build(annotation,typeDescr.getAnnotations().get(annotationName).getValueMap(),resolver);
+        def.addAnnotation(annotationDefinition);
+      }
+ catch (      NoSuchMethodException nsme) {
+        kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Annotated type " + typeDescr.getType().getFullName() + "  - undefined property in @annotation "+ annotationName+ ": "+ nsme.getMessage()+ ";"));
+      }
+    }
+    if (annotation == null || annotation == Role.class) {
+      def.addMetaData(annotationName,typeDescr.getAnnotation(annotationName).getSingleValue());
+    }
+  }
+  return true;
+}
