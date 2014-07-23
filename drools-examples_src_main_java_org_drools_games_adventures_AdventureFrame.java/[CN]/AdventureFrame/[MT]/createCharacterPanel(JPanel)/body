@@ -3,11 +3,18 @@
   characterSelectCombo=new JComboBox();
   characterSelectCombo.setModel(new DefaultComboBoxModel(new Object[]{null,null}));
   parent.add(characterSelectCombo,"top, left");
+  Map<String,Character> characterMap=(Map<String,Character>)gameEngine.getData().get("characters");
+  Character[] characters=characterMap.values().toArray(new Character[characterMap.size()]);
+  characterSelectCombo.setModel(new DefaultComboBoxModel(characters));
+  characterSelectCombo.setSelectedItem(characterMap.get("hero"));
   characterSelectCombo.addActionListener(new ActionListener(){
     public void actionPerformed(    ActionEvent e){
+      Character c=(Character)characterSelectCombo.getSelectedObjects()[0];
+      org.kie.api.runtime.rule.FactHandle fh=gameEngine.getKieSession().getFactHandle(session);
+      session.setCharacter(c);
+      gameEngine.getKieSession().update(fh,session);
       cmd=new ArrayList();
-      cmd.add(Action.SELECT_CHARACTER);
-      cmd.add(session);
+      cmd.add(LookCommand.class);
       cmd.add(characterSelectCombo.getSelectedObjects()[0]);
       gameEngine.receiveMessage(session,cmd);
       cmd=null;

@@ -2,44 +2,33 @@
   KieContainer kc=KieServices.Factory.get().getKieClasspathContainer();
   System.out.println(kc.verify().getMessages().toString());
   ksession=kc.newKieSession("TextAdventureKS");
-  KieBase kbase=ksession.getKieBase();
   Counter c=new Counter();
   ksession.setGlobal("counter",c);
-  classLoader=((KnowledgeBaseImpl)kbase).getRootClassLoader();
-  ClassLoader currentClassLoader=Thread.currentThread().getContextClassLoader();
+  Map vars=new HashMap();
+  vars.put("c",c);
   try {
-    Thread.currentThread().setContextClassLoader(classLoader);
-    Map vars=new HashMap();
-    vars.put("c",c);
-    Map<String,Map> map;
-    try {
-      String mvelContent=new String(IOUtils.toByteArray(getClass().getResource("data.mvel").openStream()),IoUtils.UTF8_CHARSET);
-      map=(Map<String,Map>)MVEL.executeExpression(MVEL.compileExpression(mvelContent),vars);
-    }
- catch (    IOException e) {
-      throw new RuntimeException(e);
-    }
-    for (    Object o : map.get("rooms").values()) {
-      ksession.insert(o);
-    }
-    for (    Object o : map.get("doors").values()) {
-      ksession.insert(o);
-    }
-    for (    Object o : map.get("characters").values()) {
-      ksession.insert(o);
-    }
-    for (    Object o : map.get("items").values()) {
-      ksession.insert(o);
-    }
-    for (    Object o : map.get("locations").values()) {
-      ksession.insert(o);
-    }
-    MapVariableResolverFactory f=new MapVariableResolverFactory(map);
-    String baseStr="import  org.drools.games.adventures.*;  import org.drools.games.adventures.commands.*;\n";
-    FactHandle fh=ksession.insert(MVEL.eval(baseStr + "new EnterEvent( characters['hero'], rooms['first floor hallway'] )",f));
-    ksession.fireAllRules();
+    String mvelContent=new String(IOUtils.toByteArray(getClass().getResource("data.mvel").openStream()),IoUtils.UTF8_CHARSET);
+    data=(Map<String,Map>)MVEL.executeExpression(MVEL.compileExpression(mvelContent),vars);
   }
-  finally {
-    Thread.currentThread().setContextClassLoader(currentClassLoader);
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+  for (  Object o : data.get("rooms").values()) {
+    ksession.insert(o);
+  }
+  for (  Object o : data.get("doors").values()) {
+    ksession.insert(o);
+  }
+  for (  Object o : data.get("characters").values()) {
+    ksession.insert(o);
+  }
+  for (  Object o : data.get("items").values()) {
+    ksession.insert(o);
+  }
+  for (  Object o : data.get("keys").values()) {
+    ksession.insert(o);
+  }
+  for (  Object o : data.get("locations").values()) {
+    ksession.insert(o);
   }
 }
