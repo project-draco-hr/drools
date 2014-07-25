@@ -1,0 +1,11 @@
+{
+  String drl="\n" + "package com.sample\n" + "\n"+ "global java.lang.String AString;\n"+ "global java.util.List list;\n"+ "\n"+ "declare AThing\n"+ "     name: String @key\n"+ "end\n"+ "\n"+ "rule init\n"+ "     when\n"+ "     then\n"+ "         insert( new AThing( AString ) );\n"+ "         insert( new AThing( 'Holla' ) );\n"+ "end\n"+ "\n"+ "query test( String $in ) \n"+ "     AThing( $in; )\n"+ "end\n"+ "\n"+ "rule spot\n"+ "     when\n"+ "         test( \"Hello\"; )\n"+ "         AThing( \"Hello\"; )\n"+ "         test( AString; )\n"+ "         AThing( AString; )"+ "     then\n"+ "         list.add( AString + \" World\" );\n"+ "end\n";
+  KieHelper helper=new KieHelper();
+  helper.addContent(drl,ResourceType.DRL);
+  KieSession ks=helper.build().newKieSession();
+  ArrayList list=new ArrayList();
+  ks.setGlobal("AString","Hello");
+  ks.setGlobal("list",list);
+  ks.fireAllRules();
+  assertEquals(Arrays.asList("Hello World"),list);
+}
