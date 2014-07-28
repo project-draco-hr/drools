@@ -1,6 +1,5 @@
 {
   KieContainer kc=KieServices.Factory.get().getKieClasspathContainer();
-  System.out.println(kc.verify().getMessages().toString());
   final KieSession serverKsession=kc.newKieSession("WumpusMainKS");
   final KieSession clientKsession=kc.newKieSession("WumpusClientKS");
   serverKsession.getChannels().put("sensors",new Channel(){
@@ -21,6 +20,9 @@
   wumpusWorldConfiguration.setExitOnClose(exitOnClose);
   serverKsession.setGlobal("wumpusWorldConfiguration",wumpusWorldConfiguration);
   serverKsession.setGlobal("randomInteger",new java.util.Random());
+  GameUI gameUI=new GameUI(serverKsession,wumpusWorldConfiguration);
+  serverKsession.insert(gameUI);
+  serverKsession.insert(gameUI.getGameView());
   new Thread(new Runnable(){
     public void run(){
       serverKsession.fireUntilHalt();
