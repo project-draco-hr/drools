@@ -1,0 +1,22 @@
+{
+  GuidedDecisionTable52 dt=new GuidedDecisionTable52();
+  dt.setTableFormat(GuidedDecisionTable52.TableFormat.EXTENDED_ENTRY);
+  dt.setTableName("extended-entry");
+  ActionInsertFactCol52 ins1=new ActionInsertFactCol52();
+  ins1.setBoundName("$f");
+  ins1.setFactType("Smurf");
+  ins1.setFactField("name");
+  ins1.setType(DataType.TYPE_STRING);
+  dt.getActionCols().add(ins1);
+  ActionInsertFactCol52 ins2=new ActionInsertFactCol52();
+  ins2.setBoundName("$f");
+  ins2.setFactType("Smurf");
+  ins2.setFactField("age");
+  ins2.setType(DataType.TYPE_NUMERIC_INTEGER);
+  dt.getActionCols().add(ins2);
+  dt.setData(DataUtilities.makeDataLists(new Object[][]{new Object[]{1l,"desc-row1",null,null},new Object[]{2l,"desc-row2","   ",35l},new Object[]{3l,"desc-row3","",null},new Object[]{4l,"desc-row4","",35l}}));
+  GuidedDTDRLPersistence p=GuidedDTDRLPersistence.getInstance();
+  String drl=p.marshal(dt);
+  final String expected="//from row number: 1\n" + "//desc-row1\n" + "rule \"Row 1 extended-entry\"\n"+ "  dialect \"mvel\"\n"+ "  when\n"+ "  then\n"+ "end\n"+ "//from row number: 2\n"+ "//desc-row2\n"+ "rule \"Row 2 extended-entry\"\n"+ "  dialect \"mvel\"\n"+ "  when\n"+ "  then\n"+ "    Smurf $f = new Smurf();\n"+ "    $f.setAge( 35 );\n"+ "    insert( $f );\n"+ "end\n"+ "//from row number: 3\n"+ "//desc-row3\n"+ "rule \"Row 3 extended-entry\"\n"+ "  dialect \"mvel\"\n"+ "  when\n"+ "  then\n"+ "end\n"+ "//from row number: 4\n"+ "//desc-row4\n"+ "rule \"Row 4 extended-entry\"\n"+ "  dialect \"mvel\"\n"+ "  when\n"+ "  then\n"+ "    Smurf $f = new Smurf();\n"+ "    $f.setAge( 35 );\n"+ "    insert( $f );\n"+ "end";
+  assertEqualsIgnoreWhitespace(expected,drl);
+}

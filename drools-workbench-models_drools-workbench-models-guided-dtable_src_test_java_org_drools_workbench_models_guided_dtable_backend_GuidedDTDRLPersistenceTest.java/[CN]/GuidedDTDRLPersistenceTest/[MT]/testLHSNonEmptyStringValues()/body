@@ -1,0 +1,26 @@
+{
+  GuidedDecisionTable52 dt=new GuidedDecisionTable52();
+  dt.setTableFormat(GuidedDecisionTable52.TableFormat.EXTENDED_ENTRY);
+  dt.setTableName("extended-entry");
+  Pattern52 p1=new Pattern52();
+  p1.setBoundName("p1");
+  p1.setFactType("Smurf");
+  dt.getConditions().add(p1);
+  ConditionCol52 cc1=new ConditionCol52();
+  cc1.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  cc1.setFieldType(DataType.TYPE_STRING);
+  cc1.setFactField("name");
+  cc1.setOperator("==");
+  p1.getChildColumns().add(cc1);
+  ConditionCol52 cc2=new ConditionCol52();
+  cc2.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  cc2.setFieldType(DataType.TYPE_NUMERIC_INTEGER);
+  cc2.setFactField("age");
+  cc2.setOperator("==");
+  p1.getChildColumns().add(cc2);
+  dt.setData(DataUtilities.makeDataLists(new Object[][]{new Object[]{1l,"desc-row1",null,null},new Object[]{2l,"desc-row2","   ",35l},new Object[]{3l,"desc-row3","",null},new Object[]{4l,"desc-row4","",35l}}));
+  GuidedDTDRLPersistence p=GuidedDTDRLPersistence.getInstance();
+  String drl=p.marshal(dt);
+  final String expected="//from row number: 1\n" + "//desc-row1\n" + "rule \"Row 1 extended-entry\"\n"+ "  dialect \"mvel\"\n"+ "  when\n"+ "  then\n"+ "end\n"+ "//from row number: 2\n"+ "//desc-row2\n"+ "rule \"Row 2 extended-entry\"\n"+ "  dialect \"mvel\"\n"+ "  when\n"+ "    p1 : Smurf( age == 35 )\n"+ "  then\n"+ "end\n"+ "//from row number: 3\n"+ "//desc-row3\n"+ "rule \"Row 3 extended-entry\"\n"+ "  dialect \"mvel\"\n"+ "  when\n"+ "  then\n"+ "end\n"+ "//from row number: 4\n"+ "//desc-row4\n"+ "rule \"Row 4 extended-entry\"\n"+ "  dialect \"mvel\"\n"+ "  when\n"+ "    p1 : Smurf( age == 35 )\n"+ "  then\n"+ "end";
+  assertEqualsIgnoreWhitespace(expected,drl);
+}

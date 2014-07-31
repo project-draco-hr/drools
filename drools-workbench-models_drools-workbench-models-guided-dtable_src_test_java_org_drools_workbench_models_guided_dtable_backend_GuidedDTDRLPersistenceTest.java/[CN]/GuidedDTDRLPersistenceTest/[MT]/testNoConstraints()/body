@@ -1,24 +1,28 @@
 {
   GuidedDecisionTable52 dt=new GuidedDecisionTable52();
+  dt.setTableFormat(GuidedDecisionTable52.TableFormat.EXTENDED_ENTRY);
+  dt.setTableName("no-constraints");
   Pattern52 p1=new Pattern52();
   p1.setBoundName("x");
   p1.setFactType("Context");
   ConditionCol52 c=new ConditionCol52();
   c.setConstraintValueType(BaseSingleFieldConstraint.TYPE_LITERAL);
+  c.setFieldType(DataType.TYPE_STRING);
+  c.setFactField("name");
+  c.setOperator("==");
   p1.getChildColumns().add(c);
   dt.getConditions().add(p1);
   ActionSetFieldCol52 asf=new ActionSetFieldCol52();
   asf.setBoundName("x");
   asf.setFactField("age");
-  asf.setType(DataType.TYPE_STRING);
+  asf.setType(DataType.TYPE_NUMERIC_INTEGER);
   dt.getActionCols().add(asf);
-  String[][] data=new String[][]{new String[]{"1","desc","y","old"}};
-  dt.setData(DataUtilities.makeDataLists(data));
-  String drl=GuidedDTDRLPersistence.getInstance().marshal(dt);
-  assertTrue(drl.indexOf("Context( )") > -1);
-  assertTrue(drl.indexOf("x.setAge") > drl.indexOf("Context( )"));
-  assertFalse(drl.indexOf("update( x );") > -1);
-  dt.setData(DataUtilities.makeDataLists(new String[][]{new String[]{"1","desc","","old"}}));
-  drl=GuidedDTDRLPersistence.getInstance().marshal(dt);
-  assertEquals(-1,drl.indexOf("Context( )"));
+  dt.setData(DataUtilities.makeDataLists(new Object[][]{new Object[]{"1","desc","Fred",75l}}));
+  String drl1=GuidedDTDRLPersistence.getInstance().marshal(dt);
+  String expected1="//from row number: 1\n" + "//desc\n" + "rule \"Row 1 no-constraints\"\n"+ "  dialect \"mvel\"\n"+ "  when\n"+ "    x : Context( name == \"Fred\" )\n"+ "  then\n"+ "    x.setAge( 75 );\n"+ "end";
+  assertEqualsIgnoreWhitespace(expected1,drl1);
+  dt.setData(DataUtilities.makeDataLists(new Object[][]{new Object[]{"1","desc",null,75l}}));
+  String drl2=GuidedDTDRLPersistence.getInstance().marshal(dt);
+  String expected2="//from row number: 1\n" + "//desc\n" + "rule \"Row 1 no-constraints\"\n"+ "  dialect \"mvel\"\n"+ "  when\n"+ "  then\n"+ "    x.setAge( 75 );\n"+ "end";
+  assertEqualsIgnoreWhitespace(expected2,drl2);
 }

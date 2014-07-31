@@ -4,49 +4,51 @@
     buf.append(">");
   }
   if (pattern.getFactPattern() != null) {
-    generateFactPattern(pattern.getFactPattern());
-  }
-  buf.append(" from accumulate ( ");
-  if (pattern.getSourcePattern() != null) {
-    if (pattern.getSourcePattern() instanceof FactPattern) {
-      generateFactPattern((FactPattern)pattern.getSourcePattern());
+    final LHSGeneratorContext gctx=generatorContextFactory.newChildGeneratorContext(rootContext,pattern.getFactPattern());
+    generateFactPattern(pattern.getFactPattern(),gctx);
+    buf.append(" from accumulate ( ");
+    if (pattern.getSourcePattern() != null) {
+      if (pattern.getSourcePattern() instanceof FactPattern) {
+        final LHSGeneratorContext soucrceGctx=generatorContextFactory.newGeneratorContext();
+        generateFactPattern((FactPattern)pattern.getSourcePattern(),soucrceGctx);
+      }
+ else       if (pattern.getSourcePattern() instanceof FromAccumulateCompositeFactPattern) {
+        visitFromAccumulateCompositeFactPattern((FromAccumulateCompositeFactPattern)pattern.getSourcePattern(),isSubPattern);
+      }
+ else       if (pattern.getSourcePattern() instanceof FromCollectCompositeFactPattern) {
+        visitFromCollectCompositeFactPattern((FromCollectCompositeFactPattern)pattern.getSourcePattern(),isSubPattern);
+      }
+ else       if (pattern.getSourcePattern() instanceof FromEntryPointFactPattern) {
+        visitFromEntryPointFactPattern((FromEntryPointFactPattern)pattern.getSourcePattern(),isSubPattern);
+      }
+ else       if (pattern.getSourcePattern() instanceof FromCompositeFactPattern) {
+        visitFromCompositeFactPattern((FromCompositeFactPattern)pattern.getSourcePattern(),isSubPattern);
+      }
+ else {
+        throw new IllegalArgumentException("Unsupported pattern " + pattern.getSourcePattern() + " for FROM ACCUMULATE");
+      }
     }
- else     if (pattern.getSourcePattern() instanceof FromAccumulateCompositeFactPattern) {
-      visitFromAccumulateCompositeFactPattern((FromAccumulateCompositeFactPattern)pattern.getSourcePattern(),isSubPattern);
-    }
- else     if (pattern.getSourcePattern() instanceof FromCollectCompositeFactPattern) {
-      visitFromCollectCompositeFactPattern((FromCollectCompositeFactPattern)pattern.getSourcePattern(),isSubPattern);
-    }
- else     if (pattern.getSourcePattern() instanceof FromEntryPointFactPattern) {
-      visitFromEntryPointFactPattern((FromEntryPointFactPattern)pattern.getSourcePattern(),isSubPattern);
-    }
- else     if (pattern.getSourcePattern() instanceof FromCompositeFactPattern) {
-      visitFromCompositeFactPattern((FromCompositeFactPattern)pattern.getSourcePattern(),isSubPattern);
+    buf.append(",\n");
+    if (pattern.useFunctionOrCode().equals(FromAccumulateCompositeFactPattern.USE_FUNCTION)) {
+      buf.append(indentation + "\t");
+      buf.append(pattern.getFunction());
     }
  else {
-      throw new IllegalArgumentException("Unsupported pattern " + pattern.getSourcePattern() + " for FROM ACCUMULATE");
-    }
-  }
-  buf.append(",\n");
-  if (pattern.useFunctionOrCode().equals(FromAccumulateCompositeFactPattern.USE_FUNCTION)) {
-    buf.append(indentation + "\t");
-    buf.append(pattern.getFunction());
-  }
- else {
-    buf.append(indentation + "\tinit( ");
-    buf.append(pattern.getInitCode());
-    buf.append(" ),\n");
-    buf.append(indentation + "\taction( ");
-    buf.append(pattern.getActionCode());
-    buf.append(" ),\n");
-    if (pattern.getReverseCode() != null && !pattern.getReverseCode().trim().equals("")) {
-      buf.append(indentation + "\treverse( ");
-      buf.append(pattern.getReverseCode());
+      buf.append(indentation + "\tinit( ");
+      buf.append(pattern.getInitCode());
       buf.append(" ),\n");
+      buf.append(indentation + "\taction( ");
+      buf.append(pattern.getActionCode());
+      buf.append(" ),\n");
+      if (pattern.getReverseCode() != null && !pattern.getReverseCode().trim().equals("")) {
+        buf.append(indentation + "\treverse( ");
+        buf.append(pattern.getReverseCode());
+        buf.append(" ),\n");
+      }
+      buf.append(indentation + "\tresult( ");
+      buf.append(pattern.getResultCode());
+      buf.append(" )\n");
     }
-    buf.append(indentation + "\tresult( ");
-    buf.append(pattern.getResultCode());
-    buf.append(" )\n");
+    buf.append(") \n");
   }
-  buf.append(") \n");
 }

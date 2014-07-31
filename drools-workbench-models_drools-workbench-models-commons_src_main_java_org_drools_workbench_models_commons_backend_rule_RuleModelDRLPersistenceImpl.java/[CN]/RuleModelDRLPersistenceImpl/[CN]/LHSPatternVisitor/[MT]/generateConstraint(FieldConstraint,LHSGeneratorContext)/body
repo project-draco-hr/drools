@@ -1,28 +1,32 @@
 {
-  generateSeparator(con,gctx);
+  generateSeparator(con,parentContext);
   if (con instanceof CompositeFieldConstraint) {
     CompositeFieldConstraint cfc=(CompositeFieldConstraint)con;
     FieldConstraint[] nestedConstraints=cfc.getConstraints();
     if (nestedConstraints != null) {
-      LHSGeneratorContext nestedGctx=generatorContextFactory.newChildGeneratorContext(gctx);
-      preGenerateConstraints(nestedGctx);
-      preGenerateNestedConstraint(gctx);
-      if (gctx.getDepth() > 0) {
+      LHSGeneratorContext nestedGctx=generatorContextFactory.newChildGeneratorContext(parentContext,con);
+      preGenerateNestedConstraint(nestedGctx);
+      if (parentContext.getParent().getFieldConstraint() instanceof CompositeFieldConstraint) {
         buf.append("( ");
       }
+      LHSGeneratorContext gctx=null;
       for (int nestedConstraintIndex=0; nestedConstraintIndex < nestedConstraints.length; nestedConstraintIndex++) {
         FieldConstraint nestedConstr=nestedConstraints[nestedConstraintIndex];
-        nestedGctx.setFieldConstraint(nestedConstr);
-        generateConstraint(nestedConstr,nestedGctx);
+        if (nestedConstraintIndex == 0) {
+          gctx=generatorContextFactory.newChildGeneratorContext(nestedGctx,nestedConstr);
+        }
+ else {
+          gctx=generatorContextFactory.newPeerGeneratorContext(gctx,nestedConstr);
+        }
+        generateConstraint(nestedConstr,gctx);
       }
-      gctx.setHasOutput(nestedGctx.isHasOutput());
-      if (gctx.getDepth() > 0) {
+      if (parentContext.getParent().getFieldConstraint() instanceof CompositeFieldConstraint) {
         buf.append(")");
       }
-      postGenerateNestedConstraint(gctx);
+      postGenerateNestedConstraint(parentContext);
     }
   }
  else {
-    generateSingleFieldConstraint((SingleFieldConstraint)con,gctx);
+    generateSingleFieldConstraint((SingleFieldConstraint)con,parentContext);
   }
 }

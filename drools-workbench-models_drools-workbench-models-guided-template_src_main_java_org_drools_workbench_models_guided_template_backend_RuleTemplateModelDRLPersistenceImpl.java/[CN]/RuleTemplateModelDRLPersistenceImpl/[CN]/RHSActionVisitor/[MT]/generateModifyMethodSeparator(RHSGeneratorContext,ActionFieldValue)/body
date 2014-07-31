@@ -1,12 +1,14 @@
 {
-  if (gctx.getParent() == null) {
+  final List<RHSGeneratorContext> peers=generatorContextFactory.getPeers(gctx);
+  if (peers.size() == 0) {
     return;
   }
-  buf.append("@if{hasOutput" + gctx.getOffset() + " && (");
-  RHSGeneratorContext parent=gctx.getParent();
-  while (parent != null) {
-    buf.append("hasOutput" + parent.getOffset() + (parent.getParent() != null ? " || " : ""));
-    parent=parent.getParent();
+  buf.append("@if{(");
+  buf.append("hasRHSOutput" + gctx.getDepth() + "_"+ gctx.getOffset()).append(" && (");
+  for (int i=0; i < peers.size(); i++) {
+    final RHSGeneratorContext peer=peers.get(i);
+    buf.append("hasRHSOutput" + peer.getDepth() + "_"+ peer.getOffset());
+    buf.append((i < peers.size() - 1 ? " || " : ")"));
   }
   buf.append(")}");
   buf.append(", \n");
