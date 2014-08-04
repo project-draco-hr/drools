@@ -13,7 +13,7 @@
   for (  TypeFieldDescr field : flds.values()) {
     String typeName=field.getPattern().getObjectType();
     String typeNameKey=typeName;
-    String fullFieldType=TypeDeclarationUtils.toBuildableType(typeNameKey,kbuilder.getRootClassLoader());
+    String fullFieldType=kbuilder != null ? TypeDeclarationUtils.toBuildableType(typeNameKey,kbuilder.getRootClassLoader()) : typeNameKey;
     FieldDefinition fieldDef=new FieldDefinition(field.getFieldName(),fullFieldType);
     boolean isKey=field.getAnnotation(TypeDeclaration.ATTR_KEY) != null;
     fieldDef.setKey(isKey);
@@ -33,12 +33,12 @@
     }
     fieldDef.setInherited(field.isInherited());
     fieldDef.setRecursive(field.isRecursive());
-    fieldDef.setInitExpr(TypeDeclarationUtils.rewriteInitExprWithImports(field.getInitExpr(),pkgRegistry.getTypeResolver()));
+    fieldDef.setInitExpr(TypeDeclarationUtils.rewriteInitExprWithImports(field.getInitExpr(),typeResolver));
     for (    String annotationName : field.getAnnotationNames()) {
-      Class annotation=TypeDeclarationUtils.resolveAnnotation(annotationName,pkgRegistry.getTypeResolver());
+      Class annotation=TypeDeclarationUtils.resolveAnnotation(annotationName,typeResolver);
       if (annotation != null && annotation.isAnnotation()) {
         try {
-          AnnotationDefinition annotationDefinition=AnnotationDefinition.build(annotation,field.getAnnotations().get(annotationName).getValueMap(),pkgRegistry.getTypeResolver());
+          AnnotationDefinition annotationDefinition=AnnotationDefinition.build(annotation,field.getAnnotations().get(annotationName).getValueMap(),typeResolver);
           fieldDef.addAnnotation(annotationDefinition);
         }
  catch (        NoSuchMethodException nsme) {
