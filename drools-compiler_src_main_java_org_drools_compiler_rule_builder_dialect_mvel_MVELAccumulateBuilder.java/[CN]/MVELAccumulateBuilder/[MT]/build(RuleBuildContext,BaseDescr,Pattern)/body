@@ -27,12 +27,20 @@
  else {
       accumulators=buildCustomAccumulate(context,accumDescr,source,dialect,decls,sourceOuterDeclr,boundIds,readLocalsFromTuple);
     }
-    final Accumulate accumulate=new Accumulate(source,null,accumulators,accumDescr.isMultiFunction());
     MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
-    int index=0;
-    for (    Accumulator accumulator : accumulators) {
-      data.addCompileable(accumulate.new Wirer(index++),(MVELCompileable)accumulator);
-      ((MVELCompileable)accumulator).compile(data);
+    Accumulate accumulate=null;
+    if (accumDescr.isMultiFunction()) {
+      accumulate=new MultiAccumulate(source,null,accumulators);
+      int index=0;
+      for (      Accumulator accumulator : accumulators) {
+        data.addCompileable(((MultiAccumulate)accumulate).new Wirer(index++),(MVELCompileable)accumulator);
+        ((MVELCompileable)accumulator).compile(data);
+      }
+    }
+ else {
+      accumulate=new SingleAccumulate(source,null,accumulators[0]);
+      data.addCompileable(((SingleAccumulate)accumulate).new Wirer(),(MVELCompileable)accumulators[0]);
+      ((MVELCompileable)accumulators[0]).compile(data);
     }
     return accumulate;
   }
