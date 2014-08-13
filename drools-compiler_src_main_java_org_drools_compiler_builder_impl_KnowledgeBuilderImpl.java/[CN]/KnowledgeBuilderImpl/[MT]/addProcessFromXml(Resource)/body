@@ -7,8 +7,21 @@
   }
   this.resource=resource;
   try {
-    this.results.addAll(processBuilder.addProcessFromXml(resource));
-    processBuilder.getErrors().clear();
+    List<Process> processes=processBuilder.addProcessFromXml(resource);
+    List<BaseKnowledgeBuilderResultImpl> errors=processBuilder.getErrors();
+    if (errors.isEmpty()) {
+      if (this.kBase != null && processes != null) {
+        for (        Process process : processes) {
+          if (filterAccepts(process.getNamespace(),process.getId())) {
+            this.kBase.addProcess(process);
+          }
+        }
+      }
+    }
+ else {
+      this.results.addAll(errors);
+      errors.clear();
+    }
   }
  catch (  Exception e) {
     if (e instanceof RuntimeException) {
