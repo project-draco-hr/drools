@@ -1,0 +1,18 @@
+{
+  String source=PMML4Helper.pmmlDefaultPackageName().replace(".",File.separator) + File.separator + "mock_cold_adapter.xml";
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.write(ResourceFactory.newClassPathResource(source).setResourceType(ResourceType.PMML));
+  Results res=ks.newKieBuilder(kfs).buildAll().getResults();
+  if (res.hasMessages(Message.Level.ERROR)) {
+    System.out.println(res.getMessages(Message.Level.ERROR));
+  }
+  assertEquals(0,res.getMessages(Message.Level.ERROR).size());
+  KieBase kieBase=ks.newKieContainer(ks.getRepository().getDefaultReleaseId()).getKieBase();
+  FactType ft=kieBase.getFactType("test","MyAdapter");
+  assertTrue(ft != null);
+  assertTrue(ft.getFactClass().isInterface());
+  FactType fto=kieBase.getFactType("test","MyOutAdapter");
+  assertTrue(fto != null);
+  assertTrue(fto.getFactClass().isInterface());
+}
