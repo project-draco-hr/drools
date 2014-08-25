@@ -1,12 +1,23 @@
 {
-  SimpleBeliefSet sBeliefSet=(SimpleBeliefSet)beliefSet;
+  boolean wasUndecided=beliefSet.isUndecided();
   beliefSet.remove(node.getJustifierEntry());
-  InternalFactHandle bfh=beliefSet.getFactHandle();
-  if (beliefSet.isEmpty() && bfh.getEqualityKey().getStatus() != EqualityKey.STATED && !((context.getType() == PropagationContext.DELETION || context.getType() == PropagationContext.MODIFICATION) && context.getFactHandle() == bfh)) {
-    ((NamedEntryPoint)bfh.getEntryPoint()).delete(bfh,context.getRuleOrigin(),node.getJustifier());
+  PropertyReference propRef=(PropertyReference)node.getObject();
+  BayesFact bayesFact=(BayesFact)propRef.getInstance();
+  BayesInstance bayesInstance=bayesFact.getBayesInstance();
+  BayesVariable var=(BayesVariable)bayesInstance.getFieldNames().get(propRef.getName());
+  boolean empty=beliefSet.isEmpty();
+  if (empty) {
+    bayesInstance.unsetLikelyhood(var);
+    return;
   }
- else   if (!beliefSet.isEmpty() && beliefSet.getFactHandle().getObject() == node.getObject() && node.getObject() != bfh.getObject()) {
-    ((NamedEntryPoint)bfh.getEntryPoint()).getObjectStore().updateHandle(bfh,((LinkedListEntry<LogicalDependency>)beliefSet.getFirst()).getObject().getObject());
-    ((NamedEntryPoint)bfh.getEntryPoint()).update(bfh,true,bfh.getObject(),Long.MAX_VALUE,Object.class,null);
+  node=((LinkedListEntry<LogicalDependency>)beliefSet.getFirst()).getObject();
+  BayesHardEvidence evidence=(BayesHardEvidence)node.getValue();
+  if (!wasUndecided && beliefSet.isUndecided()) {
+    bayesInstance.setDecided(var,false);
+    bayesInstance.unsetLikelyhood(var);
+  }
+ else   if (wasUndecided && !beliefSet.isUndecided()) {
+    bayesInstance.setDecided(var,true);
+    bayesInstance.setLikelyhood(var,evidence.getDistribution());
   }
 }

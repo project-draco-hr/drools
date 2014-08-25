@@ -1,0 +1,15 @@
+{
+  KnowledgeBuilder kBuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kBuilder.add(ResourceFactory.newByteArrayResource(drlString.getBytes()),ResourceType.DRL);
+  kBuilder.add(ResourceFactory.newClassPathResource("Garden.xmlbif",AssemblerTest.class),ResourceType.BAYES);
+  if (kBuilder.hasErrors()) {
+    System.err.println(kBuilder.getErrors());
+    fail();
+  }
+  KnowledgeBase kBase=KnowledgeBaseFactory.newKnowledgeBase();
+  kBase.addKnowledgePackages(kBuilder.getKnowledgePackages());
+  KieSessionConfiguration ksConf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  ((SessionConfiguration)ksConf).setBeliefSystemType(BeliefSystemType.DEFEASIBLE);
+  StatefulKnowledgeSession kSession=kBase.newStatefulKnowledgeSession(ksConf,null);
+  return kSession;
+}

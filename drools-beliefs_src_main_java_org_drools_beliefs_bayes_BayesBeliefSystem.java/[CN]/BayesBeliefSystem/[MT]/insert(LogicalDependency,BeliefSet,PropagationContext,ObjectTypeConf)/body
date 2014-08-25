@@ -2,10 +2,19 @@
   boolean wasEmpty=beliefSet.isEmpty();
   boolean wasUndecided=beliefSet.isUndecided();
   beliefSet.add(node.getJustifierEntry());
-  PropertyReference evidence=(PropertyReference)beliefSet.getFactHandle().getObject();
-  if (wasEmpty) {
-    InternalFactHandle handle=beliefSet.getFactHandle();
+  node=((LinkedListEntry<LogicalDependency>)beliefSet.getFirst()).getObject();
+  BayesHardEvidence evidence=(BayesHardEvidence)node.getValue();
+  PropertyReference propRef=(PropertyReference)node.getObject();
+  BayesFact bayesFact=(BayesFact)propRef.getInstance();
+  BayesInstance bayesInstance=bayesFact.getBayesInstance();
+  FactHandle fh=beliefSet.getFactHandle();
+  BayesVariable var=(BayesVariable)bayesInstance.getFieldNames().get(propRef.getName());
+  if (!wasUndecided && beliefSet.isUndecided()) {
+    bayesInstance.setDecided(var,false);
+    bayesInstance.setLikelyhood(var,null);
   }
- else   if (!wasUndecided && beliefSet.isUndecided()) {
+ else {
+    bayesInstance.setDecided(var,true);
+    bayesInstance.setLikelyhood(var,evidence.getDistribution());
   }
 }
