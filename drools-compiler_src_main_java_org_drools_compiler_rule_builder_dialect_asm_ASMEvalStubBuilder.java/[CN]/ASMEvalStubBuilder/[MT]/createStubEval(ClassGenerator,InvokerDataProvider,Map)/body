@@ -1,5 +1,5 @@
 {
-  generator.setInterfaces(EvalStub.class,CompiledInvoker.class).addField(ACC_PRIVATE,"eval",EvalExpression.class);
+  generator.setInterfaces(EvalStub.class,CompiledInvoker.class).addField(ACC_PRIVATE + ACC_VOLATILE,"eval",EvalExpression.class);
   generator.addMethod(ACC_PUBLIC,"createContext",generator.methodDescr(Object.class),new ClassGenerator.MethodBody(){
     public void body(    MethodVisitor mv){
       mv.visitInsn(ACONST_NULL);
@@ -21,6 +21,8 @@
       mv.visitTryCatchBlock(syncStart,l1,l2,null);
       Label l3=new Label();
       mv.visitTryCatchBlock(l2,l3,l2,null);
+      getFieldFromThis("eval",EvalExpression.class);
+      mv.visitJumpInsn(IFNONNULL,syncEnd);
       mv.visitVarInsn(ALOAD,0);
       mv.visitInsn(DUP);
       mv.visitVarInsn(ASTORE,5);

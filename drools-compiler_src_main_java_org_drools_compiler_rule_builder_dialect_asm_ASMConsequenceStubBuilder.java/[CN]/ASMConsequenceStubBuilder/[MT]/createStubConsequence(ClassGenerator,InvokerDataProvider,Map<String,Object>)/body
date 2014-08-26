@@ -1,5 +1,5 @@
 {
-  generator.setInterfaces(ConsequenceStub.class,CompiledInvoker.class).addField(ACC_PRIVATE,"consequence",Consequence.class);
+  generator.setInterfaces(ConsequenceStub.class,CompiledInvoker.class).addField(ACC_PRIVATE + ACC_VOLATILE,"consequence",Consequence.class);
   generator.addMethod(ACC_PUBLIC,"getName",generator.methodDescr(String.class),new ClassGenerator.MethodBody(){
     public void body(    MethodVisitor mv){
       push((String)vars.get("consequenceName"));
@@ -20,6 +20,8 @@
       mv.visitTryCatchBlock(syncStart,l1,l2,null);
       Label l3=new Label();
       mv.visitTryCatchBlock(l2,l3,l2,null);
+      getFieldFromThis("consequence",Consequence.class);
+      mv.visitJumpInsn(IFNONNULL,syncEnd);
       mv.visitVarInsn(ALOAD,0);
       mv.visitInsn(DUP);
       mv.visitVarInsn(ASTORE,3);
