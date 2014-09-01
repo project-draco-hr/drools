@@ -8,6 +8,11 @@
   if (node.isInUse()) {
     stillInUse.add(node);
   }
+  if (node.getType() != NodeTypeEnums.ObjectTypeNode && !node.isInUse() && kBase.getConfiguration().isPhreakEnabled()) {
+    for (    InternalWorkingMemory workingMemory : workingMemories) {
+      workingMemory.clearNodeMemory((MemoryFactory)node);
+    }
+  }
   if (NodeTypeEnums.isBetaNode(node)) {
     BaseNode parent=((LeftTupleSink)node).getLeftTupleSource();
     node.remove(context,this,workingMemories);
@@ -19,30 +24,27 @@
       betaStack.addLast(((BetaNode)node).getRightInput());
     }
  else {
-      removeNode(parent,alphaStack,betaStack,stillInUse,true,workingMemories,context);
+      removeNode(parent,removedSources,alphaStack,betaStack,stillInUse,true,workingMemories,context);
     }
   }
  else   if (NodeTypeEnums.isLeftTupleSink(node)) {
     BaseNode parent=((LeftTupleSink)node).getLeftTupleSource();
     node.remove(context,this,workingMemories);
-    removeNode(parent,alphaStack,betaStack,stillInUse,true,workingMemories,context);
+    removeNode(parent,removedSources,alphaStack,betaStack,stillInUse,true,workingMemories,context);
   }
  else   if (NodeTypeEnums.LeftInputAdapterNode == node.getType()) {
     BaseNode parent=((LeftInputAdapterNode)node).getParentObjectSource();
     node.remove(context,this,workingMemories);
-    removeNode(parent,alphaStack,betaStack,stillInUse,true,workingMemories,context);
+    removeNode(parent,removedSources,alphaStack,betaStack,stillInUse,true,workingMemories,context);
   }
  else   if (NodeTypeEnums.isObjectSource(node)) {
-    BaseNode parent=((ObjectSource)node).getParentObjectSource();
-    node.remove(context,this,workingMemories);
-    removeNode(parent,alphaStack,betaStack,stillInUse,true,workingMemories,context);
+    if (removedSources.add(node)) {
+      BaseNode parent=((ObjectSource)node).getParentObjectSource();
+      node.remove(context,this,workingMemories);
+      removeNode(parent,removedSources,alphaStack,betaStack,stillInUse,true,workingMemories,context);
+    }
   }
  else {
     throw new IllegalStateException("Defensive exception, should not fall through");
-  }
-  if (node.getType() != NodeTypeEnums.ObjectTypeNode && !node.isInUse() && kBase.getConfiguration().isPhreakEnabled()) {
-    for (    InternalWorkingMemory workingMemory : workingMemories) {
-      workingMemory.clearNodeMemory((MemoryFactory)node);
-    }
   }
 }
