@@ -1,0 +1,19 @@
+{
+  final String expected="rule \"test_0\"" + "when\n" + "  Person( name == \"Michael\" )\n"+ "  Address( country == \"England\" )\n"+ "then\n"+ "end"+ "rule \"test_1\""+ "when\n"+ "  Person( name == \"Michael\" )\n"+ "  Address( country == \"Norway\" )\n"+ "then\n"+ "end"+ "rule \"test_2\""+ "when\n"+ "  Person( name == \"Fred\" )\n"+ "then\n"+ "end";
+  final GuidedDecisionTree model=new GuidedDecisionTree();
+  model.setTreeName("test");
+  final TypeNode type1=new TypeNodeImpl("Person");
+  final ConstraintNode c1a=new ConstraintNodeImpl("name","==",new StringValue("Michael"));
+  final ConstraintNode c1b=new ConstraintNodeImpl("name","==",new StringValue("Fred"));
+  final TypeNode type2=new TypeNodeImpl("Address");
+  final ConstraintNode c2a=new ConstraintNodeImpl("country","==",new StringValue("England"));
+  final ConstraintNode c2b=new ConstraintNodeImpl("country","==",new StringValue("Norway"));
+  model.setRoot(type1);
+  type1.getChildren().add(c1a);
+  type1.getChildren().add(c1b);
+  c1a.getChildren().add(type2);
+  type2.getChildren().add(c2a);
+  type2.getChildren().add(c2b);
+  final String drl=GuidedDecisionTreeDRLPersistence.getInstance().marshal(model);
+  assertEqualsIgnoreWhitespace(expected,drl);
+}

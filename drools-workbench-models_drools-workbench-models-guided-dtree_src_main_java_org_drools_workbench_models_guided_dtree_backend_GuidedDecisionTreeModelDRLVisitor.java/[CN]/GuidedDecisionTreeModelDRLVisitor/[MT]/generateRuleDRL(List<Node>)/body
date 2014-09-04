@@ -1,0 +1,31 @@
+{
+  Node context=null;
+  final StringBuilder drl=new StringBuilder();
+  drl.append(generateRuleHeaderDRL());
+  drl.append("when\n");
+  for (  Node node : path) {
+    if (node instanceof TypeNode) {
+      final TypeNode tn=(TypeNode)node;
+      if (context == null) {
+        drl.append(tn.getClassName()).append("(");
+      }
+ else       if (context instanceof ConstraintNode) {
+        drl.append(")\n").append(tn.getClassName()).append("(");
+      }
+ else       if (context instanceof TypeNode) {
+        drl.append(")\n").append(tn.getClassName()).append("(");
+      }
+    }
+ else     if (node instanceof ConstraintNode) {
+      final ConstraintNode cn=(ConstraintNode)node;
+      if (context instanceof ConstraintNode) {
+        drl.append(", ");
+      }
+      drl.append(cn.getFieldName()).append(" ").append(cn.getOperator()).append(" ").append(generateValueDRL(cn.getValue()));
+    }
+    context=node;
+  }
+  drl.append(")\n").append("then\n").append("end\n");
+  ruleCount++;
+  rules.append(drl);
+}
