@@ -1,8 +1,11 @@
 {
   DecisionTableConfiguration dtableConfiguration=configuration instanceof DecisionTableConfiguration ? (DecisionTableConfiguration)configuration : null;
-  String string=DecisionTableFactory.loadFromInputStream(resource.getInputStream(),dtableConfiguration);
+  String generatedDrl=DecisionTableFactory.loadFromInputStream(resource.getInputStream(),dtableConfiguration);
+  if (this.configuration.getDumpDir() != null) {
+    dumpDrlGeneratedFromDTable(this.configuration.getDumpDir(),generatedDrl,resource.getSourcePath());
+  }
   DrlParser parser=new DrlParser(this.configuration.getLanguageLevel());
-  PackageDescr pkg=parser.parse(resource,new StringReader(string));
+  PackageDescr pkg=parser.parse(resource,new StringReader(generatedDrl));
   this.results.addAll(parser.getErrors());
   if (pkg == null) {
     addBuilderResult(new ParserError(resource,"Parser returned a null Package",0,0));
