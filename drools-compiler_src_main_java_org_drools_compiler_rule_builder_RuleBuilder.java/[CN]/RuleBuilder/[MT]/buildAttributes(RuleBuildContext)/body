@@ -15,12 +15,22 @@
       if (StringUtils.isEmpty(rule.getRuleFlowGroup())) {
         rule.setAgendaGroup(attributeDescr.getValue());
       }
+ else {
+        if (rule.getRuleFlowGroup().equals(attributeDescr.getValue())) {
+          DroolsWarning warn=new RuleBuildWarning(rule,context.getParentDescr(),null,"Both an agenda-group ( " + attributeDescr.getValue() + " ) and a ruleflow-group ( "+ rule.getRuleFlowGroup()+ " ) are defined for rule "+ rule.getName()+ ". Since version 6.x the "+ "two concepts have been unified, the ruleflow-group name will override the agenda-group. ");
+          context.addWarning(warn);
+        }
+      }
     }
  else     if (name.equals("activation-group")) {
       rule.setActivationGroup(attributeDescr.getValue());
     }
  else     if (name.equals("ruleflow-group")) {
       rule.setRuleFlowGroup(attributeDescr.getValue());
+      if (!StringUtils.isEmpty(rule.getAgendaGroup()) && !rule.getAgendaGroup().equals(attributeDescr.getValue())) {
+        DroolsWarning warn=new RuleBuildWarning(rule,context.getParentDescr(),null,"Both an agenda-group ( " + attributeDescr.getValue() + " ) and a ruleflow-group ( "+ rule.getRuleFlowGroup()+ " ) are defined for rule "+ rule.getName()+ ". Since version 6.x the "+ "two concepts have been unified, the ruleflow-group name will override the agenda-group. ");
+        context.addWarning(warn);
+      }
       rule.setAgendaGroup(attributeDescr.getValue());
     }
  else     if (name.equals("lock-on-active")) {
