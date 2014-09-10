@@ -1,21 +1,27 @@
 {
-  Map<ReleaseId,DependencyDescriptor> replacedArtifacts=new HashMap<ReleaseId,DependencyDescriptor>();
+  artifactResolver=getResolverFor(kieContainer.getReleaseId(),true);
   Map<DependencyDescriptor,Artifact> newArtifacts=new HashMap<DependencyDescriptor,Artifact>();
-  ArtifactResolver artifactResolver=getArtifactResolver();
-  artifactResolver.renewSession();
-  for (  Map.Entry<ReleaseId,DependencyDescriptor> entry : usedDependencies.entrySet()) {
-    Artifact newArtifact=artifactResolver.resolveArtifact(entry.getKey());
-    if (newArtifact == null) {
-      continue;
-    }
+  Artifact newArtifact=artifactResolver.resolveArtifact(this.kieContainer.getContainerReleaseId());
+  if (newArtifact != null) {
     DependencyDescriptor resolvedDep=new DependencyDescriptor(newArtifact);
-    if (resolvedDep.isNewerThan(entry.getValue())) {
-      newArtifacts.put(entry.getValue(),newArtifact);
-      replacedArtifacts.put(entry.getKey(),resolvedDep);
+    if (resolvedDep.isNewerThan(kieProjectDescr)) {
+      newArtifacts.put(kieProjectDescr,newArtifact);
+      kieProjectDescr=new DependencyDescriptor(newArtifact);
     }
   }
-  for (  Map.Entry<ReleaseId,DependencyDescriptor> entry : replacedArtifacts.entrySet()) {
-    usedDependencies.put(entry.getKey(),entry.getValue());
+  for (  DependencyDescriptor dep : artifactResolver.getAllDependecies()) {
+    ReleaseId artifactId=dep.getReleaseIdWithoutVersion();
+    DependencyDescriptor oldDep=usedDependencies.get(artifactId);
+    if (oldDep != null) {
+      newArtifact=artifactResolver.resolveArtifact(dep.getReleaseId());
+      if (newArtifact != null) {
+        DependencyDescriptor newDep=new DependencyDescriptor(newArtifact);
+        if (newDep.isNewerThan(oldDep)) {
+          newArtifacts.put(oldDep,newArtifact);
+          usedDependencies.put(artifactId,newDep);
+        }
+      }
+    }
   }
   return newArtifacts;
 }

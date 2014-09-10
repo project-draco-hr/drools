@@ -3,15 +3,12 @@
     throw new RuntimeException("Cannot change KieContainer on an already initialized KieScanner");
   }
   this.kieContainer=(InternalKieContainer)kieContainer;
-  ReleaseId containerReleaseId=this.kieContainer.getContainerReleaseId();
-  if (containerReleaseId == null) {
+  if (this.kieContainer.getContainerReleaseId() == null) {
     throw new RuntimeException("The KieContainer's ReleaseId cannot be null. Are you using a KieClasspathContainer?");
   }
+  kieProjectDescr=new DependencyDescriptor(this.kieContainer.getReleaseId(),this.kieContainer.getCreationTimestamp());
   artifactResolver=getResolverFor(kieContainer.getReleaseId(),true);
-  if (!isFixedVersion(containerReleaseId.getVersion())) {
-    usedDependencies.put(containerReleaseId,new DependencyDescriptor(this.kieContainer.getReleaseId(),this.kieContainer.getCreationTimestamp()));
-  }
-  indexAtifacts();
+  usedDependencies=indexAtifacts(artifactResolver);
   KieScannersRegistry.register(this);
   status=Status.STOPPED;
   if (MBeanUtils.isMBeanEnabled()) {
