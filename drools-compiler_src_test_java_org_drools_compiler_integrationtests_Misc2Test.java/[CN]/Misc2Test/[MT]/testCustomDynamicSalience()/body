@@ -1,0 +1,34 @@
+{
+  String drl="package org.drools.test; " + "import " + Person.class.getName() + "; "+ "global java.util.List list; "+ "rule A "+ "when "+ "     $person : Person( name == 'a' ) "+ "then"+ "     list.add( $person.getAge() ); "+ "end "+ "rule B "+ "when "+ "     $person : Person( name == 'b' ) "+ "then"+ "     list.add( $person.getAge() ); "+ "end "+ "";
+  KieHelper helper=new KieHelper();
+  helper.addContent(drl,ResourceType.DRL);
+  KieSession session=helper.build().newKieSession();
+  List<Integer> list=new ArrayList<Integer>();
+  session.setGlobal("list",list);
+  for (  Rule r : session.getKieBase().getKiePackage("org.drools.test").getRules()) {
+    ((RuleImpl)r).setSalience(new Salience(){
+      @Override public int getValue(      KnowledgeHelper khelper,      Rule rule,      WorkingMemory workingMemory){
+        if (khelper == null) {
+          return 0;
+        }
+        InternalFactHandle h=(InternalFactHandle)khelper.getMatch().getFactHandles().get(0);
+        return ((Person)h.getObject()).getAge();
+      }
+      @Override public int getValue(){
+        throw new IllegalStateException("Should not have been called...");
+      }
+      @Override public boolean isDynamic(){
+        return true;
+      }
+    }
+);
+  }
+  session.insert(new Person("a",1));
+  session.insert(new Person("a",5));
+  session.insert(new Person("a",3));
+  session.insert(new Person("b",4));
+  session.insert(new Person("b",2));
+  session.insert(new Person("b",6));
+  session.fireAllRules();
+  assertEquals(Arrays.asList(6,5,4,3,2,1),list);
+}
