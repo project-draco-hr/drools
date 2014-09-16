@@ -1,0 +1,14 @@
+{
+  String drl="rule R when\n" + "    $s : String( )\n" + "    not (\n"+ "        Long( toString() == $s )\n"+ "    and\n"+ "        Integer( toString() == $s )\n"+ "    )\n"+ "then\n"+ "    delete( $s );\n"+ "end";
+  KieHelper helper=new KieHelper();
+  helper.addContent(drl,ResourceType.DRL);
+  KieSession ksession=helper.build().newKieSession();
+  ksession.insert("1");
+  FactHandle iFH=ksession.insert(1);
+  FactHandle lFH=ksession.insert(1L);
+  ksession.fireAllRules();
+  ksession.delete(iFH);
+  ksession.delete(lFH);
+  ksession.fireAllRules();
+  assertEquals(0,ksession.getFactCount());
+}
