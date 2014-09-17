@@ -47,6 +47,21 @@ case POINT_IN_TIME:
   PointInTimeTrigger trigger=new PointInTimeTrigger(_trigger.getPit().getNextFireTime(),null,null);
   return trigger;
 }
+case COMPOSITE_MAX_DURATION:
+{
+ProtobufMessages.Trigger.CompositeMaxDurationTrigger _cmdTrigger=_trigger.getCmdt();
+CompositeMaxDurationTrigger trigger=new CompositeMaxDurationTrigger();
+if (_cmdTrigger.hasMaxDurationTimestamp()) {
+  trigger.setMaxDurationTimestamp(new Date(_cmdTrigger.getMaxDurationTimestamp()));
+}
+if (_cmdTrigger.hasTimerCurrentDate()) {
+  trigger.setTimerCurrentDate(new Date(_cmdTrigger.getTimerCurrentDate()));
+}
+if (_cmdTrigger.hasTimerTrigger()) {
+  trigger.setTimerTrigger(readTrigger(inCtx,_cmdTrigger.getTimerTrigger()));
+}
+return trigger;
+}
 }
 throw new RuntimeException("Unable to deserialize Trigger for type: " + _trigger.getType());
 }
