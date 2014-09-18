@@ -1,0 +1,20 @@
+{
+  String drl="package org.drools.test; " + "global java.util.List list; " + "query foo( Integer $i ) "+ "   $i := Integer() "+ "end "+ "rule Detect "+ "agenda-group 'one' "+ "when "+ "   foo( $i ; ) "+ "then "+ "   list.add( $i ); "+ "end "+ "rule OnceMore "+ "agenda-group 'two' "+ "no-loop "+ "when "+ "   $i : Integer() "+ "then "+ "   update( $i );"+ "end "+ "";
+  KieHelper helper=new KieHelper();
+  helper.addContent(drl,ResourceType.DRL);
+  KieSession kieSession=helper.build().newKieSession();
+  List<Integer> list=new ArrayList<Integer>();
+  kieSession.setGlobal("list",list);
+  FactHandle handle=kieSession.insert(42);
+  Agenda agenda=kieSession.getAgenda();
+  agenda.getAgendaGroup("two").setFocus();
+  agenda.getAgendaGroup("one").setFocus();
+  kieSession.fireAllRules();
+  assertEquals(Arrays.asList(42),list);
+  kieSession.delete(handle);
+  kieSession.insert(99);
+  agenda.getAgendaGroup("two").setFocus();
+  agenda.getAgendaGroup("one").setFocus();
+  kieSession.fireAllRules();
+  assertEquals(Arrays.asList(42,99),list);
+}
