@@ -1,6 +1,6 @@
 {
   JTMSBeliefSet jtmsBeliefSet=(JTMSBeliefSet)beliefSet;
-  boolean wasConflicting=jtmsBeliefSet.isUndecided();
+  boolean wasUndecided=jtmsBeliefSet.isUndecided();
   boolean wasNegated=jtmsBeliefSet.isNegated();
   boolean primeChanged=false;
   if ((jtmsBeliefSet.getPositiveFactHandle() != null && jtmsBeliefSet.getPositiveFactHandle().getObject() == node.getObject()) || (jtmsBeliefSet.getNegativeFactHandle() != null && jtmsBeliefSet.getNegativeFactHandle().getObject() == node.getObject())) {
@@ -8,7 +8,7 @@
   }
   beliefSet.remove((JTMSMode)node.getMode());
   if (beliefSet.isEmpty()) {
-    if (wasNegated) {
+    if (wasNegated && !wasUndecided) {
       defEP.getObjectStore().addHandle(beliefSet.getFactHandle(),beliefSet.getFactHandle().getObject());
       InternalFactHandle fh=jtmsBeliefSet.getNegativeFactHandle();
       ((NamedEntryPoint)fh.getEntryPoint()).delete(fh,context.getRuleOrigin(),node.getJustifier());
@@ -18,8 +18,8 @@
       ((NamedEntryPoint)fh.getEntryPoint()).delete(fh,context.getRuleOrigin(),node.getJustifier());
     }
   }
- else   if (wasConflicting && !jtmsBeliefSet.isUndecided()) {
-    insertBelief(node,defEP.getObjectTypeConfigurationRegistry().getObjectTypeConf(defEP.getEntryPoint(),node.getObject()),jtmsBeliefSet,context,false,wasNegated,wasConflicting);
+ else   if (wasUndecided && !jtmsBeliefSet.isUndecided()) {
+    insertBelief(node,defEP.getObjectTypeConfigurationRegistry().getObjectTypeConf(defEP.getEntryPoint(),node.getObject()),jtmsBeliefSet,context,false,wasNegated,wasUndecided);
   }
  else   if (primeChanged) {
     if ((wasNegated && !jtmsBeliefSet.isNegated()) || (!wasNegated && jtmsBeliefSet.isNegated())) {
