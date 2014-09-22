@@ -1,16 +1,18 @@
 {
   AgendaItem targetMatch=(AgendaItem)act;
-  LogicalDependency dep=null;
-  if (this.previousJustified != null) {
-    for (dep=this.previousJustified.getFirst(); dep != null; dep=dep.getNext()) {
+  LogicalDependency<SimpleMode> dep=null;
+  if (this.previousBlocked != null) {
+    for (dep=(LogicalDependency<SimpleMode>)this.previousBlocked.getFirst(); dep != null; dep=dep.getNext()) {
       if (targetMatch == dep.getJustified()) {
-        this.previousJustified.remove(dep);
+        this.previousBlocked.remove(dep);
         break;
       }
     }
   }
   if (dep == null) {
-    dep=new SimpleLogicalDependency(activation,targetMatch);
+    SimpleMode mode=new SimpleMode();
+    dep=new SimpleLogicalDependency(activation,targetMatch,mode);
+    mode.setObject(dep);
   }
   this.activation.addBlocked(dep);
   if (targetMatch.getBlockers().size() == 1 && targetMatch.isQueued()) {

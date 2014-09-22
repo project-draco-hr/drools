@@ -1,10 +1,9 @@
 {
-  DefeasibleLogicalDependency newDep=(DefeasibleLogicalDependency)((LinkedListEntry)node).getObject();
+  DefeasibleMode newDep=(DefeasibleMode)node;
   newDep.setStatus(resolveStatus(newDep));
-  RuleImpl rule=newDep.getJustifier().getRule();
+  RuleImpl rule=newDep.getLogicalDependency().getJustifier().getRule();
   boolean wasDefeated=false;
-  for (LinkedListEntry<DefeasibleLogicalDependency> existingNode=rootUndefeated; existingNode != null; existingNode=existingNode.getNext()) {
-    DefeasibleLogicalDependency existingDep=existingNode.getObject();
+  for (DefeasibleMode existingDep=rootUndefeated; existingDep != null; existingDep=(DefeasibleMode)existingDep.getNext()) {
     wasDefeated=checkIsDefeated(newDep,rule,existingDep);
     if (wasDefeated) {
       existingDep.addDefeated(newDep);
@@ -12,12 +11,11 @@
     }
   }
   if (!wasDefeated) {
-    LinkedListEntry<DefeasibleLogicalDependency> stagedDeps=null;
-    for (LinkedListEntry<DefeasibleLogicalDependency> existingNode=rootUndefeated; existingNode != null; ) {
-      LinkedListEntry<DefeasibleLogicalDependency> next=existingNode.getNext();
-      DefeasibleLogicalDependency existingDep=existingNode.getObject();
-      if (checkIsDefeated(existingDep,existingDep.getJustifier().getRule(),newDep)) {
-        removeUndefeated(existingDep,existingNode);
+    DefeasibleMode stagedDeps=null;
+    for (DefeasibleMode existingDep=rootUndefeated; existingDep != null; ) {
+      DefeasibleMode next=(DefeasibleMode)existingDep.getNext();
+      if (checkIsDefeated(existingDep,existingDep.getLogicalDependency().getJustifier().getRule(),newDep)) {
+        removeUndefeated(existingDep);
         newDep.addDefeated(existingDep);
         if (existingDep.getRootDefeated() != null) {
           if (stagedDeps == null) {
@@ -30,9 +28,9 @@
         }
         existingDep.clearDefeated();
       }
-      existingNode=next;
+      existingDep=next;
     }
-    addUndefeated(newDep,(LinkedListEntry<DefeasibleLogicalDependency>)node);
+    addUndefeated(newDep);
     reprocessDefeated(stagedDeps);
   }
   updateStatus();
