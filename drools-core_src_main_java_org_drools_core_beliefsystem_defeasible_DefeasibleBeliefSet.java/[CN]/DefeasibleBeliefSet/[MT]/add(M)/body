@@ -1,0 +1,37 @@
+{
+  M newDep=node;
+  newDep.setStatus(resolveStatus(newDep));
+  RuleImpl rule=newDep.getLogicalDependency().getJustifier().getRule();
+  boolean wasDefeated=false;
+  for (DefeasibleMode<M> existingDep=rootUndefeated; existingDep != null; existingDep=existingDep.getNext()) {
+    wasDefeated=checkIsDefeated(newDep,rule,existingDep);
+    if (wasDefeated) {
+      existingDep.addDefeated(newDep);
+      break;
+    }
+  }
+  if (!wasDefeated) {
+    M stagedDeps=null;
+    for (M existingDep=rootUndefeated; existingDep != null; ) {
+      M next=existingDep.getNext();
+      if (checkIsDefeated(existingDep,existingDep.getLogicalDependency().getJustifier().getRule(),newDep)) {
+        removeUndefeated(existingDep);
+        newDep.addDefeated(existingDep);
+        if (existingDep.getRootDefeated() != null) {
+          if (stagedDeps == null) {
+            stagedDeps=existingDep.getRootDefeated();
+          }
+ else {
+            stagedDeps.setPrevious(existingDep.getTailDefeated());
+            stagedDeps=existingDep.getRootDefeated();
+          }
+        }
+        existingDep.clearDefeated();
+      }
+      existingDep=next;
+    }
+    addUndefeated(newDep);
+    reprocessDefeated(stagedDeps);
+  }
+  updateStatus();
+}
