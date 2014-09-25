@@ -1,6 +1,13 @@
 {
   Object o=((InternalFactHandle)handle).getObject();
-  ((InternalWorkingMemoryEntryPoint)((InternalFactHandle)handle).getEntryPoint()).delete(handle,this.activation.getRule(),this.activation);
+  EqualityKey key=workingMemory.getTruthMaintenanceSystem().get(o);
+  if (key == null || key.getStatus() == EqualityKey.STATED) {
+    ((InternalWorkingMemoryEntryPoint)((InternalFactHandle)handle).getEntryPoint()).delete(handle,this.activation.getRule(),this.activation);
+  }
+  if (key != null && key.getStatus() == EqualityKey.JUSTIFIED) {
+    InternalFactHandle ifh=key.getLogicalFactHandle();
+    ((InternalWorkingMemoryEntryPoint)ifh.getEntryPoint()).getTruthMaintenanceSystem().delete(ifh);
+  }
   if (this.identityMap != null) {
     this.getIdentityMap().remove(o);
   }

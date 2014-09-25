@@ -1,0 +1,24 @@
+{
+  ObjectTypeConf typeConf=typeConfReg.getObjectTypeConf(ep.getEntryPoint(),object);
+  if (!typeConf.isTMSEnabled()) {
+    enableTMS(object,typeConf);
+  }
+  EqualityKey key=get(object);
+  InternalFactHandle fh=null;
+  if (key == null) {
+    fh=ep.getHandleFactory().newFactHandle(object,typeConf,ep.getInternalWorkingMemory(),ep);
+    key=new EqualityKey(fh,EqualityKey.JUSTIFIED);
+    fh.setEqualityKey(key);
+    put(key);
+  }
+ else {
+    fh=key.getLogicalFactHandle();
+    if (fh == null) {
+      fh=ep.getHandleFactory().newFactHandle(object,typeConf,ep.getInternalWorkingMemory(),ep);
+      key.setLogicalFactHandle(fh);
+      fh.setEqualityKey(key);
+    }
+  }
+  addLogicalDependency(fh,object,tmsValue,activation,activation.getPropagationContext(),rule,typeConf);
+  return fh;
+}

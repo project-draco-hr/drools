@@ -1,0 +1,66 @@
+{
+  try {
+    this.lock.lock();
+    this.kBase.readLock();
+    this.wm.startOperation();
+    this.kBase.executeQueuedActions();
+    if (handle.isDisconnected()) {
+      handle=this.objectStore.reconnect(handle);
+    }
+    final Object originalObject=handle.getObject();
+    if (handle.getEntryPoint() != this) {
+      throw new IllegalArgumentException("Invalid Entry Point. You updated the FactHandle on entry point '" + handle.getEntryPoint().getEntryPointId() + "' instead of '"+ getEntryPointId()+ "'");
+    }
+    final ObjectTypeConf typeConf=this.typeConfReg.getObjectTypeConf(this.entryPoint,object);
+    if (handle.getId() == -1 || object == null || (handle.isEvent() && ((EventFactHandle)handle).isExpired())) {
+      return handle;
+    }
+    if (activation != null) {
+      activation.getPropagationContext().releaseResources();
+    }
+    if (originalObject != object || !AssertBehaviour.IDENTITY.equals(this.kBase.getConfiguration().getAssertBehaviour())) {
+      this.objectStore.removeHandle(handle);
+      handle.setObject(object);
+      this.objectStore.addHandle(handle,object);
+    }
+    this.handleFactory.increaseFactHandleRecency(handle);
+    RuleImpl rule=activation == null ? null : activation.getRule();
+    final PropagationContext propagationContext=pctxFactory.createPropagationContext(this.wm.getNextPropagationIdCounter(),PropagationContext.MODIFICATION,rule,(activation == null) ? null : activation.getTuple(),handle,entryPoint,mask,modifiedClass,null);
+    if (typeConf.isTMSEnabled()) {
+      EqualityKey newKey=tms.get(object);
+      EqualityKey oldKey=handle.getEqualityKey();
+      if (newKey == null) {
+        oldKey.removeFactHandle(handle);
+        if (oldKey.isEmpty() && oldKey.getLogicalFactHandle() == null) {
+          getTruthMaintenanceSystem().remove(oldKey);
+        }
+        newKey=new EqualityKey(handle,EqualityKey.STATED);
+        handle.setEqualityKey(newKey);
+        getTruthMaintenanceSystem().put(newKey);
+      }
+ else       if (newKey != oldKey) {
+        oldKey.removeFactHandle(handle);
+        if (oldKey.isEmpty() && oldKey.getLogicalFactHandle() == null) {
+          getTruthMaintenanceSystem().remove(oldKey);
+        }
+        if (newKey.getStatus() == EqualityKey.JUSTIFIED) {
+          final InternalFactHandle justifiedHandle=newKey.getFactHandle();
+          BeliefSet bs=justifiedHandle.getEqualityKey().getBeliefSet();
+          bs.getBeliefSystem().stage(propagationContext,bs);
+          newKey.setStatus(EqualityKey.STATED);
+          propagationContext.setFactHandle(handle);
+          insert(handle,object,rule,activation,typeConf,propagationContext);
+          return handle;
+        }
+        handle=newKey.getFactHandle();
+      }
+    }
+    update(handle,object,originalObject,typeConf,rule,propagationContext);
+  }
+  finally {
+    this.wm.endOperation();
+    this.kBase.readUnlock();
+    this.lock.unlock();
+  }
+  return handle;
+}

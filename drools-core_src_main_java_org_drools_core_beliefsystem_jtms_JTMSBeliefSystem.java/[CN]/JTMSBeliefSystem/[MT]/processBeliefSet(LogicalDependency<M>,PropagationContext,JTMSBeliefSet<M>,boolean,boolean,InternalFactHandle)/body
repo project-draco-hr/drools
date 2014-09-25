@@ -1,0 +1,18 @@
+{
+  if (!wasDecided && jtmsBeliefSet.isDecided()) {
+    ep.insert(jtmsBeliefSet.getFactHandle(),node.getObject(),node.getJustifier().getRule(),node.getJustifier(),getObjectTypeConf(jtmsBeliefSet),null);
+    return true;
+  }
+ else   if (wasDecided && !jtmsBeliefSet.isDecided()) {
+    if (STRICT) {
+      throw new IllegalStateException("FATAL : A fact and its negation have been asserted " + jtmsBeliefSet.getFactHandle().getObject());
+    }
+    ep.delete(fh,fh.getObject(),getObjectTypeConf(jtmsBeliefSet),(RuleImpl)pctx.getRule(),(Activation)pctx.getLeftTupleOrigin());
+    return true;
+  }
+ else   if (wasNegated != jtmsBeliefSet.isNegated()) {
+    final PropagationContext updatePctx=ep.getPctxFactory().createPropagationContext(ep.getInternalWorkingMemory().getNextPropagationIdCounter(),PropagationContext.MODIFICATION,(RuleImpl)pctx.getRule(),(pctx.getLeftTupleOrigin() == null) ? null : pctx.getLeftTupleOrigin(),fh,ep.getEntryPoint());
+    ep.update(fh,fh.getObject(),fh.getObject(),getObjectTypeConf(jtmsBeliefSet),(RuleImpl)pctx.getRule(),updatePctx);
+  }
+  return false;
+}

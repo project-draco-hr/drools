@@ -1,0 +1,15 @@
+{
+  final PropagationContext propagationContext=pctxFactory.createPropagationContext(this.wm.getNextPropagationIdCounter(),PropagationContext.DELETION,rule,(activation == null) ? null : activation.getTuple(),handle,this.entryPoint);
+  this.entryPointNode.retractObject(handle,propagationContext,typeConf,this.wm);
+  if (handle.isTraiting() && handle.getObject() instanceof TraitProxy) {
+    (((TraitProxy)handle.getObject()).getObject()).removeTrait(((TraitProxy)handle.getObject()).getTypeCode());
+  }
+  this.objectStore.removeHandle(handle);
+  propagationContext.evaluateActionQueue(this.wm);
+  this.wm.getRuleRuntimeEventSupport().fireObjectRetracted(propagationContext,handle,object,this.wm);
+  this.wm.executeQueuedActions();
+  if (rule == null) {
+    ((InternalAgenda)this.wm.getAgenda()).unstageActivations();
+  }
+  return propagationContext;
+}

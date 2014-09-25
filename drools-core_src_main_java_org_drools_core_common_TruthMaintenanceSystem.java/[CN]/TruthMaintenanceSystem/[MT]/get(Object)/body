@@ -1,3 +1,15 @@
 {
-  return (EqualityKey)this.equalityKeyMap.get(object);
+  EqualityKey key=(EqualityKey)this.equalityKeyMap.get(object);
+  if (key == null && assertBehaviour == AssertBehaviour.EQUALITY) {
+    InternalFactHandle fh=ep.getObjectStore().getHandleForObject(object);
+    if (fh != null) {
+      key=fh.getEqualityKey();
+      if (key == null) {
+        ObjectTypeConf typeC=this.typeConfReg.getObjectTypeConf(ep.getEntryPoint(),fh.getObject());
+        enableTMS(fh.getObject(),typeC);
+        key=fh.getEqualityKey();
+      }
+    }
+  }
+  return key;
 }

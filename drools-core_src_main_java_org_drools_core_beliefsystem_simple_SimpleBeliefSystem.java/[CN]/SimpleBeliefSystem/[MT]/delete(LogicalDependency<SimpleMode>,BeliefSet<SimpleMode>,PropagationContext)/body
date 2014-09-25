@@ -2,11 +2,18 @@
   SimpleBeliefSet sBeliefSet=(SimpleBeliefSet)beliefSet;
   beliefSet.remove(node.getMode());
   InternalFactHandle bfh=beliefSet.getFactHandle();
-  if (beliefSet.isEmpty() && bfh.getEqualityKey().getStatus() != EqualityKey.STATED && !((context.getType() == PropagationContext.DELETION || context.getType() == PropagationContext.MODIFICATION) && context.getFactHandle() == bfh)) {
-    ((NamedEntryPoint)bfh.getEntryPoint()).delete(bfh,context.getRuleOrigin(),node.getJustifier());
+  if (beliefSet.isEmpty() && bfh.getEqualityKey().getStatus() == EqualityKey.JUSTIFIED) {
+    ep.delete(bfh,bfh.getObject(),getObjectTypeConf(beliefSet),(RuleImpl)context.getRule(),(Activation)context.getLeftTupleOrigin());
   }
- else   if (!beliefSet.isEmpty() && beliefSet.getFactHandle().getObject() == node.getObject() && node.getObject() != bfh.getObject()) {
+ else   if (!beliefSet.isEmpty() && bfh.getObject() == node.getObject() && node.getObject() != bfh.getObject()) {
     ((NamedEntryPoint)bfh.getEntryPoint()).getObjectStore().updateHandle(bfh,((SimpleMode)beliefSet.getFirst()).getObject().getObject());
-    ((NamedEntryPoint)bfh.getEntryPoint()).update(bfh,true,bfh.getObject(),allSetButTraitBitMask(),Object.class,null);
+    ((NamedEntryPoint)bfh.getEntryPoint()).update(bfh,bfh.getObject(),allSetButTraitBitMask(),Object.class,null);
+  }
+  if (beliefSet.isEmpty()) {
+    EqualityKey key=bfh.getEqualityKey();
+    key.setLogicalFactHandle(null);
+    if (key.getStatus() == EqualityKey.JUSTIFIED) {
+      tms.remove(key);
+    }
   }
 }

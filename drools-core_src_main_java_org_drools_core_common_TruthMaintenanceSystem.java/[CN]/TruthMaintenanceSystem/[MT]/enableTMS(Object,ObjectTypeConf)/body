@@ -1,0 +1,19 @@
+{
+  final Rete source=ep.getKnowledgeBase().getRete();
+  final ClassObjectType cot=new ClassObjectType(object.getClass());
+  final Map<ObjectType,ObjectTypeNode> map=source.getObjectTypeNodes(ep.entryPoint);
+  final ObjectTypeNode node=map.get(cot);
+  final ObjectHashSet memory=((ObjectTypeNodeMemory)ep.getInternalWorkingMemory().getNodeMemory(node)).memory;
+  org.drools.core.util.Iterator it=memory.iterator();
+  for (Object obj=it.next(); obj != null; obj=it.next()) {
+    org.drools.core.util.ObjectHashSet.ObjectEntry holder=(org.drools.core.util.ObjectHashSet.ObjectEntry)obj;
+    InternalFactHandle handle=(InternalFactHandle)holder.getValue();
+    if (handle != null && handle.getEqualityKey() == null) {
+      EqualityKey key=new EqualityKey(handle);
+      handle.setEqualityKey(key);
+      key.setStatus(EqualityKey.STATED);
+      put(key);
+    }
+  }
+  conf.enableTMS();
+}

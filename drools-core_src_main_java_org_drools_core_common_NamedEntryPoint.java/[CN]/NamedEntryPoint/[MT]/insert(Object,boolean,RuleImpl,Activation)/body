@@ -1,0 +1,69 @@
+{
+  if (object == null) {
+    return null;
+  }
+  try {
+    this.wm.startOperation();
+    ObjectTypeConf typeConf=this.typeConfReg.getObjectTypeConf(this.entryPoint,object);
+    InternalFactHandle handle=null;
+    final PropagationContext propagationContext=this.pctxFactory.createPropagationContext(this.wm.getNextPropagationIdCounter(),PropagationContext.INSERTION,rule,(activation == null) ? null : activation.getTuple(),handle,entryPoint);
+    if (this.wm.isSequential()) {
+      handle=createHandle(object,typeConf);
+      propagationContext.setFactHandle(handle);
+      insert(handle,object,rule,activation,typeConf,propagationContext);
+      return handle;
+    }
+    try {
+      this.lock.lock();
+      this.kBase.readLock();
+      handle=this.objectStore.getHandleForObject(object);
+      if (!typeConf.isTMSEnabled()) {
+        if (handle != null) {
+          return handle;
+        }
+        handle=createHandle(object,typeConf);
+      }
+ else {
+        TruthMaintenanceSystem tms=getTruthMaintenanceSystem();
+        EqualityKey key;
+        if (handle != null && handle.getEqualityKey().getStatus() == EqualityKey.STATED) {
+          return handle;
+        }
+ else {
+          key=tms.get(object);
+        }
+        if (key == null) {
+          handle=createHandle(object,typeConf);
+          key=new EqualityKey(handle);
+          handle.setEqualityKey(key);
+          tms.put(key);
+        }
+ else         if (key.getStatus() == EqualityKey.JUSTIFIED) {
+          final InternalFactHandle justifiedHandle=key.getFactHandle();
+          BeliefSet bs=justifiedHandle.getEqualityKey().getBeliefSet();
+          bs.getBeliefSystem().stage(propagationContext,bs);
+          key.setStatus(EqualityKey.STATED);
+        }
+ else {
+          handle=createHandle(object,typeConf);
+          handle.setEqualityKey(key);
+          key.addFactHandle(handle);
+        }
+        key.setStatus(EqualityKey.STATED);
+      }
+      propagationContext.setFactHandle(handle);
+      if (dynamic || typeConf.isDynamic()) {
+        addPropertyChangeListener(handle,dynamic);
+      }
+      insert(handle,object,rule,activation,typeConf,propagationContext);
+    }
+  finally {
+      this.kBase.readUnlock();
+      this.lock.unlock();
+    }
+    return handle;
+  }
+  finally {
+    this.wm.endOperation();
+  }
+}

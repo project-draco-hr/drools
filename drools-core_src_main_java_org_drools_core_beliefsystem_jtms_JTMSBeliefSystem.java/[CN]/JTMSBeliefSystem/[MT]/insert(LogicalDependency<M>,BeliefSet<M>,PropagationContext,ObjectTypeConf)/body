@@ -1,26 +1,23 @@
 {
+  log.trace("TMSInsert {} {}",node.getObject(),node.getMode().getValue());
   JTMSBeliefSet jtmsBeliefSet=(JTMSBeliefSet)beliefSet;
   boolean wasEmpty=jtmsBeliefSet.isEmpty();
   boolean wasNegated=jtmsBeliefSet.isNegated();
-  boolean wasUndecided=jtmsBeliefSet.isUndecided();
+  boolean wasDecided=jtmsBeliefSet.isDecided();
+  InternalFactHandle fh=jtmsBeliefSet.getFactHandle();
   jtmsBeliefSet.add(node.getMode());
-  if (wasEmpty) {
-    if (!jtmsBeliefSet.isUndecided()) {
-      insertBelief(node,typeConf,jtmsBeliefSet,context,wasEmpty,wasNegated,wasUndecided);
-    }
- else {
-      defEP.getObjectStore().removeHandle(jtmsBeliefSet.getFactHandle());
-    }
-  }
- else   if (!wasUndecided && jtmsBeliefSet.isUndecided()) {
-    if (STRICT) {
-      throw new IllegalStateException("FATAL : A fact and its negation have been asserted " + jtmsBeliefSet.getFactHandle().getObject());
-    }
-    deleteAfterChangedEntryPoint(node,context,typeConf,jtmsBeliefSet,wasNegated);
+  if (!wasEmpty && wasDecided && fh.isNegated() != beliefSet.isNegated()) {
+    ep.getObjectStore().removeHandle(fh);
+    fh.setNegated(beliefSet.isNegated());
+    ep.getObjectStore().addHandle(fh,fh.getObject());
   }
  else {
-    if (wasUndecided && !jtmsBeliefSet.isUndecided()) {
-      insertBelief(node,typeConf,jtmsBeliefSet,context,wasEmpty,wasNegated,wasUndecided);
-    }
+    fh.setNegated(beliefSet.isNegated());
+  }
+  if (wasEmpty && jtmsBeliefSet.isDecided()) {
+    ep.insert(jtmsBeliefSet.getFactHandle(),node.getObject(),node.getJustifier().getRule(),node.getJustifier(),typeConf,null);
+  }
+ else {
+    processBeliefSet(node,context,jtmsBeliefSet,wasDecided,wasNegated,fh);
   }
 }
