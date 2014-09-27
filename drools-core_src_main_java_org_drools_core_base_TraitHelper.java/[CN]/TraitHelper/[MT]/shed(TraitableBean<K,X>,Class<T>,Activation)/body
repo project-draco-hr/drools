@@ -1,0 +1,50 @@
+{
+  if (trait.isAssignableFrom(core.getClass())) {
+    Collection removedTraits=core.removeTrait(trait.getName());
+    if (!removedTraits.isEmpty()) {
+      update(getFactHandle(core),onlyTraitBitSetMask(),core.getClass(),activation);
+    }
+    if (core instanceof Thing) {
+      return (Thing<K>)core;
+    }
+ else {
+      return null;
+    }
+  }
+ else {
+    Collection<Thing<K>> removedTypes;
+    Thing<K> thing=core.getTrait(Thing.class.getName());
+    if (trait == Thing.class) {
+      removedTypes=new ArrayList<Thing<K>>(core._getTraitMap().values());
+      for (      Thing t : removedTypes) {
+        if (!((TraitType)t).isVirtual()) {
+          delete(getFactHandle(t),activation);
+        }
+      }
+      core._getTraitMap().clear();
+      core._setTraitMap(null);
+      return thing;
+    }
+ else     if (core.hasTrait(trait.getName())) {
+      removedTypes=core.removeTrait(trait.getName());
+    }
+ else {
+      HierarchyEncoder hier=this.workingMemory.getKnowledgeBase().getConfiguration().getComponentFactory().getTraitRegistry().getHierarchy();
+      BitSet code=hier.getCode(trait.getName());
+      removedTypes=core.removeTrait(code);
+    }
+    removedTypes=new ArrayList<Thing<K>>(removedTypes);
+    for (    Thing t : removedTypes) {
+      if (!((TraitType)t).isVirtual()) {
+        delete(getFactHandle(t),activation);
+      }
+    }
+    if (!core.hasTraits()) {
+      don(activation,core,Thing.class,false);
+    }
+ else     if (!removedTypes.isEmpty()) {
+      update(getFactHandle(core),onlyTraitBitSetMask(),core.getClass(),activation);
+    }
+    return thing;
+  }
+}

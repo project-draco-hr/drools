@@ -1,0 +1,21 @@
+{
+  if (identityMap == null) {
+    identityMap=new IdentityHashMap<Object,FactHandle>();
+  }
+  TraitFactory builder=TraitFactory.getTraitBuilderForKnowledgeBase(entryPoint.getKnowledgeBase());
+  TraitableBean inner=makeTraitable(core,builder,logical,activation);
+  boolean needsProxy=trait.isAssignableFrom(inner.getClass());
+  boolean hasTrait=inner.hasTrait(trait.getName());
+  boolean needsUpdate=needsProxy || core != inner;
+  checkStaticTypeCode(inner);
+  BitSet boundary=inner.getCurrentTypeCode() != null ? (BitSet)inner.getCurrentTypeCode().clone() : null;
+  Collection<Thing> mostSpecificTraits=getTraitBoundary(inner,needsProxy,hasTrait,trait);
+  T thing=asTrait(core,inner,trait,needsProxy,hasTrait,needsUpdate,builder,logical,activation);
+  configureTrait(thing,value);
+  thing=doInsertTrait(activation,thing,core,logical,boundary,modes);
+  refresh(thing,core,inner,trait,mostSpecificTraits,logical,activation);
+  if (trait != Thing.class && inner._getFieldTMS() != null) {
+    inner._getFieldTMS().resetModificationMask();
+  }
+  return thing;
+}

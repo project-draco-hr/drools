@@ -1,0 +1,34 @@
+{
+  boolean needsWrapping=!(core instanceof TraitableBean);
+  ClassDefinition coreDef=lookupClassDefinition(core);
+  TraitableBean<K,? extends TraitableBean> inner=needsWrapping ? builder.asTraitable(core,coreDef) : (TraitableBean<K,? extends TraitableBean>)core;
+  if (needsWrapping) {
+    InternalFactHandle h=(InternalFactHandle)lookupFactHandle(core);
+    InternalWorkingMemoryEntryPoint ep=h != null ? (InternalWorkingMemoryEntryPoint)h.getEntryPoint() : (InternalWorkingMemoryEntryPoint)((StatefulKnowledgeSessionImpl)workingMemory).getEntryPoint("DEFAULT");
+    ObjectTypeConfigurationRegistry reg=ep.getObjectTypeConfigurationRegistry();
+    ObjectTypeConf coreConf=reg.getObjectTypeConf(ep.getEntryPoint(),core);
+    ObjectTypeConf innerConf=reg.getObjectTypeConf(ep.getEntryPoint(),inner);
+    if (coreConf.isTMSEnabled()) {
+      innerConf.enableTMS();
+    }
+    if (inner._getFieldTMS() != null && inner._getFieldTMS().needsInit()) {
+      inner._getFieldTMS().init(workingMemory);
+    }
+  }
+ else {
+    TraitFieldTMS ftms=inner._getFieldTMS();
+    if (ftms != null) {
+      FactHandle handle=lookupFactHandle(inner);
+      if (handle == null) {
+        handle=this.workingMemory.insert(inner,null,false,logical,activation.getRule(),activation);
+        if (this.identityMap != null) {
+          this.identityMap.put(inner,handle);
+        }
+      }
+      if (ftms.needsInit()) {
+        ftms.init(workingMemory);
+      }
+    }
+  }
+  return inner;
+}
