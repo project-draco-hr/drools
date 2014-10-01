@@ -1,0 +1,22 @@
+{
+  final List<Node> nodes=new ArrayList<Node>();
+  if (!(p instanceof FactPattern)) {
+    throw new GuidedDecisionTreeDRLParserException("Can only process FactPatterns");
+  }
+  final FactPattern fp=(FactPattern)p;
+  if (fp.isNegated()) {
+    throw new GuidedDecisionTreeDRLParserException("Cannot process negated FactPatterns");
+  }
+  if (fp.getWindow().getOperator() != null) {
+    throw new GuidedDecisionTreeDRLParserException("Cannot process FactPatterns Windows");
+  }
+  final TypeNode node=new TypeNodeImpl(fp.getFactType());
+  if (fp.isBound()) {
+    node.setBinding(fp.getBoundName());
+  }
+  nodes.add(node);
+  for (  FieldConstraint fc : fp.getFieldConstraints()) {
+    nodes.addAll(processFieldConstraint(fc,model,dmo));
+  }
+  return nodes;
+}

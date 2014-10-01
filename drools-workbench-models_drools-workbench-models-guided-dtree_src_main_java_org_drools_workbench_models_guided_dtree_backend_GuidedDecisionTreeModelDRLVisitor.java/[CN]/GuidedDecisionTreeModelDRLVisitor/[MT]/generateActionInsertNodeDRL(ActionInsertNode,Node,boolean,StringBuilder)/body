@@ -1,0 +1,36 @@
+{
+  if (context == null) {
+  }
+ else   if (context instanceof ConstraintNode) {
+    drl.append(")\n").append(INDENTATION).append("then \n");
+    if (hasDateFieldValue) {
+      drl.append(INDENTATION).append(INDENTATION).append("java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"" + DateUtils.getDateFormatMask() + "\");\n");
+    }
+  }
+ else   if (context instanceof TypeNode) {
+    drl.append(")\n").append(INDENTATION).append("then \n");
+    if (hasDateFieldValue) {
+      drl.append(INDENTATION).append(INDENTATION).append("java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"" + DateUtils.getDateFormatMask() + "\");\n");
+    }
+  }
+  final Iterator<ActionFieldValue> itr=an.getFieldValues().iterator();
+  if (!itr.hasNext()) {
+    return;
+  }
+  final String var="$var" + (varCounter++);
+  drl.append(INDENTATION).append(INDENTATION).append(an.getClassName()).append(" ").append(var).append(" = new ").append(an.getClassName()).append("();\n");
+  while (itr.hasNext()) {
+    final ActionFieldValue afv=itr.next();
+    drl.append(INDENTATION).append(INDENTATION).append(var).append(".");
+    drl.append("set");
+    drl.append(Character.toUpperCase(afv.getFieldName().charAt(0)));
+    drl.append(afv.getFieldName().substring(1));
+    drl.append("( ").append(generateRHSValueDRL(afv.getValue())).append(" );\n");
+  }
+  if (an.isLogicalInsertion()) {
+    drl.append(INDENTATION).append(INDENTATION).append("insertLogical( ").append(var).append(" );\n");
+  }
+ else {
+    drl.append(INDENTATION).append(INDENTATION).append("insert( ").append(var).append(" );\n");
+  }
+}

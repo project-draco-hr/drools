@@ -1,0 +1,38 @@
+{
+  final String drl="rule \"test_0\"" + "when \n" + "  Person( name == \"Michael\" )\n"+ "then \n"+ "end \n"+ "rule \"test_1\""+ "when \n"+ "  Person( age == 41 )\n"+ "then \n"+ "end \n";
+  final GuidedDecisionTree expected=new GuidedDecisionTree();
+  expected.setTreeName("test");
+  final TypeNode type=new TypeNodeImpl("Person");
+  final ConstraintNode c1=new ConstraintNodeImpl("Person","name","==",new StringValue("Michael"));
+  final ConstraintNode c2=new ConstraintNodeImpl("Person","age","==",new IntegerValue(41));
+  expected.setRoot(type);
+  type.addChild(c1);
+  type.addChild(c2);
+  addModelField("Person","this","Person",DataType.TYPE_THIS);
+  addModelField("Person","name",String.class.getName(),DataType.TYPE_STRING);
+  addModelField("Person","age",Integer.class.getName(),DataType.TYPE_NUMERIC_INTEGER);
+  final GuidedDecisionTree model=GuidedDecisionTreeDRLPersistence.getInstance().unmarshal(drl,"test",dmo);
+  assertNotNull(model);
+  assertEquals(expected.getTreeName(),model.getTreeName());
+  assertNotNull(model.getRoot());
+  final TypeNode _t1=model.getRoot();
+  assertEquals(type.getClassName(),_t1.getClassName());
+  assertFalse(_t1.isBound());
+  assertEquals(2,_t1.getChildren().size());
+  assertNotNull(_t1.getChildren().get(0));
+  assertTrue(_t1.getChildren().get(0) instanceof ConstraintNode);
+  final ConstraintNode _c1=(ConstraintNode)_t1.getChildren().get(0);
+  assertEquals(c1.getClassName(),_c1.getClassName());
+  assertEquals(c1.getFieldName(),_c1.getFieldName());
+  assertEquals(c1.getOperator(),_c1.getOperator());
+  assertEquals(c1.getValue().getValue().toString(),_c1.getValue().getValue().toString());
+  assertNotNull(_t1.getChildren().get(1));
+  assertTrue(_t1.getChildren().get(1) instanceof ConstraintNode);
+  final ConstraintNode _c2=(ConstraintNode)_t1.getChildren().get(1);
+  assertEquals(c2.getClassName(),_c2.getClassName());
+  assertEquals(c2.getFieldName(),_c2.getFieldName());
+  assertEquals(c2.getOperator(),_c2.getOperator());
+  assertEquals(c2.getValue().getValue().toString(),_c2.getValue().getValue().toString());
+  assertEquals(0,_c1.getChildren().size());
+  assertEquals(0,_c2.getChildren().size());
+}

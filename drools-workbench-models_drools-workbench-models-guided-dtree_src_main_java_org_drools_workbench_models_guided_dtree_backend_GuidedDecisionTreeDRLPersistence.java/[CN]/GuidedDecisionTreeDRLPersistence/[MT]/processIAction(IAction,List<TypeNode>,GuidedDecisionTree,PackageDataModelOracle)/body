@@ -1,0 +1,99 @@
+{
+  final List<Node> nodes=new ArrayList<Node>();
+  if (a instanceof ActionRetractFact) {
+    final ActionRetractFact arf=(ActionRetractFact)a;
+    final String binding=arf.getVariableName();
+    for (    TypeNode tn : types) {
+      if (tn.isBound()) {
+        if (tn.getBinding().equals(binding)) {
+          final ActionRetractNode arn=new ActionRetractNodeImpl(tn);
+          nodes.add(arn);
+          return nodes;
+        }
+      }
+    }
+    throw new GuidedDecisionTreeDRLParserException("Cannot find a TypeNode for binding '" + binding + "'.");
+  }
+ else   if (a instanceof ActionInsertLogicalFact) {
+    final ActionInsertLogicalFact aif=(ActionInsertLogicalFact)a;
+    final ActionInsertNode aun=new ActionInsertNodeImpl(aif.getFactType());
+    aun.setLogicalInsertion(true);
+    for (    org.drools.workbench.models.datamodel.rule.ActionFieldValue afv : aif.getFieldValues()) {
+      if (afv.getNature() != FieldNatureType.TYPE_LITERAL) {
+        throw new GuidedDecisionTreeDRLParserException("Cannot process ActionFieldValue: FieldNatureType is unsupported.");
+      }
+      final String fieldName=afv.getField();
+      final Value value=getValue(aif.getFactType(),afv.getField(),model,dmo,afv.getValue());
+      final ActionFieldValue _afv=new ActionFieldValueImpl(fieldName,value);
+      aun.getFieldValues().add(_afv);
+    }
+    nodes.add(aun);
+    return nodes;
+  }
+ else   if (a instanceof ActionInsertFact) {
+    final ActionInsertFact aif=(ActionInsertFact)a;
+    final ActionInsertNode aun=new ActionInsertNodeImpl(aif.getFactType());
+    aun.setLogicalInsertion(false);
+    for (    org.drools.workbench.models.datamodel.rule.ActionFieldValue afv : aif.getFieldValues()) {
+      if (afv.getNature() != FieldNatureType.TYPE_LITERAL) {
+        throw new GuidedDecisionTreeDRLParserException("Cannot process ActionFieldValue: FieldNatureType is unsupported.");
+      }
+      final String fieldName=afv.getField();
+      final Value value=getValue(aif.getFactType(),afv.getField(),model,dmo,afv.getValue());
+      final ActionFieldValue _afv=new ActionFieldValueImpl(fieldName,value);
+      aun.getFieldValues().add(_afv);
+    }
+    nodes.add(aun);
+    return nodes;
+  }
+ else   if (a instanceof ActionUpdateField) {
+    final ActionUpdateField auf=(ActionUpdateField)a;
+    final String binding=auf.getVariable();
+    for (    TypeNode tn : types) {
+      if (tn.isBound()) {
+        if (tn.getBinding().equals(binding)) {
+          final ActionUpdateNode aun=new ActionUpdateNodeImpl(tn);
+          aun.setModify(true);
+          for (          org.drools.workbench.models.datamodel.rule.ActionFieldValue afv : auf.getFieldValues()) {
+            if (afv.getNature() != FieldNatureType.TYPE_LITERAL) {
+              throw new GuidedDecisionTreeDRLParserException("Cannot process ActionFieldValue: FieldNatureType is unsupported.");
+            }
+            final String fieldName=afv.getField();
+            final Value value=getValue(tn.getClassName(),afv.getField(),model,dmo,afv.getValue());
+            final ActionFieldValue _afv=new ActionFieldValueImpl(fieldName,value);
+            aun.getFieldValues().add(_afv);
+          }
+          nodes.add(aun);
+          return nodes;
+        }
+      }
+    }
+    throw new GuidedDecisionTreeDRLParserException("Cannot find a TypeNode for binding '" + binding + "'.");
+  }
+ else   if (a instanceof ActionSetField) {
+    final ActionSetField asf=(ActionSetField)a;
+    final String binding=asf.getVariable();
+    for (    TypeNode tn : types) {
+      if (tn.isBound()) {
+        if (tn.getBinding().equals(binding)) {
+          final ActionUpdateNode aun=new ActionUpdateNodeImpl(tn);
+          for (          org.drools.workbench.models.datamodel.rule.ActionFieldValue afv : asf.getFieldValues()) {
+            if (afv.getNature() != FieldNatureType.TYPE_LITERAL) {
+              throw new GuidedDecisionTreeDRLParserException("Cannot process ActionFieldValue: FieldNatureType is unsupported.");
+            }
+            final String fieldName=afv.getField();
+            final Value value=getValue(tn.getClassName(),afv.getField(),model,dmo,afv.getValue());
+            final ActionFieldValue _afv=new ActionFieldValueImpl(fieldName,value);
+            aun.getFieldValues().add(_afv);
+          }
+          nodes.add(aun);
+          return nodes;
+        }
+      }
+    }
+    throw new GuidedDecisionTreeDRLParserException("Cannot find a TypeNode for binding '" + binding + "'.");
+  }
+ else {
+    throw new GuidedDecisionTreeDRLParserException("Can only process FactPatterns");
+  }
+}

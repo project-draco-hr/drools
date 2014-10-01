@@ -1,0 +1,31 @@
+{
+  final String drl="rule \"test_0\"" + "when \n" + "  Person( )\n"+ "then \n"+ "  Person $var0 = new Person();\n"+ "  $var0.setAge( 25 );\n"+ "  insert( $var0 );\n"+ "end";
+  final GuidedDecisionTree expected=new GuidedDecisionTree();
+  expected.setTreeName("test");
+  final TypeNode type=new TypeNodeImpl("Person");
+  expected.setRoot(type);
+  final ActionInsertNode action=new ActionInsertNodeImpl("Person");
+  action.setLogicalInsertion(false);
+  action.getFieldValues().add(new ActionFieldValueImpl("age",new IntegerValue(25)));
+  type.addChild(action);
+  addModelField("Person","this","Person",DataType.TYPE_THIS);
+  addModelField("Person","age",Integer.class.getName(),DataType.TYPE_NUMERIC_INTEGER);
+  final GuidedDecisionTree model=GuidedDecisionTreeDRLPersistence.getInstance().unmarshal(drl,"test",dmo);
+  assertNotNull(model);
+  assertEquals(expected.getTreeName(),model.getTreeName());
+  assertNotNull(model.getRoot());
+  assertEquals(type.getClassName(),model.getRoot().getClassName());
+  assertFalse(model.getRoot().isBound());
+  assertEquals(type.getBinding(),model.getRoot().getBinding());
+  assertEquals(1,model.getRoot().getChildren().size());
+  assertNotNull(model.getRoot().getChildren().get(0));
+  assertTrue(model.getRoot().getChildren().get(0) instanceof ActionInsertNode);
+  final ActionInsertNode _action=(ActionInsertNode)model.getRoot().getChildren().get(0);
+  assertEquals(action.getClassName(),_action.getClassName());
+  assertEquals(action.isLogicalInsertion(),_action.isLogicalInsertion());
+  assertEquals(action.getFieldValues().size(),_action.getFieldValues().size());
+  assertEquals(1,_action.getFieldValues().size());
+  assertEquals(action.getFieldValues().get(0).getFieldName(),_action.getFieldValues().get(0).getFieldName());
+  assertEquals(action.getFieldValues().get(0).getValue().getValue().toString(),_action.getFieldValues().get(0).getValue().getValue().toString());
+  assertEquals(0,_action.getChildren().size());
+}

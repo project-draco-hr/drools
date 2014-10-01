@@ -1,0 +1,15 @@
+{
+  final String expected="rule \"test_0\"" + "when\n" + "  $p : Person( )\n"+ "then\n"+ "  $p.setAge( 25 );\n"+ "  $p.setName( \"Michael\" );\n"+ "end";
+  final GuidedDecisionTree model=new GuidedDecisionTree();
+  model.setTreeName("test");
+  final TypeNode type=new TypeNodeImpl("Person");
+  type.setBinding("$p");
+  model.setRoot(type);
+  final ActionUpdateNode action=new ActionUpdateNodeImpl(type);
+  action.setModify(false);
+  action.getFieldValues().add(new ActionFieldValueImpl("age",new IntegerValue(25)));
+  action.getFieldValues().add(new ActionFieldValueImpl("name",new StringValue("Michael")));
+  type.addChild(action);
+  final String drl=GuidedDecisionTreeDRLPersistence.getInstance().marshal(model);
+  assertEqualsIgnoreWhitespace(expected,drl);
+}

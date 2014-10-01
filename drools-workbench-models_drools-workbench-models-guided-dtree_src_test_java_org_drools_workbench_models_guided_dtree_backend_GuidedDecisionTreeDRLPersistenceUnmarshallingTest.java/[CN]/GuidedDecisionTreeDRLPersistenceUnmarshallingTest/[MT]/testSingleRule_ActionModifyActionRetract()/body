@@ -1,0 +1,38 @@
+{
+  final String drl="rule \"test_0\"" + "when \n" + "  $p : Person( )\n"+ "then \n"+ "  modify( $p ) {\n"+ "    setAge( 25 )\n"+ "  }\n"+ "  retract( $p );\n"+ "end";
+  final GuidedDecisionTree expected=new GuidedDecisionTree();
+  expected.setTreeName("test");
+  final TypeNode type=new TypeNodeImpl("Person");
+  type.setBinding("$p");
+  expected.setRoot(type);
+  final ActionUpdateNode action1=new ActionUpdateNodeImpl(type);
+  action1.setModify(true);
+  action1.getFieldValues().add(new ActionFieldValueImpl("age",new IntegerValue(25)));
+  type.addChild(action1);
+  final ActionRetractNode action2=new ActionRetractNodeImpl(type);
+  action1.addChild(action2);
+  addModelField("Person","this","Person",DataType.TYPE_THIS);
+  addModelField("Person","age",Integer.class.getName(),DataType.TYPE_NUMERIC_INTEGER);
+  final GuidedDecisionTree model=GuidedDecisionTreeDRLPersistence.getInstance().unmarshal(drl,"test",dmo);
+  assertNotNull(model);
+  assertEquals(expected.getTreeName(),model.getTreeName());
+  assertNotNull(model.getRoot());
+  assertEquals(type.getClassName(),model.getRoot().getClassName());
+  assertTrue(model.getRoot().isBound());
+  assertEquals(type.getBinding(),model.getRoot().getBinding());
+  assertEquals(1,model.getRoot().getChildren().size());
+  assertNotNull(model.getRoot().getChildren().get(0));
+  assertTrue(model.getRoot().getChildren().get(0) instanceof ActionUpdateNode);
+  final ActionUpdateNode _action1=(ActionUpdateNode)model.getRoot().getChildren().get(0);
+  assertEquals(action1.getBoundNode().getBinding(),_action1.getBoundNode().getBinding());
+  assertEquals(action1.isModify(),_action1.isModify());
+  assertEquals(action1.getFieldValues().size(),_action1.getFieldValues().size());
+  assertEquals(1,_action1.getFieldValues().size());
+  assertEquals(action1.getFieldValues().get(0).getFieldName(),_action1.getFieldValues().get(0).getFieldName());
+  assertEquals(action1.getFieldValues().get(0).getValue().getValue().toString(),_action1.getFieldValues().get(0).getValue().getValue().toString());
+  assertEquals(1,_action1.getChildren().size());
+  assertNotNull(_action1.getChildren().get(0));
+  assertTrue(_action1.getChildren().get(0) instanceof ActionRetractNode);
+  final ActionRetractNode _action2=(ActionRetractNode)_action1.getChildren().get(0);
+  assertEquals(action2.getBoundNode().getBinding(),_action2.getBoundNode().getBinding());
+}

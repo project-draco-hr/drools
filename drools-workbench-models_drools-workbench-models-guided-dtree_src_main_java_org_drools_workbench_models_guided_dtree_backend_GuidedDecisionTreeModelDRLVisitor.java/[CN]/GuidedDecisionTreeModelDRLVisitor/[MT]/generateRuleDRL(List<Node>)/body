@@ -1,31 +1,45 @@
 {
   Node context=null;
   final StringBuilder drl=new StringBuilder();
+  final boolean hasDateFieldValue=hasDateFieldValue(path);
+  this.varCounter=0;
   drl.append(generateRuleHeaderDRL());
-  drl.append("when\n");
+  drl.append(INDENTATION).append("when \n");
   for (  Node node : path) {
     if (node instanceof TypeNode) {
-      final TypeNode tn=(TypeNode)node;
-      if (context == null) {
-        drl.append(tn.getClassName()).append("(");
-      }
- else       if (context instanceof ConstraintNode) {
-        drl.append(")\n").append(tn.getClassName()).append("(");
-      }
- else       if (context instanceof TypeNode) {
-        drl.append(")\n").append(tn.getClassName()).append("(");
-      }
+      generateTypeNodeDRL((TypeNode)node,context,drl);
     }
  else     if (node instanceof ConstraintNode) {
-      final ConstraintNode cn=(ConstraintNode)node;
-      if (context instanceof ConstraintNode) {
-        drl.append(", ");
-      }
-      drl.append(cn.getFieldName()).append(" ").append(cn.getOperator()).append(" ").append(generateValueDRL(cn.getValue()));
+      generateConstraintNodeDRL((ConstraintNode)node,context,drl);
+    }
+ else     if (node instanceof ActionRetractNode) {
+      generateActionRetractNodeDRL((ActionRetractNode)node,context,hasDateFieldValue,drl);
+    }
+ else     if (node instanceof ActionUpdateNode) {
+      generateActionUpdateNodeDRL((ActionUpdateNode)node,context,hasDateFieldValue,drl);
+    }
+ else     if (node instanceof ActionInsertNode) {
+      generateActionInsertNodeDRL((ActionInsertNode)node,context,hasDateFieldValue,drl);
     }
     context=node;
   }
-  drl.append(")\n").append("then\n").append("end\n");
+  if (context == null) {
+  }
+ else   if (context instanceof ConstraintNode) {
+    drl.append(")\n").append("then \n").append("end\n");
+  }
+ else   if (context instanceof TypeNode) {
+    drl.append(")\n").append("then \n").append("end\n");
+  }
+ else   if (context instanceof ActionRetractNode) {
+    drl.append("end\n");
+  }
+ else   if (context instanceof ActionUpdateNode) {
+    drl.append("end\n");
+  }
+ else   if (context instanceof ActionInsertNode) {
+    drl.append("end\n");
+  }
   ruleCount++;
   rules.append(drl);
 }

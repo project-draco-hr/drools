@@ -1,0 +1,32 @@
+{
+  final String drl="rule \"test_0\"" + "when \n" + "  $p : Person( )\n"+ "then \n"+ "  modify( $p ) {\n"+ "    setAge( 25 )\n"+ "  }\n"+ "end";
+  final GuidedDecisionTree expected=new GuidedDecisionTree();
+  expected.setTreeName("test");
+  final TypeNode type=new TypeNodeImpl("Person");
+  type.setBinding("$p");
+  expected.setRoot(type);
+  final ActionUpdateNode action=new ActionUpdateNodeImpl(type);
+  action.setModify(true);
+  action.getFieldValues().add(new ActionFieldValueImpl("age",new IntegerValue(25)));
+  type.addChild(action);
+  addModelField("Person","this","Person",DataType.TYPE_THIS);
+  addModelField("Person","age",Integer.class.getName(),DataType.TYPE_NUMERIC_INTEGER);
+  final GuidedDecisionTree model=GuidedDecisionTreeDRLPersistence.getInstance().unmarshal(drl,"test",dmo);
+  assertNotNull(model);
+  assertEquals(expected.getTreeName(),model.getTreeName());
+  assertNotNull(model.getRoot());
+  assertEquals(type.getClassName(),model.getRoot().getClassName());
+  assertTrue(model.getRoot().isBound());
+  assertEquals(type.getBinding(),model.getRoot().getBinding());
+  assertEquals(1,model.getRoot().getChildren().size());
+  assertNotNull(model.getRoot().getChildren().get(0));
+  assertTrue(model.getRoot().getChildren().get(0) instanceof ActionUpdateNode);
+  final ActionUpdateNode _action=(ActionUpdateNode)model.getRoot().getChildren().get(0);
+  assertEquals(action.getBoundNode().getBinding(),_action.getBoundNode().getBinding());
+  assertEquals(action.isModify(),_action.isModify());
+  assertEquals(action.getFieldValues().size(),_action.getFieldValues().size());
+  assertEquals(1,_action.getFieldValues().size());
+  assertEquals(action.getFieldValues().get(0).getFieldName(),_action.getFieldValues().get(0).getFieldName());
+  assertEquals(action.getFieldValues().get(0).getValue().getValue().toString(),_action.getFieldValues().get(0).getValue().getValue().toString());
+  assertEquals(0,_action.getChildren().size());
+}

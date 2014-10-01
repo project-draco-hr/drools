@@ -1,0 +1,35 @@
+{
+  final String drl="rule \"test_0\"" + "when \n" + "  $p : Person( $n : name )\n"+ "then \n"+ "  retract( $p );\n"+ "end";
+  final GuidedDecisionTree expected=new GuidedDecisionTree();
+  expected.setTreeName("test");
+  final TypeNode type=new TypeNodeImpl("Person");
+  type.setBinding("$p");
+  final ConstraintNode c1=new ConstraintNodeImpl("Person","name");
+  c1.setBinding("$n");
+  expected.setRoot(type);
+  type.addChild(c1);
+  final ActionRetractNode action=new ActionRetractNodeImpl(type);
+  c1.addChild(action);
+  addModelField("Person","this","Person",DataType.TYPE_THIS);
+  addModelField("Person","name",String.class.getName(),DataType.TYPE_STRING);
+  final GuidedDecisionTree model=GuidedDecisionTreeDRLPersistence.getInstance().unmarshal(drl,"test",dmo);
+  assertNotNull(model);
+  assertEquals(expected.getTreeName(),model.getTreeName());
+  assertNotNull(model.getRoot());
+  assertEquals(type.getClassName(),model.getRoot().getClassName());
+  assertTrue(model.getRoot().isBound());
+  assertEquals(type.getBinding(),model.getRoot().getBinding());
+  assertEquals(1,model.getRoot().getChildren().size());
+  assertNotNull(model.getRoot().getChildren().get(0));
+  assertTrue(model.getRoot().getChildren().get(0) instanceof ConstraintNode);
+  final ConstraintNode _c1=(ConstraintNode)model.getRoot().getChildren().get(0);
+  assertEquals(c1.getClassName(),_c1.getClassName());
+  assertEquals(c1.getFieldName(),_c1.getFieldName());
+  assertEquals(c1.getOperator(),_c1.getOperator());
+  assertNull(_c1.getValue());
+  assertEquals(1,_c1.getChildren().size());
+  assertNotNull(_c1.getChildren().get(0));
+  assertTrue(_c1.getChildren().get(0) instanceof ActionRetractNode);
+  final ActionRetractNode _a1=(ActionRetractNode)_c1.getChildren().get(0);
+  assertEquals(action.getBoundNode().getBinding(),_a1.getBoundNode().getBinding());
+}

@@ -1,0 +1,18 @@
+{
+  final String expected="rule \"test_0\"" + "when\n" + "  $p : Person()\n"+ "then\n"+ "  java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"dd-MMM-yyyy\");\n"+ "  $p.setDateOfBirth( sdf.parse(\"15-Jul-1985\") );\n"+ "end";
+  final GuidedDecisionTree model=new GuidedDecisionTree();
+  model.setTreeName("test");
+  final TypeNode type=new TypeNodeImpl("Person");
+  type.setBinding("$p");
+  model.setRoot(type);
+  final ActionUpdateNode action=new ActionUpdateNodeImpl(type);
+  action.setModify(false);
+  final Calendar dob=Calendar.getInstance();
+  dob.set(Calendar.YEAR,1985);
+  dob.set(Calendar.MONTH,6);
+  dob.set(Calendar.DATE,15);
+  action.getFieldValues().add(new ActionFieldValueImpl("dateOfBirth",new DateValue(dob.getTime())));
+  type.addChild(action);
+  final String drl=GuidedDecisionTreeDRLPersistence.getInstance().marshal(model);
+  assertEqualsIgnoreWhitespace(expected,drl);
+}

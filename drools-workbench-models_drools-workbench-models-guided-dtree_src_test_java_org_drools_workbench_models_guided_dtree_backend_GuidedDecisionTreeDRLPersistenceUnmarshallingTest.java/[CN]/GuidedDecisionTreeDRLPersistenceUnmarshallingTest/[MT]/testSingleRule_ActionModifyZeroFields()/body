@@ -1,0 +1,20 @@
+{
+  final String drl="rule \"test_0\"" + "when \n" + "  $p : Person( )\n"+ "then \n"+ "end";
+  final GuidedDecisionTree expected=new GuidedDecisionTree();
+  expected.setTreeName("test");
+  final TypeNode type=new TypeNodeImpl("Person");
+  type.setBinding("$p");
+  expected.setRoot(type);
+  final ActionUpdateNode action=new ActionUpdateNodeImpl(type);
+  action.setModify(true);
+  type.addChild(action);
+  addModelField("Person","this","Person",DataType.TYPE_THIS);
+  final GuidedDecisionTree model=GuidedDecisionTreeDRLPersistence.getInstance().unmarshal(drl,"test",dmo);
+  assertNotNull(model);
+  assertEquals(expected.getTreeName(),model.getTreeName());
+  assertNotNull(model.getRoot());
+  assertEquals(type.getClassName(),model.getRoot().getClassName());
+  assertTrue(model.getRoot().isBound());
+  assertEquals(type.getBinding(),model.getRoot().getBinding());
+  assertEquals(0,model.getRoot().getChildren().size());
+}

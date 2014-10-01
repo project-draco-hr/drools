@@ -1,0 +1,16 @@
+{
+  final String expected="rule \"test_0\"" + "when\n" + "  $p : Person( )\n"+ "then\n"+ "  $p.setAge( 25 );\n"+ "  retract( $p );\n"+ "end";
+  final GuidedDecisionTree model=new GuidedDecisionTree();
+  model.setTreeName("test");
+  final TypeNode type=new TypeNodeImpl("Person");
+  type.setBinding("$p");
+  model.setRoot(type);
+  final ActionUpdateNode action1=new ActionUpdateNodeImpl(type);
+  action1.setModify(false);
+  action1.getFieldValues().add(new ActionFieldValueImpl("age",new IntegerValue(25)));
+  type.addChild(action1);
+  final ActionRetractNode action2=new ActionRetractNodeImpl(type);
+  action1.addChild(action2);
+  final String drl=GuidedDecisionTreeDRLPersistence.getInstance().marshal(model);
+  assertEqualsIgnoreWhitespace(expected,drl);
+}

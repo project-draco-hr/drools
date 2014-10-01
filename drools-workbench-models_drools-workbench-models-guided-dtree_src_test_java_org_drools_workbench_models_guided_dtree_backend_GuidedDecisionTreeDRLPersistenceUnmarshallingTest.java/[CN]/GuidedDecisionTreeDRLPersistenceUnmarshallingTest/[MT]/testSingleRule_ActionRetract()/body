@@ -1,0 +1,24 @@
+{
+  final String drl="rule \"test_0\"" + "when \n" + "  $p : Person( )\n"+ "then \n"+ "  retract( $p );\n"+ "end";
+  final GuidedDecisionTree expected=new GuidedDecisionTree();
+  expected.setTreeName("test");
+  final TypeNode type=new TypeNodeImpl("Person");
+  type.setBinding("$p");
+  expected.setRoot(type);
+  final ActionRetractNode action=new ActionRetractNodeImpl(type);
+  type.addChild(action);
+  addModelField("Person","this","Person",DataType.TYPE_THIS);
+  addModelField("Person","name",String.class.getName(),DataType.TYPE_STRING);
+  final GuidedDecisionTree model=GuidedDecisionTreeDRLPersistence.getInstance().unmarshal(drl,"test",dmo);
+  assertNotNull(model);
+  assertEquals(expected.getTreeName(),model.getTreeName());
+  assertNotNull(model.getRoot());
+  assertEquals(type.getClassName(),model.getRoot().getClassName());
+  assertTrue(model.getRoot().isBound());
+  assertEquals(type.getBinding(),model.getRoot().getBinding());
+  assertEquals(1,model.getRoot().getChildren().size());
+  assertNotNull(model.getRoot().getChildren().get(0));
+  assertTrue(model.getRoot().getChildren().get(0) instanceof ActionRetractNode);
+  final ActionRetractNode _a1=(ActionRetractNode)model.getRoot().getChildren().get(0);
+  assertEquals(action.getBoundNode().getBinding(),_a1.getBoundNode().getBinding());
+}
