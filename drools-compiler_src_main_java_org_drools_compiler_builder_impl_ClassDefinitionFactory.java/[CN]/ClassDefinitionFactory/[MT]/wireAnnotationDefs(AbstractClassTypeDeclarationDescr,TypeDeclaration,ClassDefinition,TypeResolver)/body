@@ -1,17 +1,23 @@
 {
-  for (  String annotationName : typeDescr.getAnnotationNames()) {
-    Class annotation=TypeDeclarationUtils.resolveAnnotation(annotationName,resolver);
+  for (  AnnotationDescr annotationDescr : typeDescr.getAnnotations()) {
+    Class annotation=null;
+    try {
+      annotation=annotationDescr.getFullyQualifiedName() != null ? resolver.resolveType(annotationDescr.getFullyQualifiedName()) : null;
+    }
+ catch (    ClassNotFoundException e) {
+      continue;
+    }
     if (annotation != null && annotation.isAnnotation()) {
       try {
-        AnnotationDefinition annotationDefinition=AnnotationDefinition.build(annotation,typeDescr.getAnnotations().get(annotationName).getValueMap(),resolver);
+        AnnotationDefinition annotationDefinition=AnnotationDefinition.build(annotation,annotationDescr.getValueMap(),resolver);
         def.addAnnotation(annotationDefinition);
       }
  catch (      NoSuchMethodException nsme) {
-        kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Annotated type " + typeDescr.getType().getFullName() + "  - undefined property in @annotation "+ annotationName+ ": "+ nsme.getMessage()+ ";"));
+        kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Annotated type " + typeDescr.getType().getFullName() + "  - undefined property in @annotation "+ annotationDescr.getName()+ ": "+ nsme.getMessage()+ ";"));
       }
     }
-    if (annotation == null || annotation == Role.class) {
-      def.addMetaData(annotationName,typeDescr.getAnnotation(annotationName).getSingleValue());
+    if (annotation == null || annotation.getCanonicalName().startsWith("org.kie.api.definition.type")) {
+      def.addMetaData(annotationDescr.getName(),annotationDescr.getSingleValue());
     }
   }
   return true;

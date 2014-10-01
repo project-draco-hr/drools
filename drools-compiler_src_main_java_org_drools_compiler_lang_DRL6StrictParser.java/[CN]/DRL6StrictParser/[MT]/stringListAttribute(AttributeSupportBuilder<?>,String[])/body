@@ -1,0 +1,44 @@
+{
+  AttributeDescrBuilder<?> attribute=null;
+  try {
+    StringBuilder builder=new StringBuilder();
+    for (    String k : key) {
+      if ("-".equals(k)) {
+        match(input,DRL6Lexer.MINUS,k,null,DroolsEditorType.KEYWORD);
+        if (state.failed)         return null;
+      }
+ else {
+        match(input,DRL6Lexer.ID,k,null,DroolsEditorType.KEYWORD);
+        if (state.failed)         return null;
+      }
+      builder.append(k);
+    }
+    if (state.backtracking == 0) {
+      attribute=helper.start((DescrBuilder<?,?>)as,AttributeDescrBuilder.class,builder.toString());
+    }
+    builder=new StringBuilder();
+    builder.append("[ ");
+    Token value=match(input,DRL6Lexer.STRING,null,null,DroolsEditorType.STRING_CONST);
+    if (state.failed)     return null;
+    builder.append(value.getText());
+    while (input.LA(1) == DRL6Lexer.COMMA) {
+      match(input,DRL6Lexer.COMMA,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+      builder.append(", ");
+      value=match(input,DRL6Lexer.STRING,null,null,DroolsEditorType.STRING_CONST);
+      if (state.failed)       return null;
+      builder.append(value.getText());
+    }
+    builder.append(" ]");
+    if (state.backtracking == 0) {
+      attribute.value(builder.toString());
+      attribute.type(AttributeDescr.Type.LIST);
+    }
+  }
+  finally {
+    if (attribute != null) {
+      helper.end(AttributeDescrBuilder.class,attribute);
+    }
+  }
+  return attribute != null ? attribute.getDescr() : null;
+}

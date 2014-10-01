@@ -1,0 +1,7 @@
+{
+  String str="package com.sample;\n" + "import " + MyClass.class.getCanonicalName() + ";\n"+ "rule R1 when\n"+ "    @Watch( !value ) $m : MyClass( value < 10 )\n"+ "then \n"+ "    modify( $m ) { setValue( $m.getValue()+1 ) };\n"+ "end\n";
+  KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem().write("src/main/resources/r1.drl",str).writeKModuleXML(ks.newKieModuleModel().setConfigurationProperty(LanguageLevelOption.PROPERTY_NAME,LanguageLevelOption.DRL6_STRICT.toString()).toXML());
+  Results results=ks.newKieBuilder(kfs).buildAll().getResults();
+  assertEquals(1,results.getMessages().size());
+}

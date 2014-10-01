@@ -1,0 +1,41 @@
+{
+  try {
+    if (input.LA(1) != DRL6Lexer.EOF && helper.validateIdentifierKey(DroolsSoftKeywords.PACKAGE)) {
+      String pkgName=packageStatement(pkg);
+      pkg.name(pkgName);
+      if (state.failed)       return pkg.getDescr();
+    }
+    while (input.LA(1) != DRL6Lexer.EOF) {
+      annotations();
+      if (state.failed) {
+        return pkg.getDescr();
+      }
+      int next=input.index();
+      if (helper.validateStatement(1)) {
+        statement(pkg);
+        if (state.failed)         return pkg.getDescr();
+        if (next == input.index()) {
+          resyncToNextStatement();
+        }
+      }
+ else {
+        resyncToNextStatement();
+      }
+      if (input.LA(1) == DRL6Lexer.SEMICOLON) {
+        match(input,DRL6Lexer.SEMICOLON,null,null,DroolsEditorType.SYMBOL);
+        if (state.failed)         return pkg.getDescr();
+      }
+      annotationsCollector.clear();
+    }
+  }
+ catch (  RecognitionException e) {
+    helper.reportError(e);
+  }
+catch (  Exception e) {
+    helper.reportError(e);
+  }
+ finally {
+    helper.setEnd(pkg);
+  }
+  return pkg.getDescr();
+}

@@ -1,8 +1,15 @@
 {
-  AnnotationDescr annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_DURATION);
-  String duration=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
+  Duration duration=typeDescr.getTypedAnnotation(Duration.class);
   if (duration != null) {
-    type.setDurationAttribute(duration);
+    String durationField=null;
+    try {
+      durationField=duration.value();
+    }
+ catch (    Exception e) {
+      kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,e.getMessage()));
+      return;
+    }
+    type.setDurationAttribute(durationField);
     InternalKnowledgePackage pkg=pkgRegistry.getPackage();
     MVELDialect dialect=(MVELDialect)pkgRegistry.getDialectCompiletimeRegistry().getDialect("mvel");
     PackageBuildContext context=new PackageBuildContext();
@@ -10,16 +17,16 @@
     if (!type.isTypesafe()) {
       context.setTypesafe(false);
     }
-    MVELAnalysisResult results=(MVELAnalysisResult)context.getDialect().analyzeExpression(context,typeDescr,duration,new BoundIdentifiers(Collections.EMPTY_MAP,Collections.EMPTY_MAP,Collections.EMPTY_MAP,type.getTypeClass()));
+    MVELAnalysisResult results=(MVELAnalysisResult)context.getDialect().analyzeExpression(context,typeDescr,durationField,new BoundIdentifiers(Collections.EMPTY_MAP,Collections.EMPTY_MAP,Collections.EMPTY_MAP,type.getTypeClass()));
     if (results != null) {
-      InternalReadAccessor reader=pkg.getClassFieldAccessorStore().getMVELReader(ClassUtils.getPackage(type.getTypeClass()),type.getTypeClass().getName(),duration,type.isTypesafe(),results.getReturnType());
+      InternalReadAccessor reader=pkg.getClassFieldAccessorStore().getMVELReader(ClassUtils.getPackage(type.getTypeClass()),type.getTypeClass().getName(),durationField,type.isTypesafe(),results.getReturnType());
       MVELDialectRuntimeData data=(MVELDialectRuntimeData)pkg.getDialectRuntimeRegistry().getDialectData("mvel");
       data.addCompileable((MVELCompileable)reader);
       ((MVELCompileable)reader).compile(data);
       type.setDurationExtractor(reader);
     }
  else {
-      kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Error processing @duration for TypeDeclaration '" + type.getFullName() + "': cannot access the field '"+ duration+ "'"));
+      kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Error processing @duration for TypeDeclaration '" + type.getFullName() + "': cannot access the field '"+ durationField+ "'"));
     }
   }
 }

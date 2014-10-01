@@ -1,32 +1,22 @@
 {
-  AnnotationDescr annotationDescr=getSingleAnnotation(typeDescr,TypeDeclaration.Role.ID);
-  String role=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
-  if (role != null) {
-    type.setRole(TypeDeclaration.Role.parseRole(role));
+  try {
+    Role role=typeDescr.getTypedAnnotation(Role.class);
+    if (role != null) {
+      type.setRole(role.value());
+    }
+    TypeSafe typeSafe=typeDescr.getTypedAnnotation(TypeSafe.class);
+    if (typeSafe != null) {
+      type.setTypesafe(typeSafe.value());
+    }
+    if (typeDescr instanceof EnumDeclarationDescr) {
+      type.setKind(TypeDeclaration.Kind.ENUM);
+    }
+ else     if (typeDescr instanceof TypeDeclarationDescr && ((TypeDeclarationDescr)typeDescr).isTrait()) {
+      type.setKind(TypeDeclaration.Kind.TRAIT);
+    }
+    type.setDynamic(typeDescr.hasAnnotation(PropertyChangeSupport.class));
   }
-  annotationDescr=getSingleAnnotation(typeDescr,TypeDeclaration.ATTR_TYPESAFE);
-  String typesafe=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
-  if (typesafe != null) {
-    type.setTypesafe(Boolean.parseBoolean(typesafe));
+ catch (  Exception e) {
+    kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,e.getMessage()));
   }
-  annotationDescr=getSingleAnnotation(typeDescr,TypeDeclaration.Format.ID);
-  String format=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
-  if (format != null) {
-    type.setFormat(TypeDeclaration.Format.parseFormat(format));
-  }
-  annotationDescr=getSingleAnnotation(typeDescr,TypeDeclaration.Kind.ID);
-  String kind=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
-  if (kind != null) {
-    type.setKind(TypeDeclaration.Kind.parseKind(kind));
-  }
-  if (typeDescr instanceof EnumDeclarationDescr) {
-    type.setKind(TypeDeclaration.Kind.ENUM);
-  }
-  annotationDescr=getSingleAnnotation(typeDescr,TypeDeclaration.ATTR_CLASS);
-  String className=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
-  if (isEmpty(className)) {
-    className=type.getTypeName();
-  }
-  annotationDescr=getSingleAnnotation(typeDescr,TypeDeclaration.ATTR_PROP_CHANGE_SUPPORT);
-  type.setDynamic(annotationDescr != null);
 }

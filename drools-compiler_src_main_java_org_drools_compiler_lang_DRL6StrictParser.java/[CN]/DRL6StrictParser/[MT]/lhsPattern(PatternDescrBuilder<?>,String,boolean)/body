@@ -1,0 +1,36 @@
+{
+  boolean query=false;
+  if (input.LA(1) == DRL6Lexer.QUESTION) {
+    match(input,DRL6Lexer.QUESTION,null,null,DroolsEditorType.SYMBOL);
+    if (state.failed)     return;
+    query=true;
+  }
+  String type=this.qualifiedIdentifier();
+  if (state.failed)   return;
+  if (state.backtracking == 0) {
+    pattern.type(type);
+    pattern.isQuery(query);
+    if (label != null) {
+      pattern.id(label,isUnification);
+    }
+  }
+  match(input,DRL6Lexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
+  if (state.failed)   return;
+  if (input.LA(1) != DRL6Lexer.RIGHT_PAREN && speculatePositionalConstraints()) {
+    positionalConstraints(pattern);
+  }
+  if (input.LA(1) != DRL6Lexer.RIGHT_PAREN) {
+    constraints(pattern);
+  }
+  match(input,DRL6Lexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
+  if (state.failed)   return;
+  if (helper.validateIdentifierKey(DroolsSoftKeywords.OVER)) {
+    patternFilter(pattern);
+  }
+  if (helper.validateIdentifierKey(DroolsSoftKeywords.FROM)) {
+    patternSource(pattern);
+  }
+  if (state.backtracking == 0) {
+    helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
+  }
+}

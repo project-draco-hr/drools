@@ -1,0 +1,74 @@
+{
+  BaseDescr result=null;
+  if (allowOr && input.LA(1) == DRL6Lexer.LEFT_PAREN && helper.validateLT(2,DroolsSoftKeywords.OR)) {
+    CEDescrBuilder<?,OrDescr> or=null;
+    if (state.backtracking == 0) {
+      or=ce.or();
+      result=or.getDescr();
+      helper.start(or,CEDescrBuilder.class,null);
+    }
+    try {
+      match(input,DRL6Lexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+      match(input,DRL6Lexer.ID,DroolsSoftKeywords.OR,null,DroolsEditorType.KEYWORD);
+      if (state.failed)       return null;
+      if (state.backtracking == 0) {
+        helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION_AND_OR);
+      }
+      while (input.LA(1) != DRL6Lexer.RIGHT_PAREN) {
+        lhsAnd(or,allowOr);
+        if (state.failed)         return null;
+      }
+      match(input,DRL6Lexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+    }
+  finally {
+      if (state.backtracking == 0) {
+        helper.end(CEDescrBuilder.class,or);
+      }
+    }
+  }
+ else {
+    CEDescrBuilder<?,OrDescr> or=null;
+    if (state.backtracking == 0) {
+      or=ce.or();
+      result=or.getDescr();
+      helper.start(or,CEDescrBuilder.class,null);
+    }
+    try {
+      lhsAnd(or,allowOr);
+      if (state.failed)       return null;
+      if (allowOr && (helper.validateIdentifierKey(DroolsSoftKeywords.OR) || input.LA(1) == DRL6Lexer.DOUBLE_PIPE)) {
+        while (helper.validateIdentifierKey(DroolsSoftKeywords.OR) || input.LA(1) == DRL6Lexer.DOUBLE_PIPE) {
+          if (input.LA(1) == DRL6Lexer.DOUBLE_PIPE) {
+            match(input,DRL6Lexer.DOUBLE_PIPE,null,null,DroolsEditorType.SYMBOL);
+          }
+ else {
+            match(input,DRL6Lexer.ID,DroolsSoftKeywords.OR,null,DroolsEditorType.KEYWORD);
+          }
+          if (state.failed)           return null;
+          if (state.backtracking == 0) {
+            helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION_AND_OR);
+          }
+          lhsAnd(or,allowOr);
+          if (state.failed)           return null;
+        }
+      }
+ else       if (allowOr) {
+        if (state.backtracking == 0) {
+          ((ConditionalElementDescr)ce.getDescr()).getDescrs().remove(or.getDescr());
+          for (          BaseDescr base : or.getDescr().getDescrs()) {
+            ((ConditionalElementDescr)ce.getDescr()).addDescr(base);
+          }
+          result=ce.getDescr();
+        }
+      }
+    }
+  finally {
+      if (state.backtracking == 0) {
+        helper.end(CEDescrBuilder.class,or);
+      }
+    }
+  }
+  return result;
+}

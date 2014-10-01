@@ -1,0 +1,15 @@
+{
+  String str="package org.test;\n" + "global java.util.List names;\n" + "declare Person\n"+ "    @Position(1) name : String \n"+ "    @Position(0) age : int \n"+ "end\n"+ "rule R when \n"+ "    $p : Person( 37, \"Mark\"; )\n"+ "then\n"+ "    names.add( $p.getName() );\n"+ "end\n";
+  KieBase kieBase=new KieHelper().setKieModuleModel(KieServices.Factory.get().newKieModuleModel().setConfigurationProperty(LanguageLevelOption.PROPERTY_NAME,LanguageLevelOption.DRL6_STRICT.toString())).addContent(str,ResourceType.DRL).build();
+  FactType factType=kieBase.getFactType("org.test","Person");
+  Object instance=factType.newInstance();
+  factType.set(instance,"name","Mark");
+  factType.set(instance,"age",37);
+  List<String> names=new ArrayList<String>();
+  KieSession ksession=kieBase.newKieSession();
+  ksession.setGlobal("names",names);
+  ksession.insert(instance);
+  ksession.fireAllRules();
+  assertEquals(1,names.size());
+  assertEquals("Mark",names.get(0));
+}

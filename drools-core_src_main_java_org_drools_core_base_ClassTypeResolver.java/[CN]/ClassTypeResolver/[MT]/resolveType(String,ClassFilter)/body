@@ -1,0 +1,105 @@
+{
+  Class<?> clazz=null;
+  boolean isArray=false;
+  boolean isPrimitive=false;
+  final StringBuilder arrayClassName=new StringBuilder();
+  clazz=lookupFromCache(className);
+  if (clazz != null && !classFilter.accept(clazz)) {
+    clazz=null;
+  }
+  if (clazz == null && className.indexOf('[') > 0) {
+    isArray=true;
+    int bracketIndex=className.indexOf('[');
+    final String componentName=className.substring(0,bracketIndex);
+    arrayClassName.append('[');
+    while ((bracketIndex=className.indexOf('[',bracketIndex + 1)) > 0) {
+      arrayClassName.append('[');
+    }
+    className=componentName;
+  }
+  if (clazz == null && internalNamesMap.containsKey(className)) {
+    clazz=Class.forName("[" + internalNamesMap.get(className),true,this.classLoader).getComponentType();
+    isPrimitive=true;
+  }
+  if (clazz == null) {
+    try {
+      clazz=this.classLoader.loadClass(className);
+      if (!classFilter.accept(clazz)) {
+        clazz=null;
+      }
+    }
+ catch (    final ClassNotFoundException e) {
+      clazz=null;
+    }
+  }
+  if (clazz == null) {
+    clazz=importClass(className,className);
+    if (clazz != null && !classFilter.accept(clazz)) {
+      clazz=null;
+    }
+  }
+  if (clazz == null) {
+    final Set<Class<?>> validClazzCandidates=new HashSet<Class<?>>();
+    for (    String i : imports) {
+      clazz=importClass(i,className);
+      if (clazz != null && classFilter.accept(clazz)) {
+        validClazzCandidates.add(clazz);
+      }
+    }
+    if (validClazzCandidates.size() > 1) {
+      for (Iterator<Class<?>> validIt=validClazzCandidates.iterator(); validIt.hasNext(); ) {
+        Class<?> cls=validIt.next();
+        if (this.defaultPackagName.equals(cls.getPackage().getName())) {
+          validIt.remove();
+        }
+      }
+    }
+    if (validClazzCandidates.size() > 1) {
+      final StringBuilder sb=new StringBuilder();
+      final Iterator<Class<?>> clazzCandIter=validClazzCandidates.iterator();
+      while (clazzCandIter.hasNext()) {
+        if (0 != sb.length()) {
+          sb.append(", ");
+        }
+        sb.append(clazzCandIter.next().getName());
+      }
+      throw new Error("Unable to find ambiguously defined class '" + className + "', candidates are: ["+ sb.toString()+ "]");
+    }
+ else     if (validClazzCandidates.size() == 1) {
+      clazz=(Class<?>)validClazzCandidates.toArray()[0];
+    }
+ else {
+      clazz=null;
+    }
+  }
+  if (clazz == null) {
+    clazz=defaultClass(className);
+    if (clazz != null && !classFilter.accept(clazz)) {
+      clazz=null;
+    }
+  }
+  if (isArray) {
+    if (isPrimitive) {
+      arrayClassName.append(internalNamesMap.get(className));
+    }
+ else {
+      if (clazz != null) {
+        arrayClassName.append("L").append(clazz.getName()).append(";");
+      }
+ else {
+        arrayClassName.append("L").append(className).append(";");
+      }
+    }
+    try {
+      clazz=Class.forName(arrayClassName.toString(),true,this.classLoader);
+    }
+ catch (    final ClassNotFoundException e) {
+      clazz=null;
+    }
+  }
+  if (clazz == null) {
+    throw new ClassNotFoundException("Unable to find class '" + className + "'");
+  }
+  this.cachedImports.put(clazz.getSimpleName(),clazz);
+  return clazz;
+}

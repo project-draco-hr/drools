@@ -1,0 +1,45 @@
+{
+  annotations();
+  BaseDescr result=null;
+  if (helper.validateIdentifierKey(DroolsSoftKeywords.EXISTS)) {
+    result=lhsExists(ce,allowOr);
+    if (helper.validateIdentifierKey(DroolsSoftKeywords.DO)) {
+      namedConsequence(ce,null);
+    }
+  }
+ else   if (helper.validateIdentifierKey(DroolsSoftKeywords.NOT)) {
+    result=lhsNot(ce,allowOr);
+    if (helper.validateIdentifierKey(DroolsSoftKeywords.DO)) {
+      namedConsequence(ce,null);
+    }
+  }
+ else   if (helper.validateIdentifierKey(DroolsSoftKeywords.EVAL)) {
+    result=lhsEval(ce);
+    for (BaseDescr i=consequenceInvocation(ce); i != null; i=consequenceInvocation(ce))     ;
+  }
+ else   if (helper.validateIdentifierKey(DroolsSoftKeywords.FORALL)) {
+    result=lhsForall(ce);
+  }
+ else   if (helper.validateIdentifierKey(DroolsSoftKeywords.ACCUMULATE) || helper.validateIdentifierKey(DroolsSoftKeywords.ACC)) {
+    result=lhsAccumulate(ce);
+  }
+ else   if (input.LA(1) == DRL6Lexer.LEFT_PAREN) {
+    result=lhsParen(ce,allowOr);
+    if (helper.validateIdentifierKey(DroolsSoftKeywords.DO)) {
+      namedConsequence(ce,null);
+    }
+  }
+ else   if (input.LA(1) == DRL6Lexer.ID || input.LA(1) == DRL6Lexer.QUESTION) {
+    result=lhsPatternBind(ce,allowOr);
+    for (BaseDescr i=consequenceInvocation(ce); i != null; i=consequenceInvocation(ce))     ;
+  }
+ else {
+    failMismatchedTokenException();
+  }
+  if (input.LA(1) == DRL6Lexer.SEMICOLON) {
+    match(input,DRL6Lexer.SEMICOLON,null,null,DroolsEditorType.SYMBOL);
+    if (state.failed)     return null;
+  }
+  setAnnotationsOn(result);
+  return result;
+}

@@ -1,0 +1,8 @@
+{
+  String str="package com.sample;\n" + "import " + MyClass.class.getCanonicalName() + ";\n"+ "rule R1 when\n"+ "    @Watch( \"!value\" ) $m : MyClass( value < 10 )\n"+ "then \n"+ "    modify( $m ) { setValue( $m.getValue()+1 ) };\n"+ "end\n";
+  KieSession ksession=new KieHelper().setKieModuleModel(KieServices.Factory.get().newKieModuleModel().setConfigurationProperty(LanguageLevelOption.PROPERTY_NAME,LanguageLevelOption.DRL6_STRICT.toString())).addContent(str,ResourceType.DRL).build().newKieSession();
+  MyClass myClass=new MyClass("test",1);
+  ksession.insert(myClass);
+  ksession.fireAllRules();
+  assertEquals(2,myClass.getValue());
+}

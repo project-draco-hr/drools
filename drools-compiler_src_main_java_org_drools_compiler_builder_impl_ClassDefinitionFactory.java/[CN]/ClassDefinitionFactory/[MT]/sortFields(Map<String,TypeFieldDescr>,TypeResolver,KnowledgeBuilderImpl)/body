@@ -1,24 +1,68 @@
 {
-  PriorityQueue<FieldDefinition> queue=new PriorityQueue<FieldDefinition>(flds.size());
+  List<FieldDefinition> fieldDefs=new ArrayList<FieldDefinition>(fields.size());
   int maxDeclaredPos=0;
-  int curr=0;
-  BitSet occupiedPositions=new BitSet(flds.size());
-  for (  TypeFieldDescr field : flds.values()) {
-    int pos=field.getIndex();
-    if (pos >= 0) {
-      occupiedPositions.set(pos);
-    }
-    maxDeclaredPos=Math.max(maxDeclaredPos,pos);
-  }
-  for (  TypeFieldDescr field : flds.values()) {
+  BitSet occupiedPositions=new BitSet(fields.size());
+  for (  TypeFieldDescr field : fields.values()) {
     String typeName=field.getPattern().getObjectType();
     String typeNameKey=typeName;
     String fullFieldType=kbuilder != null ? TypeDeclarationUtils.toBuildableType(typeNameKey,kbuilder.getRootClassLoader()) : typeNameKey;
     FieldDefinition fieldDef=new FieldDefinition(field.getFieldName(),fullFieldType);
-    boolean isKey=field.getAnnotation(TypeDeclaration.ATTR_KEY) != null;
-    fieldDef.setKey(isKey);
+    fieldDefs.add(fieldDef);
+    fieldDef.setInherited(field.isInherited());
+    fieldDef.setRecursive(field.isRecursive());
+    fieldDef.setInitExpr(TypeDeclarationUtils.rewriteInitExprWithImports(field.getInitExpr(),typeResolver));
+    if (field.getIndex() >= 0) {
+      int pos=field.getIndex();
+      occupiedPositions.set(pos);
+      maxDeclaredPos=Math.max(maxDeclaredPos,pos);
+      fieldDef.addMetaData("position",pos);
+    }
+ else {
+      Position position=field.getTypedAnnotation(Position.class);
+      if (position != null) {
+        int pos=position.value();
+        field.setIndex(pos);
+        occupiedPositions.set(pos);
+        maxDeclaredPos=Math.max(maxDeclaredPos,pos);
+        fieldDef.addMetaData("position",pos);
+      }
+    }
+    if (field.hasAnnotation(Key.class)) {
+      fieldDef.setKey(true);
+      fieldDef.addMetaData("key",null);
+    }
+    if (typeResolver != null) {
+      for (      AnnotationDescr annotationDescr : field.getAnnotations()) {
+        if (annotationDescr.getFullyQualifiedName() == null) {
+          if (annotationDescr.isStrict()) {
+            kbuilder.addBuilderResult(new TypeDeclarationError(field,"Unknown annotation @" + annotationDescr.getName() + " on field "+ field.getFieldName()));
+          }
+ else {
+            continue;
+          }
+        }
+        Annotation annotation=AnnotationFactory.buildAnnotation(typeResolver,annotationDescr);
+        if (annotation != null) {
+          try {
+            AnnotationDefinition annotationDefinition=AnnotationDefinition.build(annotation.annotationType(),field.getAnnotation(annotationDescr.getFullyQualifiedName()).getValueMap(),typeResolver);
+            fieldDef.addAnnotation(annotationDefinition);
+          }
+ catch (          Exception e) {
+            kbuilder.addBuilderResult(new TypeDeclarationError(field,"Annotated field " + field.getFieldName() + "  - undefined property in @annotation "+ annotationDescr.getName()+ ": "+ e.getMessage()+ ";"));
+          }
+        }
+ else {
+          if (annotationDescr.isStrict()) {
+            kbuilder.addBuilderResult(new TypeDeclarationError(field,"Unknown annotation @" + annotationDescr.getName() + " on field "+ field.getFieldName()));
+          }
+        }
+      }
+    }
     fieldDef.setDeclIndex(field.getIndex());
-    if (field.getIndex() < 0) {
+  }
+  int curr=0;
+  for (  FieldDefinition fieldDef : fieldDefs) {
+    if (fieldDef.getDeclIndex() < 0) {
       int freePos=occupiedPositions.nextClearBit(0);
       if (freePos < maxDeclaredPos) {
         occupiedPositions.set(freePos);
@@ -29,27 +73,9 @@
       fieldDef.setPriority(freePos * 256 + curr++);
     }
  else {
-      fieldDef.setPriority(field.getIndex() * 256 + curr++);
+      fieldDef.setPriority(fieldDef.getDeclIndex() * 256 + curr++);
     }
-    fieldDef.setInherited(field.isInherited());
-    fieldDef.setRecursive(field.isRecursive());
-    fieldDef.setInitExpr(TypeDeclarationUtils.rewriteInitExprWithImports(field.getInitExpr(),typeResolver));
-    for (    String annotationName : field.getAnnotationNames()) {
-      Class annotation=TypeDeclarationUtils.resolveAnnotation(annotationName,typeResolver);
-      if (annotation != null && annotation.isAnnotation()) {
-        try {
-          AnnotationDefinition annotationDefinition=AnnotationDefinition.build(annotation,field.getAnnotations().get(annotationName).getValueMap(),typeResolver);
-          fieldDef.addAnnotation(annotationDefinition);
-        }
- catch (        NoSuchMethodException nsme) {
-          kbuilder.addBuilderResult(new TypeDeclarationError(field,"Annotated field " + field.getFieldName() + "  - undefined property in @annotation "+ annotationName+ ": "+ nsme.getMessage()+ ";"));
-        }
-      }
-      if (annotation == null || annotation == Key.class || annotation == Position.class) {
-        fieldDef.addMetaData(annotationName,field.getAnnotation(annotationName).getSingleValue());
-      }
-    }
-    queue.add(fieldDef);
   }
-  return queue;
+  Collections.sort(fieldDefs);
+  return fieldDefs;
 }

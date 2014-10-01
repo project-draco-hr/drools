@@ -1,0 +1,41 @@
+{
+  if (conditionalBranch == null) {
+    conditionalBranch=helper.start((DescrBuilder<?,?>)ce,ConditionalBranchDescrBuilder.class,null);
+  }
+  try {
+    match(input,DRL6Lexer.ID,DroolsSoftKeywords.IF,null,DroolsEditorType.KEYWORD);
+    if (state.failed)     return null;
+    EvalDescrBuilder<?> eval=conditionalBranch.condition();
+    if (!parseEvalExpression(eval))     return null;
+    if (helper.validateIdentifierKey(DroolsSoftKeywords.DO)) {
+      if (namedConsequence(null,conditionalBranch.consequence()) == null)       return null;
+    }
+ else     if (helper.validateIdentifierKey(DroolsSoftKeywords.BREAK)) {
+      if (breakingNamedConsequence(null,conditionalBranch.consequence()) == null)       return null;
+    }
+ else {
+      return null;
+    }
+    if (helper.validateIdentifierKey(DroolsSoftKeywords.ELSE)) {
+      match(input,DRL6Lexer.ID,DroolsSoftKeywords.ELSE,null,DroolsEditorType.KEYWORD);
+      if (state.failed)       return null;
+      ConditionalBranchDescrBuilder<?> elseBranch=conditionalBranch.otherwise();
+      if (helper.validateIdentifierKey(DroolsSoftKeywords.DO)) {
+        if (namedConsequence(null,elseBranch.consequence()) == null)         return null;
+      }
+ else       if (helper.validateIdentifierKey(DroolsSoftKeywords.BREAK)) {
+        if (breakingNamedConsequence(null,elseBranch.consequence()) == null)         return null;
+      }
+ else       if (helper.validateIdentifierKey(DroolsSoftKeywords.IF)) {
+        if (conditionalBranch(null,elseBranch) == null)         return null;
+      }
+ else {
+        return null;
+      }
+    }
+  }
+  finally {
+    helper.end(ConditionalBranchDescrBuilder.class,conditionalBranch);
+  }
+  return conditionalBranch.getDescr();
+}

@@ -1,8 +1,15 @@
 {
-  AnnotationDescr annotationDescr=typeDescr.getAnnotation(TypeDeclaration.ATTR_TIMESTAMP);
-  String timestamp=(annotationDescr != null) ? annotationDescr.getSingleValue() : null;
+  Timestamp timestamp=typeDescr.getTypedAnnotation(Timestamp.class);
   if (timestamp != null) {
-    type.setTimestampAttribute(timestamp);
+    String timestampField=null;
+    try {
+      timestampField=timestamp.value();
+    }
+ catch (    Exception e) {
+      kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,e.getMessage()));
+      return;
+    }
+    type.setTimestampAttribute(timestampField);
     InternalKnowledgePackage pkg=pkgRegistry.getPackage();
     MVELDialect dialect=(MVELDialect)pkgRegistry.getDialectCompiletimeRegistry().getDialect("mvel");
     PackageBuildContext context=new PackageBuildContext();
@@ -10,9 +17,9 @@
     if (!type.isTypesafe()) {
       context.setTypesafe(false);
     }
-    MVELAnalysisResult results=(MVELAnalysisResult)context.getDialect().analyzeExpression(context,typeDescr,timestamp,new BoundIdentifiers(Collections.EMPTY_MAP,Collections.EMPTY_MAP,Collections.EMPTY_MAP,type.getTypeClass()));
+    MVELAnalysisResult results=(MVELAnalysisResult)context.getDialect().analyzeExpression(context,typeDescr,timestampField,new BoundIdentifiers(Collections.EMPTY_MAP,Collections.EMPTY_MAP,Collections.EMPTY_MAP,type.getTypeClass()));
     if (results != null) {
-      InternalReadAccessor reader=pkg.getClassFieldAccessorStore().getMVELReader(ClassUtils.getPackage(type.getTypeClass()),type.getTypeClass().getName(),timestamp,type.isTypesafe(),results.getReturnType());
+      InternalReadAccessor reader=pkg.getClassFieldAccessorStore().getMVELReader(ClassUtils.getPackage(type.getTypeClass()),type.getTypeClass().getName(),timestampField,type.isTypesafe(),results.getReturnType());
       MVELDialectRuntimeData data=(MVELDialectRuntimeData)pkg.getDialectRuntimeRegistry().getDialectData("mvel");
       data.addCompileable((MVELCompileable)reader);
       ((MVELCompileable)reader).compile(data);

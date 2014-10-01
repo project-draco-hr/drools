@@ -1,0 +1,40 @@
+{
+  CEDescrBuilder<?,NotDescr> not=null;
+  if (state.backtracking == 0) {
+    not=ce.not();
+    helper.start(not,CEDescrBuilder.class,null);
+  }
+  try {
+    match(input,DRL6Lexer.ID,DroolsSoftKeywords.NOT,null,DroolsEditorType.KEYWORD);
+    if (state.failed)     return null;
+    if (state.backtracking == 0) {
+      helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION_NOT);
+    }
+    if (input.LA(1) == DRL6Lexer.LEFT_PAREN) {
+      boolean prefixed=helper.validateLT(2,DroolsSoftKeywords.AND) || helper.validateLT(2,DroolsSoftKeywords.OR);
+      if (!prefixed) {
+        match(input,DRL6Lexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
+        if (state.failed)         return null;
+      }
+      if (state.backtracking == 0 && input.LA(1) != DRL6Lexer.EOF) {
+        helper.emit(Location.LOCATION_LHS_BEGIN_OF_CONDITION);
+      }
+      lhsOr(not,allowOr);
+      if (state.failed)       return null;
+      if (!prefixed) {
+        match(input,DRL6Lexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
+        if (state.failed)         return null;
+      }
+    }
+ else     if (input.LA(1) != DRL6Lexer.EOF) {
+      lhsPatternBind(not,true);
+      if (state.failed)       return null;
+    }
+  }
+  finally {
+    if (state.backtracking == 0) {
+      helper.end(CEDescrBuilder.class,not);
+    }
+  }
+  return not != null ? not.getDescr() : null;
+}

@@ -1,0 +1,35 @@
+{
+  String type="";
+  try {
+    int first=input.index(), last=first;
+    match(input,DRL6Lexer.ID,null,new int[]{DRL6Lexer.DOT,DRL6Lexer.LESS},DroolsEditorType.IDENTIFIER);
+    if (state.failed)     return type;
+    if (input.LA(1) == DRL6Lexer.LESS) {
+      typeArguments();
+      if (state.failed)       return type;
+    }
+    while (input.LA(1) == DRL6Lexer.DOT && input.LA(2) == DRL6Lexer.ID) {
+      match(input,DRL6Lexer.DOT,null,new int[]{DRL6Lexer.ID},DroolsEditorType.IDENTIFIER);
+      if (state.failed)       return type;
+      match(input,DRL6Lexer.ID,null,new int[]{DRL6Lexer.DOT},DroolsEditorType.IDENTIFIER);
+      if (state.failed)       return type;
+      if (input.LA(1) == DRL6Lexer.LESS) {
+        typeArguments();
+        if (state.failed)         return type;
+      }
+    }
+    while (input.LA(1) == DRL6Lexer.LEFT_SQUARE && input.LA(2) == DRL6Lexer.RIGHT_SQUARE) {
+      match(input,DRL6Lexer.LEFT_SQUARE,null,new int[]{DRL6Lexer.RIGHT_SQUARE},DroolsEditorType.IDENTIFIER);
+      if (state.failed)       return type;
+      match(input,DRL6Lexer.RIGHT_SQUARE,null,null,DroolsEditorType.IDENTIFIER);
+      if (state.failed)       return type;
+    }
+    last=input.LT(-1).getTokenIndex();
+    type=input.toString(first,last);
+    type=type.replace(" ","");
+  }
+ catch (  RecognitionException re) {
+    reportError(re);
+  }
+  return type;
+}

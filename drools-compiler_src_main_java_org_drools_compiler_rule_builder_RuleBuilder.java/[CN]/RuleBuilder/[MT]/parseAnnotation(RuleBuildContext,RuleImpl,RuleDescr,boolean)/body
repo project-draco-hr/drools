@@ -1,0 +1,25 @@
+{
+  try {
+    ActivationListener activationListener=ruleDescr.getTypedAnnotation(ActivationListener.class);
+    if (activationListener != null) {
+      rule.setActivationListener(MVELSafeHelper.getEvaluator().evalToString(activationListener.value()));
+    }
+    if (enforceEager) {
+      rule.setEager(true);
+    }
+ else {
+      Eager eager=ruleDescr.getTypedAnnotation(Eager.class);
+      if (eager != null) {
+        rule.setEager(eager.value());
+      }
+    }
+    Direct direct=ruleDescr.getTypedAnnotation(Direct.class);
+    if (direct != null && direct.value()) {
+      rule.setActivationListener("direct");
+    }
+  }
+ catch (  Exception e) {
+    DroolsError err=new RuleBuildError(rule,context.getParentDescr(),null,e.getMessage());
+    context.addError(err);
+  }
+}

@@ -1,0 +1,35 @@
+{
+  AttributeDescrBuilder<?> attribute=null;
+  try {
+    match(input,DRL6Lexer.ID,DroolsSoftKeywords.ENABLED,null,DroolsEditorType.KEYWORD);
+    if (state.failed)     return null;
+    if (state.backtracking == 0) {
+      attribute=helper.start((DescrBuilder<?,?>)as,AttributeDescrBuilder.class,DroolsSoftKeywords.ENABLED);
+    }
+    boolean hasParen=input.LA(1) == DRL6Lexer.LEFT_PAREN;
+    int first=input.index();
+    if (hasParen) {
+      match(input,DRL6Lexer.LEFT_PAREN,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+    }
+    String value=conditionalExpression();
+    if (state.failed)     return null;
+    if (hasParen) {
+      match(input,DRL6Lexer.RIGHT_PAREN,null,null,DroolsEditorType.SYMBOL);
+      if (state.failed)       return null;
+    }
+    if (state.backtracking == 0) {
+      if (hasParen) {
+        value=input.toString(first,input.LT(-1).getTokenIndex());
+      }
+      attribute.value(value);
+      attribute.type(AttributeDescr.Type.EXPRESSION);
+    }
+  }
+  finally {
+    if (attribute != null) {
+      helper.end(AttributeDescrBuilder.class,attribute);
+    }
+  }
+  return attribute != null ? attribute.getDescr() : null;
+}

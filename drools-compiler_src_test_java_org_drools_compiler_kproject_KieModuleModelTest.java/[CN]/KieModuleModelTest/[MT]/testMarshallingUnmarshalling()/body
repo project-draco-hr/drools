@@ -1,6 +1,6 @@
 {
   KieServices ks=KieServices.Factory.get();
-  KieModuleModel kproj=ks.newKieModuleModel();
+  KieModuleModel kproj=ks.newKieModuleModel().setConfigurationProperty(LanguageLevelOption.PROPERTY_NAME,LanguageLevelOption.DRL6_STRICT.toString());
   KieBaseModel kieBaseModel1=kproj.newKieBaseModel("KBase1").setEqualsBehavior(EqualityBehaviorOption.EQUALITY).setEventProcessingMode(EventProcessingOption.STREAM).setDeclarativeAgenda(DeclarativeAgendaOption.ENABLED).addInclude("OtherKBase").addPackage("org.kie.pkg1").addPackage("org.kie.pkg2");
   KieSessionModel ksession1=kieBaseModel1.newKieSessionModel("KSession1").setType(KieSessionType.STATEFUL).setClockType(ClockTypeOption.get("realtime")).setBeliefSystem(BeliefSystemTypeOption.get("jtms")).setFileLogger("drools.log",10,true).setDefault(true);
   ksession1.newListenerModel("org.domain.FirstInterface",ListenerModel.Kind.AGENDA_EVENT_LISTENER);
@@ -10,6 +10,7 @@
   ksession1.newWorkItemHandlerModel("name","org.domain.FifthInterface").newQualifierModel("MyQualfier5").addArgument("name1","aaa").addArgument("name2","bbb");
   String xml=kproj.toXML();
   KieModuleModel kprojXml=fromXML(xml);
+  assertEquals(LanguageLevelOption.DRL6_STRICT.toString(),kprojXml.getConfigurationProperty(LanguageLevelOption.PROPERTY_NAME));
   KieBaseModel kieBaseModelXML=kprojXml.getKieBaseModels().get("KBase1");
   assertSame(kprojXml,((KieBaseModelImpl)kieBaseModelXML).getKModule());
   assertEquals(EqualityBehaviorOption.EQUALITY,kieBaseModelXML.getEqualsBehavior());
