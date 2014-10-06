@@ -1,0 +1,73 @@
+{
+  if (returnType.isArray()) {
+    int n=Array.getLength(value);
+    Class targetType=returnType.getComponentType().isAnnotation() ? AnnotationDefinition.class : returnType.getComponentType();
+    Object ar=java.lang.reflect.Array.newInstance(targetType,n);
+    for (int j=0; j < n; j++) {
+      java.lang.reflect.Array.set(ar,j,decode(returnType.getComponentType(),Array.get(value,j),resolver));
+    }
+    return ar;
+  }
+ else   if (returnType.isEnum()) {
+    try {
+      String valueStr=value.toString().trim();
+      if (valueStr.indexOf('.') > 0) {
+        value=valueStr.substring(valueStr.lastIndexOf(".") + 1);
+      }
+      return returnType.getMethod("valueOf",String.class).invoke(null,value);
+    }
+ catch (    IllegalAccessException e) {
+      e.printStackTrace();
+    }
+catch (    InvocationTargetException e) {
+      e.printStackTrace();
+    }
+catch (    NoSuchMethodException e) {
+      e.printStackTrace();
+    }
+  }
+ else   if (String.class.equals(returnType)) {
+    return unquote(value.toString().trim());
+  }
+ else   if (boolean.class.equals(returnType)) {
+    return Boolean.valueOf(value.toString());
+  }
+ else   if (int.class.equals(returnType)) {
+    return Integer.valueOf(value.toString());
+  }
+ else   if (double.class.equals(returnType)) {
+    return Double.valueOf(value.toString());
+  }
+ else   if (long.class.equals(returnType)) {
+    return Long.valueOf(value.toString());
+  }
+ else   if (float.class.equals(returnType)) {
+    return Float.valueOf(value.toString());
+  }
+ else   if (short.class.equals(returnType)) {
+    return Short.valueOf(value.toString());
+  }
+ else   if (char.class.equals(returnType)) {
+    return unquote(value.toString()).charAt(0);
+  }
+ else   if (Class.class.equals(returnType)) {
+    try {
+      String cName=value.toString().trim().replace(".class","");
+      return resolver.resolveType(cName);
+    }
+ catch (    ClassNotFoundException cnfe) {
+      cnfe.printStackTrace();
+      return Object.class;
+    }
+  }
+ else   if (returnType.isAnnotation()) {
+    try {
+      return build(returnType,((PropertyMap)value).getValues(),resolver);
+    }
+ catch (    NoSuchMethodException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+  return null;
+}
