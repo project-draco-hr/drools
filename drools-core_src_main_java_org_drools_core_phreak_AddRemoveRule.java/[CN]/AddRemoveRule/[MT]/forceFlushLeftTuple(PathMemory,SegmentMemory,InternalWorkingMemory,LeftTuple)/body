@@ -1,0 +1,24 @@
+{
+  SegmentMemory[] smems=pmem.getSegmentMemories();
+  if (smems[0] == null) {
+    return;
+  }
+  int smemIndex=sm.getPos();
+  LeftTupleSink sink;
+  Memory mem;
+  long bit=1;
+  if (smems.length == 1) {
+    sink=((LeftInputAdapterNode)sm.getRootNode()).getSinkPropagator().getFirstLeftTupleSink();
+    mem=sm.getNodeMemories().get(1);
+    bit=2;
+  }
+ else {
+    sink=(LeftTupleSink)sm.getRootNode();
+    mem=sm.getNodeMemories().get(0);
+  }
+  LeftTupleSets leftTupleSets=new LeftTupleSetsImpl();
+  if (leftTuple != null) {
+    leftTupleSets.addInsert(leftTuple);
+  }
+  new RuleNetworkEvaluator().outerEval((LeftInputAdapterNode)smems[0].getRootNode(),pmem,sink,bit,mem,smems,smemIndex,leftTupleSets,wm,new LinkedList<StackEntry>(),new LinkedList<StackEntry>(),new HashSet<String>(),true,pmem.getOrCreateRuleAgendaItem(wm).getRuleExecutor());
+}
