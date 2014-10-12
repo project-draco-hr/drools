@@ -1,0 +1,20 @@
+{
+  String droolsSource="package org.drools.tms.test; \n" + "global java.util.List list; \n" + "rule Justify \n"+ "when \n"+ "    String( this == 'go1' ) "+ "then \n"+ "    insertLogical( 'f1' ); \n"+ "end \n"+ "";
+  KieBaseConfiguration kieConf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kieConf.setOption(EqualityBehaviorOption.IDENTITY);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(kieConf,droolsSource);
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  session.setGlobal("list",list);
+  session.insert("go1");
+  session.fireAllRules();
+  TruthMaintenanceSystem tms=((StatefulKnowledgeSessionImpl)session).getTruthMaintenanceSystem();
+  InternalFactHandle jfh1=tms.get("f1").getLogicalFactHandle();
+  assertSame(jfh1,session.getFactHandle("f1"));
+  try {
+    session.delete(jfh1);
+    fail("Sholud have thrown an exception, as the you cannot delete a wm fh on the tms");
+  }
+ catch (  IllegalArgumentException w) {
+  }
+}

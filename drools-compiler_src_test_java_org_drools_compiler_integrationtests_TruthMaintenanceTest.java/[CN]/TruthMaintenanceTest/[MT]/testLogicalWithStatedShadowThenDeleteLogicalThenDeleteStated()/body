@@ -1,0 +1,35 @@
+{
+  String droolsSource="package org.drools.tms.test; \n" + "global java.util.List list; \n" + "rule Justify \n"+ "when \n"+ "    String( this == 'go1' ) "+ "then \n"+ "    insertLogical( 'f1' ); \n"+ "end \n"+ "rule StillHere \n"+ "when \n"+ "    String( this in ('go2', 'go3', 'go4') ) "+ "    s : String( this == 'f1' ) "+ "then \n"+ "    list.add( s ); \n"+ "end \n"+ "";
+  KieBaseConfiguration kieConf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kieConf.setOption(EqualityBehaviorOption.IDENTITY);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(kieConf,droolsSource);
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  session.setGlobal("list",list);
+  session.insert("go1");
+  session.fireAllRules();
+  TruthMaintenanceSystem tms=((StatefulKnowledgeSessionImpl)session).getTruthMaintenanceSystem();
+  InternalFactHandle jfh1=tms.get("f1").getLogicalFactHandle();
+  assertEquals(EqualityKey.JUSTIFIED,jfh1.getEqualityKey().getStatus());
+  InternalFactHandle fh1=(InternalFactHandle)session.insert("f1");
+  session.insert("go2");
+  session.fireAllRules();
+  assertEquals(EqualityKey.STATED,fh1.getEqualityKey().getStatus());
+  assertEquals(1,fh1.getEqualityKey().getBeliefSet().size());
+  assertSame(fh1.getEqualityKey(),jfh1.getEqualityKey());
+  assertNotSame(fh1,jfh1);
+  assertEquals(1,list.size());
+  assertEquals("f1",list.get(0));
+  list.clear();
+  tms.delete(jfh1);
+  session.insert("go3");
+  session.fireAllRules();
+  assertNull(fh1.getEqualityKey().getBeliefSet());
+  assertEquals(1,list.size());
+  assertEquals("f1",list.get(0));
+  list.clear();
+  session.delete(fh1);
+  session.insert("go4");
+  session.fireAllRules();
+  assertEquals(0,list.size());
+}

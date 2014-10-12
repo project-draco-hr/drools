@@ -32,24 +32,19 @@
  else {
           key=tms.get(object);
         }
+        if (key != null && key.getStatus() == EqualityKey.JUSTIFIED) {
+          BeliefSet bs=handle.getEqualityKey().getBeliefSet();
+          bs.getBeliefSystem().stage(propagationContext,bs);
+        }
+        handle=createHandle(object,typeConf);
         if (key == null) {
-          handle=createHandle(object,typeConf);
-          key=new EqualityKey(handle);
-          handle.setEqualityKey(key);
+          key=new EqualityKey(handle,EqualityKey.STATED);
           tms.put(key);
         }
- else         if (key.getStatus() == EqualityKey.JUSTIFIED) {
-          final InternalFactHandle justifiedHandle=key.getFactHandle();
-          BeliefSet bs=justifiedHandle.getEqualityKey().getBeliefSet();
-          bs.getBeliefSystem().stage(propagationContext,bs);
-          key.setStatus(EqualityKey.STATED);
-        }
  else {
-          handle=createHandle(object,typeConf);
-          handle.setEqualityKey(key);
           key.addFactHandle(handle);
         }
-        key.setStatus(EqualityKey.STATED);
+        handle.setEqualityKey(key);
       }
       propagationContext.setFactHandle(handle);
       if (dynamic || typeConf.isDynamic()) {
