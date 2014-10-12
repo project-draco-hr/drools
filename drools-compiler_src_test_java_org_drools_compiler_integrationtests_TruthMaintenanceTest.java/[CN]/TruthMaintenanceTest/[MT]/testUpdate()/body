@@ -1,0 +1,15 @@
+{
+  String droolsSource="package org.drools.tms.test; \n" + " declare Feat1\n" + "   context : String @key\n"+ "   value : double @key\n"+ "   missing : boolean  = false\n"+ " \n"+ " end\n"+ " \n"+ " \n"+ "rule \"InitAsMissing_Test_MLP_Feat1\"\n"+ "when\n"+ "    not Feat1( context == null )\n"+ "then\n"+ "    insertLogical( new Feat1( \"Test_MLP\", 0.0, true ) );\n"+ "end\n"+ " \n"+ "rule \"miningFieldMissing_Test_MLP_Feat1\"\n"+ "when\n"+ "     $x : Feat1( $m : missing == true, context == \"Test_MLP\" )\n"+ "then\n"+ "    modify ( $x ) {\n"+ "        setValue( 3.95 ),\n"+ "        setMissing( false );\n"+ "    }\n"+ "end\n"+ " \n"+ "rule \"OverrideInput_Feat1\"\n"+ "when\n"+ "    $old: Feat1( value != 4.33 )\n"+ "then\n"+ "    retract( $old );\n"+ "end\n"+ " \n"+ " \n"+ "rule \"Input_Feat1\"\n"+ "when\n"+ "    not Feat1(  context == null )\n"+ "then\n"+ "    insert( new Feat1( null, 4.33 ) );\n"+ "end";
+  KieBaseConfiguration kieConf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kieConf.setOption(EqualityBehaviorOption.IDENTITY);
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(kieConf,droolsSource);
+  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  try {
+    session.fireAllRules();
+    fail("Currently we cannot handle updates for a belief set that is mixed stated and justified");
+  }
+ catch (  ConsequenceException e) {
+    assertEquals(IllegalStateException.class,e.getCause().getClass());
+  }
+}

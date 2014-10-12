@@ -29,31 +29,22 @@
     if (typeConf.isTMSEnabled()) {
       EqualityKey newKey=tms.get(object);
       EqualityKey oldKey=handle.getEqualityKey();
+      if (oldKey.getStatus() == EqualityKey.JUSTIFIED || oldKey.getBeliefSet() != null) {
+        throw new IllegalStateException("Currently we cannot modify something that has mixed stated and justified equal objects");
+      }
       if (newKey == null) {
         oldKey.removeFactHandle(handle);
-        if (oldKey.isEmpty() && oldKey.getLogicalFactHandle() == null) {
-          getTruthMaintenanceSystem().remove(oldKey);
-        }
         newKey=new EqualityKey(handle,EqualityKey.STATED);
         handle.setEqualityKey(newKey);
         getTruthMaintenanceSystem().put(newKey);
       }
  else       if (newKey != oldKey) {
         oldKey.removeFactHandle(handle);
-        if (oldKey.isEmpty() && oldKey.getLogicalFactHandle() == null) {
-          getTruthMaintenanceSystem().remove(oldKey);
-        }
-        if (newKey.getStatus() == EqualityKey.JUSTIFIED) {
-          final InternalFactHandle justifiedHandle=newKey.getFactHandle();
-          BeliefSet bs=justifiedHandle.getEqualityKey().getBeliefSet();
-          bs.getBeliefSystem().stage(propagationContext,bs);
-          newKey.setStatus(EqualityKey.STATED);
-          newKey.addFactHandle(handle);
-          propagationContext.setFactHandle(handle);
-          insert(handle,object,rule,activation,typeConf,propagationContext);
-          return handle;
-        }
-        handle=newKey.getFactHandle();
+        handle.setEqualityKey(newKey);
+        newKey.addFactHandle(handle);
+      }
+      if (oldKey.isEmpty() && oldKey.getLogicalFactHandle() == null) {
+        getTruthMaintenanceSystem().remove(oldKey);
       }
     }
     update(handle,object,originalObject,typeConf,rule,propagationContext);
