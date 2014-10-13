@@ -4,7 +4,10 @@
   if (handle != null) {
     TraitFieldTMS fieldTMS=inner._getFieldTMS();
     BitMask mask=fieldTMS == null ? onlyTraitBitSetMask() : fieldTMS.getModificationMask();
-    ((NamedEntryPoint)h.getEntryPoint()).update(h,((InternalFactHandle)handle).getObject(),mask,core.getClass(),activation);
+    Object o=h.getObject();
+    NamedEntryPoint nep=(NamedEntryPoint)h.getEntryPoint();
+    PropagationContext propagationContext=nep.getPctxFactory().createPropagationContext(nep.getInternalWorkingMemory().getNextPropagationIdCounter(),PropagationContext.MODIFICATION,activation.getRule(),activation.getTuple(),h,nep.getEntryPoint(),mask,core.getClass(),null);
+    nep.update(h,o,o,nep.getObjectTypeConfigurationRegistry().getObjectTypeConf(nep.getEntryPoint(),o),activation.getRule(),propagationContext);
   }
  else {
     handle=this.workingMemory.insert(inner,null,false,logical,activation.getRule(),activation);

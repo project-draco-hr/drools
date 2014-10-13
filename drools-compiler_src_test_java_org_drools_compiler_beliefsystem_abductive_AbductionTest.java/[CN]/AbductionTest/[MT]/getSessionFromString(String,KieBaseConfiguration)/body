@@ -1,15 +1,16 @@
 {
-  KieServices ks=KieServices.Factory.get();
-  KieFileSystem kfs=ks.newKieFileSystem();
-  kfs.write(ks.getResources().newByteArrayResource(drlString.getBytes()).setSourcePath("drl1.drl").setResourceType(ResourceType.DRL));
-  KieBuilder kieBuilder=ks.newKieBuilder(kfs);
-  kieBuilder.buildAll();
-  Results res=kieBuilder.getResults();
+  KieHelper kieHelper=new KieHelper();
+  kieHelper.addContent(drlString,ResourceType.DRL);
+  Results res=kieHelper.verify();
   if (res.hasMessages(Message.Level.ERROR)) {
     fail(res.getMessages(Message.Level.ERROR).toString());
   }
+  if (kbConf == null) {
+    kbConf=KieServices.Factory.get().newKieBaseConfiguration();
+  }
+  kbConf.setOption(EqualityBehaviorOption.EQUALITY);
+  KieBase kieBase=kieHelper.build(kbConf);
   KieSessionConfiguration ksConf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
   ((SessionConfiguration)ksConf).setBeliefSystemType(BeliefSystemType.DEFEASIBLE);
-  KieContainer kc=ks.newKieContainer(kieBuilder.getKieModule().getReleaseId());
-  return kbConf != null ? kc.newKieBase(kbConf).newKieSession(ksConf,null) : kc.newKieSession(ksConf);
+  return kieBase.newKieSession(ksConf,null);
 }
