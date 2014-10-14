@@ -1,0 +1,35 @@
+{
+  this.workingMemory.startOperation();
+  try {
+    try {
+      this.knowledgeHelper.setActivation(activation);
+      if (log.isTraceEnabled()) {
+        log.trace("Fire event {} for rule \"{}\" \n{}",event.getName(),activation.getRule().getName(),activation.getTuple());
+      }
+      event.evaluate(this.knowledgeHelper,this.workingMemory);
+      this.knowledgeHelper.cancelRemainingPreviousLogicalDependencies();
+      this.knowledgeHelper.reset();
+    }
+ catch (    final Exception e) {
+      if (this.legacyConsequenceExceptionHandler != null) {
+        this.legacyConsequenceExceptionHandler.handleException(activation,this.workingMemory,e);
+      }
+ else       if (this.consequenceExceptionHandler != null) {
+        this.consequenceExceptionHandler.handleException(activation,this.workingMemory.getKnowledgeRuntime(),e);
+      }
+ else {
+        throw new RuntimeException(e);
+      }
+    }
+ finally {
+      if (activation.getFactHandle() != null) {
+        InternalFactHandle factHandle=activation.getFactHandle();
+        workingMemory.getEntryPointNode().modifyActivation(factHandle,activation.getPropagationContext(),workingMemory);
+        activation.getPropagationContext().evaluateActionQueue(workingMemory);
+      }
+    }
+  }
+  finally {
+    this.workingMemory.endOperation();
+  }
+}

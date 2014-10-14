@@ -20,7 +20,7 @@
   String repeatLimitString=extractParam(timerString,"repeat-limit");
   int repeatLimit=repeatLimitString != null ? Integer.parseInt(repeatLimitString) : -1;
   String body=timerString.substring(colonPos + 1,semicolonPos > 0 ? semicolonPos : timerString.length()).trim();
-  Timer timer=null;
+  Timer timer;
   if ("cron".equals(protocol)) {
     try {
       timer=new CronTimer(createMVELExpr(startDate,context),createMVELExpr(endDate,context),repeatLimit,new CronExpression(body));
@@ -65,13 +65,7 @@
       return;
     }
     MVELObjectExpression times=MVELObjectExpressionBuilder.build(tok.nextToken().trim(),context);
-    MVELObjectExpression period=null;
-    if (tok.hasMoreTokens()) {
-      period=MVELObjectExpressionBuilder.build(tok.nextToken().trim(),context);
-    }
- else {
-      period=MVELObjectExpressionBuilder.build("0",context);
-    }
+    MVELObjectExpression period=tok.hasMoreTokens() ? MVELObjectExpressionBuilder.build(tok.nextToken().trim(),context) : MVELObjectExpressionBuilder.build("0",context);
     timer=new ExpressionIntervalTimer(createMVELExpr(startDate,context),createMVELExpr(endDate,context),repeatLimit,times,period);
   }
  else {

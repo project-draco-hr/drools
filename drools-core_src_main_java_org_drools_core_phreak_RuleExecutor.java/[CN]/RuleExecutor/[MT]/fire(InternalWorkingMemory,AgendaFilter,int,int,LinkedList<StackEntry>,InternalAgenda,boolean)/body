@@ -1,26 +1,24 @@
 {
   int localFireCount=0;
   if (!tupleList.isEmpty()) {
-    RuleTerminalNode rtn=(RuleTerminalNode)pmem.getNetworkNode();
     if (!fireExitedEarly && isDeclarativeAgendaEnabled()) {
       RuleAgendaItem nextRule=agenda.peekNextRule();
-      if (!isHighestSalience(nextRule,ruleAgendaItem.getSalience())) {
+      if (isLowerSalience(nextRule,ruleAgendaItem.getSalience())) {
         fireExitedEarly=true;
         return localFireCount;
       }
     }
-    while (!tupleList.isEmpty()) {
-      LeftTuple leftTuple;
-      if (queue != null) {
-        leftTuple=(LeftTuple)queue.dequeue();
-        tupleList.remove(leftTuple);
+    RuleTerminalNode rtn=(RuleTerminalNode)pmem.getNetworkNode();
+    RuleImpl rule=rtn.getRule();
+    LeftTuple leftTuple=getNextLeftTuple();
+    if (rule.isAllMatches()) {
+      Consequence beforeAllFires=rule.getNamedConsequence(ON_BEFORE_ALL_FIRES);
+      if (beforeAllFires != null) {
+        agenda.fireActivationEvent((AgendaItem)leftTuple,beforeAllFires);
       }
- else {
-        leftTuple=tupleList.removeFirst();
-        ((Activation)leftTuple).setQueued(false);
-      }
-      rtn=(RuleTerminalNode)leftTuple.getSink();
-      RuleImpl rule=rtn.getRule();
+    }
+    LeftTuple lastLeftTuple=null;
+    for (; leftTuple != null; lastLeftTuple=leftTuple, leftTuple=getNextLeftTuple()) {
       PropagationContext pctx=leftTuple.getPropagationContext();
       pctx=RuleTerminalNode.findMostRecentPropagationContext(leftTuple,pctx);
       if (cancelAndContinue(wm,rtn,rule,leftTuple,pctx,filter)) {
@@ -42,15 +40,23 @@
         ruleAgendaItem.getAgendaGroup().add(ruleAgendaItem);
         salience=ruleAgendaItem.getSalience();
       }
-      RuleAgendaItem nextRule=agenda.peekNextRule();
-      if (haltRuleFiring(nextRule,fireCount,fireLimit,localFireCount,agenda,salience)) {
-        break;
+      if (!rule.isAllMatches()) {
+        RuleAgendaItem nextRule=agenda.peekNextRule();
+        if (haltRuleFiring(nextRule,fireCount,fireLimit,localFireCount,agenda,salience)) {
+          break;
+        }
+        reEvaluateNetwork(wm,outerStack,fireUntilHalt);
+        wm.executeQueuedActions();
       }
-      reEvaluateNetwork(wm,outerStack,fireUntilHalt);
-      wm.executeQueuedActions();
       if (tupleList.isEmpty() && !outerStack.isEmpty()) {
         StackEntry entry=outerStack.removeFirst();
         NETWORK_EVALUATOR.evalStackEntry(entry,outerStack,outerStack,this,wm);
+      }
+    }
+    if (rule.isAllMatches()) {
+      Consequence afterAllFires=rule.getNamedConsequence(ON_AFTER_ALL_FIRES);
+      if (afterAllFires != null) {
+        agenda.fireActivationEvent((AgendaItem)lastLeftTuple,afterAllFires);
       }
     }
   }
