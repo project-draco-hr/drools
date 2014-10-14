@@ -1,0 +1,25 @@
+{
+  final List<Node> nodes=new ArrayList<Node>();
+  if (!(p instanceof FactPattern)) {
+    messages.add(new UnsupportedIPatternParserMessage());
+    return nodes;
+  }
+  final FactPattern fp=(FactPattern)p;
+  if (fp.isNegated()) {
+    messages.add(new UnsupportedIPatternParserMessage());
+    return nodes;
+  }
+  if (fp.getWindow().getOperator() != null) {
+    messages.add(new UnsupportedIPatternParserMessage());
+    return nodes;
+  }
+  final TypeNode node=new TypeNodeImpl(fp.getFactType());
+  if (fp.isBound()) {
+    node.setBinding(fp.getBoundName());
+  }
+  nodes.add(node);
+  for (  FieldConstraint fc : fp.getFieldConstraints()) {
+    nodes.addAll(visit(fc,model,dmo,messages));
+  }
+  return nodes;
+}

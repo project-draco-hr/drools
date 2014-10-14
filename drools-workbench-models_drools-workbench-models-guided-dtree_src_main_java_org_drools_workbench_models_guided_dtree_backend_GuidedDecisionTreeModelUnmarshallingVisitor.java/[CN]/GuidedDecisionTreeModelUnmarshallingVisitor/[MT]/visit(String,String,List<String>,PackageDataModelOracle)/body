@@ -1,0 +1,86 @@
+{
+  PortablePreconditions.checkNotNull("drl",drl);
+  PortablePreconditions.checkNotNull("baseFileName",baseFileName);
+  PortablePreconditions.checkNotNull("globals",globals);
+  PortablePreconditions.checkNotNull("dmo",dmo);
+  final GuidedDecisionTree model=new GuidedDecisionTree();
+  model.setTreeName(baseFileName);
+  final String packageName=PackageNameParser.parsePackageName(drl);
+  model.setPackageName(packageName);
+  final Imports imports=ImportsParser.parseImports(drl);
+  for (  Import item : imports.getImports()) {
+    model.getImports().addImport(item);
+  }
+  final List<String> rules=new ArrayList<String>();
+  final String[] lines=drl.split(System.getProperty("line.separator"));
+  StringBuilder sb=null;
+  for (  String line : lines) {
+    if (line.toLowerCase().startsWith("rule")) {
+      sb=new StringBuilder();
+    }
+    if (sb != null) {
+      sb.append(line).append("\n");
+    }
+    if (line.toLowerCase().startsWith("end")) {
+      rules.add(sb.toString());
+      sb=null;
+    }
+  }
+  final List<GuidedDecisionTreeParserExtendedError> rulesParserContent=new ArrayList<GuidedDecisionTreeParserExtendedError>();
+  for (  String rule : rules) {
+    final GuidedDecisionTreeParserExtendedError ruleParserContent=new GuidedDecisionTreeParserExtendedError();
+    rulesParserContent.add(ruleParserContent);
+    try {
+      final RuleModel rm=RuleModelDRLPersistenceImpl.getInstance().unmarshal(rule,globals,dmo);
+      ruleParserContent.setOriginalRuleName(rm.name);
+      ruleParserContent.setOriginalDrl(rule);
+      for (      IPattern p : rm.lhs) {
+        ruleParserContent.getNodes().addAll(visit(p,model,dmo,ruleParserContent.getMessages()));
+      }
+      for (      IAction a : rm.rhs) {
+        ruleParserContent.getNodes().addAll(visit(a,getTypesOnPath(ruleParserContent.getNodes()),model,dmo,ruleParserContent.getMessages()));
+      }
+    }
+ catch (    Exception e) {
+      ruleParserContent.getMessages().add(new DefaultParserMessage(e.getMessage()));
+    }
+  }
+  for (  GuidedDecisionTreeParserExtendedError ruleParserContent : rulesParserContent) {
+    Node activeModelNode=null;
+    boolean error=!ruleParserContent.getMessages().isEmpty();
+    for (int index=0; !error && index < ruleParserContent.getNodes().size(); index++) {
+      final Node node=ruleParserContent.getNodes().get(index);
+switch (index) {
+case 0:
+        if (!(node instanceof TypeNode)) {
+          ruleParserContent.getMessages().add(new InvalidRootParserMessage());
+          error=true;
+          break;
+        }
+      final TypeNode root=(TypeNode)node;
+    if (model.getRoot() == null) {
+      model.setRoot(root);
+    }
+ else     if (!root.equals(model.getRoot())) {
+      ruleParserContent.getMessages().add(new AmbiguousRootParserMessage(root.getClassName()));
+      error=true;
+      break;
+    }
+  activeModelNode=model.getRoot();
+break;
+default :
+if (!activeModelNode.getChildren().contains(node)) {
+activeModelNode.addChild(node);
+activeModelNode=node;
+}
+ else {
+activeModelNode=activeModelNode.getChildren().get(activeModelNode.getChildren().indexOf(node));
+}
+}
+}
+if (!ruleParserContent.getMessages().isEmpty()) {
+model.getParserErrors().add(new GuidedDecisionTreeParserError(ruleParserContent.getOriginalRuleName(),ruleParserContent.getOriginalDrl(),ruleParserContent.getMessages()));
+}
+}
+return model;
+}

@@ -1,0 +1,21 @@
+{
+  final String drl="rule \"test_0\"" + "when \n" + "  Person( longField == \"abc\" )\n"+ "then \n"+ "end";
+  final GuidedDecisionTree expected=new GuidedDecisionTree();
+  expected.setTreeName("test");
+  final TypeNode type=new TypeNodeImpl("Person");
+  expected.setRoot(type);
+  addModelField("Person","this","Person",DataType.TYPE_THIS);
+  addModelField("Person","longField",Long.class.getName(),DataType.TYPE_NUMERIC_LONG);
+  final GuidedDecisionTree model=GuidedDecisionTreeDRLPersistence.getInstance().unmarshal(drl,"test",dmo);
+  assertNotNull(model);
+  assertEquals(expected.getTreeName(),model.getTreeName());
+  assertNull(model.getRoot());
+  assertEquals(1,model.getParserErrors().size());
+  assertEquals("test_0",model.getParserErrors().get(0).getOriginalRuleName());
+  assertEqualsIgnoreWhitespace(drl,model.getParserErrors().get(0).getOriginalDrl());
+  assertNotNull(model.getParserErrors().get(0).getMessages());
+  assertEquals(1,model.getParserErrors().get(0).getMessages().size());
+  assertTrue(model.getParserErrors().get(0).getMessages().get(0) instanceof DataTypeConversionErrorParserMessage);
+  final String drl2=GuidedDecisionTreeDRLPersistence.getInstance().marshal(model);
+  assertEqualsIgnoreWhitespace(drl,drl2);
+}

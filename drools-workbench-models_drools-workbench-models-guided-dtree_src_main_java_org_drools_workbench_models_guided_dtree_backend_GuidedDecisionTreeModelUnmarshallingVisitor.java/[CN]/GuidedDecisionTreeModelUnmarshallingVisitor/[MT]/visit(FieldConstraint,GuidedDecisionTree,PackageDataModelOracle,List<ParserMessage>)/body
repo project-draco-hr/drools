@@ -1,0 +1,63 @@
+{
+  final List<Node> nodes=new ArrayList<Node>();
+  if (fc instanceof CompositeFieldConstraint) {
+    messages.add(new UnsupportedFieldConstraintParserMessage());
+    return nodes;
+  }
+ else   if (fc instanceof SingleFieldConstraintEBLeftSide) {
+    messages.add(new UnsupportedFieldConstraintParserMessage());
+    return nodes;
+  }
+  if (!(fc instanceof SingleFieldConstraint)) {
+    messages.add(new UnsupportedFieldConstraintParserMessage());
+    return nodes;
+  }
+  final SingleFieldConstraint sfc=(SingleFieldConstraint)fc;
+  if (sfc.getConnectives() != null) {
+    messages.add(new UnsupportedFieldConstraintParserMessage());
+    return nodes;
+  }
+  ConstraintNode node=null;
+  final String className=sfc.getFactType();
+  final String fieldName=sfc.getFieldName();
+  if (sfc.getConstraintValueType() == BaseSingleFieldConstraint.TYPE_LITERAL) {
+    final String operator=sfc.getOperator();
+    final boolean isValueRequired=OperatorsOracle.isValueRequired(operator);
+    if (isValueRequired) {
+      final Value value=getValue(className,fieldName,model,dmo,messages,sfc.getValue());
+      if (value != null) {
+        node=new ConstraintNodeImpl(className,fieldName,operator,value);
+      }
+    }
+ else {
+      node=new ConstraintNodeImpl(className,fieldName);
+    }
+  }
+ else   if (sfc.getConstraintValueType() == BaseSingleFieldConstraint.TYPE_ENUM) {
+    final String operator=sfc.getOperator();
+    final boolean isValueRequired=OperatorsOracle.isValueRequired(operator);
+    if (isValueRequired) {
+      final Value value=getValue(className,fieldName,model,dmo,messages,sfc.getValue());
+      if (value != null) {
+        node=new ConstraintNodeImpl(className,fieldName,operator,value);
+      }
+    }
+ else {
+      node=new ConstraintNodeImpl(className,fieldName);
+    }
+  }
+ else   if (sfc.getConstraintValueType() == BaseSingleFieldConstraint.TYPE_UNDEFINED) {
+    node=new ConstraintNodeImpl(className,fieldName);
+  }
+ else {
+    messages.add(new UnsupportedFieldConstraintTypeParserMessage());
+    return nodes;
+  }
+  if (node != null) {
+    if (sfc.isBound()) {
+      node.setBinding(sfc.getFieldBinding());
+    }
+    nodes.add(node);
+  }
+  return nodes;
+}
