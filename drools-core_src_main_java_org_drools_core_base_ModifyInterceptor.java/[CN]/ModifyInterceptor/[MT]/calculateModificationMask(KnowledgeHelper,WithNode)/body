@@ -2,28 +2,32 @@
   Class<?> nodeClass=node.getEgressType();
   TypeDeclaration typeDeclaration=knowledgeHelper.getWorkingMemory().getKnowledgeBase().getTypeDeclaration(nodeClass);
   if (typeDeclaration == null || !typeDeclaration.isPropertyReactive()) {
-    modificationMask=Long.MAX_VALUE;
+    modificationMask=allSetButTraitBitMask();
     return;
   }
   List<String> settableProperties=typeDeclaration.getSettableProperties();
-  modificationMask=0L;
+  modificationMask=getEmptyPropertyReactiveMask(settableProperties.size());
   WithNode.ParmValuePair[] parmValuePairs=getFieldValue(WithNode.class,"withExpressions",node);
   for (  WithNode.ParmValuePair parmValuePair : parmValuePairs) {
     Method method=extractMethod(parmValuePair);
     if (method == null) {
-      modificationMask=Long.MAX_VALUE;
+      modificationMask=allSetButTraitBitMask();
       return;
     }
     String propertyName=setter2property(method.getName());
     if (propertyName != null) {
-      int pos=settableProperties.indexOf(propertyName);
-      if (pos >= 0)       modificationMask=BitMaskUtil.set(modificationMask,pos);
+      int index=settableProperties.indexOf(propertyName);
+      if (index >= 0) {
+        modificationMask=setPropertyOnMask(modificationMask,index);
+      }
     }
     List<String> modifiedProps=typeDeclaration.getTypeClassDef().getModifiedPropsByMethod(method);
     if (modifiedProps != null) {
       for (      String modifiedProp : modifiedProps) {
-        int pos=settableProperties.indexOf(modifiedProp);
-        if (pos >= 0)         modificationMask=BitMaskUtil.set(modificationMask,pos);
+        int index=settableProperties.indexOf(modifiedProp);
+        if (index >= 0) {
+          modificationMask=setPropertyOnMask(modificationMask,index);
+        }
       }
     }
   }

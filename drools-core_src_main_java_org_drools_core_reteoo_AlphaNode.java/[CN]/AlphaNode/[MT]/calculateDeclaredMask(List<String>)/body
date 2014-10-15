@@ -1,13 +1,14 @@
 {
-  Long typeBit=0L;
+  boolean typeBit=false;
   if (constraint instanceof EvaluatorConstraint && ((EvaluatorConstraint)constraint).isSelf()) {
     Operator op=((EvaluatorConstraint)constraint).getEvaluator().getOperator();
     if (op == IsAEvaluatorDefinition.ISA || op == IsAEvaluatorDefinition.NOT_ISA) {
-      typeBit=Long.MIN_VALUE;
+      typeBit=true;
     }
   }
   if (settableProperties == null || !(constraint instanceof MvelConstraint)) {
-    return typeBit | Long.MAX_VALUE;
+    return typeBit ? AllSetBitMask.get() : allSetButTraitBitMask();
   }
-  return typeBit | ((MvelConstraint)constraint).getListenedPropertyMask(settableProperties);
+  BitMask mask=((MvelConstraint)constraint).getListenedPropertyMask(settableProperties);
+  return typeBit ? mask.set(PropertySpecificUtil.TRAITABLE_BIT) : mask;
 }

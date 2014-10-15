@@ -1,7 +1,7 @@
 {
-  PropagationContext contextPassAll=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,null,0,0,EntryPointId.DEFAULT,Long.MAX_VALUE);
-  PropagationContext contextPassNothing=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,null,0,0,EntryPointId.DEFAULT,0);
-  PropagationContext contextPass2And3=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,null,0,0,EntryPointId.DEFAULT,6);
+  PropagationContext contextPassAll=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,null,0,0,EntryPointId.DEFAULT,allSetButTraitBitMask());
+  PropagationContext contextPassNothing=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,null,0,0,EntryPointId.DEFAULT,EmptyBitMask.get());
+  PropagationContext contextPass2And3=pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,null,0,0,EntryPointId.DEFAULT,new LongBitMask(6));
   when(constraint.isAllowedCachedLeft(any(ContextEntry.class),any(InternalFactHandle.class))).thenReturn(true);
   when(constraint.isAllowedCachedRight(any(LeftTupleImpl.class),any(ContextEntry.class))).thenReturn(true);
   final StatefulKnowledgeSessionImpl workingMemory=new StatefulKnowledgeSessionImpl(1,(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase());
@@ -19,15 +19,15 @@
   assertLength(0,sink1.getAsserted());
   joinNode.modifyObject(string1Handle,modifyPreviousTuples,contextPassNothing,workingMemory);
   assertLength(0,sink1.getAsserted());
-  joinNode.setRightDeclaredMask(0);
+  joinNode.setRightDeclaredMask(EmptyBitMask.get());
   joinNode.initInferredMask();
   joinNode.modifyObject(string1Handle,modifyPreviousTuples,contextPass2And3,workingMemory);
   assertLength(0,sink1.getAsserted());
-  joinNode.setRightDeclaredMask(9);
+  joinNode.setRightDeclaredMask(new LongBitMask(9));
   joinNode.initInferredMask();
   joinNode.modifyObject(string1Handle,modifyPreviousTuples,contextPass2And3,workingMemory);
   assertLength(0,sink1.getAsserted());
-  joinNode.setRightDeclaredMask(3);
+  joinNode.setRightDeclaredMask(new LongBitMask(3));
   joinNode.initInferredMask();
   joinNode.modifyObject(string1Handle,modifyPreviousTuples,contextPass2And3,workingMemory);
   assertLength(1,sink1.getAsserted());

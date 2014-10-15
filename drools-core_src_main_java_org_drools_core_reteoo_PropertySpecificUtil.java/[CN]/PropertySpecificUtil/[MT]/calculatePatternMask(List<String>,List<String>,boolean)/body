@@ -1,11 +1,16 @@
 {
-  long mask=isPositive ? (listenedProperties != null && listenedProperties.contains(TraitableBean.TRAITSET_FIELD_NAME) ? Long.MIN_VALUE : 0) : 0;
   if (listenedProperties == null) {
-    return mask;
+    return EmptyBitMask.get();
+  }
+  BitMask mask=getEmptyPropertyReactiveMask(settableProperties.size());
+  if (listenedProperties != null && listenedProperties.contains(TraitableBean.TRAITSET_FIELD_NAME)) {
+    if (isPositive && listenedProperties != null && listenedProperties.contains(TraitableBean.TRAITSET_FIELD_NAME)) {
+      mask=mask.set(TRAITABLE_BIT);
+    }
   }
   for (  String propertyName : listenedProperties) {
     if (propertyName.equals(isPositive ? "*" : "!*")) {
-      return isPositive ? -1L : Long.MAX_VALUE;
+      return isPositive ? AllSetBitMask.get() : allSetButTraitBitMask();
     }
     if (propertyName.startsWith("!") ^ !isPositive) {
       continue;
@@ -13,11 +18,7 @@
     if (!isPositive) {
       propertyName=propertyName.substring(1);
     }
-    int pos=settableProperties.indexOf(propertyName);
-    if (pos < 0) {
-      throw new RuntimeException("Unknown property: " + propertyName);
-    }
-    mask=BitMaskUtil.set(mask,pos);
+    mask=setPropertyOnMask(mask,settableProperties,propertyName);
   }
   return mask;
 }

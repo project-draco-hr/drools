@@ -1,5 +1,5 @@
 {
-  long mask=0;
+  BitMask mask=getEmptyPropertyReactiveMask(settableProperties.size());
   String[] simpleExpressions=expression.split("\\Q&&\\E|\\Q||\\E");
   for (  String simpleExpression : simpleExpressions) {
     String propertyName=getPropertyNameFromSimpleExpression(simpleExpression);
@@ -7,7 +7,7 @@
       continue;
     }
     if (propertyName.equals("this")) {
-      return Long.MAX_VALUE;
+      return allSetButTraitBitMask();
     }
     int pos=settableProperties.indexOf(propertyName);
     if (pos < 0 && Character.isUpperCase(propertyName.charAt(0))) {
@@ -15,7 +15,7 @@
       pos=settableProperties.indexOf(propertyName);
     }
     if (pos >= 0) {
-      mask=BitMaskUtil.set(mask,pos);
+      mask=mask.set(pos + PropertySpecificUtil.CUSTOM_BITS_OFFSET);
     }
   }
   return mask;

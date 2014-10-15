@@ -2,9 +2,13 @@
   if (condition instanceof SingleCondition) {
     return calculateMask((SingleCondition)condition,settableProperties);
   }
-  long mask=0L;
+  BitMask mask=getEmptyPropertyReactiveMask(settableProperties.size());
+  ;
   for (  Condition c : ((CombinedCondition)condition).getConditions()) {
-    mask|=calculateMask(c,settableProperties);
+    String propertyName=getFirstInvokedPropertyName(((SingleCondition)c).getLeft());
+    if (propertyName != null) {
+      mask=setPropertyOnMask(mask,settableProperties,propertyName);
+    }
   }
   return mask;
 }

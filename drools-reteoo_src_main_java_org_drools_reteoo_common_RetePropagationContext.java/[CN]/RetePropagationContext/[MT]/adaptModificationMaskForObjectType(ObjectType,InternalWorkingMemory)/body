@@ -1,33 +1,37 @@
 {
-  if (originalMask == Long.MAX_VALUE || originalMask <= 0 || !(type instanceof ClassObjectType)) {
+  if (isAllSetPropertyReactiveMask(originalMask) || originalMask.isSet(PropertySpecificUtil.TRAITABLE_BIT) || !(type instanceof ClassObjectType)) {
     return this;
   }
   ClassObjectType classObjectType=(ClassObjectType)type;
-  Long cachedMask=classObjectType.getTransformedMask(modifiedClass,originalMask);
+  BitMask cachedMask=classObjectType.getTransformedMask(modifiedClass,originalMask);
   if (cachedMask != null) {
     return this;
   }
   modificationMask=originalMask;
-  long typeBit=modificationMask & Long.MIN_VALUE;
-  modificationMask&=Long.MAX_VALUE;
+  boolean typeBit=modificationMask.isSet(PropertySpecificUtil.TRAITABLE_BIT);
+  modificationMask=modificationMask.reset(PropertySpecificUtil.TRAITABLE_BIT);
   Class<?> classType=classObjectType.getClassType();
   String pkgName=classType.getPackage().getName();
   if (classType == modifiedClass || "java.lang".equals(pkgName) || !(classType.isInterface() || modifiedClass.isInterface())) {
-    modificationMask|=typeBit;
+    if (typeBit) {
+      modificationMask=modificationMask.set(PropertySpecificUtil.TRAITABLE_BIT);
+    }
     return this;
   }
-  modificationMask=0L;
   List<String> typeClassProps=getSettableProperties(workingMemory,classType,pkgName);
   List<String> modifiedClassProps=getSettableProperties(workingMemory,modifiedClass);
+  modificationMask=getEmptyPropertyReactiveMask(typeClassProps.size());
   for (int i=0; i < modifiedClassProps.size(); i++) {
-    if (BitMaskUtil.isPositionSet(originalMask,i)) {
+    if (isPropertySetOnMask(originalMask,i)) {
       int posInType=typeClassProps.indexOf(modifiedClassProps.get(i));
       if (posInType >= 0) {
-        modificationMask=BitMaskUtil.set(modificationMask,posInType);
+        modificationMask=setPropertyOnMask(modificationMask,posInType);
       }
     }
   }
-  modificationMask|=typeBit;
+  if (typeBit) {
+    modificationMask=modificationMask.set(PropertySpecificUtil.TRAITABLE_BIT);
+  }
   classObjectType.storeTransformedMask(modifiedClass,originalMask,modificationMask);
   return this;
 }
