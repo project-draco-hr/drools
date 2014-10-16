@@ -1,0 +1,11 @@
+{
+  String str="import " + Person.class.getCanonicalName() + ";\n"+ "rule R1 when\n"+ "    $p : Person( age > 30 )\n"+ "then\n"+ "    $p.setStatus(\"in\");\n"+ "then[$onDeleteMatch$]\n"+ "    $p.setStatus(\"out\");\n"+ "end\n";
+  KieSession ksession=new KieHelper().addContent(str,ResourceType.DRL).build().newKieSession();
+  Person mario=new Person("Mario",40);
+  FactHandle fact=ksession.insert(mario);
+  ksession.fireAllRules();
+  assertEquals("in",mario.getStatus());
+  ksession.delete(fact);
+  ksession.fireAllRules();
+  assertEquals("out",mario.getStatus());
+}
