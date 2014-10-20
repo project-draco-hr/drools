@@ -1,0 +1,23 @@
+{
+  for (  T crd : cdescrs) {
+    String cName=descrNameConverter.getName(crd);
+    boolean found=false;
+    for (Iterator<T> it=odescrs.iterator(); it.hasNext(); ) {
+      T ord=it.next();
+      if (descrNameConverter.getName(ord).equals(cName)) {
+        found=true;
+        it.remove();
+        if (!segmentEquals(ob,ord.getStartCharacter(),ord.getEndCharacter(),cb,crd.getStartCharacter(),crd.getEndCharacter())) {
+          pkgcs.getChanges().add(new ResourceChange(ChangeType.UPDATED,type,cName));
+        }
+        break;
+      }
+    }
+    if (!found) {
+      pkgcs.getChanges().add(new ResourceChange(ChangeType.ADDED,type,cName));
+    }
+  }
+  for (  T ord : odescrs) {
+    pkgcs.getChanges().add(new ResourceChange(ChangeType.REMOVED,type,descrNameConverter.getName(ord)));
+  }
+}

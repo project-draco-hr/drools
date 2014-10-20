@@ -5,29 +5,14 @@
     try {
       PackageDescr opkg=new DrlParser().parse(new ByteArrayResource(ob));
       PackageDescr cpkg=new DrlParser().parse(new ByteArrayResource(cb));
-      List<RuleDescr> orules=new ArrayList<RuleDescr>(opkg.getRules());
       String pkgName=isEmpty(cpkg.getName()) ? getDefaultPackageName() : cpkg.getName();
       for (      RuleDescr crd : cpkg.getRules()) {
         pkgcs.getLoadOrder().add(new ResourceChangeSet.RuleLoadOrder(pkgName,crd.getName(),crd.getLoadOrder()));
-        boolean found=false;
-        for (Iterator<RuleDescr> it=orules.iterator(); it.hasNext(); ) {
-          RuleDescr ord=it.next();
-          if (ord.getName().equals(crd.getName())) {
-            found=true;
-            it.remove();
-            if (!segmentEquals(ob,ord.getStartCharacter(),ord.getEndCharacter(),cb,crd.getStartCharacter(),crd.getEndCharacter())) {
-              pkgcs.getChanges().add(new ResourceChange(ChangeType.UPDATED,ResourceChange.Type.RULE,crd.getName()));
-            }
-            break;
-          }
-        }
-        if (!found) {
-          pkgcs.getChanges().add(new ResourceChange(ChangeType.ADDED,ResourceChange.Type.RULE,crd.getName()));
-        }
       }
-      for (      RuleDescr ord : orules) {
-        pkgcs.getChanges().add(new ResourceChange(ChangeType.REMOVED,ResourceChange.Type.RULE,ord.getName()));
-      }
+      List<RuleDescr> orules=new ArrayList<RuleDescr>(opkg.getRules());
+      diffDescrs(ob,cb,pkgcs,orules,cpkg.getRules(),ResourceChange.Type.RULE,RULE_CONVERTER);
+      List<FunctionDescr> ofuncs=new ArrayList<FunctionDescr>(opkg.getFunctions());
+      diffDescrs(ob,cb,pkgcs,ofuncs,cpkg.getFunctions(),ResourceChange.Type.FUNCTION,FUNC_CONVERTER);
     }
  catch (    Exception e) {
       logger.error("Error analyzing the contents of " + file + ". Skipping.",e);
