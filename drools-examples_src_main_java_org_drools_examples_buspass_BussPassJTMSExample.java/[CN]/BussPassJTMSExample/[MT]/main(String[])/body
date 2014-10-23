@@ -1,0 +1,24 @@
+{
+  KieContainer kc;
+  KieSession ksession;
+  try {
+    System.setProperty("drools.negatable","on");
+    kc=KieServices.Factory.get().getKieClasspathContainer();
+    ksession=kc.newKieSession("BussPassJTMSKS");
+  }
+ catch (  Exception e) {
+    throw new RuntimeException(e);
+  }
+ finally {
+    System.setProperty("drools.negatable","off");
+  }
+  Person yoda=new Person("Yoda",15);
+  ksession.insert(yoda);
+  FactHandle badYodaFh=ksession.insert(new BadBehaviour(yoda));
+  ksession.fireAllRules();
+  pause();
+  Person darth=new Person("Darth",15);
+  ksession.insert(darth);
+  ksession.fireAllRules();
+  ksession.dispose();
+}
