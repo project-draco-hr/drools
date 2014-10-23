@@ -1,0 +1,29 @@
+{
+  final Set<Class<?>> validClazzCandidates=new HashSet<Class<?>>();
+  for (  String i : usedImports) {
+    Class<?> clazz=importClass(i,className);
+    if (clazz != null && classFilter.accept(clazz)) {
+      validClazzCandidates.add(clazz);
+    }
+  }
+  if (validClazzCandidates.size() > 1) {
+    for (Iterator<Class<?>> validIt=validClazzCandidates.iterator(); validIt.hasNext(); ) {
+      Class<?> cls=validIt.next();
+      if (this.defaultPackagName.equals(cls.getPackage().getName())) {
+        validIt.remove();
+      }
+    }
+  }
+  if (validClazzCandidates.size() > 1) {
+    final StringBuilder sb=new StringBuilder();
+    final Iterator<Class<?>> clazzCandIter=validClazzCandidates.iterator();
+    while (clazzCandIter.hasNext()) {
+      if (0 != sb.length()) {
+        sb.append(", ");
+      }
+      sb.append(clazzCandIter.next().getName());
+    }
+    throw new Error("Unable to find ambiguously defined class '" + className + "', candidates are: ["+ sb.toString()+ "]");
+  }
+  return validClazzCandidates.size() == 1 ? validClazzCandidates.iterator().next() : null;
+}
