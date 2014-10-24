@@ -1,0 +1,17 @@
+{
+  Map<String,AbstractClassTypeDeclarationDescr> compactedUnsorted=new HashMap<String,AbstractClassTypeDeclarationDescr>(unsortedDescrs.size());
+  for (  AbstractClassTypeDeclarationDescr descr : unsortedDescrs) {
+    if (compactedUnsorted.containsKey(descr.getType().getFullName())) {
+      AbstractClassTypeDeclarationDescr prev=compactedUnsorted.get(descr.getType().getFullName());
+      boolean res=mergeTypeDescriptors(prev,descr);
+      if (!res) {
+        unprocesseableDescrs.put(prev.getType().getFullName(),prev);
+        kbuilder.addBuilderResult(new TypeDeclarationError(prev,"Found duplicate declaration for type " + prev.getType().getFullName() + ", unable to reconcile "));
+      }
+    }
+ else {
+      compactedUnsorted.put(descr.getType().getFullName(),descr);
+    }
+  }
+  return compactedUnsorted.values();
+}
