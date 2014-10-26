@@ -1,0 +1,13 @@
+{
+  String drl="package org.drools; " + "declare Foo " + "  @role(event) "+ "  @expires(10ms) "+ "end "+ "rule In "+ "when "+ "then "+ "  insertLogical( new Foo() ); "+ "end ";
+  KieSessionConfiguration sessionConfig=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  sessionConfig.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  KieHelper helper=new KieHelper();
+  helper.addContent(drl,ResourceType.DRL);
+  KieSession ksession=helper.build(EventProcessingOption.STREAM).newKieSession(sessionConfig,null);
+  ksession.fireAllRules();
+  ((PseudoClockScheduler)ksession.getSessionClock()).advanceTime(1,TimeUnit.SECONDS);
+  ksession.fireAllRules();
+  assertEquals(0,ksession.getObjects().size());
+  assertEquals(0,((NamedEntryPoint)ksession.getEntryPoint(EntryPointId.DEFAULT.getEntryPointId())).getTruthMaintenanceSystem().getEqualityKeyMap().size());
+}
