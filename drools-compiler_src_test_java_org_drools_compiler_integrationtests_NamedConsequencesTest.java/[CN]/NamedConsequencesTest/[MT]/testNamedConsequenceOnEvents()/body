@@ -1,0 +1,12 @@
+{
+  String drl="import " + StockTick.class.getCanonicalName() + ";\n"+ "global java.util.List list;\n"+ "declare StockTick \n"+ "    @role( event )"+ "    @timestamp( time )\n"+ "end\n"+ "rule R when\n"+ "    $s1 : StockTick( company == \"XXX\" )\n"+ "    $s2 : StockTick( price > $s1.price ) do[t1]\n"+ "    $s3 : StockTick( price < $s1.price )\n"+ "then\n"+ "    list.add( \"t0:\" + $s3.getCompany() );\n"+ "then[t1]\n"+ "    list.add( \"t1:\" + $s2.getCompany() );\n"+ "end\n";
+  KieSession ksession=new KieHelper().addContent(drl,ResourceType.DRL).build().newKieSession();
+  List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  ksession.insert(new StockTick(1L,"XXX",10,0L));
+  ksession.insert(new StockTick(2L,"YYY",15,1L));
+  ksession.insert(new StockTick(3L,"ZZZ",5,2L));
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+  assertTrue(list.containsAll(asList("t1:YYY","t0:ZZZ")));
+}
