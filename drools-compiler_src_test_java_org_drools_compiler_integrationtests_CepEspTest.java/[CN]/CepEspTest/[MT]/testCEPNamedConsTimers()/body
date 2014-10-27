@@ -1,0 +1,19 @@
+{
+  String drl="package org.drools " + "global java.util.List list; " + "declare  Msg "+ "    @role( event ) "+ "    sender : String  @key "+ "end "+ "rule Init "+ "when "+ "  $s : String() "+ "then "+ "  System.out.println( 'Msg ' + $s ); "+ "  insert( new Msg( $s ) ); "+ "end "+ "rule 'Viol' "+ "when "+ "    $trigger : Msg( 'John' ; ) "+ "    not Msg( 'Peter' ; this after[0, 100ms] $trigger ) do[viol]"+ "then "+ "  list.add( 0 ); "+ "then[viol] "+ "  list.add( -2 ); "+ "end "+ "";
+  KieSessionConfiguration sessionConfig=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  sessionConfig.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  KieHelper helper=new KieHelper();
+  helper.addContent(drl,ResourceType.DRL);
+  KieSession ksession=helper.build(EventProcessingOption.STREAM).newKieSession(sessionConfig,null);
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.insert("John");
+  ksession.fireAllRules();
+  assertTrue(list.isEmpty());
+  System.out.println(list);
+  ((PseudoClockScheduler)ksession.getSessionClock()).advanceTime(1000,TimeUnit.MILLISECONDS);
+  ksession.fireAllRules();
+  System.out.println(list);
+  assertTrue(list.contains(-2));
+  assertTrue(list.contains(0));
+}
