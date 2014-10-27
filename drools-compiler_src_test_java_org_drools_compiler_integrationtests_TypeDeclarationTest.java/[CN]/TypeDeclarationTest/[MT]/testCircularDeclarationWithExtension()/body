@@ -1,0 +1,14 @@
+{
+  String drl="package org.drools.compiler.test\n" + "declare FactA\n" + "    fieldB: FactB\n"+ "end\n"+ "declare FactB extends FactA end\n"+ "rule R1 when\n"+ "   $a : FactA( )\n"+ "   $b : FactB( this == $a.fieldB )\n"+ "then\n"+ "end";
+  KieBase kbase=new KieHelper().addContent(drl,ResourceType.DRL).build();
+  KieSession ksession=kbase.newKieSession();
+  FactType aType=kbase.getFactType("org.drools.compiler.test","FactA");
+  FactType bType=kbase.getFactType("org.drools.compiler.test","FactB");
+  Object a=aType.newInstance();
+  Object b=bType.newInstance();
+  aType.set(a,"fieldB",b);
+  ksession.insert(a);
+  ksession.insert(b);
+  int rules=ksession.fireAllRules();
+  assertEquals(1,rules);
+}
