@@ -14,32 +14,31 @@
       }
       double num=0;
       CellRangeAddress merged=getRangeIfMerged(cell,mergedRanges);
+      int mergedColStart=DataListener.NON_MERGED;
       if (merged != null) {
-        Cell topLeft=sheet.getRow(merged.getFirstRow()).getCell(merged.getFirstColumn());
-        newCell(listeners,i,cellNum,formatter.formatCellValue(topLeft),topLeft.getColumnIndex());
+        cell=sheet.getRow(merged.getFirstRow()).getCell(merged.getFirstColumn());
+        mergedColStart=cell.getColumnIndex();
       }
- else {
 switch (cell.getCellType()) {
 case Cell.CELL_TYPE_FORMULA:
-          String cellValue=null;
-        try {
-          newCell(listeners,i,cellNum,formatter.formatCellValue(cell,formulaEvaluator),DataListener.NON_MERGED);
-        }
- catch (        RuntimeException e) {
-          log.warn("Cannot resolve externally linked value: " + formatter.formatCellValue(cell));
-          String cachedValue=tryToReadCachedValue(cell);
-          newCell(listeners,i,cellNum,cachedValue,DataListener.NON_MERGED);
-        }
-      break;
+        String cellValue=null;
+      try {
+        newCell(listeners,i,cellNum,formatter.formatCellValue(cell,formulaEvaluator),mergedColStart);
+      }
+ catch (      RuntimeException e) {
+        log.warn("Cannot resolve externally linked value: " + formatter.formatCellValue(cell));
+        String cachedValue=tryToReadCachedValue(cell);
+        newCell(listeners,i,cellNum,cachedValue,mergedColStart);
+      }
+    break;
 case Cell.CELL_TYPE_NUMERIC:
-    num=cell.getNumericCellValue();
+  num=cell.getNumericCellValue();
 default :
-  if (num - Math.round(num) != 0) {
-    newCell(listeners,i,cellNum,String.valueOf(num),DataListener.NON_MERGED);
-  }
+if (num - Math.round(num) != 0) {
+  newCell(listeners,i,cellNum,String.valueOf(num),mergedColStart);
+}
  else {
-    newCell(listeners,i,cellNum,formatter.formatCellValue(cell),DataListener.NON_MERGED);
-  }
+  newCell(listeners,i,cellNum,formatter.formatCellValue(cell),mergedColStart);
 }
 }
 }
