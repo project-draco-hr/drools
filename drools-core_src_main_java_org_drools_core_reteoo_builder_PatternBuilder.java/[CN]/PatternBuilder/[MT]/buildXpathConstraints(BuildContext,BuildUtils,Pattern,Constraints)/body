@@ -1,0 +1,18 @@
+{
+  if (!constraints.xpathConstraints.isEmpty()) {
+    buildTupleSource(context,utils);
+    List<BetaNodeFieldConstraint> xpathConstraints=context.getBetaconstraints();
+    context.setBetaconstraints(Collections.<BetaNodeFieldConstraint>emptyList());
+    buildJoinNode(context,utils);
+    context.setBetaconstraints(xpathConstraints);
+    context.setAlphaConstraints(constraints.alphaConstraints);
+    ReteooComponentBuilder builder=utils.getBuilderFor(From.class);
+    for (    XpathConstraint xpathConstraint : constraints.xpathConstraints) {
+      context.incrementCurrentPatternOffset();
+      Declaration declaration=xpathConstraint.getDeclaration();
+      Pattern clonedPattern=new Pattern(pattern.getIndex(),context.getCurrentPatternOffset(),new ClassObjectType(xpathConstraint.getResultClass()),declaration.getIdentifier(),declaration.isInternalFact());
+      declaration.setPattern(clonedPattern);
+      builder.build(context,utils,xpathConstraint.asFrom());
+    }
+  }
+}

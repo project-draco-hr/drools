@@ -1,0 +1,35 @@
+{
+  String expression=((ExpressionDescr)descr).getExpression();
+  XpathAnalysis xpathAnalysis=XpathAnalysis.analyze(expression);
+  if (xpathAnalysis == null) {
+    context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Invalid xpath expression '" + expression + "'"));
+    return;
+  }
+  XpathConstraint xpathConstraint=new XpathConstraint();
+  ObjectType objectType=pattern.getObjectType();
+  Class<?> patternClass=((ClassObjectType)objectType).getClassType();
+  ObjectType originalType=pattern.getObjectType();
+  for (  XpathAnalysis.XpathPart part : xpathAnalysis) {
+    XpathConstraint.XpathChunk xpathChunk=xpathConstraint.addChunck(patternClass,part.getField(),part.isIterate());
+    if (xpathChunk == null) {
+      context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Invalid xpath expression '" + expression + "': cannot access "+ part.getField()+ " on "+ patternClass));
+      pattern.setObjectType(originalType);
+      return;
+    }
+    patternClass=xpathChunk.getReturnedClass();
+    pattern.setObjectType(new ClassObjectType(patternClass));
+    for (    String constraint : part.getConstraints()) {
+      ConstraintConnectiveDescr result=parseExpression(context,patternDescr,new ExprConstraintDescr(constraint),constraint);
+      build(context,patternDescr,pattern,result,mvelCtx);
+      for (      Constraint c : pattern.getConstraints()) {
+        xpathChunk.addConstraint(c);
+      }
+      pattern.clearConstraints();
+    }
+  }
+  pattern.setObjectType(originalType);
+  pattern.addConstraint(xpathConstraint);
+  if (descr instanceof BindingDescr) {
+    xpathConstraint.setDeclaration(pattern.addDeclaration(((BindingDescr)descr).getVariable()));
+  }
+}

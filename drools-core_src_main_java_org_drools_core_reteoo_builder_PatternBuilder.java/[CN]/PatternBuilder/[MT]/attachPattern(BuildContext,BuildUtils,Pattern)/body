@@ -6,13 +6,10 @@
       PropertyHandlerFactoryFixer.getPropertyHandlerClass().put(AgendaItemImpl.class,new ActivationPropertyHandler());
     }
   }
-  final List<AlphaNodeFieldConstraint> alphaConstraints=new LinkedList<AlphaNodeFieldConstraint>();
-  final List<BetaNodeFieldConstraint> betaConstraints=new LinkedList<BetaNodeFieldConstraint>();
-  final List<Behavior> behaviors=pattern.getBehaviors();
-  this.createConstraints(context,utils,pattern,alphaConstraints,betaConstraints);
-  context.setBetaconstraints(betaConstraints);
+  Constraints constraints=createConstraints(context,utils,pattern);
+  context.setBetaconstraints(constraints.betaConstraints);
   if (pattern.getSource() != null) {
-    context.setAlphaConstraints(alphaConstraints);
+    context.setAlphaConstraints(constraints.alphaConstraints);
     final int currentOffset=context.getCurrentPatternOffset();
     PatternSource source=pattern.getSource();
     ReteooComponentBuilder builder=utils.getBuilderFor(source);
@@ -27,16 +24,10 @@
     ReteooComponentBuilder builder=utils.getBuilderFor(source);
     builder.build(context,utils,source);
   }
-  if (pattern.getSource() == null || (!(pattern.getSource() instanceof WindowReference) && (context.getCurrentEntryPoint() != EntryPointId.DEFAULT || !behaviors.isEmpty()))) {
-    attachObjectTypeNode(context,utils,pattern);
-  }
-  if (!behaviors.isEmpty()) {
-    WindowNode wn=new WindowNode(context.getNextId(),alphaConstraints,behaviors,context.getObjectSource(),context);
-    context.setObjectSource((WindowNode)utils.attachNode(context,wn));
-    alphaConstraints.clear();
-  }
+  buildBehaviors(context,utils,pattern,constraints);
   if (context.getObjectSource() != null) {
-    attachAlphaNodes(context,utils,pattern,alphaConstraints);
+    attachAlphaNodes(context,utils,pattern,constraints.alphaConstraints);
   }
+  buildXpathConstraints(context,utils,pattern,constraints);
   context.incrementCurrentPatternOffset();
 }

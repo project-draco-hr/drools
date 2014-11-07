@@ -1,0 +1,68 @@
+{
+  if (xpath.charAt(0) != '/')   return null;
+  boolean iterate=true;
+  List<XpathPart> parts=new ArrayList<XpathPart>();
+  List<String> constraints=new ArrayList<String>();
+  int lastStart=1;
+  int nestedParam=0;
+  int nestedSquare=0;
+  boolean isQuoted=false;
+  String field=null;
+  for (int i=1; i < xpath.length(); i++) {
+switch (xpath.charAt(i)) {
+case '/':
+case '.':
+      if (!isQuoted && nestedParam == 0 && nestedSquare == 0) {
+        if (field == null) {
+          field=xpath.substring(lastStart,i).trim();
+        }
+        parts.add(new XpathPart(field,iterate,constraints));
+        iterate=xpath.charAt(i) == '/';
+        constraints=new ArrayList<String>();
+        lastStart=i + 1;
+        field=null;
+      }
+    break;
+case '(':
+case '{':
+  if (!isQuoted)   nestedParam++;
+break;
+case ')':
+case '}':
+if (!isQuoted) nestedParam--;
+break;
+case '[':
+if (!isQuoted && nestedParam == 0) {
+if (nestedSquare == 0) {
+field=xpath.substring(lastStart,i).trim();
+lastStart=i + 1;
+}
+nestedSquare++;
+}
+break;
+case ']':
+if (!isQuoted && nestedParam == 0) {
+nestedSquare--;
+if (nestedSquare == 0) {
+constraints.add(xpath.substring(lastStart,i).trim());
+}
+}
+break;
+case ',':
+if (!isQuoted && nestedParam == 0 && nestedSquare == 1) {
+constraints.add(xpath.substring(lastStart,i).trim());
+lastStart=i + 1;
+}
+break;
+case '"':
+case '\'':
+isQuoted=!isQuoted;
+break;
+}
+}
+if (field == null) {
+field=xpath.substring(lastStart).trim();
+}
+parts.add(new XpathPart(field,iterate,constraints));
+return new XpathAnalysis(parts);
+}

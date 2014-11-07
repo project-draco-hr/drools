@@ -1,0 +1,24 @@
+{
+  Constraints constraints=new Constraints();
+  checkRemoveIdentities(context,pattern,constraints.betaConstraints);
+  final boolean isNegative=isNegative(context);
+  for (  Constraint constraint : pattern.getConstraints()) {
+switch (constraint.getType()) {
+case ALPHA:
+      linkAlphaConstraint((AlphaNodeFieldConstraint)constraint,constraints.alphaConstraints);
+    break;
+case BETA:
+  linkBetaConstraint((BetaNodeFieldConstraint)constraint,constraints.betaConstraints);
+if (isNegative && context.getKnowledgeBase().getConfiguration().getEventProcessingMode() == EventProcessingOption.STREAM && pattern.getObjectType().isEvent() && constraint.isTemporal()) {
+  checkDelaying(context,constraint);
+}
+break;
+case XPATH:
+constraints.xpathConstraints.add((XpathConstraint)constraint);
+break;
+default :
+throw new RuntimeException("Unknown constraint type: " + constraint.getType() + ". This is a bug. Please contact development team.");
+}
+}
+return constraints;
+}
