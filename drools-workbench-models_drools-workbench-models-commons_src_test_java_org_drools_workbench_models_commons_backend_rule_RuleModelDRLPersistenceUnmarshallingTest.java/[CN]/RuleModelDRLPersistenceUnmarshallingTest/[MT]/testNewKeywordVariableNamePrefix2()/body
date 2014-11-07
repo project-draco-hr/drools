@@ -1,0 +1,41 @@
+{
+  String oldValue=System.getProperty("drools.dateformat");
+  try {
+    System.setProperty("drools.dateformat","dd-MMM-yyyy");
+    String drl="package org.test;\n" + "rule \"rule1\"\n" + "  dialect \"java\"\n"+ "  when\n"+ "    $a : Applicant()\n"+ "  then\n"+ "    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"dd-MMM-yyyy\");\n"+ "    java.util.Date newStartDate = new java.util.Date();\n"+ "    modify( $a ) {\n"+ "      setApplicantDate( newStartDate )"+ "    }\n"+ "end\n";
+    addModelField("org.test.Applicant","this","org.test.Applicant",DataType.TYPE_THIS);
+    addModelField("org.test.Applicant","applicantDate",Date.class.getName(),DataType.TYPE_DATE);
+    when(dmo.getPackageName()).thenReturn("org.test");
+    RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,Collections.EMPTY_LIST,dmo);
+    assertNotNull(m);
+    assertEquals("rule1",m.name);
+    assertEquals(1,m.lhs.length);
+    IPattern p=m.lhs[0];
+    assertTrue(p instanceof FactPattern);
+    FactPattern fp=(FactPattern)p;
+    assertEquals("Applicant",fp.getFactType());
+    assertEquals("$a",fp.getBoundName());
+    assertNull(fp.getConstraintList());
+    assertEquals(2,m.rhs.length);
+    assertTrue(m.rhs[0] instanceof FreeFormLine);
+    FreeFormLine ffl=(FreeFormLine)m.rhs[0];
+    assertEquals("java.util.Date newStartDate = new java.util.Date();",ffl.getText());
+    assertTrue(m.rhs[1] instanceof ActionUpdateField);
+    ActionUpdateField auf=(ActionUpdateField)m.rhs[1];
+    assertEquals("$a",auf.getVariable());
+    assertEquals(1,auf.getFieldValues().length);
+    ActionFieldValue afv=auf.getFieldValues()[0];
+    assertEquals("applicantDate",afv.getField());
+    assertEquals("newStartDate",afv.getValue());
+    assertEquals(FieldNatureType.TYPE_FORMULA,afv.getNature());
+    assertEqualsIgnoreWhitespace(drl,RuleModelDRLPersistenceImpl.getInstance().marshal(m));
+  }
+  finally {
+    if (oldValue == null) {
+      System.clearProperty("drools.dateformat");
+    }
+ else {
+      System.setProperty("drools.dateformat",oldValue);
+    }
+  }
+}
