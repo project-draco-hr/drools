@@ -1,4 +1,17 @@
 {
   byte[] bytecode=getBytecode(name);
-  return bytecode != null ? new ByteArrayInputStream(bytecode) : super.getResourceAsStream(name);
+  if (bytecode != null) {
+    return new ByteArrayInputStream(bytecode);
+  }
+  if (resourceProvider != null) {
+    try {
+      InputStream is=resourceProvider.getResourceAsStream(name);
+      if (is != null) {
+        return is;
+      }
+    }
+ catch (    IOException e) {
+    }
+  }
+  return super.getResourceAsStream(name);
 }
