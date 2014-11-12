@@ -15,6 +15,14 @@
     initExistingKnowledgeSession(sessionInfo.getId(),marshallingHelper.getKbase(),marshallingHelper.getConf(),persistenceContext);
     jpm.beginCommandScopedEntityManager();
     registerRollbackSync();
+    if (txm != null) {
+      ObjectMarshallingStrategy[] strategies=(ObjectMarshallingStrategy[])env.get(EnvironmentName.OBJECT_MARSHALLING_STRATEGIES);
+      for (      ObjectMarshallingStrategy strategy : strategies) {
+        if (strategy instanceof TransactionAware) {
+          ((TransactionAware)strategy).onStart(txm);
+        }
+      }
+    }
     T result=null;
     if (command instanceof BatchExecutionCommand) {
       result=ksession.execute(command);

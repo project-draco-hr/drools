@@ -2,6 +2,14 @@
   if (status != TransactionManager.STATUS_COMMITTED) {
     this.service.rollback();
   }
+  if (this.service.txm != null) {
+    ObjectMarshallingStrategy[] strategies=(ObjectMarshallingStrategy[])this.service.env.get(EnvironmentName.OBJECT_MARSHALLING_STRATEGIES);
+    for (    ObjectMarshallingStrategy strategy : strategies) {
+      if (strategy instanceof TransactionAware) {
+        ((TransactionAware)strategy).onEnd(this.service.txm);
+      }
+    }
+  }
   this.service.jpm.endCommandScopedEntityManager();
   KieSession ksession=this.service.ksession;
   if (ksession != null) {
