@@ -1,0 +1,30 @@
+{
+  String str="";
+  str+="package org.drools.compiler.test\n";
+  str+="import " + A.class.getCanonicalName() + "\n";
+  str+="global  " + List.class.getCanonicalName() + " list\n";
+  str+="rule r0 when\n";
+  str+="then\n";
+  str+="    drools.getKnowledgeRuntime().getAgenda().getAgendaGroup( 'g1' ).setFocus();\n";
+  str+="    drools.getKnowledgeRuntime().getAgenda().getAgendaGroup( 'g2' ).setFocus();\n";
+  str+="    drools.getKnowledgeRuntime().getAgenda().getAgendaGroup( 'g1' ).setFocus();\n";
+  str+="end\n";
+  str+="rule r1_x agenda-group 'g1' when\n";
+  str+="    a : A( object == 2 )\n";
+  str+="then\n";
+  str+="    list.add( drools.getRule().getName() );\n";
+  str+="end\n";
+  str+="rule r9 agenda-group 'g2' when\n";
+  str+="    a : A(object >= 5  )\n";
+  str+="then\n";
+  str+="    modify(a) { setObject( 2 ) };\n";
+  str+="    list.add( drools.getRule().getName() );\n";
+  str+="end\n";
+  KnowledgeBase kbase=loadKnowledgeBaseFromString(kconf,str);
+  StatelessKnowledgeSession ksession=createStatelessKnowledgeSession(kbase);
+  final List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.execute(CommandFactory.newInsertElements(Arrays.asList(new Object[]{new A(5)})));
+  assertEquals(1,list.size());
+  assertEquals("r9",list.get(0));
+}
