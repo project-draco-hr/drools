@@ -1,9 +1,16 @@
 {
-  loadedClasses.add(name);
-  try {
-    return internalLoadClass(name,resolve);
+  Class<?> cls=loadedClasses.get(name);
+  if (cls != null) {
+    return cls;
   }
- catch (  ClassNotFoundException e2) {
-    return loadType(name,resolve);
+synchronized (this) {
+    try {
+      cls=internalLoadClass(name,resolve);
+    }
+ catch (    ClassNotFoundException e2) {
+      cls=loadType(name,resolve);
+    }
   }
+  loadedClasses.put(name,cls);
+  return cls;
 }
