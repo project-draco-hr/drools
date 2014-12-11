@@ -19,7 +19,13 @@
         context.addError(new DescrBuildError(context.getParentDescr(),accumDescr,null,"Duplicate declaration for variable '" + func.getBind() + "' in the rule '"+ context.getRule().getName()+ "'"));
       }
  else {
-        createResultBind(pattern,index,arrayReader,func,function);
+        Declaration declr=pattern.addDeclaration(func.getBind());
+        if (accumDescr.isMultiFunction()) {
+          declr.setReadAccessor(new ArrayElementReader(arrayReader,index,function.getResultType()));
+        }
+ else {
+          declr.setReadAccessor(new SelfReferenceClassFieldReader(function.getResultType(),"this"));
+        }
       }
     }
     final AnalysisResult analysis=dialect.analyzeExpression(context,accumDescr,func.getParams().length > 0 ? func.getParams()[0] : "\"\"",boundIds);

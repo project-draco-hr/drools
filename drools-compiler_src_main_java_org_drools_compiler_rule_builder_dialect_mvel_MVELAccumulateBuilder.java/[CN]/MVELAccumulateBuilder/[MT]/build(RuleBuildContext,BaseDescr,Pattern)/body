@@ -27,10 +27,17 @@
  else {
       accumulators=buildCustomAccumulate(context,accumDescr,source,dialect,decls,sourceOuterDeclr,boundIds,readLocalsFromTuple);
     }
+    List<Declaration> requiredDeclarations=new ArrayList<Declaration>();
+    for (    Accumulator acc : accumulators) {
+      MvelAccumulator mvelAcc=(MvelAccumulator)acc;
+      for (      Declaration decl : mvelAcc.getRequiredDeclarations()) {
+        requiredDeclarations.add(decl);
+      }
+    }
     MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
     Accumulate accumulate=null;
     if (accumDescr.isMultiFunction()) {
-      accumulate=new MultiAccumulate(source,null,accumulators);
+      accumulate=new MultiAccumulate(source,requiredDeclarations.toArray(new Declaration[requiredDeclarations.size()]),accumulators);
       int index=0;
       for (      Accumulator accumulator : accumulators) {
         data.addCompileable(((MultiAccumulate)accumulate).new Wirer(index++),(MVELCompileable)accumulator);
@@ -38,7 +45,7 @@
       }
     }
  else {
-      accumulate=new SingleAccumulate(source,null,accumulators[0]);
+      accumulate=new SingleAccumulate(source,requiredDeclarations.toArray(new Declaration[requiredDeclarations.size()]),accumulators[0]);
       data.addCompileable(((SingleAccumulate)accumulate).new Wirer(),(MVELCompileable)accumulators[0]);
       ((MVELCompileable)accumulators[0]).compile(data);
     }

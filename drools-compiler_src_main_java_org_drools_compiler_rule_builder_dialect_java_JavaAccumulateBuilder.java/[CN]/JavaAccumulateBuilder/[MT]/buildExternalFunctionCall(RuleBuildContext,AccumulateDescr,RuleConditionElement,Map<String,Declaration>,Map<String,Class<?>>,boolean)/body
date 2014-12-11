@@ -2,37 +2,30 @@
   final List<AccumulateFunctionCallDescr> funcCalls=accumDescr.getFunctions();
   final Declaration[] sourceDeclArr=source.getOuterDeclarations().values().toArray(new Declaration[0]);
   Arrays.sort(sourceDeclArr,RuleTerminalNode.SortDeclarations.instance);
-  Accumulator[] accumulators=new Accumulator[funcCalls.size()];
   Set<Declaration> requiredDecl=new HashSet<Declaration>();
-  InternalReadAccessor arrayReader=new SelfReferenceClassFieldReader(Object[].class,"this");
-  int index=0;
   Pattern pattern=(Pattern)context.getBuildStack().peek();
-  for (  AccumulateFunctionCallDescr fc : funcCalls) {
-    AccumulateFunction function=context.getConfiguration().getAccumulateFunction(fc.getFunction());
-    if (function == null) {
-      function=context.getKnowledgeBuilder().getPackage().getAccumulateFunctions().get(fc.getFunction());
-    }
-    if (function == null) {
-      context.addError(new DescrBuildError(accumDescr,context.getRuleDescr(),null,"Unknown accumulate function: '" + fc.getFunction() + "' on rule '"+ context.getRuleDescr().getName()+ "'. All accumulate functions must be registered before building a resource."));
-      return null;
-    }
-    if (fc.getBind() != null) {
-      if (pattern.getDeclaration(fc.getBind()) != null) {
-        context.addError(new DescrBuildError(context.getParentDescr(),accumDescr,null,"Duplicate declaration for variable '" + fc.getBind() + "' in the rule '"+ context.getRule().getName()+ "'"));
-      }
- else {
-        createResultBind(pattern,index,arrayReader,fc,function);
-      }
-    }
-    final JavaAnalysisResult analysis=(JavaAnalysisResult)context.getDialect().analyzeBlock(context,accumDescr,fc.getParams().length > 0 ? fc.getParams()[0] : "\"\"",new BoundIdentifiers(declCls,context.getKnowledgeBuilder().getGlobals()));
-    final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
-    final Declaration[] previousDeclarations=collectRequiredDeclarations(declsInScope,requiredDecl,usedIdentifiers);
-    accumulators[index++]=generateFunctionCallCodeTemplate(context,accumDescr,sourceDeclArr,fc,function,usedIdentifiers,previousDeclarations,readLocalsFromTuple);
-  }
   if (accumDescr.isMultiFunction()) {
+    Accumulator[] accumulators=new Accumulator[funcCalls.size()];
+    InternalReadAccessor reader=new SelfReferenceClassFieldReader(Object[].class,"this");
+    int index=0;
+    for (    AccumulateFunctionCallDescr fc : funcCalls) {
+      AccumulateFunction function=getAccumulateFunction(context,accumDescr,fc);
+      if (function == null) {
+        return null;
+      }
+      bindReaderToDeclaration(context,accumDescr,pattern,fc,new ArrayElementReader(reader,index,function.getResultType()));
+      accumulators[index++]=buildAccumulator(context,accumDescr,declsInScope,declCls,readLocalsFromTuple,sourceDeclArr,requiredDecl,fc,function);
+    }
     return new MultiAccumulate(source,requiredDecl.toArray(new Declaration[requiredDecl.size()]),accumulators);
   }
  else {
-    return new SingleAccumulate(source,requiredDecl.toArray(new Declaration[requiredDecl.size()]),accumulators[0]);
+    AccumulateFunctionCallDescr fc=accumDescr.getFunctions().get(0);
+    AccumulateFunction function=getAccumulateFunction(context,accumDescr,fc);
+    if (function == null) {
+      return null;
+    }
+    bindReaderToDeclaration(context,accumDescr,pattern,fc,new SelfReferenceClassFieldReader(function.getResultType(),"this"));
+    Accumulator accumulator=buildAccumulator(context,accumDescr,declsInScope,declCls,readLocalsFromTuple,sourceDeclArr,requiredDecl,fc,function);
+    return new SingleAccumulate(source,requiredDecl.toArray(new Declaration[requiredDecl.size()]),accumulator);
   }
 }
