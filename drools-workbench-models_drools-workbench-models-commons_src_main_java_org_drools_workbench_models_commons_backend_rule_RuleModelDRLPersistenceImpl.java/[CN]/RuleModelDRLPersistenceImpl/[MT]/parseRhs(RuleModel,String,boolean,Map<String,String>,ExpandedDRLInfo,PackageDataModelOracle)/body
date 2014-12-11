@@ -29,7 +29,7 @@
         ActionUpdateField action=new ActionUpdateField();
         action.setVariable(modifiedVariable);
         m.addRhsItem(action);
-        addModifiersToAction(modifiers,action,boundParams,dmo,m.getImports(),isJavaDialect);
+        addModifiersToAction(modifiers,action,modifiedVariable,boundParams,dmo,m,isJavaDialect);
         modifiedVariable=null;
         modifiers=null;
       }
@@ -41,7 +41,7 @@
         ActionInsertLogicalFact action=new ActionInsertLogicalFact(type);
         m.addRhsItem(action);
         if (factsType.containsKey(fact)) {
-          addSettersToAction(setStatements,fact,action,boundParams,dmo,m.getImports(),isJavaDialect);
+          addSettersToAction(setStatements,fact,action,boundParams,dmo,m,isJavaDialect);
         }
       }
     }
@@ -53,7 +53,7 @@
         m.addRhsItem(action);
         if (factsType.containsKey(fact)) {
           action.setBoundName(fact);
-          addSettersToAction(setStatements,fact,action,boundParams,dmo,m.getImports(),isJavaDialect);
+          addSettersToAction(setStatements,fact,action,boundParams,dmo,m,isJavaDialect);
         }
       }
     }
@@ -62,7 +62,7 @@
       ActionUpdateField action=new ActionUpdateField();
       action.setVariable(variable);
       m.addRhsItem(action);
-      addSettersToAction(setStatements,variable,action,boundParams,dmo,m.getImports(),isJavaDialect);
+      addSettersToAction(setStatements,variable,action,boundParams,dmo,m,isJavaDialect);
     }
  else     if (line.startsWith("modify")) {
       int modifyBlockEnd=line.lastIndexOf('}');
@@ -71,7 +71,7 @@
         ActionUpdateField action=new ActionUpdateField();
         action.setVariable(variable);
         m.addRhsItem(action);
-        addModifiersToAction(line.substring(line.indexOf('{') + 1,modifyBlockEnd).trim(),action,boundParams,dmo,m.getImports(),isJavaDialect);
+        addModifiersToAction(line.substring(line.indexOf('{') + 1,modifyBlockEnd).trim(),action,variable,boundParams,dmo,m,isJavaDialect);
       }
  else {
         modifiedVariable=line.substring(line.indexOf('(') + 1,line.indexOf(')')).trim();
@@ -110,7 +110,7 @@
         if (isJavaIdentifier(variable)) {
           String methodName=line.substring(dotPos + 1,argStart).trim();
           if (isJavaIdentifier(methodName)) {
-            if (getSettedField(methodName) != null) {
+            if (getSettedField(m,methodName,boundParams.get(variable),dmo) != null) {
               List<String> setters=setStatements.get(variable);
               if (setters == null) {
                 setters=new ArrayList<String>();
@@ -155,7 +155,7 @@
   }
   for (  Map.Entry<String,List<String>> entry : setStatements.entrySet()) {
     ActionSetField action=new ActionSetField(entry.getKey());
-    addSettersToAction(entry.getValue(),action,boundParams,dmo,m.getImports(),isJavaDialect);
+    addSettersToAction(entry.getValue(),action,entry.getKey(),boundParams,dmo,m,isJavaDialect);
     m.addRhsItem(action,setStatementsPosition.get(entry.getKey()));
   }
   if (expandedDRLInfo.hasDsl) {
