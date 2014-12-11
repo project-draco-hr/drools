@@ -107,29 +107,33 @@
       int argStart=line.indexOf('(');
       if (dotPos > 0 && argStart > dotPos) {
         String variable=line.substring(0,dotPos).trim();
-        if (isJavaIdentifier(variable)) {
-          String methodName=line.substring(dotPos + 1,argStart).trim();
-          if (isJavaIdentifier(methodName)) {
-            if (getSettedField(m,methodName,boundParams.get(variable),dmo) != null) {
-              List<String> setters=setStatements.get(variable);
-              if (setters == null) {
-                setters=new ArrayList<String>();
-                setStatements.put(variable,setters);
+        if (boundParams.containsKey(variable) || factsType.containsKey(variable) || expandedDRLInfo.hasGlobal(variable)) {
+          if (isJavaIdentifier(variable)) {
+            String methodName=line.substring(dotPos + 1,argStart).trim();
+            if (isJavaIdentifier(methodName)) {
+              if (getSettedField(m,methodName,boundParams.get(variable),dmo) != null) {
+                List<String> setters=setStatements.get(variable);
+                if (setters == null) {
+                  setters=new ArrayList<String>();
+                  setStatements.put(variable,setters);
+                }
+                if (!setStatementsPosition.containsKey(variable)) {
+                  setStatementsPosition.put(variable,lineCounter);
+                }
+                setters.add(line);
               }
-              setStatementsPosition.put(variable,lineCounter);
-              setters.add(line);
-            }
- else             if (methodName.equals("add") && expandedDRLInfo.hasGlobal(variable)) {
-              String factName=line.substring(argStart + 1,line.lastIndexOf(')')).trim();
-              ActionGlobalCollectionAdd actionGlobalCollectionAdd=new ActionGlobalCollectionAdd();
-              actionGlobalCollectionAdd.setGlobalName(variable);
-              actionGlobalCollectionAdd.setFactName(factName);
-              m.addRhsItem(actionGlobalCollectionAdd);
-            }
+ else               if (methodName.equals("add") && expandedDRLInfo.hasGlobal(variable)) {
+                String factName=line.substring(argStart + 1,line.lastIndexOf(')')).trim();
+                ActionGlobalCollectionAdd actionGlobalCollectionAdd=new ActionGlobalCollectionAdd();
+                actionGlobalCollectionAdd.setGlobalName(variable);
+                actionGlobalCollectionAdd.setFactName(factName);
+                m.addRhsItem(actionGlobalCollectionAdd);
+              }
  else {
-              m.addRhsItem(getActionCallMethod(m,isJavaDialect,boundParams,dmo,line,variable,methodName));
+                m.addRhsItem(getActionCallMethod(m,isJavaDialect,boundParams,dmo,line,variable,methodName));
+              }
+              continue;
             }
-            continue;
           }
         }
       }
@@ -154,9 +158,20 @@
     }
   }
   for (  Map.Entry<String,List<String>> entry : setStatements.entrySet()) {
-    ActionSetField action=new ActionSetField(entry.getKey());
-    addSettersToAction(entry.getValue(),action,entry.getKey(),boundParams,dmo,m,isJavaDialect);
-    m.addRhsItem(action,setStatementsPosition.get(entry.getKey()));
+    if (boundParams.containsKey(entry.getKey())) {
+      ActionSetField action=new ActionSetField(entry.getKey());
+      addSettersToAction(entry.getValue(),action,entry.getKey(),boundParams,dmo,m,isJavaDialect);
+      m.addRhsItem(action,setStatementsPosition.get(entry.getKey()));
+    }
+ else {
+      FreeFormLine action=new FreeFormLine();
+      StringBuilder sb=new StringBuilder();
+      for (      String setter : entry.getValue()) {
+        sb.append(setter).append("\n");
+      }
+      action.setText(sb.toString());
+      m.addRhsItem(action,setStatementsPosition.get(entry.getKey()));
+    }
   }
   if (expandedDRLInfo.hasDsl) {
     String dslLine=expandedDRLInfo.dslStatementsInRhs.get(++lineCounter);
