@@ -1,0 +1,20 @@
+{
+  if (fc.getBind() != null) {
+    if (context.getDeclarationResolver().isDuplicated(context.getRule(),fc.getBind(),resultType.getName())) {
+      if (!fc.isUnification()) {
+        context.addError(new DescrBuildError(context.getParentDescr(),accumDescr,null,"Duplicate declaration for variable '" + fc.getBind() + "' in the rule '"+ context.getRule().getName()+ "'"));
+      }
+ else {
+        Declaration inner=context.getDeclarationResolver().getDeclaration(context.getRule(),fc.getBind());
+        Constraint c=new MvelConstraint(Arrays.asList(context.getPkg().getName()),index >= 0 ? "this[ " + index + " ] == "+ fc.getBind() : "this == " + fc.getBind(),new Declaration[]{inner},null,IndexUtil.ConstraintType.EQUAL,context.getDeclarationResolver().getDeclaration(context.getRule(),fc.getBind()),index >= 0 ? new ArrayElementReader(readAccessor,index,resultType) : readAccessor,true);
+        ((MutableTypeConstraint)c).setType(Constraint.ConstraintType.BETA);
+        pattern.addConstraint(c);
+        index++;
+      }
+    }
+ else {
+      Declaration declr=pattern.addDeclaration(fc.getBind());
+      declr.setReadAccessor(readAccessor);
+    }
+  }
+}

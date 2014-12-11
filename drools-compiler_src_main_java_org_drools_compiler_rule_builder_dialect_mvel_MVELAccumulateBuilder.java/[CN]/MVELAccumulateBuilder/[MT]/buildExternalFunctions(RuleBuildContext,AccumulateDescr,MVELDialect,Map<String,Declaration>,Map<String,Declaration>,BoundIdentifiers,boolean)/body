@@ -14,9 +14,21 @@
       context.addError(new DescrBuildError(accumDescr,context.getRuleDescr(),null,"Unknown accumulate function: '" + func.getFunction() + "' on rule '"+ context.getRuleDescr().getName()+ "'. All accumulate functions must be registered before building a resource."));
       return null;
     }
+    final AnalysisResult analysis=dialect.analyzeExpression(context,accumDescr,func.getParams().length > 0 ? func.getParams()[0] : "\"\"",boundIds);
+    MVELCompilationUnit unit=dialect.getMVELCompilationUnit(func.getParams().length > 0 ? func.getParams()[0] : "\"\"",analysis,getUsedDeclarations(decls,analysis),getUsedDeclarations(sourceOuterDeclr,analysis),null,context,"drools",KnowledgeHelper.class,readLocalsFromTuple);
+    accumulators[index]=new MVELAccumulatorFunctionExecutor(unit,function);
     if (func.getBind() != null) {
-      if (pattern.getDeclaration(func.getBind()) != null) {
-        context.addError(new DescrBuildError(context.getParentDescr(),accumDescr,null,"Duplicate declaration for variable '" + func.getBind() + "' in the rule '"+ context.getRule().getName()+ "'"));
+      if (context.getDeclarationResolver().isDuplicated(context.getRule(),func.getBind(),function.getResultType().getName())) {
+        if (!func.isUnification()) {
+          context.addError(new DescrBuildError(context.getParentDescr(),accumDescr,null,"Duplicate declaration for variable '" + func.getBind() + "' in the rule '"+ context.getRule().getName()+ "'"));
+        }
+ else {
+          Declaration inner=context.getDeclarationResolver().getDeclaration(context.getRule(),func.getBind());
+          Constraint c=new MvelConstraint(Arrays.asList(context.getPkg().getName()),accumDescr.isMultiFunction() ? "this[ " + index + " ] == "+ func.getBind() : "this == " + func.getBind(),new Declaration[]{inner},null,IndexUtil.ConstraintType.EQUAL,context.getDeclarationResolver().getDeclaration(context.getRule(),func.getBind()),accumDescr.isMultiFunction() ? new ArrayElementReader(arrayReader,index,function.getResultType()) : new SelfReferenceClassFieldReader(function.getResultType(),"this"),true);
+          ((MutableTypeConstraint)c).setType(Constraint.ConstraintType.BETA);
+          pattern.addConstraint(c);
+          index++;
+        }
       }
  else {
         Declaration declr=pattern.addDeclaration(func.getBind());
@@ -28,9 +40,7 @@
         }
       }
     }
-    final AnalysisResult analysis=dialect.analyzeExpression(context,accumDescr,func.getParams().length > 0 ? func.getParams()[0] : "\"\"",boundIds);
-    MVELCompilationUnit unit=dialect.getMVELCompilationUnit(func.getParams().length > 0 ? func.getParams()[0] : "\"\"",analysis,getUsedDeclarations(decls,analysis),getUsedDeclarations(sourceOuterDeclr,analysis),null,context,"drools",KnowledgeHelper.class,readLocalsFromTuple);
-    accumulators[index++]=new MVELAccumulatorFunctionExecutor(unit,function);
+    index++;
   }
   return accumulators;
 }

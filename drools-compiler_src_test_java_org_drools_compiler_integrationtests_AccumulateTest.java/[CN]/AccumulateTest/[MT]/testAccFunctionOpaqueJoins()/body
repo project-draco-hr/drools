@@ -1,15 +1,20 @@
 {
-  String str="package org.test; " + "import java.util.*; " + "global List list; "+ "declare Tick "+ "  tick : int "+ "end "+ "declare Data "+ "  values : List "+ "end "+ "rule Init "+ "when "+ "then "+ "  insert( new Data( Arrays.asList( 1, 2, 3 ) ) ); "+ "  insert( new Data( Arrays.asList( 4, 5, 6 ) ) ); "+ "  insert( new Tick( 0 ) );"+ "end "+ "rule Update "+ "  no-loop "+ "when "+ "  $i : Integer() "+ "  $t : Tick() "+ "then "+ "  System.out.println( 'Set tick to ' + $i ); "+ "  modify( $t ) { "+ "      setTick( $i ); "+ "  } "+ "end "+ "rule R "+ "  dialect 'mvel' "+ "when "+ "    Tick( $index : tick ) "+ "    accumulate ( $data : Data(),"+ "                 $tot : sum( $data.values[ $index ] ) ) "+ "then "+ "    System.out.println( $tot + ' for ' + $index ); "+ "    list.add( $tot ); "+ "end ";
+  String str="package org.test; " + "import java.util.*; " + "global List list; "+ "global List list2; "+ "declare Tick "+ "  tick : int "+ "end "+ "declare Data "+ "  values : List "+ "  bias : int = 0 "+ "end "+ "rule Init "+ "when "+ "then "+ "  insert( new Data( Arrays.asList( 1, 2, 3 ), 1 ) ); "+ "  insert( new Data( Arrays.asList( 4, 5, 6 ), 2 ) ); "+ "  insert( new Tick( 0 ) );"+ "end "+ "rule Update "+ "  no-loop "+ "when "+ "  $i : Integer() "+ "  $t : Tick() "+ "then "+ "  System.out.println( 'Set tick to ' + $i ); "+ "  modify( $t ) { "+ "      setTick( $i ); "+ "  } "+ "end "+ "rule M "+ "  dialect 'mvel' "+ "when "+ "    Tick( $index : tick ) "+ "    accumulate ( $data : Data( $bias : bias ),"+ "                 $tot : sum( $data.values[ $index ] + $bias ) ) "+ "then "+ "    System.out.println( $tot + ' for J ' + $index ); "+ "    list.add( $tot ); "+ "end "+ "rule J "+ "when "+ "    Tick( $index : tick ) "+ "    accumulate ( $data : Data( $bias : bias ),"+ "                 $tot : sum( ((Integer)$data.getValues().get( $index )) + $bias ) ) "+ "then "+ "    System.out.println( $tot + ' for M ' + $index ); "+ "    list2.add( $tot ); "+ "end ";
   KieHelper helper=new KieHelper();
   KieSession ks=helper.addContent(str,ResourceType.DRL).build().newKieSession();
   List list=new ArrayList();
   ks.setGlobal("list",list);
+  List list2=new ArrayList();
+  ks.setGlobal("list2",list2);
   ks.fireAllRules();
-  assertEquals(Arrays.asList(5.0),list);
+  assertEquals(Arrays.asList(8.0),list);
+  assertEquals(Arrays.asList(8.0),list2);
   ks.insert(1);
   ks.fireAllRules();
-  assertEquals(Arrays.asList(5.0,7.0),list);
+  assertEquals(Arrays.asList(8.0,10.0),list);
+  assertEquals(Arrays.asList(8.0,10.0),list2);
   ks.insert(2);
   ks.fireAllRules();
-  assertEquals(Arrays.asList(5.0,7.0,9.0),list);
+  assertEquals(Arrays.asList(8.0,10.0,12.0),list);
+  assertEquals(Arrays.asList(8.0,10.0,12.0),list2);
 }
