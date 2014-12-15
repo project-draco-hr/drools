@@ -6,8 +6,48 @@
     if (target != null) {
       target.setReadAccessor(reader);
     }
+    return reader;
   }
- else   if (!identifierRegexp.matcher(fieldName).matches() || (fieldName.indexOf('.') > -1 || fieldName.indexOf('[') > -1 || fieldName.indexOf('(') > -1)) {
+  boolean isGetter=getterRegexp.matcher(fieldName).matches();
+  if (isGetter) {
+    fieldName=fieldName.substring(3,fieldName.indexOf('(')).trim();
+  }
+  if (isGetter || identifierRegexp.matcher(fieldName).matches()) {
+    Declaration decl=context.getDeclarationResolver().getDeclarations(context.getRule()).get(fieldName);
+    if (decl != null && decl.getExtractor() instanceof ClassFieldReader && "this".equals(((ClassFieldReader)decl.getExtractor()).getFieldName())) {
+      return decl.getExtractor();
+    }
+    boolean alternatives=false;
+    try {
+      Map<String,Class<?>> declarations=getDeclarationsMap(descr,context,false);
+      Map<String,Class<?>> globals=context.getKnowledgeBuilder().getGlobals();
+      alternatives=declarations.containsKey(fieldName) || globals.containsKey(fieldName);
+      reader=context.getPkg().getClassFieldAccessorStore().getReader(((ClassObjectType)objectType).getClassName(),fieldName,target);
+    }
+ catch (    final Exception e) {
+      if (reportError && !alternatives && context.isTypesafe()) {
+        DialectUtil.copyErrorLocation(e,descr);
+        context.addError(new DescrBuildError(context.getParentDescr(),descr,e,"Unable to create Field Extractor for '" + fieldName + "'"+ e.getMessage()));
+      }
+      reader=null;
+    }
+ finally {
+      if (reportError && !alternatives) {
+        Collection<KnowledgeBuilderResult> results=context.getPkg().getClassFieldAccessorStore().getWiringResults(((ClassObjectType)objectType).getClassType(),fieldName);
+        if (!results.isEmpty()) {
+          for (          KnowledgeBuilderResult res : results) {
+            if (res.getSeverity() == ResultSeverity.ERROR) {
+              context.addError(new DroolsErrorWrapper(res));
+            }
+ else {
+              context.addWarning(new DroolsWarningWrapper(res));
+            }
+          }
+        }
+      }
+    }
+  }
+ else {
     Dialect dialect=context.getDialect();
     Map<String,Class<?>> globals=context.getKnowledgeBuilder().getGlobals();
     try {
@@ -47,41 +87,6 @@
     }
  finally {
       context.setDialect(dialect);
-    }
-  }
- else {
-    Declaration decl=context.getDeclarationResolver().getDeclarations(context.getRule()).get(fieldName);
-    if (decl != null && decl.getExtractor() instanceof ClassFieldReader && "this".equals(((ClassFieldReader)decl.getExtractor()).getFieldName())) {
-      return decl.getExtractor();
-    }
-    boolean alternatives=false;
-    try {
-      Map<String,Class<?>> declarations=getDeclarationsMap(descr,context,false);
-      Map<String,Class<?>> globals=context.getKnowledgeBuilder().getGlobals();
-      alternatives=declarations.containsKey(fieldName) || globals.containsKey(fieldName);
-      reader=context.getPkg().getClassFieldAccessorStore().getReader(((ClassObjectType)objectType).getClassName(),fieldName,target);
-    }
- catch (    final Exception e) {
-      if (reportError && !alternatives && context.isTypesafe()) {
-        DialectUtil.copyErrorLocation(e,descr);
-        context.addError(new DescrBuildError(context.getParentDescr(),descr,e,"Unable to create Field Extractor for '" + fieldName + "'"+ e.getMessage()));
-      }
-      reader=null;
-    }
- finally {
-      if (reportError && !alternatives) {
-        Collection<KnowledgeBuilderResult> results=context.getPkg().getClassFieldAccessorStore().getWiringResults(((ClassObjectType)objectType).getClassType(),fieldName);
-        if (!results.isEmpty()) {
-          for (          KnowledgeBuilderResult res : results) {
-            if (res.getSeverity() == ResultSeverity.ERROR) {
-              context.addError(new DroolsErrorWrapper(res));
-            }
- else {
-              context.addWarning(new DroolsWarningWrapper(res));
-            }
-          }
-        }
-      }
     }
   }
   return reader;
