@@ -3,6 +3,7 @@
   boolean iterate=true;
   List<XpathPart> parts=new ArrayList<XpathPart>();
   List<String> constraints=new ArrayList<String>();
+  String inlineCast=null;
   int lastStart=1;
   int nestedParam=0;
   int nestedSquare=0;
@@ -16,9 +17,10 @@ case '.':
         if (field == null) {
           field=xpath.substring(lastStart,i).trim();
         }
-        parts.add(new XpathPart(field,iterate,constraints));
+        parts.add(new XpathPart(field,iterate,constraints,inlineCast));
         iterate=xpath.charAt(i) == '/';
         constraints=new ArrayList<String>();
+        inlineCast=null;
         lastStart=i + 1;
         field=null;
       }
@@ -44,13 +46,25 @@ case ']':
 if (!isQuoted && nestedParam == 0) {
 nestedSquare--;
 if (nestedSquare == 0) {
-constraints.add(xpath.substring(lastStart,i).trim());
+String constraint=xpath.substring(lastStart,i).trim();
+if (constraint.startsWith("#")) {
+inlineCast=constraint.substring(1);
+}
+ else {
+constraints.add(constraint);
+}
 }
 }
 break;
 case ',':
 if (!isQuoted && nestedParam == 0 && nestedSquare == 1) {
-constraints.add(xpath.substring(lastStart,i).trim());
+String constraint=xpath.substring(lastStart,i).trim();
+if (constraint.startsWith("#")) {
+inlineCast=constraint.substring(1);
+}
+ else {
+constraints.add(constraint);
+}
 lastStart=i + 1;
 }
 break;
@@ -63,6 +77,6 @@ break;
 if (field == null) {
 field=xpath.substring(lastStart).trim();
 }
-parts.add(new XpathPart(field,iterate,constraints));
+parts.add(new XpathPart(field,iterate,constraints,inlineCast));
 return new XpathAnalysis(parts);
 }

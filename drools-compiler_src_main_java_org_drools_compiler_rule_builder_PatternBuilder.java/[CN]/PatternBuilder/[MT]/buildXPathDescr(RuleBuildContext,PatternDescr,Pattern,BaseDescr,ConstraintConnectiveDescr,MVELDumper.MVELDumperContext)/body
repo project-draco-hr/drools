@@ -16,10 +16,25 @@
       pattern.setObjectType(originalType);
       return;
     }
-    patternClass=xpathChunk.getReturnedClass();
+    if (part.getInlineCast() != null) {
+      try {
+        patternClass=context.getDialect().getTypeResolver().resolveType(part.getInlineCast());
+      }
+ catch (      ClassNotFoundException e) {
+        context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Unknown class " + part.getInlineCast() + " in xpath expression '"+ expression+ "'"));
+        return;
+      }
+      part.addInlineCastConstraint(patternClass);
+    }
+ else {
+      patternClass=xpathChunk.getReturnedClass();
+    }
     pattern.setObjectType(new ClassObjectType(patternClass));
     for (    String constraint : part.getConstraints()) {
       ConstraintConnectiveDescr result=parseExpression(context,patternDescr,new ExprConstraintDescr(constraint),constraint);
+      if (result == null) {
+        continue;
+      }
       build(context,patternDescr,pattern,result,mvelCtx);
       for (      Constraint c : pattern.getConstraints()) {
         xpathChunk.addConstraint(c);
