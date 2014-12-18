@@ -1,27 +1,25 @@
 {
+  List<Constraint> constraints=new ArrayList<Constraint>();
   List<BaseDescr> initialDescrs=new ArrayList<BaseDescr>(descr.getDescrs());
   for (  BaseDescr d : initialDescrs) {
-    if (isXPathDescr(d)) {
-      buildXPathDescr(context,patternDescr,pattern,d,descr,mvelCtx);
-    }
- else {
-      buildCcdDescr(context,patternDescr,pattern,d,descr,mvelCtx);
+    Constraint constraint=isXPathDescr(d) ? buildXPathDescr(context,patternDescr,pattern,d,mvelCtx) : buildCcdDescr(context,patternDescr,pattern,d,descr,mvelCtx);
+    if (constraint != null) {
+      constraints.add(constraint);
     }
   }
   if (descr.getDescrs().size() > initialDescrs.size()) {
     List<BaseDescr> additionalDescrs=new ArrayList<BaseDescr>(descr.getDescrs());
     additionalDescrs.removeAll(initialDescrs);
     if (!additionalDescrs.isEmpty()) {
-      List<Constraint> constraints=new ArrayList<Constraint>(pattern.getConstraints());
-      for (      Constraint c : constraints) {
-        pattern.removeConstraint(c);
-      }
+      List<Constraint> additionalConstraints=new ArrayList<Constraint>();
       for (      BaseDescr d : additionalDescrs) {
-        buildCcdDescr(context,patternDescr,pattern,d,descr,mvelCtx);
+        Constraint constraint=buildCcdDescr(context,patternDescr,pattern,d,descr,mvelCtx);
+        if (constraint != null) {
+          additionalConstraints.add(constraint);
+        }
       }
-      for (      Constraint c : constraints) {
-        pattern.addConstraint(c);
-      }
+      constraints.addAll(0,additionalConstraints);
     }
   }
+  return constraints;
 }

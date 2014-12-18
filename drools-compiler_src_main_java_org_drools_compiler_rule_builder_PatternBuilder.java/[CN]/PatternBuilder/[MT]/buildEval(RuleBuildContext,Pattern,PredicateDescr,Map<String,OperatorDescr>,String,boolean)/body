@@ -1,7 +1,7 @@
 {
   AnalysisResult analysis=buildAnalysis(context,pattern,predicateDescr,aliases);
   if (analysis == null) {
-    return;
+    return null;
   }
   Declaration[][] usedDeclarations=getUsedDeclarations(context,pattern,analysis);
   Declaration[] previousDeclarations=usedDeclarations[0];
@@ -16,23 +16,20 @@
     final PredicateConstraint predicateConstraint=new PredicateConstraint(null,previousDeclarations,localDeclarations,requiredGlobals,requiredOperators);
     final PredicateBuilder builder=context.getDialect().getPredicateBuilder();
     builder.build(context,usedIdentifiers,previousDeclarations,localDeclarations,predicateConstraint,predicateDescr,analysis);
-    pattern.addConstraint(predicateConstraint);
+    return predicateConstraint;
   }
- else {
-    MVELCompilationUnit compilationUnit=getConstraintBuilder(context).buildCompilationUnit(context,previousDeclarations,localDeclarations,predicateDescr,analysis);
-    Declaration[] mvelDeclarations=new Declaration[previousDeclarations.length + localDeclarations.length + requiredGlobals.length];
-    int i=0;
-    for (    Declaration d : previousDeclarations) {
-      mvelDeclarations[i++]=d;
-    }
-    for (    Declaration d : localDeclarations) {
-      mvelDeclarations[i++]=d;
-    }
-    for (    String global : requiredGlobals) {
-      mvelDeclarations[i++]=context.getDeclarationResolver().getDeclaration(context.getRule(),global);
-    }
-    boolean isDynamic=requiredOperators.length > 0 || ClassObjectType.Match_ObjectType.isAssignableFrom(pattern.getObjectType()) || (!((ClassObjectType)pattern.getObjectType()).getClassType().isArray() && !context.getKnowledgeBuilder().getTypeDeclaration(((ClassObjectType)pattern.getObjectType()).getClassType()).isTypesafe());
-    Constraint constraint=getConstraintBuilder(context).buildMvelConstraint(context.getPkg().getName(),expr,mvelDeclarations,compilationUnit,isDynamic);
-    pattern.addConstraint(constraint);
+  MVELCompilationUnit compilationUnit=getConstraintBuilder(context).buildCompilationUnit(context,previousDeclarations,localDeclarations,predicateDescr,analysis);
+  Declaration[] mvelDeclarations=new Declaration[previousDeclarations.length + localDeclarations.length + requiredGlobals.length];
+  int i=0;
+  for (  Declaration d : previousDeclarations) {
+    mvelDeclarations[i++]=d;
   }
+  for (  Declaration d : localDeclarations) {
+    mvelDeclarations[i++]=d;
+  }
+  for (  String global : requiredGlobals) {
+    mvelDeclarations[i++]=context.getDeclarationResolver().getDeclaration(context.getRule(),global);
+  }
+  boolean isDynamic=requiredOperators.length > 0 || ClassObjectType.Match_ObjectType.isAssignableFrom(pattern.getObjectType()) || (!((ClassObjectType)pattern.getObjectType()).getClassType().isArray() && !context.getKnowledgeBuilder().getTypeDeclaration(((ClassObjectType)pattern.getObjectType()).getClassType()).isTypesafe());
+  return getConstraintBuilder(context).buildMvelConstraint(context.getPkg().getName(),expr,mvelDeclarations,compilationUnit,isDynamic);
 }

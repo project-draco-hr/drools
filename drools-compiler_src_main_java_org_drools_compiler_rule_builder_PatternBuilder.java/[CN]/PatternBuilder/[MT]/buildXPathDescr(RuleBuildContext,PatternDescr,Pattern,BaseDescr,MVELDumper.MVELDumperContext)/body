@@ -3,7 +3,7 @@
   XpathAnalysis xpathAnalysis=XpathAnalysis.analyze(expression);
   if (xpathAnalysis == null) {
     context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Invalid xpath expression '" + expression + "'"));
-    return;
+    return null;
   }
   XpathConstraint xpathConstraint=new XpathConstraint();
   ObjectType objectType=pattern.getObjectType();
@@ -14,7 +14,7 @@
     if (xpathChunk == null) {
       context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Invalid xpath expression '" + expression + "': cannot access "+ part.getField()+ " on "+ patternClass));
       pattern.setObjectType(originalType);
-      return;
+      return null;
     }
     if (part.getInlineCast() != null) {
       try {
@@ -22,7 +22,7 @@
       }
  catch (      ClassNotFoundException e) {
         context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Unknown class " + part.getInlineCast() + " in xpath expression '"+ expression+ "'"));
-        return;
+        return null;
       }
       part.addInlineCastConstraint(patternClass);
     }
@@ -35,16 +35,14 @@
       if (result == null) {
         continue;
       }
-      build(context,patternDescr,pattern,result,mvelCtx);
-      for (      Constraint c : pattern.getConstraints()) {
+      for (      Constraint c : build(context,patternDescr,pattern,result,mvelCtx)) {
         xpathChunk.addConstraint(c);
       }
-      pattern.clearConstraints();
     }
   }
   pattern.setObjectType(originalType);
-  pattern.addConstraint(xpathConstraint);
   if (descr instanceof BindingDescr) {
     xpathConstraint.setDeclaration(pattern.addDeclaration(((BindingDescr)descr).getVariable()));
   }
+  return xpathConstraint;
 }

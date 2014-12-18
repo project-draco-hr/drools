@@ -1,4 +1,8 @@
 {
+  InternalReadAccessor extractor=getFieldReadAccessor(context,relDescr,pattern.getObjectType(),value1,null,true);
+  if (extractor == null) {
+    return null;
+  }
   int dotPos=value1.indexOf('.');
   if (dotPos > 0) {
     String part0=value1.substring(0,dotPos).trim();
@@ -18,8 +22,7 @@
     if (field != null) {
       Constraint constraint=getConstraintBuilder(context).buildLiteralConstraint(context,pattern,vtype,field,expr,value1,operator,value2,extractor,restrictionDescr);
       if (constraint != null) {
-        pattern.addConstraint(constraint);
-        return true;
+        return constraint;
       }
     }
   }
@@ -48,7 +51,7 @@
             value2=parts[1].trim();
           }
  else {
-            return false;
+            return null;
           }
         }
       }
@@ -61,10 +64,9 @@
  else {
       declarations=getDeclarationsForReturnValue(context,relDescr,operator,value2);
       if (declarations == null) {
-        return false;
+        return null;
       }
     }
   }
-  pattern.addConstraint(getConstraintBuilder(context).buildVariableConstraint(context,pattern,expr,declarations,value1,relDescr.getOperatorDescr(),value2,extractor,declr,relDescr));
-  return true;
+  return getConstraintBuilder(context).buildVariableConstraint(context,pattern,expr,declarations,value1,relDescr.getOperatorDescr(),value2,extractor,declr,relDescr);
 }
