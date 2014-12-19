@@ -1,0 +1,48 @@
+{
+  String expected_dslr="rule \"rule1\"\n" + "dialect \"mvel\"\n" + "when\n"+ "There is an Applicant\n"+ "- age more then 55\n"+ "then\n"+ "end\n";
+  String expected_drl="rule \"rule1\"\n" + "dialect \"mvel\"\n" + "when\n"+ "Applicant( age > 55 )\n"+ "then\n"+ "end\n";
+  final String dslDefinition1="There is an Applicant";
+  final String dslFile1="[when]" + dslDefinition1 + "=Applicant( )";
+  final String dslDefinition2="- age more then {age}";
+  final String dslFile2="[when]" + dslDefinition2 + "=age > {age}";
+  final RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshalUsingDSL(expected_dslr,new ArrayList<String>(),dmo,new String[]{dslFile1,dslFile2});
+  assertNotNull(m);
+  assertEquals(2,m.lhs.length);
+  assertTrue(m.lhs[0] instanceof DSLSentence);
+  assertTrue(m.lhs[1] instanceof DSLSentence);
+  DSLSentence dslSentence1=(DSLSentence)m.lhs[0];
+  assertEquals(dslDefinition1,dslSentence1.getDefinition());
+  assertEquals(0,dslSentence1.getValues().size());
+  DSLSentence dslSentence2=(DSLSentence)m.lhs[1];
+  assertEquals(dslDefinition2,dslSentence2.getDefinition());
+  assertEquals(1,dslSentence2.getValues().size());
+  DSLVariableValue dslVariableValue=dslSentence2.getValues().get(0);
+  assertEquals("55",dslVariableValue.getValue());
+  assertEqualsIgnoreWhitespace(expected_dslr,RuleModelDRLPersistenceImpl.getInstance().marshal(m));
+  final Expander expander=new DefaultExpander();
+  final List<DSLMappingFile> dsls=new ArrayList<DSLMappingFile>();
+  try {
+    final DSLTokenizedMappingFile dslTokenizer1=new DSLTokenizedMappingFile();
+    if (dslTokenizer1.parseAndLoad(new StringReader(dslFile1))) {
+      dsls.add(dslTokenizer1);
+    }
+ else {
+      fail();
+    }
+    final DSLTokenizedMappingFile dslTokenizer2=new DSLTokenizedMappingFile();
+    if (dslTokenizer2.parseAndLoad(new StringReader(dslFile2))) {
+      dsls.add(dslTokenizer2);
+    }
+ else {
+      fail();
+    }
+  }
+ catch (  IOException e) {
+    fail();
+  }
+  for (  DSLMappingFile dsl : dsls) {
+    expander.addDSLMapping(dsl.getMapping());
+  }
+  final String actual_drl=expander.expand(expected_dslr);
+  assertEqualsIgnoreWhitespace(expected_drl,actual_drl);
+}
