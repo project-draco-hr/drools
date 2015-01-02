@@ -1,11 +1,11 @@
 {
-  if (!TypeDeclarationUtils.isQualified(type)) {
+  boolean qualified=TypeDeclarationUtils.isQualified(type);
+  if (!qualified) {
     type=TypeDeclarationUtils.lookupSimpleNameByImports(type,typeDescr,packageDescr,kbuilder.getRootClassLoader());
   }
-  if (!TypeDeclarationUtils.isQualified(type)) {
-    type=TypeDeclarationUtils.resolveType(type,packageDescr,kbuilder.getPackageRegistry(packageDescr.getNamespace()));
-  }
-  if (!TypeDeclarationUtils.isQualified(type)) {
+  type=TypeDeclarationUtils.resolveType(type,packageDescr,kbuilder.getPackageRegistry(packageDescr.getNamespace()));
+  qualified=TypeDeclarationUtils.isQualified(type);
+  if (!qualified) {
     try {
       Class klass=typeResolver.resolveType(type,TypeResolver.EXCLUDE_ANNOTATION_CLASS_FILTER);
       type=klass.getCanonicalName();
@@ -16,11 +16,12 @@
   }
  else {
     type=TypeDeclarationUtils.typeName2ClassName(type,kbuilder.getRootClassLoader());
+    qualified=TypeDeclarationUtils.isQualified(type);
   }
-  if (forceResolution && !TypeDeclarationUtils.isQualified(type)) {
+  if (forceResolution && !qualified) {
     TypeDeclaration temp=new TypeDeclaration(type);
     temp.setTypeClassName(type);
     unresolvedTypes.add(new TypeDefinition(temp,null));
   }
-  return TypeDeclarationUtils.isQualified(type) ? type : null;
+  return qualified ? type : null;
 }
