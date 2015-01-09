@@ -4,10 +4,6 @@
     updateTupleSinkId(this,this);
     dirty=false;
   }
-  if (objectMemoryEnabled && !(queryNode && !((DroolsQuery)factHandle.getObject()).isOpen())) {
-    final ObjectTypeNodeMemory memory=(ObjectTypeNodeMemory)workingMemory.getNodeMemory(this);
-    memory.memory.add(factHandle,false);
-  }
   if (compiledNetwork != null) {
     compiledNetwork.assertObject(factHandle,context,workingMemory);
   }
@@ -15,14 +11,6 @@
     this.sink.propagateAssertObject(factHandle,context,workingMemory);
   }
   if (context.getReaderContext() == null && this.objectType.isEvent() && this.expirationOffset >= 0 && this.expirationOffset != Long.MAX_VALUE) {
-    WorkingMemoryReteExpireAction expire=new WorkingMemoryReteExpireAction(factHandle,this);
-    TimerService clock=workingMemory.getTimerService();
-    EventFactHandle eventFactHandle=(EventFactHandle)factHandle;
-    long effectiveEnd=eventFactHandle.getEndTimestamp() + this.expirationOffset;
-    long nextTimestamp=Math.max(clock.getCurrentTime(),effectiveEnd >= 0 ? effectiveEnd : Long.MAX_VALUE);
-    JobContext jobctx=new ExpireJobContext(expire,workingMemory);
-    JobHandle jobHandle=clock.scheduleJob(job,jobctx,new PointInTimeTrigger(nextTimestamp,null,null));
-    jobctx.setJobHandle(jobHandle);
-    eventFactHandle.addJob(jobHandle);
+    scheduleExpiration(context,workingMemory,factHandle,expirationOffset,new WorkingMemoryReteExpireAction(factHandle,this));
   }
 }

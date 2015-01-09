@@ -4,7 +4,12 @@
     final PropagationContext context=pctxFactory.createPropagationContext(workingMemory.getNextPropagationIdCounter(),PropagationContext.EXPIRATION,null,null,this.factHandle);
     ((EventFactHandle)factHandle).setExpired(true);
     if (factHandle.getEqualityKey() == null || factHandle.getEqualityKey().getLogicalFactHandle() != factHandle) {
-      this.node.retractObject(factHandle,context,workingMemory);
+      if (this.node != null) {
+        this.node.retractObject(factHandle,context,workingMemory);
+      }
+ else {
+        workingMemory.getEntryPoint(factHandle.getEntryPoint().getEntryPointId()).delete(factHandle);
+      }
       context.evaluateActionQueue(workingMemory);
       if (((EventFactHandle)factHandle).getActivationsCount() == 0) {
         ((EventFactHandle)factHandle).getEntryPoint().retract(factHandle);

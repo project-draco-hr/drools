@@ -1,0 +1,20 @@
+{
+  int fireCount=0;
+  try {
+    kBase.readLock();
+    if (liaPropagations != null && isSequential()) {
+      for (Iterator it=liaPropagations.iterator(); it.hasNext(); ) {
+        ((LIANodePropagation)it.next()).doPropagation(this);
+      }
+    }
+    executeQueuedActions();
+    fireCount=this.agenda.fireAllRules(agendaFilter,fireLimit);
+  }
+  finally {
+    kBase.readUnlock();
+    if (kBase.flushModifications()) {
+      fireCount+=internalFireAllRules(agendaFilter,fireLimit);
+    }
+  }
+  return fireCount;
+}

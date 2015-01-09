@@ -1,20 +1,18 @@
 {
-  lock();
-  try {
-    final InternalKnowledgePackage pkg=this.pkgs.get(packageName);
-    if (pkg == null) {
-      throw new IllegalArgumentException("Package name '" + packageName + "' does not exist for this Rule Base.");
+  if (lock.writeLock().tryLock()) {
+    try {
+      internalRemoveRule(packageName,ruleName);
     }
-    RuleImpl rule=pkg.getRule(ruleName);
-    if (rule == null) {
-      throw new IllegalArgumentException("Rule name '" + ruleName + "' does not exist in the Package '"+ packageName+ "'.");
-    }
-    this.removalsSinceLock++;
-    removeRule(pkg,rule);
-    pkg.removeRule(rule);
-    addReloadDialectDatas(pkg.getDialectRuntimeRegistry());
-  }
   finally {
-    unlock();
+      unlock();
+    }
+  }
+ else {
+    kbaseModificationsQueue.offer(new Runnable(){
+      @Override public void run(){
+        internalRemoveRule(packageName,ruleName);
+      }
+    }
+);
   }
 }

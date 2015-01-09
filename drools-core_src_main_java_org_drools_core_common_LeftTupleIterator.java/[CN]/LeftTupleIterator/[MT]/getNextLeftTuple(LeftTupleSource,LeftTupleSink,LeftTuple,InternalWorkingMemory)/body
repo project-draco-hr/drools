@@ -1,5 +1,5 @@
 {
-  if (factHandleEntry != null) {
+  if (otnIterator != null) {
     LeftTuple leftParent=leftTuple.getLeftParent();
     while (leftTuple != null) {
       leftTuple=leftTuple.getLeftParentNext();
@@ -11,12 +11,7 @@
     }
     if (leftParent != null) {
       while (leftParent != null) {
-        if (source instanceof EvalConditionNode) {
-          leftParent=getNextLeftTuple(((EvalConditionNode)source).getLeftTupleSource(),(LeftTupleSink)source,leftParent,wm);
-        }
- else {
-          leftParent=getNextLeftTuple(((QueryElementNode)source).getLeftTupleSource(),(LeftTupleSink)source,leftParent,wm);
-        }
+        leftParent=getNextLeftTuple(source.getLeftTupleSource(),(LeftTupleSink)source,leftParent,wm);
         if (leftParent != null) {
           for (leftTuple=leftParent.getFirstChild(); leftTuple != null; leftTuple=leftTuple.getLeftParentNext()) {
             if (leftTuple.getLeftTupleSink() == sink) {
@@ -27,18 +22,14 @@
       }
       return null;
     }
-    if (factHandleEntry == null) {
-      return null;
-    }
-    for (factHandleEntry=(ObjectEntry)otnIterator.next(); factHandleEntry != null; factHandleEntry=(ObjectEntry)otnIterator.next()) {
-      InternalFactHandle handle=(InternalFactHandle)factHandleEntry.getValue();
+    while (otnIterator.hasNext()) {
+      InternalFactHandle handle=otnIterator.next();
       for (leftTuple=handle.getFirstLeftTuple(); leftTuple != null; leftTuple=leftTuple.getLeftParentNext()) {
         if (leftTuple.getLeftTupleSink() == sink) {
           return leftTuple;
         }
       }
     }
-    factHandleEntry=null;
     otnIterator=null;
   }
  else   if (wm.getKnowledgeBase().getConfiguration().isPhreakEnabled() && source instanceof AccumulateNode) {

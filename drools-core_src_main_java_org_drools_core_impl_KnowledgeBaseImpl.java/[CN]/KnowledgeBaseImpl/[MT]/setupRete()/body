@@ -1,6 +1,13 @@
 {
   this.rete=new Rete(this);
   this.reteooBuilder=new ReteooBuilder(this);
-  EntryPointNode epn=kieComponentFactory.getNodeFactoryService().buildEntryPointNode(this.reteooBuilder.getIdGenerator().getNextId(),RuleBasePartitionId.MAIN_PARTITION,this.getConfiguration().isMultithreadEvaluation(),this.rete,EntryPointId.DEFAULT);
+  NodeFactory nodeFactory=kieComponentFactory.getNodeFactoryService();
+  EntryPointNode epn=nodeFactory.buildEntryPointNode(this.reteooBuilder.getIdGenerator().getNextId(),RuleBasePartitionId.MAIN_PARTITION,this.getConfiguration().isMultithreadEvaluation(),this.rete,EntryPointId.DEFAULT);
   epn.attach();
+  BuildContext context=new BuildContext(this,reteooBuilder.getIdGenerator());
+  context.setCurrentEntryPoint(epn.getEntryPoint());
+  context.setTupleMemoryEnabled(true);
+  context.setObjectTypeNodeMemoryEnabled(true);
+  ObjectTypeNode otn=nodeFactory.buildObjectTypeNode(this.reteooBuilder.getIdGenerator().getNextId(),epn,ClassObjectType.InitialFact_ObjectType,context);
+  otn.attach(context);
 }

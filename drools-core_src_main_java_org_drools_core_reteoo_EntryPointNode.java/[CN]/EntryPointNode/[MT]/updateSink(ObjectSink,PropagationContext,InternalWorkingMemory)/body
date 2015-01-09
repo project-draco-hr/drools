@@ -3,12 +3,12 @@
   final ObjectType newObjectType=node.getObjectType();
   InternalWorkingMemoryEntryPoint wmEntryPoint=(InternalWorkingMemoryEntryPoint)workingMemory.getWorkingMemoryEntryPoint(this.entryPoint.getEntryPointId());
   for (  ObjectTypeConf objectTypeConf : wmEntryPoint.getObjectTypeConfigurationRegistry().values()) {
-    if (newObjectType.isAssignableFrom(objectTypeConf.getConcreteObjectTypeNode().getObjectType())) {
+    if (objectTypeConf.getConcreteObjectTypeNode() != null && newObjectType.isAssignableFrom(objectTypeConf.getConcreteObjectTypeNode().getObjectType())) {
       objectTypeConf.resetCache();
       ObjectTypeNode sourceNode=objectTypeConf.getConcreteObjectTypeNode();
-      Iterator it=((ObjectTypeNodeMemory)workingMemory.getNodeMemory(sourceNode)).memory.iterator();
-      for (ObjectEntry entry=(ObjectEntry)it.next(); entry != null; entry=(ObjectEntry)it.next()) {
-        sink.assertObject((InternalFactHandle)entry.getValue(),context,workingMemory);
+      Iterator<InternalFactHandle> it=((ObjectTypeNodeMemory)workingMemory.getNodeMemory(sourceNode)).iterator();
+      while (it.hasNext()) {
+        sink.assertObject(it.next(),context,workingMemory);
       }
     }
   }

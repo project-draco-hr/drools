@@ -4,26 +4,12 @@
   this.entryPoint=entryPoint;
   this.typeDecl=kBase.getTypeDeclaration(clazz);
   isEvent=typeDecl != null && typeDecl.getRole() == Role.Type.EVENT;
-  isTrait=determineTraitStatus();
-  ObjectType objectType=kBase.getClassFieldAccessorCache().getClassObjectType(new ClassObjectType(clazz,isEvent),false);
-  this.concreteObjectTypeNode=kBase.getRete().getObjectTypeNodes(entryPoint).get(objectType);
-  if (this.concreteObjectTypeNode == null) {
-    BuildContext context=new BuildContext(kBase,kBase.getReteooBuilder().getIdGenerator());
-    context.setCurrentEntryPoint(entryPoint);
-    if (DroolsQuery.class == clazz) {
-      context.setTupleMemoryEnabled(false);
-      context.setObjectTypeNodeMemoryEnabled(false);
-    }
- else     if (context.getKnowledgeBase().getConfiguration().isSequential()) {
-      context.setTupleMemoryEnabled(true);
-      context.setObjectTypeNodeMemoryEnabled(true);
-    }
- else {
-      context.setTupleMemoryEnabled(true);
-      context.setObjectTypeNodeMemoryEnabled(true);
-    }
-    this.concreteObjectTypeNode=PatternBuilder.attachObjectTypeNode(context,objectType);
+  if (isEvent && typeDecl != null) {
+    expirationOffset=typeDecl.getExpirationOffset();
   }
+  isTrait=determineTraitStatus();
+  this.objectType=kBase.getClassFieldAccessorCache().getClassObjectType(new ClassObjectType(clazz,isEvent),false);
+  this.concreteObjectTypeNode=kBase.getRete().getObjectTypeNodes(entryPoint).get(objectType);
   this.supportsPropertyListeners=checkPropertyListenerSupport(clazz);
   Traitable ttbl=cls.getAnnotation(Traitable.class);
   this.traitTmsEnabled=ttbl != null && ttbl.logical();
