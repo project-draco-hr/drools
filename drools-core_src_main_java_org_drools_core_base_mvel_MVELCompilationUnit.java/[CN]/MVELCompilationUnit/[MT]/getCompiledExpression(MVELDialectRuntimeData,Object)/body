@@ -1,0 +1,39 @@
+{
+  ParserConfiguration conf=runtimeData.getParserConfiguration();
+  final ParserContext parserContext=new ParserContext(conf,evaluationContext);
+  if (MVELDebugHandler.isDebugMode()) {
+    parserContext.setDebugSymbols(true);
+  }
+  parserContext.setStrictTypeEnforcement(strictMode);
+  parserContext.setStrongTyping(strictMode);
+  parserContext.setIndexAllocation(true);
+  if (INTERCEPTORS != null) {
+    parserContext.setInterceptors(INTERCEPTORS);
+  }
+  parserContext.addIndexedInput(inputIdentifiers);
+  String identifier=null;
+  String type=null;
+  try {
+    for (int i=0, length=inputIdentifiers.length; i < length; i++) {
+      identifier=inputIdentifiers[i];
+      type=inputTypes[i];
+      Class<?> cls=loadClass(runtimeData.getPackageClassLoader(),inputTypes[i]);
+      parserContext.addInput(inputIdentifiers[i],cls);
+    }
+  }
+ catch (  ClassNotFoundException e) {
+    throw new RuntimeException("Unable to resolve class '" + type + "' for identifier '"+ identifier);
+  }
+  parserContext.setSourceFile(name);
+  String[] varNames=parserContext.getIndexedVarNames();
+  ExecutableStatement stmt=(ExecutableStatement)compile(expression,runtimeData.getPackageClassLoader(),parserContext,languageLevel);
+  Set<String> localNames=parserContext.getVariables().keySet();
+  parserContext.addIndexedLocals(localNames);
+  String[] locals=localNames.toArray(new String[localNames.size()]);
+  String[] allVars=new String[varNames.length + locals.length];
+  System.arraycopy(varNames,0,allVars,0,varNames.length);
+  System.arraycopy(locals,0,allVars,varNames.length,locals.length);
+  this.varModel=new SimpleVariableSpaceModel(allVars);
+  this.allVarsLength=allVars.length;
+  return stmt;
+}
