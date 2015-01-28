@@ -1,20 +1,14 @@
 {
-  if (ksession != null && ((StatefulKnowledgeSessionImpl)ksession).isAlive()) {
-    return ksession;
-  }
   if (this.kagent != null) {
     this.kBase=(InternalKnowledgeBase)this.kagent.getKnowledgeBase();
   }
   this.kBase.readLock();
   try {
-    ksession=(StatefulKnowledgeSession)wmFactory.createWorkingMemory(this.kBase.nextWorkingMemoryCounter(),this.kBase,(SessionConfiguration)this.conf,this.environment);
+    StatefulKnowledgeSession ksession=(StatefulKnowledgeSession)wmFactory.createWorkingMemory(this.kBase.nextWorkingMemoryCounter(),this.kBase,(SessionConfiguration)this.conf,this.environment);
     StatefulKnowledgeSessionImpl ksessionImpl=(StatefulKnowledgeSessionImpl)ksession;
     ((Globals)ksessionImpl.getGlobalResolver()).setDelegate(this.sessionGlobals);
-    if (!initialized) {
-      registerSystemListeners(ksessionImpl);
-      registerCustomListeners();
-      initialized=true;
-    }
+    registerSystemListeners(ksessionImpl);
+    registerCustomListeners();
     ksessionImpl.setAgendaEventSupport(this.agendaEventSupport);
     ksessionImpl.setRuleRuntimeEventSupport(this.ruleRuntimeEventSupport);
     InternalProcessRuntime processRuntime=ksessionImpl.getProcessRuntime();
