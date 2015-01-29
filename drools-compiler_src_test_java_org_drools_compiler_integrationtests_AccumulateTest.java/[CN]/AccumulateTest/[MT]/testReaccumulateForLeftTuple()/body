@@ -1,0 +1,9 @@
+{
+  String drl1="import " + ExpectedMessage.class.getCanonicalName() + ";\n"+ "import "+ List.class.getCanonicalName()+ ";\n"+ "import "+ ExpectedMessageToRegister.class.getCanonicalName()+ ";\n"+ "\n\n"+ "rule \"Modify\"\n"+ " when\n"+ " $etr: ExpectedMessageToRegister(registered == false)"+ " then\n"+ " modify( $etr ) { setRegistered( true ) }"+ " end\n"+ "rule \"Collect\"\n"+ " salience 200 \n"+ " when\n"+ " etr: ExpectedMessageToRegister($type: type)"+ " $l : List( ) from collect( ExpectedMessage( type == $type ) from etr.expectedMessages )"+ " then\n"+ " java.lang.System.out.println( $l.size() );"+ " end\n";
+  KieSession ksession=new KieHelper().addContent(drl1,ResourceType.DRL).build().newKieSession();
+  ExpectedMessage psExpMsg1=new ExpectedMessage("Index");
+  ExpectedMessageToRegister etr1=new ExpectedMessageToRegister("Index");
+  etr1.msgs.add(psExpMsg1);
+  ksession.insert(etr1);
+  ksession.fireAllRules();
+}
