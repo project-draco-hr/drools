@@ -1,0 +1,16 @@
+{
+  String droolsSource="package org.drools.abductive.test; \n" + "" + "import " + Abducible.class.getName() + "; \n"+ "global java.util.List list; \n"+ ""+ "declare Foo \n"+ "   @Abducible \n"+ "   id : String @key \n"+ "   name : String @key \n"+ "   value : double \n"+ "   flag : boolean \n"+ "end \n"+ "query foo( String $name, double $val, String $x ) \n"+ "   @Abductive( target=Foo.class, args={ $x, $name } ) \n"+ "end \n"+ "rule R3 "+ "when "+ "   $f := foo( \"name_test\", 99.0, \"id_0\" ; ) "+ "then "+ "   list.add( $f ); "+ "end \n"+ ""+ "";
+  KieSession session=getSessionFromString(droolsSource);
+  List list=new ArrayList();
+  session.setGlobal("list",list);
+  session.fireAllRules();
+  FactType type=session.getKieBase().getFactType("org.drools.abductive.test","Foo");
+  for (  Object o : session.getObjects()) {
+    if (type.getFactClass().isInstance(o)) {
+      assertEquals("id_0",type.get(o,"id"));
+      assertEquals("name_test",type.get(o,"name"));
+      assertEquals(0.0,type.get(o,"value"));
+    }
+  }
+  System.err.println(list);
+}

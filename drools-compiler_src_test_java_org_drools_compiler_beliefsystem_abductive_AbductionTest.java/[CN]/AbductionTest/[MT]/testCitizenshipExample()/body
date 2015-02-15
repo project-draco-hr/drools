@@ -1,14 +1,21 @@
 {
-  String droolsSource="package org.drools.tms.test; \n" + "" + "declare entry-point \"neg\" end "+ "declare CitizenUS "+ "   name : String @key "+ "end "+ "declare Parent "+ "   parent : String @key "+ "   child : String @key "+ "end "+ "declare BornUS @Abducible name : String @key end "+ "declare BornOutsideUS @Abducible name : String @key end "+ "declare ResidentUS @Abducible name : String @key end "+ "declare NaturalizedUS @Abducible name : String @key end "+ "declare RegisteredUS @Abducible name : String @key end "+ "query extractCitizen( CitizenUS $cit ) "+ "   $cit := CitizenUS() "+ "end "+ "query citizen( String $name ) "+ "   @Abductive( target=CitizenUS.class ) "+ "   bornUS( $name ; ) "+ "   or "+ "   ( bornOutsideUS( $name ; ) and residentUS( $name ; ) and naturalizedUS( $name ; ) ) "+ "   or "+ "   ( bornOutsideUS( $name ; ) and Parent( $parent, $name ; ) and CitizenUS( $parent ; ) and registeredUS( $name ; ) ) "+ "end "+ "query bornUS( String $name ) @Abductive( target=BornUS.class ) end "+ "query bornOutsideUS( String $name ) @Abductive( target=BornOutsideUS.class ) end "+ "query residentUS( String $name ) @Abductive( target=ResidentUS.class ) end "+ "query naturalizedUS( String $name ) @Abductive( target=NaturalizedUS.class ) end "+ "query registeredUS( String $name ) @Abductive( target=RegisteredUS.class ) end "+ "rule Facts "+ "when "+ "then "+ "   insert( new CitizenUS( 'Mary' ) ); "+ "   insert( new Parent( 'Mary', 'John' ) ); "+ "   insertLogical( new ResidentUS( 'John' ), 'neg' ); "+ "end "+ "rule CheckCitizen "+ "when "+ "   $cit : ?citizen( 'John' ; ) "+ "then "+ "   System.out.println( 'John is a citizen ' + $cit ); "+ "end "+ "";
+  String droolsSource="package org.drools.abductive.test; \n" + "" + "declare CitizenUS "+ "   name : String @key "+ "end "+ "declare Parent "+ "   parent : String @key "+ "   child : String @key "+ "end "+ "declare BornUS @Abducible name : String @key end "+ "declare BornOutsideUS @Abducible name : String @key end "+ "declare ResidentUS @Abducible name : String @key end "+ "declare NaturalizedUS @Abducible name : String @key end "+ "declare RegisteredUS @Abducible name : String @key end "+ "query extractCitizen( CitizenUS $cit ) "+ "   $cit := CitizenUS() "+ "end "+ "query citizen( String $name ) "+ "   @Abductive( target=CitizenUS.class ) "+ "   bornUS( $name ; ) "+ "   or "+ "   ( bornOutsideUS( $name ; ) and residentUS( $name ; ) and naturalizedUS( $name ; ) ) "+ "   or "+ "   ( bornOutsideUS( $name ; ) and Parent( $parent, $name ; ) and CitizenUS( $parent ; ) and registeredUS( $name ; ) ) "+ "end "+ "query bornUS( String $name ) @Abductive( target=BornUS.class ) end "+ "query bornOutsideUS( String $name ) @Abductive( target=BornOutsideUS.class ) end "+ "query residentUS( String $name ) @Abductive( target=ResidentUS.class ) end "+ "query naturalizedUS( String $name ) @Abductive( target=NaturalizedUS.class ) end "+ "query registeredUS( String $name ) @Abductive( target=RegisteredUS.class ) end "+ "rule Facts "+ "when "+ "then "+ "   insert( new CitizenUS( 'Mary' ) ); "+ "   insert( new Parent( 'Mary', 'John' ) ); "+ "   insertLogical( new ResidentUS( 'John' ), 'neg' ); "+ "end "+ "rule CheckCitizen "+ "when "+ "   $cit : ?citizen( 'John' ; ) "+ "then "+ "   System.out.println( 'John is a citizen ' + $cit ); "+ "end "+ "";
   KieSession session=getSessionFromString(droolsSource);
   session.fireAllRules();
+  FactType type=session.getKieBase().getFactType("org.drools.abductive.test","CitizenUS");
   for (  Object o : session.getObjects()) {
     System.out.println(">>> " + o);
-    if (o.getClass().equals(session.getKieBase().getFactType("org.drools.tms.test","CitizenUS"))) {
+    if (o.getClass().equals(type.getFactClass())) {
       InternalFactHandle h=(InternalFactHandle)session.getFactHandle(o);
-      BeliefSet bs=h.getEqualityKey().getBeliefSet();
-      assertTrue(bs.isPositive());
-      assertEquals(2,bs.size());
+      String name=(String)type.get(o,"name");
+      if ("Mary".equals(name)) {
+        assertNull(h.getEqualityKey().getBeliefSet());
+      }
+ else       if ("John".equals(name)) {
+        BeliefSet bs=h.getEqualityKey().getBeliefSet();
+        assertTrue(bs.isPositive());
+        assertEquals(2,bs.size());
+      }
     }
   }
 }
