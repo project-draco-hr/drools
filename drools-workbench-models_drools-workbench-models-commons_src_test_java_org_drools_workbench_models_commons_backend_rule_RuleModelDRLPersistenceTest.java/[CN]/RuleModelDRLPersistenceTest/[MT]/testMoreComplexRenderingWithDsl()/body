@@ -1,13 +1,13 @@
 {
   final RuleModel m=getComplexModel(true);
   String expected="rule \"Complex Rule\"\n" + "no-loop true\n" + "salience -10\n"+ "agenda-group \"aGroup\"\n"+ "dialect \"mvel\"\n"+ "when\n"+ "  >p1 : Person( f1 : age < 42 )\n"+ "  >not (Cancel( )) \n"+ "then\n"+ "  >modify( p1 ) {\n"+ "    >setStatus( \"rejected\" ),\n"+ "    >setName( \"Fred\" )\n"+ "  >}\n"+ "  >retract( p1 );\n"+ "Send an email to administrator\n"+ "end\n";
-  checkMarshallUnmarshallUsingDsl(expected,m);
+  checkMarshallingUsingDsl(expected,m);
   String drl=ruleModelPersistence.marshal(m);
   assertEqualsIgnoreWhitespace(expected,drl);
   String dslFile="[then]Send an email to {administrator}=sendMailTo({administrator});";
-  RuleModel unmarshalledModel=ruleModelPersistence.unmarshalUsingDSL(drl,null,dmo,dslFile);
+  RuleModel unmarshalledModel=ruleModelPersistence.unmarshalUsingDSL(drl,null,mock(PackageDataModelOracle.class),dslFile);
   IAction[] actions=unmarshalledModel.rhs;
   DSLSentence dslSentence=(DSLSentence)actions[actions.length - 1];
   assertEquals("Send an email to {administrator}",dslSentence.getDefinition());
-  checkMarshallUnmarshallUsingDsl(expected,unmarshalledModel);
+  checkMarshallingUsingDsl(expected,unmarshalledModel);
 }
