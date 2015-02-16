@@ -1,18 +1,12 @@
 {
-  final Rete source=ep.getKnowledgeBase().getRete();
-  final ClassObjectType cot=new ClassObjectType(object.getClass());
-  final Map<ObjectType,ObjectTypeNode> map=source.getObjectTypeNodes(ep.entryPoint);
-  final ObjectTypeNode node=map.get(cot);
-  if (node != null) {
-    Iterator<InternalFactHandle> it=((ObjectTypeNodeMemory)ep.getInternalWorkingMemory().getNodeMemory(node)).iterator();
-    while (it.hasNext()) {
-      InternalFactHandle handle=it.next();
-      if (handle != null && handle.getEqualityKey() == null) {
-        EqualityKey key=new EqualityKey(handle);
-        handle.setEqualityKey(key);
-        key.setStatus(EqualityKey.STATED);
-        put(key);
-      }
+  Iterator<InternalFactHandle> it=((ClassAwareObjectStore)ep.getObjectStore()).iterateFactHandles(getActualClass(object));
+  while (it.hasNext()) {
+    InternalFactHandle handle=it.next();
+    if (handle != null && handle.getEqualityKey() == null) {
+      EqualityKey key=new EqualityKey(handle);
+      handle.setEqualityKey(key);
+      key.setStatus(EqualityKey.STATED);
+      put(key);
     }
   }
   conf.enableTMS();
