@@ -1,0 +1,19 @@
+{
+  String str="import java.util.Collection\n" + "rule R1 when\n" + "    Collection(empty==false) from collect( Integer() )\n"+ "    Collection() from collect( String() )\n"+ "then\n"+ "end\n"+ "rule R2 when then end\n";
+  KieBase kbase=new KieHelper().addContent(str,ResourceType.DRL).build();
+  KieSession ksession=kbase.newKieSession();
+  try {
+    Marshaller marshaller=MarshallerFactory.newMarshaller(kbase);
+    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+    marshaller.marshall(baos,ksession);
+    marshaller=MarshallerFactory.newMarshaller(kbase);
+    ByteArrayInputStream bais=new ByteArrayInputStream(baos.toByteArray());
+    baos.close();
+    ksession=marshaller.unmarshall(bais);
+    bais.close();
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail("unexpected exception :" + e.getMessage());
+  }
+}
