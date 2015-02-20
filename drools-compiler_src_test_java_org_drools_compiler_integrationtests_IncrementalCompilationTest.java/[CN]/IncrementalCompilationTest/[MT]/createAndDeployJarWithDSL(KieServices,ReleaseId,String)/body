@@ -1,0 +1,20 @@
+{
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.generateAndWritePomXML(releaseId);
+  for (int i=0; i < drls.length; i++) {
+    String extension=i == 0 ? "dsl" : "rdslr";
+    if (drls[i] != null) {
+      kfs.write("src/main/resources/r" + i + "."+ extension,drls[i]);
+    }
+  }
+  KieBuilder kb=ks.newKieBuilder(kfs).buildAll();
+  if (kb.getResults().hasMessages(org.kie.api.builder.Message.Level.ERROR)) {
+    for (    org.kie.api.builder.Message result : kb.getResults().getMessages()) {
+      System.out.println(result.getText());
+    }
+    return null;
+  }
+  InternalKieModule kieModule=(InternalKieModule)ks.getRepository().getKieModule(releaseId);
+  byte[] jar=kieModule.getBytes();
+  return deployJar(ks,jar);
+}
