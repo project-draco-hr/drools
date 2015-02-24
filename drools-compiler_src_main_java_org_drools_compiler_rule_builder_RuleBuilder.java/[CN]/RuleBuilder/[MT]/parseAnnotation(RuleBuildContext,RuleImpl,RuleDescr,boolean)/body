@@ -8,16 +8,20 @@
       rule.setEager(true);
     }
  else {
-      Eager eager=ruleDescr.getTypedAnnotation(Eager.class);
-      if (eager != null) {
-        rule.setEager(eager.value());
+      Propagation propagation=ruleDescr.getTypedAnnotation(Propagation.class);
+      if (propagation != null) {
+        if (propagation.value() == Propagation.Type.IMMEDIATE) {
+          rule.setDataDriven(true);
+        }
+ else         if (propagation.value() == Propagation.Type.EAGER) {
+          rule.setEager(true);
+        }
       }
     }
     Direct direct=ruleDescr.getTypedAnnotation(Direct.class);
     if (direct != null && direct.value()) {
       rule.setActivationListener("direct");
     }
-    rule.setDataDriven(ruleDescr.hasAnnotation(DataDriven.class));
     rule.setAllMatches(ruleDescr.hasAnnotation(All.class));
   }
  catch (  Exception e) {
