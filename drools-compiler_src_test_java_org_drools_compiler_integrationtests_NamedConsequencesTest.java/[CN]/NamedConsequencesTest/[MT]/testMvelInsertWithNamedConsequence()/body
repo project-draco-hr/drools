@@ -1,0 +1,12 @@
+{
+  String drl2="package org.drools.compiler\n" + "global java.util.concurrent.atomic.AtomicInteger counter\n" + "declare Output\n"+ "    feedback: String\n"+ "end\n"+ "rule \"Move to next\" dialect \"mvel\"\n"+ "   when\n"+ "          $i: Integer()\n"+ "          if ($i == 1) break[nextStep1]\n"+ "   then\n"+ "           insert(new Output(\"defualt\"));\n"+ "   then[nextStep1]\n"+ "           insert(new Output(\"step 1\"));\n"+ "end\n"+ "\n"+ "rule \"Produce output\"\n"+ "    when\n"+ "        $output: Output()\n"+ "    then\n"+ "        System.out.println($output);\n"+ "        retract($output);"+ "        counter.incrementAndGet();\n"+ "end\n";
+  KieSession kSession=new KieHelper().addContent(drl2,ResourceType.DRL).build().newKieSession();
+  AtomicInteger counter=new AtomicInteger(0);
+  kSession.setGlobal("counter",counter);
+  FactHandle messageHandle=kSession.insert(1);
+  kSession.fireAllRules();
+  kSession.delete(messageHandle);
+  kSession.insert(2);
+  kSession.fireAllRules();
+  assertEquals(2,counter.get());
+}
