@@ -1,0 +1,38 @@
+{
+  if (object == null || !activation.isMatched()) {
+    return null;
+  }
+  InternalFactHandle handle=getFactHandleFromWM(object);
+  NamedEntryPoint ep=(NamedEntryPoint)workingMemory.getEntryPoint(EntryPointId.DEFAULT.getEntryPointId());
+  ObjectTypeConf otc=ep.getObjectTypeConfigurationRegistry().getObjectTypeConf(ep.getEntryPoint(),object);
+  Object mode=value;
+  BeliefSystem beliefSystem;
+  if (value == null) {
+    beliefSystem=workingMemory.getTruthMaintenanceSystem().getBeliefSystem();
+  }
+ else {
+    if (value instanceof Mode) {
+      Mode m=(Mode)value;
+      beliefSystem=(BeliefSystem)m.getBeliefSystem();
+    }
+ else {
+      beliefSystem=workingMemory.getTruthMaintenanceSystem().getBeliefSystem();
+      mode=value;
+    }
+  }
+  BeliefSet beliefSet=null;
+  if (handle == null) {
+    handle=workingMemory.getKnowledgeBase().getConfiguration().getComponentFactory().getFactHandleFactoryService().newFactHandle(object,otc,workingMemory,ep);
+  }
+  if (handle.getEqualityKey() == null) {
+    handle.setEqualityKey(new EqualityKey(handle,EqualityKey.STATED));
+  }
+ else {
+    beliefSet=handle.getEqualityKey().getBeliefSet();
+  }
+  if (beliefSet == null) {
+    beliefSet=beliefSystem.newBeliefSet(handle);
+    handle.getEqualityKey().setBeliefSet(beliefSet);
+  }
+  return beliefSystem.insert(beliefSystem.newLogicalDependency(activation,beliefSet,object,mode),beliefSet,activation.getPropagationContext(),otc).getFactHandle();
+}
