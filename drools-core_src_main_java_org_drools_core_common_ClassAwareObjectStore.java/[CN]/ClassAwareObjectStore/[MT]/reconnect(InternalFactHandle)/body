@@ -1,7 +1,23 @@
 {
-  SingleClassStore store=getClassStore(handle.getObjectClassName());
-  if (!store.isConcrete()) {
+  if (handle == null) {
     return null;
   }
-  return handle.isNegated() ? (InternalFactHandle)((ConcreteClassStore)store).getNegMap().get(handle) : (InternalFactHandle)((ConcreteClassStore)store).getIdentityMap().get(handle);
+  String handleClass=handle.getObjectClassName();
+  if (handleClass != null) {
+    SingleClassStore store=getClassStore(handleClass);
+    if (store == null || !store.isConcrete()) {
+      return null;
+    }
+    return handle.isNegated() ? (InternalFactHandle)((ConcreteClassStore)store).getNegMap().get(handle) : (InternalFactHandle)((ConcreteClassStore)store).getIdentityMap().get(handle);
+  }
+  if (isEqualityBehaviour) {
+    return (InternalFactHandle)equalityMap.get(handle);
+  }
+  for (  ConcreteClassStore stores : concreteStores) {
+    Object reconnectedHandle=stores.getAssertMap().get(handle);
+    if (reconnectedHandle != null) {
+      return (InternalFactHandle)reconnectedHandle;
+    }
+  }
+  return null;
 }
