@@ -5,21 +5,32 @@
   try {
     eachNotifier.fireTestStarted();
     if (ksessions == null || ksessions.values().isEmpty()) {
-      throw new NullKieSessionException("Unable to get a Session to run tests. Check the project for build errors.");
+      eachNotifier.addFailure(new NullKieSessionException("Unable to get a Session to run tests. Check the project for build errors."));
     }
  else {
       KieSession ksession=getKSession(scenario.getKSessions());
-      final ScenarioRunner runner=new ScenarioRunner(ksession,maxRuleFirings);
-      runner.run(scenario);
-      if (!scenario.wasSuccessful()) {
-        StringBuilder builder=new StringBuilder();
-        for (        String message : scenario.getFailureMessages()) {
-          builder.append(message).append("\n");
+      if (ksession == null) {
+        String ksessionName=getKSessionName(scenario.getKSessions());
+        if (ksessionName == null) {
+          eachNotifier.addFailure(new NullPointerException("Test scenario runner could not find the default knowledge session."));
         }
-        eachNotifier.addFailedAssumption(new AssumptionViolatedException(builder.toString()));
+ else {
+          eachNotifier.addFailure(new NullPointerException("Test scenario runner could not find a stateless knowledge session with the name \'" + ksessionName + "\'."));
+        }
       }
-      for (      FactHandle factHandle : ksession.getFactHandles()) {
-        ksession.delete(factHandle);
+ else {
+        final ScenarioRunner runner=new ScenarioRunner(ksession,maxRuleFirings);
+        runner.run(scenario);
+        if (!scenario.wasSuccessful()) {
+          StringBuilder builder=new StringBuilder();
+          for (          String message : scenario.getFailureMessages()) {
+            builder.append(message).append("\n");
+          }
+          eachNotifier.addFailedAssumption(new AssumptionViolatedException(builder.toString()));
+        }
+        for (        FactHandle factHandle : ksession.getFactHandles()) {
+          ksession.delete(factHandle);
+        }
       }
     }
   }
