@@ -1,24 +1,3 @@
 {
-  log.trace("TMSInsert {} {}",node.getObject(),node.getMode().getValue());
-  JTMSBeliefSet jtmsBeliefSet=(JTMSBeliefSet)beliefSet;
-  boolean wasEmpty=jtmsBeliefSet.isEmpty();
-  boolean wasNegated=jtmsBeliefSet.isNegated();
-  boolean wasDecided=jtmsBeliefSet.isDecided();
-  InternalFactHandle fh=jtmsBeliefSet.getFactHandle();
-  jtmsBeliefSet.add(node.getMode());
-  if (!wasEmpty && wasDecided && fh.isNegated() != beliefSet.isNegated()) {
-    ep.getObjectStore().removeHandle(fh);
-    fh.setNegated(beliefSet.isNegated());
-    ep.getObjectStore().addHandle(fh,fh.getObject());
-  }
- else {
-    fh.setNegated(beliefSet.isNegated());
-  }
-  if (wasEmpty && jtmsBeliefSet.isDecided()) {
-    ep.insert(jtmsBeliefSet.getFactHandle(),node.getObject(),node.getJustifier().getRule(),node.getJustifier(),typeConf,null);
-  }
- else {
-    processBeliefSet(node,context,jtmsBeliefSet,wasDecided,wasNegated,fh);
-  }
-  return beliefSet;
+  return insert(node.getMode(),node.getJustifier().getRule(),node.getJustifier(),node.getObject(),beliefSet,context,typeConf);
 }

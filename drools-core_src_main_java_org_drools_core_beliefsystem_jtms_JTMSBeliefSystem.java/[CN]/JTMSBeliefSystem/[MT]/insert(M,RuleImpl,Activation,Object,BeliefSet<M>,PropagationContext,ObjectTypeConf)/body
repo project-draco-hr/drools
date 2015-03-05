@@ -1,0 +1,26 @@
+{
+  if (log.isTraceEnabled()) {
+    log.trace("TMSInsert {} {}",payload,mode.getValue());
+  }
+  JTMSBeliefSet jtmsBeliefSet=(JTMSBeliefSet)beliefSet;
+  boolean wasEmpty=jtmsBeliefSet.isEmpty();
+  boolean wasNegated=jtmsBeliefSet.isNegated();
+  boolean wasDecided=jtmsBeliefSet.isDecided();
+  InternalFactHandle fh=jtmsBeliefSet.getFactHandle();
+  jtmsBeliefSet.add(mode);
+  if (!wasEmpty && wasDecided && fh.isNegated() != beliefSet.isNegated()) {
+    ep.getObjectStore().removeHandle(fh);
+    fh.setNegated(beliefSet.isNegated());
+    ep.getObjectStore().addHandle(fh,fh.getObject());
+  }
+ else {
+    fh.setNegated(beliefSet.isNegated());
+  }
+  if (wasEmpty && jtmsBeliefSet.isDecided()) {
+    ep.insert(jtmsBeliefSet.getFactHandle(),payload,rule,activation,typeConf,null);
+  }
+ else {
+    processBeliefSet(rule,activation,payload,context,jtmsBeliefSet,wasDecided,wasNegated,fh);
+  }
+  return beliefSet;
+}
