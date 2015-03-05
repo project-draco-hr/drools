@@ -1,0 +1,18 @@
+{
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.generateAndWritePomXML(releaseId);
+  KieModuleModel module=ks.newKieModuleModel();
+  KieBaseModel defaultBase=module.newKieBaseModel("kBase1");
+  defaultBase.setEventProcessingMode(EventProcessingOption.STREAM).setDefault(true);
+  defaultBase.newKieSessionModel("defaultKSession").setDefault(true);
+  kfs.writeKModuleXML(module.toXML());
+  for (int i=0; i < drls.length; i++) {
+    kfs.write("src/main/resources/rules" + i + ".drl",drls[i]);
+  }
+  KieBuilder kb=ks.newKieBuilder(kfs);
+  kb.buildAll();
+  if (kb.getResults().hasMessages(org.kie.api.builder.Message.Level.ERROR)) {
+    System.out.println(kb.getResults().toString());
+  }
+  return kb.getKieModule();
+}

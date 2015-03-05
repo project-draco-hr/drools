@@ -19,6 +19,15 @@
           rightTuple.unlinkFromRightParent();
           rightTuple=next;
         }
+        if (bn.isStreamMode()) {
+          TupleEntryQueue queue=bm.getSegmentMemory().getStreamQueue().takeAllForFlushing();
+          while (!queue.isEmpty()) {
+            RightTuple rightTuple=queue.remove().getRightTuple();
+            if (rightTuple != null) {
+              rightTuple.unlinkFromRightParent();
+            }
+          }
+        }
         RightTupleSets srcRightTuples=bm.getStagedRightTuples().takeAll();
         unlinkRightTuples(srcRightTuples.getInsertFirst());
         unlinkRightTuples(srcRightTuples.getUpdateFirst());
