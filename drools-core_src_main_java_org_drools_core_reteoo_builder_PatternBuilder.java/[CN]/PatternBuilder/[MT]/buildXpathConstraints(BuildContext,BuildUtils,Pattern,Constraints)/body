@@ -6,13 +6,18 @@
     buildJoinNode(context,utils);
     context.setBetaconstraints(xpathConstraints);
     context.setAlphaConstraints(null);
-    ReteooComponentBuilder builder=utils.getBuilderFor(From.class);
+    ReteooComponentBuilder builder=utils.getBuilderFor(ReactiveFromNode.class);
     for (    XpathConstraint xpathConstraint : constraints.xpathConstraints) {
-      context.incrementCurrentPatternOffset();
+      for (      XpathConstraint.XpathChunk chunk : xpathConstraint.getChunks()) {
+        builder.build(context,utils,chunk.asFrom());
+        context.incrementCurrentPatternOffset();
+      }
       Declaration declaration=xpathConstraint.getDeclaration();
       Pattern clonedPattern=new Pattern(pattern.getIndex(),context.getCurrentPatternOffset(),new ClassObjectType(xpathConstraint.getResultClass()),declaration.getIdentifier(),declaration.isInternalFact());
       declaration.setPattern(clonedPattern);
-      builder.build(context,utils,xpathConstraint.asFrom());
     }
+    context.setAlphaConstraints(null);
+    context.setBetaconstraints(null);
+    context.popRuleComponent();
   }
 }

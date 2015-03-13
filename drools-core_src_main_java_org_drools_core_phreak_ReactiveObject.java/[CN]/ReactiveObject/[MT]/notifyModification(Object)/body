@@ -1,0 +1,12 @@
+{
+  for (LeftTuple leftTuple=lts.getFirst(); leftTuple != null; leftTuple=(LeftTuple)leftTuple.getNext()) {
+    PropagationContext propagationContext=leftTuple.getPropagationContext();
+    ReactiveFromNode node=(ReactiveFromNode)leftTuple.getSink();
+    LeftTupleSinkNode sink=node.getSinkPropagator().getFirstLeftTupleSink();
+    InternalWorkingMemory wm=getInternalWorkingMemory(propagationContext);
+    ReactiveFromNode.ReactiveFromMemory mem=(ReactiveFromNode.ReactiveFromMemory)wm.getNodeMemory(node);
+    RightTuple rightTuple=node.createRightTuple(leftTuple,propagationContext,wm,object);
+    checkConstraintsAndPropagate(sink,leftTuple,rightTuple,node.getAlphaConstraints(),node.getBetaConstraints(),propagationContext,wm,mem,mem.getBetaMemory().getContext(),RuleNetworkEvaluator.useLeftMemory(node,leftTuple),mem.getStagedLeftTuples(),null);
+    mem.getBetaMemory().setNodeDirty(wm);
+  }
+}
