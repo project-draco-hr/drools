@@ -1,0 +1,21 @@
+{
+  long[] result=new long[2];
+  KieSession ksession=kbase.newKieSession();
+  List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  List<Man> model=generateModel(n);
+  List<Child> toBeModified=getChildToBeModified(model);
+  long start=System.nanoTime();
+  insertModel(ksession,model);
+  ksession.fireAllRules();
+  result[0]=System.nanoTime() - start;
+  list.clear();
+  start=System.nanoTime();
+  for (  Child child : toBeModified) {
+    child.setAge(11);
+  }
+  ksession.fireAllRules();
+  result[1]=System.nanoTime() - start;
+  assertEquals(n,list.size());
+  return result;
+}
