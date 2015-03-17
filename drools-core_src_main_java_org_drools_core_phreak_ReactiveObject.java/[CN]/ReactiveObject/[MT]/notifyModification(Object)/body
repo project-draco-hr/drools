@@ -6,7 +6,10 @@
     InternalWorkingMemory wm=getInternalWorkingMemory(propagationContext);
     ReactiveFromNode.ReactiveFromMemory mem=(ReactiveFromNode.ReactiveFromMemory)wm.getNodeMemory(node);
     RightTuple rightTuple=node.createRightTuple(leftTuple,propagationContext,wm,object);
-    checkConstraintsAndPropagate(sink,leftTuple,rightTuple,node.getAlphaConstraints(),node.getBetaConstraints(),propagationContext,wm,mem,mem.getBetaMemory().getContext(),RuleNetworkEvaluator.useLeftMemory(node,leftTuple),mem.getStagedLeftTuples(),null);
+    ContextEntry[] context=mem.getBetaMemory().getContext();
+    BetaConstraints betaConstraints=node.getBetaConstraints();
+    betaConstraints.updateFromTuple(context,wm,leftTuple);
+    checkConstraintsAndPropagate(sink,leftTuple,rightTuple,node.getAlphaConstraints(),betaConstraints,propagationContext,wm,mem,context,RuleNetworkEvaluator.useLeftMemory(node,leftTuple),mem.getStagedLeftTuples(),null);
     mem.getBetaMemory().setNodeDirty(wm);
   }
 }
