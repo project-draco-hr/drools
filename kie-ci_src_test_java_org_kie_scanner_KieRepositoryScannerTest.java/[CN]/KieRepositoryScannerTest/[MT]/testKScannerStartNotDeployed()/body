@@ -1,0 +1,12 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId releaseId=ks.newReleaseId("org.kie","scanner-start-not-deployed-test","1.0-SNAPSHOT");
+  InternalKieModule kJar1=createKieJar(ks,releaseId,"rule1","rule2");
+  KieContainer kieContainer=ks.newKieContainer(releaseId);
+  KieScanner scanner=ks.newKieScanner(kieContainer);
+  scanner.scanNow();
+  MavenRepository repository=getMavenRepository();
+  repository.deployArtifact(releaseId,kJar1,kPom);
+  KieSession ksession=kieContainer.newKieSession("KSession1");
+  checkKSession(ksession,"rule1","rule2");
+}
