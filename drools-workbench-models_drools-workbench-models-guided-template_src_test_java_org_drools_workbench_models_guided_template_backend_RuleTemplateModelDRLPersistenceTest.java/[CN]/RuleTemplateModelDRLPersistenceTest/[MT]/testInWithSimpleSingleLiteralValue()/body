@@ -1,0 +1,20 @@
+{
+  TemplateModel m=new TemplateModel();
+  m.name="t1";
+  FactPattern p=new FactPattern("Person");
+  SingleFieldConstraint con=new SingleFieldConstraint();
+  con.setFieldType(DataType.TYPE_STRING);
+  con.setFieldName("field1");
+  con.setOperator("in");
+  con.setValue("$f1");
+  con.setConstraintValueType(SingleFieldConstraint.TYPE_TEMPLATE);
+  p.addConstraint(con);
+  m.addLhsItem(p);
+  m.addRow(new String[]{"ak1,mk1"});
+  m.addRow(new String[]{"(ak2,mk2)"});
+  m.addRow(new String[]{"( ak3, mk3 )"});
+  m.addRow(new String[]{"( \"ak4\", \"mk4\" )"});
+  m.addRow(new String[]{"( \"ak5 \", \" mk5\" )"});
+  String expected="rule \"t1_4\"" + "dialect \"mvel\"\n" + "when \n"+ "  Person( field1 in (\"ak5 \",\" mk5\") )"+ "then \n"+ "end"+ "rule \"t1_3\""+ "dialect \"mvel\"\n"+ "when \n"+ "  Person( field1 in (\"ak4\",\"mk4\") )"+ "then \n"+ "end"+ "rule \"t1_2\""+ "dialect \"mvel\"\n"+ "when \n"+ "  Person( field1 in (\"ak3\",\"mk3\") )"+ "then \n"+ "end"+ "rule \"t1_1\""+ "dialect \"mvel\"\n"+ "when \n"+ "  Person( field1 in (\"ak2\",\"mk2\") )"+ "then \n"+ "end"+ "rule \"t1_0\""+ "dialect \"mvel\"\n"+ "when \n"+ "  Person( field1 in (\"ak1\",\"mk1\") )"+ "then \n"+ "end";
+  checkMarshall(expected,m);
+}
