@@ -1,6 +1,5 @@
 {
-  KnowledgeBase kbase=loadKnowledgeBase(fileName);
-  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  KieSession ksession=getKieSessionFromResources(fileName);
   AgendaEventListener ael=mock(AgendaEventListener.class);
   ksession.addEventListener(ael);
   final Cheese[] cheese=new Cheese[]{new Cheese("stilton",10),new Cheese("stilton",3),new Cheese("stilton",5),new Cheese("brie",15),new Cheese("brie",17),new Cheese("provolone",8)};
@@ -37,7 +36,7 @@
   assertThat(((Number)activation.getDeclarationValue("$min")).intValue(),is(15));
   assertThat(((Number)activation.getDeclarationValue("$avg")).intValue(),is(16));
   Mockito.reset(ael);
-  ksession.retract(cheeseHandles[3]);
+  ksession.delete(cheeseHandles[3]);
   ksession.fireAllRules();
   Mockito.verify(ael).afterMatchFired(cap.capture());
   activation=cap.getValue().getMatch();
