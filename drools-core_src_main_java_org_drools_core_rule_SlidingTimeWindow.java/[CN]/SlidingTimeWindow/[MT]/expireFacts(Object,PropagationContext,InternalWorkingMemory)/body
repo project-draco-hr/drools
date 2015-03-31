@@ -1,0 +1,21 @@
+{
+  TimerService clock=workingMemory.getTimerService();
+  long currentTime=clock.getCurrentTime();
+  SlidingTimeWindowContext queue=(SlidingTimeWindowContext)context;
+synchronized (queue.queue) {
+    EventFactHandle handle=queue.queue.peek();
+    while (handle != null && isExpired(currentTime,handle)) {
+      queue.expiringHandle=handle;
+      queue.queue.remove();
+      if (handle.isValid()) {
+        PropagationContextFactory pctxFactory=workingMemory.getKnowledgeBase().getConfiguration().getComponentFactory().getPropagationContextFactory();
+        final PropagationContext expiresPctx=pctxFactory.createPropagationContext(workingMemory.getNextPropagationIdCounter(),PropagationContext.EXPIRATION,null,null,handle);
+        ObjectTypeNode.doRetractObject(handle,expiresPctx,workingMemory);
+        expiresPctx.evaluateActionQueue(workingMemory);
+      }
+      queue.expiringHandle=null;
+      handle=queue.queue.peek();
+    }
+    updateNextExpiration(handle,pctx,workingMemory,queue,nodeId);
+  }
+}

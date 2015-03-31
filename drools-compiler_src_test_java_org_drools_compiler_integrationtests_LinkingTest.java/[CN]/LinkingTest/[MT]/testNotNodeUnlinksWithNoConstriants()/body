@@ -24,7 +24,7 @@
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
   kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
   ObjectTypeNode aotn=getObjectTypeNode(kbase,A.class);
-  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession());
+  InternalWorkingMemory wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession());
   List list=new ArrayList();
   wm.setGlobal("list",list);
   LeftInputAdapterNode aNode=(LeftInputAdapterNode)aotn.getSinkPropagator().getSinks()[0];
@@ -40,6 +40,7 @@
   assertEquals(0,list.size());
   assertEquals(5,amem.getSegmentMemory().getLinkedNodeMask());
   wm.retract(fhb);
+  wm.flushPropagations();
   assertEquals(7,amem.getSegmentMemory().getLinkedNodeMask());
   wm.fireAllRules();
   assertEquals(1,list.size());
@@ -54,6 +55,7 @@
   for (  FactHandle fh : handles) {
     wm.retract(fh);
   }
+  wm.flushPropagations();
   assertEquals(7,amem.getSegmentMemory().getLinkedNodeMask());
   wm.fireAllRules();
   assertEquals(1,list.size());

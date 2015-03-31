@@ -1,0 +1,24 @@
+{
+  String drl="package test " + "import " + Entity.class.getName() + ";"+ "global java.util.List list; "+ "declare trait A @propertyReactive value : int end "+ "rule Trait when "+ "    $core: Entity( ) "+ "then "+ "    A o = don( $core, A.class ); "+ "    System.out.println( 'Found ! ' + o ); "+ "end "+ "rule Test when "+ "   $x: A( value == 0 ) "+ "then "+ "   list.add( 0 ); "+ "end "+ "rule Check when "+ "   $x: A( value == 42 ) "+ "then "+ "   list.add( 42 ); "+ "end "+ "rule Mood when "+ "  $x : A( value != 42 ) "+ "then "+ "  modify ( $x ) { setValue( 42 ); } "+ "end ";
+  final KnowledgeBase kbase=getKieBaseFromString(drl);
+  TraitFactory.setMode(mode,kbase);
+  StatefulKnowledgeSession ksession=kbase.newStatefulKnowledgeSession();
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.insert(new Entity());
+  ksession.fireAllRules();
+  for (  final Object o : ksession.getObjects(new ObjectFilter(){
+    @Override public boolean accept(    Object object){
+      return object.getClass().getName().contains("test.A");
+    }
+  }
+)) {
+    InternalFactHandle handle=(InternalFactHandle)ksession.getFactHandle(o);
+    LeftTuple first=handle.getFirstLeftTuple();
+    LeftTuple last=handle.getLastLeftTuple();
+    assertSame(first,last);
+    assertTrue(first instanceof RuleTerminalNodeLeftTuple);
+    assertEquals("Check",((RuleTerminalNodeLeftTuple)first).getRule().getName());
+  }
+  assertEquals(Arrays.asList(0,42),list);
+}

@@ -4,31 +4,30 @@
   Collection<Thing> mostSpecificTraits=inner.getMostSpecificTraits();
   boolean newTraitsAdded=false;
   T firstThing=null;
-  Map<Thing,BitSet> things=new HashMap<Thing,BitSet>(traits.size());
+  List<Thing> things=new ArrayList<Thing>(traits.size());
   checkStaticTypeCode(inner);
   for (  Class<?> trait : traits) {
     boolean needsProxy=trait.isAssignableFrom(inner.getClass());
     boolean hasTrait=inner.hasTrait(trait.getName());
     boolean needsUpdate=needsProxy || core != inner;
     if (!hasTrait) {
-      BitSet boundary=inner.getCurrentTypeCode() != null ? (BitSet)inner.getCurrentTypeCode().clone() : null;
       T thing=(T)asTrait(core,inner,trait,needsProxy,hasTrait,needsUpdate,builder,logical,activation);
       configureTrait(thing,value);
-      things.put((Thing)thing,boundary);
+      things.add((Thing)thing);
       if (!newTraitsAdded && trait != Thing.class) {
         firstThing=thing;
         newTraitsAdded=true;
       }
     }
   }
-  for (  Thing t : things.keySet()) {
-    doInsertTrait(activation,t,core,logical,things.get(t),modes);
+  for (  Thing t : things) {
+    doInsertTrait(activation,t,core,logical,modes);
   }
   if (newTraitsAdded) {
     if (mostSpecificTraits != null) {
       updateCore(inner,core,null,logical,activation);
       if (!mostSpecificTraits.isEmpty()) {
-        updateManyTraits(inner,onlyTraitBitSetMask(),things.keySet(),core.getClass(),null,mostSpecificTraits,activation);
+        updateManyTraits(inner,onlyTraitBitSetMask(),things,core.getClass(),mostSpecificTraits,activation);
       }
     }
   }

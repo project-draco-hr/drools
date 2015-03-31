@@ -2,17 +2,12 @@
   final BetaMemory memory=(BetaMemory)getBetaMemoryFromRightInput(this,wm);
   RightTuple rightTuple=createRightTuple(factHandle,this,pctx);
   rightTuple.setPropagationContext(pctx);
-  boolean stagedInsertWasEmpty=false;
-  if (streamMode) {
-    stagedInsertWasEmpty=memory.getSegmentMemory().getStreamQueue().addInsert(new RightTupleEntry(rightTuple,pctx,memory,pctx.getType()));
-  }
- else {
-    stagedInsertWasEmpty=memory.getStagedRightTuples().addInsert(rightTuple);
-  }
+  boolean stagedInsertWasEmpty=memory.getStagedRightTuples().addInsert(rightTuple);
   if (memory.getAndIncCounter() == 0 && isEmptyBetaConstraints()) {
     memory.linkNode(wm);
   }
  else   if (stagedInsertWasEmpty) {
     memory.setNodeDirty(wm);
   }
+  flushLeftTupleIfNecessary(wm,memory.getSegmentMemory());
 }

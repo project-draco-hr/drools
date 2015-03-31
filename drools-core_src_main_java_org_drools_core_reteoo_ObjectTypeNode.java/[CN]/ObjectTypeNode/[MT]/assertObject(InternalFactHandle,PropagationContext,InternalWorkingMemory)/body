@@ -1,16 +1,9 @@
 {
-  if (dirty) {
-    resetIdGenerator();
-    updateTupleSinkId(this,this);
-    dirty=false;
-  }
-  if (compiledNetwork != null) {
-    compiledNetwork.assertObject(factHandle,context,workingMemory);
-  }
- else {
-    this.sink.propagateAssertObject(factHandle,context,workingMemory);
+  checkDirty();
+  if (!workingMemory.getSessionConfiguration().isThreadSafe()) {
+    propagateAssert(factHandle,context,workingMemory);
   }
   if (context.getReaderContext() == null && this.objectType.isEvent() && this.expirationOffset >= 0 && this.expirationOffset != Long.MAX_VALUE) {
-    scheduleExpiration(context,workingMemory,factHandle,expirationOffset,new WorkingMemoryReteExpireAction(factHandle,this));
+    scheduleExpiration(context,workingMemory,factHandle,expirationOffset,new WorkingMemoryReteExpireAction((EventFactHandle)factHandle,this));
   }
 }

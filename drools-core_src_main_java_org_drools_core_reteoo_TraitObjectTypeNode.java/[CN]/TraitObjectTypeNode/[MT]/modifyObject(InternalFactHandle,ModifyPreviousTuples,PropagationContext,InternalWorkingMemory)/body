@@ -1,4 +1,7 @@
 {
+  if (!isModifyAllowed(factHandle)) {
+    return;
+  }
   if (dirty) {
     resetIdGenerator();
     updateTupleSinkId(this,this);
@@ -9,19 +12,11 @@
     compiledNetwork.modifyObject(factHandle,modifyPreviousTuples,context.adaptModificationMaskForObjectType(objectType,workingMemory),workingMemory);
   }
  else {
-    if (factHandle.getObject() instanceof TraitProxy) {
-      TraitProxy proxy=((TraitProxy)factHandle.getObject());
-      BitSet vetoMask=proxy.getTypeFilter();
-      if (vetoMask == null || typeMask.isEmpty() || !HierarchyEncoderImpl.supersetOrEqualset(vetoMask,this.typeMask)) {
-        if (context.getModificationMask().isSet(PropertySpecificUtil.TRAITABLE_BIT)) {
-          TraitableBean txBean=(TraitableBean)proxy.getObject();
-          TraitTypeMap tMap=(TraitTypeMap)txBean._getTraitMap();
-          Collection<Thing> x=tMap.immediateParents(this.typeMask);
-          Thing k=x.iterator().next();
+    if (factHandle.isTraiting()) {
+      if (isModifyAllowed(factHandle)) {
+        if (context.getModificationMask().isSet(PropertySpecificUtil.TRAITABLE_BIT) && modifyPreviousTuples.peekLeftTuple() != null && modifyPreviousTuples.peekLeftTuple().getPropagationContext().getType() == PropagationContext.INSERTION) {
           BitMask originalMask=context.getModificationMask();
-          if (!k.isTop()) {
-            context.setModificationMask(AllSetBitMask.get());
-          }
+          context.setModificationMask(AllSetBitMask.get());
           this.sink.propagateModifyObject(factHandle,modifyPreviousTuples,context.adaptModificationMaskForObjectType(objectType,workingMemory),workingMemory);
           context.setModificationMask(originalMask);
         }

@@ -1,5 +1,5 @@
 {
-  String drl="\n" + "import java.util.*;\n" + "import org.drools.compiler.integrationtests.CepEspTest.MyEvent; \n"+ ""+ "declare MyEvent\n"+ "    @role(event)\n"+ "    @timestamp(timestamp)\n"+ "end\n"+ "\n"+ ""+ "global java.util.List list; \n"+ ""+ "rule \"over 0.3s\"\n"+ "salience 1 \n"+ "    when\n"+ "        $list: List() from collect(MyEvent() over window:time(300ms))\n"+ "    then\n"+ "        System.out.println(\"Rule: with in 0.3s --> \" + $list);\n"+ "        list.add( $list.size() ); \n"+ "end\n"+ "\n"+ "rule \"over 1s\"\n"+ "salience 2 \n"+ "    when\n"+ "        $list: List() from collect(MyEvent() over window:time(1s))\n"+ "    then\n"+ "        System.out.println(\"Rule: with in 1s --> \" + $list);\n"+ "        list.add( $list.size() ); \n"+ "end\n"+ "\n"+ "rule \"over 3s\"\n"+ "salience 3 \n"+ "    when\n"+ "        $list: List() from collect(MyEvent() over window:time(3s))\n"+ "    then\n"+ "        System.out.println(\"Rule: with in 3s --> \" + $list);\n"+ "        list.add( $list.size() ); \n"+ "end\n"+ "\n"+ "rule \"over 0.3s ep\"\n"+ "salience 4 \n"+ "    when\n"+ "        $list: List() from collect(MyEvent() over window:time(300ms) from entry-point \"stream\")\n"+ "    then\n"+ "        System.out.println(\"Rule: with in 0.3s use ep --> \" + $list);\n"+ "        list.add( $list.size() ); \n"+ "end\n"+ "\n"+ "rule \"over 1s ep\"\n"+ "salience 5 \n"+ "    when\n"+ "        $list: List() from collect(MyEvent() over window:time(1s) from entry-point \"stream\")\n"+ "    then\n"+ "        System.out.println(\"Rule: with in 1s use ep --> \" + $list);\n"+ "        list.add( $list.size() ); \n"+ "end\n"+ "\n"+ "rule \"over 3s ep\"\n"+ "salience 6 \n"+ "    when\n"+ "        $list: List() from collect(MyEvent() over window:time(3s) from entry-point \"stream\")\n"+ "    then\n"+ "        System.out.println(\"Rule: with in 3s use ep --> \" + $list);\n"+ "        list.add( $list.size() ); \n"+ "end";
+  String drl="\n" + "import java.util.*;\n" + "import org.drools.compiler.integrationtests.CepEspTest.MyEvent; \n"+ ""+ "declare MyEvent\n"+ "    @role(event)\n"+ "    @timestamp(timestamp)\n"+ "end\n"+ "\n"+ ""+ "global java.util.List list; \n"+ ""+ "rule \"over 0.3s\"\n"+ "salience 1 \n"+ "    when\n"+ "        $list: List() from collect(MyEvent() over window:time(300ms))\n"+ "    then\n"+ "        System.out.println(\"Rule: with in 0.3s --> \" + $list);\n"+ "        list.add( 'r1:' + $list.size() ); \n"+ "end\n"+ "\n"+ "rule \"over 1s\"\n"+ "salience 2 \n"+ "    when\n"+ "        $list: List() from collect(MyEvent() over window:time(1s))\n"+ "    then\n"+ "        System.out.println(\"Rule: with in 1s --> \" + $list);\n"+ "        list.add( 'r2:' + $list.size() ); \n"+ "end\n"+ "\n"+ "rule \"over 3s\"\n"+ "salience 3 \n"+ "    when\n"+ "        $list: List() from collect(MyEvent() over window:time(3s))\n"+ "    then\n"+ "        System.out.println(\"Rule: with in 3s --> \" + $list);\n"+ "        list.add( 'r3:' + $list.size() ); \n"+ "end\n"+ "\n"+ "rule \"over 0.3s ep\"\n"+ "salience 4 \n"+ "    when\n"+ "        $list: List() from collect(MyEvent() over window:time(300ms) from entry-point \"stream\")\n"+ "    then\n"+ "        System.out.println(\"Rule: with in 0.3s use ep --> \" + $list);\n"+ "        list.add( 'r4:' + $list.size() ); \n"+ "end\n"+ "\n"+ "rule \"over 1s ep\"\n"+ "salience 5 \n"+ "    when\n"+ "        $list: List() from collect(MyEvent() over window:time(1s) from entry-point \"stream\")\n"+ "    then\n"+ "        System.out.println(\"Rule: with in 1s use ep --> \" + $list);\n"+ "        list.add( 'r5:' + $list.size() ); \n"+ "end\n"+ "\n"+ "rule \"over 3s ep\"\n"+ "salience 6 \n"+ "    when\n"+ "        $list: List() from collect(MyEvent() over window:time(3s) from entry-point \"stream\")\n"+ "    then\n"+ "        System.out.println(\"Rule: with in 3s use ep --> \" + $list);\n"+ "        list.add( 'r6:' + $list.size() ); \n"+ "end";
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
   kbuilder.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
   if (kbuilder.hasErrors()) {
@@ -27,15 +27,15 @@
     System.out.println(list);
 switch (j) {
 case 0:
-      assertEquals(Arrays.asList(1,1,0,1,1,0),list);
+      assertEquals(Arrays.asList("r6:1","r5:1","r3:1","r2:1"),list);
     break;
 case 1:
-  assertEquals(Arrays.asList(2,1,0,2,1,0),list);
+  assertEquals(Arrays.asList("r6:2","r5:1","r3:2","r2:1"),list);
 break;
 case 2:
 case 3:
 case 4:
-assertEquals(Arrays.asList(3,1,0,3,1,0),list);
+assertEquals(Arrays.asList("r6:3","r5:1","r3:3","r2:1"),list);
 break;
 default :
 fail();

@@ -1,18 +1,6 @@
 {
   RightTupleSets stagedRightTuples=memory.getStagedRightTuples();
-  boolean stagedDeleteWasEmpty=false;
-  if (isStreamMode()) {
-    PropagationContext pctx=rightTuple.getPropagationContext();
-    int propagationType=pctx.getType() == PropagationContext.MODIFICATION ? PropagationContext.DELETION : pctx.getType();
-    stagedDeleteWasEmpty=memory.getSegmentMemory().getStreamQueue().addDelete(new RightTupleEntry(rightTuple,pctx,memory,propagationType));
-    if (isLogTraceEnabled) {
-      log.trace("{} delete queue={} size={} pctx={} lt={}",getClass().getSimpleName(),System.identityHashCode(memory.getSegmentMemory().getStreamQueue()),memory.getSegmentMemory().getStreamQueue().size(),PhreakPropagationContext.intEnumToString(rightTuple.getPropagationContext()),rightTuple);
-    }
-    registerUnlinkedPaths(wm,memory.getSegmentMemory(),stagedDeleteWasEmpty);
-  }
- else {
-    stagedDeleteWasEmpty=stagedRightTuples.addDelete(rightTuple);
-  }
+  boolean stagedDeleteWasEmpty=stagedRightTuples.addDelete(rightTuple);
   if (memory.getAndDecCounter() == 1) {
     memory.unlinkNode(wm);
   }

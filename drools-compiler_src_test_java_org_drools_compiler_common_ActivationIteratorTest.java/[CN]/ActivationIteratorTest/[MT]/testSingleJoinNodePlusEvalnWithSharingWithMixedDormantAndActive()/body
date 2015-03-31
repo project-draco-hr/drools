@@ -1,13 +1,6 @@
 {
   String str="package org.kie.test \n" + "\n" + "rule rule1  salience ( Integer.parseInt( '1'+$s1+'0'+$s2 ) ) when\n"+ "    $s1 : String( )\n"+ "    $s2 : String( )\n"+ "    eval( 1 == 1 ) \n"+ "then\n"+ "end\n"+ "rule rule2 salience (1020 + Integer.parseInt( $s1 ) ) when\n"+ "    $s1 : String( )\n"+ "then\n"+ "    kcontext.getKieRuntime().halt();\n"+ "end\n"+ "rule rule3  salience ( Integer.parseInt( '1'+$s1+'1'+$s2  ) ) when\n"+ "    $s1 : String( )\n"+ "    $s2 : String( )\n"+ "    $s3 : String( )\n"+ "    eval( 1 == 1 ) \n"+ "then\n"+ "end\n"+ "\n";
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    fail(kbuilder.getErrors().toString());
-  }
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  KieSession ksession=new KieHelper().addContent(str,ResourceType.DRL).build().newKieSession();
   for (int i=0; i < 2; i++) {
     ksession.insert(new String("" + i));
   }

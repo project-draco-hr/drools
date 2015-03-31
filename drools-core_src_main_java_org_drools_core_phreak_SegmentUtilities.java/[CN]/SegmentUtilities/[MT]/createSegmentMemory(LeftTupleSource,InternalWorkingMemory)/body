@@ -19,10 +19,6 @@ synchronized (wm) {
     boolean updateNodeBit=true;
     while (true) {
       nodeTypesInSegment=updateNodeTypesMask(tupleSource,nodeTypesInSegment);
-      if (tupleSource.isStreamMode() && smem.getStreamQueue() == null) {
-        StreamTupleEntryQueue queue=initAndGetTupleQueue(tupleSource,wm);
-        smem.setStreamQueue(queue);
-      }
       if (NodeTypeEnums.isBetaNode(tupleSource)) {
         allLinkedTestMask=processBetaNode(tupleSource,wm,smem,nodePosMask,allLinkedTestMask,updateNodeBit);
       }
@@ -96,9 +92,6 @@ pathRoot=pathRoot.getLeftTupleSource();
 }
 smem.setSegmentPosMaskBit(ruleSegmentPosMask);
 smem.setPos(counter);
-if (smem.getRootNode().getType() != NodeTypeEnums.LeftInputAdapterNode && ((LeftTupleSource)smem.getRootNode()).getLeftTupleSource().getType() == NodeTypeEnums.LeftInputAdapterNode) {
-smem.setStagedTuples(new SynchronizedLeftTupleSets());
-}
 nodeTypesInSegment=updateRiaAndTerminalMemory(tupleSource,tupleSource,smem,wm,false,nodeTypesInSegment);
 ((KnowledgeBaseImpl)wm.getKnowledgeBase()).registerSegmentPrototype(segmentRoot,smem);
 return smem;

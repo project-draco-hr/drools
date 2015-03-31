@@ -1,0 +1,50 @@
+{
+  final int OBJECT_NR=1000000;
+  final int THREAD_NR=8;
+  Executor executor=Executors.newFixedThreadPool(THREAD_NR,new ThreadFactory(){
+    public Thread newThread(    Runnable r){
+      Thread t=new Thread(r);
+      t.setDaemon(true);
+      return t;
+    }
+  }
+);
+  long[] results=new long[10];
+  for (int counter=0; counter < results.length; ) {
+    final Checker checker=new Checker(THREAD_NR);
+    final PropagationList propagationList=new SynchronizedPropagationList();
+    CompletionService<Boolean> ecs=new ExecutorCompletionService<Boolean>(executor);
+    long start=System.nanoTime();
+    for (int i=0; i < THREAD_NR; i++) {
+      ecs.submit(getTask(OBJECT_NR,checker,propagationList,i));
+    }
+    try {
+      Thread.sleep(1L);
+    }
+ catch (    InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+    for (int i=0; i < THREAD_NR * 20; i++) {
+      propagationList.flush(null);
+      try {
+        Thread.sleep(1L);
+      }
+ catch (      InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    boolean success=true;
+    for (int i=0; i < THREAD_NR; i++) {
+      try {
+        success=ecs.take().get() && success;
+      }
+ catch (      Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+    propagationList.flush(null);
+    results[counter++]=System.nanoTime() - start;
+    System.out.println("Threads DONE!");
+  }
+  analyzeResults(results);
+}

@@ -1,0 +1,24 @@
+{
+  String source="package t.x  " + "import java.util.*;  " + "import org.drools.core.factmodel.traits.Thing  "+ "import org.drools.core.factmodel.traits.Traitable  "+ " "+ "global java.util.List list;  "+ " "+ ""+ "declare trait A @PropertyReactive end "+ "declare trait B extends A @PropertyReactive end "+ "declare trait C extends B @PropertyReactive end "+ "declare trait D extends A @PropertyReactive end "+ "declare trait E extends C, D @PropertyReactive end "+ "declare trait F extends E @PropertyReactive end "+ "declare trait G extends A @PropertyReactive end "+ ""+ "declare Kore "+ "   @Traitable "+ "end "+ ""+ "rule Init when "+ "then "+ "   Kore k = new Kore(); "+ "   don( k, C.class );  "+ "   don( k, D.class );  "+ "   don( k, B.class );  "+ "   don( k, A.class );  "+ "   don( k, F.class );  "+ "   don( k, E.class );  "+ "   don( k, G.class );  "+ "end ";
+  for (char c='A'; c <= 'G'; c++) {
+    String C="" + c;
+    source+="rule Rule" + C + " when "+ C+ "() then list.add( '"+ C+ "' ); end ";
+  }
+  source+="rule RuleAll " + "when  " + "   A() B() C() D() E() F() G() "+ "then  "+ "   list.add( 'Z' ); "+ "end "+ "";
+  StatefulKnowledgeSession ks=getSessionFromString(source);
+  TraitFactory.setMode(mode,ks.getKieBase());
+  List list=new ArrayList();
+  ks.setGlobal("list",list);
+  ks.fireAllRules();
+  System.out.println(list);
+  assertEquals(Arrays.asList('A','B','C','D','E','F','G','Z'),list);
+  for (  Object o : ks.getObjects(new ObjectFilter(){
+    @Override public boolean accept(    Object object){
+      return object instanceof TraitableBean;
+    }
+  }
+)) {
+    Set<BitSet> otns=checkOTNPartitioning((TraitableBean)o,ks);
+    assertEquals(7,otns.size());
+  }
+}

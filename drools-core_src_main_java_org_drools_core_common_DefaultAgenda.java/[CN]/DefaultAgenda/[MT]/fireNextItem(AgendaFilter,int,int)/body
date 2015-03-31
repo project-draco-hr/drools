@@ -17,14 +17,11 @@
           item=(RuleAgendaItem)group.peek();
         }
         if (item != null) {
-          if (streamMode) {
-            garbageCollector.remove(item);
-          }
           evaluateQueriesForRule(item);
           localFireCount=item.getRuleExecutor().evaluateNetworkAndFire(this.workingMemory,filter,fireCount,fireLimit);
           if (localFireCount == 0) {
             tryagain=true;
-            this.workingMemory.executeQueuedActions();
+            this.workingMemory.flushPropagations();
           }
         }
         if (group.peek() == null || !((AgendaItem)group.peek()).getTerminalNode().isFireDirect()) {

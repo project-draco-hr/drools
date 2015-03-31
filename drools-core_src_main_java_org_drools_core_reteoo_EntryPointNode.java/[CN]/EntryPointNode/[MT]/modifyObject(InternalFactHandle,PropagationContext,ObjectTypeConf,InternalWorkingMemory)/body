@@ -2,38 +2,10 @@
   if (log.isTraceEnabled()) {
     log.trace("Update {}",handle.toString());
   }
-  ObjectTypeNode[] cachedNodes=objectTypeConf.getObjectTypeNodes();
-  ModifyPreviousTuples modifyPreviousTuples=new ModifyPreviousTuples(handle.getFirstLeftTuple(),handle.getFirstRightTuple(),this);
-  handle.clearLeftTuples();
-  handle.clearRightTuples();
-  for (int i=0, length=cachedNodes.length; i < length; i++) {
-    cachedNodes[i].modifyObject(handle,modifyPreviousTuples,pctx,wm);
-    if (i < cachedNodes.length - 1) {
-      RightTuple rightTuple=modifyPreviousTuples.peekRightTuple();
-      while (rightTuple != null && ((BetaNode)rightTuple.getRightTupleSink()).getObjectTypeNode() == cachedNodes[i]) {
-        modifyPreviousTuples.removeRightTuple();
-        doRightDelete(pctx,wm,rightTuple);
-        rightTuple=modifyPreviousTuples.peekRightTuple();
-      }
-      LeftTuple leftTuple;
-      ObjectTypeNode otn;
-      while (true) {
-        leftTuple=modifyPreviousTuples.peekLeftTuple();
-        otn=null;
-        if (leftTuple != null) {
-          LeftTupleSink leftTupleSink=leftTuple.getLeftTupleSink();
-          if (leftTupleSink instanceof LeftTupleSource) {
-            otn=((LeftTupleSource)leftTupleSink).getLeftTupleSource().getObjectTypeNode();
-          }
- else           if (leftTupleSink instanceof RuleTerminalNode) {
-            otn=((RuleTerminalNode)leftTupleSink).getObjectTypeNode();
-          }
-        }
-        if (otn == null || otn == cachedNodes[i + 1])         break;
-        modifyPreviousTuples.removeLeftTuple();
-        doDeleteObject(pctx,wm,leftTuple);
-      }
-    }
+  if (workingMemory.getSessionConfiguration().isThreadSafe()) {
+    workingMemory.addPropagation(new PropagationEntry.Update(this,handle,pctx,objectTypeConf));
   }
-  modifyPreviousTuples.retractTuples(pctx,wm);
+ else {
+    propagateModify(handle,pctx,objectTypeConf,workingMemory);
+  }
 }

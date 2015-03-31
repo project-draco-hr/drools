@@ -9,7 +9,10 @@
   if (objectTypeConf.getConcreteObjectTypeNode() == null && context.getReaderContext() == null) {
     long expirationOffset=((ClassObjectTypeConf)objectTypeConf).getExpirationOffset();
     if (expirationOffset >= 0 && expirationOffset != Long.MAX_VALUE) {
-      scheduleExpiration(context,workingMemory,handle,expirationOffset,new StatefulKnowledgeSessionImpl.WorkingMemoryReteExpireAction(handle));
+      scheduleExpiration(context,workingMemory,handle,expirationOffset,new StatefulKnowledgeSessionImpl.WorkingMemoryReteExpireAction((EventFactHandle)handle));
     }
+  }
+  if (cachedNodes.length > 0 && workingMemory.getSessionConfiguration().isThreadSafe()) {
+    ((StatefulKnowledgeSessionImpl)workingMemory).addPropagation(new PropagationEntry.Insert(cachedNodes,handle,context));
   }
 }

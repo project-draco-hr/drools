@@ -1,8 +1,20 @@
 {
   boolean isSameType=typeMask.equals(proxy.getTypeCode());
   if (isSameType) {
-    Collection descs=((TraitTypeMap)proxy.getObject()._getTraitMap()).immediateChildren(typeMask);
-    return descs.size() <= 1;
+    TraitTypeMap<String,Thing<?>,?> ttm=(TraitTypeMap<String,Thing<?>,?>)proxy.getObject()._getTraitMap();
+    Collection<Thing<?>> descs=ttm.lowerDescendants(typeMask);
+    if (descs == null || descs.isEmpty()) {
+      return true;
+    }
+ else {
+      for (      Thing sub : descs) {
+        TraitType tt=(TraitType)sub;
+        if (tt != proxy && tt.hasTypeCode(typeMask)) {
+          return false;
+        }
+      }
+      return true;
+    }
   }
  else {
     return false;

@@ -22,7 +22,7 @@
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
   kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
   ObjectTypeNode node=getObjectTypeNode(kbase,A.class);
-  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession());
+  InternalWorkingMemory wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession());
   LeftInputAdapterNode liaNode=(LeftInputAdapterNode)node.getSinkPropagator().getSinks()[0];
   assertEquals(1,liaNode.getSinkPropagator().size());
   JoinNode bNode=(JoinNode)liaNode.getSinkPropagator().getSinks()[0];
@@ -39,21 +39,29 @@
   assertEquals(0,existsBm.getSegmentMemory().getLinkedNodeMask());
   FactHandle fhc=wm.insert(new C());
   FactHandle fhd=wm.insert(new D());
+  wm.flushPropagations();
   assertEquals(1,existsBm.getSegmentMemory().getLinkedNodeMask());
   wm.retract(fhd);
+  wm.flushPropagations();
   assertEquals(0,existsBm.getSegmentMemory().getLinkedNodeMask());
   PathMemory rs=(PathMemory)wm.getNodeMemory(rtn);
   assertFalse(rs.isRuleLinked());
   wm.insert(new A());
+  wm.flushPropagations();
   assertFalse(rs.isRuleLinked());
   wm.insert(new B());
+  wm.flushPropagations();
   assertFalse(rs.isRuleLinked());
   wm.insert(new E());
+  wm.flushPropagations();
   assertFalse(rs.isRuleLinked());
   wm.insert(new D());
+  wm.flushPropagations();
   assertTrue(rs.isRuleLinked());
   wm.retract(fhc);
+  wm.flushPropagations();
   assertFalse(rs.isRuleLinked());
   wm.insert(new C());
+  wm.flushPropagations();
   assertTrue(rs.isRuleLinked());
 }

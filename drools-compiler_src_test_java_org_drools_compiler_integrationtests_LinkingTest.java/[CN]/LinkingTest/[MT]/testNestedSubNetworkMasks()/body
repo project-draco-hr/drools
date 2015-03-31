@@ -24,7 +24,7 @@
   KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
   kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
   ObjectTypeNode node=getObjectTypeNode(kbase,A.class);
-  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession());
+  InternalWorkingMemory wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession());
   LeftInputAdapterNode liaNode=(LeftInputAdapterNode)node.getSinkPropagator().getSinks()[0];
   JoinNode bNode=(JoinNode)liaNode.getSinkPropagator().getSinks()[0];
   ExistsNode exists1n=(ExistsNode)bNode.getSinkPropagator().getSinks()[1];
@@ -42,6 +42,7 @@
   wm.insert(new C());
   wm.insert(new D());
   wm.insert(new G());
+  wm.flushPropagations();
   LiaNodeMemory liaMem=(LiaNodeMemory)wm.getNodeMemory(liaNode);
   BetaMemory bMem=(BetaMemory)wm.getNodeMemory(bNode);
   BetaMemory exists1Mem=(BetaMemory)wm.getNodeMemory(exists1n);
@@ -81,11 +82,13 @@
   assertEquals(0,exists2Mem.getNodePosMaskBit());
   FactHandle fhE1=wm.insert(new E());
   FactHandle fhF1=wm.insert(new F());
+  wm.flushPropagations();
   assertEquals(1,exists2Mem.getNodePosMaskBit());
   assertEquals(6,riaMem1.getRiaPathMemory().getAllLinkedMaskTest());
   assertEquals(6,riaMem1.getRiaPathMemory().getLinkedSegmentMask());
   wm.delete(fhE1);
   wm.delete(fhF1);
+  wm.flushPropagations();
   assertEquals(2,riaMem1.getRiaPathMemory().getLinkedSegmentMask());
   assertNotNull(null,eMem.getSegmentMemory());
   assertSame(fMem.getSegmentMemory(),eMem.getSegmentMemory());
@@ -100,6 +103,7 @@
   assertEquals(0,riaMem2.getRiaPathMemory().getLinkedSegmentMask());
   fhE1=wm.insert(new E());
   wm.insert(new F());
+  wm.flushPropagations();
   assertTrue(rs.isRuleLinked());
   assertEquals(3,rs.getAllLinkedMaskTest());
   assertEquals(3,rs.getLinkedSegmentMask());
@@ -112,6 +116,7 @@
   assertEquals(4,riaMem2.getRiaPathMemory().getAllLinkedMaskTest());
   assertEquals(4,riaMem2.getRiaPathMemory().getLinkedSegmentMask());
   wm.delete(fhE1);
+  wm.flushPropagations();
   assertFalse(rs.isRuleLinked());
   assertEquals(3,cMem.getSegmentMemory().getLinkedNodeMask());
   assertEquals(2,riaMem1.getRiaPathMemory().getLinkedSegmentMask());

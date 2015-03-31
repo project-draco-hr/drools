@@ -1,0 +1,21 @@
+{
+  List<GroupElement> result=new ArrayList<GroupElement>();
+  for (  GroupElement and : ands) {
+    List<RuleConditionElement> children=and.getChildren();
+    for (int i=0; i < children.size(); i++) {
+      RuleConditionElement child=children.get(i);
+      if (child instanceof NamedConsequence) {
+        GroupElement clonedAnd=GroupElementFactory.newAndInstance();
+        for (int j=0; j < i; j++) {
+          clonedAnd.getChildren().add(children.get(j).clone());
+        }
+        ((NamedConsequence)child).setTerminal(true);
+        clonedAnd.getChildren().add(child);
+        children.remove(i--);
+        result.add(clonedAnd);
+      }
+    }
+    result.add(and);
+  }
+  return result.toArray(new GroupElement[result.size()]);
+}

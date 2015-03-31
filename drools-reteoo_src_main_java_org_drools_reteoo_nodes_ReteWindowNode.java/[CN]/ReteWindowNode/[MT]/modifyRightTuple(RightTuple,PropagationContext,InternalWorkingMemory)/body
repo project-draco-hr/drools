@@ -1,0 +1,30 @@
+{
+  final ReteWindowMemory memory=(ReteWindowMemory)workingMemory.getNodeMemory(this);
+  memory.gate.lock();
+  EventFactHandle originalFactHandle=(EventFactHandle)rightTuple.getFactHandle();
+  EventFactHandle cloneFactHandle=(EventFactHandle)rightTuple.getObject();
+  originalFactHandle.quickCloneUpdate(cloneFactHandle);
+  try {
+    int index=0;
+    boolean isAllowed=true;
+    for (    AlphaNodeFieldConstraint constraint : getConstraints()) {
+      if (!constraint.isAllowed(cloneFactHandle,workingMemory,memory.context[index++])) {
+        isAllowed=false;
+        break;
+      }
+    }
+    if (isAllowed) {
+      ModifyPreviousTuples modifyPreviousTuples=new ModifyPreviousTuples(cloneFactHandle.getFirstLeftTuple(),cloneFactHandle.getFirstRightTuple(),epNode);
+      cloneFactHandle.clearLeftTuples();
+      cloneFactHandle.clearRightTuples();
+      this.sink.propagateModifyObject(cloneFactHandle,modifyPreviousTuples,context,workingMemory);
+      modifyPreviousTuples.retractTuples(context,workingMemory);
+    }
+ else {
+      ObjectTypeNode.doRetractObject(cloneFactHandle,context,workingMemory);
+    }
+  }
+  finally {
+    memory.gate.unlock();
+  }
+}

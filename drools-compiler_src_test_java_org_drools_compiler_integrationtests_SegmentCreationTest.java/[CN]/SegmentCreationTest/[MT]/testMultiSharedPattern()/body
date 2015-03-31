@@ -1,6 +1,6 @@
 {
   KnowledgeBase kbase=buildKnowledgeBase("   A() \n","   A() B() \n","   A() B() C() \n");
-  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession());
+  InternalWorkingMemory wm=((InternalWorkingMemory)kbase.newStatefulKnowledgeSession());
   ObjectTypeNode aotn=getObjectTypeNode(kbase,LinkingTest.A.class);
   LeftInputAdapterNode liaNode=(LeftInputAdapterNode)aotn.getSinkPropagator().getSinks()[0];
   RuleTerminalNode rtn1=(RuleTerminalNode)liaNode.getSinkPropagator().getSinks()[0];
@@ -11,6 +11,7 @@
   wm.insert(new LinkingTest.A());
   wm.insert(new LinkingTest.B());
   wm.insert(new LinkingTest.C());
+  wm.flushPropagations();
   LiaNodeMemory liaMem=(LiaNodeMemory)wm.getNodeMemory(liaNode);
   SegmentMemory smem=liaMem.getSegmentMemory();
   assertEquals(liaNode,smem.getRootNode());
@@ -24,6 +25,7 @@
   assertNull(bSmem.getFirst());
   assertNull(bSmem.getNext());
   wm.fireAllRules();
+  wm.flushPropagations();
   SegmentMemory rtnSmem2=bSmem.getFirst();
   assertEquals(rtn2,rtnSmem2.getRootNode());
   assertEquals(rtn2,rtnSmem2.getTipNode());

@@ -1,0 +1,40 @@
+{
+  String drl="import " + SlowBean.class.getCanonicalName() + ";\n"+ "rule R when\n"+ "  $sb1: SlowBean() \n"+ "  $sb2: SlowBean( id > $sb1.id ) \n"+ "then "+ "  System.out.println($sb2 + \" > \"+ $sb1);"+ "end\n";
+  final KieSession ksession=new KieHelper().addContent(drl,ResourceType.DRL).build().newKieSession();
+  final int BEAN_NR=4;
+  for (int step=0; step < 2; step++) {
+    FactHandle[] fhs=new FactHandle[BEAN_NR];
+    for (int i=0; i < BEAN_NR; i++) {
+      fhs[i]=ksession.insert(new SlowBean(i + step * BEAN_NR));
+    }
+    final CyclicBarrier barrier=new CyclicBarrier(2);
+    new Thread(new Runnable(){
+      @Override public void run(){
+        ksession.fireAllRules();
+        try {
+          barrier.await();
+        }
+ catch (        Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    }
+).start();
+    try {
+      Thread.sleep(15L);
+    }
+ catch (    InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+    for (int i=0; i < BEAN_NR; i++) {
+      if (i % 2 == 1)       ksession.delete(fhs[i]);
+    }
+    try {
+      barrier.await();
+    }
+ catch (    Exception e) {
+      throw new RuntimeException(e);
+    }
+    System.out.println("Done step " + step);
+  }
+}

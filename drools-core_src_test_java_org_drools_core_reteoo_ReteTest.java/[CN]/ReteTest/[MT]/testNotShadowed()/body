@@ -4,7 +4,7 @@
   RuleBaseConfiguration conf=new RuleBaseConfiguration(properties);
   InternalKnowledgeBase kBase=(InternalKnowledgeBase)KnowledgeBaseFactory.newKnowledgeBase(conf);
   buildContext=new BuildContext(kBase,kBase.getReteooBuilder().getIdGenerator());
-  final StatefulKnowledgeSessionImpl workingMemory=new StatefulKnowledgeSessionImpl(1L,kBase);
+  final StatefulKnowledgeSessionImpl ksession=new StatefulKnowledgeSessionImpl(1L,kBase);
   final Rete rete=kBase.getRete();
   final EntryPointNode entryPoint=new EntryPointNode(0,rete,buildContext);
   entryPoint.attach(buildContext);
@@ -14,6 +14,7 @@
   objectTypeNode.addObjectSink(sink1);
   final Cheese cheese=new Cheese("brie",15);
   final DefaultFactHandle h1=new DefaultFactHandle(1,cheese);
-  rete.assertObject(h1,pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,null),workingMemory);
+  rete.assertObject(h1,pctxFactory.createPropagationContext(0,PropagationContext.INSERTION,null,null,null),ksession);
+  ksession.fireAllRules();
   final Object[] results=(Object[])sink1.getAsserted().get(0);
 }

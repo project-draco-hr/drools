@@ -1,13 +1,6 @@
 {
   String str="package org.kie.test \n" + "\n" + "rule rule1 @Propagation(EAGER) when\n"+ "    $s1 : Double() from accumulate( $i : Integer(), sum ( $i ) )    "+ "then\n"+ "end\n"+ "rule rule2 @Propagation(EAGER) when\n"+ "    $s1 : Double() from accumulate( $i : Integer(), sum ( $i ) )    "+ "    eval( 1 == 1 ) \n"+ "then\n"+ "end\n"+ "rule rule3  salience 10 when\n"+ "    eval( 1 == 1 ) \n"+ "    $s1 : Double() from accumulate( $i : Integer(), sum ( $i ) )    "+ "    eval( 1 == 1 ) \n"+ "then\n"+ "    kcontext.getKieRuntime().halt();\n"+ "end\n"+ "\n";
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    fail(kbuilder.getErrors().toString());
-  }
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  KieSession ksession=new KieHelper().addContent(str,ResourceType.DRL).build().newKieSession();
   ksession.insert(new Integer(1));
   ksession.insert(new Integer(2));
   ksession.insert(new Integer(3));

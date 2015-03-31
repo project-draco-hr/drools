@@ -1,0 +1,26 @@
+{
+  boolean hasChildOr=false;
+  ce.pack();
+  Object[] children=(Object[])ce.getChildren().toArray();
+  for (  Object child : children) {
+    if (child instanceof GroupElement) {
+      final GroupElement group=(GroupElement)child;
+      processTree(group,result);
+      if ((group.isOr() || group.isAnd()) && group.getType() == ce.getType()) {
+        group.pack(ce);
+      }
+ else       if (group.isOr()) {
+        hasChildOr=true;
+      }
+    }
+ else     if (child instanceof NamedConsequence) {
+      result[0]=true;
+    }
+ else     if (child instanceof Pattern && ((Pattern)child).getObjectType().isEvent()) {
+      result[1]=true;
+    }
+  }
+  if (hasChildOr) {
+    applyOrTransformation(ce);
+  }
+}

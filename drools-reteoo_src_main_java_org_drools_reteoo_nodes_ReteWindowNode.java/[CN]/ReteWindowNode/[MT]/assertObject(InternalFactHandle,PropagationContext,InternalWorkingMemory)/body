@@ -1,0 +1,24 @@
+{
+  final ReteWindowMemory memory=(ReteWindowMemory)workingMemory.getNodeMemory(this);
+  EventFactHandle evFh=(EventFactHandle)factHandle;
+  memory.gate.lock();
+  try {
+    int index=0;
+    for (    AlphaNodeFieldConstraint constraint : getConstraints()) {
+      if (!constraint.isAllowed(evFh,workingMemory,memory.context[index++])) {
+        return;
+      }
+    }
+    RightTuple rightTuple=new RightTuple(evFh,this);
+    rightTuple.setPropagationContext(pctx);
+    InternalFactHandle clonedFh=evFh.cloneAndLink();
+    rightTuple.setObject(clonedFh);
+    if (!behavior.assertFact(memory.behaviorContext,clonedFh,pctx,workingMemory)) {
+      return;
+    }
+    this.sink.propagateAssertObject(clonedFh,pctx,workingMemory);
+  }
+  finally {
+    memory.gate.unlock();
+  }
+}

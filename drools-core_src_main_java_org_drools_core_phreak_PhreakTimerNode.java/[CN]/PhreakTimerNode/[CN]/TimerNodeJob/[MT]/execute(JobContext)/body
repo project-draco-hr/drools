@@ -1,6 +1,6 @@
 {
   final TimerNodeJobContext timerJobCtx=(TimerNodeJobContext)ctx;
-  Trigger trigger=timerJobCtx.getTrigger();
+  final InternalWorkingMemory wm=timerJobCtx.getWorkingMemory();
   LeftTupleList leftTuples=timerJobCtx.getTimerNodeMemory().getInsertOrUpdateLeftTuples();
   LeftTuple lt=timerJobCtx.getLeftTuple();
   if (log.isTraceEnabled()) {
@@ -16,14 +16,15 @@ synchronized (leftTuples) {
   }
   timerJobCtx.getTimerNodeMemory().setNodeDirtyWithoutNotify();
   for (  final PathMemory pmem : timerJobCtx.getPathMemories()) {
-    pmem.doLinkRule(timerJobCtx.getWorkingMemory());
-    pmem.queueRuleAgendaItem(timerJobCtx.getWorkingMemory());
-    final TimedRuleExecutionFilter filter=timerJobCtx.getWorkingMemory().getSessionConfiguration().getTimedRuleExecutionFilter();
+    if (pmem.doLinkRule(wm)) {
+      ((InternalAgenda)wm.getAgenda()).notifyHalt();
+    }
+    final TimedRuleExecutionFilter filter=wm.getSessionConfiguration().getTimedRuleExecutionFilter();
     if (filter != null) {
       ExecutorHolder.executor.execute(new Runnable(){
         @Override public void run(){
           if (filter.accept(new Rule[]{pmem.getRule()})) {
-            new Executor(pmem,timerJobCtx.getWorkingMemory(),timerJobCtx.getSink(),timerJobCtx.getTimerNodeMemory()).evauateAndFireRule();
+            new Executor(pmem,wm,timerJobCtx.getSink(),timerJobCtx.getTimerNodeMemory()).evauateAndFireRule();
           }
         }
       }

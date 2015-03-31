@@ -1,13 +1,6 @@
 {
   String str="package org.kie.test \n" + "\n" + "rule rule1  @Propagation(EAGER)  salience 10 when\n"+ "    not String( this == '1' )\n"+ "then\n"+ "end\n"+ "rule rule2   @Propagation(EAGER)  salience ( Integer.parseInt( $s1+'1' ) ) when\n"+ "    not String( this == '1' )\n"+ "    $s1 : String( )\n"+ "    eval( 1 == 1 ) \n"+ "then\n"+ "end\n"+ "rule rule3  @Propagation(EAGER)  salience ( Integer.parseInt( $s1+'2' ) ) when\n"+ "    $s1 : String( )\n"+ "    not String( this == '1' )\n"+ "    eval( 1 == 1 ) \n"+ "    eval( 1 == 1 ) \n"+ "then\n"+ "    kcontext.getKieRuntime().halt();\n"+ "end\n"+ "\n";
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    fail(kbuilder.getErrors().toString());
-  }
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  KieSession ksession=new KieHelper().addContent(str,ResourceType.DRL).build().newKieSession();
   ksession.insert("0");
   ksession.insert("2");
   ksession.fireAllRules();

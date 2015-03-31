@@ -4,7 +4,7 @@
     this.lock.lock();
     this.kBase.readLock();
     this.kBase.executeQueuedActions();
-    executeQueuedActions();
+    flushPropagations();
     DroolsQuery queryObject=new DroolsQuery(queryName,arguments,getQueryListenerInstance(),false,null,null,null,null,null);
     InternalFactHandle handle=this.handleFactory.newFactHandle(queryObject,null,this,this);
     final PropagationContext pCtx=pctxFactory.createPropagationContext(getNextPropagationIdCounter(),PropagationContext.INSERTION,null,null,handle,getEntryPoint());
@@ -15,7 +15,7 @@
         decls.add(((QueryTerminalNode)node).getSubRule().getOuterDeclarations());
       }
     }
-    executeQueuedActions();
+    flushPropagations();
     this.handleFactory.destroyFactHandle(handle);
     return new QueryResultsImpl((List<QueryRowWithSubruleIndex>)queryObject.getQueryResultCollector().getResults(),decls.toArray(new Map[decls.size()]),this,(queryObject.getQuery() != null) ? queryObject.getQuery().getParameters() : new Declaration[0]);
   }

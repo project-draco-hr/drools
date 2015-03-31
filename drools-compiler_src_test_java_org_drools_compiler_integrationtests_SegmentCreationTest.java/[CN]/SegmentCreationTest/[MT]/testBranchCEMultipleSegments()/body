@@ -1,6 +1,6 @@
 {
   KnowledgeBase kbase=buildKnowledgeBase("   $a : A() \n","   $a : A() \n" + "   if ( $a != null ) do[t1] \n" + "   B() \n","   $a : A() \n" + "   if ( $a != null ) do[t1] \n" + "   B() \n"+ "   C() \n");
-  ReteooWorkingMemoryInterface wm=((StatefulKnowledgeSessionImpl)kbase.newStatefulKnowledgeSession());
+  InternalWorkingMemory wm=((InternalWorkingMemory)kbase.newStatefulKnowledgeSession());
   ObjectTypeNode aotn=getObjectTypeNode(kbase,LinkingTest.A.class);
   LeftInputAdapterNode liaNode=(LeftInputAdapterNode)aotn.getSinkPropagator().getSinks()[0];
   ConditionalBranchNode cen1Node=(ConditionalBranchNode)liaNode.getSinkPropagator().getSinks()[1];
@@ -10,6 +10,7 @@
   RuleTerminalNode rtn3=(RuleTerminalNode)cNode.getSinkPropagator().getSinks()[0];
   FactHandle bFh=wm.insert(new LinkingTest.B());
   FactHandle cFh=wm.insert(new LinkingTest.C());
+  wm.flushPropagations();
   BetaMemory bNodeBm=(BetaMemory)wm.getNodeMemory(bNode);
   SegmentMemory bNodeSmem=bNodeBm.getSegmentMemory();
   assertEquals(0,bNodeSmem.getAllLinkedMaskTest());
@@ -28,10 +29,12 @@
   assertEquals(1,cNodeSmem.getAllLinkedMaskTest());
   assertEquals(1,cNodeSmem.getLinkedNodeMask());
   wm.insert(new LinkingTest.A());
+  wm.flushPropagations();
   assertTrue(pmemr2.isRuleLinked());
   assertTrue(pmemr3.isRuleLinked());
   wm.delete(bFh);
   wm.delete(cFh);
+  wm.flushPropagations();
   assertEquals(3,pmemr2.getLinkedSegmentMask());
   assertTrue(pmemr2.isRuleLinked());
   assertEquals(3,pmemr3.getLinkedSegmentMask());
