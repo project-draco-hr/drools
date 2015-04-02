@@ -10,8 +10,12 @@
       return executeNext(command);
     }
  catch (    RuntimeException ex) {
+      if (hasInterceptorInStack()) {
+        System.out.print("###################");
+        throw ex;
+      }
       logger.trace(ex.getClass().getSimpleName() + " caught in " + this.getClass().getSimpleName()+ ": "+ ex.getMessage());
-      if (!isCausedByOptimisticLockingFailure(ex)) {
+      if (!isCausedByOptimisticLockingFailure(ex) && !isCausedByConstraintViolationFailure(ex)) {
         throw ex;
       }
       attempt++;
