@@ -1,7 +1,6 @@
 {
   String str="import java.util.*;\n" + "import " + MyPerson.class.getName() + ";\n"+ "global java.util.Map map;\n"+ "dialect \"mvel\"\n"+ "\n"+ "rule \"Test\"\n"+ "    when\n"+ "        $total : Number()\n"+ "             from accumulate( MyPerson( $age: age ),\n"+ "                              sum( $age ) )\n"+ "\n"+ "        $p: MyPerson();\n"+ "        $k: List( size > 0 ) from accumulate( MyPerson($kids: kids) from $p.kids,\n"+ "            init( ArrayList myList = new ArrayList(); ),\n"+ "            action( myList.addAll($kids); ),\n"+ "            reverse( myList.removeAll($kids); ),\n"+ "            result( myList )\n"+ "        )\n"+ "\n"+ "        $r : MyPerson(name == \"Jos Jr Jr\")\n"+ "        or\n"+ "        $r : MyPerson(name == \"Jos\")\n"+ "    then\n"+ "        Map pMap = map.get( $r.getName() );\n"+ "        pMap.put( 'total', $total );\n"+ "        pMap.put( 'p', $p );\n"+ "        pMap.put( 'k', $k );\n"+ "        pMap.put( 'r', $r );\n"+ "        map.put('count', ((Integer)map.get('count')) + 1 );\n "+ "end\n";
-  KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
-  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  KieSession ksession=getKieSessionFromContentStrings(str);
   List list=new ArrayList();
   Map map=new HashMap();
   ksession.setGlobal("map",map);
