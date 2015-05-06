@@ -1,0 +1,32 @@
+{
+  final RuleModel rm=new RuleModel();
+  rm.setPackageName(PackageNameParser.parsePackageName(drl));
+  rm.setImports(ImportsParser.parseImports(drl));
+  final Pattern rulePattern=Pattern.compile("\\s?rule\\s+(.+?)\\s+.*",Pattern.DOTALL);
+  final Pattern lhsPattern=Pattern.compile(".*\\s+when\\s+(.+?)\\s+then.*",Pattern.DOTALL);
+  final Pattern rhsPattern=Pattern.compile(".*\\s+then\\s+(.+?)\\s+end.*",Pattern.DOTALL);
+  final Matcher ruleMatcher=rulePattern.matcher(drl);
+  if (ruleMatcher.matches()) {
+    String name=ruleMatcher.group(1);
+    if (name.startsWith("\"")) {
+      name=name.substring(1);
+    }
+    if (name.endsWith("\"")) {
+      name=name.substring(0,name.length() - 1);
+    }
+    rm.name=name;
+  }
+  final Matcher lhsMatcher=lhsPattern.matcher(drl);
+  if (lhsMatcher.matches()) {
+    final FreeFormLine lhs=new FreeFormLine();
+    lhs.setText(lhsMatcher.group(1) == null ? "" : lhsMatcher.group(1).trim());
+    rm.addLhsItem(lhs);
+  }
+  final Matcher rhsMatcher=rhsPattern.matcher(drl);
+  if (rhsMatcher.matches()) {
+    final FreeFormLine rhs=new FreeFormLine();
+    rhs.setText(rhsMatcher.group(1) == null ? "" : rhsMatcher.group(1).trim());
+    rm.addRhsItem(rhs);
+  }
+  return rm;
+}
