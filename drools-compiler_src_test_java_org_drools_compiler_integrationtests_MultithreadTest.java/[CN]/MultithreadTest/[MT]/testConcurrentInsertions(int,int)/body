@@ -1,0 +1,43 @@
+{
+  String str="import org.drools.compiler.integrationtests.MultithreadTest.Bean\n" + "\n" + "rule \"R\"\n"+ "when\n"+ "    $a : Bean( seed != 1 )\n"+ "then\n"+ "end";
+  final KieSession ksession=new KieHelper().addContent(str,ResourceType.DRL).build().newKieSession();
+  Executor executor=Executors.newCachedThreadPool(new ThreadFactory(){
+    public Thread newThread(    Runnable r){
+      Thread t=new Thread(r);
+      t.setDaemon(true);
+      return t;
+    }
+  }
+);
+  CompletionService<Boolean> ecs=new ExecutorCompletionService<Boolean>(executor);
+  for (int i=0; i < threadCount; i++) {
+    ecs.submit(new Callable<Boolean>(){
+      public Boolean call() throws Exception {
+        try {
+          FactHandle[] facts=new FactHandle[objectCount];
+          for (int i=0; i < objectCount; i++)           facts[i]=ksession.insert(new Bean(i));
+          ksession.fireAllRules();
+          for (          FactHandle fact : facts)           ksession.delete(fact);
+          ksession.fireAllRules();
+          return true;
+        }
+ catch (        Exception e) {
+          e.printStackTrace();
+          return false;
+        }
+      }
+    }
+);
+  }
+  boolean success=true;
+  for (int i=0; i < threadCount; i++) {
+    try {
+      success=ecs.take().get() && success;
+    }
+ catch (    Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+  assertTrue(success);
+  ksession.dispose();
+}

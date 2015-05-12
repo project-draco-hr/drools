@@ -1,0 +1,22 @@
+{
+  LeftTupleList leftTuples=timerJobCtx.getTimerNodeMemory().getInsertOrUpdateLeftTuples();
+  LeftTuple lt=timerJobCtx.getLeftTuple();
+  if (log.isTraceEnabled()) {
+    log.trace("Timer Executor {} {}",timerJobCtx.getTrigger(),lt);
+  }
+  if (timerJobCtx.getJobHandle().isCancel()) {
+    return;
+  }
+  if (lt.getMemory() == null) {
+    leftTuples.add(lt);
+  }
+  timerJobCtx.getTimerNodeMemory().setNodeDirtyWithoutNotify();
+  TimedRuleExecutionFilter filter=wm.getSessionConfiguration().getTimedRuleExecutionFilter();
+  needEvaluation&=filter != null;
+  for (  final PathMemory pmem : timerJobCtx.getPathMemories()) {
+    pmem.doLinkRule(wm);
+    if (needEvaluation && filter.accept(new Rule[]{pmem.getRule()})) {
+      evaluateAndFireRule(pmem,wm);
+    }
+  }
+}

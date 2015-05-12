@@ -1,11 +1,26 @@
 {
-  boolean wasEmpty=head == null;
-  if (wasEmpty) {
-    head=entry;
+  if (entry.requiresImmediateFlushingIfNotFiring()) {
+    boolean executed=workingMemory.getAgenda().executeIfNotFiring(new Runnable(){
+      @Override public void run(){
+        ((PhreakTimerNode.TimerAction)entry).execute(workingMemory,true);
+      }
+    }
+);
+    if (executed) {
+      return;
+    }
   }
+synchronized (this) {
+    boolean wasEmpty=head == null;
+    if (wasEmpty) {
+      head=entry;
+    }
  else {
-    tail.setNext(entry);
+      tail.setNext(entry);
+    }
+    tail=entry;
+    if (wasEmpty) {
+      workingMemory.getAgenda().notifyHalt();
+    }
   }
-  tail=entry;
-  return wasEmpty;
 }

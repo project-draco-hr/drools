@@ -5,19 +5,6 @@
   conf.setOption(TimedRuleExectionOption.YES);
   KnowledgeBase kbase=loadKnowledgeBaseFromString(str);
   KieSession ksession=createKnowledgeSession(kbase,conf);
-  final CyclicBarrier barrier=new CyclicBarrier(2);
-  AgendaEventListener agendaEventListener=new DefaultAgendaEventListener(){
-    public void afterMatchFired(    org.kie.api.event.rule.AfterMatchFiredEvent event){
-      try {
-        barrier.await();
-      }
- catch (      Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }
-;
-  ksession.addEventListener(agendaEventListener);
   List list=new ArrayList();
   PseudoClockScheduler timeService=(PseudoClockScheduler)ksession.<SessionClock>getSessionClock();
   timeService.advanceTime(new Date().getTime(),TimeUnit.MILLISECONDS);
@@ -25,15 +12,9 @@
   ksession.fireAllRules();
   assertEquals(0,list.size());
   timeService.advanceTime(35,TimeUnit.SECONDS);
-  barrier.await();
-  barrier.reset();
   assertEquals(1,list.size());
   timeService.advanceTime(10,TimeUnit.SECONDS);
-  barrier.await();
-  barrier.reset();
   assertEquals(2,list.size());
   timeService.advanceTime(10,TimeUnit.SECONDS);
-  barrier.await();
-  barrier.reset();
   assertEquals(3,list.size());
 }

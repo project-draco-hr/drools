@@ -12,7 +12,7 @@
   long[] results=new long[10];
   for (int counter=0; counter < results.length; ) {
     final Checker checker=new Checker(THREAD_NR);
-    final PropagationList propagationList=new SynchronizedPropagationList();
+    final PropagationList propagationList=new SynchronizedPropagationList(null);
     CompletionService<Boolean> ecs=new ExecutorCompletionService<Boolean>(executor);
     long start=System.nanoTime();
     for (int i=0; i < THREAD_NR; i++) {
@@ -25,7 +25,7 @@
       throw new RuntimeException(e);
     }
     for (int i=0; i < THREAD_NR * 20; i++) {
-      propagationList.flush(null);
+      propagationList.flush();
       try {
         Thread.sleep(1L);
       }
@@ -42,7 +42,7 @@
         throw new RuntimeException(e);
       }
     }
-    propagationList.flush(null);
+    propagationList.flush();
     results[counter++]=System.nanoTime() - start;
     System.out.println("Threads DONE!");
   }

@@ -1,15 +1,13 @@
 {
   LeftTupleList leftTuples=tm.getInsertOrUpdateLeftTuples();
-synchronized (leftTuples) {
-    for (LeftTuple leftTuple=leftTuples.getFirst(); leftTuple != null; ) {
-      LeftTuple next=(LeftTuple)leftTuple.getNext();
-      doPropagateChildLeftTuple(sink,trgLeftTuples,stagedLeftTuples,leftTuple);
-      leftTuple.clear();
-      leftTuple=next;
-    }
-    if (tm.getDeleteLeftTuples().isEmpty()) {
-      tm.setNodeCleanWithoutNotify();
-    }
-    leftTuples.clear();
+  for (LeftTuple leftTuple=leftTuples.getFirst(); leftTuple != null; ) {
+    LeftTuple next=(LeftTuple)leftTuple.getNext();
+    doPropagateChildLeftTuple(sink,trgLeftTuples,stagedLeftTuples,leftTuple);
+    leftTuple.clear();
+    leftTuple=next;
   }
+  if (tm.getDeleteLeftTuples().isEmpty()) {
+    tm.setNodeCleanWithoutNotify();
+  }
+  leftTuples.clear();
 }
