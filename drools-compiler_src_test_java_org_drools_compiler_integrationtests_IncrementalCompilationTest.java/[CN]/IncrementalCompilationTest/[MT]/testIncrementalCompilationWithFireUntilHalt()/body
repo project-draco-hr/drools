@@ -1,0 +1,20 @@
+{
+  String drl1=getCronRule(3) + getCronRule(6);
+  String drl2=getCronRule(8) + getCronRule(10) + getCronRule(5);
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId releaseId1=ks.newReleaseId("org.kie","test-fireUntilHalt","1.0.0");
+  KieModule km=createAndDeployJar(ks,releaseId1,drl1);
+  final KieContainer kc=ks.newKieContainer(km.getReleaseId());
+  new Thread(new Runnable(){
+    public void run(){
+      kc.newKieSession().fireUntilHalt();
+    }
+  }
+).start();
+  Thread.sleep(10000);
+  ReleaseId releaseId2=ks.newReleaseId("org.kie","test-fireUntilHalt","1.1.0");
+  km=createAndDeployJar(ks,releaseId2,drl2);
+  Results results=kc.updateToVersion(releaseId2);
+  assertFalse("Errors detected on updateToVersion: " + results.getMessages(org.kie.api.builder.Message.Level.ERROR),results.hasMessages(org.kie.api.builder.Message.Level.ERROR));
+  Thread.sleep(10000);
+}

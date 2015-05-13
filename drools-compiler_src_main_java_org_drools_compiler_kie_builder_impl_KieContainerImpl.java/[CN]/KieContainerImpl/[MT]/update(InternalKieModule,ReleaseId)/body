@@ -14,7 +14,8 @@
       kbasesToRemove.add(kbaseName);
     }
  else {
-      KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder((KnowledgeBase)kBaseEntry.getValue());
+      KnowledgeBase kBase=(KnowledgeBase)kBaseEntry.getValue();
+      KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(kBase);
       KnowledgeBuilderImpl pkgbuilder=(KnowledgeBuilderImpl)kbuilder;
       CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
       boolean shouldRebuild=applyResourceChanges(currentKM,newKM,cs,modifiedClasses,kBaseEntry,kieBaseModel,pkgbuilder,ckbuilder);
@@ -35,6 +36,9 @@
             }
           }
           rebuildAll(newReleaseId,results,newKM,modifiedClasses,kieBaseModel,pkgbuilder,ckbuilder);
+        }
+        for (        StatefulKnowledgeSession session : kBase.getStatefulKnowledgeSessions()) {
+          ((InternalAgenda)session.getAgenda()).notifyHalt();
         }
       }
   finally {
