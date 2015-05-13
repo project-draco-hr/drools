@@ -1,6 +1,9 @@
 {
+  InternalKnowledgePackage pkg=pkgRegistry.getPackage();
+  Set<String> existingGlobals=new HashSet(pkg.getGlobals().keySet());
   for (  final GlobalDescr global : packageDescr.getGlobals()) {
     final String identifier=global.getIdentifier();
+    existingGlobals.remove(identifier);
     String className=global.getType();
     while (className.indexOf('<') >= 0) {
       className=className.replaceAll("<[^<>]+?>","");
@@ -11,7 +14,7 @@
         addBuilderResult(new GlobalError(global," Primitive types are not allowed in globals : " + className));
         return;
       }
-      pkgRegistry.getPackage().addGlobal(identifier,clazz);
+      pkg.addGlobal(identifier,clazz);
       this.globals.put(identifier,clazz);
       if (kBase != null) {
         kBase.addGlobal(identifier,clazz);
@@ -20,6 +23,14 @@
  catch (    final ClassNotFoundException e) {
       addBuilderResult(new GlobalError(global,e.getMessage()));
       e.printStackTrace();
+    }
+  }
+  for (  String toBeRemoved : existingGlobals) {
+    if (filterAcceptsRemoval(ResourceChange.Type.GLOBAL,pkg.getName(),toBeRemoved)) {
+      pkg.removeGlobal(toBeRemoved);
+      if (kBase != null) {
+        kBase.removeGlobal(toBeRemoved);
+      }
     }
   }
 }
