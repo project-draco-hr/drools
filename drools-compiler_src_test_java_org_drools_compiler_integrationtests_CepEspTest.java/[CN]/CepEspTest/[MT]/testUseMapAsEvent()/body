@@ -1,0 +1,11 @@
+{
+  String drl="import java.util.Map\n " + "declare Map \n" + "  @role(event)\n"+ "end\n"+ "rule \"sliding window time map\" \n"+ "when \n"+ "   $m:Map()\n"+ "   accumulate(Map() over window:time( 1m ); $count:count(); $count>1 )\n"+ "then \n"+ "    System.out.println(\"alarm!!!!\");  \n"+ "end \n";
+  KieSessionConfiguration sessionConfig=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  sessionConfig.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  KieHelper helper=new KieHelper();
+  helper.addContent(drl,ResourceType.DRL);
+  KieBase kbase=helper.build(EventProcessingOption.STREAM);
+  KieSession ksession=kbase.newKieSession(sessionConfig,null);
+  ksession.insert(new HashMap<String,Object>());
+  ksession.fireAllRules();
+}
