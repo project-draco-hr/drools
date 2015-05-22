@@ -1,0 +1,21 @@
+{
+  String drl1="import java.util.List\n" + "import java.util.ArrayList\n" + "\n"+ "rule \"Test1\"\n"+ "\n"+ "when\n"+ "   $a : Integer()\n"+ "then\n"+ "   insert(new ArrayList());\n"+ "end\n";
+  String drl2="rule \"Test2\"\n" + "when\n" + "   $b : List()\n"+ " then\n"+ "   $b.isEmpty();\n"+ "end";
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId releaseId1=ks.newReleaseId("org.kie","test-upgrade","1.0.0");
+  KieModule km=createAndDeployJar(ks,releaseId1,drl1);
+  KieContainer kc=ks.newKieContainer(km.getReleaseId());
+  StatelessKieSession statelessKieSession=kc.newStatelessKieSession();
+  KieRuntimeLogger kieRuntimeLogger=ks.getLoggers().newConsoleLogger(statelessKieSession);
+  List<Command> cmds=new ArrayList<Command>();
+  cmds.add(CommandFactory.newInsertElements(new ArrayList()));
+  FireAllRulesCommand fireAllRulesCommand=(FireAllRulesCommand)CommandFactory.newFireAllRules();
+  cmds.add(fireAllRulesCommand);
+  cmds.add(CommandFactory.newGetObjects("returnedObjects"));
+  BatchExecutionCommand batchExecutionCommand=CommandFactory.newBatchExecution(cmds);
+  statelessKieSession.execute(batchExecutionCommand);
+  kieRuntimeLogger.close();
+  ReleaseId releaseId2=ks.newReleaseId("org.kie","test-upgrade","1.1.0");
+  km=createAndDeployJar(ks,releaseId2,drl1 + drl2);
+  kc.updateToVersion(km.getReleaseId());
+}
