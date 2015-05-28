@@ -1,23 +1,20 @@
 {
-  InternalAgenda agenda=(InternalAgenda)wm.getAgenda();
-synchronized (agendaItem) {
-    agendaItem.getRuleExecutor().setDirty(true);
-    ActivationsFilter activationFilter=agenda.getActivationsFilter();
-    if (activationFilter != null && !activationFilter.accept(agendaItem,wm,agendaItem.getTerminalNode())) {
-      return;
+  agendaItem.getRuleExecutor().setDirty(true);
+  ActivationsFilter activationFilter=wm.getAgenda().getActivationsFilter();
+  if (activationFilter != null && !activationFilter.accept(agendaItem,wm,agendaItem.getTerminalNode())) {
+    return;
+  }
+  if (!agendaItem.isQueued()) {
+    if (isLogTraceEnabled) {
+      log.trace("Queue RuleAgendaItem {}",agendaItem);
     }
-    if (!agendaItem.isQueued()) {
-      if (isLogTraceEnabled) {
-        log.trace("Queue RuleAgendaItem {}",agendaItem);
-      }
-      InternalAgendaGroup ag=agendaItem.getAgendaGroup();
-      ag.add(agendaItem);
-    }
+    InternalAgendaGroup ag=agendaItem.getAgendaGroup();
+    ag.add(agendaItem);
   }
   if (agendaItem.getRule().isQuery()) {
-    ((InternalAgenda)wm.getAgenda()).addQueryAgendaItem(agendaItem);
+    wm.getAgenda().addQueryAgendaItem(agendaItem);
   }
  else   if (agendaItem.getRule().isEager()) {
-    ((InternalAgenda)wm.getAgenda()).addEagerRuleAgendaItem(agendaItem);
+    wm.getAgenda().addEagerRuleAgendaItem(agendaItem);
   }
 }

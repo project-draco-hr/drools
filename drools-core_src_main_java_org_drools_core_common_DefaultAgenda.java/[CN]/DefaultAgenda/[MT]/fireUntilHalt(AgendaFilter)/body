@@ -1,30 +1,31 @@
 {
-  if (this.halt.compareAndSet(true,false)) {
-    try {
-      if (log.isTraceEnabled()) {
-        log.trace("Starting fireUntilHalt");
-      }
-      while (isFiring()) {
-        boolean fired=fireNextItem(agendaFilter,0,-1) > 0;
-        if (!fired) {
-synchronized (this.halt) {
-            if (!workingMemory.hasPendingPropagations()) {
-              try {
-                this.halt.wait();
-              }
- catch (              InterruptedException e) {
-              }
-            }
-          }
-        }
-        this.workingMemory.flushPropagations();
-      }
-      if (log.isTraceEnabled()) {
-        log.trace("Ending fireUntilHalt");
-      }
+synchronized (this) {
+    if (currentState == ExecutionState.FIRING_UNTIL_HALT) {
+      return;
     }
+    waitAndEnterExecutionState(ExecutionState.FIRING_UNTIL_HALT);
+  }
+  try {
+    if (log.isTraceEnabled()) {
+      log.trace("Starting fireUntilHalt");
+    }
+    this.workingMemory.flushPropagations();
+    while (isFiring()) {
+      workingMemory.flushPropagationsOnFireUntilHalt(fireNextItem(agendaFilter,0,-1) > 0);
+    }
+    PropagationEntry head=tryHalt();
+    while (head != null) {
+      workingMemory.flushPropagationsOnFireUntilHalt(fireNextItem(agendaFilter,0,-1) > 0,head);
+      if (currentState == ExecutionState.FORCE_HALTING) {
+        break;
+      }
+      head=workingMemory.takeAllPropagations();
+    }
+    if (log.isTraceEnabled()) {
+      log.trace("Ending fireUntilHalt");
+    }
+  }
   finally {
-      this.halt.set(true);
-    }
+    immediateHalt();
   }
 }

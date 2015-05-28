@@ -1,22 +1,33 @@
 {
   unstageActivations();
+synchronized (this) {
+    if (currentState.isFiring()) {
+      return 0;
+    }
+    waitAndEnterExecutionState(ExecutionState.FIRING_ALL_RULES);
+  }
   int fireCount=0;
-  if (this.halt.compareAndSet(true,false)) {
-    try {
-      int returnedFireCount=0;
-      do {
-        returnedFireCount=fireNextItem(agendaFilter,fireCount,fireLimit);
-        fireCount+=returnedFireCount;
-        this.workingMemory.flushPropagations();
-      }
- while (isFiring() && returnedFireCount != 0 && (fireLimit == -1 || (fireCount < fireLimit)));
-      if (this.focusStack.size() == 1 && getMainAgendaGroup().isEmpty()) {
-        getMainAgendaGroup().setActive(false);
-      }
+  try {
+    this.workingMemory.flushPropagations();
+    int returnedFireCount;
+    do {
+      returnedFireCount=fireNextItem(agendaFilter,fireCount,fireLimit);
+      fireCount+=returnedFireCount;
+      this.workingMemory.flushPropagations();
     }
+ while ((isFiring() && returnedFireCount != 0 && (fireLimit == -1 || fireCount < fireLimit)));
+    PropagationEntry head=tryHalt();
+    while (head != null) {
+      fireCount+=fireNextItem(agendaFilter,fireCount,fireLimit);
+      SynchronizedPropagationList.flush(workingMemory,head);
+      head=workingMemory.takeAllPropagations();
+    }
+    if (this.focusStack.size() == 1 && getMainAgendaGroup().isEmpty()) {
+      getMainAgendaGroup().setActive(false);
+    }
+  }
   finally {
-      this.halt.set(true);
-    }
+    immediateHalt();
   }
   return fireCount;
 }

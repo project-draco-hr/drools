@@ -1,26 +1,16 @@
 {
-  if (entry.requiresImmediateFlushingIfNotFiring()) {
-    boolean executed=workingMemory.getAgenda().executeIfNotFiring(new Runnable(){
-      @Override public void run(){
+  if (entry.requiresImmediateFlushing()) {
+    workingMemory.getAgenda().executeTask(new ExecutableEntry(){
+      @Override public void execute(){
         ((PhreakTimerNode.TimerAction)entry).execute(workingMemory,true);
+      }
+      @Override public void enqueue(){
+        internalAddEntry(entry);
       }
     }
 );
-    if (executed) {
-      return;
-    }
   }
-synchronized (this) {
-    boolean wasEmpty=head == null;
-    if (wasEmpty) {
-      head=entry;
-    }
  else {
-      tail.setNext(entry);
-    }
-    tail=entry;
-    if (wasEmpty) {
-      workingMemory.getAgenda().notifyHalt();
-    }
+    internalAddEntry(entry);
   }
 }

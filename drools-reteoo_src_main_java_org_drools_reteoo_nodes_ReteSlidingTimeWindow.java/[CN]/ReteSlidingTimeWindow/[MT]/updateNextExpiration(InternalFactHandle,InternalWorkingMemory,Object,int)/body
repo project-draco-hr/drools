@@ -1,0 +1,14 @@
+{
+  TimerService clock=workingMemory.getTimerService();
+  if (fact != null) {
+    long nextTimestamp=((EventFactHandle)fact).getStartTimestamp() + getSize();
+    if (nextTimestamp < clock.getCurrentTime()) {
+      workingMemory.queueWorkingMemoryAction(new BehaviorExpireWMAction(nodeId,this,context));
+    }
+ else {
+      JobContext jobctx=new BehaviorJobContext(nodeId,workingMemory,this,context);
+      JobHandle handle=clock.scheduleJob(reteJob,jobctx,new PointInTimeTrigger(nextTimestamp,null,null));
+      jobctx.setJobHandle(handle);
+    }
+  }
+}

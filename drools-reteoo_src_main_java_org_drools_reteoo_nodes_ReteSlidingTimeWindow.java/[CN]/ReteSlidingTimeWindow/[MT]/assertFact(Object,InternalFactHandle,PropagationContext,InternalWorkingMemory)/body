@@ -1,0 +1,15 @@
+{
+  final SlidingTimeWindowContext queue=(SlidingTimeWindowContext)context;
+  final EventFactHandle handle=(EventFactHandle)fact;
+  long currentTime=workingMemory.getTimerService().getCurrentTime();
+  if (isExpired(currentTime,handle)) {
+    return false;
+  }
+synchronized (queue) {
+    queue.add(handle);
+    if (queue.peek() == handle) {
+      updateNextExpiration(handle,workingMemory,queue,nodeId);
+    }
+  }
+  return true;
+}
