@@ -5,6 +5,7 @@
   Map<String,List<RuleDescr>> children=new HashMap<String,List<RuleDescr>>();
   LinkedHashMap<String,RuleDescr> sorted=new LinkedHashMap<String,RuleDescr>();
   List<RuleDescr> queries=new ArrayList<RuleDescr>();
+  List<String> compiledRules=new ArrayList<String>();
   for (  RuleDescr ruleDescr : packageDescr.getRules()) {
     if (ruleDescr.isQuery()) {
       queries.add(ruleDescr);
@@ -12,10 +13,10 @@
  else     if (!ruleDescr.hasParent()) {
       roots.add(ruleDescr);
     }
- else     if (pkg.getRule(ruleDescr.getParentName()) != null) {
-      sorted.put(ruleDescr.getName(),ruleDescr);
-    }
  else {
+      if (pkg.getRule(ruleDescr.getParentName()) != null) {
+        compiledRules.add(ruleDescr.getParentName());
+      }
       List<RuleDescr> childz=children.get(ruleDescr.getParentName());
       if (childz == null) {
         childz=new ArrayList<RuleDescr>();
@@ -30,6 +31,10 @@
       packageDescr.getRules().addAll(0,queries);
     }
     return;
+  }
+  for (  String compiledRule : compiledRules) {
+    List<RuleDescr> childz=children.remove(compiledRule);
+    roots.addAll(childz);
   }
   while (!roots.isEmpty()) {
     RuleDescr root=roots.remove(0);

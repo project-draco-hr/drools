@@ -1,4 +1,9 @@
 {
+  Set<String> updatedRules=null;
+  if (type == ResourceChange.Type.RULE) {
+    updatedRules=new HashSet<String>();
+    Collections.sort((List<RuleDescr>)cdescrs,RULE_HIERARCHY_COMPARATOR);
+  }
   for (  T crd : cdescrs) {
     String cName=descrNameConverter.getName(crd);
     boolean found=false;
@@ -7,8 +12,11 @@
       if (descrNameConverter.getName(ord).equals(cName)) {
         found=true;
         it.remove();
-        if (!segmentEquals(ob,ord.getStartCharacter(),ord.getEndCharacter(),cb,crd.getStartCharacter(),crd.getEndCharacter())) {
+        if (!segmentEquals(ob,ord.getStartCharacter(),ord.getEndCharacter(),cb,crd.getStartCharacter(),crd.getEndCharacter()) || (type == ResourceChange.Type.RULE && updatedRules.contains(((RuleDescr)crd).getParentName()))) {
           pkgcs.getChanges().add(new ResourceChange(ChangeType.UPDATED,type,cName));
+          if (type == ResourceChange.Type.RULE) {
+            updatedRules.add(cName);
+          }
         }
         break;
       }
