@@ -6,25 +6,26 @@
   boolean iterateFromStart=existsNode.isIndexedUnificationJoin() || rtm.getIndexType().isComparison();
   for (RightTuple rightTuple=srcRightTuples.getUpdateFirst(); rightTuple != null; ) {
     RightTuple next=rightTuple.getStagedNext();
-    FastIterator leftIt=existsNode.getLeftIterator(ltm);
-    PropagationContext context=rightTuple.getPropagationContext();
-    LeftTuple firstLeftTuple=existsNode.getFirstLeftTuple(rightTuple,ltm,context,leftIt);
-    constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
-    LeftTuple firstBlocked=rightTuple.getTempBlocked();
-    for (LeftTuple leftTuple=firstLeftTuple; leftTuple != null; ) {
-      LeftTuple temp=(LeftTuple)leftIt.next(leftTuple);
-      if (leftTuple.getStagedType() == LeftTuple.UPDATE) {
+    if (ltm != null && ltm.size() > 0) {
+      FastIterator leftIt=existsNode.getLeftIterator(ltm);
+      LeftTuple firstLeftTuple=existsNode.getFirstLeftTuple(rightTuple,ltm,leftIt);
+      constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
+      for (LeftTuple leftTuple=firstLeftTuple; leftTuple != null; ) {
+        LeftTuple temp=(LeftTuple)leftIt.next(leftTuple);
+        if (leftTuple.getStagedType() == LeftTuple.UPDATE) {
+          leftTuple=temp;
+          continue;
+        }
+        if (constraints.isAllowedCachedRight(contextEntry,leftTuple)) {
+          leftTuple.setBlocker(rightTuple);
+          rightTuple.addBlocked(leftTuple);
+          ltm.remove(leftTuple);
+          trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,sink,rightTuple.getPropagationContext(),true));
+        }
         leftTuple=temp;
-        continue;
       }
-      if (constraints.isAllowedCachedRight(contextEntry,leftTuple)) {
-        leftTuple.setBlocker(rightTuple);
-        rightTuple.addBlocked(leftTuple);
-        ltm.remove(leftTuple);
-        trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,sink,rightTuple.getPropagationContext(),true));
-      }
-      leftTuple=temp;
     }
+    LeftTuple firstBlocked=rightTuple.getTempBlocked();
     if (firstBlocked != null) {
       RightTuple rootBlocker=rightTuple.getTempNextRightTuple();
       if (rootBlocker == null) {
@@ -52,7 +53,9 @@
           }
         }
         if (leftTuple.getBlocker() == null) {
-          ltm.add(leftTuple);
+          if (ltm != null) {
+            ltm.add(leftTuple);
+          }
           LeftTuple childLeftTuple=leftTuple.getFirstChild();
           if (childLeftTuple != null) {
             childLeftTuple.setPropagationContext(rightTuple.getPropagationContext());

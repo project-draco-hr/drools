@@ -6,29 +6,30 @@
   boolean iterateFromStart=notNode.isIndexedUnificationJoin() || rtm.getIndexType().isComparison();
   for (RightTuple rightTuple=srcRightTuples.getUpdateFirst(); rightTuple != null; ) {
     RightTuple next=rightTuple.getStagedNext();
-    PropagationContext context=rightTuple.getPropagationContext();
-    constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
-    FastIterator leftIt=notNode.getLeftIterator(ltm);
-    LeftTuple firstLeftTuple=notNode.getFirstLeftTuple(rightTuple,ltm,context,leftIt);
-    LeftTuple firstBlocked=rightTuple.getTempBlocked();
-    for (LeftTuple leftTuple=firstLeftTuple; leftTuple != null; ) {
-      LeftTuple temp=(LeftTuple)leftIt.next(leftTuple);
-      if (leftTuple.getStagedType() == LeftTuple.UPDATE) {
-        leftTuple=temp;
-        continue;
-      }
-      if (constraints.isAllowedCachedRight(contextEntry,leftTuple)) {
-        leftTuple.setBlocker(rightTuple);
-        rightTuple.addBlocked(leftTuple);
-        ltm.remove(leftTuple);
-        LeftTuple childLeftTuple=leftTuple.getFirstChild();
-        if (childLeftTuple != null) {
-          childLeftTuple.setPropagationContext(rightTuple.getPropagationContext());
-          RuleNetworkEvaluator.deleteRightChild(childLeftTuple,trgLeftTuples,stagedLeftTuples);
+    if (ltm != null && ltm.size() > 0) {
+      constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
+      FastIterator leftIt=notNode.getLeftIterator(ltm);
+      LeftTuple firstLeftTuple=notNode.getFirstLeftTuple(rightTuple,ltm,leftIt);
+      for (LeftTuple leftTuple=firstLeftTuple; leftTuple != null; ) {
+        LeftTuple temp=(LeftTuple)leftIt.next(leftTuple);
+        if (leftTuple.getStagedType() == LeftTuple.UPDATE) {
+          leftTuple=temp;
+          continue;
         }
+        if (constraints.isAllowedCachedRight(contextEntry,leftTuple)) {
+          leftTuple.setBlocker(rightTuple);
+          rightTuple.addBlocked(leftTuple);
+          ltm.remove(leftTuple);
+          LeftTuple childLeftTuple=leftTuple.getFirstChild();
+          if (childLeftTuple != null) {
+            childLeftTuple.setPropagationContext(rightTuple.getPropagationContext());
+            RuleNetworkEvaluator.deleteRightChild(childLeftTuple,trgLeftTuples,stagedLeftTuples);
+          }
+        }
+        leftTuple=temp;
       }
-      leftTuple=temp;
     }
+    LeftTuple firstBlocked=rightTuple.getTempBlocked();
     if (firstBlocked != null) {
       RightTuple rootBlocker=rightTuple.getTempNextRightTuple();
       if (rootBlocker == null) {
@@ -56,7 +57,9 @@
           }
         }
         if (leftTuple.getBlocker() == null) {
-          ltm.add(leftTuple);
+          if (ltm != null) {
+            ltm.add(leftTuple);
+          }
           trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,sink,rightTuple.getPropagationContext(),true));
         }
         leftTuple=temp;

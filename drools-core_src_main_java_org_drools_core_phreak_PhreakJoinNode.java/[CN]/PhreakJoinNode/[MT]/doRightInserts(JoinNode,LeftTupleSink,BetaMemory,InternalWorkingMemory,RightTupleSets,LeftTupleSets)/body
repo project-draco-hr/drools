@@ -6,20 +6,16 @@
   for (RightTuple rightTuple=srcRightTuples.getInsertFirst(); rightTuple != null; ) {
     RightTuple next=rightTuple.getStagedNext();
     rtm.add(rightTuple);
-    if (ltm == null || ltm.size() == 0) {
-      rightTuple.clearStaged();
-      rightTuple=next;
-      continue;
-    }
-    FastIterator it=joinNode.getLeftIterator(ltm);
-    PropagationContext context=rightTuple.getPropagationContext();
-    constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
-    for (LeftTuple leftTuple=joinNode.getFirstLeftTuple(rightTuple,ltm,context,it); leftTuple != null; leftTuple=(LeftTuple)it.next(leftTuple)) {
-      if (leftTuple.getStagedType() == LeftTuple.UPDATE) {
-        continue;
-      }
-      if (constraints.isAllowedCachedRight(contextEntry,leftTuple)) {
-        trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,rightTuple,null,null,sink,true));
+    if (ltm != null && ltm.size() > 0) {
+      FastIterator it=joinNode.getLeftIterator(ltm);
+      constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
+      for (LeftTuple leftTuple=joinNode.getFirstLeftTuple(rightTuple,ltm,it); leftTuple != null; leftTuple=(LeftTuple)it.next(leftTuple)) {
+        if (leftTuple.getStagedType() == LeftTuple.UPDATE) {
+          continue;
+        }
+        if (constraints.isAllowedCachedRight(contextEntry,leftTuple)) {
+          trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,rightTuple,null,null,sink,true));
+        }
       }
     }
     rightTuple.clearStaged();

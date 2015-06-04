@@ -11,20 +11,16 @@
   for (RightTuple rightTuple=srcRightTuples.getInsertFirst(); rightTuple != null; ) {
     RightTuple next=rightTuple.getStagedNext();
     rtm.add(rightTuple);
-    if (ltm == null || ltm.size() == 0) {
-      rightTuple.clearStaged();
-      rightTuple=next;
-      continue;
-    }
-    PropagationContext context=rightTuple.getPropagationContext();
-    constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
-    FastIterator leftIt=accNode.getLeftIterator(ltm);
-    for (LeftTuple leftTuple=accNode.getFirstLeftTuple(rightTuple,ltm,context,leftIt); leftTuple != null; leftTuple=(LeftTuple)leftIt.next(leftTuple)) {
-      if (constraints.isAllowedCachedRight(contextEntry,leftTuple)) {
-        final AccumulateContext accctx=(AccumulateContext)leftTuple.getObject();
-        addMatch(accNode,accumulate,leftTuple,rightTuple,null,null,wm,am,accctx,true);
-        if (leftTuple.getStagedType() == LeftTuple.NONE) {
-          trgLeftTuples.addUpdate(leftTuple);
+    if (ltm != null && ltm.size() > 0) {
+      constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
+      FastIterator leftIt=accNode.getLeftIterator(ltm);
+      for (LeftTuple leftTuple=accNode.getFirstLeftTuple(rightTuple,ltm,leftIt); leftTuple != null; leftTuple=(LeftTuple)leftIt.next(leftTuple)) {
+        if (constraints.isAllowedCachedRight(contextEntry,leftTuple)) {
+          final AccumulateContext accctx=(AccumulateContext)leftTuple.getObject();
+          addMatch(accNode,accumulate,leftTuple,rightTuple,null,null,wm,am,accctx,true);
+          if (leftTuple.getStagedType() == LeftTuple.NONE) {
+            trgLeftTuples.addUpdate(leftTuple);
+          }
         }
       }
     }

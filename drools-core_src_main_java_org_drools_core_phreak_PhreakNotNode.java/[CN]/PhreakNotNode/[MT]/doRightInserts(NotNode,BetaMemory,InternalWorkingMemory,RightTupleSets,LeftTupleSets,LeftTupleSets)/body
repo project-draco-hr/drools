@@ -7,31 +7,27 @@
   for (RightTuple rightTuple=srcRightTuples.getInsertFirst(); rightTuple != null; ) {
     RightTuple next=rightTuple.getStagedNext();
     rtm.add(rightTuple);
-    if (ltm == null || ltm.size() == 0) {
-      rightTuple.clearStaged();
-      rightTuple=next;
-      continue;
-    }
-    FastIterator it=notNode.getLeftIterator(ltm);
-    PropagationContext context=rightTuple.getPropagationContext();
-    constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
-    for (LeftTuple leftTuple=notNode.getFirstLeftTuple(rightTuple,ltm,context,it); leftTuple != null; ) {
-      LeftTuple temp=(LeftTuple)it.next(leftTuple);
-      if (leftTuple.getStagedType() == LeftTuple.UPDATE) {
-        leftTuple=temp;
-        continue;
-      }
-      if (constraints.isAllowedCachedRight(contextEntry,leftTuple)) {
-        leftTuple.setBlocker(rightTuple);
-        rightTuple.addBlocked(leftTuple);
-        ltm.remove(leftTuple);
-        LeftTuple childLeftTuple=leftTuple.getFirstChild();
-        if (childLeftTuple != null) {
-          childLeftTuple.setPropagationContext(rightTuple.getPropagationContext());
-          RuleNetworkEvaluator.deleteLeftChild(childLeftTuple,trgLeftTuples,stagedLeftTuples);
+    if (ltm != null && ltm.size() > 0) {
+      FastIterator it=notNode.getLeftIterator(ltm);
+      constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
+      for (LeftTuple leftTuple=notNode.getFirstLeftTuple(rightTuple,ltm,it); leftTuple != null; ) {
+        LeftTuple temp=(LeftTuple)it.next(leftTuple);
+        if (leftTuple.getStagedType() == LeftTuple.UPDATE) {
+          leftTuple=temp;
+          continue;
         }
+        if (constraints.isAllowedCachedRight(contextEntry,leftTuple)) {
+          leftTuple.setBlocker(rightTuple);
+          rightTuple.addBlocked(leftTuple);
+          ltm.remove(leftTuple);
+          LeftTuple childLeftTuple=leftTuple.getFirstChild();
+          if (childLeftTuple != null) {
+            childLeftTuple.setPropagationContext(rightTuple.getPropagationContext());
+            RuleNetworkEvaluator.deleteLeftChild(childLeftTuple,trgLeftTuples,stagedLeftTuples);
+          }
+        }
+        leftTuple=temp;
       }
-      leftTuple=temp;
     }
     rightTuple.clearStaged();
     rightTuple=next;
