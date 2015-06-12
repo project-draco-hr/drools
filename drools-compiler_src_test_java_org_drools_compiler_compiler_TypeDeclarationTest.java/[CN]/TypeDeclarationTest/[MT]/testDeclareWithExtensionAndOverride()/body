@@ -1,0 +1,30 @@
+{
+  final String s1="package test; " + "global java.util.List list; " + "declare Sub extends Sup "+ " fld : String "+ "end "+ "declare Sup "+ " fld : Object "+ "end "+ "rule Init when "+ "then insert( new Sub( 'aa' ) ); end "+ "rule CheckSup when "+ " $s : Sup( $f : fld == 'aa' ) "+ "then "+ "  list.add( \"Sup\" + $f );  "+ "end "+ "rule CheckSub when "+ " $s : Sub( $f : fld == 'aa' ) "+ "then "+ "  list.add( \"Sub\" + $f );  "+ "end ";
+  KieHelper kh=new KieHelper();
+  kh.addContent(s1,ResourceType.DRL);
+  assertEquals(0,kh.verify().getMessages(Message.Level.ERROR).size());
+  assertEquals(0,kh.verify().getMessages(Message.Level.WARNING).size());
+  KieSession ks=kh.build().newKieSession();
+  List list=new ArrayList();
+  ks.setGlobal("list",list);
+  ks.fireAllRules();
+  assertEquals(2,list.size());
+  assertTrue(list.containsAll(asList("Supaa","Subaa")));
+  FactType sup=ks.getKieBase().getFactType("test","Sup");
+  FactType sub=ks.getKieBase().getFactType("test","Sub");
+  try {
+    Method m1=sup.getFactClass().getMethod("getFld");
+    assertNotNull(m1);
+    assertEquals(Object.class,m1.getReturnType());
+    Method m2=sub.getFactClass().getMethod("getFld");
+    assertNotNull(m2);
+    assertEquals(String.class,m2.getReturnType());
+    assertEquals(0,sub.getFactClass().getFields().length);
+    assertEquals(0,sub.getFactClass().getDeclaredFields().length);
+    assertEquals(1,sup.getFactClass().getDeclaredFields().length);
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}

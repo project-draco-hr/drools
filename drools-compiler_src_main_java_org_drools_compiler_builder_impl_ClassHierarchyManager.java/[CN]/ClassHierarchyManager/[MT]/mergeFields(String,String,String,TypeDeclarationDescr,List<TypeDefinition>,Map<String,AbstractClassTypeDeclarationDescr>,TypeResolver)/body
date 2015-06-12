@@ -74,24 +74,40 @@ catch (    IOException e) {
  catch (        ClassNotFoundException cnfe) {
         }
       }
-      if (!type1.equals(type2)) {
+      boolean clash=!type1.equals(type2);
+      TypeFieldDescr overriding=null;
+      if (clash) {
+        try {
+          Class<?> sup=resolver.resolveType(type1);
+          Class<?> loc=resolver.resolveType(type2);
+          if (sup.isAssignableFrom(loc)) {
+            clash=false;
+            overriding=fieldMap.get(fieldName);
+          }
+        }
+ catch (        ClassNotFoundException cnfe) {
+        }
+      }
+      if (clash) {
         kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Cannot redeclare field '" + fieldName + " from "+ type1+ " to "+ type2));
         typeDescr.setType(null,null);
         return false;
       }
  else {
         String initVal=fieldMap.get(fieldName).getInitExpr();
-        if (typeDescr.getFields().get(fieldName).getInitExpr() == null) {
-          typeDescr.getFields().get(fieldName).setInitExpr(initVal);
+        TypeFieldDescr fd=typeDescr.getFields().get(fieldName);
+        if (fd.getInitExpr() == null) {
+          fd.setInitExpr(initVal);
         }
-        typeDescr.getFields().get(fieldName).setInherited(fieldMap.get(fieldName).isInherited());
+        fd.setInherited(fieldMap.get(fieldName).isInherited());
+        fd.setOverriding(overriding);
         for (        String key : fieldMap.get(fieldName).getAnnotationNames()) {
-          if (typeDescr.getFields().get(fieldName).getAnnotation(key) == null) {
-            typeDescr.getFields().get(fieldName).addAnnotation(fieldMap.get(fieldName).getAnnotation(key));
+          if (fd.getAnnotation(key) == null) {
+            fd.addAnnotation(fieldMap.get(fieldName).getAnnotation(key));
           }
         }
-        if (typeDescr.getFields().get(fieldName).getIndex() < 0) {
-          typeDescr.getFields().get(fieldName).setIndex(fieldMap.get(fieldName).getIndex());
+        if (fd.getIndex() < 0) {
+          fd.setIndex(fieldMap.get(fieldName).getIndex());
         }
       }
     }

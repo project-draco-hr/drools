@@ -9,8 +9,15 @@
       mv.visitLabel(l0);
     }
     mv.visitVarInsn(Opcodes.ALOAD,0);
-    mv.visitFieldInsn(Opcodes.GETFIELD,BuildUtils.getInternalType(classDef.getClassName()),fieldDef.getName(),BuildUtils.getTypeDescriptor(fieldDef.getTypeName()));
-    mv.visitInsn(Type.getType(BuildUtils.getTypeDescriptor(fieldDef.getTypeName())).getOpcode(Opcodes.IRETURN));
+    if (!fieldDef.hasOverride()) {
+      mv.visitFieldInsn(Opcodes.GETFIELD,BuildUtils.getInternalType(classDef.getClassName()),fieldDef.getName(),BuildUtils.getTypeDescriptor(fieldDef.getTypeName()));
+      mv.visitInsn(Type.getType(BuildUtils.getTypeDescriptor(fieldDef.getTypeName())).getOpcode(Opcodes.IRETURN));
+    }
+ else {
+      mv.visitMethodInsn(INVOKESPECIAL,BuildUtils.getInternalType(classDef.getSuperClass()),BuildUtils.getterName(fieldDef.getName(),fieldDef.getOverriding()),Type.getMethodDescriptor(Type.getType(BuildUtils.getTypeDescriptor(fieldDef.getOverriding())),new Type[]{}),false);
+      mv.visitTypeInsn(CHECKCAST,BuildUtils.getInternalType(fieldDef.getTypeName()));
+      mv.visitInsn(BuildUtils.returnType(fieldDef.getTypeName()));
+    }
     Label l1=null;
     if (this.debug) {
       l1=new Label();

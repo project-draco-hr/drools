@@ -15,7 +15,12 @@
  else {
       mv.visitVarInsn(Type.getType(BuildUtils.getTypeDescriptor(fieldDef.getTypeName())).getOpcode(Opcodes.ILOAD),1);
     }
-    mv.visitFieldInsn(Opcodes.PUTFIELD,BuildUtils.getInternalType(classDef.getClassName()),fieldDef.getName(),BuildUtils.getTypeDescriptor(fieldDef.getTypeName()));
+    if (!fieldDef.hasOverride()) {
+      mv.visitFieldInsn(Opcodes.PUTFIELD,BuildUtils.getInternalType(classDef.getClassName()),fieldDef.getName(),BuildUtils.getTypeDescriptor(fieldDef.getTypeName()));
+    }
+ else {
+      mv.visitMethodInsn(INVOKESPECIAL,BuildUtils.getInternalType(classDef.getSuperClass()),BuildUtils.setterName(fieldDef.getName(),fieldDef.getOverriding()),Type.getMethodDescriptor(Type.VOID_TYPE,new Type[]{Type.getType(BuildUtils.getTypeDescriptor(fieldDef.getOverriding()))}),false);
+    }
     mv.visitInsn(Opcodes.RETURN);
     Label l1=null;
     if (this.debug) {

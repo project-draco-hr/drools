@@ -2,8 +2,10 @@
   taxonomy=new HashMap<QualifiedName,Collection<QualifiedName>>();
   Map<QualifiedName,AbstractClassTypeDeclarationDescr> cache=new HashMap<QualifiedName,AbstractClassTypeDeclarationDescr>();
   for (  AbstractClassTypeDeclarationDescr tdescr : unsortedDescrs) {
+    cache.put(tdescr.getType(),tdescr);
+  }
+  for (  AbstractClassTypeDeclarationDescr tdescr : unsortedDescrs) {
     QualifiedName name=tdescr.getType();
-    cache.put(name,tdescr);
     Collection<QualifiedName> supers=taxonomy.get(name);
     if (supers == null) {
       supers=new ArrayList<QualifiedName>();
@@ -16,7 +18,9 @@
     for (    QualifiedName sup : tdescr.getSuperTypes()) {
       if (!Object.class.getName().equals(name.getFullName())) {
         if (!hasCircularDependency(tdescr.getType(),sup,taxonomy)) {
-          supers.add(sup);
+          if (cache.containsKey(sup)) {
+            supers.add(sup);
+          }
         }
  else {
           circular=true;
@@ -34,7 +38,9 @@
       QualifiedName name=tdescr.getType();
       QualifiedName typeName=new QualifiedName(field.getPattern().getObjectType());
       if (!hasCircularDependency(name,typeName,taxonomy)) {
-        taxonomy.get(name).add(typeName);
+        if (cache.containsKey(typeName)) {
+          taxonomy.get(name).add(typeName);
+        }
       }
  else {
         field.setRecursive(true);
