@@ -1,0 +1,23 @@
+{
+  List<String> existing=new ArrayList<String>();
+  for (  String existingFieldName : cfi.getFieldTypesField().keySet()) {
+    if (!cfi.isNonGetter(existingFieldName) && !"class".equals(existingFieldName) && cfi.getSetterMethods().containsKey(existingFieldName)) {
+      existing.add(existingFieldName);
+    }
+  }
+  Collections.sort(existing);
+  List<String> declared=new ArrayList<String>(typeDescr.getFields().keySet());
+  Collections.sort(declared);
+  List<String> deltas=new ArrayList<String>();
+  for (  String s : existing) {
+    if (!declared.contains(s)) {
+      deltas.add("--" + s);
+    }
+  }
+  for (  String s : declared) {
+    if (!existing.contains(s)) {
+      deltas.add("++" + s);
+    }
+  }
+  return new TypeDeclarationError(typeDescr,"New declaration of " + typeDescr.getType().getFullName() + " can't declare a different set of fields \n"+ "existing : "+ existing+ "\n"+ "declared : "+ declared+ "\n"+ "diff : "+ deltas);
+}
