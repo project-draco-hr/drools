@@ -1,0 +1,19 @@
+{
+  String drl="rule Rule1\n" + "  when\n" + "    Integer()\n"+ "    String()\n"+ "    Long()\n"+ "    not (Double())\n"+ "  then \n"+ "end\n"+ "\n"+ "rule Rule2\n"+ "  when\n"+ "    Integer()\n"+ "    String()\n"+ "  then \n"+ "end";
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId releaseId1=ks.newReleaseId("org.kie","test-upgrade","1.0.0");
+  KieModule km=createAndDeployJar(ks,releaseId1);
+  KieContainer kc=ks.newKieContainer(km.getReleaseId());
+  KieSession ksession=kc.newKieSession();
+  ksession.insert("test");
+  ReleaseId releaseId2=ks.newReleaseId("org.kie","test-upgrade","1.1.0");
+  createAndDeployJar(ks,releaseId2,drl);
+  kc.updateToVersion(releaseId2);
+  FactHandle handle=ksession.insert(1);
+  ksession.fireAllRules();
+  ksession.update(handle,1);
+  ksession.fireAllRules();
+  ReleaseId releaseId3=ks.newReleaseId("org.kie","test-upgrade","1.2.0");
+  createAndDeployJar(ks,releaseId3);
+  kc.updateToVersion(releaseId3);
+}
