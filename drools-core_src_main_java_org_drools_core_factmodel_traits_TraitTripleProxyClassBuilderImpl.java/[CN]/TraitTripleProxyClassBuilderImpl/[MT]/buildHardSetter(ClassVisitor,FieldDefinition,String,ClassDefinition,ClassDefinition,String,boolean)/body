@@ -4,7 +4,8 @@
   mv.visitCode();
   if (core.isFullTraiting()) {
     FieldDefinition hardField=core.getFieldByAlias(field.resolveAlias());
-    if (!field.getType().isPrimitive() && !field.getTypeName().equals(hardField.getTypeName())) {
+    boolean isHardField=field.getTypeName().equals(hardField.getTypeName());
+    if (!field.getType().isPrimitive() && !isHardField) {
       boolean isCoreTrait=hardField.getType().getAnnotation(Trait.class) != null;
       boolean isTraitTrait=field.getType().getAnnotation(Trait.class) != null;
       Label l0=new Label();
@@ -48,6 +49,9 @@
       if (!hardField.getType().equals(field.getType())) {
         mv.visitInsn(RETURN);
       }
+    }
+    if (isHardField && CoreWrapper.class.isAssignableFrom(core.getDefinedClass())) {
+      logicalSetter(mv,field,masterName,this.trait,core,true);
     }
   }
   TraitFactory.invokeInjector(mv,masterName,trait,core,field,false,1);

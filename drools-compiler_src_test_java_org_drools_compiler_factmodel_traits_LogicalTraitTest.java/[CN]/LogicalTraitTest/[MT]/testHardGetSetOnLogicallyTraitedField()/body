@@ -1,0 +1,20 @@
+{
+  String drl="package org.drools.test; " + "import " + Qty.class.getCanonicalName() + "; "+ ""+ "global java.util.List list; "+ "declare Obs @Traitable( logical = true ) value : Qty end "+ "declare trait TObs @Trait( logical = true ) value : TQty end "+ "declare trait TQty @Trait( logical = true ) num : Integer end "+ "rule Init "+ "when "+ "then "+ "  Obs o = new Obs( new Qty( 42 ) ); "+ "  don( o, TObs.class ); "+ "end "+ "rule Log "+ "when "+ "  $o : TObs( $val : value.num ) "+ "then "+ "  list.add( $val ); "+ "end "+ "rule Change "+ "when "+ "  $s : String() "+ "  $o : TObs() "+ "then "+ "  delete( $s ); "+ "  modify( $o ) { getValue().setNum( 99 ); } "+ "end ";
+  KnowledgeBase knowledgeBase=loadKnowledgeBaseFromString(drl);
+  TraitFactory.setMode(mode,knowledgeBase);
+  StatefulKnowledgeSession knowledgeSession=knowledgeBase.newStatefulKnowledgeSession();
+  ArrayList list=new ArrayList();
+  knowledgeSession.setGlobal("list",list);
+  knowledgeSession.fireAllRules();
+  knowledgeSession.insert("x");
+  knowledgeSession.fireAllRules();
+  boolean found=false;
+  for (  Object o : knowledgeSession.getObjects(new ClassObjectFilter(Qty.class))) {
+    assertEquals((Integer)99,((Qty)o).getNum());
+    assertEquals(99,((CoreWrapper)o)._getFieldTMS().get("num",Integer.class));
+    found=true;
+  }
+  assertTrue(found);
+  assertEquals(Arrays.asList(42,99),list);
+  knowledgeSession.dispose();
+}
