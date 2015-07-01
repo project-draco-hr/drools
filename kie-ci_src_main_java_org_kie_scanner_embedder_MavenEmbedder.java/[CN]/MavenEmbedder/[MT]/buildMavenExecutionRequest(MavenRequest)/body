@@ -7,8 +7,8 @@
     mavenExecutionRequest.setUserSettingsFile(new File(mavenRequest.getUserSettingsFile()));
   }
   try {
-    lookup(MavenExecutionRequestPopulator.class).populateFromSettings(mavenExecutionRequest,getSettings());
-    lookup(MavenExecutionRequestPopulator.class).populateDefaults(mavenExecutionRequest);
+    componentProvider.lookup(MavenExecutionRequestPopulator.class).populateFromSettings(mavenExecutionRequest,getSettings());
+    componentProvider.lookup(MavenExecutionRequestPopulator.class).populateDefaults(mavenExecutionRequest);
   }
  catch (  MavenExecutionRequestPopulationException e) {
     throw new MavenEmbedderException(e.getMessage(),e);
@@ -27,9 +27,6 @@
     mavenExecutionRequest.getSystemProperties().putAll(mavenRequest.getSystemProperties());
   }
   mavenExecutionRequest.getSystemProperties().putAll(getEnvVars());
-  if (this.mavenHome != null) {
-    mavenExecutionRequest.getSystemProperties().put("maven.home",this.mavenHome.getAbsolutePath());
-  }
   if (mavenRequest.getProfiles() != null && !mavenRequest.getProfiles().isEmpty()) {
     for (    String id : mavenRequest.getProfiles()) {
       Profile p=new Profile();
@@ -40,7 +37,7 @@
     }
   }
   mavenExecutionRequest.setLoggingLevel(mavenRequest.getLoggingLevel());
-  lookup(Logger.class).setThreshold(mavenRequest.getLoggingLevel());
+  componentProvider.lookup(Logger.class).setThreshold(mavenRequest.getLoggingLevel());
   mavenExecutionRequest.setExecutionListener(mavenRequest.getExecutionListener()).setInteractiveMode(mavenRequest.isInteractive()).setGlobalChecksumPolicy(mavenRequest.getGlobalChecksumPolicy()).setGoals(mavenRequest.getGoals());
   if (mavenRequest.getPom() != null) {
     mavenExecutionRequest.setPom(new File(mavenRequest.getPom()));

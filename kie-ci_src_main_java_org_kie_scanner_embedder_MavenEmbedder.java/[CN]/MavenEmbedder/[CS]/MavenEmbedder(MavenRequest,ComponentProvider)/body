@@ -1,0 +1,16 @@
+{
+  this.mavenRequest=mavenRequest;
+  this.componentProvider=componentProvider;
+  try {
+    this.mavenExecutionRequest=this.buildMavenExecutionRequest(mavenRequest);
+    RepositorySystemSession rss=((DefaultMaven)componentProvider.lookup(Maven.class)).newRepositorySession(mavenExecutionRequest);
+    MavenSession mavenSession=new MavenSession(componentProvider.getPlexusContainer(),rss,mavenExecutionRequest,new DefaultMavenExecutionResult());
+    componentProvider.lookup(LegacySupport.class).setSession(mavenSession);
+  }
+ catch (  MavenEmbedderException e) {
+    throw new MavenEmbedderException(e.getMessage(),e);
+  }
+catch (  ComponentLookupException e) {
+    throw new MavenEmbedderException(e.getMessage(),e);
+  }
+}
