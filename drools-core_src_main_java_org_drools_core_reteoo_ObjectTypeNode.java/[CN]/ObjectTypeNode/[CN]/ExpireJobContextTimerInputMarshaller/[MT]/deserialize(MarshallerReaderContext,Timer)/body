@@ -1,11 +1,8 @@
 {
   ExpireTimer _expire=_timer.getExpire();
   InternalFactHandle factHandle=inCtx.handles.get(_expire.getHandleId());
-  EntryPointNode epn=inCtx.wm.getKnowledgeBase().getRete().getEntryPointNode(new EntryPointId(_expire.getEntryPointId()));
-  Class<?> cls=inCtx.wm.getKnowledgeBase().getRootClassLoader().loadClass(_expire.getClassName());
-  ObjectTypeNode otn=epn.getObjectTypeNodes().get(new ClassObjectType(cls));
   TimerService clock=inCtx.wm.getTimerService();
-  JobContext jobctx=new ExpireJobContext(new WorkingMemoryReteExpireAction((EventFactHandle)factHandle,otn),inCtx.wm);
+  JobContext jobctx=new ExpireJobContext(new WorkingMemoryReteExpireAction((EventFactHandle)factHandle),inCtx.wm);
   JobHandle jobHandle=clock.scheduleJob(job,jobctx,new PointInTimeTrigger(_expire.getNextFireTimestamp(),null,null));
   jobctx.setJobHandle(jobHandle);
   ((EventFactHandle)factHandle).addJob(jobHandle);

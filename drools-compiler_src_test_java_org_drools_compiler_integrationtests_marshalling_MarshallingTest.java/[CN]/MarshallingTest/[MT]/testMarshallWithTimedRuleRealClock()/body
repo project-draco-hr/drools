@@ -1,0 +1,28 @@
+{
+  String drl="rule \"Rule A Timeout\"\n" + "when\n" + "    String( this == \"ATrigger\" )\n"+ "then\n"+ "   insert (new String( \"A-Timer\") );\n"+ "end\n"+ "\n"+ "rule \"Timer For rule A Timeout\"\n"+ "    timer ( int: 5s )\n"+ "when\n"+ "   String( this == \"A-Timer\")\n"+ "then\n"+ "   delete ( \"A-Timer\" );\n"+ "   delete ( \"ATrigger\" );\n"+ "end\n";
+  KieBase kbase=new KieHelper().addContent(drl,ResourceType.DRL).build(EqualityBehaviorOption.EQUALITY,DeclarativeAgendaOption.ENABLED,EventProcessingOption.STREAM);
+  KieSession ksession=kbase.newKieSession();
+  ksession.insert("ATrigger");
+  assertEquals(1,ksession.getFactCount());
+  ksession.fireAllRules();
+  assertEquals(2,ksession.getFactCount());
+  try {
+    Thread.sleep(4000L);
+  }
+ catch (  InterruptedException e) {
+    throw new RuntimeException(e);
+  }
+  assertEquals(2,ksession.getFactCount());
+  ksession.fireAllRules();
+  assertEquals(2,ksession.getFactCount());
+  ksession=marshallAndUnmarshall(kbase,ksession,null);
+  try {
+    Thread.sleep(4000L);
+  }
+ catch (  InterruptedException e) {
+    throw new RuntimeException(e);
+  }
+  assertEquals(2,ksession.getFactCount());
+  ksession.fireAllRules();
+  assertEquals(0,ksession.getFactCount());
+}

@@ -3,7 +3,7 @@
     throw new UnsupportedOperationException("Command " + command + " cannot be issued on a persisted session");
   }
   if (command instanceof DisposeCommand) {
-    T result=executeNext((GenericCommand<T>)command);
+    T result=executeNext(command);
     jpm.dispose();
     return result;
   }
@@ -29,7 +29,7 @@
     }
  else {
       logger.trace("Executing " + command.getClass().getSimpleName());
-      result=executeNext((GenericCommand<T>)command);
+      result=executeNext(command);
     }
     registerUpdateSync();
     txm.commit(transactionOwner);
@@ -42,11 +42,5 @@
 catch (  Exception t1) {
     rollbackTransaction(t1,transactionOwner);
     throw new RuntimeException("Wrapped exception see cause",t1);
-  }
- finally {
-    if (command instanceof DisposeCommand) {
-      executeNext((GenericCommand<T>)command);
-      jpm.dispose();
-    }
   }
 }

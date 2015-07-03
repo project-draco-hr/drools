@@ -1,13 +1,8 @@
 {
   InternalFactHandle factHandle=inCtx.handles.get(inCtx.readInt());
-  String entryPointId=inCtx.readUTF();
-  EntryPointNode epn=inCtx.wm.getKnowledgeBase().getRete().getEntryPointNode(new EntryPointId(entryPointId));
-  String className=inCtx.readUTF();
-  Class<?> cls=inCtx.wm.getKnowledgeBase().getRootClassLoader().loadClass(className);
-  ObjectTypeNode otn=epn.getObjectTypeNodes().get(new ClassObjectType(cls));
   long nextTimeStamp=inCtx.readLong();
   TimerService clock=inCtx.wm.getTimerService();
-  JobContext jobctx=new ExpireJobContext(new WorkingMemoryReteExpireAction((EventFactHandle)factHandle,otn),inCtx.wm);
+  JobContext jobctx=new ExpireJobContext(new WorkingMemoryReteExpireAction((EventFactHandle)factHandle),inCtx.wm);
   JobHandle handle=clock.scheduleJob(job,jobctx,new PointInTimeTrigger(nextTimeStamp,null,null));
   jobctx.setJobHandle(handle);
 }
