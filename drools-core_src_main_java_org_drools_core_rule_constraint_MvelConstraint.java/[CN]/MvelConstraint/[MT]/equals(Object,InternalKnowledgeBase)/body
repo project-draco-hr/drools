@@ -1,0 +1,18 @@
+{
+  if (!equals(object)) {
+    return false;
+  }
+  String thisPkg=packageNames.iterator().next();
+  String otherPkg=((MvelConstraint)object).packageNames.iterator().next();
+  if (thisPkg.equals(otherPkg)) {
+    return true;
+  }
+  Map<String,Object> thisImports=((MVELDialectRuntimeData)kbase.getPackage(thisPkg).getDialectRuntimeRegistry().getDialectData("mvel")).getImports();
+  Map<String,Object> otherImports=((MVELDialectRuntimeData)kbase.getPackage(otherPkg).getDialectRuntimeRegistry().getDialectData("mvel")).getImports();
+  for (  String token : expression.split("[\\s\\.=<>!\\(\\)\\[\\]]")) {
+    if (!areNullSafeEquals(thisImports.get(token),otherImports.get(token))) {
+      return false;
+    }
+  }
+  return true;
+}
