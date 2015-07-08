@@ -1,0 +1,18 @@
+{
+  KieSessionConfiguration sessionConfig=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  sessionConfig.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  KieSession ksession=new KieHelper().addContent(drl,ResourceType.DRL).build(EventProcessingOption.STREAM).newKieSession(sessionConfig,null);
+  List<Double> list=new ArrayList<Double>();
+  ksession.setGlobal("list",list);
+  ksession.insert("RHT");
+  ksession.insert(new StockTick(1L,"RHT",10.0));
+  ksession.insert(new StockTick(2L,"RHT",10.0));
+  ksession.insert(new StockTick(3L,"ABC",20.0));
+  ksession.insert(new StockTick(4L,"RHT",10.0));
+  ksession.insert(new StockTick(5L,"XYZ",20.0));
+  ksession.insert(new StockTick(6L,"XYZ",20.0));
+  ksession.insert(new StockTick(7L,"RHT",10.0));
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  assertEquals(expectedPrice,(double)list.get(0),0.01);
+}
