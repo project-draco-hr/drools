@@ -2,14 +2,38 @@
   try {
     final ColumnFactory cf=new ColumnFactory();
     final BufferedReader templateReader=new BufferedReader(new InputStreamReader(templateStream,IoUtils.UTF8_CHARSET));
-    String line=null;
-    StringBuffer header=new StringBuffer();
+    String line;
     boolean inTemplate=false;
     boolean inHeader=false;
     boolean inContents=false;
+    boolean inMultiLineComment=false;
     RuleTemplate template=null;
-    StringBuffer contents=new StringBuffer();
+    StringBuilder header=new StringBuilder();
+    StringBuilder contents=new StringBuilder();
     while ((line=templateReader.readLine()) != null) {
+      if (inMultiLineComment) {
+        int commentEnd=line.indexOf("*/");
+        if (commentEnd >= 0) {
+          line=line.substring(commentEnd + 2);
+          inMultiLineComment=false;
+        }
+ else {
+          line="";
+        }
+      }
+ else {
+        int commentStart=line.indexOf("/*");
+        if (commentStart >= 0) {
+          int commentEnd=line.indexOf("*/");
+          if (commentEnd > commentStart) {
+            line=line.substring(0,commentStart) + line.substring(commentEnd + 2);
+          }
+ else {
+            line=line.substring(0,commentStart);
+            inMultiLineComment=true;
+          }
+        }
+      }
       String trimmed=line.trim();
       if (trimmed.length() > 0) {
         if (trimmed.startsWith("template header")) {
@@ -24,7 +48,7 @@
           addTemplate(template);
         }
  else         if (trimmed.startsWith("package")) {
-          if (inHeader == false) {
+          if (!inHeader) {
             throw new DecisionTableParseException("Missing header");
           }
           inHeader=false;
@@ -37,7 +61,7 @@
  else         if (inHeader) {
           addColumn(cf.getColumn(trimmed));
         }
- else         if (!inTemplate && !inHeader) {
+ else         if (!inTemplate) {
           header.append(line).append("\n");
         }
  else         if (!inContents && trimmed.startsWith("rule")) {
@@ -51,9 +75,9 @@
           inContents=false;
         }
  else         if (inContents) {
-          contents.append(line).append("\n");
+          contents.append(removeSingleLineComment(line)).append("\n");
         }
- else         if (inTemplate) {
+ else {
           template.addColumn(trimmed);
         }
       }
