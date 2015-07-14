@@ -1,0 +1,43 @@
+{
+  String str="";
+  str+="package org.kie.test\n";
+  str+="global java.util.List list\n";
+  str+="rule rule1\n";
+  str+="when\n";
+  str+="  Integer(intValue > 0)\n";
+  str+="then\n";
+  str+="  list.add( 1 );\n";
+  str+="end\n";
+  str+="\n";
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  kbuilder.add(ResourceFactory.newByteArrayResource(str.getBytes()),ResourceType.DRL);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  if (kbuilder.hasErrors()) {
+    fail(kbuilder.getErrors().toString());
+  }
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  StatefulKnowledgeSession ksession=JPAKnowledgeService.newStatefulKnowledgeSession(kbase,null,env);
+  SingleSessionCommandService sscs=(SingleSessionCommandService)((CommandBasedStatefulKnowledgeSession)ksession).getCommandService();
+  sscs.addInterceptor(new LoggingInterceptor());
+  sscs.addInterceptor(new FireAllRulesInterceptor());
+  sscs.addInterceptor(new LoggingInterceptor());
+  CommandService internalCommandService=sscs.getCommandService();
+  assertEquals(LoggingInterceptor.class,internalCommandService.getClass());
+  internalCommandService=((Interceptor)internalCommandService).getNext();
+  assertEquals(FireAllRulesInterceptor.class,internalCommandService.getClass());
+  internalCommandService=((Interceptor)internalCommandService).getNext();
+  assertEquals(LoggingInterceptor.class,internalCommandService.getClass());
+  UserTransaction ut=InitialContext.doLookup("java:comp/UserTransaction");
+  ut.begin();
+  List<?> list=new ArrayList<Object>();
+  ksession.setGlobal("list",list);
+  ksession.insert(1);
+  ut.rollback();
+  ksession.insert(3);
+  internalCommandService=sscs.getCommandService();
+  assertEquals(LoggingInterceptor.class,internalCommandService.getClass());
+  internalCommandService=((Interceptor)internalCommandService).getNext();
+  assertEquals(FireAllRulesInterceptor.class,internalCommandService.getClass());
+  internalCommandService=((Interceptor)internalCommandService).getNext();
+  assertEquals(LoggingInterceptor.class,internalCommandService.getClass());
+}
