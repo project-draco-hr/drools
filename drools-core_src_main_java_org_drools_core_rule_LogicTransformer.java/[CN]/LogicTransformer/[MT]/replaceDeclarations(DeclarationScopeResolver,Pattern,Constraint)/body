@@ -1,0 +1,26 @@
+{
+  Declaration[] decl=constraint.getRequiredDeclarations();
+  for (  Declaration aDecl : decl) {
+    Declaration resolved=resolver.getDeclaration(null,aDecl.getIdentifier());
+    if (constraint instanceof MvelConstraint && ((MvelConstraint)constraint).isUnification()) {
+      if (ClassObjectType.DroolsQuery_ObjectType.isAssignableFrom(resolved.getPattern().getObjectType())) {
+        Declaration redeclaredDeclr=new Declaration(resolved.getIdentifier(),((MvelConstraint)constraint).getFieldExtractor(),pattern,false);
+        pattern.addDeclaration(redeclaredDeclr);
+      }
+ else       if (resolved.getPattern() != pattern) {
+        ((MvelConstraint)constraint).unsetUnification();
+      }
+    }
+    if (resolved != null && resolved != aDecl && resolved.getPattern() != pattern) {
+      constraint.replaceDeclaration(aDecl,resolved);
+    }
+ else     if (resolved == null) {
+      Pattern old=aDecl.getPattern();
+      Pattern current=resolver.findPatternByIndex(old.getIndex());
+      if (current != null && old != current) {
+        resolved=new Declaration(aDecl.getIdentifier(),aDecl.getExtractor(),current);
+        constraint.replaceDeclaration(aDecl,resolved);
+      }
+    }
+  }
+}

@@ -1,38 +1,14 @@
 {
   if (element instanceof Pattern) {
     Pattern pattern=(Pattern)element;
-    for (Iterator it=pattern.getNestedElements().iterator(); it.hasNext(); ) {
-      processElement(resolver,contextStack,(RuleConditionElement)it.next());
+    for (    RuleConditionElement ruleConditionElement : pattern.getNestedElements()) {
+      processElement(resolver,contextStack,ruleConditionElement);
     }
-    for (    Constraint next : pattern.getConstraints()) {
-      if (next instanceof Declaration) {
+    for (    Constraint constraint : pattern.getConstraints()) {
+      if (constraint instanceof Declaration) {
         continue;
       }
-      Constraint constraint=(Constraint)next;
-      Declaration[] decl=constraint.getRequiredDeclarations();
-      for (int i=0; i < decl.length; i++) {
-        Declaration resolved=resolver.getDeclaration(null,decl[i].getIdentifier());
-        if (constraint instanceof MvelConstraint && ((MvelConstraint)constraint).isUnification()) {
-          if (ClassObjectType.DroolsQuery_ObjectType.isAssignableFrom(resolved.getPattern().getObjectType())) {
-            Declaration redeclaredDeclr=new Declaration(resolved.getIdentifier(),((MvelConstraint)constraint).getFieldExtractor(),pattern,false);
-            pattern.addDeclaration(redeclaredDeclr);
-          }
- else           if (resolved.getPattern() != pattern) {
-            ((MvelConstraint)constraint).unsetUnification();
-          }
-        }
-        if (resolved != null && resolved != decl[i] && resolved.getPattern() != pattern) {
-          constraint.replaceDeclaration(decl[i],resolved);
-        }
- else         if (resolved == null) {
-          Pattern old=decl[i].getPattern();
-          Pattern current=resolver.findPatternByIndex(old.getIndex());
-          if (current != null && old != current) {
-            resolved=new Declaration(decl[i].getIdentifier(),decl[i].getExtractor(),current);
-            constraint.replaceDeclaration(decl[i],resolved);
-          }
-        }
-      }
+      replaceDeclarations(resolver,pattern,constraint);
     }
   }
  else   if (element instanceof EvalCondition) {
@@ -42,7 +18,9 @@
     for (    RuleConditionElement rce : element.getNestedElements()) {
       processElement(resolver,contextStack,rce);
     }
-    ((Accumulate)element).resetInnerDeclarationCache();
+    Accumulate accumulate=(Accumulate)element;
+    replaceDeclarations(resolver,accumulate);
+    accumulate.resetInnerDeclarationCache();
   }
  else   if (element instanceof From) {
     DataProvider provider=((From)element).getDataProvider();

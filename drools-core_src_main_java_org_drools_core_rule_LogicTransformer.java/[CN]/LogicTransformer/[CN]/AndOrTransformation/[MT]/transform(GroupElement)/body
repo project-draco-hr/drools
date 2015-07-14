@@ -1,12 +1,12 @@
 {
-  final List orsList=new ArrayList();
-  final Object[] others=new Object[parent.getChildren().size()];
+  final List<GroupElement> orsList=new ArrayList<GroupElement>();
+  final RuleConditionElement[] others=new RuleConditionElement[parent.getChildren().size()];
   int permutations=1;
   int index=0;
   for (  final RuleConditionElement child : parent.getChildren()) {
     if ((child instanceof GroupElement) && ((GroupElement)child).isOr()) {
       permutations*=((GroupElement)child).getChildren().size();
-      orsList.add(child);
+      orsList.add((GroupElement)child);
     }
  else {
       others[index]=child;
@@ -15,21 +15,21 @@
   }
   parent.setType(GroupElement.OR);
   parent.getChildren().clear();
-  final GroupElement[] ors=(GroupElement[])orsList.toArray(new GroupElement[orsList.size()]);
-  final int[] indexes=new int[ors.length];
+  final int[] indexes=new int[orsList.size()];
   for (int i=1; i <= permutations; i++) {
     final GroupElement and=GroupElementFactory.newAndInstance();
     int mod=1;
-    for (int j=ors.length - 1; j >= 0; j--) {
-      and.getChildren().add(0,ors[j].getChildren().get(indexes[j]).clone());
+    for (int j=orsList.size() - 1; j >= 0; j--) {
+      GroupElement or=orsList.get(j);
+      and.getChildren().add(0,or.getChildren().get(indexes[j]).clone());
       if ((i % mod) == 0) {
-        indexes[j]=(indexes[j] + 1) % ors[j].getChildren().size();
+        indexes[j]=(indexes[j] + 1) % or.getChildren().size();
       }
-      mod*=ors[j].getChildren().size();
+      mod*=or.getChildren().size();
     }
     for (int j=0; j < others.length; j++) {
       if (others[j] != null) {
-        and.getChildren().add(j,(RuleConditionElement)((RuleConditionElement)others[j]).clone());
+        and.getChildren().add(j,others[j].clone());
       }
     }
     parent.addChild(and);
