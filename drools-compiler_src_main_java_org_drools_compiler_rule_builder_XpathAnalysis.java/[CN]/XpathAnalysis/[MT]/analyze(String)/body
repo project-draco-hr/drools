@@ -4,8 +4,10 @@
   List<XpathPart> parts=new ArrayList<XpathPart>();
   List<String> constraints=new ArrayList<String>();
   String inlineCast=null;
+  int index=-1;
   int lastStart=1;
   int nestedParam=0;
+  int nestedCurly=0;
   int nestedSquare=0;
   boolean isQuoted=false;
   String field=null;
@@ -13,39 +15,74 @@
 switch (xpath.charAt(i)) {
 case '/':
 case '.':
-      if (!isQuoted && nestedParam == 0 && nestedSquare == 0) {
+      if (!isQuoted && nestedParam == 0 && nestedCurly == 0 && nestedSquare == 0) {
         if (field == null) {
           field=xpath.substring(lastStart,i).trim();
         }
-        parts.add(new XpathPart(field,iterate,constraints,inlineCast));
+        parts.add(new XpathPart(field,iterate,constraints,inlineCast,index));
         iterate=xpath.charAt(i) == '/';
         constraints=new ArrayList<String>();
         inlineCast=null;
+        index=-1;
         lastStart=i + 1;
         field=null;
       }
     break;
 case '(':
-case '{':
-  if (!isQuoted)   nestedParam++;
+  if (!isQuoted) {
+    nestedParam++;
+  }
 break;
 case ')':
-case '}':
-if (!isQuoted) nestedParam--;
+if (!isQuoted) {
+nestedParam--;
+if (nestedParam < 0) {
+  return null;
+}
+}
 break;
 case '[':
-if (!isQuoted && nestedParam == 0) {
+if (!isQuoted && nestedParam == 0 && nestedCurly == 0) {
 if (nestedSquare == 0) {
+if (field == null) {
 field=xpath.substring(lastStart,i).trim();
+}
 lastStart=i + 1;
 }
 nestedSquare++;
 }
 break;
 case ']':
-if (!isQuoted && nestedParam == 0) {
+if (!isQuoted && nestedParam == 0 && nestedCurly == 0) {
 nestedSquare--;
 if (nestedSquare == 0) {
+try {
+index=Integer.parseInt(xpath.substring(lastStart,i).trim());
+}
+ catch (Exception e) {
+return null;
+}
+}
+ else if (nestedSquare < 0) {
+return null;
+}
+}
+break;
+case '{':
+if (!isQuoted && nestedParam == 0 && nestedSquare == 0) {
+if (nestedCurly == 0) {
+if (field == null) {
+field=xpath.substring(lastStart,i).trim();
+}
+lastStart=i + 1;
+}
+nestedCurly++;
+}
+break;
+case '}':
+if (!isQuoted && nestedParam == 0 && nestedSquare == 0) {
+nestedCurly--;
+if (nestedCurly == 0) {
 String constraint=xpath.substring(lastStart,i).trim();
 if (constraint.startsWith("#")) {
 inlineCast=constraint.substring(1);
@@ -54,10 +91,13 @@ inlineCast=constraint.substring(1);
 constraints.add(constraint);
 }
 }
+ else if (nestedCurly < 0) {
+return null;
+}
 }
 break;
 case ',':
-if (!isQuoted && nestedParam == 0 && nestedSquare == 1) {
+if (!isQuoted && nestedParam == 0 && nestedCurly == 1) {
 String constraint=xpath.substring(lastStart,i).trim();
 if (constraint.startsWith("#")) {
 inlineCast=constraint.substring(1);
@@ -77,6 +117,6 @@ break;
 if (field == null) {
 field=xpath.substring(lastStart).trim();
 }
-parts.add(new XpathPart(field,iterate,constraints,inlineCast));
+parts.add(new XpathPart(field,iterate,constraints,inlineCast,index));
 return new XpathAnalysis(parts);
 }
