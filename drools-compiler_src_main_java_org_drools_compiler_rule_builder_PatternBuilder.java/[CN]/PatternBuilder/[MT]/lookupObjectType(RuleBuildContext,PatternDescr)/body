@@ -1,0 +1,21 @@
+{
+  List<? extends BaseDescr> descrs=patternDescr.getConstraint().getDescrs();
+  if (descrs.size() != 1 || !(descrs.get(0) instanceof ExprConstraintDescr)) {
+    return;
+  }
+  ExprConstraintDescr descr=(ExprConstraintDescr)descrs.get(0);
+  String expr=descr.getExpression();
+  if (expr.charAt(0) != '/') {
+    return;
+  }
+  int separator=expr.indexOf('/',1);
+  if (separator < 0) {
+    return;
+  }
+  String identifier=expr.substring(1,separator);
+  Declaration declr=context.getDeclarationResolver().getDeclaration(context.getRule(),identifier);
+  patternDescr.setXpathStartDeclaration(declr);
+  patternDescr.setObjectType(declr.getExtractor().getExtractToClassName());
+  expr=patternDescr.getIdentifier() + (patternDescr.isUnification() ? " := " : " : ") + expr.substring(separator);
+  descr.setExpression(expr);
+}

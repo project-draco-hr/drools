@@ -1,0 +1,26 @@
+{
+  String patternIdentifier=patternDescr.getIdentifier();
+  boolean duplicateBindings=patternIdentifier != null && objectType instanceof ClassObjectType && context.getDeclarationResolver().isDuplicated(context.getRule(),patternIdentifier,((ClassObjectType)objectType).getClassName());
+  Pattern pattern;
+  if (!StringUtils.isEmpty(patternIdentifier) && !duplicateBindings) {
+    pattern=new Pattern(context.getNextPatternId(),0,objectType,patternIdentifier,patternDescr.isInternalFact());
+    if (objectType instanceof ClassObjectType) {
+      context.getPkg().getClassFieldAccessorStore().getClassObjectType(((ClassObjectType)objectType),(AcceptsClassObjectType)pattern.getDeclaration().getExtractor());
+    }
+  }
+ else {
+    pattern=new Pattern(context.getNextPatternId(),0,objectType,null);
+  }
+  pattern.setPassive(patternDescr.isPassive());
+  if (ClassObjectType.Match_ObjectType.isAssignableFrom(pattern.getObjectType())) {
+    PropertyHandler handler=PropertyHandlerFactory.getPropertyHandler(RuleTerminalNodeLeftTuple.class);
+    if (handler == null) {
+      PropertyHandlerFactoryFixer.getPropertyHandlerClass().put(RuleTerminalNodeLeftTuple.class,new ActivationPropertyHandler());
+    }
+  }
+  context.getBuildStack().push(pattern);
+  if (duplicateBindings) {
+    processDuplicateBindings(patternDescr.isUnification(),patternDescr,pattern,patternDescr,"this",patternDescr.getIdentifier(),context);
+  }
+  return pattern;
+}

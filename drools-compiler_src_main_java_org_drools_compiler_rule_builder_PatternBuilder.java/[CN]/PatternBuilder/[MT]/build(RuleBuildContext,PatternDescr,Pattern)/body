@@ -1,0 +1,24 @@
+{
+  if (patternDescr.getObjectType() == null) {
+    lookupObjectType(context,patternDescr);
+  }
+  if (patternDescr.getObjectType() == null || patternDescr.getObjectType().equals("")) {
+    context.addError(new DescrBuildError(context.getParentDescr(),patternDescr,null,"ObjectType not correctly defined"));
+    return null;
+  }
+  ObjectType objectType=getObjectType(context,patternDescr);
+  if (objectType == null) {
+    return buildQuery(context,patternDescr,prefixPattern,patternDescr);
+  }
+  Pattern pattern=buildPattern(context,patternDescr,objectType);
+  processClassObjectType(context,objectType,pattern);
+  processAnnotations(context,patternDescr,pattern);
+  processSource(context,patternDescr,pattern);
+  processConstraintsAndBinds(context,patternDescr,pattern);
+  processBehaviors(context,patternDescr,pattern);
+  if (!pattern.hasNegativeConstraint() && "on".equals(System.getProperty("drools.negatable"))) {
+    pattern.addConstraint(new NegConstraint(false));
+  }
+  context.getBuildStack().pop();
+  return pattern;
+}
