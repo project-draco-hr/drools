@@ -1,6 +1,13 @@
 {
   if (!INVOKER_REGISTRY.contains("invokers")) {
-    INVOKER_REGISTRY.addNamedTemplate("invokers",TemplateCompiler.compileTemplate(JavaRuleBuilderHelper.class.getResourceAsStream(JAVA_INVOKERS_MVEL)));
+    InputStream javaInvokersMvelStream=JavaRuleBuilderHelper.class.getResourceAsStream(JAVA_INVOKERS_MVEL);
+    INVOKER_REGISTRY.addNamedTemplate("invokers",TemplateCompiler.compileTemplate(javaInvokersMvelStream));
+    try {
+      javaInvokersMvelStream.close();
+    }
+ catch (    IOException ex) {
+      logger.debug("Failed to close stream!",ex);
+    }
     TemplateRuntime.execute(INVOKER_REGISTRY.getNamedTemplate("invokers"),null,INVOKER_REGISTRY);
   }
   return INVOKER_REGISTRY;

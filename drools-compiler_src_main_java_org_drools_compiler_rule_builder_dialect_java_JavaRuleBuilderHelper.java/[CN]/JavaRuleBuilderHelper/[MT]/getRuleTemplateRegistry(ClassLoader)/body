@@ -1,6 +1,13 @@
 {
   if (!RULE_REGISTRY.contains("rules")) {
-    RULE_REGISTRY.addNamedTemplate("rules",TemplateCompiler.compileTemplate(JavaRuleBuilderHelper.class.getResourceAsStream(JAVA_RULE_MVEL)));
+    InputStream javaRuleMvelStream=JavaRuleBuilderHelper.class.getResourceAsStream(JAVA_RULE_MVEL);
+    RULE_REGISTRY.addNamedTemplate("rules",TemplateCompiler.compileTemplate(javaRuleMvelStream));
+    try {
+      javaRuleMvelStream.close();
+    }
+ catch (    IOException ex) {
+      logger.debug("Failed to close stream!",ex);
+    }
     TemplateRuntime.execute(RULE_REGISTRY.getNamedTemplate("rules"),null,RULE_REGISTRY);
   }
   return RULE_REGISTRY;
