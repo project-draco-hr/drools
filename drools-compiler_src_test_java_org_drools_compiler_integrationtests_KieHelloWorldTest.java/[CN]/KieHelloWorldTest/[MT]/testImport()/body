@@ -1,0 +1,18 @@
+{
+  String drl1="package org.drools.compiler.integrationtests\n" + "import " + Message.class.getCanonicalName() + "\n"+ "global java.util.List list\n"+ "rule R1 when\n"+ "    $m : Message( message == \"Hello World\" )\n"+ "then\n"+ "    list.add(\"ok\");\n"+ "end\n";
+  String drl2="package org.drools.compiler.integrationtests\n" + "import " + Message.class.getCanonicalName() + "\n"+ "global java.util.List list\n"+ "rule R2 when\n"+ "   $m : Message( message == \"Hi Universe\" )\n"+ "then\n"+ "   list.add(\"ko\");\n"+ "end\n";
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId releaseId=ks.newReleaseId("org.kie","test-import","1.0-SNAPSHOT");
+  KieModuleModel kproj=ks.newKieModuleModel();
+  kproj.newKieBaseModel("kbase").addPackage("rules").newKieSessionModel("ksession").setDefault(true);
+  KieFileSystem kfs=ks.newKieFileSystem().generateAndWritePomXML(releaseId).write("src/main/resources/rules/r1.drl",drl1).write("src/main/resources/myrules/r2.drl",drl2).writeKModuleXML(kproj.toXML());
+  KieBuilder kieBuilder=ks.newKieBuilder(kfs).buildAll();
+  KieSession ksession=ks.newKieContainer(releaseId).newKieSession();
+  List<String> results=new ArrayList<String>();
+  ksession.setGlobal("list",results);
+  ksession.insert(new Message("Hello World"));
+  ksession.insert(new Message("Hi Universe"));
+  ksession.fireAllRules();
+  assertEquals(1,results.size());
+  assertEquals("ok",results.get(0));
+}
