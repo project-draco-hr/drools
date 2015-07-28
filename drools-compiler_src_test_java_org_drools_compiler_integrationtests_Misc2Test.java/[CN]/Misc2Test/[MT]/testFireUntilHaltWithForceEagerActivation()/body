@@ -1,0 +1,34 @@
+{
+  String drl="global java.util.List list\n" + "rule \"String detector\"\n" + "    when\n"+ "        $s : String( )\n"+ "    then\n"+ "        list.add($s);\n"+ "end";
+  KieSessionConfiguration config=KieServices.Factory.get().newKieSessionConfiguration();
+  config.setOption(ForceEagerActivationOption.YES);
+  final KieSession ksession=new KieHelper().addContent(drl,ResourceType.DRL).build().newKieSession(config,null);
+  final Integer monitor=42;
+  int factsNr=5;
+  List<String> list=new NotifyingList<String>(factsNr,new Runnable(){
+    @Override public void run(){
+synchronized (monitor) {
+        monitor.notifyAll();
+      }
+    }
+  }
+);
+  ksession.setGlobal("list",list);
+  ExecutorService thread=Executors.newSingleThreadExecutor();
+  thread.submit(new Runnable(){
+    @Override public void run(){
+      ksession.fireUntilHalt();
+    }
+  }
+);
+  for (int i=0; i < factsNr; i++) {
+    ksession.insert("" + i);
+  }
+synchronized (monitor) {
+    if (list.size() < factsNr) {
+      monitor.wait();
+    }
+  }
+  assertEquals(factsNr,list.size());
+  ksession.halt();
+}
