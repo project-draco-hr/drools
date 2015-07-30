@@ -1,0 +1,19 @@
+{
+  Map<String,Class<?>> declarations=new HashMap<String,Class<?>>();
+  for (  Map.Entry<String,Declaration> entry : context.getDeclarationResolver().getDeclarations(context.getRule()).entrySet()) {
+    if (entry.getValue().getExtractor() == null) {
+      if (reportError) {
+        context.addError(new DescrBuildError(context.getParentDescr(),baseDescr,null,"Field Reader does not exist for declaration '" + entry.getKey() + "' in '"+ baseDescr+ "' in the rule '"+ context.getRule().getName()+ "'"));
+      }
+      continue;
+    }
+    declarations.put(entry.getKey(),entry.getValue().getExtractor().getExtractToClass());
+  }
+  if (pattern != null) {
+    List<Class<?>> xpathBackReferenceClasses=pattern.getXpathBackReferenceClasses();
+    for (int i=0; i < xpathBackReferenceClasses.size(); i++) {
+      declarations.put(XpathBackReference.BACK_REFERENCE_HEAD + i,xpathBackReferenceClasses.get(i));
+    }
+  }
+  return declarations;
+}

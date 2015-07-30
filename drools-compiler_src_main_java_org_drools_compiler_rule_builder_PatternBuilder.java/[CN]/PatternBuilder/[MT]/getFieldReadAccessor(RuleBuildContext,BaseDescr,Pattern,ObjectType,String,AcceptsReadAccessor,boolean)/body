@@ -1,0 +1,93 @@
+{
+  InternalReadAccessor reader;
+  if (ValueType.FACTTEMPLATE_TYPE.equals(objectType.getValueType())) {
+    final FactTemplate factTemplate=((FactTemplateObjectType)objectType).getFactTemplate();
+    reader=new FactTemplateFieldExtractor(factTemplate,factTemplate.getFieldTemplateIndex(fieldName));
+    if (target != null) {
+      target.setReadAccessor(reader);
+    }
+    return reader;
+  }
+  boolean isGetter=getterRegexp.matcher(fieldName).matches();
+  if (isGetter) {
+    fieldName=fieldName.substring(3,fieldName.indexOf('(')).trim();
+  }
+  if (isGetter || identifierRegexp.matcher(fieldName).matches()) {
+    Declaration decl=context.getDeclarationResolver().getDeclarations(context.getRule()).get(fieldName);
+    if (decl != null && decl.getExtractor() instanceof ClassFieldReader && "this".equals(((ClassFieldReader)decl.getExtractor()).getFieldName())) {
+      return decl.getExtractor();
+    }
+    boolean alternatives=false;
+    try {
+      Map<String,Class<?>> declarations=getDeclarationsMap(pattern,descr,context,false);
+      Map<String,Class<?>> globals=context.getKnowledgeBuilder().getGlobals();
+      alternatives=declarations.containsKey(fieldName) || globals.containsKey(fieldName);
+      reader=context.getPkg().getClassFieldAccessorStore().getReader(((ClassObjectType)objectType).getClassName(),fieldName,target);
+    }
+ catch (    final Exception e) {
+      if (reportError && !alternatives && context.isTypesafe()) {
+        DialectUtil.copyErrorLocation(e,descr);
+        context.addError(new DescrBuildError(context.getParentDescr(),descr,e,"Unable to create Field Extractor for '" + fieldName + "'"+ e.getMessage()));
+      }
+      reader=null;
+    }
+ finally {
+      if (reportError && !alternatives) {
+        Collection<KnowledgeBuilderResult> results=context.getPkg().getClassFieldAccessorStore().getWiringResults(((ClassObjectType)objectType).getClassType(),fieldName);
+        if (!results.isEmpty()) {
+          for (          KnowledgeBuilderResult res : results) {
+            if (res.getSeverity() == ResultSeverity.ERROR) {
+              context.addError(new DroolsErrorWrapper(res));
+            }
+ else {
+              context.addWarning(new DroolsWarningWrapper(res));
+            }
+          }
+        }
+      }
+    }
+  }
+ else {
+    Dialect dialect=context.getDialect();
+    Map<String,Class<?>> globals=context.getKnowledgeBuilder().getGlobals();
+    try {
+      MVELDialect mvelDialect=(MVELDialect)context.getDialect("mvel");
+      context.setDialect(mvelDialect);
+      Map<String,Class<?>> declarations=getDeclarationsMap(pattern,descr,context,false);
+      final AnalysisResult analysis=context.getDialect().analyzeExpression(context,descr,fieldName,new BoundIdentifiers(declarations,globals,null,((ClassObjectType)objectType).getClassType()));
+      if (analysis == null) {
+        if (reportError) {
+          context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to analyze expression '" + fieldName + "'"));
+        }
+        return null;
+      }
+      final BoundIdentifiers usedIdentifiers=analysis.getBoundIdentifiers();
+      if (!usedIdentifiers.getDeclrClasses().isEmpty()) {
+        if (reportError && descr instanceof BindingDescr) {
+          context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Variables can not be used inside bindings. Variable " + usedIdentifiers.getDeclrClasses().keySet() + " is being used in binding '"+ fieldName+ "'"));
+        }
+        return null;
+      }
+      reader=context.getPkg().getClassFieldAccessorStore().getMVELReader(context.getPkg().getName(),((ClassObjectType)objectType).getClassName(),fieldName,context.isTypesafe(),((MVELAnalysisResult)analysis).getReturnType());
+      MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
+      ((MVELCompileable)reader).compile(data,context.getRule());
+      data.addCompileable((MVELCompileable)reader);
+    }
+ catch (    final Exception e) {
+      int dotPos=fieldName.indexOf('.');
+      String varName=dotPos > 0 ? fieldName.substring(0,dotPos).trim() : fieldName;
+      if (globals.containsKey(varName)) {
+        return null;
+      }
+      if (reportError) {
+        DialectUtil.copyErrorLocation(e,descr);
+        context.addError(new DescrBuildError(context.getParentDescr(),descr,e,"Unable to create reader for '" + fieldName + "':"+ e.getMessage()));
+      }
+      reader=null;
+    }
+ finally {
+      context.setDialect(dialect);
+    }
+  }
+  return reader;
+}
