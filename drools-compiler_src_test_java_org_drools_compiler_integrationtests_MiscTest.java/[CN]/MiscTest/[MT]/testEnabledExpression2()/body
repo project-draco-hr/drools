@@ -1,0 +1,25 @@
+{
+  String drl="import " + Foo.class.getName() + ";\n"+ "rule R1\n"+ "    enabled( rule.name == $f.id )"+ "when\n"+ "   $f : Foo()\n"+ "then end\n"+ "rule R2\n"+ "when\n"+ "   Foo( id == \"R2\" )\n"+ "then end\n";
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId releaseId1=ks.newReleaseId("org.kie","test-enabled","1.0.0");
+  KieModule km=createAndDeployJar(ks,releaseId1,drl);
+  KieContainer kc=ks.newKieContainer(km.getReleaseId());
+  AgendaEventListener ael=mock(AgendaEventListener.class);
+  KieSession ksession=kc.newKieSession();
+  ksession.addEventListener(ael);
+  ksession.insert(new Foo("R1",null));
+  assertEquals(1,ksession.fireAllRules());
+  ksession.dispose();
+  ArgumentCaptor<AfterMatchFiredEvent> event=ArgumentCaptor.forClass(AfterMatchFiredEvent.class);
+  verify(ael).afterMatchFired(event.capture());
+  assertEquals("R1",event.getValue().getMatch().getRule().getName());
+  ael=mock(AgendaEventListener.class);
+  ksession=kc.newKieSession();
+  ksession.addEventListener(ael);
+  ksession.insert(new Foo("R2",null));
+  assertEquals(1,ksession.fireAllRules());
+  ksession.dispose();
+  event=ArgumentCaptor.forClass(AfterMatchFiredEvent.class);
+  verify(ael).afterMatchFired(event.capture());
+  assertEquals("R2",event.getValue().getMatch().getRule().getName());
+}
