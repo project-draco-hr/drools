@@ -1,0 +1,18 @@
+{
+  String drl="import org.drools.compiler.xpath.graph.*;\n" + "import " + Library.class.getCanonicalName() + ";\n"+ "import "+ Book.class.getCanonicalName()+ ";\n"+ "import "+ Person.class.getCanonicalName()+ ";\n"+ "global java.util.List list\n"+ "\n"+ "rule R when\n"+ "  Vertex( it instanceof Library, $a : /outVs/outVs/it{ #Person, age > 40 } )\n"+ "then\n"+ "  list.add( $a.getName() );\n"+ "end\n";
+  KieSession ksession=new KieHelper().addContent(drl,ResourceType.DRL).build().newKieSession();
+  List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  Vertex<Library> library=getGraph();
+  ksession.insert(library);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  assertTrue(list.contains("Mario"));
+  list.clear();
+  Vertex<?> book=library.getOutVs().get(0);
+  Vertex<Person> alan=new Vertex<Person>(new Person("Alan",53));
+  book.connectTo(alan);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  assertTrue(list.contains("Alan"));
+}
