@@ -15,27 +15,25 @@
     Map<String,Declaration> sourceOuterDeclr=source.getOuterDeclarations();
     Map<String,Declaration> mergedDecl=new HashMap(decls);
     mergedDecl.putAll(sourceOuterDeclr);
-    Map<String,Class<?>> declarationClasses=context.getDeclarationResolver().getDeclarationClasses(decls);
-    declarationClasses.putAll(context.getDeclarationResolver().getDeclarationClasses(sourceOuterDeclr));
+    Map<String,Class<?>> declarationClasses=DeclarationScopeResolver.getDeclarationClasses(decls);
+    declarationClasses.putAll(DeclarationScopeResolver.getDeclarationClasses(sourceOuterDeclr));
     BoundIdentifiers boundIds=new BoundIdentifiers(declarationClasses,context.getKnowledgeBuilder().getGlobals());
     boundIds.setDeclarations(mergedDecl);
-    Accumulator[] accumulators=null;
+    Accumulator[] accumulators;
     final boolean readLocalsFromTuple=PackageBuilderUtil.isReadLocalsFromTuple(context,accumDescr,source);
     if (accumDescr.isExternalFunction()) {
       accumulators=buildExternalFunctions(context,accumDescr,dialect,decls,sourceOuterDeclr,boundIds,readLocalsFromTuple);
     }
  else {
-      accumulators=buildCustomAccumulate(context,accumDescr,source,dialect,decls,sourceOuterDeclr,boundIds,readLocalsFromTuple);
+      accumulators=buildCustomAccumulate(context,accumDescr,dialect,decls,sourceOuterDeclr,boundIds,readLocalsFromTuple);
     }
     List<Declaration> requiredDeclarations=new ArrayList<Declaration>();
     for (    Accumulator acc : accumulators) {
       MvelAccumulator mvelAcc=(MvelAccumulator)acc;
-      for (      Declaration decl : mvelAcc.getRequiredDeclarations()) {
-        requiredDeclarations.add(decl);
-      }
+      Collections.addAll(requiredDeclarations,mvelAcc.getRequiredDeclarations());
     }
     MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
-    Accumulate accumulate=null;
+    Accumulate accumulate;
     if (accumDescr.isMultiFunction()) {
       accumulate=new MultiAccumulate(source,requiredDeclarations.toArray(new Declaration[requiredDeclarations.size()]),accumulators);
       int index=0;

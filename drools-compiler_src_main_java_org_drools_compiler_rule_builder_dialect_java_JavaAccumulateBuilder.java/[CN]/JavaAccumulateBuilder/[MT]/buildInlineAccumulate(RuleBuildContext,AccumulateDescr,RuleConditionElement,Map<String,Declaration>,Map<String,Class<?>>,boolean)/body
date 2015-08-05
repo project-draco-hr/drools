@@ -5,6 +5,9 @@
   final JavaAnalysisResult initCodeAnalysis=(JavaAnalysisResult)context.getDialect().analyzeBlock(context,accumDescr,accumDescr.getInitCode(),available);
   final AnalysisResult actionCodeAnalysis=context.getDialect().analyzeBlock(context,accumDescr,accumDescr.getActionCode(),available);
   final AnalysisResult resultCodeAnalysis=context.getDialect().analyzeExpression(context,accumDescr,accumDescr.getResultCode(),available);
+  if (initCodeAnalysis == null || actionCodeAnalysis == null || resultCodeAnalysis == null) {
+    return null;
+  }
   final Set<String> requiredDeclarations=new HashSet<String>(initCodeAnalysis.getBoundIdentifiers().getDeclrClasses().keySet());
   requiredDeclarations.addAll(actionCodeAnalysis.getBoundIdentifiers().getDeclrClasses().keySet());
   requiredDeclarations.addAll(resultCodeAnalysis.getBoundIdentifiers().getDeclrClasses().keySet());
@@ -21,7 +24,7 @@
   for (Iterator<String> it=requiredDeclarations.iterator(); it.hasNext(); i++) {
     declarations[i]=decls.get(it.next());
   }
-  final Declaration[] sourceDeclArr=source.getOuterDeclarations().values().toArray(new Declaration[0]);
+  final Declaration[] sourceDeclArr=source.getOuterDeclarations().values().toArray(new Declaration[source.getOuterDeclarations().size()]);
   Arrays.sort(sourceDeclArr,RuleTerminalNode.SortDeclarations.instance);
   final Map<String,Object> map=createVariableContext(className,null,context,declarations,null,requiredGlobals);
   map.put("className",accumDescr.getClassName());
