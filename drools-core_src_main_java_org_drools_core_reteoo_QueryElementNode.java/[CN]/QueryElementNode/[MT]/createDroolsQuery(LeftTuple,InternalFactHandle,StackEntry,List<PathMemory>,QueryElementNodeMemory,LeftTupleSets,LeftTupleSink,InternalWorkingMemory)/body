@@ -2,23 +2,20 @@
   Object[] args=new Object[argsTemplate.length];
   System.arraycopy(argsTemplate,0,args,0,args.length);
   int[] declIndexes=this.queryElement.getDeclIndexes();
-  for (int i=0, length=declIndexes.length; i < length; i++) {
-    Declaration declr=(Declaration)argsTemplate[declIndexes[i]];
+  for (  int declIndexe : declIndexes) {
+    Declaration declr=(Declaration)argsTemplate[declIndexe];
     Object tupleObject=leftTuple.get(declr).getObject();
     Object o;
-    if (tupleObject instanceof DroolsQuery) {
-      ArrayElementReader arrayReader=(ArrayElementReader)declr.getExtractor();
-      if (((DroolsQuery)tupleObject).getVariables()[arrayReader.getIndex()] != null) {
-        o=Variable.v;
-      }
- else {
-        o=declr.getValue(workingMemory,tupleObject);
-      }
+    if (tupleObject instanceof DroolsQuery && declr.getExtractor() instanceof ArrayElementReader && ((DroolsQuery)tupleObject).getVariables()[declr.getExtractor().getIndex()] != null) {
+      o=Variable.v;
     }
  else {
       o=declr.getValue(workingMemory,tupleObject);
     }
-    args[declIndexes[i]]=o;
+    if (o == null) {
+      o=declr.getValue(workingMemory,tupleObject);
+    }
+    args[declIndexe]=o;
   }
   int[] varIndexes=this.queryElement.getVariableIndexes();
   for (  int varIndex : varIndexes) {
