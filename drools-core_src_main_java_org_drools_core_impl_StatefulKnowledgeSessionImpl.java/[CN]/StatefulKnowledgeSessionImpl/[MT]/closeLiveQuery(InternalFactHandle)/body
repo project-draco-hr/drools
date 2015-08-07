@@ -3,15 +3,12 @@
     startOperation();
     this.kBase.readLock();
     this.lock.lock();
-    final PropagationContext pCtx=pctxFactory.createPropagationContext(getNextPropagationIdCounter(),PropagationContext.INSERTION,null,null,factHandle,getEntryPoint());
     LeftInputAdapterNode lian=(LeftInputAdapterNode)factHandle.getFirstLeftTuple().getLeftTupleSink().getLeftTupleSource();
     LeftInputAdapterNode.LiaNodeMemory lmem=(LeftInputAdapterNode.LiaNodeMemory)getNodeMemory(lian);
     SegmentMemory lsmem=lmem.getSegmentMemory();
     LeftTuple childLeftTuple=factHandle.getFirstLeftTuple();
     LeftInputAdapterNode.doDeleteObject(childLeftTuple,childLeftTuple.getPropagationContext(),lsmem,this,lian,false,lmem);
-    List<PathMemory> pmems=lmem.getSegmentMemory().getPathMemories();
-    for (int i=0, length=pmems.size(); i < length; i++) {
-      PathMemory rm=pmems.get(i);
+    for (    PathMemory rm : lmem.getSegmentMemory().getPathMemories()) {
       RuleAgendaItem evaluator=agenda.createRuleAgendaItem(Integer.MAX_VALUE,rm,(TerminalNode)rm.getNetworkNode());
       evaluator.getRuleExecutor().setDirty(true);
       evaluator.getRuleExecutor().evaluateNetworkAndFire(this,null,0,-1);
