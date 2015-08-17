@@ -1,20 +1,26 @@
 {
-  ObjectTypeConf objectTypeConf=null;
-  Class<?> cls=(object instanceof Activation) ? ClassObjectType.Match_ObjectType.getClassType() : object.getClass();
-  Object key=(object instanceof Fact) ? ((Fact)object).getFactTemplate().getName() : cls;
-  objectTypeConf=this.typeConfMap.get(key);
+  Object key;
+  if (object instanceof Activation) {
+    key=ClassObjectType.Match_ObjectType.getClassType();
+  }
+ else   if (object instanceof Fact) {
+    key=((Fact)object).getFactTemplate().getName();
+  }
+ else {
+    key=object.getClass();
+  }
+  ObjectTypeConf objectTypeConf=this.typeConfMap.get(key);
   if (objectTypeConf == null) {
     if (object instanceof Fact) {
-      ;
       objectTypeConf=new FactTemplateTypeConf(entrypoint,((Fact)object).getFactTemplate(),this.kBase);
     }
  else {
       objectTypeConf=new ClassObjectTypeConf(entrypoint,(Class<?>)key,this.kBase);
     }
-  }
-  ObjectTypeConf existing=this.typeConfMap.putIfAbsent(key,objectTypeConf);
-  if (existing != null) {
-    objectTypeConf=existing;
+    ObjectTypeConf existing=this.typeConfMap.putIfAbsent(key,objectTypeConf);
+    if (existing != null) {
+      objectTypeConf=existing;
+    }
   }
   return objectTypeConf;
 }
