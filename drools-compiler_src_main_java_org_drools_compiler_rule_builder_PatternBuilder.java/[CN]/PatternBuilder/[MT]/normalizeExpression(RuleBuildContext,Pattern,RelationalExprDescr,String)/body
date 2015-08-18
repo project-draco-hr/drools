@@ -1,0 +1,20 @@
+{
+  String[] values=new String[2];
+  findExpressionValues(subDescr,values);
+  String normalizedExpr;
+  if (!getExprBindings(context,pattern,values[1]).isConstant()) {
+    normalizedExpr=subExpr;
+  }
+ else {
+    InternalReadAccessor extractor=getFieldReadAccessor(context,subDescr,pattern,values[0],null,true);
+    if (extractor == null) {
+      normalizedExpr=subExpr;
+    }
+ else {
+      ValueType vtype=extractor.getValueType();
+      LiteralRestrictionDescr restrictionDescr=new LiteralRestrictionDescr(subDescr.getOperator(),subDescr.isNegated(),subDescr.getParameters(),values[1],LiteralRestrictionDescr.TYPE_STRING);
+      normalizedExpr=normalizeMVELLiteralExpression(vtype,getFieldValue(context,vtype,restrictionDescr),subExpr,values[0],subDescr.getOperator(),values[1],restrictionDescr);
+    }
+  }
+  return normalizedExpr;
+}
