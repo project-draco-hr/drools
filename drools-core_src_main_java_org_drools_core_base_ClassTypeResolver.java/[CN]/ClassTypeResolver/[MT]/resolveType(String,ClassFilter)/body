@@ -1,13 +1,12 @@
 {
-  Class<?> clazz=null;
-  boolean isArray=false;
-  boolean isPrimitive=false;
-  final StringBuilder arrayClassName=new StringBuilder();
-  clazz=lookupFromCache(className);
+  Class<?> clazz=lookupFromCache(className);
   if (clazz != null && !classFilter.accept(clazz)) {
     clazz=null;
   }
+  boolean isArray=false;
+  StringBuilder arrayClassName=null;
   if (clazz == null && className.indexOf('[') > 0) {
+    arrayClassName=new StringBuilder();
     isArray=true;
     int bracketIndex=className.indexOf('[');
     final String componentName=className.substring(0,bracketIndex);
@@ -17,6 +16,7 @@
     }
     className=componentName;
   }
+  boolean isPrimitive=false;
   if (clazz == null && internalNamesMap.containsKey(className)) {
     clazz=Class.forName("[" + internalNamesMap.get(className),true,this.classLoader).getComponentType();
     isPrimitive=true;
@@ -70,6 +70,7 @@
     }
   }
   if (clazz == null) {
+    this.cachedImports.put(className,Void.class);
     throw new ClassNotFoundException("Unable to find class '" + className + "'");
   }
   this.cachedImports.put(clazz.getSimpleName(),clazz);

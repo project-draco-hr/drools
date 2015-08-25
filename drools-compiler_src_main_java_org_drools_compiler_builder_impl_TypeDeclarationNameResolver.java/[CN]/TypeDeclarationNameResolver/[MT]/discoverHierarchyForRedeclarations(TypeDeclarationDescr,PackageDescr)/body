@@ -1,13 +1,16 @@
 {
   PackageRegistry pkReg=kbuilder.getPackageRegistry(packageDescr.getName());
-  if (!TypeDeclarationUtils.isNovelClass(typeDescr,pkReg)) {
-    Class typeClass=TypeDeclarationUtils.getExistingDeclarationClass(typeDescr,pkReg);
-    if (typeClass != null && typeDescr.isTrait()) {
+  Class typeClass=TypeDeclarationUtils.getExistingDeclarationClass(typeDescr,pkReg);
+  if (typeClass != null) {
+    if (typeDescr.isTrait()) {
       fillStaticInterfaces(typeDescr,typeClass);
     }
  else {
       typeDescr.getSuperTypes().clear();
       typeDescr.addSuperType(typeClass.isInterface() || typeClass == Object.class ? Object.class.getName() : typeClass.getSuperclass().getName());
     }
+  }
+ else {
+    pkReg.getTypeResolver().registerClass(typeDescr.getFullTypeName(),null);
   }
 }
