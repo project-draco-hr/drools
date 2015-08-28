@@ -30,8 +30,7 @@
     extraDescr.setType(ExprConstraintDescr.Type.POSITIONAL);
     args.add(extraDescr);
   }
-  for (int i=0, length=args.size(); i < length; i++) {
-    BaseDescr base=args.get(i);
+  for (  BaseDescr base : args) {
     String expression=null;
     boolean isPositional=false;
     boolean isBinding=false;
@@ -63,11 +62,9 @@
     }
     if ((!isPositional) && (!isBinding)) {
       context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Query's must use positional or bindings, not field constraints:\n" + expression));
-      continue;
     }
  else     if (isPositional && isBinding) {
       context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Query's can't use positional bindings:\n" + expression));
-      continue;
     }
  else     if (isPositional) {
       processPositional(context,query,params,declrIndexes,varIndexes,arguments,requiredDeclarations,arrayReader,pattern,base,expression,result);
@@ -88,8 +85,8 @@
   for (  Integer declIndex : declrIndexes) {
     Declaration knownInputArg=(Declaration)arguments.get(declIndex);
     Declaration formalArgument=query.getParameters()[declIndex];
-    Class actual=knownInputArg.getExtractor().getExtractToClass();
-    Class formal=formalArgument.getExtractor().getExtractToClass();
+    Class actual=knownInputArg.getDeclarationClass();
+    Class formal=formalArgument.getDeclarationClass();
     if (!ClassUtils.isTypeCompatibleWithArgumentType(actual,formal) && !ClassUtils.isTypeCompatibleWithArgumentType(formal,actual)) {
       context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Query is being invoked with known argument of type " + actual + " at position "+ declIndex+ ", but the expected query argument is of type "+ formal));
     }

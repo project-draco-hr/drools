@@ -1,0 +1,11 @@
+{
+  String drl="import " + ChildA.class.getCanonicalName() + "\n"+ "import "+ ChildB.class.getCanonicalName()+ "\n"+ "rule R when\n"+ "    (\n"+ "    ChildA(value == null, $entity : this) or \n"+ "    ChildB(value == null, $entity : this)\n"+ "    )\n"+ "then\n"+ "    modify( $entity ) { setValue(\"Done!\"); }\n"+ "end\n";
+  KieSession ksession=new KieHelper().addContent(drl,ResourceType.DRL).build().newKieSession();
+  ChildA childA=new ChildA();
+  ChildB childB=new ChildB();
+  ksession.insert(childA);
+  ksession.insert(childB);
+  ksession.fireAllRules();
+  assertEquals("Done!",childA.getValue());
+  assertEquals("Done!",childB.getValue());
+}
