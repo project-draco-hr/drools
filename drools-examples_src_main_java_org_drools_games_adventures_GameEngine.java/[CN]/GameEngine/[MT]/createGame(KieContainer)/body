@@ -1,0 +1,29 @@
+{
+  ksession=kc.newKieSession("TextAdventureKS");
+  Counter c=new Counter();
+  ksession.setGlobal("counter",c);
+  Map vars=new HashMap();
+  vars.put("c",c);
+  try {
+    String mvelContent=new String(IOUtils.toByteArray(getClass().getResource("data.mvel").openStream()),IoUtils.UTF8_CHARSET);
+    data=(Map<String,Map>)MVEL.executeExpression(MVEL.compileExpression(mvelContent),vars);
+  }
+ catch (  IOException e) {
+    throw new RuntimeException(e);
+  }
+  for (  Object o : data.get("rooms").values()) {
+    ksession.insert(o);
+  }
+  for (  Object o : data.get("doors").values()) {
+    ksession.insert(o);
+  }
+  for (  Object o : data.get("characters").values()) {
+    ksession.insert(o);
+  }
+  for (  Object o : data.get("items").values()) {
+    ksession.insert(o);
+  }
+  for (  Object o : data.get("locations").values()) {
+    ksession.insert(o);
+  }
+}
