@@ -1,0 +1,19 @@
+{
+  final String id=remoteRepository.getId();
+  final String url=remoteRepository.getUrl();
+  final ArtifactRepositoryLayout layout=new DefaultRepositoryLayout();
+  ArtifactRepositoryPolicy snapshots=new ArtifactRepositoryPolicy();
+  ArtifactRepositoryPolicy releases=new ArtifactRepositoryPolicy();
+  if (remoteRepository.getPolicy(true) != null) {
+    snapshots=new ArtifactRepositoryPolicy(remoteRepository.getPolicy(true).isEnabled(),remoteRepository.getPolicy(true).getUpdatePolicy(),remoteRepository.getPolicy(true).getChecksumPolicy());
+  }
+  if (remoteRepository.getPolicy(false) != null) {
+    releases=new ArtifactRepositoryPolicy(remoteRepository.getPolicy(false).isEnabled(),remoteRepository.getPolicy(false).getUpdatePolicy(),remoteRepository.getPolicy(false).getChecksumPolicy());
+  }
+  final ArtifactRepository artifactRepository=new MavenArtifactRepository(id,url,layout,snapshots,releases);
+  final Server server=settings.getServer(id);
+  if (server != null) {
+    artifactRepository.setAuthentication(new Authentication(server.getUsername(),server.getPassword()));
+  }
+  return artifactRepository;
+}
