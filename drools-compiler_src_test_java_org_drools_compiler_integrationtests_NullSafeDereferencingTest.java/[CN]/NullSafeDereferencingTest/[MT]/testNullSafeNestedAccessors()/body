@@ -1,0 +1,15 @@
+{
+  String str="package org.drools.test; " + "import " + Person.class.getName() + "; "+ "global java.util.List list; "+ "rule R1 when "+ " $street : String() "+ " Person( address!.( street == $street, $zip : zipCode ) ) "+ "then "+ " list.add( $zip ); "+ "end";
+  KieBase kbase=loadKnowledgeBaseFromString(str);
+  KieSession ksession=kbase.newKieSession();
+  List list=new ArrayList();
+  ksession.setGlobal("list",list);
+  ksession.insert(new Person("Mario",38));
+  Person mark=new Person("Mark",37);
+  mark.setAddress(new Address("Main Street","","123456"));
+  ksession.insert(mark);
+  ksession.insert("Main Street");
+  assertEquals(1,ksession.fireAllRules());
+  ksession.dispose();
+  assertEquals(Arrays.asList("123456"),list);
+}
