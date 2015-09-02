@@ -1,0 +1,25 @@
+{
+  final KieServices ks=KieServices.Factory.get();
+  KieModuleModel module=ks.newKieModuleModel();
+  KieBaseModel baseModel=module.newKieBaseModel("defaultKBase");
+  baseModel.setDefault(true);
+  baseModel.addPackage("*");
+  KieSessionModel sessionModel=baseModel.newKieSessionModel("defaultKSession");
+  sessionModel.setDefault(true);
+  sessionModel.setType(KieSessionModel.KieSessionType.STATEFUL);
+  sessionModel.newListenerModel(MarkingAgendaEventListener.class.getName(),ListenerModel.Kind.AGENDA_EVENT_LISTENER);
+  sessionModel.newListenerModel(MarkingRuntimeEventListener.class.getName(),ListenerModel.Kind.RULE_RUNTIME_EVENT_LISTENER);
+  KieSessionModel statelessSessionModel=baseModel.newKieSessionModel("defaultStatelessKSession");
+  statelessSessionModel.setDefault(true);
+  statelessSessionModel.setType(KieSessionModel.KieSessionType.STATELESS);
+  statelessSessionModel.newListenerModel(MarkingAgendaEventListener.class.getName(),ListenerModel.Kind.AGENDA_EVENT_LISTENER);
+  statelessSessionModel.newListenerModel(MarkingRuntimeEventListener.class.getName(),ListenerModel.Kind.RULE_RUNTIME_EVENT_LISTENER);
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.writeKModuleXML(module.toXML());
+  kfs.generateAndWritePomXML(RELEASE_ID);
+  kfs.write("src/main/resources/" + PACKAGE_PATH + "/test.drl",ResourceFactory.newByteArrayResource(DRL.getBytes()));
+  KieBuilder builder=ks.newKieBuilder(kfs).buildAll();
+  assertEquals("Unexpected compilation errors",0,builder.getResults().getMessages().size());
+  ks.getRepository().addKieModule(builder.getKieModule());
+  return RELEASE_ID;
+}
