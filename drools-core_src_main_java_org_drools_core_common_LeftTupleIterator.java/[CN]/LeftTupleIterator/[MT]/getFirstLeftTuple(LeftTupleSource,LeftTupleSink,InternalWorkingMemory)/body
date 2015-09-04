@@ -1,7 +1,7 @@
 {
   if (wm.getKnowledgeBase().getConfiguration().isPhreakEnabled() && source instanceof AccumulateNode) {
     AccumulateMemory accmem=(AccumulateMemory)wm.getNodeMemory((MemoryFactory)source);
-    BetaMemory memory=accmem.betaMemory;
+    BetaMemory memory=accmem.getBetaMemory();
     FastIterator localIt=memory.getLeftTupleMemory().fullFastIterator();
     LeftTuple leftTuple=BetaNode.getFirstLeftTuple(memory.getLeftTupleMemory(),localIt);
     if (leftTuple != null) {
@@ -14,10 +14,10 @@
     BetaMemory memory;
     FastIterator localIt;
     if (source instanceof FromNode) {
-      memory=((FromMemory)wm.getNodeMemory((MemoryFactory)source)).betaMemory;
+      memory=((FromMemory)wm.getNodeMemory((MemoryFactory)source)).getBetaMemory();
     }
  else     if (source instanceof AccumulateNode) {
-      memory=((AccumulateMemory)wm.getNodeMemory((MemoryFactory)source)).betaMemory;
+      memory=((AccumulateMemory)wm.getNodeMemory((MemoryFactory)source)).getBetaMemory();
     }
  else {
       memory=(BetaMemory)wm.getNodeMemory((MemoryFactory)source);
@@ -51,13 +51,12 @@
     }
   }
  else   if (source instanceof LeftInputAdapterNode) {
-    ObjectTypeNode otn=null;
     ObjectSource os=((LeftInputAdapterNode)source).getParentObjectSource();
     while (!(os instanceof ObjectTypeNode)) {
       os=os.getParentObjectSource();
     }
-    otn=(ObjectTypeNode)os;
-    otnIterator=((ObjectTypeNodeMemory)wm.getNodeMemory(otn)).iterator();
+    ObjectTypeNode otn=(ObjectTypeNode)os;
+    otnIterator=wm.getNodeMemory(otn).iterator();
     while (otnIterator.hasNext()) {
       InternalFactHandle handle=otnIterator.next();
       for (LeftTuple leftTuple=handle.getFirstLeftTuple(); leftTuple != null; leftTuple=leftTuple.getLeftParentNext()) {
@@ -68,8 +67,7 @@
     }
   }
  else   if (source instanceof EvalConditionNode || source instanceof QueryElementNode) {
-    LeftTuple parentLeftTuple=null;
-    parentLeftTuple=getFirstLeftTuple(source.getLeftTupleSource(),(LeftTupleSink)source,wm);
+    LeftTuple parentLeftTuple=getFirstLeftTuple(source.getLeftTupleSource(),(LeftTupleSink)source,wm);
     while (parentLeftTuple != null) {
       for (LeftTuple leftTuple=parentLeftTuple.getFirstChild(); leftTuple != null; leftTuple=leftTuple.getLeftParentNext()) {
         if (leftTuple.getLeftTupleSink() == sink) {

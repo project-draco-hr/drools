@@ -33,57 +33,53 @@
     otnIterator=null;
   }
  else   if (wm.getKnowledgeBase().getConfiguration().isPhreakEnabled() && source instanceof AccumulateNode) {
-    BetaMemory memory=((AccumulateMemory)wm.getNodeMemory((MemoryFactory)source)).betaMemory;
+    BetaMemory memory=((AccumulateMemory)wm.getNodeMemory((MemoryFactory)source)).getBetaMemory();
     FastIterator localIt=memory.getLeftTupleMemory().fullFastIterator(leftTuple.getParent());
     LeftTuple childLeftTuple=leftTuple;
-    if (childLeftTuple != null) {
-      leftTuple=childLeftTuple.getParent();
-      while (leftTuple != null) {
-        if (childLeftTuple == null) {
-          childLeftTuple=leftTuple.getFirstChild();
-        }
- else {
-          childLeftTuple=childLeftTuple.getLeftParentNext();
-        }
-        for (; childLeftTuple != null; childLeftTuple=childLeftTuple.getLeftParentNext()) {
-          if (childLeftTuple.getLeftTupleSink() == sink) {
-            return childLeftTuple;
-          }
-        }
-        leftTuple=(LeftTuple)localIt.next(leftTuple);
+    leftTuple=childLeftTuple.getParent();
+    while (leftTuple != null) {
+      if (childLeftTuple == null) {
+        childLeftTuple=leftTuple.getFirstChild();
       }
+ else {
+        childLeftTuple=childLeftTuple.getLeftParentNext();
+      }
+      for (; childLeftTuple != null; childLeftTuple=childLeftTuple.getLeftParentNext()) {
+        if (childLeftTuple.getLeftTupleSink() == sink) {
+          return childLeftTuple;
+        }
+      }
+      leftTuple=(LeftTuple)localIt.next(leftTuple);
     }
   }
  else   if (source instanceof JoinNode || source instanceof NotNode || source instanceof FromNode|| source instanceof AccumulateNode) {
     BetaMemory memory;
     FastIterator localIt;
     if (source instanceof FromNode) {
-      memory=((FromMemory)wm.getNodeMemory((MemoryFactory)source)).betaMemory;
+      memory=((FromMemory)wm.getNodeMemory((MemoryFactory)source)).getBetaMemory();
     }
  else     if (source instanceof AccumulateNode) {
-      memory=((AccumulateMemory)wm.getNodeMemory((MemoryFactory)source)).betaMemory;
+      memory=((AccumulateMemory)wm.getNodeMemory((MemoryFactory)source)).getBetaMemory();
     }
  else {
       memory=(BetaMemory)wm.getNodeMemory((MemoryFactory)source);
     }
     localIt=memory.getLeftTupleMemory().fullFastIterator(leftTuple.getLeftParent());
     LeftTuple childLeftTuple=leftTuple;
-    if (childLeftTuple != null) {
-      leftTuple=childLeftTuple.getLeftParent();
-      while (leftTuple != null) {
-        if (childLeftTuple == null) {
-          childLeftTuple=leftTuple.getFirstChild();
-        }
- else {
-          childLeftTuple=childLeftTuple.getLeftParentNext();
-        }
-        for (; childLeftTuple != null; childLeftTuple=childLeftTuple.getLeftParentNext()) {
-          if (childLeftTuple.getLeftTupleSink() == sink) {
-            return childLeftTuple;
-          }
-        }
-        leftTuple=(LeftTuple)localIt.next(leftTuple);
+    leftTuple=childLeftTuple.getLeftParent();
+    while (leftTuple != null) {
+      if (childLeftTuple == null) {
+        childLeftTuple=leftTuple.getFirstChild();
       }
+ else {
+        childLeftTuple=childLeftTuple.getLeftParentNext();
+      }
+      for (; childLeftTuple != null; childLeftTuple=childLeftTuple.getLeftParentNext()) {
+        if (childLeftTuple.getLeftTupleSink() == sink) {
+          return childLeftTuple;
+        }
+      }
+      leftTuple=(LeftTuple)localIt.next(leftTuple);
     }
   }
   if (source instanceof ExistsNode) {
@@ -132,10 +128,10 @@
           }
         }
         if (source instanceof EvalConditionNode) {
-          leftTuple=getNextLeftTuple(((EvalConditionNode)source).getLeftTupleSource(),(LeftTupleSink)source,leftTuple,wm);
+          leftTuple=getNextLeftTuple(source.getLeftTupleSource(),(LeftTupleSink)source,leftTuple,wm);
         }
  else {
-          leftTuple=getNextLeftTuple(((QueryElementNode)source).getLeftTupleSource(),(LeftTupleSink)source,leftTuple,wm);
+          leftTuple=getNextLeftTuple(source.getLeftTupleSource(),(LeftTupleSink)source,leftTuple,wm);
         }
       }
     }

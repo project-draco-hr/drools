@@ -1,26 +1,26 @@
 {
   final FromMemory memory=(FromMemory)workingMemory.getNodeMemory(this);
   FastIterator rightIter=LinkedList.fastIterator;
-  final Iterator tupleIter=memory.betaMemory.getLeftTupleMemory().iterator();
+  final Iterator tupleIter=memory.getBetaMemory().getLeftTupleMemory().iterator();
   for (LeftTuple leftTuple=(LeftTuple)tupleIter.next(); leftTuple != null; leftTuple=(LeftTuple)tupleIter.next()) {
-    this.betaConstraints.updateFromTuple(memory.betaMemory.getContext(),workingMemory,leftTuple);
+    this.betaConstraints.updateFromTuple(memory.getBetaMemory().getContext(),workingMemory,leftTuple);
     Map<Object,RightTuple> matches=(Map<Object,RightTuple>)leftTuple.getObject();
     for (    RightTuple rightTuples : matches.values()) {
       for (RightTuple rightTuple=rightTuples; rightTuple != null; rightTuple=(RightTuple)rightIter.next(rightTuple)) {
         boolean isAllowed=true;
         if (this.alphaConstraints != null) {
           for (int i=0, length=this.alphaConstraints.length; i < length; i++) {
-            if (!this.alphaConstraints[i].isAllowed(rightTuple.getFactHandle(),workingMemory,memory.alphaContexts[i])) {
+            if (!this.alphaConstraints[i].isAllowed(rightTuple.getFactHandle(),workingMemory,memory.getAlphaContexts()[i])) {
               isAllowed=false;
               break;
             }
           }
         }
-        if (isAllowed && this.betaConstraints.isAllowedCachedLeft(memory.betaMemory.getContext(),rightTuple.getFactHandle())) {
+        if (isAllowed && this.betaConstraints.isAllowedCachedLeft(memory.getBetaMemory().getContext(),rightTuple.getFactHandle())) {
           sink.assertLeftTuple(sink.createLeftTuple(leftTuple,rightTuple,null,null,sink,this.tupleMemoryEnabled),context,workingMemory);
         }
       }
     }
-    this.betaConstraints.resetTuple(memory.betaMemory.getContext());
+    this.betaConstraints.resetTuple(memory.getBetaMemory().getContext());
   }
 }
