@@ -1,32 +1,3 @@
 {
-  if (o instanceof List) {
-    List v=(List)o;
-    return new JaxbListWrapper(v.toArray(new Object[v.size()]));
-  }
- else   if (o instanceof Map) {
-    Map<Object,Object> value=(Map<Object,Object>)o;
-    if (value == null || value.isEmpty()) {
-      return new JaxbStringObjectPair[0];
-    }
-    List<JaxbObjectObjectPair> ret=new ArrayList<JaxbObjectObjectPair>(value.size());
-    for (    Map.Entry<Object,Object> entry : value.entrySet()) {
-      Object obj=entry.getValue();
-      Class<? extends Object> vClass=obj.getClass();
-      if (obj instanceof QueryResultsImpl) {
-        obj=new FlatQueryResults((QueryResultsImpl)obj);
-      }
- else       if (obj instanceof FactHandle) {
-        obj=((InternalFactHandle)obj).toExternalForm();
-      }
- else       if (List.class.isAssignableFrom(vClass) && !JaxbListWrapper.class.equals(vClass)) {
-        obj=new JaxbListWrapper(((List<?>)obj).toArray(new Object[((List<?>)obj).size()]));
-        ;
-      }
-      ret.add(new JaxbObjectObjectPair((String)entry.getKey(),obj));
-    }
-    return ret.toArray(new JaxbObjectObjectPair[value.size()]);
-  }
- else {
-    return o;
-  }
+  return recursiveMarshal(o,new IdentityHashMap<Object,Object>());
 }

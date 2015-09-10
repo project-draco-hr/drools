@@ -1,26 +1,53 @@
 {
   if (o instanceof JaxbListWrapper) {
-    JaxbListWrapper v=(JaxbListWrapper)o;
-    Object[] vElements=v.getElements();
-    if (vElements == null) {
-      return new ArrayList<Object>();
+    JaxbListWrapper wrapper=(JaxbListWrapper)o;
+    Object[] elements=wrapper.getElements();
+    int size=0;
+    if (elements != null) {
+      size=elements.length;
     }
-    return Arrays.asList(vElements);
-  }
- else   if (o instanceof JaxbObjectObjectPair[]) {
-    JaxbObjectObjectPair[] value=(JaxbObjectObjectPair[])o;
-    Map<Object,Object> r=new HashMap<Object,Object>();
-    for (    JaxbObjectObjectPair p : value) {
-      if (p.getValue() instanceof JaxbListWrapper) {
-        r.put(p.getKey(),Arrays.asList(((JaxbListWrapper)p.getValue()).getElements()));
-      }
- else {
-        r.put(p.getKey(),p.getValue());
-      }
+    if (wrapper.getType() == null) {
+      List<Object> list=new ArrayList<Object>(size);
+      return convertSerializedElementsToCollection(elements,list);
     }
-    return r;
-  }
  else {
-    return o;
-  }
+switch (wrapper.getType()) {
+case LIST:
+        List<Object> list=new ArrayList<Object>(size);
+      return convertSerializedElementsToCollection(elements,list);
+case SET:
+    Set<Object> set=new HashSet<Object>(size);
+  return convertSerializedElementsToCollection(elements,set);
+case MAP:
+Map<String,Object> map=new HashMap<String,Object>(size);
+if (size > 0) {
+for (Object keyValueObj : elements) {
+  JaxbStringObjectPair keyValue=(JaxbStringObjectPair)keyValueObj;
+  Object key=keyValue.getKey();
+  Object value=convertSerializedObjectToObject(keyValue.getValue());
+  map.put(key.toString(),value);
+}
+}
+return map;
+default :
+throw new IllegalArgumentException("Unknown JAXB collection wrapper type: " + wrapper.getType().toString());
+}
+}
+}
+ else if (o instanceof JaxbStringObjectPair[]) {
+JaxbStringObjectPair[] value=(JaxbStringObjectPair[])o;
+Map<Object,Object> r=new HashMap<Object,Object>();
+for (JaxbStringObjectPair p : value) {
+if (p.getValue() instanceof JaxbListWrapper) {
+r.put(p.getKey(),new ArrayList(Arrays.asList(((JaxbListWrapper)p.getValue()).getElements())));
+}
+ else {
+r.put(p.getKey(),p.getValue());
+}
+}
+return r;
+}
+ else {
+return o;
+}
 }

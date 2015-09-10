@@ -1,0 +1,39 @@
+{
+  if (seenObjectsMap.put(o,PRESENT) != null) {
+    throw new UnsupportedOperationException("Serialization of recursive data structures is not supported!");
+  }
+  try {
+    if (o instanceof List) {
+      List list=(List)o;
+      Object[] serializedArr=convertCollectionToSerializedArray(list,seenObjectsMap);
+      return new JaxbListWrapper(serializedArr,JaxbWrapperType.LIST);
+    }
+ else     if (o instanceof Set) {
+      Set set=(Set)o;
+      Object[] serializedArr=convertCollectionToSerializedArray(set,seenObjectsMap);
+      return new JaxbListWrapper(serializedArr,JaxbWrapperType.SET);
+    }
+ else     if (o instanceof Map) {
+      Map<Object,Object> map=(Map<Object,Object>)o;
+      List<JaxbStringObjectPair> pairList=new ArrayList<JaxbStringObjectPair>(map.size());
+      if (map == null || map.isEmpty()) {
+        pairList=Collections.EMPTY_LIST;
+      }
+      for (      Entry<Object,Object> entry : map.entrySet()) {
+        Object key=entry.getKey();
+        if (key != null && !(key instanceof String)) {
+          throw new UnsupportedOperationException("Only String keys for Map structures are supported [key was a " + key.getClass().getName() + "]");
+        }
+        Object value=convertObjectToSerializableVariant(entry.getValue(),seenObjectsMap);
+        pairList.add(new JaxbStringObjectPair((String)key,value));
+      }
+      return new JaxbListWrapper(pairList.toArray(new JaxbStringObjectPair[pairList.size()]),JaxbWrapperType.MAP);
+    }
+ else {
+      return o;
+    }
+  }
+  finally {
+    seenObjectsMap.remove(o);
+  }
+}
