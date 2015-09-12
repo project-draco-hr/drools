@@ -1,0 +1,20 @@
+{
+  String str="";
+  str+="package org.drools.compiler.integrationtests \n";
+  str+="import " + Cheese.class.getCanonicalName() + " \n";
+  str+="rule StringRule \n";
+  str+=" when \n";
+  str+=" $c : Cheese() \n";
+  str+=" then \n";
+  str+=" System.out.println($c); \n";
+  str+="end \n";
+  StatefulKnowledgeSession kSession=getSession(str);
+  List<Command> commands=new ArrayList<Command>();
+  commands.add(CommandFactory.newEnableAuditLog(auditFileDir,auditFileName));
+  commands.add(CommandFactory.newInsert(new Cheese()));
+  commands.add(CommandFactory.newFireAllRules());
+  kSession.execute(CommandFactory.newBatchExecution(commands));
+  kSession.dispose();
+  File file=new File(auditFileDir + File.separator + auditFileName+ ".log");
+  assertTrue(file.exists());
+}
