@@ -36,22 +36,14 @@
     if (leftTuple.getMemory() == null) {
       LeftTuple childLeftTuple=leftTuple.getFirstChild();
       if (childLeftTuple != null) {
-switch (childLeftTuple.getStagedType()) {
-case LeftTuple.INSERT:
-          stagedLeftTuples.removeInsert(childLeftTuple);
-        break;
-case LeftTuple.UPDATE:
-      stagedLeftTuples.removeUpdate(childLeftTuple);
-    break;
-}
-childLeftTuple.setPropagationContext(leftTuple.getPropagationContext());
-trgLeftTuples.addDelete(childLeftTuple);
-if (log.isTraceEnabled()) {
-  log.trace("Timer Delete {}",leftTuple);
-}
-}
-}
-leftTuple.clearStaged();
-leftTuple=next;
-}
+        childLeftTuple.setPropagationContext(leftTuple.getPropagationContext());
+        RuleNetworkEvaluator.deleteChildLeftTuple(childLeftTuple,trgLeftTuples,stagedLeftTuples);
+        if (log.isTraceEnabled()) {
+          log.trace("Timer Delete {}",leftTuple);
+        }
+      }
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
 }
