@@ -1,0 +1,33 @@
+{
+  String str="";
+  str+="package org.drools.compiler.integrationtests \n";
+  str+="import " + Alarm.class.getCanonicalName() + " \n";
+  str+="import " + Sensor.class.getCanonicalName() + " \n";
+  str+="rule StringRule  @Propagation(EAGER) ruleflow-group \"DROOLS_SYSTEM\"\n";
+  str+=" when \n";
+  str+=" $a : Alarm() \n";
+  str+=" $s : Sensor() \n";
+  str+=" then \n";
+  str+="end \n";
+  KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  conf.setOption(ForceEagerActivationOption.YES);
+  KieSession ksession=new KieHelper().addContent(str,ResourceType.DRL).build().newKieSession(conf,null);
+  ksession.addEventListener(new DefaultAgendaEventListener(){
+    @Override public void matchCreated(    MatchCreatedEvent event){
+      Collection<? extends FactHandle> alarms=event.getKieRuntime().getFactHandles(new ClassObjectFilter(Alarm.class));
+      for (      FactHandle alarm : alarms) {
+        event.getKieRuntime().delete(alarm);
+      }
+    }
+  }
+);
+  Alarm alarm=new Alarm();
+  alarm.setMessage("test");
+  alarm.setNumber(123);
+  ksession.insert(alarm);
+  Sensor sensor=new Sensor();
+  sensor.setPressure(1);
+  sensor.setTemperature(25);
+  ksession.insert(sensor);
+  ksession.fireAllRules();
+}

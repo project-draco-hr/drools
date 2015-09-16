@@ -1,7 +1,18 @@
 {
   workingMemory.getAgenda().executeTask(new ExecutableEntry(){
     @Override public void execute(){
-      propagationEntry.execute(workingMemory);
+      if (executing.compareAndSet(false,true)) {
+        try {
+          propagationEntry.execute(workingMemory);
+        }
+  finally {
+          executing.set(false);
+          flush();
+        }
+      }
+ else {
+        internalAddEntry(propagationEntry);
+      }
     }
     @Override public void enqueue(){
       internalAddEntry(propagationEntry);
