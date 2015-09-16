@@ -1,0 +1,31 @@
+{
+  String namespace="org.kie.test";
+  ReleaseId releaseId=KieServices.Factory.get().newReleaseId(namespace,"pomModelReuse","1.0-SNAPSHOT");
+  String pom=KieBuilderImpl.generatePomXml(releaseId);
+  KieFileSystem kfs=KieServices.Factory.get().newKieFileSystem();
+  kfs.writePomXML(pom);
+  KieBuilder kieBuilder1=createKieBuilder(kfs);
+  kieBuilder1.buildAll();
+  PomModel pomModel=((KieBuilderImpl)kieBuilder1).getPomModel();
+  kfs.writePomXML(pom);
+  KieBuilder kieBuilder2=createKieBuilder(kfs);
+  ((KieBuilderImpl)kieBuilder2).setPomModel(pomModel);
+  kieBuilder2.buildAll();
+  InternalKieModule kieModule1=(InternalKieModule)((KieBuilderImpl)kieBuilder1).getKieModuleIgnoringErrors();
+  final Reader reader1=kieModule1.getResource("META-INF/maven/org.kie.test/pomModelReuse/pom.xml").getReader();
+  int charCode;
+  String readPom1="";
+  while ((charCode=reader1.read()) != -1) {
+    readPom1=readPom1 + (char)charCode;
+  }
+  reader1.close();
+  assertEquals(pom,readPom1);
+  InternalKieModule kieModule2=(InternalKieModule)((KieBuilderImpl)kieBuilder2).getKieModuleIgnoringErrors();
+  final Reader reader2=kieModule2.getResource("META-INF/maven/org.kie.test/pomModelReuse/pom.xml").getReader();
+  String readPom2="";
+  while ((charCode=reader2.read()) != -1) {
+    readPom2=readPom2 + (char)charCode;
+  }
+  reader1.close();
+  assertEquals(pom,readPom2);
+}
