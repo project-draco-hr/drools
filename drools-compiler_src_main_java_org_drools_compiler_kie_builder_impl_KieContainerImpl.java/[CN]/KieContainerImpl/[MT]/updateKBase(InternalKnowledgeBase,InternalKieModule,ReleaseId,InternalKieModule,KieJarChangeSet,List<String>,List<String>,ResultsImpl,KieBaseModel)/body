@@ -1,0 +1,25 @@
+{
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(kBase);
+  KnowledgeBuilderImpl pkgbuilder=(KnowledgeBuilderImpl)kbuilder;
+  CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
+  boolean shouldRebuild=applyResourceChanges(currentKM,newKM,cs,modifiedClasses,kBase,kieBaseModel,pkgbuilder,ckbuilder);
+  for (  ResourceChangeSet rcs : cs.getChanges().values()) {
+    if (rcs.getChangeType() == ChangeType.REMOVED) {
+      String resourceName=rcs.getResourceName();
+      if (!resourceName.endsWith(".properties") && isFileInKBase(newKM,kieBaseModel,resourceName)) {
+        pkgbuilder.removeObjectsGeneratedFromResource(currentKM.getResource(resourceName));
+      }
+    }
+  }
+  if (shouldRebuild) {
+    for (    String dslFile : dslFiles) {
+      if (isFileInKBase(newKM,kieBaseModel,dslFile)) {
+        newKM.addResourceToCompiler(ckbuilder,kieBaseModel,dslFile);
+      }
+    }
+    rebuildAll(newReleaseId,results,newKM,modifiedClasses,kieBaseModel,pkgbuilder,ckbuilder);
+  }
+  for (  StatefulKnowledgeSession session : kBase.getStatefulKnowledgeSessions()) {
+    ((InternalWorkingMemory)session).notifyHalt();
+  }
+}
