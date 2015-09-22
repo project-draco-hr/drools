@@ -1,21 +1,17 @@
 {
   Class<?> cls=findLoadedClass(name);
   if (cls == null) {
-    final byte[] clazzBytes=this.store.read(convertClassToResourcePath(name));
-    if (clazzBytes != null) {
-      String pkgName=name.substring(0,name.lastIndexOf('.'));
-      if (!existingPackages.contains(pkgName)) {
-synchronized (this) {
-          if (getPackage(pkgName) == null) {
-            definePackage(pkgName,"","","","","","",null);
-          }
-          existingPackages.add(pkgName);
+    Object lock=getLockObject(name);
+synchronized (lock) {
+      cls=findLoadedClass(name);
+      if (cls == null) {
+        try {
+          cls=internalDefineClass(name,this.store.read(convertClassToResourcePath(name)));
+        }
+  finally {
+          releaseLockObject(name);
         }
       }
-      cls=defineClass(name,clazzBytes,0,clazzBytes.length,PROTECTION_DOMAIN);
-    }
-    if (cls != null) {
-      resolveClass(cls);
     }
   }
   return cls;
