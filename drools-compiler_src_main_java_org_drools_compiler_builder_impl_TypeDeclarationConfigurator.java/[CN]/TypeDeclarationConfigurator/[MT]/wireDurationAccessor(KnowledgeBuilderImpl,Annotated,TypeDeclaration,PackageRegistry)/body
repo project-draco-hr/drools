@@ -1,0 +1,23 @@
+{
+  Duration duration=annotated.getTypedAnnotation(Duration.class);
+  if (duration != null) {
+    BaseDescr typeDescr=annotated instanceof BaseDescr ? ((BaseDescr)annotated) : new BaseDescr();
+    String durationField;
+    try {
+      durationField=duration.value();
+    }
+ catch (    Exception e) {
+      kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,e.getMessage()));
+      return;
+    }
+    type.setDurationAttribute(durationField);
+    InternalKnowledgePackage pkg=pkgRegistry.getPackage();
+    MVELAnalysisResult results=getMvelAnalysisResult(kbuilder,typeDescr,type,pkgRegistry,durationField,pkg);
+    if (results != null) {
+      type.setDurationExtractor(getFieldExtractor(type,durationField,pkg,results));
+    }
+ else {
+      kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Error processing @duration for TypeDeclaration '" + type.getFullName() + "': cannot access the field '"+ durationField+ "'"));
+    }
+  }
+}

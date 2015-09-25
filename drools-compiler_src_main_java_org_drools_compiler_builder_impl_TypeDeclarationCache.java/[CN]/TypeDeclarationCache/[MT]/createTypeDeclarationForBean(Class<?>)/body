@@ -1,11 +1,14 @@
 {
   TypeDeclaration typeDeclaration=new TypeDeclaration(cls);
-  PropertySpecificOption propertySpecificOption=kbuilder.getBuilderConfiguration().getPropertySpecificOption();
-  boolean propertyReactive=propertySpecificOption.isPropSpecific(cls.isAnnotationPresent(PropertyReactive.class),cls.isAnnotationPresent(ClassReactive.class));
-  typeDeclaration.setPropertyReactive(propertyReactive);
   Role role=cls.getAnnotation(Role.class);
   if (role != null) {
     typeDeclaration.setRole(role.value());
   }
+  String namespace=ClassUtils.getPackage(cls);
+  PackageRegistry pkgRegistry=kbuilder.getPackageRegistry(namespace);
+  if (pkgRegistry == null) {
+    pkgRegistry=kbuilder.createPackageRegistry(new PackageDescr(namespace));
+  }
+  processTypeAnnotations(kbuilder,pkgRegistry,new Annotated.ClassAdapter(cls),typeDeclaration);
   return typeDeclaration;
 }

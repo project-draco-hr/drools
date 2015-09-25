@@ -1,0 +1,23 @@
+{
+  Timestamp timestamp=annotated.getTypedAnnotation(Timestamp.class);
+  if (timestamp != null) {
+    BaseDescr typeDescr=annotated instanceof BaseDescr ? ((BaseDescr)annotated) : new BaseDescr();
+    String timestampField;
+    try {
+      timestampField=timestamp.value();
+    }
+ catch (    Exception e) {
+      kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,e.getMessage()));
+      return;
+    }
+    type.setTimestampAttribute(timestampField);
+    InternalKnowledgePackage pkg=pkgRegistry.getPackage();
+    MVELAnalysisResult results=getMvelAnalysisResult(kbuilder,typeDescr,type,pkgRegistry,timestampField,pkg);
+    if (results != null) {
+      type.setTimestampExtractor(getFieldExtractor(type,timestampField,pkg,results));
+    }
+ else {
+      kbuilder.addBuilderResult(new TypeDeclarationError(typeDescr,"Error creating field accessors for timestamp field '" + timestamp + "' for type '"+ type.getTypeName()+ "'"));
+    }
+  }
+}
