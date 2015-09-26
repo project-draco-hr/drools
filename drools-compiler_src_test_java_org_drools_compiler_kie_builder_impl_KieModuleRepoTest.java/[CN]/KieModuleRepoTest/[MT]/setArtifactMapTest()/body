@@ -1,0 +1,44 @@
+{
+  Thread.currentThread().setName("test");
+  final String groupId="org";
+  final String artifactId="one";
+  final String firstVersion="1.0";
+  final String secondVersion="1.0-NEW-FEATURE";
+  final CyclicBarrier threadsFinishedBarrier=new CyclicBarrier(3);
+  Thread firstThread=new Thread(new Runnable(){
+    private final KieModuleRepo kieModuleRepo=KieModuleRepoTest.this.kieModuleRepo;
+    @Override public void run(){
+      ReleaseIdImpl firstReleaseId=new ReleaseIdImpl(groupId,artifactId,firstVersion);
+      KieModule firstKieModule=mock(KieModule.class);
+      when(firstKieModule.getReleaseId()).thenReturn(firstReleaseId);
+      kieModuleRepo.store(firstKieModule);
+      waitFor(threadsFinishedBarrier);
+    }
+  }
+);
+  Thread secondThread=new Thread(new Runnable(){
+    private final KieModuleRepo kieModuleRepo=KieModuleRepoTest.this.kieModuleRepo;
+    @Override public void run(){
+      ReleaseIdImpl secondReleaseId=new ReleaseIdImpl(groupId,artifactId,secondVersion);
+      KieModule secondKieModule=mock(KieModule.class);
+      when(secondKieModule.getReleaseId()).thenReturn(secondReleaseId);
+      kieModuleRepo.store(secondKieModule);
+      waitFor(threadsFinishedBarrier);
+    }
+  }
+);
+  firstThread.setName("normal");
+  firstThread.start();
+  secondThread.setName("newFeature");
+  secondThread.start();
+  waitFor(threadsFinishedBarrier);
+  checkRules();
+  String ga=groupId + ":" + artifactId;
+  Map<ComparableVersion,KieModule> artifactMap=kieModuleRepo.kieModules.get(ga);
+  ComparableVersion normalVersion=new ComparableVersion(firstVersion);
+  KieModule normalKieModule=artifactMap.get(normalVersion);
+  ComparableVersion newFeatureVersion=new ComparableVersion(secondVersion);
+  KieModule newFeatureKieModule=artifactMap.get(newFeatureVersion);
+  assertNotNull("Race condition occurred: normal KieModule disappeared from KieModuleRepo!",normalKieModule);
+  assertNotNull("Race condition occurred: new feature KieModule disappeared from KieModuleRepo!",newFeatureKieModule);
+}

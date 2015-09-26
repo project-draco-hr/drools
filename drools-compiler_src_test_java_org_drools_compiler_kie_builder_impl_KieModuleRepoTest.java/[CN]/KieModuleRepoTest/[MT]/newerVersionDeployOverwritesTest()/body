@@ -1,0 +1,38 @@
+{
+  Thread.currentThread().setName("test");
+  ReleaseIdImpl releaseId=new ReleaseIdImpl("org","deployTwiceAfterUpdateDependency","1.0-SNAPSHOT");
+  InternalKieModule originalOldKieModule=mock(InternalKieModule.class);
+  when(originalOldKieModule.getReleaseId()).thenReturn(releaseId);
+  when(originalOldKieModule.getCreationTimestamp()).thenReturn(0l);
+  ReleaseId dependentReleaseid=new ReleaseIdImpl("org","deployTwiceAfterUpdate","1.0-SNAPSHOT");
+  KieContainerImpl kieContainer=createMockKieContainer(dependentReleaseid,kieModuleRepo);
+  final CountDownLatch initialDeployAndUpdateDependencyToFinish=new CountDownLatch(1);
+  kieModuleRepo.store(originalOldKieModule);
+  kieContainer.updateDependencyToVersion(releaseId,releaseId);
+  initialDeployAndUpdateDependencyToFinish.countDown();
+  final CyclicBarrier bothStoreThreadsToFinish=new CyclicBarrier(3);
+  final InternalKieModule newKieModule=mock(InternalKieModule.class);
+  when(newKieModule.getReleaseId()).thenReturn(releaseId);
+  when(newKieModule.getCreationTimestamp()).thenReturn(10l);
+  Runnable deployRunnable=new Runnable(){
+    private final KieModuleRepo kieModuleRepo=KieModuleRepoTest.this.kieModuleRepo;
+    @Override public void run(){
+      waitFor(initialDeployAndUpdateDependencyToFinish);
+      kieModuleRepo.store(newKieModule);
+      waitFor(bothStoreThreadsToFinish);
+    }
+  }
+;
+  Thread deployThread=new Thread(deployRunnable);
+  Thread secondDeployThread=new Thread(deployRunnable);
+  deployThread.setName("one");
+  deployThread.start();
+  secondDeployThread.setName("two");
+  secondDeployThread.start();
+  waitFor(bothStoreThreadsToFinish);
+  checkRules();
+  KieModule oldKieModule=kieModuleRepo.oldKieModules.get(releaseId);
+  long oldKieModuleTimeStamp=((InternalKieModule)oldKieModule).getCreationTimestamp();
+  long originalKieModuleTimestamp=((InternalKieModule)originalOldKieModule).getCreationTimestamp();
+  assertEquals("The old kie module in the repo is not the originally deployed module!",originalKieModuleTimestamp,oldKieModuleTimeStamp);
+}

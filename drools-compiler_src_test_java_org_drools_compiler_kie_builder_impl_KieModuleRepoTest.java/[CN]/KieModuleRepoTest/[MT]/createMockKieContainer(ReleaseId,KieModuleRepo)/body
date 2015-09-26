@@ -1,0 +1,17 @@
+{
+  InternalKieModule mockKieProjectKieModule=mock(InternalKieModule.class);
+  ResourceProvider mockKieProjectKieModuleResourceProvider=mock(ResourceProvider.class);
+  when(mockKieProjectKieModule.createResourceProvider()).thenReturn(mockKieProjectKieModuleResourceProvider);
+  KieModuleKieProject kieProject=new KieModuleKieProject(mockKieProjectKieModule);
+  KieModuleKieProject mockKieProject=spy(kieProject);
+  doNothing().when(mockKieProject).init();
+  doReturn(projectReleaseId).when(mockKieProject).getGAV();
+  doNothing().when(mockKieProject).updateToModule(any(InternalKieModule.class));
+  KieRepository kieRepository=new KieRepositoryImpl();
+  Field kieModuleRepoField=KieRepositoryImpl.class.getDeclaredField("kieModuleRepo");
+  kieModuleRepoField.setAccessible(true);
+  kieModuleRepoField.set(kieRepository,kieModuleRepo);
+  kieModuleRepoField.setAccessible(false);
+  KieContainerImpl kieContainerImpl=new KieContainerImpl(mockKieProject,kieRepository);
+  return kieContainerImpl;
+}

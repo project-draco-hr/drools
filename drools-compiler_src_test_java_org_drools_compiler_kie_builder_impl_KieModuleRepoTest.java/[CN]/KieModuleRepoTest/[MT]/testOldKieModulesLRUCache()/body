@@ -1,0 +1,31 @@
+{
+  Field maxSizeGaCacheField=KieModuleRepo.class.getDeclaredField("MAX_SIZE_GA_CACHE");
+  setFinalField(maxSizeGaCacheField,null,2);
+  Field maxSizeGaVersionsCacheField=KieModuleRepo.class.getDeclaredField("MAX_SIZE_GA_VERSIONS_CACHE");
+  setFinalField(maxSizeGaVersionsCacheField,null,4);
+  ReleaseIdImpl[] releaseIds=new ReleaseIdImpl[9];
+  for (int i=0; i < releaseIds.length; ++i) {
+    String artifactId=Character.toString((char)('A' + i / 2));
+    releaseIds[i]=new ReleaseIdImpl("org",artifactId,"1." + i);
+  }
+  for (int i=0; i < releaseIds.length; ++i) {
+    InternalKieModule kieModule=mock(InternalKieModule.class);
+    when(kieModule.getReleaseId()).thenReturn(releaseIds[i]);
+    when(kieModule.getCreationTimestamp()).thenReturn(10l);
+    kieModuleRepo.store(kieModule);
+    kieModuleRepo.store(kieModule);
+  }
+  int maxSameGAModules=0;
+  int maxGAs=0;
+  for (  Map<ComparableVersion,KieModule> artifactMap : kieModuleRepo.kieModules.values()) {
+    maxGAs++;
+    if (artifactMap.size() > maxSameGAModules) {
+      maxSameGAModules=artifactMap.size();
+    }
+  }
+  assertTrue("The maximum of artifacts per GA should not grow past " + KieModuleRepo.MAX_SIZE_GA_VERSIONS_CACHE + ": "+ KieModuleRepo.MAX_SIZE_GA_VERSIONS_CACHE+ " < "+ maxSameGAModules,KieModuleRepo.MAX_SIZE_GA_VERSIONS_CACHE >= maxSameGAModules);
+  assertTrue("The number of GAs not grow past " + KieModuleRepo.MAX_SIZE_GA_CACHE + ": "+ KieModuleRepo.MAX_SIZE_GA_CACHE+ " > "+ maxGAs,KieModuleRepo.MAX_SIZE_GA_CACHE >= maxGAs);
+  int oldKieModulesSize=kieModuleRepo.oldKieModules.size();
+  int maxOldKieModules=KieModuleRepo.MAX_SIZE_GA_CACHE * KieModuleRepo.MAX_SIZE_GA_VERSIONS_CACHE;
+  assertTrue("KieModuleRepo old KieModules map is not limited in it's growth: " + oldKieModulesSize + " > "+ maxOldKieModules,oldKieModulesSize <= maxOldKieModules);
+}

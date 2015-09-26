@@ -1,0 +1,21 @@
+{
+  NavigableMap<ComparableVersion,KieModule> newArtifactMap=new TreeMap<ComparableVersion,KieModule>(){
+    private final Map<ComparableVersion,KieModule> artifactMap=this;
+    LinkedHashMap<ComparableVersion,Object> backingLRUMap=new LinkedHashMap<KieRepositoryImpl.ComparableVersion,Object>(16,0.75f,true){
+      @Override protected boolean removeEldestEntry(      Map.Entry<ComparableVersion,Object> eldest){
+        boolean remove=(size() > MAX_SIZE_GA_VERSIONS_CACHE);
+        if (remove) {
+          artifactMap.remove(eldest.getKey());
+        }
+        return remove;
+      }
+    }
+;
+    @Override public KieModule put(    ComparableVersion key,    KieModule value){
+      backingLRUMap.put(key,PRESENT);
+      return super.put(key,value);
+    }
+  }
+;
+  return newArtifactMap;
+}

@@ -1,0 +1,44 @@
+{
+  Thread.currentThread().setName("test");
+  final ReleaseIdImpl releaseId=new ReleaseIdImpl("org","redeploy","2.0");
+  final InternalKieModule originalKieModule=mock(InternalKieModule.class);
+  when(originalKieModule.getReleaseId()).thenReturn(releaseId);
+  when(originalKieModule.getCreationTimestamp()).thenReturn(0l);
+  final InternalKieModule redeployKieModule=mock(InternalKieModule.class);
+  when(redeployKieModule.getReleaseId()).thenReturn(releaseId);
+  when(redeployKieModule.getCreationTimestamp()).thenReturn(1l);
+  final CountDownLatch initialDeploy=new CountDownLatch(1);
+  kieModuleRepo.store(originalKieModule);
+  initialDeploy.countDown();
+  final CyclicBarrier storeAndRemoveThreadsToFinish=new CyclicBarrier(3);
+  Thread removeThread=new Thread(new Runnable(){
+    private final KieModuleRepo kieModuleRepo=KieModuleRepoTest.this.kieModuleRepo;
+    @Override public void run(){
+      waitFor(initialDeploy);
+      kieModuleRepo.remove(releaseId);
+      waitFor(storeAndRemoveThreadsToFinish);
+    }
+  }
+);
+  Thread redeployThread=new Thread(new Runnable(){
+    private final KieModuleRepo kieModuleRepo=KieModuleRepoTest.this.kieModuleRepo;
+    @Override public void run(){
+      waitFor(initialDeploy);
+      kieModuleRepo.store(redeployKieModule);
+      waitFor(storeAndRemoveThreadsToFinish);
+    }
+  }
+);
+  removeThread.setName("remove");
+  removeThread.start();
+  redeployThread.setName("store");
+  redeployThread.start();
+  waitFor(storeAndRemoveThreadsToFinish);
+  checkRules();
+  String ga=releaseId.getGroupId() + ":" + releaseId.getArtifactId();
+  Map<ComparableVersion,KieModule> artifactMap=kieModuleRepo.kieModules.get(ga);
+  assertNotNull("Artifact Map for GA '" + ga + "' not in KieModuleRepo!",artifactMap);
+  KieModule redployedKieModule=artifactMap.get(new ComparableVersion(releaseId.getVersion()));
+  assertNotNull("Redeployed module has disappeared from KieModuleRepo!",redployedKieModule);
+  assertEquals("Original module retrieved instead of redeployed module!",1l,((InternalKieModule)redeployKieModule).getCreationTimestamp());
+}
