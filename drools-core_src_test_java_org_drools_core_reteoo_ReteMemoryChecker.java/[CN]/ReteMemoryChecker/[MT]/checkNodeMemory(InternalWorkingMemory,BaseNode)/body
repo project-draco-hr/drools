@@ -1,0 +1,54 @@
+{
+  if (node instanceof MemoryFactory) {
+    Memory memory=wm.getNodeMemory((MemoryFactory)node);
+    if (NodeTypeEnums.ObjectTypeNode == node.getType()) {
+      if (!(memory instanceof ObjectTypeNode.ObjectTypeNodeMemory)) {
+        throw new RuntimeException("Invalid memory type. Node: " + node + " has memory "+ memory);
+      }
+    }
+ else     if (NodeTypeEnums.LeftInputAdapterNode == node.getType()) {
+      if (!(memory instanceof LeftInputAdapterNode.LiaNodeMemory)) {
+        throw new RuntimeException("Invalid memory type. Node: " + node + " has memory "+ memory);
+      }
+    }
+ else     if (NodeTypeEnums.AlphaNode == node.getType()) {
+      if (!(memory instanceof AlphaNode.AlphaMemory)) {
+        throw new RuntimeException("Invalid memory type. Node: " + node + " has memory "+ memory);
+      }
+    }
+ else     if (NodeTypeEnums.isBetaNode(node)) {
+      if (NodeTypeEnums.AccumulateNode == node.getType()) {
+        if (!(memory instanceof AccumulateNode.AccumulateMemory)) {
+          throw new RuntimeException("Invalid memory type. Node: " + node + " has memory "+ memory);
+        }
+      }
+ else       if (!(memory instanceof BetaMemory)) {
+        throw new RuntimeException("Invalid memory type. Node: " + node + " has memory "+ memory);
+      }
+    }
+ else     if (NodeTypeEnums.FromNode == node.getType()) {
+      if (!(memory instanceof FromNode.FromMemory)) {
+        throw new RuntimeException("Invalid memory type. Node: " + node + " has memory "+ memory);
+      }
+    }
+ else     if (NodeTypeEnums.WindowNode == node.getType()) {
+      if (!(memory instanceof WindowNode.WindowMemory)) {
+        throw new RuntimeException("Invalid memory type. Node: " + node + " has memory "+ memory);
+      }
+    }
+ else     if (NodeTypeEnums.isTerminalNode(node)) {
+      if (!(memory instanceof PathMemory)) {
+        throw new RuntimeException("Invalid memory type. Node: " + node + " has memory "+ memory);
+      }
+      checkPathMemory((PathMemory)memory);
+    }
+  }
+  Sink[] sinks=getSinks(node);
+  if (sinks != null) {
+    for (    Sink sink : sinks) {
+      if (sink instanceof BaseNode) {
+        checkNodeMemory(wm,(BaseNode)sink);
+      }
+    }
+  }
+}
