@@ -1,9 +1,19 @@
 {
-  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("simple_query_test.drl"));
-  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+  KieBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("simple_query_test.drl"));
+  KieSession session=createKieSession(kbase);
   final Cheese stilton=new Cheese("stinky",5);
-  session.insert(stilton);
+  FactHandle factHandle=session.insert(stilton);
   session=SerializationHelper.getSerialisedStatefulKnowledgeSession(session,true);
-  org.kie.api.runtime.rule.QueryResults results=session.getQueryResults("simple query");
+  String queryName="simple query";
+  org.kie.api.runtime.rule.QueryResults results=getQueryResults(session,queryName);
   assertEquals(1,results.size());
+  QueryResultsRow row=results.iterator().next();
+  if (row instanceof FlatQueryResultRow) {
+    FlatQueryResultRow flatRow=(FlatQueryResultRow)row;
+    assertEquals(0,flatRow.getIdentifiers().size());
+  }
+ else   if (row instanceof QueryResultsRowImpl) {
+    QueryResultsRowImpl rowImpl=(QueryResultsRowImpl)row;
+    assertEquals(0,rowImpl.getDeclarations().size());
+  }
 }

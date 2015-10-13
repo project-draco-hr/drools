@@ -1,0 +1,20 @@
+{
+  ClassLoader tccl=Thread.currentThread().getContextClassLoader();
+  ClassLoader loader=tccl == null ? JaxbUnknownAdapter.class.getClassLoader() : tccl;
+  try {
+    if (className.contains(".")) {
+      return Class.forName(className,true,loader);
+    }
+ else {
+      String arrClassName=classToArrayTypeMap.get(className);
+      if (arrClassName == null) {
+        throw new IllegalStateException("Unexpected class type encountered during deserialization: " + arrClassName);
+      }
+      arrClassName="[" + arrClassName;
+      return Class.forName(arrClassName,true,loader).getComponentType();
+    }
+  }
+ catch (  ClassNotFoundException cnfe) {
+    throw new IllegalStateException("Class '" + className + "' could not be found during deserialization: "+ cnfe.getMessage(),cnfe);
+  }
+}

@@ -1,4 +1,7 @@
 {
+  if (o == null) {
+    return o;
+  }
   if (seenObjectsMap.put(o,PRESENT) != null) {
     throw new UnsupportedOperationException("Serialization of recursive data structures is not supported!");
   }
@@ -24,10 +27,25 @@
         if (key != null && !(key instanceof String)) {
           throw new UnsupportedOperationException("Only String keys for Map structures are supported [key was a " + key.getClass().getName() + "]");
         }
-        Object value=convertObjectToSerializableVariant(entry.getValue(),seenObjectsMap);
-        pairList.add(new JaxbStringObjectPair((String)key,value));
+        pairList.add(new JaxbStringObjectPair((String)key,entry.getValue()));
       }
       return new JaxbListWrapper(pairList.toArray(new JaxbStringObjectPair[pairList.size()]),JaxbWrapperType.MAP);
+    }
+ else     if (o.getClass().isArray()) {
+      int length=Array.getLength(o);
+      Object[] serializedArr=new Object[length];
+      for (int i=0; i < length; ++i) {
+        Object elem=convertObjectToSerializableVariant(Array.get(o,i),seenObjectsMap);
+        serializedArr[i]=elem;
+      }
+      JaxbListWrapper wrapper=new JaxbListWrapper(serializedArr,JaxbWrapperType.ARRAY);
+      Class componentType=o.getClass().getComponentType();
+      String componentTypeName=o.getClass().getComponentType().getCanonicalName();
+      if (componentTypeName == null) {
+        throw new UnsupportedOperationException("Local or anonymous classes are not supported for serialization: " + componentType.getName());
+      }
+      wrapper.setComponentType(componentTypeName);
+      return wrapper;
     }
  else {
       return o;

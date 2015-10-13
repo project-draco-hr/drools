@@ -1,0 +1,59 @@
+{
+  final ClassObjectType queryObjectType=new ClassObjectType(DroolsQuery.class);
+  final ObjectTypeNode queryObjectTypeNode=new ObjectTypeNode(this.buildContext.getNextId(),this.entryPoint,queryObjectType,buildContext);
+  queryObjectTypeNode.attach(buildContext);
+  ClassFieldReader extractor=store.getReader(DroolsQuery.class,"name");
+  MvelConstraint constraint=new MvelConstraintTestUtil("name == \"query-1\"",FieldFactory.getInstance().getFieldValue("query-1"),extractor);
+  final QueryImpl query=new QueryImpl("query-1");
+  buildContext.setRule(query);
+  AlphaNode alphaNode=new AlphaNode(this.buildContext.getNextId(),constraint,queryObjectTypeNode,buildContext);
+  alphaNode.attach(buildContext);
+  final LeftInputAdapterNode liaNode=new LeftInputAdapterNode(this.buildContext.getNextId(),alphaNode,this.buildContext);
+  liaNode.attach(buildContext);
+  final ClassObjectType cheeseObjectType=new ClassObjectType(Cheese.class);
+  final ObjectTypeNode cheeseObjectTypeNode=new ObjectTypeNode(this.buildContext.getNextId(),this.entryPoint,cheeseObjectType,buildContext);
+  cheeseObjectTypeNode.attach(buildContext);
+  extractor=store.getReader(Cheese.class,"type");
+  constraint=new MvelConstraintTestUtil("type == \"stilton\"",FieldFactory.getInstance().getFieldValue("stilton"),extractor);
+  alphaNode=new AlphaNode(this.buildContext.getNextId(),constraint,cheeseObjectTypeNode,buildContext);
+  alphaNode.attach(buildContext);
+  BuildContext buildContext=new BuildContext(kBase,kBase.getReteooBuilder().getIdGenerator());
+  buildContext.setTupleMemoryEnabled(false);
+  final JoinNode joinNode=new JoinNode(this.buildContext.getNextId(),liaNode,alphaNode,EmptyBetaConstraints.getInstance(),buildContext);
+  joinNode.attach(buildContext);
+  final QueryTerminalNode queryNode=new QueryTerminalNode(this.buildContext.getNextId(),joinNode,query,((QueryImpl)query).getLhs(),0,buildContext);
+  queryNode.attach(buildContext);
+  final KnowledgePackageImpl pkg=new KnowledgePackageImpl("com.drools.test");
+  pkg.addRule(query);
+  ((KnowledgeBaseImpl)kBase).addPackages(Arrays.asList(new InternalKnowledgePackage[]{pkg}));
+  KieSession kSession=kBase.newKieSession();
+  QueryResults results=kSession.getQueryResults("query-1");
+  assertEquals(0,results.size());
+  final Cheese stilton1=new Cheese("stilton",100);
+  final FactHandle handle1=kSession.insert(stilton1);
+  results=kSession.getQueryResults("query-1");
+  assertEquals(1,results.size());
+  final Cheese cheddar=new Cheese("cheddar",55);
+  kSession.insert(cheddar);
+  results=kSession.getQueryResults("query-1");
+  assertEquals(1,results.size());
+  final Cheese stilton2=new Cheese("stilton",5);
+  final FactHandle handle2=kSession.insert(stilton2);
+  results=kSession.getQueryResults("query-1");
+  assertEquals(2,results.size());
+  int i=0;
+  for (final Iterator<QueryResultsRow> it=results.iterator(); it.hasNext(); ) {
+    QueryResultsRow resultRow=it.next();
+    if (i == 1) {
+    }
+ else {
+    }
+    i++;
+  }
+  kSession.delete(handle1);
+  results=kSession.getQueryResults("query-1");
+  assertEquals(1,results.size());
+  kSession.delete(handle2);
+  results=kSession.getQueryResults("query-1");
+  assertEquals(0,results.size());
+}

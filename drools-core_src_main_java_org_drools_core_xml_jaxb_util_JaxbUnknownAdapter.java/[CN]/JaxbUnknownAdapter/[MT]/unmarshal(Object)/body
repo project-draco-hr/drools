@@ -1,53 +1,9 @@
 {
-  if (o instanceof JaxbListWrapper) {
-    JaxbListWrapper wrapper=(JaxbListWrapper)o;
-    Object[] elements=wrapper.getElements();
-    int size=0;
-    if (elements != null) {
-      size=elements.length;
-    }
-    if (wrapper.getType() == null) {
-      List<Object> list=new ArrayList<Object>(size);
-      return convertSerializedElementsToCollection(elements,list);
-    }
- else {
-switch (wrapper.getType()) {
-case LIST:
-        List<Object> list=new ArrayList<Object>(size);
-      return convertSerializedElementsToCollection(elements,list);
-case SET:
-    Set<Object> set=new HashSet<Object>(size);
-  return convertSerializedElementsToCollection(elements,set);
-case MAP:
-Map<String,Object> map=new HashMap<String,Object>(size);
-if (size > 0) {
-for (Object keyValueObj : elements) {
-  JaxbStringObjectPair keyValue=(JaxbStringObjectPair)keyValueObj;
-  Object key=keyValue.getKey();
-  Object value=convertSerializedObjectToObject(keyValue.getValue());
-  map.put(key.toString(),value);
-}
-}
-return map;
-default :
-throw new IllegalArgumentException("Unknown JAXB collection wrapper type: " + wrapper.getType().toString());
-}
-}
-}
- else if (o instanceof JaxbStringObjectPair[]) {
-JaxbStringObjectPair[] value=(JaxbStringObjectPair[])o;
-Map<Object,Object> r=new HashMap<Object,Object>();
-for (JaxbStringObjectPair p : value) {
-if (p.getValue() instanceof JaxbListWrapper) {
-r.put(p.getKey(),new ArrayList(Arrays.asList(((JaxbListWrapper)p.getValue()).getElements())));
-}
- else {
-r.put(p.getKey(),p.getValue());
-}
-}
-return r;
-}
- else {
-return o;
-}
+  try {
+    return recursiveUnmarhsal(o);
+  }
+ catch (  Exception e) {
+    logger.error("Unable to *un*marshal " + o.getClass().getName() + " instance: "+ e.getMessage(),e);
+    throw e;
+  }
 }

@@ -1,0 +1,37 @@
+{
+  QueryResultsImpl results=(QueryResultsImpl)session.getQueryResults(queryName,arguments);
+  FlatQueryResults flatResults=new FlatQueryResults(results);
+  assertEquals("Query results size",results.size(),flatResults.size());
+  assertEquals("Query results identifiers",results.getIdentifiers().length,flatResults.getIdentifiers().length);
+  Set<String> resultIds=new TreeSet<String>(Arrays.asList(results.getIdentifiers()));
+  Set<String> flatIds=new TreeSet<String>(Arrays.asList(flatResults.getIdentifiers()));
+  assertArrayEquals("Flat query results identifiers",resultIds.toArray(),flatIds.toArray());
+  FlatQueryResults copyFlatResults=roundTrip(flatResults);
+  String[] identifiers=results.getIdentifiers();
+  Iterator<QueryResultsRow> copyFlatIter=copyFlatResults.iterator();
+  for (int i=0; i < results.size(); ++i) {
+    QueryResultsRow row=results.get(i);
+    assertTrue("Round-tripped flat query results contain less rows than original query results",copyFlatIter.hasNext());
+    QueryResultsRow copyRow=copyFlatIter.next();
+    for (    String id : identifiers) {
+      Object obj=row.get(id);
+      if (obj != null) {
+        Object copyObj=copyRow.get(id);
+        assertTrue("Flat query result [" + i + "] does not contain result: '"+ id+ "': "+ obj+ "/"+ copyObj,obj != null && obj.equals(copyObj));
+      }
+      FactHandle fh=row.getFactHandle(id);
+      FactHandle copyFh=copyRow.getFactHandle(id);
+      if (fh != null) {
+        assertNotNull("Flat query result [" + i + "] does not contain facthandle: '"+ ((InternalFactHandle)fh).getId()+ "'",copyFh);
+        String fhStr=fh.toExternalForm();
+        fhStr=fhStr.substring(0,fhStr.lastIndexOf(":"));
+        String copyFhStr=copyFh.toExternalForm();
+        copyFhStr=copyFhStr.substring(0,copyFhStr.lastIndexOf(":"));
+        assertEquals("Unequal fact handles for fact handle '" + ((InternalFactHandle)fh).getId() + "':",fhStr,copyFhStr);
+      }
+    }
+  }
+  Set<String> copyFlatIds=new TreeSet<String>(Arrays.asList(copyFlatResults.getIdentifiers()));
+  assertArrayEquals("Flat query results identifiers",flatIds.toArray(),copyFlatIds.toArray());
+  return copyFlatResults;
+}

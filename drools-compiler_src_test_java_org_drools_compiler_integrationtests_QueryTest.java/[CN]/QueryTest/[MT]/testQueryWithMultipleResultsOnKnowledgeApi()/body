@@ -6,8 +6,8 @@
   str+="    stilton : Cheese(type == 'stilton') \n";
   str+="    cheddar : Cheese(type == 'cheddar', price == stilton.price) \n";
   str+="end\n";
-  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(str));
-  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+  KieBase kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(str));
+  KieSession session=createKieSession(kbase);
   Cheese stilton1=new Cheese("stilton",1);
   Cheese cheddar1=new Cheese("cheddar",1);
   Cheese stilton2=new Cheese("stilton",2);
@@ -33,7 +33,7 @@
   session.insert(cheddar1);
   session.insert(cheddar2);
   session.insert(cheddar3);
-  org.kie.api.runtime.rule.QueryResults results=session.getQueryResults("cheeses");
+  org.kie.api.runtime.rule.QueryResults results=getQueryResults(session,"cheeses");
   assertEquals(3,results.size());
   assertEquals(2,results.getIdentifiers().length);
   Set newSet=new HashSet();
@@ -45,8 +45,6 @@
   }
   assertEquals(set,newSet);
   FlatQueryResults flatResults=new FlatQueryResults(((StatefulKnowledgeSessionImpl)session).getQueryResults("cheeses"));
-  assertEquals(3,flatResults.size());
-  assertEquals(2,flatResults.getIdentifiers().length);
   newSet=new HashSet();
   for (  org.kie.api.runtime.rule.QueryResultsRow result : flatResults) {
     list=new ArrayList();

@@ -1,14 +1,22 @@
 {
-  if (v == null) {
-    return new JaxbListWrapper(new Object[0]);
-  }
- else   if (v instanceof List) {
-    return new JaxbListWrapper(v.toArray(new Object[v.size()]),JaxbWrapperType.LIST);
-  }
- else   if (v instanceof Set) {
-    return new JaxbListWrapper(v.toArray(new Object[v.size()]),JaxbWrapperType.SET);
-  }
+  try {
+    if (v == null) {
+      return new JaxbListWrapper(new Object[0]);
+    }
+ else     if (v instanceof List) {
+      Object[] marshalledArr=marshalUnknownCollection(v);
+      return new JaxbListWrapper(marshalledArr,JaxbWrapperType.LIST);
+    }
+ else     if (v instanceof Set) {
+      Object[] marshalledArr=marshalUnknownCollection(v);
+      return new JaxbListWrapper(marshalledArr,JaxbWrapperType.SET);
+    }
  else {
-    throw new UnsupportedOperationException("Unsupported collection type: " + v.getClass());
+      throw new UnsupportedOperationException("Unsupported collection type: " + v.getClass());
+    }
+  }
+ catch (  Exception e) {
+    logger.error("Unable to marshal " + v.getClass().getName() + " instance: "+ e.getMessage(),e);
+    throw e;
   }
 }

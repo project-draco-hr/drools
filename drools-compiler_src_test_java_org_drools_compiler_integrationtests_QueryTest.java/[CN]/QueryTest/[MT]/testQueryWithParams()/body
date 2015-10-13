@@ -1,16 +1,21 @@
 {
-  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_QueryWithParams.drl"));
-  StatefulKnowledgeSession session=createKnowledgeSession(kbase);
+  KieBase kbase=SerializationHelper.serializeObject(loadKnowledgeBase("test_QueryWithParams.drl"));
+  KieSession session=createKieSession(kbase);
   session.fireAllRules();
-  org.kie.api.runtime.rule.QueryResults results=session.getQueryResults("assertedobjquery",new String[]{"value1"});
+  String queryName="assertedobjquery";
+  String[] arguments=new String[]{"value1"};
+  QueryResultsImpl resultsImpl=(QueryResultsImpl)session.getQueryResults(queryName,arguments);
+  QueryResults results=getQueryResults(session,queryName,arguments);
   assertEquals(1,results.size());
-  assertEquals(new InsertedObject("value1"),((InternalFactHandle)results.iterator().next().getFactHandle("assertedobj")).getObject());
-  results=session.getQueryResults("assertedobjquery",new String[]{"value3"});
+  InsertedObject value=new InsertedObject("value1");
+  assertEquals(value,((InternalFactHandle)results.iterator().next().getFactHandle("assertedobj")).getObject());
+  assertEquals(value,results.iterator().next().get("assertedobj"));
+  results=getQueryResults(session,"assertedobjquery",new String[]{"value3"});
   assertEquals(0,results.size());
-  results=session.getQueryResults("assertedobjquery2",new String[]{null,"value2"});
+  results=getQueryResults(session,"assertedobjquery2",new String[]{null,"value2"});
   assertEquals(1,results.size());
   assertEquals(new InsertedObject("value2"),((InternalFactHandle)results.iterator().next().getFactHandle("assertedobj")).getObject());
-  results=session.getQueryResults("assertedobjquery2",new String[]{"value3","value2"});
+  results=getQueryResults(session,"assertedobjquery2",new String[]{"value3","value2"});
   assertEquals(1,results.size());
   assertEquals(new InsertedObject("value2"),((InternalFactHandle)results.iterator().next().getFactHandle("assertedobj")).getObject());
 }

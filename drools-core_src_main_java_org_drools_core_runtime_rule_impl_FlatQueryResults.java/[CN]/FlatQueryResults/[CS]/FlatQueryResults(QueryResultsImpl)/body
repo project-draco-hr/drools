@@ -1,13 +1,13 @@
 {
   Declaration[] parameters=results.getParameters();
-  Set<String> set=new HashSet<String>();
+  identifiers=new HashSet<String>();
   for (  Declaration declr : parameters) {
-    set.add(declr.getIdentifier());
+    identifiers.add(declr.getIdentifier());
   }
   Collection<Declaration> declrCollection=new ArrayList(results.getDeclarations(0).values());
   for (Iterator<Declaration> it=declrCollection.iterator(); it.hasNext(); ) {
     Declaration declr=it.next();
-    if (set.contains(declr.getIdentifier())) {
+    if (!identifiers.add(declr.getIdentifier())) {
       it.remove();
     }
   }
@@ -19,22 +19,25 @@
   for (  Declaration declr : declrCollection) {
     declrs[i++]=declr;
   }
-  this.results=new ArrayList<ArrayList<Object>>(results.size());
-  this.factHandles=new ArrayList<ArrayList<FactHandle>>(results.size());
   int length=declrs.length;
-  identifiers=new LinkedHashMap<String,Integer>(length);
-  for (i=0; i < length; i++) {
-    identifiers.put(declrs[i].getIdentifier(),i);
-  }
+  idFactHandleMaps=new ArrayList<Map<String,FactHandle>>();
+  idResultMaps=new ArrayList<Map<String,Object>>();
   for (  QueryResultsRow result : results) {
-    ArrayList<Object> row=new ArrayList<Object>();
-    ArrayList<FactHandle> rowHandle=new ArrayList<FactHandle>();
-    for (i=0; i < length; i++) {
-      Declaration declr=declrs[i];
-      row.add(((QueryResultsRowImpl)result).get(declr));
-      rowHandle.add(((QueryResultsRowImpl)result).getFactHandle(declr));
+    QueryResultsRowImpl resultImpl=(QueryResultsRowImpl)result;
+    Map<String,FactHandle> idFactHandleMap=new HashMap<String,FactHandle>(length);
+    Map<String,Object> idResultMap=new HashMap<String,Object>(length);
+    for (i=0; i < length; ++i) {
+      String id=declrs[i].getIdentifier();
+      FactHandle factHandle=resultImpl.getFactHandle(id);
+      Object obj=null;
+      if (!id.equals("")) {
+        obj=resultImpl.get(id);
+      }
+      factHandle=DisconnectedFactHandle.newFrom(factHandle);
+      idFactHandleMap.put(id,factHandle);
+      idResultMap.put(id,obj);
     }
-    this.results.add(row);
-    this.factHandles.add(rowHandle);
+    idFactHandleMaps.add(idFactHandleMap);
+    idResultMaps.add(idResultMap);
   }
 }

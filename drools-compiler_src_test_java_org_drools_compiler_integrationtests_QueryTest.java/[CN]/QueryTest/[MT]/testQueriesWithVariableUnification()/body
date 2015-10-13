@@ -5,8 +5,8 @@
   str+="query peeps( String $name, String $likes, int $age ) \n";
   str+="    $p : Person( $name := name, $likes := likes, $age := age ) \n";
   str+="end\n";
-  KnowledgeBase kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(str));
-  StatefulKnowledgeSession ksession=createKnowledgeSession(kbase);
+  KieBase kbase=SerializationHelper.serializeObject(loadKnowledgeBaseFromString(str));
+  KieSession ksession=createKieSession(kbase);
   Person p1=new Person("darth","stilton",100);
   Person p2=new Person("yoda","stilton",300);
   Person p3=new Person("luke","brie",300);
@@ -15,7 +15,7 @@
   ksession.insert(p2);
   ksession.insert(p3);
   ksession.insert(p4);
-  org.kie.api.runtime.rule.QueryResults results=ksession.getQueryResults("peeps",new Object[]{Variable.v,Variable.v,Variable.v});
+  QueryResults results=getQueryResults(ksession,"peeps",new Object[]{Variable.v,Variable.v,Variable.v});
   assertEquals(4,results.size());
   List names=new ArrayList();
   for (  org.kie.api.runtime.rule.QueryResultsRow row : results) {
@@ -26,7 +26,7 @@
   assertTrue(names.contains("yoda"));
   assertTrue(names.contains("bobba"));
   assertTrue(names.contains("darth"));
-  results=ksession.getQueryResults("peeps",new Object[]{Variable.v,Variable.v,300});
+  results=getQueryResults(ksession,"peeps",new Object[]{Variable.v,Variable.v,300});
   assertEquals(3,results.size());
   names=new ArrayList();
   for (  org.kie.api.runtime.rule.QueryResultsRow row : results) {
@@ -36,7 +36,7 @@
   assertTrue(names.contains("luke"));
   assertTrue(names.contains("yoda"));
   assertTrue(names.contains("bobba"));
-  results=ksession.getQueryResults("peeps",new Object[]{Variable.v,"stilton",300});
+  results=getQueryResults(ksession,"peeps",new Object[]{Variable.v,"stilton",300});
   assertEquals(1,results.size());
   names=new ArrayList();
   for (  org.kie.api.runtime.rule.QueryResultsRow row : results) {
