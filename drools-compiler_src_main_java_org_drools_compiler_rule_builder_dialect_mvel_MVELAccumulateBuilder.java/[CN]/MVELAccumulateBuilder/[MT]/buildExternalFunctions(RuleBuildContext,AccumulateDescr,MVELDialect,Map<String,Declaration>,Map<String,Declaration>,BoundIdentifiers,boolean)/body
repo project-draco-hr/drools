@@ -2,7 +2,7 @@
   Accumulator[] accumulators;
   List<AccumulateFunctionCallDescr> functions=accumDescr.getFunctions();
   accumulators=new Accumulator[functions.size()];
-  InternalReadAccessor arrayReader=new SelfReferenceClassFieldReader(Object[].class,"this");
+  InternalReadAccessor arrayReader=new SelfReferenceClassFieldReader(Object[].class);
   int index=0;
   Pattern pattern=(Pattern)context.getDeclarationResolver().peekBuildStack();
   for (  AccumulateFunctionCallDescr func : functions) {
@@ -24,7 +24,7 @@
         }
  else {
           Declaration inner=context.getDeclarationResolver().getDeclaration(context.getRule(),func.getBind());
-          Constraint c=new MvelConstraint(Collections.singletonList(context.getPkg().getName()),accumDescr.isMultiFunction() ? "this[ " + index + " ] == "+ func.getBind() : "this == " + func.getBind(),new Declaration[]{inner},null,IndexUtil.ConstraintType.EQUAL,context.getDeclarationResolver().getDeclaration(context.getRule(),func.getBind()),accumDescr.isMultiFunction() ? new ArrayElementReader(arrayReader,index,function.getResultType()) : new SelfReferenceClassFieldReader(function.getResultType(),"this"),true);
+          Constraint c=new MvelConstraint(Collections.singletonList(context.getPkg().getName()),accumDescr.isMultiFunction() ? "this[ " + index + " ] == "+ func.getBind() : "this == " + func.getBind(),new Declaration[]{inner},null,IndexUtil.ConstraintType.EQUAL,context.getDeclarationResolver().getDeclaration(context.getRule(),func.getBind()),accumDescr.isMultiFunction() ? new ArrayElementReader(arrayReader,index,function.getResultType()) : new SelfReferenceClassFieldReader(function.getResultType()),true);
           ((MutableTypeConstraint)c).setType(Constraint.ConstraintType.BETA);
           pattern.addConstraint(c);
           index++;
@@ -36,7 +36,7 @@
           declr.setReadAccessor(new ArrayElementReader(arrayReader,index,function.getResultType()));
         }
  else {
-          declr.setReadAccessor(new SelfReferenceClassFieldReader(function.getResultType(),"this"));
+          declr.setReadAccessor(new SelfReferenceClassFieldReader(function.getResultType()));
         }
       }
     }

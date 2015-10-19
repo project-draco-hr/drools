@@ -1,24 +1,6 @@
 {
   String drl="package completely.other.deal;\n" + "\n" + "declare Person\n"+ "   firstName : String\n"+ "   lastName : String\n"+ "end\n"+ "\n"+ "rule \"now use it B\"\n"+ "   when\n"+ "       Person( $christianName, $surname; )\n"+ "   then\n"+ "       insert( new Person( $christianName, null ) );\n"+ "end";
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
-  kbuilder.add(ResourceFactory.newByteArrayResource(drl.getBytes()),ResourceType.DRL);
-  if (kbuilder.hasErrors()) {
-    throw new RuntimeException("" + kbuilder.getErrors());
-  }
-  FileManager fileManager=new FileManager().setUp();
-  try {
-    File root=fileManager.getRootDirectory();
-    ObjectOutputStream out=new ObjectOutputStream(new FileOutputStream(new File(root,"test.drl.compiled")));
-    out.writeObject(kbuilder.getKnowledgePackages());
-    out.close();
-    KieBaseConfiguration kconf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
-    kconf.setOption(RuleEngineOption.PHREAK);
-    KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase(kconf);
-    ObjectInputStream in=new ObjectInputStream(new FileInputStream(new File(root,"test.drl.compiled")));
-    kbase.addKnowledgePackages((Collection<KnowledgePackage>)in.readObject());
-    in.close();
-  }
-  finally {
-    fileManager.tearDown();
-  }
+  KieBase kbase1=new KieHelper().addContent(drl,ResourceType.DRL).build();
+  KieBase kbase2=SerializationHelper.serializeObject(kbase1,((InternalKnowledgeBase)kbase1).getRootClassLoader());
+  ReteComparator.compare(kbase1,kbase2);
 }
