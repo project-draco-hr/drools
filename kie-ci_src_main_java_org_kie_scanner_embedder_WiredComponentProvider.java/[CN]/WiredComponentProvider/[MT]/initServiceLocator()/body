@@ -4,6 +4,7 @@
   locator.addService(TransporterFactory.class,WagonTransporterFactory.class);
   locator.setServices(SettingsBuilder.class,new DefaultSettingsBuilderFactory().newInstance());
   locator.addService(RepositorySystem.class,LegacyRepositorySystem.class);
+  locator.addService(MavenRepositorySystem.class,MavenRepositorySystem.class);
   locator.addService(org.eclipse.aether.RepositorySystem.class,DefaultRepositorySystem.class);
   locator.addService(PlexusCipher.class,DefaultPlexusCipher.class);
   locator.addService(SecDispatcher.class,DefaultSecDispatcher.class);
@@ -60,7 +61,13 @@
   inject(Maven.class,Logger.class,"logger");
   inject(ProjectBuilder.class,ProjectBuildingHelper.class,"projectBuildingHelper");
   inject(ProjectBuildingHelper.class,RepositorySystem.class,"repositorySystem");
-  inject(ProjectBuilder.class,RepositorySystem.class,"repositorySystem");
+  inject(MavenRepositorySystem.class,Logger.class,"logger");
+  inject(MavenRepositorySystem.class,ArtifactHandlerManager.class,"artifactHandlerManager");
+  inject(MavenRepositorySystem.class,ArtifactResolver.class,"artifactResolver");
+  inject(MavenRepositorySystem.class,layouts,"layouts");
+  inject(MavenRepositorySystem.class,PlexusContainer.class,"plexus");
+  inject(MavenRepositorySystem.class,SettingsDecrypter.class,"settingsDecrypter");
+  inject(ProjectBuilder.class,MavenRepositorySystem.class,"repositorySystem");
   inject(ProjectBuilder.class,ProjectBuildingHelper.class,"projectBuildingHelper");
   inject(ProjectBuilder.class,ModelBuilder.class,"modelBuilder");
   inject(ProjectBuilder.class,org.eclipse.aether.RepositorySystem.class,"repoSystem");
@@ -68,6 +75,8 @@
   inject(ProjectBuilder.class,ProjectDependenciesResolver.class,"dependencyResolver");
   inject(ProjectDependenciesResolver.class,Logger.class,"logger");
   inject(ProjectDependenciesResolver.class,org.eclipse.aether.RepositorySystem.class,"repoSystem");
+  List<RepositorySessionDecorator> decorators=new ArrayList<RepositorySessionDecorator>();
+  inject(ProjectDependenciesResolver.class,decorators,"decorators");
   inject(SuperPomProvider.class,ModelProcessor.class,"modelProcessor");
   inject(ModelUrlNormalizer.class,UrlNormalizer.class,"urlNormalizer");
   inject(ModelProcessor.class,ModelReader.class,"reader");
