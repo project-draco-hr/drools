@@ -1,36 +1,3 @@
 {
-  boolean hasErrors;
-  PackageDescr pkg;
-  DrlParser parser=new DrlParser(configuration.getLanguageLevel());
-  DefaultExpander expander=getDslExpander();
-  Reader reader=null;
-  try {
-    if (expander == null) {
-      expander=new DefaultExpander();
-    }
-    reader=resource.getReader();
-    String str=expander.expand(reader);
-    if (expander.hasErrors()) {
-      for (      ExpanderException error : expander.getErrors()) {
-        error.setResource(resource);
-        addBuilderResult(error);
-      }
-    }
-    pkg=parser.parse(resource,str);
-    this.results.addAll(parser.getErrors());
-    hasErrors=parser.hasErrors();
-  }
- catch (  IOException e) {
-    throw new RuntimeException(e);
-  }
- finally {
-    if (reader != null) {
-      try {
-        reader.close();
-      }
- catch (      IOException e) {
-      }
-    }
-  }
-  return hasErrors ? null : pkg;
+  return dslrReaderToPackageDescr(resource,resource.getReader());
 }
