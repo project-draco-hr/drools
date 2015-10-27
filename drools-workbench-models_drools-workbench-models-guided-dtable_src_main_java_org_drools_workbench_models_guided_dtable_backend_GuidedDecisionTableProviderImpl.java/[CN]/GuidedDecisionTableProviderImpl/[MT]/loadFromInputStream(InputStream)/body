@@ -1,7 +1,11 @@
 {
   String xml=new String(IoUtils.readBytesFromInputStream(is),IoUtils.UTF8_CHARSET);
   GuidedDecisionTable52 model=GuidedDTXMLPersistence.getInstance().unmarshal(xml);
-  boolean containsDsl=hasDSLSentences(model);
-  String drl=GuidedDTDRLPersistence.getInstance().marshal(model);
-  return new ConversionResult(drl,containsDsl);
+  String content=GuidedDTDRLPersistence.getInstance().marshal(model);
+  if (hasDSLSentences(model)) {
+    return new ResourceConversionResult(content,ResourceType.DSLR);
+  }
+ else {
+    return new ResourceConversionResult(content,ResourceType.DRL);
+  }
 }
