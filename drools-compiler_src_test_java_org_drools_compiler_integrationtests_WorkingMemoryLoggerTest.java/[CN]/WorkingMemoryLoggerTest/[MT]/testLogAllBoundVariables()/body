@@ -1,0 +1,15 @@
+{
+  String drl="import " + Message.class.getCanonicalName() + "\n"+ "rule \"Hello World\"\n"+ "    when\n"+ "        $messageInstance : Message( $myMessage : message )\n"+ "    then\n"+ "        delete($messageInstance);\n"+ "end\n";
+  KieSession ksession=new KieHelper().addContent(drl,ResourceType.DRL).build().newKieSession();
+  WorkingMemoryInMemoryLogger logger=new WorkingMemoryInMemoryLogger((WorkingMemory)ksession);
+  Message message=new Message();
+  message.setMessage("Hello World");
+  ksession.insert(message);
+  ksession.fireAllRules();
+  for (  LogEvent logEvent : logger.getLogEvents()) {
+    if (logEvent instanceof ActivationLogEvent) {
+      assertTrue(((ActivationLogEvent)logEvent).getDeclarations().contains("$messageInstance"));
+      assertTrue(((ActivationLogEvent)logEvent).getDeclarations().contains("$myMessage"));
+    }
+  }
+}
