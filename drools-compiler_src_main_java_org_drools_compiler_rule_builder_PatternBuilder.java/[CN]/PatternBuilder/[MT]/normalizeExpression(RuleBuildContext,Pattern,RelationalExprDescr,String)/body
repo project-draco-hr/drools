@@ -1,20 +1,19 @@
 {
-  String[] values=new String[2];
-  findExpressionValues(subDescr,values);
-  String normalizedExpr;
-  if (!getExprBindings(context,pattern,values[1]).isConstant()) {
-    normalizedExpr=subExpr;
+  String leftValue=findLeftExpressionValue(subDescr);
+  InternalReadAccessor extractor=getFieldReadAccessor(context,subDescr,pattern,leftValue,null,true);
+  if (extractor == null) {
+    return subExpr;
   }
- else {
-    InternalReadAccessor extractor=getFieldReadAccessor(context,subDescr,pattern,values[0],null,true);
-    if (extractor == null) {
-      normalizedExpr=subExpr;
-    }
- else {
-      ValueType vtype=extractor.getValueType();
-      LiteralRestrictionDescr restrictionDescr=new LiteralRestrictionDescr(subDescr.getOperator(),subDescr.isNegated(),subDescr.getParameters(),values[1],LiteralRestrictionDescr.TYPE_STRING);
-      normalizedExpr=normalizeMVELLiteralExpression(vtype,getFieldValue(context,vtype,restrictionDescr),subExpr,values[0],subDescr.getOperator(),values[1],restrictionDescr);
-    }
+  ValueType vtype=extractor.getValueType();
+  String operator=subDescr.getOperator();
+  if (vtype == ValueType.DATE_TYPE) {
+    String rightValue=findRightExpressionValue(subDescr);
+    FieldValue fieldValue=getFieldValue(context,vtype,rightValue);
+    return fieldValue != null ? normalizeDate(fieldValue,leftValue,operator) : subExpr;
   }
-  return normalizedExpr;
+  if (operator.equals("str")) {
+    String rightValue=findRightExpressionValue(subDescr);
+    return normalizeStringOperator(leftValue,rightValue,new LiteralRestrictionDescr(operator,subDescr.isNegated(),subDescr.getParameters(),rightValue,LiteralRestrictionDescr.TYPE_STRING));
+  }
+  return normalizeEmptyKeyword(subExpr,operator);
 }
