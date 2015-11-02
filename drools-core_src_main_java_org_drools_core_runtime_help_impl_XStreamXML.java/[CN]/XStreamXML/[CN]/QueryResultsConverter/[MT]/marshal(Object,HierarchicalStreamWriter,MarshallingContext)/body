@@ -1,7 +1,7 @@
 {
   QueryResults results=(QueryResults)object;
   List<String> originalIds=Arrays.asList(results.getIdentifiers());
-  List<String> actualIds=new ArrayList();
+  Set<String> actualIds=new HashSet<String>();
   if (results instanceof QueryResultsImpl) {
     for (    String identifier : originalIds) {
       Declaration declr=((QueryResultsImpl)results).getDeclarations(0).get(identifier);
@@ -12,6 +12,17 @@
         }
       }
       actualIds.add(identifier);
+    }
+  }
+ else   if (results instanceof FlatQueryResults) {
+    for (    String identifier : results.getIdentifiers()) {
+      for (      QueryResultsRow row : ((FlatQueryResults)results)) {
+        Object rowObj=row.get(identifier);
+        if (rowObj != null && rowObj instanceof DroolsQuery) {
+          continue;
+        }
+        actualIds.add(identifier);
+      }
     }
   }
   String[] identifiers=actualIds.toArray(new String[actualIds.size()]);
