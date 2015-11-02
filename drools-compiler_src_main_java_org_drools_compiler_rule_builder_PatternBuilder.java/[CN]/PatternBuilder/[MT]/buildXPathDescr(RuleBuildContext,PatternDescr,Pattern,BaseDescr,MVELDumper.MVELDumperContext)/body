@@ -1,8 +1,8 @@
 {
   String expression=((ExpressionDescr)descr).getExpression();
   XpathAnalysis xpathAnalysis=XpathAnalysis.analyze(expression);
-  if (xpathAnalysis == null) {
-    context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Invalid xpath expression '" + expression + "'"));
+  if (xpathAnalysis.hasError()) {
+    context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Invalid xpath expression '" + expression + "': "+ xpathAnalysis.getError()));
     return null;
   }
   XpathConstraint xpathConstraint=new XpathConstraint();
@@ -16,7 +16,7 @@
   mvelCtx.setInXpath(true);
   try {
     for (    XpathAnalysis.XpathPart part : xpathAnalysis) {
-      XpathConstraint.XpathChunk xpathChunk=xpathConstraint.addChunck(patternClass,part.getField(),part.getIndex(),part.isIterate());
+      XpathConstraint.XpathChunk xpathChunk=xpathConstraint.addChunck(patternClass,part.getField(),part.getIndex(),part.isIterate(),part.isLazy());
       if (xpathChunk == null) {
         context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Invalid xpath expression '" + expression + "': cannot access "+ part.getField()+ " on "+ patternClass));
         pattern.setObjectType(originalType);
