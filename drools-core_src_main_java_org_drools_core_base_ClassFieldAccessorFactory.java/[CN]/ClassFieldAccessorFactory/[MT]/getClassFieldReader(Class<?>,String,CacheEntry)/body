@@ -1,22 +1,16 @@
 {
-  ByteArrayClassLoader byteArrayClassLoader=cache.getByteArrayClassLoader();
-  Map<Class<?>,ClassFieldInspector> inspectors=cache.getInspectors();
   try {
     if (SELF_REFERENCE_FIELD.equals(fieldName)) {
       return new SelfReferenceClassFieldReader(clazz);
     }
  else {
-      ClassFieldInspector inspector=inspectors.get(clazz);
-      if (inspector == null) {
-        inspector=new ClassFieldInspector(clazz);
-        inspectors.put(clazz,inspector);
-      }
-      Class<?> fieldType=inspector.getFieldTypes().get(fieldName);
+      ClassFieldInspector inspector=getClassFieldInspector(clazz,cache);
       Method getterMethod=inspector.getGetterMethods().get(fieldName);
       Integer index=inspector.getFieldNames().get(fieldName);
+      Class<?> fieldType=inspector.getFieldType(fieldName);
       if (fieldType == null && fieldName.length() > 1 && Character.isLowerCase(fieldName.charAt(0)) && Character.isUpperCase(fieldName.charAt(1))) {
         String altFieldName=Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
-        fieldType=inspector.getFieldTypes().get(altFieldName);
+        fieldType=inspector.getFieldType(altFieldName);
         if (fieldType != null) {
           getterMethod=inspector.getGetterMethods().get(altFieldName);
           index=inspector.getFieldNames().get(altFieldName);
@@ -24,7 +18,8 @@
       }
       if (fieldType != null && getterMethod != null) {
         final String className=ClassFieldAccessorFactory.BASE_PACKAGE + "/" + Type.getInternalName(clazz)+ Math.abs(System.identityHashCode(clazz))+ "$"+ getterMethod.getName();
-        final byte[] bytes=dumpReader(clazz,className,getterMethod,fieldType,clazz.isInterface());
+        final byte[] bytes=dumpReader(clazz,className,getterMethod,fieldType);
+        ByteArrayClassLoader byteArrayClassLoader=cache.getByteArrayClassLoader();
         final Class<?> newClass=byteArrayClassLoader.defineClass(className.replace('/','.'),bytes,PROTECTION_DOMAIN);
         final ValueType valueType=ValueType.determineValueType(fieldType);
         final Object[] params={index,fieldType,valueType};
