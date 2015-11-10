@@ -13,10 +13,12 @@
   XpathBackReference backRef=new XpathBackReference(pattern,backReferenceClasses);
   pattern.setBackRefDeclarations(backRef);
   ObjectType originalType=pattern.getObjectType();
+  ObjectType currentObjectType=originalType;
   mvelCtx.setInXpath(true);
   try {
     for (    XpathAnalysis.XpathPart part : xpathAnalysis) {
       XpathConstraint.XpathChunk xpathChunk=xpathConstraint.addChunck(patternClass,part.getField(),part.getIndex(),part.isIterate(),part.isLazy());
+      context.getPkg().getClassFieldAccessorStore().getClassObjectType(((ClassObjectType)currentObjectType),xpathChunk);
       if (xpathChunk == null) {
         context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Invalid xpath expression '" + expression + "': cannot access "+ part.getField()+ " on "+ patternClass));
         pattern.setObjectType(originalType);
@@ -31,12 +33,14 @@
           return null;
         }
         part.addInlineCastConstraint(patternClass);
-        xpathChunk.setReturnedClass(patternClass);
+        currentObjectType=getObjectType(context,patternDescr,patternClass.getName());
+        xpathChunk.setReturnedType((ClassObjectType)currentObjectType);
       }
  else {
         patternClass=xpathChunk.getReturnedClass();
+        currentObjectType=getObjectType(context,patternDescr,patternClass.getName());
       }
-      pattern.setObjectType(new ClassObjectType(patternClass));
+      pattern.setObjectType(currentObjectType);
       backReferenceClasses.add(0,patternClass);
       backRef.reset();
       for (      String constraint : part.getConstraints()) {

@@ -1,0 +1,21 @@
+{
+  final FactTemplate factTemplate=context.getPkg().getFactTemplate(objectType);
+  if (factTemplate != null) {
+    return new FactTemplateObjectType(factTemplate);
+  }
+ else {
+    try {
+      final Class<?> userProvidedClass=context.getDialect().getTypeResolver().resolveType(objectType);
+      if (!Modifier.isPublic(userProvidedClass.getModifiers())) {
+        context.addError(new DescrBuildError(context.getParentDescr(),patternDescr,null,"The class '" + objectType + "' is not public"));
+        return null;
+      }
+      PackageRegistry pkgr=context.getKnowledgeBuilder().getPackageRegistry(ClassUtils.getPackage(userProvidedClass));
+      InternalKnowledgePackage pkg=pkgr == null ? context.getPkg() : pkgr.getPackage();
+      return new ClassObjectType(userProvidedClass,pkg.isEvent(userProvidedClass));
+    }
+ catch (    final ClassNotFoundException e) {
+    }
+  }
+  return null;
+}
