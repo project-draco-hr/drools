@@ -1,0 +1,31 @@
+{
+  workingMemory.getAgenda().executeTask(new ExecutableEntry(){
+    @Override public void execute(){
+      if (executing.compareAndSet(false,true)) {
+        try {
+          propagationEntry.execute(workingMemory);
+        }
+  finally {
+          executing.set(false);
+          flush();
+        }
+      }
+ else {
+        doAdd();
+      }
+    }
+    @Override public void enqueue(){
+      doAdd();
+    }
+    private void doAdd(){
+      if (addToTop) {
+        SynchronizedBypassPropagationList.super.addEntryToTop(propagationEntry);
+      }
+ else {
+        internalAddEntry(propagationEntry);
+      }
+    }
+  }
+);
+  notifyHalt();
+}
