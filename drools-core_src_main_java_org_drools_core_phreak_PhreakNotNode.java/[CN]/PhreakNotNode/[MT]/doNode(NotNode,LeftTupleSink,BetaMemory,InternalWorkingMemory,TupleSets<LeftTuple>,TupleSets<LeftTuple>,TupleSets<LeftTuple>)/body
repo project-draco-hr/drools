@@ -1,0 +1,32 @@
+{
+  if (!bm.getStagedRightTuples().isEmpty()) {
+    bm.setNodeDirtyWithoutNotify();
+  }
+  TupleSets<RightTuple> srcRightTuples=bm.getStagedRightTuples().takeAll();
+  if (srcLeftTuples.getDeleteFirst() != null) {
+    doLeftDeletes(bm,srcLeftTuples,trgLeftTuples,stagedLeftTuples);
+  }
+  if (srcLeftTuples.getUpdateFirst() != null) {
+    RuleNetworkEvaluator.doUpdatesExistentialReorderLeftMemory(bm,srcLeftTuples);
+  }
+  if (srcRightTuples.getUpdateFirst() != null) {
+    RuleNetworkEvaluator.doUpdatesExistentialReorderRightMemory(bm,notNode,srcRightTuples);
+  }
+  if (srcRightTuples.getInsertFirst() != null) {
+    doRightInserts(notNode,bm,wm,srcRightTuples,trgLeftTuples,stagedLeftTuples);
+  }
+  if (srcRightTuples.getUpdateFirst() != null) {
+    doRightUpdates(notNode,sink,bm,wm,srcRightTuples,trgLeftTuples,stagedLeftTuples);
+  }
+  if (srcRightTuples.getDeleteFirst() != null) {
+    doRightDeletes(notNode,sink,bm,wm,srcRightTuples,trgLeftTuples);
+  }
+  if (srcLeftTuples.getUpdateFirst() != null) {
+    doLeftUpdates(notNode,sink,bm,wm,srcLeftTuples,trgLeftTuples,stagedLeftTuples);
+  }
+  if (srcLeftTuples.getInsertFirst() != null) {
+    doLeftInserts(notNode,sink,bm,wm,srcLeftTuples,trgLeftTuples);
+  }
+  srcRightTuples.resetAll();
+  srcLeftTuples.resetAll();
+}

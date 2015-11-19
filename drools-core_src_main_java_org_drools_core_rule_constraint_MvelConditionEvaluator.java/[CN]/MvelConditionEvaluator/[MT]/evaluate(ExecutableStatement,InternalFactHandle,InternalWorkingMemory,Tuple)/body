@@ -1,0 +1,19 @@
+{
+  if (compilationUnit == null) {
+    Map<String,Object> vars=valuesAsMap(handle.getObject(),workingMemory,tuple,declarations);
+    if (operators.length > 0) {
+      if (vars == null) {
+        vars=new HashMap<String,Object>();
+      }
+      InternalFactHandle[] handles=tuple != null ? tuple.toFactHandles() : new InternalFactHandle[0];
+      for (      EvaluatorWrapper operator : operators) {
+        vars.put(operator.getBindingName(),operator);
+        operator.loadHandles(workingMemory,handles,handle);
+      }
+    }
+    return evaluate(statement,handle.getObject(),vars);
+  }
+  VariableResolverFactory factory=compilationUnit.createFactory();
+  compilationUnit.updateFactory(null,null,handle,tuple,null,workingMemory,workingMemory.getGlobalResolver(),factory);
+  return (Boolean)MVELSafeHelper.getEvaluator().executeExpression(statement,handle.getObject(),factory);
+}

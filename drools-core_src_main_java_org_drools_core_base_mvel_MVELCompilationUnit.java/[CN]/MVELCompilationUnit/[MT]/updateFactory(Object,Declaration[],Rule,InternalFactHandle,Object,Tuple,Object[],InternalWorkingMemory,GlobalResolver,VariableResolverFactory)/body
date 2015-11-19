@@ -1,0 +1,71 @@
+{
+  int varLength=inputIdentifiers.length;
+  int i=0;
+  if ("this".equals(inputIdentifiers[0])) {
+    factory.getIndexedVariableResolver(i++).setValue(rightObject);
+  }
+  factory.getIndexedVariableResolver(i++).setValue(knowledgeHelper);
+  factory.getIndexedVariableResolver(i++).setValue(knowledgeHelper);
+  if (inputIdentifiers.length > i && "rule".equals(inputIdentifiers[i])) {
+    factory.getIndexedVariableResolver(i++).setValue(rule);
+  }
+  if (globalIdentifiers != null) {
+    for (    String globalIdentifier : globalIdentifiers) {
+      factory.getIndexedVariableResolver(i++).setValue(globals.resolveGlobal(globalIdentifier));
+    }
+  }
+  InternalFactHandle[] handles=tuple instanceof LeftTuple ? ((LeftTuple)tuple).toFactHandles() : null;
+  if (operators.length > 0) {
+    for (    EvaluatorWrapper operator : operators) {
+      factory.getIndexedVariableResolver(i++).setValue(operator);
+      operator.loadHandles(workingMemory,handles,rightHandle);
+    }
+  }
+  Object[] objs=null;
+  if (tuple != null) {
+    if (handles == null) {
+      objs=tuple.toObjects();
+    }
+    if (this.previousDeclarations != null && this.previousDeclarations.length > 0) {
+      if (prevDecl == null) {
+        prevDecl=this.previousDeclarations;
+      }
+      for (      Declaration decl : prevDecl) {
+        int offset=decl.getPattern().getOffset();
+        Object o=decl.getValue(workingMemory,objs != null ? objs[offset] : handles[offset].getObject());
+        factory.getIndexedVariableResolver(i++).setValue(o);
+      }
+    }
+  }
+  if (this.localDeclarations != null && this.localDeclarations.length > 0) {
+    for (    Declaration decl : this.localDeclarations) {
+      Object value;
+      if (readLocalsFromTuple && tuple != null) {
+        int offset=decl.getPattern().getOffset();
+        value=decl.getValue(workingMemory,objs != null ? objs[offset] : handles[offset].getObject());
+      }
+ else {
+        value=decl.getValue(workingMemory,rightObject);
+      }
+      factory.getIndexedVariableResolver(i++).setValue(value);
+    }
+  }
+  int otherVarsPos=0;
+  if (otherVars != null) {
+    otherVarsPos=i;
+    for (    Object o : otherVars) {
+      factory.getIndexedVariableResolver(i++).setValue(o);
+    }
+  }
+  int otherVarsLength=i - otherVarsPos;
+  for (i=varLength; i < this.allVarsLength; i++) {
+    factory.getIndexedVariableResolver(i).setValue(null);
+  }
+  DroolsVarFactory df=(DroolsVarFactory)factory.getNextFactory();
+  df.setOtherVarsPos(otherVarsPos);
+  df.setOtherVarsLength(otherVarsLength);
+  if (knowledgeHelper instanceof KnowledgeHelper) {
+    KnowledgeHelper kh=(KnowledgeHelper)knowledgeHelper;
+    df.setKnowledgeHelper(kh);
+  }
+}

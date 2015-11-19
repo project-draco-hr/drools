@@ -1,0 +1,43 @@
+{
+  BetaMemory bm=fm.getBetaMemory();
+  ContextEntry[] context=bm.getContext();
+  BetaConstraints betaConstraints=fromNode.getBetaConstraints();
+  AlphaNodeFieldConstraint[] alphaConstraints=fromNode.getAlphaConstraints();
+  DataProvider dataProvider=fromNode.getDataProvider();
+  Class<?> resultClass=fromNode.getResultClass();
+  for (LeftTuple leftTuple=srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    PropagationContext propagationContext=leftTuple.getPropagationContext();
+    final Map<Object,RightTuple> previousMatches=(Map<Object,RightTuple>)leftTuple.getContextObject();
+    final Map<Object,RightTuple> newMatches=new HashMap<Object,RightTuple>();
+    leftTuple.setContextObject(newMatches);
+    betaConstraints.updateFromTuple(context,wm,leftTuple);
+    FastIterator rightIt=LinkedList.fastIterator;
+    for (final java.util.Iterator<?> it=dataProvider.getResults(leftTuple,wm,propagationContext,fm.providerContext); it.hasNext(); ) {
+      final Object object=it.next();
+      if ((object == null) || !resultClass.isAssignableFrom(object.getClass())) {
+        continue;
+      }
+      RightTuple rightTuple=previousMatches.remove(object);
+      if (rightTuple == null) {
+        rightTuple=fromNode.createRightTuple(leftTuple,propagationContext,wm,object);
+      }
+ else {
+        if (rightIt.next(rightTuple) != null) {
+          previousMatches.put(object,(RightTuple)rightIt.next(rightTuple));
+          rightTuple.setNext(null);
+        }
+      }
+      checkConstraintsAndPropagate(sink,leftTuple,rightTuple,alphaConstraints,betaConstraints,propagationContext,wm,fm,context,true,trgLeftTuples,null);
+      fromNode.addToCreatedHandlesMap(newMatches,rightTuple);
+    }
+    for (    RightTuple rightTuple : previousMatches.values()) {
+      for (RightTuple current=rightTuple; current != null; current=(RightTuple)rightIt.next(current)) {
+        deleteChildLeftTuple(propagationContext,trgLeftTuples,stagedLeftTuples,current.getFirstChild());
+      }
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+  betaConstraints.resetTuple(context);
+}

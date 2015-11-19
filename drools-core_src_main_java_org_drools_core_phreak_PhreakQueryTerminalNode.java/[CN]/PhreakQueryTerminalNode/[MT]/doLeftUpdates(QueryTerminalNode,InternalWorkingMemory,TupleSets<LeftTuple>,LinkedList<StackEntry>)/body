@@ -1,0 +1,18 @@
+{
+  for (LeftTuple leftTuple=srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    PropagationContext pCtx=RuleTerminalNode.findMostRecentPropagationContext(leftTuple,leftTuple.getPropagationContext());
+    LeftTuple rootEntry=leftTuple;
+    while (rootEntry.getParent() != null) {
+      rootEntry=rootEntry.getParent();
+    }
+    DroolsQuery dquery=(DroolsQuery)rootEntry.getFactHandle().getObject();
+    dquery.setQuery(qtnNode.getQuery());
+    if (dquery.getStackEntry() != null) {
+      checkAndTriggerQueryReevaluation(wm,stack,rootEntry,dquery);
+    }
+    dquery.getQueryResultCollector().rowUpdated(qtnNode.getQuery(),leftTuple,pCtx,wm);
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+}

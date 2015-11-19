@@ -1,0 +1,100 @@
+{
+  TupleSets<LeftTuple> srcTuples;
+  SegmentMemory smem=smems[smemIndex];
+  TupleSets<LeftTuple> stagedLeftTuples=null;
+  while (true) {
+    srcTuples=trgTuples;
+    if (log.isTraceEnabled()) {
+      int offset=getOffset(node);
+      log.trace("{} {} {} {}",indent(offset),++cycle,node.toString(),srcTuples.toStringSizes());
+    }
+    boolean emptySrcTuples=srcTuples.isEmpty();
+    if (!(NodeTypeEnums.isBetaNode(node) && ((BetaNode)node).isRightInputIsRiaNode())) {
+      if (emptySrcTuples && smem.getDirtyNodeMask() == 0) {
+        boolean foundDirty=false;
+        for (int i=++smemIndex, length=smems.length; i < length; i++) {
+          if (log.isTraceEnabled()) {
+            int offset=getOffset(node);
+            log.trace("{} Skip Segment {}",indent(offset),i - 1);
+          }
+          if (smem.isEmpty() && !NodeTypeEnums.isTerminalNode(smem.getTipNode())) {
+            SegmentUtilities.createChildSegments(wm,smem,((LeftTupleSource)smem.getTipNode()).getSinkPropagator());
+          }
+          smem=smems[i];
+          bit=1;
+          srcTuples=smem.getStagedLeftTuples().takeAll();
+          emptySrcTuples=srcTuples.isEmpty();
+          node=smem.getRootNode();
+          nodeMem=smem.getNodeMemories().getFirst();
+          if (!emptySrcTuples || smem.getDirtyNodeMask() != 0 || (NodeTypeEnums.isBetaNode(node) && ((BetaNode)node).isRightInputIsRiaNode())) {
+            foundDirty=true;
+            smemIndex=i;
+            break;
+          }
+        }
+        if (!foundDirty) {
+          break;
+        }
+      }
+      if (log.isTraceEnabled()) {
+        int offset=getOffset(node);
+        log.trace("{} Segment {}",indent(offset),smemIndex);
+        log.trace("{} {} {} {}",indent(offset),cycle,node.toString(),srcTuples.toStringSizes());
+      }
+    }
+    long dirtyMask=smem.getDirtyNodeMask();
+    if (emptySrcTuples) {
+      while ((dirtyMask & bit) == 0 && node != smem.getTipNode() && !(NodeTypeEnums.isBetaNode(node) && ((BetaNode)node).isRightInputIsRiaNode())) {
+        if (log.isTraceEnabled()) {
+          int offset=getOffset(node);
+          log.trace("{} Skip Node {}",indent(offset),node);
+        }
+        bit=bit << 1;
+        node=((LeftTupleSource)node).getSinkPropagator().getFirstLeftTupleSink();
+        nodeMem=nodeMem.getNext();
+      }
+    }
+    if (NodeTypeEnums.isTerminalNode(node)) {
+      TerminalNode rtn=(TerminalNode)node;
+      if (node.getType() == NodeTypeEnums.QueryTerminalNode) {
+        pQtNode.doNode((QueryTerminalNode)rtn,wm,srcTuples,stack);
+      }
+ else {
+        pRtNode.doNode(rtn,wm,srcTuples,executor);
+      }
+      break;
+    }
+ else     if (NodeTypeEnums.RightInputAdaterNode == node.getType()) {
+      doRiaNode2(wm,srcTuples,(RightInputAdapterNode)node);
+      break;
+    }
+    stagedLeftTuples=getTargetStagedLeftTuples(node,wm,smem);
+    LeftTupleSinkNode sink=((LeftTupleSource)node).getSinkPropagator().getFirstLeftTupleSink();
+    trgTuples=evalNode(liaNode,pmem,node,bit,nodeMem,smems,smemIndex,wm,stack,processRian,executor,srcTuples,smem,stagedLeftTuples,sink);
+    if (trgTuples == null) {
+      break;
+    }
+    if (node != smem.getTipNode()) {
+      node=sink;
+      nodeMem=nodeMem.getNext();
+      bit=bit << 1;
+    }
+ else {
+      smem.getFirst().getStagedLeftTuples().addAll(stagedLeftTuples);
+      SegmentPropagator.propagate(smem,trgTuples,wm);
+      bit=1;
+      smem=smems[++smemIndex];
+      trgTuples=smem.getStagedLeftTuples().takeAll();
+      if (log.isTraceEnabled()) {
+        int offset=getOffset(node);
+        log.trace("{} Segment {}",indent(offset),smemIndex);
+      }
+      node=smem.getRootNode();
+      nodeMem=smem.getNodeMemories().getFirst();
+    }
+    processRian=true;
+  }
+  if (stagedLeftTuples != null && !stagedLeftTuples.isEmpty()) {
+    smem.getFirst().getStagedLeftTuples().addAll(stagedLeftTuples);
+  }
+}

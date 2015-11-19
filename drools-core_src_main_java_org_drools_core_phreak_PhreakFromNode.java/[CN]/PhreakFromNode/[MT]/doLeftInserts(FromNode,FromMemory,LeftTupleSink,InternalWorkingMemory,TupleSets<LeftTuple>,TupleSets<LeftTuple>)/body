@@ -1,0 +1,34 @@
+{
+  BetaMemory bm=fm.getBetaMemory();
+  ContextEntry[] context=bm.getContext();
+  BetaConstraints betaConstraints=fromNode.getBetaConstraints();
+  AlphaNodeFieldConstraint[] alphaConstraints=fromNode.getAlphaConstraints();
+  DataProvider dataProvider=fromNode.getDataProvider();
+  Class<?> resultClass=fromNode.getResultClass();
+  for (LeftTuple leftTuple=srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    PropagationContext propagationContext=leftTuple.getPropagationContext();
+    Map<Object,RightTuple> matches=null;
+    boolean useLeftMemory=RuleNetworkEvaluator.useLeftMemory(fromNode,leftTuple);
+    if (useLeftMemory) {
+      fm.getBetaMemory().getLeftTupleMemory().add(leftTuple);
+      matches=new LinkedHashMap<Object,RightTuple>();
+      leftTuple.setContextObject(matches);
+    }
+    betaConstraints.updateFromTuple(context,wm,leftTuple);
+    for (final java.util.Iterator<?> it=dataProvider.getResults(leftTuple,wm,propagationContext,fm.providerContext); it.hasNext(); ) {
+      final Object object=it.next();
+      if ((object == null) || !resultClass.isAssignableFrom(object.getClass())) {
+        continue;
+      }
+      RightTuple rightTuple=fromNode.createRightTuple(leftTuple,propagationContext,wm,object);
+      checkConstraintsAndPropagate(sink,leftTuple,rightTuple,alphaConstraints,betaConstraints,propagationContext,wm,fm,context,useLeftMemory,trgLeftTuples,null);
+      if (useLeftMemory) {
+        fromNode.addToCreatedHandlesMap(matches,rightTuple);
+      }
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+  betaConstraints.resetTuple(context);
+}

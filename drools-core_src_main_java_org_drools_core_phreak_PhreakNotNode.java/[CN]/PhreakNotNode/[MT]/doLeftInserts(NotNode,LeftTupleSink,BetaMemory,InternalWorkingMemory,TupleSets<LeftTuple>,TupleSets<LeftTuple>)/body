@@ -1,0 +1,22 @@
+{
+  TupleMemory ltm=bm.getLeftTupleMemory();
+  TupleMemory rtm=bm.getRightTupleMemory();
+  ContextEntry[] contextEntry=bm.getContext();
+  BetaConstraints constraints=notNode.getRawConstraints();
+  for (LeftTuple leftTuple=srcLeftTuples.getInsertFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    FastIterator it=notNode.getRightIterator(rtm);
+    boolean useLeftMemory=RuleNetworkEvaluator.useLeftMemory(notNode,leftTuple);
+    constraints.updateFromTuple(contextEntry,wm,leftTuple);
+    RuleNetworkEvaluator.findLeftTupleBlocker(notNode,rtm,contextEntry,constraints,leftTuple,it,useLeftMemory);
+    if (leftTuple.getBlocker() == null) {
+      if (useLeftMemory) {
+        ltm.add(leftTuple);
+      }
+      trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,sink,leftTuple.getPropagationContext(),useLeftMemory));
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+  constraints.resetTuple(contextEntry);
+}

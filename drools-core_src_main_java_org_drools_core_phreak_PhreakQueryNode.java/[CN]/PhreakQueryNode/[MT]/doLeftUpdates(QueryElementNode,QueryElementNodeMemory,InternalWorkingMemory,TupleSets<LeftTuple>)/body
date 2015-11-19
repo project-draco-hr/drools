@@ -1,0 +1,53 @@
+{
+  for (LeftTuple leftTuple=srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    InternalFactHandle fh=(InternalFactHandle)leftTuple.getContextObject();
+    DroolsQuery dquery=(DroolsQuery)fh.getObject();
+    Object[] argTemplate=queryNode.getQueryElement().getArgTemplate();
+    Object[] args=new Object[argTemplate.length];
+    System.arraycopy(argTemplate,0,args,0,args.length);
+    int[] declIndexes=queryNode.getQueryElement().getDeclIndexes();
+    for (    int declIndexe : declIndexes) {
+      Declaration declr=(Declaration)argTemplate[declIndexe];
+      Object tupleObject=leftTuple.get(declr).getObject();
+      Object o;
+      if (tupleObject instanceof DroolsQuery) {
+        ArrayElementReader arrayReader=(ArrayElementReader)declr.getExtractor();
+        if (((DroolsQuery)tupleObject).getVariables()[arrayReader.getIndex()] != null) {
+          o=Variable.v;
+        }
+ else {
+          o=declr.getValue(wm,tupleObject);
+        }
+      }
+ else {
+        o=declr.getValue(wm,tupleObject);
+      }
+      args[declIndexe]=o;
+    }
+    int[] varIndexes=queryNode.getQueryElement().getVariableIndexes();
+    for (    int varIndexe : varIndexes) {
+      if (argTemplate[varIndexe] == Variable.v) {
+        args[varIndexe]=Variable.v;
+      }
+    }
+    dquery.setParameters(args);
+    ((UnificationNodeViewChangedEventListener)dquery.getQueryResultCollector()).setVariables(varIndexes);
+    SegmentMemory qsmem=qmem.getQuerySegmentMemory();
+    LeftInputAdapterNode lian=(LeftInputAdapterNode)qsmem.getRootNode();
+    LiaNodeMemory lmem=(LiaNodeMemory)qsmem.getNodeMemories().getFirst();
+    if (dquery.isOpen()) {
+      LeftTuple childLeftTuple=fh.getFirstLeftTuple();
+      LeftInputAdapterNode.doUpdateObject(childLeftTuple,childLeftTuple.getPropagationContext(),wm,lian,false,lmem,qmem.getQuerySegmentMemory());
+    }
+ else {
+      if (fh.getFirstLeftTuple() != null) {
+        throw new RuntimeException("defensive programming while testing");
+      }
+      LiaNodeMemory lm=(LiaNodeMemory)qmem.getQuerySegmentMemory().getNodeMemories().get(0);
+      LeftInputAdapterNode.doInsertObject(fh,leftTuple.getPropagationContext(),lian,wm,lm,false,dquery.isOpen());
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+}

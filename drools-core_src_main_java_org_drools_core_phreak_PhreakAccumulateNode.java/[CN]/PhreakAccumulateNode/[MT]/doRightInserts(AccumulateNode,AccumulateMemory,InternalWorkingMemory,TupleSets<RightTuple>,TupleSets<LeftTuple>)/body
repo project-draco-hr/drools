@@ -1,0 +1,28 @@
+{
+  Accumulate accumulate=accNode.getAccumulate();
+  BetaMemory bm=am.getBetaMemory();
+  TupleMemory ltm=bm.getLeftTupleMemory();
+  TupleMemory rtm=bm.getRightTupleMemory();
+  ContextEntry[] contextEntry=bm.getContext();
+  BetaConstraints constraints=accNode.getRawConstraints();
+  for (RightTuple rightTuple=srcRightTuples.getInsertFirst(); rightTuple != null; ) {
+    RightTuple next=rightTuple.getStagedNext();
+    rtm.add(rightTuple);
+    if (ltm != null && ltm.size() > 0) {
+      constraints.updateFromFactHandle(contextEntry,wm,rightTuple.getFactHandle());
+      FastIterator leftIt=accNode.getLeftIterator(ltm);
+      for (LeftTuple leftTuple=accNode.getFirstLeftTuple(rightTuple,ltm,leftIt); leftTuple != null; leftTuple=(LeftTuple)leftIt.next(leftTuple)) {
+        if (constraints.isAllowedCachedRight(contextEntry,leftTuple)) {
+          final AccumulateContext accctx=(AccumulateContext)leftTuple.getContextObject();
+          addMatch(accNode,accumulate,leftTuple,rightTuple,null,null,wm,am,accctx,true);
+          if (leftTuple.getStagedType() == LeftTuple.NONE) {
+            trgLeftTuples.addUpdate(leftTuple);
+          }
+        }
+      }
+    }
+    rightTuple.clearStaged();
+    rightTuple=next;
+  }
+  constraints.resetFactHandle(contextEntry);
+}

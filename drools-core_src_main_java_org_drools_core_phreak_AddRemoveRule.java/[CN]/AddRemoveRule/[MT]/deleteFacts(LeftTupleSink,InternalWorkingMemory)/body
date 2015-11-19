@@ -11,7 +11,7 @@
  else {
           bm=(BetaMemory)wm.getNodeMemory(bn);
         }
-        RightTupleMemory rtm=bm.getRightTupleMemory();
+        TupleMemory rtm=bm.getRightTupleMemory();
         FastIterator it=rtm.fullFastIterator();
         for (RightTuple rightTuple=BetaNode.getFirstRightTuple(rtm,it); rightTuple != null; ) {
           RightTuple next=(RightTuple)it.next(rightTuple);
@@ -19,7 +19,10 @@
           rightTuple.unlinkFromRightParent();
           rightTuple=next;
         }
-        RightTupleSets srcRightTuples=bm.getStagedRightTuples().takeAll();
+        if (!bm.getStagedRightTuples().isEmpty()) {
+          bm.setNodeDirtyWithoutNotify();
+        }
+        TupleSets<RightTuple> srcRightTuples=bm.getStagedRightTuples().takeAll();
         unlinkRightTuples(srcRightTuples.getInsertFirst());
         unlinkRightTuples(srcRightTuples.getUpdateFirst());
         unlinkRightTuples(srcRightTuples.getDeleteFirst());

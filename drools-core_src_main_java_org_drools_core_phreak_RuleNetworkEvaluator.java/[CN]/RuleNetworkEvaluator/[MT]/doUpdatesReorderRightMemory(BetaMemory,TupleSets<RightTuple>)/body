@@ -1,0 +1,23 @@
+{
+  TupleMemory rtm=bm.getRightTupleMemory();
+  for (RightTuple rightTuple=srcRightTuples.getUpdateFirst(); rightTuple != null; ) {
+    RightTuple next=rightTuple.getStagedNext();
+    if (rightTuple.getMemory() != null) {
+      rightTuple.setTempRightTupleMemory(rightTuple.getMemory());
+      rtm.remove(rightTuple);
+    }
+    rightTuple=next;
+  }
+  for (RightTuple rightTuple=srcRightTuples.getUpdateFirst(); rightTuple != null; ) {
+    RightTuple next=rightTuple.getStagedNext();
+    if (rightTuple.getTempRightTupleMemory() != null) {
+      rtm.add(rightTuple);
+      for (LeftTuple childLeftTuple=rightTuple.getFirstChild(); childLeftTuple != null; ) {
+        LeftTuple childNext=childLeftTuple.getRightParentNext();
+        childLeftTuple.reAddLeft();
+        childLeftTuple=childNext;
+      }
+    }
+    rightTuple=next;
+  }
+}

@@ -1,0 +1,43 @@
+{
+  if (childLeftTuple == null) {
+    for (; leftTuple != null; leftTuple=(LeftTuple)leftIt.next(leftTuple)) {
+      if (constraints.isAllowedCachedRight(bm.getContext(),leftTuple)) {
+        if (leftTuple.getStagedType() == LeftTuple.NONE) {
+          trgLeftTuples.addUpdate(leftTuple);
+        }
+        final AccumulateContext accctx=(AccumulateContext)leftTuple.getContextObject();
+        addMatch(accNode,accumulate,leftTuple,rightTuple,null,null,wm,am,accctx,true);
+      }
+    }
+  }
+ else {
+    for (; leftTuple != null; leftTuple=(LeftTuple)leftIt.next(leftTuple)) {
+      if (constraints.isAllowedCachedRight(bm.getContext(),leftTuple)) {
+        if (leftTuple.getStagedType() == LeftTuple.NONE) {
+          trgLeftTuples.addUpdate(leftTuple);
+        }
+        final AccumulateContext accctx=(AccumulateContext)leftTuple.getContextObject();
+        LeftTuple temp=null;
+        if (childLeftTuple != null && childLeftTuple.getLeftParent() == leftTuple) {
+          temp=childLeftTuple.getRightParentNext();
+          childLeftTuple.reAddLeft();
+          removeMatch(accNode,accumulate,rightTuple,childLeftTuple,wm,am,accctx,true);
+          childLeftTuple=temp;
+        }
+        addMatch(accNode,accumulate,leftTuple,rightTuple,null,childLeftTuple,wm,am,accctx,true);
+        if (temp != null) {
+          childLeftTuple=temp;
+        }
+      }
+ else       if (childLeftTuple != null && childLeftTuple.getLeftParent() == leftTuple) {
+        if (leftTuple.getStagedType() == LeftTuple.NONE) {
+          trgLeftTuples.addUpdate(leftTuple);
+        }
+        LeftTuple temp=childLeftTuple.getRightParentNext();
+        final AccumulateContext accctx=(AccumulateContext)leftTuple.getContextObject();
+        removeMatch(accNode,accumulate,rightTuple,childLeftTuple,wm,am,accctx,true);
+        childLeftTuple=temp;
+      }
+    }
+  }
+}

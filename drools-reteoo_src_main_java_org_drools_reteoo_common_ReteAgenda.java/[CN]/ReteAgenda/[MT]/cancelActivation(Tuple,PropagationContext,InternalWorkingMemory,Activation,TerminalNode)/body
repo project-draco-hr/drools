@@ -1,0 +1,24 @@
+{
+  AgendaItem item=(AgendaItem)activation;
+  item.removeAllBlockersAndBlocked(this);
+  if (isDeclarativeAgenda() && activation.getActivationFactHandle() == null) {
+    return;
+  }
+ else {
+    removeActivation(item);
+  }
+  if (activation.isQueued()) {
+    if (context.getType() != PropagationContext.EXPIRATION || context.getFactHandle() == null) {
+      activation.remove();
+      if (activation.getActivationGroupNode() != null) {
+        activation.getActivationGroupNode().getActivationGroup().removeActivation(activation);
+      }
+      leftTuple.decreaseActivationCountForEvents();
+      ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCancelled(activation,workingMemory,MatchCancelledCause.WME_MODIFY);
+    }
+  }
+  if (item.getActivationUnMatchListener() != null) {
+    item.getActivationUnMatchListener().unMatch(workingMemory.getKnowledgeRuntime(),item);
+  }
+  TruthMaintenanceSystemHelper.removeLogicalDependencies(activation,context,rtn.getRule());
+}

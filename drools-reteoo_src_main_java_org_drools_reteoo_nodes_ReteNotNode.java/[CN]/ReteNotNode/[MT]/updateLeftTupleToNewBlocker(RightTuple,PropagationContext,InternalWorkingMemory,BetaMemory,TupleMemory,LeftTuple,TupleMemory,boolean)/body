@@ -1,0 +1,48 @@
+{
+  boolean resumeFromCurrent=!(indexedUnificationJoin || rightTupleMemory.getIndexType().isComparison());
+  FastIterator rightIt;
+  RightTuple rootBlocker=null;
+  if (resumeFromCurrent) {
+    TupleList currentRtm=rightTuple.getMemory();
+    rightIt=currentRtm.fastIterator();
+    rootBlocker=(RightTuple)rightTuple.getNext();
+    if (removeAdd) {
+      rightTupleMemory.removeAdd(rightTuple);
+    }
+ else {
+      rightTupleMemory.remove(rightTuple);
+    }
+    if (rootBlocker == null && rightTuple.getMemory() == currentRtm) {
+      rootBlocker=rightTuple;
+    }
+  }
+ else {
+    rightIt=getRightIterator(rightTupleMemory);
+    if (removeAdd) {
+      rightTupleMemory.removeAdd(rightTuple);
+    }
+ else {
+      rightTupleMemory.remove(rightTuple);
+    }
+  }
+  for (LeftTuple leftTuple=firstBlocked; leftTuple != null; ) {
+    LeftTuple temp=leftTuple.getBlockedNext();
+    leftTuple.clearBlocker();
+    this.constraints.updateFromTuple(memory.getContext(),workingMemory,leftTuple);
+    if (!resumeFromCurrent) {
+      rootBlocker=getFirstRightTuple(leftTuple,rightTupleMemory,(InternalFactHandle)context.getFactHandle(),rightIt);
+    }
+    for (RightTuple newBlocker=rootBlocker; newBlocker != null; newBlocker=(RightTuple)rightIt.next(newBlocker)) {
+      if (this.constraints.isAllowedCachedLeft(memory.getContext(),newBlocker.getFactHandle())) {
+        leftTuple.setBlocker(newBlocker);
+        newBlocker.addBlocked(leftTuple);
+        break;
+      }
+    }
+    if (leftTuple.getBlocker() == null) {
+      leftMemory.add(leftTuple);
+      propagateAssertLeftTuple(context,workingMemory,leftTuple);
+    }
+    leftTuple=temp;
+  }
+}

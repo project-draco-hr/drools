@@ -1,0 +1,47 @@
+{
+  TupleMemory rtm=bm.getRightTupleMemory();
+  boolean resumeFromCurrent=!(betaNode.isIndexedUnificationJoin() || rtm.getIndexType().isComparison());
+  for (RightTuple rightTuple=srcRightTuples.getUpdateFirst(); rightTuple != null; ) {
+    RightTuple next=rightTuple.getStagedNext();
+    if (rightTuple.getMemory() != null) {
+      rightTuple.setTempRightTupleMemory(rightTuple.getMemory());
+      if (resumeFromCurrent) {
+        if (rightTuple.getBlocked() != null) {
+          RightTuple tempRightTuple=(RightTuple)rightTuple.getNext();
+          while (tempRightTuple != null && tempRightTuple.getStagedType() != LeftTuple.NONE) {
+            tempRightTuple=(RightTuple)tempRightTuple.getNext();
+          }
+          if (tempRightTuple == null) {
+            tempRightTuple=(RightTuple)rightTuple.getPrevious();
+            while (tempRightTuple != null && tempRightTuple.getStagedType() != LeftTuple.NONE) {
+              tempRightTuple=(RightTuple)tempRightTuple.getPrevious();
+            }
+          }
+          rightTuple.setTempNextRightTuple(tempRightTuple);
+        }
+      }
+      rightTuple.setTempBlocked(rightTuple.getBlocked());
+      rightTuple.setBlocked(null);
+      rtm.remove(rightTuple);
+    }
+    rightTuple=next;
+  }
+  for (RightTuple rightTuple=srcRightTuples.getUpdateFirst(); rightTuple != null; ) {
+    RightTuple next=rightTuple.getStagedNext();
+    if (rightTuple.getTempRightTupleMemory() != null) {
+      rtm.add(rightTuple);
+      if (resumeFromCurrent) {
+        RightTuple tempRightTuple=rightTuple.getTempNextRightTuple();
+        if (rightTuple.getBlocked() != null && tempRightTuple == null && rightTuple.getMemory() == rightTuple.getTempRightTupleMemory()) {
+          rightTuple.setTempNextRightTuple(rightTuple);
+        }
+      }
+      for (LeftTuple childLeftTuple=rightTuple.getFirstChild(); childLeftTuple != null; ) {
+        LeftTuple childNext=childLeftTuple.getRightParentNext();
+        childLeftTuple.reAddLeft();
+        childLeftTuple=childNext;
+      }
+    }
+    rightTuple=next;
+  }
+}

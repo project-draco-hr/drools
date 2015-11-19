@@ -1,7 +1,7 @@
 {
-  RuleTerminalNode rtn=(RuleTerminalNode)knowledgeHelper.getMatch().getTuple().getLeftTupleSink();
+  RuleTerminalNode rtn=(RuleTerminalNode)knowledgeHelper.getMatch().getTuple().getTupleSink();
   final Declaration[] declarations=rtn.getRequiredDeclarations();
-  final LeftTuple tuple=(LeftTuple)knowledgeHelper.getTuple();
+  final Tuple tuple=knowledgeHelper.getTuple();
   final List<DeclarationMatcher> declarationMatchers=matchDeclarationsToTuple(declarations);
   final ClassGenerator generator=createInvokerClassGenerator(stub,workingMemory).setInterfaces(Consequence.class,CompiledInvoker.class);
   generator.addMethod(ACC_PUBLIC,"getName",generator.methodDescr(String.class),new ClassGenerator.MethodBody(){
@@ -18,12 +18,12 @@
       mv.visitVarInsn(ASTORE,3);
       mv.visitVarInsn(ALOAD,1);
       invokeInterface(KnowledgeHelper.class,"getMatch",Activation.class);
-      invokeInterface(Activation.class,"getTuple",LeftTuple.class);
-      invokeInterface(LeftTuple.class,"getLeftTupleSink",LeftTupleSink.class);
+      invokeInterface(Activation.class,"getTuple",Tuple.class);
+      invokeInterface(Tuple.class,"getTupleSink",Sink.class);
       cast(RuleTerminalNode.class);
       invokeVirtual(RuleTerminalNode.class,"getRequiredDeclarations",Declaration[].class);
       mv.visitVarInsn(ASTORE,4);
-      LeftTuple currentLeftTuple=tuple;
+      Tuple currentTuple=tuple;
       objAstorePos=6;
       int[] paramsPos=new int[declarations.length];
       for (      DeclarationMatcher matcher : declarationMatchers) {
@@ -31,9 +31,9 @@
         int handlePos=objAstorePos;
         int objPos=++objAstorePos;
         paramsPos[i]=handlePos;
-        currentLeftTuple=traverseTuplesUntilDeclaration(currentLeftTuple,matcher.getRootDistance(),3);
+        currentTuple=traverseTuplesUntilDeclaration(currentTuple,matcher.getRootDistance(),3);
         mv.visitVarInsn(ALOAD,3);
-        invokeInterface(LeftTuple.class,"getHandle",InternalFactHandle.class);
+        invokeInterface(LeftTuple.class,"getFactHandle",InternalFactHandle.class);
         mv.visitVarInsn(ASTORE,handlePos);
         String declarationType=declarations[i].getTypeName();
         if (stub.getNotPatterns()[i]) {

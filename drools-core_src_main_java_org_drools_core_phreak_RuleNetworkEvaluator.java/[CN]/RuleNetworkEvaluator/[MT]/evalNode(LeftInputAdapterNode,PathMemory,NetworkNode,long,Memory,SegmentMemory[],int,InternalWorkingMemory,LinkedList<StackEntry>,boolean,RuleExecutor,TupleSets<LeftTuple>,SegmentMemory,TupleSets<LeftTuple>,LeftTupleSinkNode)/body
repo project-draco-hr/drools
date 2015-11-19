@@ -1,0 +1,48 @@
+{
+  TupleSets<LeftTuple> trgTuples=new TupleSetsImpl<LeftTuple>();
+  if (NodeTypeEnums.isBetaNode(node)) {
+    boolean exitInnerEval=evalBetaNode(liaNode,pmem,node,nodeMem,smems,smemIndex,trgTuples,wm,stack,processRian,executor,srcTuples,stagedLeftTuples,sink);
+    if (exitInnerEval) {
+      return null;
+    }
+  }
+ else {
+    boolean exitInnerEval=false;
+switch (node.getType()) {
+case NodeTypeEnums.EvalConditionNode:
+{
+        pEvalNode.doNode((EvalConditionNode)node,(EvalMemory)nodeMem,sink,wm,srcTuples,trgTuples,stagedLeftTuples);
+        break;
+      }
+case NodeTypeEnums.FromNode:
+{
+      pFromNode.doNode((FromNode)node,(FromMemory)nodeMem,sink,wm,srcTuples,trgTuples,stagedLeftTuples);
+      break;
+    }
+case NodeTypeEnums.ReactiveFromNode:
+{
+    pReactiveFromNode.doNode((ReactiveFromNode)node,(ReactiveFromNode.ReactiveFromMemory)nodeMem,sink,wm,srcTuples,trgTuples,stagedLeftTuples);
+    break;
+  }
+case NodeTypeEnums.QueryElementNode:
+{
+  exitInnerEval=evalQueryNode(liaNode,pmem,node,bit,nodeMem,smems,smemIndex,trgTuples,wm,stack,srcTuples,sink,stagedLeftTuples);
+  break;
+}
+case NodeTypeEnums.TimerConditionNode:
+{
+pTimerNode.doNode((TimerNode)node,(TimerNodeMemory)nodeMem,pmem,smem,sink,wm,srcTuples,trgTuples,stagedLeftTuples);
+break;
+}
+case NodeTypeEnums.ConditionalBranchNode:
+{
+pBranchNode.doNode((ConditionalBranchNode)node,(ConditionalBranchMemory)nodeMem,sink,wm,srcTuples,trgTuples,stagedLeftTuples,executor);
+break;
+}
+}
+if (exitInnerEval && trgTuples.isEmpty()) {
+return null;
+}
+}
+return trgTuples;
+}

@@ -1,0 +1,26 @@
+{
+  Tuple next=(Tuple)tuple.getNext();
+  if (next != null) {
+    return next;
+  }
+  Comparable ascendingKey=getLeftAscendingIndexedValue(tuple);
+  Comparable descendingKey=getLeftDescendingIndexedValue(tuple);
+  RBTree<Comparable<Comparable>,TupleList> nestedTree=tree.lookup(ascendingKey);
+  while (nestedTree != null) {
+    while (true) {
+      RBTree.Node<Comparable<Comparable>,TupleList> nextNode=nestedTree.findNearestNode(descendingKey,false,RBTree.Boundary.LOWER);
+      if (nextNode == null) {
+        break;
+      }
+      if (nextNode.value.size() == 0) {
+        nestedTree.delete(nextNode.key);
+      }
+ else {
+        return nextNode.value.getFirst();
+      }
+    }
+    RBTree.Node<Comparable<Comparable>,RBTree<Comparable<Comparable>,TupleList>> nextNode=tree.findNearestNode(ascendingKey,false,RBTree.Boundary.UPPER);
+    nestedTree=nextNode == null ? null : nextNode.value;
+  }
+  return null;
+}

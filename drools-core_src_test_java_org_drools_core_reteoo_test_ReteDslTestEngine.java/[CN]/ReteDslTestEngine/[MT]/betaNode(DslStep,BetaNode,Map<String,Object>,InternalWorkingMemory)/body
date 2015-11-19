@@ -18,7 +18,7 @@
         Map<String,Object> vars=new HashMap<String,Object>();
         vars.put("h",handles);
         List<?> expectedLeftTuples=(List<?>)MVEL.eval(listString,vars);
-        LeftTupleMemory leftMemory=memory.getLeftTupleMemory();
+        TupleMemory leftMemory=memory.getLeftTupleMemory();
         if (expectedLeftTuples.isEmpty() && leftMemory.size() != 0) {
           throw new AssertionFailedError("line " + step.getLine() + ": left Memory expected [] actually "+ print(leftMemory,lrUnlinkingEnabled));
         }
@@ -28,14 +28,14 @@
         List<InternalFactHandle> first=(List<InternalFactHandle>)expectedLeftTuples.get(0);
         LeftTuple firstTuple=new LeftTupleImpl(first.get(0),null,false);
         for (int i=1; i < first.size(); i++) {
-          firstTuple=new LeftTupleImpl(firstTuple,new RightTuple(first.get(i)),null,false);
+          firstTuple=new LeftTupleImpl(firstTuple,new RightTupleImpl(first.get(i)),null,false);
         }
-        List<LeftTuple> leftTuples=new ArrayList<LeftTuple>();
-        for (LeftTuple leftTuple=getFirst(memory.getLeftTupleMemory(),firstTuple); leftTuple != null; leftTuple=(LeftTuple)leftTuple.getNext()) {
+        List<Tuple> leftTuples=new ArrayList<Tuple>();
+        for (Tuple leftTuple=getFirst(memory.getLeftTupleMemory(),firstTuple); leftTuple != null; leftTuple=(LeftTuple)leftTuple.getNext()) {
           leftTuples.add(leftTuple);
         }
         if (lrUnlinkingEnabled) {
-          Collections.sort(leftTuples,new LeftTupleComparator());
+          Collections.sort(leftTuples,new TupleComparator());
         }
         List<List<InternalFactHandle>> actualLeftTuples=getHandlesList(leftTuples);
         if (!expectedLeftTuples.equals(actualLeftTuples)) {
@@ -48,16 +48,16 @@
         Map<String,Object> vars=new HashMap<String,Object>();
         vars.put("h",handles);
         List<?> expectedFactHandles=(List<?>)MVEL.eval(listString,vars);
-        RightTupleMemory rightMemory=memory.getRightTupleMemory();
+        TupleMemory rightMemory=memory.getRightTupleMemory();
         if (expectedFactHandles.isEmpty() && rightMemory.size() != 0) {
           throw new AssertionError("line " + step.getLine() + ": right Memory expected [] actually "+ print(rightMemory));
         }
  else         if (expectedFactHandles.isEmpty() && rightMemory.size() == 0) {
           continue;
         }
-        RightTuple first=new RightTuple((InternalFactHandle)expectedFactHandles.get(0));
-        List<RightTuple> actualRightTuples=new ArrayList<RightTuple>();
-        for (RightTuple rightTuple=getFirst(memory.getRightTupleMemory(),first); rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
+        RightTuple first=new RightTupleImpl((InternalFactHandle)expectedFactHandles.get(0));
+        List<Tuple> actualRightTuples=new ArrayList<Tuple>();
+        for (Tuple rightTuple=getFirst(memory.getRightTupleMemory(),first); rightTuple != null; rightTuple=(RightTuple)rightTuple.getNext()) {
           actualRightTuples.add(rightTuple);
         }
         if (expectedFactHandles.size() != actualRightTuples.size()) {

@@ -1,0 +1,23 @@
+{
+  for (LeftTuple leftTuple=srcLeftTuples.getDeleteFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    InternalFactHandle fh=(InternalFactHandle)leftTuple.getContextObject();
+    DroolsQuery dquery=(DroolsQuery)fh.getObject();
+    if (dquery.isOpen()) {
+      LeftInputAdapterNode lian=(LeftInputAdapterNode)qmem.getQuerySegmentMemory().getRootNode();
+      LiaNodeMemory lm=(LiaNodeMemory)qmem.getQuerySegmentMemory().getNodeMemories().get(0);
+      LeftTuple childLeftTuple=fh.getFirstLeftTuple();
+      LeftInputAdapterNode.doDeleteObject(childLeftTuple,childLeftTuple.getPropagationContext(),qmem.getQuerySegmentMemory(),wm,lian,false,lm);
+    }
+ else {
+      LeftTuple childLeftTuple=leftTuple.getFirstChild();
+      while (childLeftTuple != null) {
+        LeftTuple nextChild=childLeftTuple.getLeftParentNext();
+        RuleNetworkEvaluator.unlinkAndDeleteChildLeftTuple(childLeftTuple,trgLeftTuples,stagedLeftTuples);
+        childLeftTuple=nextChild;
+      }
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+}

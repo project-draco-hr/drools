@@ -1,11 +1,11 @@
 {
-  RightTuple rightTuple=(RightTuple)resultLeftTuple.getObject();
+  RightTuple rightTuple=(RightTuple)resultLeftTuple.getContextObject();
   if (rightTuple.getMemory() != null) {
     return;
   }
-  rightTuple.setLeftTuple(null);
-  resultLeftTuple.setObject(null);
-  QueryTerminalNode node=(QueryTerminalNode)resultLeftTuple.getLeftTupleSink();
+  rightTuple.setBlocked(null);
+  resultLeftTuple.setContextObject(null);
+  QueryTerminalNode node=(QueryTerminalNode)resultLeftTuple.getTupleSink();
   Declaration[] decls=node.getRequiredDeclarations();
   InternalFactHandle rootHandle=resultLeftTuple.get(0);
   DroolsQuery dquery=(DroolsQuery)rootHandle.getObject();
@@ -19,10 +19,10 @@
   handle.setRecency(workingMemory.getFactHandleFactory().getAtomicRecency().incrementAndGet());
   handle.setObject(objects);
   if (dquery.isOpen()) {
-    rightTuple.setLeftTuple(resultLeftTuple);
-    resultLeftTuple.setObject(rightTuple);
+    rightTuple.setBlocked(resultLeftTuple);
+    resultLeftTuple.setContextObject(rightTuple);
   }
-  LeftTupleSets leftTuples=dquery.getResultLeftTupleSets();
+  TupleSets<LeftTuple> leftTuples=dquery.getResultLeftTupleSets();
   LeftTuple childLeftTuple=rightTuple.getFirstChild();
 switch (childLeftTuple.getStagedType()) {
 case LeftTuple.INSERT:

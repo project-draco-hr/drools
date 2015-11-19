@@ -1,0 +1,15 @@
+{
+  if (!jitted) {
+    int jittingThreshold=TEST_JITTING ? 0 : workingMemory.getKnowledgeBase().getConfiguration().getJittingThreshold();
+    if (conditionEvaluator == null) {
+      createMvelConditionEvaluator(workingMemory);
+      if (jittingThreshold == 0 && !isDynamic) {
+        forceJitEvaluator(handle,workingMemory,tuple);
+      }
+    }
+    if (!TEST_JITTING && !isDynamic && invocationCounter.getAndIncrement() == jittingThreshold) {
+      jitEvaluator(handle,workingMemory,tuple);
+    }
+  }
+  return conditionEvaluator.evaluate(handle,workingMemory,tuple);
+}

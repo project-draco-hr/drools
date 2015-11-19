@@ -1,0 +1,19 @@
+{
+  BetaMemory bm=am.getBetaMemory();
+  TupleMemory ltm=bm.getLeftTupleMemory();
+  Accumulate accumulate=accNode.getAccumulate();
+  for (LeftTuple leftTuple=srcLeftTuples.getDeleteFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    if (leftTuple.getMemory() != null) {
+      ltm.remove(leftTuple);
+      final AccumulateContext accctx=(AccumulateContext)leftTuple.getContextObject();
+      leftTuple.setContextObject(null);
+      removePreviousMatchesForLeftTuple(accumulate,leftTuple,wm,am,accctx,false);
+      if (accctx.propagated) {
+        trgLeftTuples.addDelete(accctx.resultLeftTuple);
+      }
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+}

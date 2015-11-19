@@ -1,0 +1,19 @@
+{
+  TupleMemory ltm=bm.getLeftTupleMemory();
+  for (LeftTuple leftTuple=srcLeftTuples.getDeleteFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    if (leftTuple.getMemory() != null) {
+      ltm.remove(leftTuple);
+    }
+    if (leftTuple.getFirstChild() != null) {
+      LeftTuple childLeftTuple=leftTuple.getFirstChild();
+      while (childLeftTuple != null) {
+        LeftTuple nextChild=childLeftTuple.getLeftParentNext();
+        RuleNetworkEvaluator.unlinkAndDeleteChildLeftTuple(childLeftTuple,trgLeftTuples,stagedLeftTuples);
+        childLeftTuple=nextChild;
+      }
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+}

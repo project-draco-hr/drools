@@ -1,0 +1,28 @@
+{
+  AgendaItem item=(AgendaItem)activation;
+  item.removeAllBlockersAndBlocked(this);
+  if (isDeclarativeAgenda() && activation.getActivationFactHandle() == null) {
+    return;
+  }
+ else   if (isDeclarativeAgenda()) {
+    workingMemory.getEntryPointNode().retractActivation(activation.getActivationFactHandle(),activation.getPropagationContext(),workingMemory);
+    if (activation.getActivationGroupNode() != null) {
+      activation.getActivationGroupNode().getActivationGroup().removeActivation(activation);
+    }
+  }
+  if (activation.isQueued()) {
+    if (context.getType() != PropagationContext.EXPIRATION || context.getFactHandle() == null) {
+      if (activation.getActivationGroupNode() != null) {
+        activation.getActivationGroupNode().getActivationGroup().removeActivation(activation);
+      }
+      leftTuple.decreaseActivationCountForEvents();
+      ((EventSupport)workingMemory).getAgendaEventSupport().fireActivationCancelled(activation,workingMemory,MatchCancelledCause.WME_MODIFY);
+    }
+  }
+  fireConsequenceEvent(item,ON_DELETE_MATCH_CONSEQUENCE_NAME);
+  if (item.getActivationUnMatchListener() != null) {
+    item.getActivationUnMatchListener().unMatch(workingMemory.getKnowledgeRuntime(),item);
+  }
+  TruthMaintenanceSystemHelper.removeLogicalDependencies(activation,context,rtn.getRule());
+  workingMemory.executeQueuedActionsForRete();
+}

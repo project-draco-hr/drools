@@ -1,0 +1,26 @@
+{
+  BetaMemory bm=am.getBetaMemory();
+  TupleMemory rtm=bm.getRightTupleMemory();
+  Accumulate accumulate=accNode.getAccumulate();
+  ContextEntry[] contextEntry=bm.getContext();
+  BetaConstraints constraints=accNode.getRawConstraints();
+  for (LeftTuple leftTuple=srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    final AccumulateContext accctx=(AccumulateContext)leftTuple.getContextObject();
+    constraints.updateFromTuple(contextEntry,wm,leftTuple);
+    FastIterator rightIt=accNode.getRightIterator(rtm);
+    RightTuple rightTuple=accNode.getFirstRightTuple(leftTuple,rtm,null,rightIt);
+    LeftTuple childLeftTuple=leftTuple.getFirstChild();
+    if (childLeftTuple != null && rtm.isIndexed() && !rightIt.isFullIterator() && (rightTuple == null || (rightTuple.getMemory() != childLeftTuple.getRightParent().getMemory()))) {
+      removePreviousMatchesForLeftTuple(accumulate,leftTuple,wm,am,accctx,true);
+      childLeftTuple=null;
+    }
+    if (rightTuple != null) {
+      doLeftUpdatesProcessChildren(accNode,am,wm,bm,accumulate,constraints,rightIt,leftTuple,accctx,rightTuple,childLeftTuple);
+    }
+    leftTuple.clearStaged();
+    trgLeftTuples.addUpdate(leftTuple);
+    leftTuple=next;
+  }
+  constraints.resetTuple(contextEntry);
+}

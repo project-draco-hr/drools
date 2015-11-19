@@ -1,0 +1,28 @@
+{
+  if (trigger.hasNextFireTime() == null) {
+    return;
+  }
+  if (trigger.hasNextFireTime().getTime() <= timestamp) {
+    if (log.isTraceEnabled()) {
+      log.trace("Timer Fire Now {}",leftTuple);
+    }
+    LeftTuple childLeftTuple=doPropagateChildLeftTuple(sink,trgLeftTuples,stagedLeftTuples,leftTuple);
+    if (childLeftTuple.getStagedType() != LeftTuple.NONE) {
+      childLeftTuple.setContextObject(Boolean.TRUE);
+    }
+    trigger.nextFireTime();
+    Date nextFireTime=trigger.hasNextFireTime();
+    if (nextFireTime != null && nextFireTime.getTime() <= timestamp) {
+      throw new IllegalStateException("Trigger.nextFireTime is not increasing");
+    }
+  }
+  if (trigger.hasNextFireTime() != null) {
+    TimerNodeJob job=new TimerNodeJob();
+    TimerNodeJobContext jobCtx=new TimerNodeJobContext(timerNode.getId(),trigger,leftTuple,tm,sink,smem.getPathMemories(),wm);
+    DefaultJobHandle jobHandle=(DefaultJobHandle)timerService.scheduleJob(job,jobCtx,trigger);
+    leftTuple.setContextObject(jobHandle);
+    if (log.isTraceEnabled()) {
+      log.trace("Timer Scheduled {}",leftTuple);
+    }
+  }
+}

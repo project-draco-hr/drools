@@ -4,13 +4,13 @@
   }
   declPositions=new int[declarations.length];
   List<GeneratorHelper.DeclarationMatcher> declarationMatchers=matchDeclarationsToTuple(declarations);
-  LeftTuple currentLeftTuple=leftTuple;
+  Tuple currentTuple=tuple;
   mv.visitVarInsn(ALOAD,3);
-  store(4,LeftTuple.class);
+  store(4,Tuple.class);
   int decPos=ARGUMENTS;
   for (  GeneratorHelper.DeclarationMatcher declarationMatcher : declarationMatchers) {
     int i=declarationMatcher.getOriginalIndex();
-    if (currentLeftTuple == null || declarationMatcher.getRootDistance() > currentLeftTuple.getIndex()) {
+    if (currentTuple == null || declarationMatcher.getRootDistance() > currentTuple.getIndex()) {
       getFieldFromThis("declarations",Declaration[].class);
       push(i);
       mv.visitInsn(AALOAD);
@@ -21,13 +21,13 @@
       decPos+=storeObjectFromDeclaration(declarationMatcher.getDeclaration(),decPos);
       continue;
     }
-    currentLeftTuple=traverseTuplesUntilDeclaration(currentLeftTuple,declarationMatcher.getRootDistance(),4);
+    currentTuple=traverseTuplesUntilDeclaration(currentTuple,declarationMatcher.getRootDistance(),4);
     getFieldFromThis("declarations",Declaration[].class);
     push(i);
     mv.visitInsn(AALOAD);
     mv.visitVarInsn(ALOAD,2);
     load(4);
-    invokeInterface(LeftTuple.class,"getHandle",InternalFactHandle.class);
+    invokeInterface(Tuple.class,"getFactHandle",InternalFactHandle.class);
     invokeInterface(InternalFactHandle.class,"getObject",Object.class);
     declPositions[i]=decPos;
     decPos+=storeObjectFromDeclaration(declarationMatcher.getDeclaration(),decPos);

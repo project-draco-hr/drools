@@ -1,0 +1,17 @@
+{
+  Timer timer=timerNode.getTimer();
+  TimerService timerService=wm.getTimerService();
+  long timestamp=timerService.getCurrentTime();
+  String[] calendarNames=timerNode.getCalendarNames();
+  Calendars calendars=wm.getCalendars();
+  for (LeftTuple leftTuple=srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    DefaultJobHandle jobHandle=(DefaultJobHandle)leftTuple.getContextObject();
+    if (jobHandle != null) {
+      timerService.removeJob(jobHandle);
+    }
+    scheduleLeftTuple(timerNode,tm,pmem,smem,sink,wm,timer,timerService,timestamp,calendarNames,calendars,leftTuple,trgLeftTuples,stagedLeftTuples);
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+}
