@@ -1,0 +1,24 @@
+{
+  ClassGenerator generator=new ClassGenerator(getUniqueClassName(),classLoader).setInterfaces(ConditionEvaluator.class).addStaticField(ACC_PRIVATE | ACC_FINAL,"EXPRESSION",String.class,expression).addField(ACC_PRIVATE | ACC_FINAL,"declarations",Declaration[].class);
+  generator.addMethod(ACC_PUBLIC,"evaluate",generator.methodDescr(boolean.class,InternalFactHandle.class,InternalWorkingMemory.class,LeftTuple.class),new EvaluateMethodGenerator(condition,declarations,operators,leftTuple));
+  if (operators.length == 0) {
+    generator.addDefaultConstructor(new ClassGenerator.MethodBody(){
+      public void body(      MethodVisitor mv){
+        putFieldInThisFromRegistry("declarations",Declaration[].class,1);
+        mv.visitInsn(RETURN);
+      }
+    }
+,Declaration[].class);
+    return generator.newInstance(Declaration[].class,declarations);
+  }
+  generator.addField(ACC_PRIVATE | ACC_FINAL,"operators",EvaluatorWrapper[].class);
+  generator.addDefaultConstructor(new ClassGenerator.MethodBody(){
+    public void body(    MethodVisitor mv){
+      putFieldInThisFromRegistry("declarations",Declaration[].class,1);
+      putFieldInThisFromRegistry("operators",EvaluatorWrapper[].class,2);
+      mv.visitInsn(RETURN);
+    }
+  }
+,Declaration[].class,EvaluatorWrapper[].class);
+  return generator.newInstance(Declaration[].class,declarations,EvaluatorWrapper[].class,operators);
+}

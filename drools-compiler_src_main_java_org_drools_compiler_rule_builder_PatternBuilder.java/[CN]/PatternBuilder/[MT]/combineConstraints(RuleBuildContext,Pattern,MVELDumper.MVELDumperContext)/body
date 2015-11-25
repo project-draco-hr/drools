@@ -4,6 +4,7 @@
     return;
   }
   List<Declaration> declarations=new ArrayList<Declaration>();
+  List<EvaluatorWrapper> operators=new ArrayList<EvaluatorWrapper>();
   Set<String> declarationNames=new HashSet<String>();
   boolean isFirst=true;
   Collection<String> packageNames=null;
@@ -31,9 +32,12 @@
         declarations.add(declaration);
       }
     }
+    for (    EvaluatorWrapper operator : constraint.getOperators()) {
+      operators.add(operator);
+    }
   }
   String expression=expressionBuilder.toString();
   MVELCompilationUnit compilationUnit=getConstraintBuilder(context).buildCompilationUnit(context,pattern,expression,mvelCtx.getAliases());
-  Constraint combinedConstraint=getConstraintBuilder(context).buildMvelConstraint(packageNames,expression,declarations.toArray(new Declaration[declarations.size()]),compilationUnit,IndexUtil.ConstraintType.UNKNOWN,null,null,false);
+  Constraint combinedConstraint=getConstraintBuilder(context).buildMvelConstraint(packageNames,expression,declarations.toArray(new Declaration[declarations.size()]),operators.toArray(new EvaluatorWrapper[operators.size()]),compilationUnit,IndexUtil.ConstraintType.UNKNOWN,null,null,false);
   pattern.addConstraint(combinedConstraint);
 }
