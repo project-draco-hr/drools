@@ -1,0 +1,63 @@
+{
+  List<ComparePair> cantCompare=new ArrayList<ComparePair>();
+  for (  Method getIsMethod : objInterface.getDeclaredMethods()) {
+    String methodName=getIsMethod.getName();
+    String fieldName;
+    if (methodName.startsWith("get")) {
+      fieldName=methodName.substring(3);
+    }
+ else     if (methodName.startsWith("is")) {
+      fieldName=methodName.substring(2);
+    }
+ else {
+      continue;
+    }
+    fieldName=fieldName.substring(0,1).toLowerCase() + fieldName.substring(1);
+    try {
+      Object origField=getIsMethod.invoke(orig,new Object[0]);
+      Object copyField=getIsMethod.invoke(copy,new Object[0]);
+      boolean skip=false;
+      if (origField == null) {
+        if (nullFields != null) {
+          for (          String nullField : nullFields) {
+            if (fieldName.equals(nullField)) {
+              skip=true;
+              break;
+            }
+          }
+        }
+        if (!skip) {
+          fail("Please fill in the " + fieldName + " field in the "+ objInterface.getSimpleName()+ "!");
+        }
+      }
+      if (skip) {
+        continue;
+      }
+      if (origField != null && !(origField instanceof Enum) && origField.getClass().getPackage().getName().startsWith("org.")) {
+        ComparePair newComPair=new ComparePair(origField,copyField,getInterface(origField));
+        newComPair.addNullFields(this.nullFields);
+        cantCompare.add(newComPair);
+        continue;
+      }
+ else       if (origField instanceof List<?>) {
+        List<?> origList=(List)origField;
+        List<?> copyList=(List)copyField;
+        for (int i=0; i < origList.size(); ++i) {
+          Class<?> newInterface=origField.getClass();
+          while (newInterface.getInterfaces().length > 0) {
+            newInterface=newInterface.getInterfaces()[0];
+          }
+          ComparePair newCompair=new ComparePair(origList.get(i),copyList.get(i),getInterface(origList.get(i)));
+          newCompair.addNullFields(this.nullFields);
+          cantCompare.add(newCompair);
+        }
+        continue;
+      }
+      assertEquals(fieldName,origField,copyField);
+    }
+ catch (    Exception e) {
+      throw new RuntimeException("Unable to compare " + fieldName,e);
+    }
+  }
+  return cantCompare;
+}

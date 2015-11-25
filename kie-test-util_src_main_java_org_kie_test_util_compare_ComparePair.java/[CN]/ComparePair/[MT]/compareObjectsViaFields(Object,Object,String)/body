@@ -1,0 +1,57 @@
+{
+  Class<?> origClass=orig.getClass();
+  assertEquals("copy is not an instance of " + origClass + " ("+ copy.getClass().getSimpleName()+ ")",origClass,copy.getClass());
+  for (  Field field : orig.getClass().getDeclaredFields()) {
+    try {
+      field.setAccessible(true);
+      Object origFieldVal=field.get(orig);
+      Object copyFieldVal=field.get(copy);
+      String fieldName=field.getName();
+      boolean skip=false;
+      for (      String skipFieldName : skipFields) {
+        if (skipFieldName.matches(fieldName)) {
+          skip=true;
+          break;
+        }
+      }
+      if (skip) {
+        continue;
+      }
+      boolean nullFound=false;
+      if (origFieldVal == null || copyFieldVal == null) {
+        nullFound=true;
+        for (        String nullFieldName : skipFields) {
+          if (nullFieldName.matches(fieldName)) {
+            nullFound=false;
+          }
+        }
+      }
+      String failMsg=origClass.getSimpleName() + "." + field.getName()+ " is null";
+      assertFalse(failMsg + "!",nullFound);
+      if (copyFieldVal != origFieldVal) {
+        assertNotNull(failMsg + "in copy!",copyFieldVal);
+        assertNotNull(failMsg + "in original!",origFieldVal);
+        Package pkg=origFieldVal.getClass().getPackage();
+        if (pkg == null || pkg.getName().startsWith("java.")) {
+          if (origFieldVal.getClass().isArray()) {
+            if (origFieldVal instanceof byte[]) {
+              assertArrayEquals(origClass.getSimpleName() + "." + field.getName(),(byte[])origFieldVal,(byte[])copyFieldVal);
+            }
+          }
+ else           if (origFieldVal instanceof Map<?,?> && copyFieldVal instanceof Map<?,?>) {
+            CollectionUtils.disjunction(((Map)origFieldVal).values(),((Map)copyFieldVal).values());
+          }
+ else {
+            assertEquals(origClass.getSimpleName() + "." + field.getName(),origFieldVal,copyFieldVal);
+          }
+        }
+ else {
+          compareObjectsViaFields(origFieldVal,copyFieldVal,skipFields);
+        }
+      }
+    }
+ catch (    Exception e) {
+      throw new RuntimeException("Unable to access " + field.getName() + " when testing "+ origClass.getSimpleName()+ ".",e);
+    }
+  }
+}
