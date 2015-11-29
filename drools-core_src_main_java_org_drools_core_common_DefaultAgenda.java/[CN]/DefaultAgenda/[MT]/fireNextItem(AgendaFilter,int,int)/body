@@ -1,38 +1,29 @@
 {
   boolean tryagain;
   int localFireCount=0;
-  try {
-    do {
-      evaluateEagerList();
-      this.workingMemory.prepareToFireActivation();
-      tryagain=false;
-      final InternalAgendaGroup group=getNextFocus();
-      if (group != null) {
-        RuleAgendaItem item;
-        if (workingMemory.getKnowledgeBase().getConfiguration().isSequential()) {
-          item=(RuleAgendaItem)group.remove();
-          item.setBlocked(true);
-        }
+  do {
+    evaluateEagerList();
+    tryagain=false;
+    final InternalAgendaGroup group=getNextFocus();
+    if (group != null) {
+      RuleAgendaItem item;
+      if (workingMemory.getKnowledgeBase().getConfiguration().isSequential()) {
+        item=(RuleAgendaItem)group.remove();
+        item.setBlocked(true);
+      }
  else {
-          item=(RuleAgendaItem)group.peek();
-        }
-        if (item != null) {
-          evaluateQueriesForRule(item);
-          localFireCount=item.getRuleExecutor().evaluateNetworkAndFire(this.workingMemory,filter,fireCount,fireLimit);
-          if (localFireCount == 0) {
-            tryagain=true;
-            this.workingMemory.flushPropagations();
-          }
-        }
-        if (group.peek() == null || !((AgendaItem)group.peek()).getTerminalNode().isFireDirect()) {
-          unstageActivations();
+        item=(RuleAgendaItem)group.peek();
+      }
+      if (item != null) {
+        evaluateQueriesForRule(item);
+        localFireCount=item.getRuleExecutor().evaluateNetworkAndFire(this.workingMemory,filter,fireCount,fireLimit);
+        if (localFireCount == 0) {
+          tryagain=true;
+          this.workingMemory.flushPropagations();
         }
       }
     }
+  }
  while (tryagain);
-  }
-  finally {
-    this.workingMemory.activationFired();
-  }
   return localFireCount;
 }

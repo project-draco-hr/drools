@@ -9,35 +9,25 @@
     }
   }
 );
-  CompletionService<Boolean> ecs=new ExecutorCompletionService<Boolean>(executor);
+  Callable<Boolean>[] tasks=new Callable[threadCount];
   for (int i=0; i < threadCount; i++) {
-    ecs.submit(new Callable<Boolean>(){
-      public Boolean call() throws Exception {
-        try {
-          FactHandle[] facts=new FactHandle[objectCount];
-          for (int i=0; i < objectCount; i++)           facts[i]=ksession.insert(new Bean(i));
-          ksession.fireAllRules();
-          for (          FactHandle fact : facts)           ksession.delete(fact);
-          ksession.fireAllRules();
-          return true;
-        }
- catch (        Exception e) {
-          e.printStackTrace();
-          return false;
-        }
-      }
-    }
-);
+    tasks[i]=getTask(objectCount,ksession);
   }
-  boolean success=true;
+  CompletionService<Boolean> ecs=new ExecutorCompletionService<Boolean>(executor);
+  for (  Callable<Boolean> task : tasks) {
+    ecs.submit(task);
+  }
+  int successCounter=0;
   for (int i=0; i < threadCount; i++) {
     try {
-      success=ecs.take().get() && success;
+      if (ecs.take().get()) {
+        successCounter++;
+      }
     }
  catch (    Exception e) {
       throw new RuntimeException(e);
     }
   }
-  assertTrue(success);
+  assertEquals(threadCount,successCounter);
   ksession.dispose();
 }

@@ -1,0 +1,35 @@
+{
+  int fireCount=0;
+  try {
+    PropagationEntry head=workingMemory.takeAllPropagations();
+    int returnedFireCount=0;
+    boolean limitReached=fireLimit == 0;
+    boolean loop=true;
+    while (loop) {
+      log.debug("Fire Loop");
+      if (head != null) {
+        this.workingMemory.flushPropagations(head);
+      }
+      if (!limitReached && isFiring()) {
+        returnedFireCount=fireNextItem(agendaFilter,fireCount,fireLimit);
+        fireCount+=returnedFireCount;
+        limitReached=(fireLimit > 0 && fireCount >= fireLimit);
+      }
+ else {
+        returnedFireCount=0;
+      }
+      head=workingMemory.takeAllPropagations();
+      if (returnedFireCount == 0 && head == null) {
+        head=restHandler.handleRest(workingMemory,this);
+      }
+      loop=head != null || isFiring();
+    }
+    if (this.focusStack.size() == 1 && getMainAgendaGroup().isEmpty()) {
+      getMainAgendaGroup().setActive(false);
+    }
+  }
+  finally {
+    immediateHalt();
+  }
+  return fireCount;
+}
