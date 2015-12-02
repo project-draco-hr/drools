@@ -5,24 +5,30 @@
     int returnedFireCount=0;
     boolean limitReached=fireLimit == 0;
     boolean loop=true;
-    while (loop) {
+    while (isFiring()) {
       log.debug("Fire Loop");
       if (head != null) {
         this.workingMemory.flushPropagations(head);
+        head=null;
       }
-      if (!limitReached && isFiring()) {
-        returnedFireCount=fireNextItem(agendaFilter,fireCount,fireLimit);
+      if (!isFiring()) {
+        break;
+      }
+      evaluateEagerList();
+      InternalAgendaGroup group=getNextFocus();
+      if (group != null && !limitReached) {
+        returnedFireCount=fireNextItem(agendaFilter,fireCount,fireLimit,group);
         fireCount+=returnedFireCount;
         limitReached=(fireLimit > 0 && fireCount >= fireLimit);
+        head=workingMemory.takeAllPropagations();
       }
  else {
         returnedFireCount=0;
+        group=null;
       }
-      head=workingMemory.takeAllPropagations();
-      if (returnedFireCount == 0 && head == null) {
+      if (returnedFireCount == 0 && head == null && (group == null || !group.isAutoDeactivate())) {
         head=restHandler.handleRest(workingMemory,this);
       }
-      loop=head != null || isFiring();
     }
     if (this.focusStack.size() == 1 && getMainAgendaGroup().isEmpty()) {
       getMainAgendaGroup().setActive(false);

@@ -2,25 +2,14 @@
   boolean tryagain;
   int localFireCount=0;
   do {
-    evaluateEagerList();
     tryagain=false;
+    evaluateEagerList();
     final InternalAgendaGroup group=getNextFocus();
     if (group != null) {
-      RuleAgendaItem item;
-      if (workingMemory.getKnowledgeBase().getConfiguration().isSequential()) {
-        item=(RuleAgendaItem)group.remove();
-        item.setBlocked(true);
-      }
- else {
-        item=(RuleAgendaItem)group.peek();
-      }
-      if (item != null) {
-        evaluateQueriesForRule(item);
-        localFireCount=item.getRuleExecutor().evaluateNetworkAndFire(this.workingMemory,filter,fireCount,fireLimit);
-        if (localFireCount == 0) {
-          tryagain=true;
-          this.workingMemory.flushPropagations();
-        }
+      localFireCount=fireNextItem(filter,fireCount,fireLimit,group);
+      if (localFireCount == 0) {
+        tryagain=true;
+        this.workingMemory.flushPropagations();
       }
     }
   }
