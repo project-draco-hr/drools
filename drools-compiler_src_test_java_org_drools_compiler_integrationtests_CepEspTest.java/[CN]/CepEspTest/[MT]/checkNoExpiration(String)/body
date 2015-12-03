@@ -1,0 +1,18 @@
+{
+  String drl="import " + SimpleEvent.class.getCanonicalName() + "\n"+ "declare SimpleEvent\n"+ "    @role( event )\n"+ "    @expires( -1 )\n"+ "    @timestamp( dateEvt )\n"+ "end\n"+ "\n"+ "rule R when\n"+ lhs+ "then\n"+ "end";
+  KieSessionConfiguration sessionConfig=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  sessionConfig.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  KieHelper helper=new KieHelper();
+  helper.addContent(drl,ResourceType.DRL);
+  KieBase kbase=helper.build(EventProcessingOption.STREAM);
+  KieSession ksession=kbase.newKieSession(sessionConfig,null);
+  PseudoClockScheduler clock=ksession.getSessionClock();
+  SimpleEvent event1=new SimpleEvent("1",0L);
+  ksession.insert(event1);
+  ksession.fireAllRules();
+  assertEquals(1,ksession.getFactCount());
+  clock.advanceTime(60000,TimeUnit.MILLISECONDS);
+  ksession.fireAllRules();
+  assertEquals(1,ksession.getFactCount());
+  ksession.dispose();
+}
