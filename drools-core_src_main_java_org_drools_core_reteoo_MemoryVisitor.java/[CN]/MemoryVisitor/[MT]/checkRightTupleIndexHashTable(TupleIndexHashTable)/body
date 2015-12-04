@@ -1,0 +1,40 @@
+{
+  final Entry[] entries=memory.getTable();
+  int factCount=0;
+  int bucketCount=0;
+  FastIterator it=LinkedList.fastIterator;
+  for (  Entry entry1 : entries) {
+    if (entry1 != null) {
+      TupleList rightTupleList=(TupleList)entry1;
+      while (rightTupleList != null) {
+        if (rightTupleList.getFirst() != null) {
+          Entry entry=rightTupleList.getFirst();
+          while (entry != null) {
+            entry=it.next(entry);
+            factCount++;
+          }
+        }
+ else {
+          logger.info("error : fieldIndexHashTable cannot have empty FieldIndexEntry objects");
+        }
+        rightTupleList=rightTupleList.getNext();
+        bucketCount++;
+      }
+    }
+  }
+  try {
+    final Field field=AbstractHashTable.class.getDeclaredField("size");
+    field.setAccessible(true);
+    logger.info(indent() + "FieldIndexBuckets: " + field.get(memory)+ ":"+ bucketCount);
+    if ((Integer)field.get(memory) != bucketCount) {
+      logger.info(indent() + "error");
+    }
+  }
+ catch (  final Exception e) {
+    e.printStackTrace();
+  }
+  logger.info(indent() + "FieldIndexFacts: " + memory.size()+ ":"+ factCount);
+  if (memory.size() != factCount) {
+    logger.info(indent() + "error");
+  }
+}

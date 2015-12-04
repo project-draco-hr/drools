@@ -3,11 +3,11 @@
   final Pattern pattern=new Pattern(0,new ClassObjectType(Cheese.class));
   final Declaration declaration=new Declaration("typeOfCheese",extractor,pattern);
   final FieldIndex fieldIndex=new FieldIndex(extractor,declaration,MvelConstraint.INDEX_EVALUATOR);
-  final RightTupleIndexHashTable map=new RightTupleIndexHashTable(new FieldIndex[]{fieldIndex});
+  final TupleIndexHashTable map=new TupleIndexHashTable(new FieldIndex[]{fieldIndex},false);
   final Cheese cheddar=new Cheese("cheddar",10);
   final InternalFactHandle cheddarHandle1=new DefaultFactHandle(0,cheddar);
   assertEquals(0,map.size());
-  assertNull(map.get(new LeftTupleImpl(cheddarHandle1,null,true)));
+  assertNull(map.getFirst(new LeftTupleImpl(cheddarHandle1,null,true)));
   final Cheese stilton1=new Cheese("stilton",35);
   RightTuple stiltonRighTuple=new RightTupleImpl(new DefaultFactHandle(1,stilton1),null);
   map.add(stiltonRighTuple);
@@ -15,7 +15,7 @@
   assertEquals(1,tablePopulationSize(map));
   final Cheese stilton2=new Cheese("stilton",80);
   final InternalFactHandle stiltonHandle2=new DefaultFactHandle(2,stilton2);
-  final TupleList list=map.get(new LeftTupleImpl(stiltonHandle2,null,true));
-  assertSame(stiltonRighTuple.getFactHandle(),list.first.getFactHandle());
-  assertNull(list.first.getNext());
+  final Tuple tuple=map.getFirst(new LeftTupleImpl(stiltonHandle2,null,true));
+  assertSame(stiltonRighTuple.getFactHandle(),tuple.getFactHandle());
+  assertNull(tuple.getNext());
 }
