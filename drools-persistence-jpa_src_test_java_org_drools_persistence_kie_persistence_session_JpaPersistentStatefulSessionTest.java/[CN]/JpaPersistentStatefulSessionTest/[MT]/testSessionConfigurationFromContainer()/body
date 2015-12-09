@@ -1,0 +1,13 @@
+{
+  String str="rule R when then end";
+  KieServices ks=KieServices.Factory.get();
+  KieModuleModel kmodel=ks.newKieModuleModel();
+  kmodel.newKieBaseModel("kbase1").newKieSessionModel("ksession1").setClockType(ClockTypeOption.get("pseudo"));
+  KieFileSystem kfs=ks.newKieFileSystem().write("src/main/resources/r1.drl",str).writeKModuleXML(kmodel.toXML());
+  ks.newKieBuilder(kfs).buildAll();
+  KieContainer kcontainer=ks.newKieContainer(ks.getRepository().getDefaultReleaseId());
+  KieSessionConfiguration conf=kcontainer.getKieSessionConfiguration("ksession1");
+  assertEquals("pseudo",conf.getOption(ClockTypeOption.class).getClockType());
+  KieSession ksession=ks.getStoreServices().newKieSession(kcontainer.getKieBase("kbase1"),conf,env);
+  assertTrue(ksession.getSessionClock() instanceof SessionPseudoClock);
+}
