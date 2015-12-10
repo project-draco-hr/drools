@@ -47,46 +47,10 @@
           }
         }
       }
-      String failMsg=origClass.getSimpleName() + "." + field.getName()+ " is null";
-      assertFalse(failMsg + "!",nullFound);
+      String objectFieldName=origClass.getSimpleName() + "." + field.getName();
+      assertFalse(objectFieldName + "!",nullFound);
       if (copyFieldVal != origFieldVal) {
-        assertNotNull(failMsg + " in the copy!",copyFieldVal);
-        assertNotNull(failMsg + " in the original!",origFieldVal);
-        Package pkg=origFieldVal.getClass().getPackage();
-        if (pkg == null || pkg.getName().startsWith("java.")) {
-          if (origFieldVal.getClass().isArray()) {
-            if (origFieldVal instanceof byte[]) {
-              assertArrayEquals(origClass.getSimpleName() + "." + field.getName(),(byte[])origFieldVal,(byte[])copyFieldVal);
-            }
-          }
- else           if (origFieldVal instanceof Map<?,?> && copyFieldVal instanceof Map<?,?>) {
-            Collection shouldBeEmpty=CollectionUtils.disjunction(((Map)origFieldVal).values(),((Map)copyFieldVal).values());
-            assertTrue("Comparison of Map values failed on " + origFieldVal.getClass().getSimpleName() + "."+ fieldName,shouldBeEmpty.isEmpty());
-          }
- else           if (origFieldVal instanceof Collection) {
-            assertEquals("Different collection sizes on " + origFieldVal.getClass().getSimpleName() + "."+ fieldName,((Collection)origFieldVal).size(),((Collection)copyFieldVal).size());
-            for (            Object elem : ((Collection)origFieldVal)) {
-              boolean match=false;
-              for (              Object copyElem : ((Collection)copyFieldVal)) {
-                try {
-                  compareObjectsViaFields(elem,copyElem,skipFields);
-                  match=true;
-                  break;
-                }
- catch (                Throwable t) {
-                  logger.debug(t.getMessage());
-                }
-              }
-              assertTrue("Different collection values on " + origFieldVal.getClass().getSimpleName() + "."+ fieldName,match);
-            }
-          }
- else {
-            assertEquals(origClass.getSimpleName() + "." + field.getName(),origFieldVal,copyFieldVal);
-          }
-        }
- else {
-          compareObjectsViaFields(origFieldVal,copyFieldVal,skipFields);
-        }
+        compareValues(origFieldVal,copyFieldVal,objectFieldName,skipFields);
       }
     }
  catch (    Exception e) {
