@@ -5,5 +5,13 @@
   DroolsQuery query=(DroolsQuery)this.factHandle.getObject();
   TupleSets<LeftTuple> leftTuples=query.getResultLeftTupleSets();
   LeftTuple childLeftTuple=rightTuple.getFirstChild();
-  RuleNetworkEvaluator.unlinkAndDeleteChildLeftTuple(childLeftTuple,leftTuples,leftTuples);
+switch (childLeftTuple.getStagedTypeForQueries()) {
+case LeftTuple.INSERT:
+    leftTuples.removeInsert(childLeftTuple);
+  return;
+case LeftTuple.UPDATE:
+leftTuples.removeUpdate(childLeftTuple);
+break;
+}
+leftTuples.addDelete(childLeftTuple);
 }

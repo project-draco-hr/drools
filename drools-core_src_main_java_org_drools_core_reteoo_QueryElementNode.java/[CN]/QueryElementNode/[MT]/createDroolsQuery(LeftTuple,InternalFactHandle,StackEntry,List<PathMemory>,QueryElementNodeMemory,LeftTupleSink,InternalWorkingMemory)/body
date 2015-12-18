@@ -1,0 +1,39 @@
+{
+  Object[] args=new Object[argsTemplate.length];
+  System.arraycopy(argsTemplate,0,args,0,args.length);
+  int[] declIndexes=this.queryElement.getDeclIndexes();
+  for (  int declIndexe : declIndexes) {
+    Declaration declr=(Declaration)argsTemplate[declIndexe];
+    Object tupleObject=leftTuple.get(declr).getObject();
+    Object o;
+    if (tupleObject instanceof DroolsQuery && declr.getExtractor() instanceof ArrayElementReader && ((DroolsQuery)tupleObject).getVariables()[declr.getExtractor().getIndex()] != null) {
+      o=Variable.v;
+    }
+ else {
+      o=declr.getValue(workingMemory,tupleObject);
+    }
+    if (o == null) {
+      o=declr.getValue(workingMemory,tupleObject);
+    }
+    args[declIndexe]=o;
+  }
+  int[] varIndexes=this.queryElement.getVariableIndexes();
+  for (  int varIndex : varIndexes) {
+    if (argsTemplate[varIndex] == Variable.v) {
+      args[varIndex]=Variable.v;
+    }
+  }
+  UnificationNodeViewChangedEventListener collector=createCollector(leftTuple,varIndexes,this.tupleMemoryEnabled);
+  boolean executeAsOpenQuery=openQuery;
+  if (executeAsOpenQuery) {
+    Object object=leftTuple.get(0).getObject();
+    if (object instanceof DroolsQuery && !((DroolsQuery)object).isOpen()) {
+      executeAsOpenQuery=false;
+    }
+  }
+  DroolsQuery queryObject=new DroolsQuery(this.queryElement.getQueryName(),args,collector,executeAsOpenQuery,stackEntry,pmems,qmem != null ? qmem.getResultLeftTuples() : null,qmem,sink);
+  collector.setFactHandle(handle);
+  handle.setObject(queryObject);
+  leftTuple.setContextObject(handle);
+  return queryObject;
+}

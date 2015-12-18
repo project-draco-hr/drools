@@ -9,6 +9,7 @@
  else {
     bm=(BetaMemory)nodeMem;
   }
+  TupleSets<RightTuple> rightTuples=bm.getStagedRightTuples();
   BetaNode[] bns=null;
   BetaMemory[] bms=null;
   int length=sinks.length;
@@ -29,70 +30,57 @@
   length--;
   for (LeftTuple leftTuple=srcTuples.getInsertFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
-    PropagationContext pctx=leftTuple.getPropagationContext();
-    InternalFactHandle handle=riaNode.createFactHandle(leftTuple,pctx,wm);
-    RightTuple rightTuple=new RightTupleImpl(handle,betaNode);
-    leftTuple.setContextObject(handle);
-    rightTuple.setPropagationContext(pctx);
     if (bm.getStagedRightTuples().isEmpty()) {
       bm.setNodeDirtyWithoutNotify();
     }
-    bm.getStagedRightTuples().addInsert(rightTuple);
+    leftTuple.clearStaged();
+    rightTuples.addInsert((RightTuple)leftTuple);
     if (bns != null) {
       for (int i=0; i < length; i++) {
-        rightTuple=new RightTupleImpl(handle,bns[i]);
-        rightTuple.setPropagationContext(pctx);
         if (bms[i].getStagedRightTuples().isEmpty()) {
           bms[i].setNodeDirtyWithoutNotify();
         }
-        bms[i].getStagedRightTuples().addInsert(rightTuple);
+        bms[i].getStagedRightTuples().addInsert((RightTuple)leftTuple);
       }
     }
-    leftTuple.clearStaged();
     leftTuple=next;
   }
   for (LeftTuple leftTuple=srcTuples.getDeleteFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
-    InternalFactHandle handle=(InternalFactHandle)leftTuple.getContextObject();
-    RightTuple rightTuple=handle.getFirstRightTuple();
-    TupleSets<RightTuple> rightTuples=bm.getStagedRightTuples();
     if (rightTuples.isEmpty()) {
       bm.setNodeDirtyWithoutNotify();
     }
-    rightTuples.addDelete(rightTuple);
+    leftTuple.clearStaged();
+    rightTuples.addDelete((RightTuple)leftTuple);
     if (bns != null) {
       for (int i=0; i < length; i++) {
-        rightTuple=rightTuple.getHandleNext();
+        leftTuple=leftTuple.getHandleNext();
         rightTuples=bms[i].getStagedRightTuples();
         if (rightTuples.isEmpty()) {
           bms[i].setNodeDirtyWithoutNotify();
         }
-        rightTuples.addDelete(rightTuple);
+        rightTuples.addDelete((RightTuple)leftTuple);
       }
     }
-    leftTuple.clearStaged();
     leftTuple=next;
   }
   for (LeftTuple leftTuple=srcTuples.getUpdateFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
-    InternalFactHandle handle=(InternalFactHandle)leftTuple.getContextObject();
-    RightTuple rightTuple=handle.getFirstRightTuple();
-    TupleSets<RightTuple> rightTuples=bm.getStagedRightTuples();
     if (rightTuples.isEmpty()) {
       bm.setNodeDirtyWithoutNotify();
     }
-    rightTuples.addUpdate(rightTuple);
+    leftTuple.clearStaged();
+    rightTuples.addUpdate((RightTuple)leftTuple);
     if (bns != null) {
       for (int i=0; i < length; i++) {
-        rightTuple=rightTuple.getHandleNext();
+        leftTuple=leftTuple.getHandleNext();
         rightTuples=bms[i].getStagedRightTuples();
         if (rightTuples.isEmpty()) {
           bms[i].setNodeDirtyWithoutNotify();
         }
-        rightTuples.addUpdate(rightTuple);
+        rightTuples.addUpdate((RightTuple)leftTuple);
       }
     }
-    leftTuple.clearStaged();
     leftTuple=next;
   }
   srcTuples.resetAll();
