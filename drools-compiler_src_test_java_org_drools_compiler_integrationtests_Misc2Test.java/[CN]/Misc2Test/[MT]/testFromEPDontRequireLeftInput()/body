@@ -1,0 +1,18 @@
+{
+  String drl="rule R when\n" + "    $s1 : String() from entry-point \"xxx\"\n" + "then\n"+ "end\n";
+  KieBase kbase=new KieHelper().addContent(drl,ResourceType.DRL).build();
+  Rete rete=((KnowledgeBaseImpl)kbase).getRete();
+  LeftInputAdapterNode liaNode=null;
+  for (  ObjectTypeNode otn : rete.getObjectTypeNodes()) {
+    Class<?> otnType=((ClassObjectType)otn.getObjectType()).getClassType();
+    if (String.class == otnType) {
+      assertEquals(1,otn.getSinkPropagator().size());
+    }
+ else     if (InitialFact.class.isAssignableFrom(otnType)) {
+      assertEquals(0,otn.getSinkPropagator().size());
+    }
+ else {
+      fail("There shouldn't be other OTNs");
+    }
+  }
+}
