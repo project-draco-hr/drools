@@ -1,0 +1,19 @@
+{
+  ProjectDataModelOracle mockedDMO=mock(ProjectDataModelOracle.class);
+  Map<String,ModelField[]> projectModelFields=new HashMap<>();
+  when(mockedDMO.getProjectModelFields()).thenReturn(projectModelFields);
+  String fullyQualifiedClassName=this.getClass().getName();
+  String fieldName="nonExistentField";
+  String fqnFieldClassName=getFieldFullyQualifiedClassName(mockedDMO,fullyQualifiedClassName,fieldName);
+  assertNull("Expected a null FQN field class name",fqnFieldClassName);
+  projectModelFields.put(fullyQualifiedClassName,new ModelField[]{new ModelField("existentField",String.class.getName(),FIELD_CLASS_TYPE.REGULAR_CLASS,FIELD_ORIGIN.DECLARED,FieldAccessorsAndMutators.ACCESSOR,null)});
+  when(mockedDMO.getProjectModelFields()).thenReturn(projectModelFields);
+  fqnFieldClassName=getFieldFullyQualifiedClassName(mockedDMO,fullyQualifiedClassName,fieldName);
+  assertNull("Expected a null FQN field class name",fqnFieldClassName);
+  fieldName="testField";
+  String fieldType="org.acme.test.field.type";
+  projectModelFields.put(fullyQualifiedClassName,new ModelField[]{new ModelField("existentField",String.class.getName(),FIELD_CLASS_TYPE.REGULAR_CLASS,FIELD_ORIGIN.DECLARED,FieldAccessorsAndMutators.ACCESSOR,null),new ModelField(fieldName,fieldType,FIELD_CLASS_TYPE.REGULAR_CLASS,FIELD_ORIGIN.DECLARED,FieldAccessorsAndMutators.ACCESSOR,null)});
+  when(mockedDMO.getProjectModelFields()).thenReturn(projectModelFields);
+  fqnFieldClassName=getFieldFullyQualifiedClassName(mockedDMO,fullyQualifiedClassName,fieldName);
+  assertEquals("Expected a null FQN field class name",fieldType,fqnFieldClassName);
+}
