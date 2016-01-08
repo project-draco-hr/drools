@@ -1,0 +1,18 @@
+{
+  if (entityId instanceof Number && entity instanceof VariableEntity && context instanceof ProcessMarshallerWriteContext) {
+    ProcessMarshallerWriteContext processContext=(ProcessMarshallerWriteContext)context;
+    VariableEntity variableEntity=(VariableEntity)entity;
+    MappedVariable mappedVariable=new MappedVariable(((Number)entityId).longValue(),entityType,processContext.getProcessInstanceId(),processContext.getTaskId(),processContext.getWorkItemId());
+    if (processContext.getState() == ProcessMarshallerWriteContext.STATE_ACTIVE) {
+      variableEntity.addMappedVariables(mappedVariable);
+    }
+ else {
+      MappedVariable toBeRemoved=variableEntity.findMappedVariables(mappedVariable);
+      if (toBeRemoved != null) {
+        toBeRemoved=em.find(MappedVariable.class,toBeRemoved.getMappedVarId());
+        em.remove(toBeRemoved);
+        variableEntity.removeMappedVariables(toBeRemoved);
+      }
+    }
+  }
+}
