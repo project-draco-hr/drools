@@ -5,7 +5,12 @@
       kfs.write(resources[i]);
     }
   }
-  ks.newKieBuilder(kfs).buildAll();
+  KieBuilder kieBuilder=ks.newKieBuilder(kfs);
+  kieBuilder.buildAll();
+  Results results=kieBuilder.getResults();
+  if (results.hasMessages(Message.Level.ERROR)) {
+    throw new IllegalStateException(results.getMessages(Message.Level.ERROR).toString());
+  }
   InternalKieModule kieModule=(InternalKieModule)ks.getRepository().getKieModule(releaseId);
   byte[] jar=kieModule.getBytes();
   return jar;
