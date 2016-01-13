@@ -2,83 +2,36 @@
   if (log.isTraceEnabled()) {
     log.trace("Removing Rule {}",tn.getRule().getName());
   }
-  LeftTupleSource splitStartNode=getNetworkSplitPoint(tn);
-  kBase.invalidateSegmentPrototype(splitStartNode,true);
+  boolean hasProtos=kBase.hasSegmentPrototypes();
+  boolean hasWms=wms.length > 0;
+  if (!hasProtos && !hasWms) {
+    return;
+  }
+  RuleImpl rule=tn.getRule();
+  LeftTupleNode firstSplit=getNetworkSplitPoint(tn,rule);
+  PathEndNodes pathEndNodes=getPathEndNodes(kBase,firstSplit,tn,rule,hasProtos,hasWms);
   for (  InternalWorkingMemory wm : wms) {
-    PathMemory removedPmem=wm.getNodeMemory(tn);
-    int s=getSegmentPos(splitStartNode,null);
-    flushSegmentIfMerge(wm,tn,splitStartNode,s);
-    flushStagedTuples(splitStartNode,removedPmem,wm,true);
     wm.flushPropagations();
-    if (NodeTypeEnums.LeftInputAdapterNode == splitStartNode.getType() && splitStartNode.getAssociationsSize() == 1) {
-      deleteLiaFacts(splitStartNode,wm);
-    }
-    LeftTupleSink sink;
-    if (splitStartNode.getAssociationsSize() == 1) {
-      SegmentMemory sm=removedPmem.getSegmentMemories()[s];
-      if (sm == null) {
-        continue;
+    PathEndNodeMemories tnms=getPathEndMemories(wm,pathEndNodes,true);
+    if (NodeTypeEnums.LeftInputAdapterNode == firstSplit.getType() && firstSplit.getAssociatedRuleSize() == 1) {
+      if (tnms.subjectPmem != null) {
+        flushStagedTuples(firstSplit,tnms.subjectPmem,wm);
       }
-      sink=((LeftInputAdapterNode)sm.getRootNode()).getSinkPropagator().getFirstLeftTupleSink();
+      processLeftTuples(firstSplit,wm,false,tn.getRule());
+      removeNewPaths(wm,tnms.subjectPmems);
     }
  else {
-      SegmentMemory sm=removedPmem.getSegmentMemories()[s + 1];
-      if (sm == null) {
-        List<PathMemory> pathMems=new ArrayList<PathMemory>();
-        collectRtnPathMemories(splitStartNode,wm,pathMems,tn);
-        reInitPathMemories(wm,pathMems,tn.getRule());
-        continue;
+      for (      PathMemory pmem : tnms.pmemsToBeFlushed) {
+        flushStagedTuples(firstSplit,pmem,wm);
       }
-      sink=(LeftTupleSink)sm.getRootNode();
+      processLeftTuples(firstSplit,wm,false,tn.getRule());
+      Map<PathMemory,SegmentMemory[]> prevSmemsLookup=reInitPathMemories(wm,tnms.otherPmems,rule);
+      Set<SegmentMemory> smemsToNotify=handleExistingPaths(rule,prevSmemsLookup,tnms.otherPmems,wm,ExistingPathStrategy.REMOVE_STRATEGY);
+      removeNewPaths(wm,tnms.subjectPmems);
+      notifySegments(smemsToNotify,wm);
     }
-    deleteFacts(sink,wm);
-    if (splitStartNode.getAssociationsSize() > 1) {
-      List<PathMemory> pathMems=new ArrayList<PathMemory>();
-      collectRtnPathMemories(splitStartNode,wm,pathMems,tn);
-      List<SegmentMemory[]> previousSmems=reInitPathMemories(wm,pathMems,tn.getRule());
-      if (splitStartNode.getSinkPropagator().size() == 2) {
-        int p=0;
-        for (        PathMemory pmem : pathMems) {
-          pmem.setlinkedSegmentMask(0);
-          SegmentMemory[] smems=previousSmems.get(p);
-          for (int i=0; i < smems.length; i++) {
-            SegmentMemory sm=smems[i];
-            if (sm == null) {
-              sm=SegmentUtilities.createSegmentMemory(splitStartNode,wm);
-            }
-            if (i < s) {
-              correctSegmentBeforeSplitOnRemove(wm,removedPmem,pmem,sm,p);
-            }
- else             if (i == s) {
-              if (smems[i + 1] != null) {
-                correctSegmentOnSplitOnRemove(wm,sm,smems[i + 1],pmem,removedPmem,p);
-                i++;
-              }
-            }
- else             if (i > s) {
-              correctSegmentAfterSplitOnRemove(wm,pmem,i,sm);
-            }
-          }
-          p++;
-        }
-      }
- else {
-        int p=0;
-        for (        PathMemory pmem : pathMems) {
-          SegmentMemory[] smems=previousSmems.get(p++);
-          for (int i=0; i < pmem.getSegmentMemories().length; i++) {
-            if (smems[i] == null) {
-              continue;
-            }
-            smems[i].removePathMemory(removedPmem);
-            pmem.setSegmentMemory(i,smems[i]);
-          }
-        }
-      }
+    if (tnms.subjectPmem != null && tnms.subjectPmem.getRuleAgendaItem() != null && tnms.subjectPmem.getRuleAgendaItem().isQueued()) {
+      tnms.subjectPmem.getRuleAgendaItem().dequeue();
     }
-    if (removedPmem.getRuleAgendaItem() != null && removedPmem.getRuleAgendaItem().isQueued()) {
-      removedPmem.getRuleAgendaItem().dequeue();
-    }
-    correctMemoryOnSplitsChanged(splitStartNode,wm);
   }
 }

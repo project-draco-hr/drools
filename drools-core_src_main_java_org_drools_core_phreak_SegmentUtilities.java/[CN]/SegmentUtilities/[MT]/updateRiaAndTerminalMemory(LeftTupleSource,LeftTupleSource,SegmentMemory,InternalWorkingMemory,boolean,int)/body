@@ -9,9 +9,11 @@
         RiaNodeMemory riaMem=(RiaNodeMemory)wm.getNodeMemory((MemoryFactory)sink);
         PathMemory pmem=riaMem.getRiaPathMemory();
         smem.addPathMemory(pmem);
-        pmem.setSegmentMemory(smem.getPos(),smem);
+        if (smem.getPos() < pmem.getSegmentMemories().length) {
+          pmem.setSegmentMemory(smem.getPos(),smem);
+        }
         if (fromPrototype) {
-          ObjectSink[] nodes=((RightInputAdapterNode)sink).getSinkPropagator().getSinks();
+          ObjectSink[] nodes=((RightInputAdapterNode)sink).getObjectSinkPropagator().getSinks();
           for (          ObjectSink node : nodes) {
             if (NodeTypeEnums.isLeftTupleSource(node) && wm.getNodeMemory((MemoryFactory)node).getSegmentMemory() == null) {
               restoreSegmentFromPrototype(wm,(LeftTupleSource)node,nodeTypesInSegment);
@@ -19,7 +21,7 @@
           }
         }
  else         if ((pmem.getAllLinkedMaskTest() & (1L << pmem.getSegmentMemories().length)) == 0) {
-          ObjectSink[] nodes=((RightInputAdapterNode)sink).getSinkPropagator().getSinks();
+          ObjectSink[] nodes=((RightInputAdapterNode)sink).getObjectSinkPropagator().getSinks();
           for (          ObjectSink node : nodes) {
             if (NodeTypeEnums.isLeftTupleSource(node)) {
               createSegmentMemory((LeftTupleSource)node,wm);
@@ -31,11 +33,13 @@
  else     if (NodeTypeEnums.isTerminalNode(sink)) {
       PathMemory pmem=(PathMemory)wm.getNodeMemory((MemoryFactory)sink);
       smem.addPathMemory(pmem);
-      pmem.setSegmentMemory(smem.getPos(),smem);
-      if (smem.isSegmentLinked()) {
-        smem.notifyRuleLinkSegment(wm);
+      if (smem.getPos() < pmem.getSegmentMemories().length) {
+        pmem.setSegmentMemory(smem.getPos(),smem);
+        if (smem.isSegmentLinked()) {
+          smem.notifyRuleLinkSegment(wm);
+        }
+        checkEagerSegmentCreation(sink.getLeftTupleSource(),wm,nodeTypesInSegment);
       }
-      checkEagerSegmentCreation(sink.getLeftTupleSource(),wm,nodeTypesInSegment);
     }
   }
   return nodeTypesInSegment;

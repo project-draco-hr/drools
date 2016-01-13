@@ -1,0 +1,29 @@
+{
+  if (pmem.getRuleAgendaItem() == null) {
+    return;
+  }
+  int smemIndex=getSegmentPos(splitStartNode,null);
+  SegmentMemory[] smems=pmem.getSegmentMemories();
+  SegmentMemory sm;
+  LeftTupleSink sink;
+  Memory mem;
+  long bit=1;
+  if (splitStartNode.getAssociatedRuleSize() == 1 && (smems[0] == null || smems[0].getTipNode().getType() != NodeTypeEnums.LeftInputAdapterNode)) {
+    sm=smems[0];
+    if (sm == null || sm.getStagedLeftTuples().isEmpty()) {
+      return;
+    }
+    sink=sm.getRootNode().getSinkPropagator().getFirstLeftTupleSink();
+    mem=sm.getNodeMemories().get(1);
+    bit=2;
+  }
+ else {
+    sm=smems[++smemIndex];
+    if (sm == null || sm.getStagedLeftTuples().isEmpty()) {
+      return;
+    }
+    sink=(LeftTupleSink)sm.getRootNode();
+    mem=sm.getNodeMemories().get(0);
+  }
+  new RuleNetworkEvaluator().outerEval((LeftInputAdapterNode)smems[0].getRootNode(),pmem,sink,bit,mem,smems,smemIndex,sm.getStagedLeftTuples().takeAll(),wm,new LinkedList<StackEntry>(),true,pmem.getRuleAgendaItem().getRuleExecutor());
+}

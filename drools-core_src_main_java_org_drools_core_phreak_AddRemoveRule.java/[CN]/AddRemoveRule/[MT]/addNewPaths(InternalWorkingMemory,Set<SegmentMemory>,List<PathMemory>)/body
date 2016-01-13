@@ -1,0 +1,48 @@
+{
+  Set<LeftTupleNode> visited=new HashSet<LeftTupleNode>();
+  for (  PathMemory pmem : pmems) {
+    LeftTupleSink tipNode=(LeftTupleSink)pmem.getPathEndNode();
+    LeftTupleNode child=tipNode;
+    LeftTupleNode parent=tipNode.getLeftTupleSource();
+    SegmentMemory[] smems=pmem.getSegmentMemories();
+    while (true) {
+      if (visited.add(child)) {
+        if (parent != null && parent.getAssociatedRuleSize() != 1 && child.getAssociatedRuleSize() == 1) {
+          Memory mem=wm.getNodeMemories().peekNodeMemory(parent.getId());
+          if (mem != null && mem.getSegmentMemory() != null) {
+            SegmentMemory sm=mem.getSegmentMemory();
+            if (sm.getFirst() != null) {
+              SegmentMemory childSmem=SegmentUtilities.createChildSegment(wm,child);
+              sm.add(childSmem);
+              smems[childSmem.getPos()]=childSmem;
+              smemsToNotify.add(childSmem);
+            }
+            correctMemoryOnSplitsChanged(parent,null,wm);
+          }
+        }
+ else {
+          Memory mem=wm.getNodeMemories().peekNodeMemory(child.getId());
+          if (mem != null) {
+            SegmentMemory sm=mem.getSegmentMemory();
+            if (sm != null && !sm.getPathMemories().contains(pmem)) {
+              sm.addPathMemory(pmem);
+              pmem.setSegmentMemory(sm.getPos(),sm);
+              sm.notifyRuleLinkSegment(wm,pmem);
+            }
+          }
+        }
+      }
+ else {
+        Memory mem=wm.getNodeMemories().peekNodeMemory(child.getId());
+        if (mem != null) {
+          mem.getSegmentMemory().notifyRuleLinkSegment(wm,pmem);
+        }
+      }
+      if (parent == null) {
+        break;
+      }
+      child=parent;
+      parent=parent.getLeftTupleSource();
+    }
+  }
+}

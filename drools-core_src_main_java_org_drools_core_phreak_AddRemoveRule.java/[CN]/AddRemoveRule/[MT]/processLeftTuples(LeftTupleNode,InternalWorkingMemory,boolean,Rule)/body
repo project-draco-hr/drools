@@ -1,0 +1,88 @@
+{
+  Memory memory=wm.getNodeMemories().peekNodeMemory(node.getId());
+  if (memory == null || memory.getSegmentMemory() == null) {
+    return;
+  }
+  SegmentMemory sm=memory.getSegmentMemory();
+  while (NodeTypeEnums.LeftInputAdapterNode != node.getType()) {
+    if (NodeTypeEnums.isBetaNode(node)) {
+      BetaMemory bm;
+      SegmentMemory childSmem=sm;
+      if (sm.getTipNode() == node) {
+        childSmem=sm.getFirst();
+      }
+      if (NodeTypeEnums.AccumulateNode == node.getType()) {
+        AccumulateMemory am=(AccumulateMemory)memory;
+        bm=am.getBetaMemory();
+        FastIterator it=bm.getLeftTupleMemory().fullFastIterator();
+        Tuple lt=BetaNode.getFirstTuple(bm.getLeftTupleMemory(),it);
+        for (; lt != null; lt=(LeftTuple)it.next(lt)) {
+          AccumulateContext accctx=(AccumulateContext)lt.getContextObject();
+          visitChild(accctx.getResultLeftTuple(),childSmem,insert,wm,rule);
+        }
+      }
+ else       if (NodeTypeEnums.ExistsNode == node.getType()) {
+        bm=(BetaMemory)wm.getNodeMemory((MemoryFactory)node);
+        FastIterator it=bm.getRightTupleMemory().fullFastIterator();
+        RightTuple rt=(RightTuple)BetaNode.getFirstTuple(bm.getRightTupleMemory(),it);
+        for (; rt != null; rt=(RightTuple)it.next(rt)) {
+          for (LeftTuple lt=rt.getBlocked(); lt != null; lt=lt.getBlockedNext()) {
+            visitChild(wm,insert,rule,childSmem,it,lt);
+          }
+        }
+      }
+ else {
+        bm=(BetaMemory)wm.getNodeMemory((MemoryFactory)node);
+        FastIterator it=bm.getLeftTupleMemory().fullFastIterator();
+        Tuple lt=BetaNode.getFirstTuple(bm.getLeftTupleMemory(),it);
+        visitChild(wm,insert,rule,childSmem,it,lt);
+      }
+      return;
+    }
+ else     if (NodeTypeEnums.FromNode == node.getType()) {
+      FromMemory fm=(FromMemory)wm.getNodeMemory((MemoryFactory)node);
+      TupleMemory ltm=fm.getBetaMemory().getLeftTupleMemory();
+      FastIterator it=ltm.fullFastIterator();
+      for (LeftTuple lt=(LeftTuple)ltm.getFirst(null); lt != null; lt=(LeftTuple)it.next(lt)) {
+        visitChild(lt,sm,insert,wm,rule);
+      }
+      return;
+    }
+    if (sm.getRootNode() == node) {
+      sm=wm.getNodeMemory((MemoryFactory<Memory>)node.getLeftTupleSource()).getSegmentMemory();
+    }
+    node=node.getLeftTupleSource();
+  }
+  LeftInputAdapterNode lian=(LeftInputAdapterNode)node;
+  ObjectSource os=lian.getObjectSource();
+  while (os.getType() != NodeTypeEnums.ObjectTypeNode) {
+    os=os.getParentObjectSource();
+  }
+  ObjectTypeNode otn=(ObjectTypeNode)os;
+  final ObjectTypeNodeMemory omem=wm.getNodeMemory(otn);
+  if (omem == null) {
+    return;
+  }
+  Iterator<InternalFactHandle> it=omem.iterator();
+  while (it.hasNext()) {
+    InternalFactHandle fh=it.next();
+    LeftTuple lt=fh.getFirstLeftTuple();
+    while (lt != null) {
+      LeftTuple nextLt=lt.getHandleNext();
+      if (lt.getTupleSource().isAssociatedWith(rule)) {
+        SegmentMemory childSmem=sm;
+        if (sm.getFirst() != null && sm.getFirst().getRootNode() == lt.getTupleSink()) {
+          childSmem=sm.getFirst();
+        }
+        visitChild(lt,childSmem,insert,wm,rule);
+        if (lt.getHandlePrevious() != null) {
+          lt.getHandlePrevious().setHandleNext(nextLt);
+        }
+        if (nextLt != null) {
+          nextLt.setHandlePrevious(lt.getHandlePrevious());
+        }
+      }
+      lt=nextLt;
+    }
+  }
+}

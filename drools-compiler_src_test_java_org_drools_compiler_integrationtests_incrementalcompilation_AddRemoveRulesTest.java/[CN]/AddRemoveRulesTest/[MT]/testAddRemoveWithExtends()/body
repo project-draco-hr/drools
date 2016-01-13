@@ -1,0 +1,13 @@
+{
+  final String packageName="test_same_condition_pk";
+  final String rule1="package " + packageName + ";"+ "import java.util.Map; \n"+ "rule \"parentRule\" \n"+ "when \n"+ " Map(this['name'] == 'Michael') \n"+ "then \n"+ "System.out.println('Parent rule!'); \n"+ "end";
+  final String rule2="package " + packageName + ";"+ "import java.util.Map; \n"+ "rule \"childRule\" \n"+ "     extends \"parentRule\"\n"+ "when \n"+ " Map(this['test'] == '1') \n"+ "then \n"+ "System.out.println('Child rule!'); \n"+ "end";
+  final StatefulKnowledgeSession session=buildSessionInSteps(rule1,rule2);
+  session.fireAllRules();
+  final Map<String,Object> fact=new HashMap<String,Object>();
+  fact.put("name","Michael");
+  fact.put("test",1);
+  session.insert(fact);
+  session.getKieBase().removeRule(packageName,"parentRule");
+  assertTrue(session.fireAllRules() == 0);
+}

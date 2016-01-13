@@ -4,7 +4,7 @@ synchronized (wm) {
     if (smem != null) {
       return smem;
     }
-    while (tupleSource.getType() != NodeTypeEnums.LeftInputAdapterNode && SegmentUtilities.parentInSameSegment(tupleSource,null)) {
+    while (!SegmentUtilities.isRootNode(tupleSource,null)) {
       tupleSource=tupleSource.getLeftTupleSource();
     }
     LeftTupleSource segmentRoot=tupleSource;
@@ -59,7 +59,7 @@ if (sink.getType() == NodeTypeEnums.RightInputAdaterNode) {
 PathMemory riaPmem=((RiaNodeMemory)memory).getRiaPathMemory();
 smem.getNodeMemories().add(riaPmem);
 RightInputAdapterNode rian=(RightInputAdapterNode)sink;
-ObjectSink[] nodes=rian.getSinkPropagator().getSinks();
+ObjectSink[] nodes=rian.getObjectSinkPropagator().getSinks();
 for (ObjectSink node : nodes) {
 if (NodeTypeEnums.isLeftTupleSource(node)) {
 createSegmentMemory((LeftTupleSource)node,wm);
@@ -84,7 +84,7 @@ LeftTupleSource pathRoot=segmentRoot;
 int ruleSegmentPosMask=1;
 int counter=0;
 while (pathRoot.getType() != NodeTypeEnums.LeftInputAdapterNode) {
-if (!SegmentUtilities.parentInSameSegment(pathRoot,null)) {
+if (SegmentUtilities.isRootNode(pathRoot,null)) {
 ruleSegmentPosMask=ruleSegmentPosMask << 1;
 counter++;
 }

@@ -1,0 +1,28 @@
+{
+  if (wm.getNodeMemories().peekNodeMemory(node.getId()) != null) {
+    BetaNode bn=(BetaNode)node;
+    BetaMemory bm;
+    if (bn.getType() == NodeTypeEnums.AccumulateNode) {
+      bm=((AccumulateMemory)wm.getNodeMemory(bn)).getBetaMemory();
+    }
+ else {
+      bm=(BetaMemory)wm.getNodeMemory(bn);
+    }
+    TupleMemory rtm=bm.getRightTupleMemory();
+    FastIterator it=rtm.fullFastIterator();
+    for (Tuple rightTuple=BetaNode.getFirstTuple(rtm,it); rightTuple != null; ) {
+      Tuple next=(Tuple)it.next(rightTuple);
+      rtm.remove(rightTuple);
+      rightTuple.unlinkFromRightParent();
+      rightTuple=next;
+    }
+    if (!bm.getStagedRightTuples().isEmpty()) {
+      bm.setNodeDirtyWithoutNotify();
+    }
+    TupleSets<RightTuple> srcRightTuples=bm.getStagedRightTuples().takeAll();
+    unlinkRightTuples(srcRightTuples.getInsertFirst());
+    unlinkRightTuples(srcRightTuples.getUpdateFirst());
+    unlinkRightTuples(srcRightTuples.getDeleteFirst());
+    deleteFactsFromRightInput(bn,wm);
+  }
+}

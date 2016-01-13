@@ -1,0 +1,22 @@
+{
+  Set<LeftTupleNode> visited=new HashSet<LeftTupleNode>();
+  for (  PathEndNode endNode : endNodes.subjectEndNodes) {
+    LeftTupleNode[] nodes=endNode.getPathNodes();
+    for (int i=nodes.length - 1; i >= 0 && nodes[i].getAssociatedRuleSize() == 1; i--) {
+      LeftTupleNode node=nodes[i];
+      if (NodeTypeEnums.isBetaNode(node)) {
+        if (!visited.add(node)) {
+          continue;
+        }
+        BetaNode bn=(BetaNode)node;
+        if (!bn.isRightInputIsRiaNode()) {
+          for (int j=0; j < wms.length; j++) {
+            PropagationContextFactory pctxFactory=wms[j].getKnowledgeBase().getConfiguration().getComponentFactory().getPropagationContextFactory();
+            final PropagationContext pctx=pctxFactory.createPropagationContext(wms[j].getNextPropagationIdCounter(),PropagationContext.RULE_ADDITION,null,null,null);
+            bn.getRightInput().updateSink(bn,pctx,wms[j]);
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  LeftInputAdapterNode.LiaNodeMemory liaMem=null;
+  if (node.getLeftTupleSource().getType() == NodeTypeEnums.LeftInputAdapterNode) {
+    liaMem=wm.getNodeMemory(((LeftInputAdapterNode)node.getLeftTupleSource()));
+  }
+  lt=node.createPeer(lt);
+  Memory memory=wm.getNodeMemories().peekNodeMemory(node.getId());
+  if (memory == null || memory.getSegmentMemory() == null) {
+    throw new IllegalStateException("Defensive Programming: this should not be possilbe, as the addRule code should init child segments if they are needed ");
+  }
+  if (liaMem == null) {
+    memory.getSegmentMemory().getStagedLeftTuples().addInsert(lt);
+  }
+ else {
+    LeftInputAdapterNode.doInsertSegmentMemory(wm,true,liaMem,memory.getSegmentMemory(),lt,node.getLeftTupleSource().isStreamMode());
+  }
+  return lt;
+}

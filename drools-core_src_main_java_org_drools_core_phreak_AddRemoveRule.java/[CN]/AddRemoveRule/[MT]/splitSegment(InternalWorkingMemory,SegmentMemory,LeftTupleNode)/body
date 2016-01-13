@@ -1,0 +1,30 @@
+{
+  LeftTupleNode childNode=splitNode.getSinkPropagator().getFirstLeftTupleSink();
+  SegmentMemory sm2=new SegmentMemory(childNode);
+  wm.getNodeMemories().peekNodeMemory(childNode.getId()).setSegmentMemory(sm2);
+  if (sm1.getFirst() != null) {
+    for (SegmentMemory sm=sm1.getFirst(); sm != null; ) {
+      SegmentMemory next=sm.getNext();
+      sm1.remove(sm);
+      sm2.add(sm);
+      sm=next;
+    }
+  }
+  sm1.add(sm2);
+  sm2.setPos(sm1.getPos());
+  sm2.setSegmentPosMaskBit(sm1.getSegmentPosMaskBit());
+  sm2.setLinkedNodeMask(sm1.getLinkedNodeMask());
+  sm2.mergePathMemories(sm1);
+  sm2.setTipNode(sm1.getTipNode());
+  sm1.setTipNode(splitNode);
+  if (sm1.getTipNode().getType() == NodeTypeEnums.LeftInputAdapterNode) {
+    if (!sm1.getStagedLeftTuples().isEmpty()) {
+      sm2.getStagedLeftTuples().addAll(sm1.getStagedLeftTuples());
+    }
+  }
+  int pos=nodeSegmentPosition(sm1,splitNode);
+  splitNodeMemories(sm1,sm2,pos);
+  splitBitMasks(sm1,sm2,pos);
+  correctSegmentMemoryAfterSplitOnAdd(sm2);
+  return sm2;
+}

@@ -2,53 +2,32 @@
   if (log.isTraceEnabled()) {
     log.trace("Adding Rule {}",tn.getRule().getName());
   }
-  LeftTupleSource splitStartLeftTupleSource=getNetworkSplitPoint(tn);
-  kBase.invalidateSegmentPrototype(splitStartLeftTupleSource,false);
+  boolean hasProtos=kBase.hasSegmentPrototypes();
+  boolean hasWms=wms.length > 0;
+  if (!hasProtos && !hasWms) {
+    return;
+  }
+  RuleImpl rule=tn.getRule();
+  LeftTupleNode firstSplit=getNetworkSplitPoint(tn,rule);
+  PathEndNodes pathEndNodes=getPathEndNodes(kBase,firstSplit,tn,rule,hasProtos,hasWms);
   for (  InternalWorkingMemory wm : wms) {
-    if (splitStartLeftTupleSource.getAssociationsSize() > 1) {
-      List<PathMemory> pathMems=new ArrayList<PathMemory>();
-      collectRtnPathMemories(splitStartLeftTupleSource,wm,pathMems,tn);
-      PathMemory newPmem=wm.getNodeMemory(tn);
-      int s=getSegmentPos(splitStartLeftTupleSource,null);
-      LeftTupleSink[] sinks=splitStartLeftTupleSource.getSinkPropagator().getSinks();
-      if (sinks.length == 2 || (sinks.length == 3 && NodeTypeEnums.isBetaNode(sinks[2])) && ((BetaNode)sinks[2]).isRightInputIsRiaNode()) {
-        List<SegmentMemory[]> previousSmems=reInitPathMemories(wm,pathMems,null);
-        int p=0;
-        SegmentMemory splitSmem=null;
-        for (        PathMemory pmem : pathMems) {
-          pmem.setlinkedSegmentMask(0);
-          SegmentMemory[] smems=previousSmems.get(p);
-          for (int i=0; i < smems.length; i++) {
-            SegmentMemory sm=smems[i];
-            if (sm == null) {
-              continue;
-            }
-            if (i < s) {
-              correctSegmentBeforeSplitOnAdd(wm,newPmem,p,pmem,sm);
-            }
- else             if (i == s) {
-              splitSmem=correctSegmentOnSplitOnAdd(splitStartLeftTupleSource,wm,newPmem,p,splitSmem,pmem,sm);
-            }
- else             if (i > s) {
-              correctSegmentAfterSplitOnAdd(wm,pmem,i,sm);
-            }
-          }
-          p++;
-        }
-      }
+    wm.flushPropagations();
+    if (NodeTypeEnums.LeftInputAdapterNode == firstSplit.getType() && firstSplit.getAssociatedRuleSize() == 1) {
+      insertLiaFacts(firstSplit,wm);
+    }
  else {
-        SegmentMemory sm=pathMems.get(0).getSegmentMemories()[s];
-        if (sm == null) {
-          continue;
-        }
-        initNewSegment(splitStartLeftTupleSource,wm,sm);
-        correctSegmentBeforeSplitOnAdd(wm,newPmem,pathMems.get(0),sm);
+      PathEndNodeMemories tnms=getPathEndMemories(wm,pathEndNodes,false);
+      if (tnms.subjectPmem == null) {
+        continue;
       }
+      Map<PathMemory,SegmentMemory[]> prevSmemsLookup=reInitPathMemories(wm,tnms.otherPmems,null);
+      Set<SegmentMemory> smemsToNotify=handleExistingPaths(rule,prevSmemsLookup,tnms.otherPmems,wm,ExistingPathStrategy.ADD_STRATEGY);
+      addNewPaths(wm,smemsToNotify,tnms.subjectPmems);
+      processLeftTuples(firstSplit,wm,true,rule);
+      notifySegments(smemsToNotify,wm);
     }
-    if (NodeTypeEnums.LeftInputAdapterNode == splitStartLeftTupleSource.getType() && splitStartLeftTupleSource.getAssociationsSize() == 1) {
-      insertLiaFacts(splitStartLeftTupleSource,wm);
-    }
-    correctMemoryOnSplitsChanged(splitStartLeftTupleSource,wm);
-    insertFacts(splitStartLeftTupleSource.getSinkPropagator().getLastLeftTupleSink(),wm);
+  }
+  if (hasWms) {
+    insertFacts(pathEndNodes,wms);
   }
 }

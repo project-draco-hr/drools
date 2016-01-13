@@ -1,0 +1,50 @@
+{
+  PathEndNodeMemories tnMems=new PathEndNodeMemories();
+  if (isRemoving) {
+    List<LeftTupleNode> nodes=new ArrayList<LeftTupleNode>();
+    nodes.addAll(pathEndNodes.subjectSplits);
+    nodes.addAll(pathEndNodes.otherSplits);
+    for (    LeftTupleNode splitNode : nodes) {
+      findPmemToBeFlushed(tnMems,wm.getNodeMemories().peekNodeMemory(splitNode.getId()));
+      for (      LeftTupleSink sink : splitNode.getSinkPropagator().getSinks()) {
+        findPmemToBeFlushed(tnMems,wm.getNodeMemories().peekNodeMemory(sink.getId()));
+      }
+    }
+  }
+  for (  LeftTupleNode node : pathEndNodes.otherEndNodes) {
+    if (node.getType() == NodeTypeEnums.RightInputAdaterNode) {
+      RiaNodeMemory riaMem=(RiaNodeMemory)wm.getNodeMemories().peekNodeMemory(node.getId());
+      if (riaMem != null) {
+        tnMems.otherPmems.add(riaMem.getRiaPathMemory());
+      }
+    }
+ else {
+      PathMemory pmem=(PathMemory)wm.getNodeMemories().peekNodeMemory(node.getId());
+      if (pmem != null) {
+        tnMems.otherPmems.add(pmem);
+      }
+    }
+  }
+  tnMems.subjectPmem=(PathMemory)wm.getNodeMemories().peekNodeMemory(pathEndNodes.subjectEndNode.getId());
+  if (tnMems.subjectPmem == null && !tnMems.otherPmems.isEmpty()) {
+    tnMems.subjectPmem=(PathMemory)wm.getNodeMemory((MemoryFactory<Memory>)pathEndNodes.subjectEndNode);
+  }
+  for (  LeftTupleNode node : pathEndNodes.subjectEndNodes) {
+    if (node.getType() == NodeTypeEnums.RightInputAdaterNode) {
+      RiaNodeMemory riaMem=(RiaNodeMemory)wm.getNodeMemories().peekNodeMemory(node.getId());
+      if (riaMem == null && tnMems.otherPmems != null) {
+        riaMem=(RiaNodeMemory)wm.getNodeMemory((MemoryFactory<Memory>)node);
+      }
+      if (riaMem != null) {
+        tnMems.subjectPmems.add(riaMem.getRiaPathMemory());
+      }
+    }
+ else {
+      PathMemory pmem=(PathMemory)wm.getNodeMemories().peekNodeMemory(node.getId());
+      if (pmem != null) {
+        tnMems.subjectPmems.add(pmem);
+      }
+    }
+  }
+  return tnMems;
+}

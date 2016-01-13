@@ -1,0 +1,37 @@
+{
+  LeftTuple prevLt=null;
+  LeftTupleSinkNode sink=lt.getTupleSink();
+  for (; sink != null; sink=sink.getNextLeftTupleSinkNode()) {
+    if (lt != null) {
+      if (lt.getTupleSink().isAssociatedWith(rule)) {
+        if (lt.getTupleSink().getAssociatedRuleSize() > 1) {
+          if (lt.getFirstChild() != null) {
+            SegmentMemory childSmem=smem;
+            if (smem.getFirst() != null && smem.getFirst().getRootNode() == lt.getFirstChild().getTupleSink()) {
+              childSmem=smem.getFirst();
+            }
+            for (LeftTuple child=lt.getFirstChild(); child != null; child=child.getHandleNext()) {
+              visitChild(child,childSmem,insert,wm,rule);
+            }
+          }
+        }
+ else         if (!insert) {
+          LeftTuple lt2=null;
+          if (lt.getPeer() != null && lt.getPeer().getTupleSink().isAssociatedWith(rule) && lt.getPeer().getTupleSink().getAssociatedRuleSize() == 1) {
+            lt2=lt.getPeer();
+          }
+          deletePeerLeftTuple(lt,lt2,prevLt,wm);
+          break;
+        }
+      }
+      prevLt=lt;
+      lt=lt.getPeer();
+    }
+ else {
+      prevLt=insertPeerLeftTuple(prevLt,sink,wm);
+    }
+    if (smem != null) {
+      smem=smem.getNext();
+    }
+  }
+}

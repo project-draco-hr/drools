@@ -1,0 +1,65 @@
+{
+  boolean isFirstLt=prevLt == null;
+  LeftTuple nextPeerLt=(removingLt2 == null) ? removingLt.getPeer() : removingLt2.getPeer();
+  if (!isFirstLt) {
+    prevLt.setPeer(nextPeerLt);
+  }
+ else {
+    if (nextPeerLt == null) {
+      removingLt.unlinkFromLeftParent();
+      removingLt.unlinkFromRightParent();
+      return;
+    }
+    boolean isRootLt=(isFirstLt && removingLt.getLeftParent() == null);
+    InternalFactHandle fh=removingLt.getFactHandle();
+    LeftTuple leftPrevious=removingLt.getHandlePrevious();
+    LeftTuple leftNext=removingLt.getHandleNext();
+    LeftTuple rightPrevious=removingLt.getRightParentPrevious();
+    LeftTuple rightNext=removingLt.getRightParentNext();
+    LeftTuple leftParent=removingLt.getLeftParent();
+    RightTuple rightParent=removingLt.getRightParent();
+    nextPeerLt.setFactHandle(removingLt.getFactHandle());
+    if (leftPrevious != null) {
+      nextPeerLt.setHandlePrevious(leftPrevious);
+      leftPrevious.setHandleNext(nextPeerLt);
+    }
+    if (leftNext != null) {
+      nextPeerLt.setHandleNext(leftNext);
+      leftNext.setHandlePrevious(nextPeerLt);
+    }
+    if (rightPrevious != null) {
+      nextPeerLt.setRightParentPrevious(rightPrevious);
+      rightPrevious.setRightParentNext(nextPeerLt);
+    }
+    if (rightNext != null) {
+      nextPeerLt.setRightParentNext(rightNext);
+      rightNext.setRightParentPrevious(nextPeerLt);
+    }
+    if (leftParent != null) {
+      nextPeerLt.setLeftParent(leftParent);
+      if (leftParent.getFirstChild() == removingLt) {
+        leftParent.setFirstChild(nextPeerLt);
+      }
+      if (leftParent.getLastChild() == removingLt) {
+        leftParent.setLastChild(nextPeerLt);
+      }
+    }
+ else     if (isRootLt) {
+      if (fh.getFirstLeftTuple() == removingLt) {
+        fh.setFirstLeftTuple(nextPeerLt);
+      }
+      if (fh.getLastLeftTuple() == removingLt) {
+        fh.setLastLeftTuple(nextPeerLt);
+      }
+    }
+    if (rightParent != null) {
+      nextPeerLt.setRightParent(rightParent);
+      if (rightParent.getFirstChild() == removingLt) {
+        rightParent.setFirstChild(nextPeerLt);
+      }
+      if (rightParent.getLastChild() == removingLt) {
+        rightParent.setLastChild(nextPeerLt);
+      }
+    }
+  }
+}

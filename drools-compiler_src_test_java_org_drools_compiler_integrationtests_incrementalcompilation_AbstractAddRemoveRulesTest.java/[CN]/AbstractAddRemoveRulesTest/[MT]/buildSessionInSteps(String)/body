@@ -1,0 +1,19 @@
+{
+  if (drls == null || drls.length == 0) {
+    return KnowledgeBaseFactory.newKnowledgeBase().newStatefulKnowledgeSession();
+  }
+ else {
+    String drl=drls[0];
+    final KnowledgeBuilder kbuilder=createKnowledgeBuilder(null,drl);
+    final KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+    kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+    final StatefulKnowledgeSession kSession=kbase.newStatefulKnowledgeSession();
+    kSession.fireAllRules();
+    for (int i=1; i < drls.length; i++) {
+      drl=drls[i];
+      final KnowledgeBuilder kbuilder2=createKnowledgeBuilder(kSession.getKieBase(),drl);
+      kSession.getKieBase().addKnowledgePackages(kbuilder2.getKnowledgePackages());
+    }
+    return kSession;
+  }
+}
