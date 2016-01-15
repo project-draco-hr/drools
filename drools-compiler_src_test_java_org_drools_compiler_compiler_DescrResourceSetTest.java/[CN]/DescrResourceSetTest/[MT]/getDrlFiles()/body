@@ -1,0 +1,42 @@
+{
+  URL url=this.getClass().getProtectionDomain().getCodeSource().getLocation();
+  File dir=new File(url.toURI());
+  assertTrue("Does not exist: " + url.toString(),dir.exists());
+  final FileFilter drlFilter=new FileFilter(){
+    @Override public boolean accept(    File file){
+      return file.getName().endsWith(".drl");
+    }
+  }
+;
+  final FileFilter dirFilter=new FileFilter(){
+    @Override public boolean accept(    File file){
+      return file.isDirectory();
+    }
+  }
+;
+  Set<File> drls=new TreeSet<File>(new Comparator<File>(){
+    @Override public int compare(    File o1,    File o2){
+      if (o1 == o2) {
+        return 0;
+      }
+ else       if (o1 == null) {
+        return 1;
+      }
+ else       if (o2 == null) {
+        return -1;
+      }
+ else {
+        return o1.getAbsolutePath().compareTo(o2.getAbsolutePath());
+      }
+    }
+  }
+);
+  Queue<File> dirs=new LinkedList<File>();
+  dirs.add(dir);
+  while (!dirs.isEmpty()) {
+    dir=dirs.poll();
+    drls.addAll(Arrays.asList(dir.listFiles(drlFilter)));
+    dirs.addAll(Arrays.asList(dir.listFiles(dirFilter)));
+  }
+  return drls;
+}
