@@ -1,0 +1,52 @@
+{
+  URL codeLocUrl=StaticMethodTestHelper.class.getProtectionDomain().getCodeSource().getLocation();
+  String projVersionStr=null;
+  String codeLocStr=null;
+  try {
+    codeLocStr=codeLocUrl.toURI().toString();
+    if (codeLocStr.endsWith(".jar")) {
+      Matcher jarLocMatcher=jarLocRegex.matcher(codeLocStr);
+      assertTrue("Regex for code (jar) location did not match location!",jarLocMatcher.matches() && jarLocMatcher.groupCount() >= 2);
+      projVersionStr=jarLocMatcher.group(1);
+    }
+ else {
+      codeLocStr=codeLocStr.replace("target/classes/","pom.xml");
+      File pomFile=new File(new URI(codeLocStr));
+      assertTrue(codeLocStr + " does not exist!",pomFile.exists());
+      Reader reader=null;
+      try {
+        reader=new FileReader(pomFile);
+        MavenXpp3Reader xpp3Reader=new MavenXpp3Reader();
+        Model model=xpp3Reader.read(reader);
+        projVersionStr=model.getVersion();
+        if (projVersionStr == null) {
+          projVersionStr=model.getParent().getVersion();
+        }
+        String projectName=model.getGroupId() + ":" + model.getArtifactId();
+        assertNotNull("Unable to resolve project version for " + projectName,projVersionStr);
+      }
+ catch (      FileNotFoundException fnfe) {
+        throw new RuntimeException("Unable to open " + pomFile.getAbsolutePath(),fnfe);
+      }
+catch (      IOException ioe) {
+        throw new RuntimeException("Unable to read " + codeLocStr,ioe);
+      }
+catch (      XmlPullParserException xppe) {
+        throw new RuntimeException("Unable to parse " + codeLocStr,xppe);
+      }
+ finally {
+        try {
+          if (reader != null) {
+            reader.close();
+          }
+        }
+ catch (        IOException e) {
+        }
+      }
+    }
+  }
+ catch (  URISyntaxException urise) {
+    throw new RuntimeException("Invalid URL: " + codeLocStr,urise);
+  }
+  return projVersionStr;
+}
