@@ -1,0 +1,28 @@
+{
+  List<String> tokens=new ArrayList<String>();
+  int lastStart=-1;
+  boolean isQuoted=false;
+  for (int i=0; i < expression.length(); i++) {
+    if (lastStart == -1) {
+      if (!isQuoted && Character.isJavaIdentifierStart(expression.charAt(i))) {
+        lastStart=i;
+      }
+    }
+ else     if (!Character.isJavaIdentifierPart(expression.charAt(i))) {
+      tokens.add(expression.subSequence(lastStart,i).toString());
+      lastStart=-1;
+    }
+    if (expression.charAt(i) == '"' || expression.charAt(i) == '\'') {
+      if (i == 0 || expression.charAt(i - 1) != '\\') {
+        isQuoted=!isQuoted;
+      }
+      if (isQuoted) {
+        lastStart=-1;
+      }
+    }
+  }
+  if (lastStart != -1) {
+    tokens.add(expression.subSequence(lastStart,expression.length()).toString());
+  }
+  return tokens;
+}
