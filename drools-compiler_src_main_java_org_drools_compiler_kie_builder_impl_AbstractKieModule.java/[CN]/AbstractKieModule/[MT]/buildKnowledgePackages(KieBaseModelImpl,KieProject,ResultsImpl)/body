@@ -2,7 +2,7 @@
   AbstractKieModule kModule=(AbstractKieModule)kieProject.getKieModuleForKBase(kBaseModel.getName());
   KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(getBuilderConfiguration(kBaseModel,kieProject,kModule));
   CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
-  Map<String,InternalKieModule> assets=new HashMap<String,InternalKieModule>();
+  Set<Asset> assets=new HashSet<Asset>();
   boolean allIncludesAreValid=true;
   for (  String include : kieProject.getTransitiveIncludes(kBaseModel)) {
     if (StringUtils.isEmpty(include)) {
@@ -31,8 +31,8 @@
     }
   }
  else {
-    for (    Map.Entry<String,InternalKieModule> entry : assets.entrySet()) {
-      entry.getValue().addResourceToCompiler(ckbuilder,kBaseModel,entry.getKey());
+    for (    Asset asset : assets) {
+      asset.kmodule.addResourceToCompiler(ckbuilder,kBaseModel,asset.name);
     }
   }
   ckbuilder.build();
