@@ -1,0 +1,19 @@
+{
+  long startTime=System.currentTimeMillis();
+  KieServices ks=KieServices.Factory.get();
+  KieRepository kr=ks.getRepository();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.write("src/main/resources/examples/pertest.drl",rules);
+  KieBuilder kb=ks.newKieBuilder(kfs);
+  kb.buildAll();
+  if (kb.getResults().hasMessages(Message.Level.ERROR)) {
+    throw new RuntimeException("Build Errors:\n" + kb.getResults().toString());
+  }
+  long endTime=System.currentTimeMillis();
+  System.out.println("Time to build rules : " + (endTime - startTime) + " ms");
+  startTime=System.currentTimeMillis();
+  KieContainer kContainer=ks.newKieContainer(kr.getDefaultReleaseId());
+  endTime=System.currentTimeMillis();
+  System.out.println("Time to load container: " + (endTime - startTime) + " ms");
+  return kContainer;
+}

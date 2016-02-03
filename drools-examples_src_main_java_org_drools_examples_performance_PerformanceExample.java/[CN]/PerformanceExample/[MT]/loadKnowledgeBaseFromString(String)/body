@@ -1,0 +1,20 @@
+{
+  long startTime=System.currentTimeMillis();
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  for (  String drlContentString : drlContentStrings) {
+    kbuilder.add(ResourceFactory.newByteArrayResource(drlContentString.getBytes()),ResourceType.DRL);
+  }
+  if (kbuilder.hasErrors()) {
+    throw new RuntimeException("Build Errors:\n" + kbuilder.getErrors());
+  }
+  long endTime=System.currentTimeMillis();
+  System.out.println("Time to build rules: " + (endTime - startTime) + " ms");
+  startTime=System.currentTimeMillis();
+  KieBaseConfiguration kBaseConfig=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+  kBaseConfig.setOption(phreak);
+  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
+  kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+  endTime=System.currentTimeMillis();
+  System.out.println("Time to create knowledgebase: " + (endTime - startTime) + " ms");
+  return kbase;
+}

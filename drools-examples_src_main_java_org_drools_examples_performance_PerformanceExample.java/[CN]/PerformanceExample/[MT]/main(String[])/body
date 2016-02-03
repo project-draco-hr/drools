@@ -1,0 +1,36 @@
+{
+  final long numberOfRulesToBuild=10;
+  boolean useAccumulate=true;
+  String dialect="mvel";
+  boolean usekjars=false;
+  boolean collectionBasedRules=true;
+  System.out.println("********* Numbers of rules: " + numberOfRulesToBuild + " kjars: "+ usekjars+ " accumulate: "+ useAccumulate+ " dialect: "+ dialect+ " *********");
+  String rules=getRules(numberOfRulesToBuild,useAccumulate,dialect,collectionBasedRules);
+  long startTime=System.currentTimeMillis();
+  StatelessKieSession kSession;
+  FactType ft;
+  if (usekjars) {
+    KieContainer kContainer=loadContainerFromString(rules);
+    kSession=kContainer.newStatelessKieSession();
+    ft=kContainer.getKieBase().getFactType("org.drools.examples.performance","TransactionC");
+  }
+ else {
+    KnowledgeBase kbase=loadKnowledgeBaseFromString(rules);
+    kSession=kbase.newStatelessKieSession();
+    ft=kbase.getFactType("org.drools.examples.performance","TransactionC");
+  }
+  long endTime=System.currentTimeMillis();
+  System.out.println("Total time to build and load knowledgebase: " + (endTime - startTime) + " ms");
+  ArrayList output=new ArrayList();
+  kSession.setGlobal("mo",output);
+  Object o=ft.newInstance();
+  Gson gConverter=new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss").create();
+  Object fo=gConverter.fromJson(getFact(),o.getClass());
+  kSession.execute(fo);
+  startTime=System.currentTimeMillis();
+  kSession.execute(fo);
+  endTime=System.currentTimeMillis();
+  System.out.println("Execution time: " + (endTime - startTime) + " ms");
+  String rulesOutput=gConverter.toJson(output);
+  System.out.println(rulesOutput);
+}

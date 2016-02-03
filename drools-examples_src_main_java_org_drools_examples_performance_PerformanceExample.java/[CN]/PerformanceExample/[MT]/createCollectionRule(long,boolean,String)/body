@@ -1,0 +1,19 @@
+{
+  long NumOfSKU=10;
+  String sku="";
+  String prefix="";
+  for (long l=0; l < NumOfSKU; l++) {
+    sku+=prefix + "\"SKU" + number+ "_"+ l+ "\"";
+    prefix=",";
+  }
+  String s="" + "rule \"rule" + number + "\" \n";
+  if (!dialect.isEmpty()) {
+    s=s + "dialect \"" + dialect+ "\"\n";
+  }
+  s=s + "when   t : TransactionC() \n" + "d: TransactionDetailsC(ItemNumber in ("+ sku+ ")) from t.TransactionDetails \n";
+  if (useAccumulate) {
+    s=s + "accumulate($item:TransactionDetailsC(ItemNumber in (" + sku+ ")) from t.TransactionDetails, $totQty: collectList($item.getQuantity()))\n";
+  }
+  s=s + "then \n" + "mo.add(new Outcome(\"rule"+ number+ "\", d.getBrandID()));\n"+ "end \n";
+  return s;
+}
