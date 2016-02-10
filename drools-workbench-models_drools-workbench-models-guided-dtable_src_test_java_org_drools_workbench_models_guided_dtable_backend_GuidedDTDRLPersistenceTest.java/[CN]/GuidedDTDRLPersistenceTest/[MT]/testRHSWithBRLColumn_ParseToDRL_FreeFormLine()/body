@@ -1,0 +1,38 @@
+{
+  GuidedDecisionTable52 dtable=new GuidedDecisionTable52();
+  String[][] data=new String[][]{new String[]{"1","desc","Pupa","50"},new String[]{"2","desc","","50"},new String[]{"3","desc","Pupa",""},new String[]{"4","desc","",""}};
+  dtable.setRowNumberCol(new RowNumberCol52());
+  dtable.setDescriptionCol(new DescriptionCol52());
+  BRLActionColumn brl1=new BRLActionColumn();
+  List<IAction> brl1Definition=new ArrayList<IAction>();
+  FreeFormLine brl1DefinitionFreeFormLine=new FreeFormLine();
+  brl1DefinitionFreeFormLine.setText("System.out.println( \"name == @{name}, age == @{age}\" );");
+  brl1Definition.add(brl1DefinitionFreeFormLine);
+  brl1.setDefinition(brl1Definition);
+  BRLActionVariableColumn brl1Variable1=new BRLActionVariableColumn("name",DataType.TYPE_STRING);
+  BRLActionVariableColumn brl1Variable2=new BRLActionVariableColumn("age",DataType.TYPE_NUMERIC_INTEGER);
+  brl1.getChildColumns().add(brl1Variable1);
+  brl1.getChildColumns().add(brl1Variable2);
+  dtable.getActionCols().add(brl1);
+  dtable.setData(DataUtilities.makeDataLists(data));
+  int ruleStartIndex;
+  int pattern1StartIndex;
+  GuidedDTDRLPersistence p=GuidedDTDRLPersistence.getInstance();
+  String drl=p.marshal(dtable);
+  ruleStartIndex=drl.indexOf("//from row number: 1");
+  assertFalse(ruleStartIndex == -1);
+  pattern1StartIndex=drl.indexOf("System.out.println( \"name == Pupa, age == 50\" );",ruleStartIndex);
+  assertFalse(pattern1StartIndex == -1);
+  ruleStartIndex=drl.indexOf("//from row number: 2");
+  assertFalse(ruleStartIndex == -1);
+  pattern1StartIndex=drl.indexOf("System.out.println(",ruleStartIndex);
+  assertTrue(pattern1StartIndex == -1);
+  ruleStartIndex=drl.indexOf("//from row number: 3");
+  assertFalse(ruleStartIndex == -1);
+  pattern1StartIndex=drl.indexOf("System.out.println(",ruleStartIndex);
+  assertTrue(pattern1StartIndex == -1);
+  ruleStartIndex=drl.indexOf("//from row number: 4");
+  assertFalse(ruleStartIndex == -1);
+  pattern1StartIndex=drl.indexOf("System.out.println(",ruleStartIndex);
+  assertTrue(pattern1StartIndex == -1);
+}
