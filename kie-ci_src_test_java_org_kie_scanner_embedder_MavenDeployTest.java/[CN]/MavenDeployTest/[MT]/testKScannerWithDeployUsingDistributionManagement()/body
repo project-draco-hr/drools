@@ -1,0 +1,27 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId releaseId=ks.newReleaseId("org.kie","scanner-test-deploy-dist","1.0-SNAPSHOT");
+  Path m2Folder=Files.createTempDirectory("temp-m2-dist");
+  Path settingsXmlPath=generateSettingsXml(m2Folder);
+  try {
+    System.setProperty("kie.maven.settings.custom",settingsXmlPath.toString());
+    MavenSettings.reinitSettings();
+    InternalKieModule kJar1=createKieJar(ks,releaseId,"rule1","rule2");
+    KieContainer kieContainer=ks.newKieContainer(releaseId);
+    MavenRepository repository=getMavenRepository();
+    repository.deployArtifact(releaseId,kJar1,createKPomWithDistributionManagement(m2Folder,releaseId).toFile());
+    KieSession ksession=kieContainer.newKieSession("KSession1");
+    checkKSession(ksession,"rule1","rule2");
+    InternalKieModule kJar2=createKieJar(ks,releaseId,"rule2","rule3");
+    repository.deployArtifact(releaseId,kJar2,createKPomWithDistributionManagement(m2Folder,releaseId).toFile());
+    KieScanner scanner=ks.newKieScanner(kieContainer);
+    scanner.scanNow();
+    KieSession ksession2=kieContainer.newKieSession("KSession1");
+    checkKSession(ksession2,"rule2","rule3");
+    ks.getRepository().removeKieModule(releaseId);
+  }
+  finally {
+    System.clearProperty("kie.maven.settings.custom");
+    MavenSettings.reinitSettings();
+  }
+}
