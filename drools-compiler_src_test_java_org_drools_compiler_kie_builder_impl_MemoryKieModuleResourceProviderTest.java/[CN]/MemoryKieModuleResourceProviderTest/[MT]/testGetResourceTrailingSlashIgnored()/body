@@ -1,0 +1,10 @@
+{
+  MemoryFileSystem mfs=new MemoryFileSystem();
+  mfs.setFileContents(new MemoryFile(mfs,"my-file1",mfs.getFolder("src/main/resources")),new byte[]{65,66});
+  MemoryKieModule mkm=new MemoryKieModule(releaseId,kieModuleModel,mfs);
+  ResourceProvider resourceProvider=mkm.createResourceProvider();
+  String noTrailingSlashContents=IOUtils.toString(resourceProvider.getResourceAsStream("src/main/resources/my-file1"));
+  Assertions.assertThat(noTrailingSlashContents).hasLineCount(1).contains("AB");
+  String withTrailingSlashContents=IOUtils.toString(resourceProvider.getResourceAsStream("src/main/resources/my-file1/"));
+  Assertions.assertThat(withTrailingSlashContents).hasLineCount(1).contains("AB");
+}

@@ -1,0 +1,12 @@
+{
+  MemoryFileSystem mfs=new MemoryFileSystem();
+  mfs.createFolder(new MemoryFolder(mfs,"src/main/java"));
+  mfs.createFolder(new MemoryFolder(mfs,"src/main/java/org"));
+  mfs.createFolder(new MemoryFolder(mfs,"src/main/java/com"));
+  mfs.setFileContents(new MemoryFile(mfs,"my-file1",mfs.getFolder("src/main/java")),new byte[10]);
+  mfs.setFileContents(new MemoryFile(mfs,"my-file2",mfs.getFolder("src/main/java")),new byte[10]);
+  MemoryKieModule mkm=new MemoryKieModule(releaseId,kieModuleModel,mfs);
+  ResourceProvider resourceProvider=mkm.createResourceProvider();
+  String folderContents=IOUtils.toString(resourceProvider.getResource("src/main/java").openStream());
+  Assertions.assertThat(folderContents).hasLineCount(4).contains("com","org","my-file1","my-file2");
+}

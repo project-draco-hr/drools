@@ -1,8 +1,17 @@
 {
   try {
-    return mfs.existsFile(name) ? new URL(MemoryURLStreamHandler.MEMORY_URL_PROTOCOL,null,-1,constructName(name),new MemoryURLStreamHandler(mfs.getFile(name))) : null;
+    if (mfs.existsFile(name)) {
+      return new URL(MEMORY_URL_PROTOCOL,null,-1,constructName(name),new MemoryFileURLStreamHandler(mfs.getFile(name)));
+    }
+ else     if (mfs.existsFolder(name)) {
+      return new URL(MEMORY_URL_PROTOCOL,null,-1,constructName(name),new MemoryFolderURLStreamHandler(mfs.getFolder(name)));
+    }
+ else {
+      return null;
+    }
   }
  catch (  MalformedURLException e) {
+    logger.debug("Can't create URL for resource " + name,e);
     return null;
   }
 }
