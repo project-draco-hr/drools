@@ -1,0 +1,13 @@
+{
+  KieServices kieServices=KieServices.Factory.get();
+  String drl="package org.drools.test\n" + "rule R1 when\n" + "   $m : Object()\n"+ "then\n"+ "end\n";
+  Resource resource=kieServices.getResources().newReaderResource(new StringReader(drl),"UTF-8");
+  resource.setTargetPath("org/drools/test/rules.drl");
+  String kmodule="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + "<kmodule xmlns=\"http://www.drools.org/xsd/kmodule\">\n" + "  <kbase name=\"testKbase\" packages=\"org.drools.test\">\n"+ "    <ksession name=\"testKsession\" default=\"true\"/>\n"+ "  </kbase>\n"+ "</kmodule>";
+  ReleaseId releaseId=kieServices.newReleaseId("org.kie","test-testGetDefaultKieSessionModel","1.0.0");
+  createAndDeployJar(kieServices,kmodule,releaseId,resource);
+  KieContainer kieContainer=kieServices.newKieContainer(releaseId);
+  KieSessionModel sessionModel=kieContainer.getKieSessionModel(null);
+  assertNotNull(sessionModel);
+  assertEquals("testKsession",sessionModel.getName());
+}
