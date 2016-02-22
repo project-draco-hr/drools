@@ -1,0 +1,33 @@
+{
+  String rule1="import java.util.List;\n" + "rule R when\n" + "  $s : String()\n"+ "then\n"+ "  list.add(\"Hello \" + $s);\n"+ "end";
+  String rule2="import java.util.List;\n" + "rule R when\n" + "  $s : String()\n"+ "then\n"+ "  list.add(\"Hi \" + $s);\n"+ "end";
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId releaseId=ks.newReleaseId("org.kie","scanner-test","1.0-SNAPSHOT");
+  InternalKieModule kJar1=createKieJarWithGDRL(ks,releaseId,rule1);
+  KieContainer kieContainer=ks.newKieContainer(releaseId);
+  MavenRepository repository=getMavenRepository();
+  repository.installArtifact(releaseId,kJar1,createKPom(fileManager,releaseId));
+  KieSession ksession=kieContainer.newKieSession("KSession1");
+  List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  ksession.insert("Mario");
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  assertEquals("Hello Mario",list.get(0));
+  list.clear();
+  ksession.dispose();
+  InternalKieModule kJar2=createKieJarWithGDRL(ks,releaseId,rule2);
+  repository.installArtifact(releaseId,kJar2,createKPom(fileManager,releaseId));
+  KieScanner scanner=ks.newKieScanner(kieContainer);
+  scanner.scanNow();
+  ksession=kieContainer.newKieSession("KSession1");
+  list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  ksession.insert("Mario");
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  assertEquals("Hi Mario",list.get(0));
+  list.clear();
+  ksession.dispose();
+  ks.getRepository().removeKieModule(releaseId);
+}

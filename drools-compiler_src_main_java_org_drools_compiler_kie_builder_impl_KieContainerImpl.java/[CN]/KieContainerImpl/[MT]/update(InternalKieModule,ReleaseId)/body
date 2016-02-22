@@ -3,7 +3,7 @@
   ChangeSetBuilder csb=new ChangeSetBuilder();
   final KieJarChangeSet cs=csb.build(currentKM,newKM);
   final List<String> modifiedClasses=getModifiedClasses(cs);
-  final List<String> dslFiles=getUnchangedDslFiles(newKM,cs);
+  final List<String> unchangedResources=getUnchangedResources(newKM,cs);
   ((KieModuleKieProject)kProject).updateToModule(newKM);
   final ResultsImpl results=new ResultsImpl();
   List<String> kbasesToRemove=new ArrayList<String>();
@@ -18,7 +18,7 @@
       boolean locked=kBase.tryLock();
       if (locked) {
         try {
-          updateKBase(kBase,currentKM,newReleaseId,newKM,cs,modifiedClasses,dslFiles,results,kieBaseModel);
+          updateKBase(kBase,currentKM,newReleaseId,newKM,cs,modifiedClasses,unchangedResources,results,kieBaseModel);
         }
   finally {
           kBase.unlock();
@@ -27,7 +27,7 @@
  else {
         kBase.enqueueModification(new Runnable(){
           @Override public void run(){
-            updateKBase(kBase,currentKM,newReleaseId,newKM,cs,modifiedClasses,dslFiles,results,kieBaseModel);
+            updateKBase(kBase,currentKM,newReleaseId,newKM,cs,modifiedClasses,unchangedResources,results,kieBaseModel);
           }
         }
 );
