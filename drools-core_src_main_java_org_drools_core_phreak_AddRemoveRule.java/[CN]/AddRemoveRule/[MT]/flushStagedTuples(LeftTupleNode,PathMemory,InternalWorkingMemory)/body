@@ -4,26 +4,31 @@
   }
   int smemIndex=getSegmentPos(splitStartNode,null);
   SegmentMemory[] smems=pmem.getSegmentMemories();
-  SegmentMemory sm;
-  LeftTupleSink sink;
-  Memory mem;
+  SegmentMemory sm=null;
+  LeftTupleSink sink=null;
+  Memory mem=null;
   long bit=1;
   if (splitStartNode.getAssociatedRuleSize() == 1 && (smems[0] == null || smems[0].getTipNode().getType() != NodeTypeEnums.LeftInputAdapterNode)) {
     sm=smems[0];
-    if (sm == null || sm.getStagedLeftTuples().isEmpty()) {
-      return;
+    if (sm != null && !sm.getStagedLeftTuples().isEmpty()) {
+      sink=sm.getRootNode().getSinkPropagator().getFirstLeftTupleSink();
+      mem=sm.getNodeMemories().get(1);
+      bit=2;
     }
-    sink=sm.getRootNode().getSinkPropagator().getFirstLeftTupleSink();
-    mem=sm.getNodeMemories().get(1);
-    bit=2;
   }
  else {
-    sm=smems[++smemIndex];
-    if (sm == null || sm.getStagedLeftTuples().isEmpty()) {
-      return;
+    smemIndex++;
+    while (smemIndex < smems.length) {
+      sm=smems[smemIndex];
+      if (sm != null && !sm.getStagedLeftTuples().isEmpty()) {
+        sink=(LeftTupleSink)sm.getRootNode();
+        mem=sm.getNodeMemories().get(0);
+        break;
+      }
+      smemIndex++;
     }
-    sink=(LeftTupleSink)sm.getRootNode();
-    mem=sm.getNodeMemories().get(0);
   }
-  new RuleNetworkEvaluator().outerEval((LeftInputAdapterNode)smems[0].getRootNode(),pmem,sink,bit,mem,smems,smemIndex,sm.getStagedLeftTuples().takeAll(),wm,new LinkedList<StackEntry>(),true,pmem.getRuleAgendaItem().getRuleExecutor());
+  if (sink != null) {
+    new RuleNetworkEvaluator().outerEval((LeftInputAdapterNode)smems[0].getRootNode(),pmem,sink,bit,mem,smems,smemIndex,sm.getStagedLeftTuples().takeAll(),wm,new LinkedList<StackEntry>(),true,pmem.getRuleAgendaItem().getRuleExecutor());
+  }
 }

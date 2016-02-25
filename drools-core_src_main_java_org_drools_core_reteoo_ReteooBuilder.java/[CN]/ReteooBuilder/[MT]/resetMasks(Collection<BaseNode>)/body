@@ -1,0 +1,37 @@
+{
+  NodeSet leafSet=new NodeSet();
+  for (  BaseNode node : nodes) {
+    if (node.getType() == NodeTypeEnums.AlphaNode) {
+      ObjectSource source=(AlphaNode)node;
+      while (true) {
+        source.resetInferredMask();
+        BaseNode parent=source.getParentObjectSource();
+        if (parent.getType() != NodeTypeEnums.AlphaNode) {
+          break;
+        }
+        source=(ObjectSource)parent;
+      }
+      updateLeafSet(source,leafSet);
+    }
+ else     if (NodeTypeEnums.isBetaNode(node)) {
+      BetaNode betaNode=(BetaNode)node;
+      if (betaNode.isInUse()) {
+        leafSet.add(betaNode);
+      }
+    }
+ else     if (NodeTypeEnums.isTerminalNode(node)) {
+      RuleTerminalNode rtNode=(RuleTerminalNode)node;
+      if (rtNode.isInUse()) {
+        leafSet.add(rtNode);
+      }
+    }
+  }
+  for (  BaseNode node : leafSet) {
+    if (NodeTypeEnums.isTerminalNode(node)) {
+      ((TerminalNode)node).initInferredMask();
+    }
+ else {
+      ((BetaNode)node).initInferredMask();
+    }
+  }
+}

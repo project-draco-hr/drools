@@ -1,0 +1,27 @@
+{
+  if (removedNodes.contains(node.getId())) {
+    return;
+  }
+  ObjectSource parent=node.getParentObjectSource();
+  boolean removed=node.remove(context,this,wms);
+  if (!removed) {
+    stillInUse.put(node.getId(),node);
+    if (!kBase.getConfiguration().isPhreakEnabled()) {
+      if (parent != null && parent.getType() != NodeTypeEnums.EntryPointNode) {
+        removeObjectSource(wms,stillInUse,removedNodes,parent,context);
+      }
+    }
+  }
+ else {
+    stillInUse.remove(node.getId());
+    removedNodes.add(node.getId());
+    if (node.getType() != NodeTypeEnums.ObjectTypeNode && node.getType() != NodeTypeEnums.AlphaNode && kBase.getConfiguration().isPhreakEnabled()) {
+      for (      InternalWorkingMemory workingMemory : wms) {
+        workingMemory.clearNodeMemory((MemoryFactory)node);
+      }
+    }
+    if (parent != null && parent.getType() != NodeTypeEnums.EntryPointNode) {
+      removeObjectSource(wms,stillInUse,removedNodes,parent,context);
+    }
+  }
+}

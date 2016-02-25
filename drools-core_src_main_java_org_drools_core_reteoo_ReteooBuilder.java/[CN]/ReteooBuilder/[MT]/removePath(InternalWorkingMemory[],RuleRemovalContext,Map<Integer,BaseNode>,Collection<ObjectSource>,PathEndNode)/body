@@ -1,0 +1,23 @@
+{
+  LeftTupleNode[] nodes=endNode.getPathNodes();
+  for (int i=endNode.getPositionInPath(); i >= 0; i--) {
+    BaseNode node=(BaseNode)nodes[i];
+    boolean removed=false;
+    if (NodeTypeEnums.isLeftTupleNode(node)) {
+      removed=removeLeftTupleNode(wms,context,stillInUse,node);
+    }
+    if (removed || !kBase.getConfiguration().isPhreakEnabled()) {
+      if (NodeTypeEnums.isBetaNode(node) && !((BetaNode)node).isRightInputIsRiaNode()) {
+        alphas.add(((BetaNode)node).getRightInput());
+      }
+ else       if (node.getType() == NodeTypeEnums.LeftInputAdapterNode) {
+        alphas.add(((LeftInputAdapterNode)node).getObjectSource());
+      }
+    }
+    if (NodeTypeEnums.isBetaNode(node) && ((BetaNode)node).isRightInputIsRiaNode()) {
+      endNode=(PathEndNode)((BetaNode)node).getRightInput();
+      removePath(wms,context,stillInUse,alphas,endNode);
+      return;
+    }
+  }
+}

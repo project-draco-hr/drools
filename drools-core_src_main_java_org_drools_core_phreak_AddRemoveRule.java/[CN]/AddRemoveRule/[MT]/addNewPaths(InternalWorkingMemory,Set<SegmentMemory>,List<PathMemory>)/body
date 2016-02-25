@@ -4,18 +4,20 @@
     LeftTupleSink tipNode=(LeftTupleSink)pmem.getPathEndNode();
     LeftTupleNode child=tipNode;
     LeftTupleNode parent=tipNode.getLeftTupleSource();
-    SegmentMemory[] smems=pmem.getSegmentMemories();
     while (true) {
       if (visited.add(child)) {
         if (parent != null && parent.getAssociatedRuleSize() != 1 && child.getAssociatedRuleSize() == 1) {
           Memory mem=wm.getNodeMemories().peekNodeMemory(parent.getId());
           if (mem != null && mem.getSegmentMemory() != null) {
             SegmentMemory sm=mem.getSegmentMemory();
-            if (sm.getFirst() != null) {
-              SegmentMemory childSmem=SegmentUtilities.createChildSegment(wm,child);
-              sm.add(childSmem);
-              smems[childSmem.getPos()]=childSmem;
-              smemsToNotify.add(childSmem);
+            if (sm.getFirst() != null && sm.size() < parent.getSinkPropagator().size()) {
+              LeftTupleSink[] sinks=parent.getSinkPropagator().getSinks();
+              for (int i=sm.size(); i < sinks.length; i++) {
+                SegmentMemory childSmem=SegmentUtilities.createChildSegment(wm,sinks[i]);
+                sm.add(childSmem);
+                pmem.setSegmentMemory(childSmem.getPos(),childSmem);
+                smemsToNotify.add(childSmem);
+              }
             }
             correctMemoryOnSplitsChanged(parent,null,wm);
           }
