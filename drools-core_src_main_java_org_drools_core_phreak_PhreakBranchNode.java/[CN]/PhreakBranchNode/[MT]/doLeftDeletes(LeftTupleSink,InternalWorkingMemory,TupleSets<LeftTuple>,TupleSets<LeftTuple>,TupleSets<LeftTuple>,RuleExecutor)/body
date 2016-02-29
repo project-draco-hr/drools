@@ -1,0 +1,17 @@
+{
+  for (LeftTuple leftTuple=srcLeftTuples.getDeleteFirst(); leftTuple != null; ) {
+    LeftTuple next=leftTuple.getStagedNext();
+    BranchTuples branchTuples=getBranchTuples(sink,leftTuple);
+    if (branchTuples.rtnLeftTuple != null) {
+      if (branchTuples.rtnLeftTuple.getMemory() != null) {
+        executor.removeLeftTuple(branchTuples.rtnLeftTuple);
+      }
+      PhreakRuleTerminalNode.doLeftDelete(wm,executor,branchTuples.rtnLeftTuple);
+    }
+    if (branchTuples.mainLeftTuple != null) {
+      RuleNetworkEvaluator.deleteChildLeftTuple(branchTuples.mainLeftTuple,trgLeftTuples,stagedLeftTuples);
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
+}

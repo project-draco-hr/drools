@@ -9,29 +9,10 @@
   }
   for (LeftTuple leftTuple=srcLeftTuples.getUpdateFirst(); leftTuple != null; ) {
     LeftTuple next=leftTuple.getStagedNext();
-    LeftTuple rtnLeftTuple=null;
-    LeftTuple mainLeftTuple=null;
-    LeftTuple child=leftTuple.getFirstChild();
-    if (child != null) {
-      if (child.getTupleSink() == sink) {
-        mainLeftTuple=child;
-      }
- else {
-        rtnLeftTuple=child;
-      }
-      child=child.getHandleNext();
-      if (child != null) {
-        if (child.getTupleSink() == sink) {
-          mainLeftTuple=child;
-        }
- else {
-          rtnLeftTuple=child;
-        }
-      }
-    }
+    BranchTuples branchTuples=getBranchTuples(sink,leftTuple);
     RuleTerminalNode oldRtn=null;
-    if (rtnLeftTuple != null) {
-      oldRtn=(RuleTerminalNode)rtnLeftTuple.getTupleSink();
+    if (branchTuples.rtnLeftTuple != null) {
+      oldRtn=branchTuples.rtnLeftTuple.getTupleSink();
     }
     ConditionalExecution conditionalExecution=branchEvaluator.evaluate(leftTuple,wm,cbm.context);
     RuleTerminalNode newRtn=null;
@@ -42,41 +23,41 @@
     }
     if (oldRtn != null) {
       if (newRtn == null) {
-        if (rtnLeftTuple.getMemory() != null) {
-          executor.removeLeftTuple(rtnLeftTuple);
+        if (branchTuples.rtnLeftTuple.getMemory() != null) {
+          executor.removeLeftTuple(branchTuples.rtnLeftTuple);
         }
-        PhreakRuleTerminalNode.doLeftDelete(wm,executor,rtnLeftTuple);
+        PhreakRuleTerminalNode.doLeftDelete(wm,executor,branchTuples.rtnLeftTuple);
       }
  else       if (newRtn == oldRtn) {
-        PhreakRuleTerminalNode.doLeftTupleUpdate(newRtn,executor,(InternalAgenda)wm.getAgenda(),salienceInt,salience,rtnLeftTuple,wm);
+        PhreakRuleTerminalNode.doLeftTupleUpdate(newRtn,executor,wm.getAgenda(),salienceInt,salience,branchTuples.rtnLeftTuple,wm);
       }
  else {
-        if (rtnLeftTuple.getMemory() != null) {
-          executor.removeLeftTuple(rtnLeftTuple);
+        if (branchTuples.rtnLeftTuple.getMemory() != null) {
+          executor.removeLeftTuple(branchTuples.rtnLeftTuple);
         }
-        PhreakRuleTerminalNode.doLeftDelete(wm,executor,rtnLeftTuple);
-        rtnLeftTuple=newRtn.createLeftTuple(leftTuple,newRtn,leftTuple.getPropagationContext(),true);
-        PhreakRuleTerminalNode.doLeftTupleInsert(newRtn,executor,(InternalAgenda)wm.getAgenda(),executor.getRuleAgendaItem(),salienceInt,salience,rtnLeftTuple,wm);
+        PhreakRuleTerminalNode.doLeftDelete(wm,executor,branchTuples.rtnLeftTuple);
+        branchTuples.rtnLeftTuple=newRtn.createLeftTuple(leftTuple,newRtn,leftTuple.getPropagationContext(),true);
+        PhreakRuleTerminalNode.doLeftTupleInsert(newRtn,executor,wm.getAgenda(),executor.getRuleAgendaItem(),salienceInt,salience,branchTuples.rtnLeftTuple,wm);
       }
     }
  else     if (newRtn != null) {
-      rtnLeftTuple=newRtn.createLeftTuple(leftTuple,newRtn,leftTuple.getPropagationContext(),true);
-      PhreakRuleTerminalNode.doLeftTupleInsert(newRtn,executor,(InternalAgenda)wm.getAgenda(),executor.getRuleAgendaItem(),salienceInt,salience,rtnLeftTuple,wm);
+      branchTuples.rtnLeftTuple=newRtn.createLeftTuple(leftTuple,newRtn,leftTuple.getPropagationContext(),true);
+      PhreakRuleTerminalNode.doLeftTupleInsert(newRtn,executor,wm.getAgenda(),executor.getRuleAgendaItem(),salienceInt,salience,branchTuples.rtnLeftTuple,wm);
     }
-    if (mainLeftTuple != null) {
-switch (mainLeftTuple.getStagedType()) {
+    if (branchTuples.mainLeftTuple != null) {
+switch (branchTuples.mainLeftTuple.getStagedType()) {
 case LeftTuple.INSERT:
-        stagedLeftTuples.removeInsert(mainLeftTuple);
+        stagedLeftTuples.removeInsert(branchTuples.mainLeftTuple);
       break;
 case LeftTuple.UPDATE:
-    stagedLeftTuples.removeUpdate(mainLeftTuple);
+    stagedLeftTuples.removeUpdate(branchTuples.mainLeftTuple);
   break;
 }
 if (!breaking) {
-trgLeftTuples.addUpdate(mainLeftTuple);
+trgLeftTuples.addUpdate(branchTuples.mainLeftTuple);
 }
  else {
-trgLeftTuples.addDelete(mainLeftTuple);
+trgLeftTuples.addDelete(branchTuples.mainLeftTuple);
 }
 }
  else if (!breaking) {
