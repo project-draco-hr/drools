@@ -1,0 +1,33 @@
+{
+  if (pmem.getRuleAgendaItem() != null) {
+    new RuleNetworkEvaluator().evaluateNetwork(pmem,pmem.getRuleAgendaItem().getRuleExecutor(),wm);
+  }
+  List<Flushed> flushed=new ArrayList<Flushed>();
+  for (  LeftTupleNode node : pathEndNodes.subjectSplits) {
+    if (!isSplit(node,pmem.getRule())) {
+      Memory mem=wm.getNodeMemories().peekNodeMemory(node.getId());
+      if (mem != null) {
+        SegmentMemory smem=mem.getSegmentMemory();
+        if (!smem.isEmpty()) {
+          for (SegmentMemory childSmem=smem.getFirst(); childSmem != null; childSmem=childSmem.getNext()) {
+            if (!childSmem.getStagedLeftTuples().isEmpty()) {
+              PathMemory childPmem=childSmem.getPathMemories().get(0);
+              flushed.add(new Flushed(childSmem,childPmem));
+              forceFlushLeftTuple(childPmem,childSmem,wm,childSmem.getStagedLeftTuples().takeAll());
+            }
+          }
+        }
+      }
+    }
+  }
+  int flushCount=1;
+  while (!flushed.isEmpty() && flushCount != 0) {
+    flushCount=0;
+    for (    Flushed path : flushed) {
+      if (!path.segmentMemory.getStagedLeftTuples().isEmpty()) {
+        flushCount++;
+        forceFlushLeftTuple(pmem,path.segmentMemory,wm,path.segmentMemory.getStagedLeftTuples().takeAll());
+      }
+    }
+  }
+}

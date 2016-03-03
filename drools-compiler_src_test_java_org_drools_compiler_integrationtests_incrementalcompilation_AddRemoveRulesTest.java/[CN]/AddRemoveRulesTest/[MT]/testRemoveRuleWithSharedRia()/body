@@ -1,0 +1,15 @@
+{
+  final String rule1Name="rule1";
+  final String rule2Name="rule2";
+  final String rule1="rule " + rule1Name + " \n"+ "when \n"+ "   Integer() \n"+ "   not(Integer() and Integer()) \n"+ "then \n"+ "System.out.println('test rule 1'); \n"+ "end";
+  final String rule2="rule " + rule2Name + " \n"+ "when \n"+ "   Integer() \n"+ "   exists(Integer() and Integer()) \n"+ "then \n"+ "System.out.println('test  rule 2'); \n"+ "end";
+  KieSession session=base.newKieSession();
+  this.addRuleToEngine(rule1);
+  InternalFactHandle fh=(InternalFactHandle)session.insert(1);
+  session.fireAllRules();
+  this.addRuleToEngine(rule2);
+  SubnetworkTuple tuple=(SubnetworkTuple)fh.getFirstLeftTuple().getFirstChild().getFirstChild();
+  assertNotNull(tuple.getPeer());
+  this.deleteRule(rule2Name);
+  assertNull(tuple.getPeer());
+}

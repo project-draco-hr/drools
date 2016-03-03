@@ -7,10 +7,6 @@
   while (NodeTypeEnums.LeftInputAdapterNode != node.getType()) {
     if (NodeTypeEnums.isBetaNode(node)) {
       BetaMemory bm;
-      SegmentMemory childSmem=sm;
-      if (sm.getTipNode() == node) {
-        childSmem=sm.getFirst();
-      }
       if (NodeTypeEnums.AccumulateNode == node.getType()) {
         AccumulateMemory am=(AccumulateMemory)memory;
         bm=am.getBetaMemory();
@@ -18,7 +14,7 @@
         Tuple lt=BetaNode.getFirstTuple(bm.getLeftTupleMemory(),it);
         for (; lt != null; lt=(LeftTuple)it.next(lt)) {
           AccumulateContext accctx=(AccumulateContext)lt.getContextObject();
-          visitChild(accctx.getResultLeftTuple(),childSmem,insert,wm,rule);
+          visitChild(accctx.getResultLeftTuple(),insert,wm,rule);
         }
       }
  else       if (NodeTypeEnums.ExistsNode == node.getType()) {
@@ -27,7 +23,7 @@
         RightTuple rt=(RightTuple)BetaNode.getFirstTuple(bm.getRightTupleMemory(),it);
         for (; rt != null; rt=(RightTuple)it.next(rt)) {
           for (LeftTuple lt=rt.getBlocked(); lt != null; lt=lt.getBlockedNext()) {
-            visitChild(wm,insert,rule,childSmem,it,lt);
+            visitChild(wm,insert,rule,it,lt);
           }
         }
       }
@@ -35,7 +31,7 @@
         bm=(BetaMemory)wm.getNodeMemory((MemoryFactory)node);
         FastIterator it=bm.getLeftTupleMemory().fullFastIterator();
         Tuple lt=BetaNode.getFirstTuple(bm.getLeftTupleMemory(),it);
-        visitChild(wm,insert,rule,childSmem,it,lt);
+        visitChild(wm,insert,rule,it,lt);
       }
       return;
     }
@@ -44,7 +40,7 @@
       TupleMemory ltm=fm.getBetaMemory().getLeftTupleMemory();
       FastIterator it=ltm.fullFastIterator();
       for (LeftTuple lt=(LeftTuple)ltm.getFirst(null); lt != null; lt=(LeftTuple)it.next(lt)) {
-        visitChild(lt,sm,insert,wm,rule);
+        visitChild(lt,insert,wm,rule);
       }
       return;
     }
@@ -70,11 +66,7 @@
     while (lt != null) {
       LeftTuple nextLt=lt.getHandleNext();
       if (lt.getTupleSource().isAssociatedWith(rule)) {
-        SegmentMemory childSmem=sm;
-        if (sm.getFirst() != null && sm.getFirst().getRootNode() == lt.getTupleSink()) {
-          childSmem=sm.getFirst();
-        }
-        visitChild(lt,childSmem,insert,wm,rule);
+        visitChild(lt,insert,wm,rule);
         if (lt.getHandlePrevious() != null) {
           lt.getHandlePrevious().setHandleNext(nextLt);
         }

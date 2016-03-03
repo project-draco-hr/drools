@@ -1,0 +1,33 @@
+{
+  LeftTuple prevLt=null;
+  LeftTupleSinkNode sink=lt.getTupleSink();
+  for (; sink != null; sink=sink.getNextLeftTupleSinkNode()) {
+    if (lt != null) {
+      if (lt.getTupleSink().isAssociatedWith(rule)) {
+        if (lt.getTupleSink().getAssociatedRuleSize() > 1) {
+          if (lt.getFirstChild() != null) {
+            for (LeftTuple child=lt.getFirstChild(); child != null; child=child.getHandleNext()) {
+              visitChild(child,insert,wm,rule);
+            }
+          }
+ else           if (lt.getTupleSink().getType() == NodeTypeEnums.RightInputAdaterNode) {
+            insertPeerRightTuple(lt,wm,rule,insert);
+          }
+        }
+ else         if (!insert) {
+          LeftTuple lt2=null;
+          if (lt.getPeer() != null && lt.getPeer().getTupleSink().isAssociatedWith(rule) && lt.getPeer().getTupleSink().getAssociatedRuleSize() == 1) {
+            lt2=lt.getPeer();
+          }
+          deletePeerLeftTuple(lt,lt2,prevLt,wm);
+          break;
+        }
+      }
+      prevLt=lt;
+      lt=lt.getPeer();
+    }
+ else {
+      prevLt=insertPeerLeftTuple(prevLt,sink,wm);
+    }
+  }
+}

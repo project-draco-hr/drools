@@ -1,0 +1,19 @@
+{
+  LeftTuple prevLt=null;
+  RightInputAdapterNode rian=(RightInputAdapterNode)lt.getTupleSink();
+  for (  ObjectSink sink : rian.getObjectSinkPropagator().getSinks()) {
+    if (lt != null) {
+      if (prevLt != null && !insert && sink.isAssociatedWith(rule) && sink.getAssociatedRuleSize() == 1) {
+        prevLt.setPeer(null);
+      }
+      prevLt=lt;
+      lt=lt.getPeer();
+    }
+ else     if (insert) {
+      BetaMemory bm=(BetaMemory)wm.getNodeMemory((BetaNode)sink);
+      prevLt=rian.createPeer(prevLt);
+      bm.linkNode(wm);
+      bm.getStagedRightTuples().addInsert((RightTuple)prevLt);
+    }
+  }
+}

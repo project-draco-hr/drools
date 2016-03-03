@@ -18,11 +18,8 @@
     }
     if (NodeTypeEnums.isLeftTupleSource(sink)) {
       if (hasWms && SegmentUtilities.isTipNode(sink,null)) {
-        if (isUnsharedSinkForRule(tn.getRule(),sink)) {
+        if (!SegmentUtilities.isTipNode(sink,tn.getRule())) {
           endNodes.subjectSplits.add(sink);
-        }
- else {
-          endNodes.otherSplits.add(sink);
         }
       }
       collectPathEndNodes(kBase,sink,endNodes,tn,processedRule,hasProtos,hasWms,isBelowNewSplit);
@@ -31,10 +28,10 @@
       endNodes.otherEndNodes.add((PathEndNode)sink);
     }
  else     if (NodeTypeEnums.RightInputAdaterNode == sink.getType()) {
-      if (isUnsharedSinkForRule(tn.getRule(),sink)) {
+      if (sink.isAssociatedWith(processedRule)) {
         endNodes.subjectEndNodes.add((PathEndNode)sink);
       }
- else {
+      if (sink.getAssociatedRuleSize() > 1 || !sink.isAssociatedWith(processedRule)) {
         endNodes.otherEndNodes.add((PathEndNode)sink);
       }
     }

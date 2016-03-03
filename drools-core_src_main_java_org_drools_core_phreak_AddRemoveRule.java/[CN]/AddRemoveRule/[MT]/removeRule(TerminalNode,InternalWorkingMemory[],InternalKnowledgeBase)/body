@@ -13,22 +13,22 @@
   for (  InternalWorkingMemory wm : wms) {
     wm.flushPropagations();
     PathEndNodeMemories tnms=getPathEndMemories(wm,pathEndNodes,true);
-    if (NodeTypeEnums.LeftInputAdapterNode == firstSplit.getType() && firstSplit.getAssociatedRuleSize() == 1) {
-      if (tnms.subjectPmem != null) {
-        flushStagedTuples(firstSplit,tnms.subjectPmem,wm);
+    if (!tnms.subjectPmems.isEmpty()) {
+      if (NodeTypeEnums.LeftInputAdapterNode == firstSplit.getType() && firstSplit.getAssociatedRuleSize() == 1) {
+        if (tnms.subjectPmem != null) {
+          flushStagedTuples(firstSplit,tnms.subjectPmem,wm);
+        }
+        processLeftTuples(firstSplit,wm,false,tn.getRule());
+        removeNewPaths(wm,tnms.subjectPmems);
       }
-      processLeftTuples(firstSplit,wm,false,tn.getRule());
-      removeNewPaths(wm,tnms.subjectPmems);
-    }
  else {
-      for (      PathMemory pmem : tnms.pmemsToBeFlushed) {
-        flushStagedTuples(firstSplit,pmem,wm);
+        flushStagedTuples(tnms.subjectPmem,pathEndNodes,wm);
+        processLeftTuples(firstSplit,wm,false,tn.getRule());
+        removeNewPaths(wm,tnms.subjectPmems);
+        Map<PathMemory,SegmentMemory[]> prevSmemsLookup=reInitPathMemories(wm,tnms.otherPmems,rule);
+        Set<SegmentMemory> smemsToNotify=handleExistingPaths(rule,prevSmemsLookup,tnms.otherPmems,wm,ExistingPathStrategy.REMOVE_STRATEGY);
+        notifySegments(smemsToNotify,wm);
       }
-      processLeftTuples(firstSplit,wm,false,tn.getRule());
-      Map<PathMemory,SegmentMemory[]> prevSmemsLookup=reInitPathMemories(wm,tnms.otherPmems,rule);
-      Set<SegmentMemory> smemsToNotify=handleExistingPaths(rule,prevSmemsLookup,tnms.otherPmems,wm,ExistingPathStrategy.REMOVE_STRATEGY);
-      removeNewPaths(wm,tnms.subjectPmems);
-      notifySegments(smemsToNotify,wm);
     }
     if (tnms.subjectPmem != null && tnms.subjectPmem.getRuleAgendaItem() != null && tnms.subjectPmem.getRuleAgendaItem().isQueued()) {
       tnms.subjectPmem.getRuleAgendaItem().dequeue();
