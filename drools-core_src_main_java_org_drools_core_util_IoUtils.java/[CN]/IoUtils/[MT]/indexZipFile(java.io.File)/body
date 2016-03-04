@@ -1,4 +1,5 @@
 {
+  Map<String,List<String>> folders=new HashMap<String,List<String>>();
   Map<String,byte[]> files=new HashMap<String,byte[]>();
   ZipFile zipFile=null;
   try {
@@ -9,8 +10,24 @@
       if (entry.getName().endsWith(".dex")) {
         continue;
       }
-      byte[] bytes=readBytesFromInputStream(zipFile.getInputStream(entry));
-      files.put(entry.getName(),bytes);
+      String entryName=entry.getName();
+      if (entry.isDirectory()) {
+        if (entryName.endsWith("/")) {
+          entryName=entryName.substring(0,entryName.length() - 1);
+        }
+      }
+ else {
+        byte[] bytes=readBytesFromInputStream(zipFile.getInputStream(entry));
+        files.put(entryName,bytes);
+      }
+      int lastSlashPos=entryName.lastIndexOf('/');
+      String folderName=lastSlashPos < 0 ? "" : entryName.substring(0,lastSlashPos);
+      List<String> folder=folders.get(folderName);
+      if (folder == null) {
+        folder=new ArrayList<String>();
+        folders.put(folderName,folder);
+      }
+      folder.add(lastSlashPos < 0 ? entryName : entryName.substring(lastSlashPos + 1));
     }
   }
  catch (  IOException e) {
@@ -25,6 +42,13 @@
         throw new RuntimeException("Unable to get all ZipFile entries: " + jarFile,e);
       }
     }
+  }
+  for (  Map.Entry<String,List<String>> folder : folders.entrySet()) {
+    StringBuilder sb=new StringBuilder();
+    for (    String child : folder.getValue()) {
+      sb.append(child).append("\n");
+    }
+    files.put(folder.getKey(),sb.toString().getBytes(StandardCharsets.UTF_8));
   }
   return files;
 }
