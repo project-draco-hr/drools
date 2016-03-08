@@ -1,25 +1,9 @@
 {
-  SingleClassStore existingStore=storesMap.get(clazz.getName());
-  if (existingStore == null) {
-    ConcreteClassStore store=createClassStore(clazz).makeConcrete();
-    for (    SingleClassStore classStore : storesMap.values()) {
-      if (classStore.getStoredClass().isAssignableFrom(clazz)) {
-        classStore.addConcreteStore(store);
-      }
- else       if (classStore.isConcrete() && clazz.isAssignableFrom(classStore.getStoredClass())) {
-        store.addConcreteStore(((ConcreteClassStore)classStore));
-      }
-    }
-    storesMap.put(clazz.getName(),store);
-    concreteStores.add(store);
-    return store;
-  }
- else   if (existingStore.isConcrete()) {
+  SingleClassStore existingStore=getOrCreateClassStore(clazz);
+  if (existingStore.isConcrete()) {
     return (ConcreteClassStore)existingStore;
   }
  else {
-    ConcreteClassStore store=existingStore.makeConcrete();
-    concreteStores.add(store);
-    return store;
+    return makeStoreConcrete(existingStore);
   }
 }
