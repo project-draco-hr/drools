@@ -1,0 +1,21 @@
+{
+  String drl="import " + ListsContainer.class.getCanonicalName() + "\n"+ "global java.util.List output1;\n"+ "global java.util.List output2;\n"+ "rule R1 when\n"+ "    ListsContainer( $list : list1 )\n"+ "    $s : String( length == 2 ) from $list\n"+ "then\n"+ "    output1.add($s);\n"+ "end\n"+ "rule R2 when\n"+ "    ListsContainer( $list : list2 )\n"+ "    $s : String( length == 2 ) from $list\n"+ "then\n"+ "    output2.add($s);\n"+ "end\n"+ "rule R3 when\n"+ "    ListsContainer( $list : list2 )\n"+ "    $s : String( length == 2 ) from $list\n"+ "then\n"+ "    output2.add($s);\n"+ "end\n";
+  KieBase kbase=new KieHelper().addContent(drl,ResourceType.DRL).build();
+  KieSession ksession=kbase.newKieSession();
+  List<String> output1=new ArrayList<String>();
+  ksession.setGlobal("output1",output1);
+  List<String> output2=new ArrayList<String>();
+  ksession.setGlobal("output2",output2);
+  FactHandle fh=ksession.insert(new ListsContainer());
+  ksession.fireAllRules();
+  assertEquals("bb",output1.get(0));
+  assertEquals("22",output2.get(0));
+  assertEquals("22",output2.get(1));
+  EntryPointNode epn=((InternalKnowledgeBase)kbase).getRete().getEntryPointNodes().values().iterator().next();
+  ObjectTypeNode otn=epn.getObjectTypeNodes().get(new ClassObjectType(ListsContainer.class));
+  LeftInputAdapterNode lian=(LeftInputAdapterNode)otn.getObjectSinkPropagator().getSinks()[0];
+  LeftTupleSink[] sinks=lian.getSinkPropagator().getSinks();
+  assertEquals(2,sinks.length);
+  assertEquals(1,sinks[0].getSinkPropagator().size());
+  assertEquals(2,sinks[1].getSinkPropagator().size());
+}

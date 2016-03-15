@@ -1,0 +1,26 @@
+{
+  String drl="package org.drools.compiler\n" + "\n" + "import java.util.List;\n"+ "import java.util.ArrayList;\n"+ "\n"+ "global java.util.List output1;\n"+ "global java.util.List output2;\n"+ "\n"+ "rule R1\n"+ "    when\n"+ "        $cheesery : Cheesery()\n"+ "        $list     : List( ) from accumulate( $cheese : Cheese( ) from $cheesery.getCheeses(),\n"+ "                                             init( List l = new ArrayList(); ),\n"+ "                                             action( l.add( $cheese ); )\n"+ "                                             result( l ) )\n"+ "    then\n"+ "        output1.add( $list );\n"+ "end\n"+ "rule R2\n"+ "    when\n"+ "        $cheesery : Cheesery()\n"+ "        $list     : List( ) from accumulate( $cheese : Cheese( ) from $cheesery.getCheeses(),\n"+ "                                             init( List l = new ArrayList(); ),\n"+ "                                             action( l.add( $cheese ); )\n"+ "                                             result( l ) )\n"+ "    then\n"+ "        output2.add( $list );\n"+ "end\n";
+  KieBase kbase=new KieHelper().addContent(drl,ResourceType.DRL).build();
+  KieSession ksession=kbase.newKieSession();
+  List<?> output1=new ArrayList<Object>();
+  ksession.setGlobal("output1",output1);
+  List<?> output2=new ArrayList<Object>();
+  ksession.setGlobal("output2",output2);
+  Cheesery cheesery=new Cheesery();
+  cheesery.addCheese(new Cheese("stilton",8));
+  cheesery.addCheese(new Cheese("provolone",8));
+  FactHandle cheeseryHandle=ksession.insert(cheesery);
+  ksession.fireAllRules();
+  assertEquals(1,output1.size());
+  assertEquals(2,((List)output1.get(0)).size());
+  assertEquals(1,output2.size());
+  assertEquals(2,((List)output2.get(0)).size());
+  output1.clear();
+  output2.clear();
+  ksession.update(cheeseryHandle,cheesery);
+  ksession.fireAllRules();
+  assertEquals(1,output1.size());
+  assertEquals(2,((List)output1.get(0)).size());
+  assertEquals(1,output2.size());
+  assertEquals(2,((List)output2.get(0)).size());
+}
