@@ -1,0 +1,14 @@
+{
+  final List resultsList=new ArrayList();
+  final Map<String,Object> sessionGlobals=new HashMap<String,Object>();
+  sessionGlobals.put("list",resultsList);
+  final TestContext testContext=new TestContext(PKG_NAME_TEST,sessionGlobals,resultsList);
+  final AddRemoveTestBuilder builder=new AddRemoveTestBuilder();
+  builder.addOperation(TestOperationType.CREATE_SESSION,getRules()).addOperation(TestOperationType.INSERT_FACTS,getFacts()).addOperation(TestOperationType.FIRE_RULES).addOperation(TestOperationType.CHECK_RESULTS,new String[]{RULE1_NAME,RULE2_NAME,RULE3_NAME});
+  testContext.executeTestOperations(builder.build());
+  builder.clear();
+  final Set<FactHandle> insertedFacts=testContext.getActualSessionFactHandles();
+  builder.addOperation(TestOperationType.REMOVE_RULES,rulesPermutation.getPermutation()).addOperation(TestOperationType.FIRE_RULES).addOperation(TestOperationType.CHECK_RESULTS,new String[]{}).addOperation(TestOperationType.REMOVE_FACTS,insertedFacts.toArray(new FactHandle[]{})).addOperation(TestOperationType.FIRE_RULES).addOperation(TestOperationType.CHECK_RESULTS,new String[]{});
+  testContext.executeTestOperations(builder.build());
+  builder.clear();
+}
