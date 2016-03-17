@@ -9,10 +9,18 @@ case FieldAccessor:
           this.lookup.put(entry.getKey(),lookupEntry);
         }
         if (lookupEntry.getClassFieldReader() != null) {
-          wire(((FieldLookupEntry)entry.getValue()).getClassFieldReader());
+          InternalReadAccessor reader=((FieldLookupEntry)entry.getValue()).getClassFieldReader();
+          BaseClassFieldReader accessor=wire(reader);
+          if (other.cache != null && reader instanceof ClassFieldReader) {
+            other.cache.setReadAcessor((ClassFieldReader)reader,accessor);
+          }
         }
         if (lookupEntry.getClassFieldWriter() != null) {
-          wire(((FieldLookupEntry)entry.getValue()).getClassFieldWriter());
+          ClassFieldWriter writer=((FieldLookupEntry)entry.getValue()).getClassFieldWriter();
+          BaseClassFieldWriter accessor=wire(writer);
+          if (other.cache != null) {
+            other.cache.setWriteAcessor(writer,accessor);
+          }
         }
         break;
       }
