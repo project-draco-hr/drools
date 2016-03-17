@@ -1,0 +1,31 @@
+{
+  if (key != null && key.getStatus() == EqualityKey.JUSTIFIED) {
+    return;
+  }
+  if (handle.isTraitable()) {
+    traitHelper.deleteWMAssertedTraitProxies(handle,rule,activation);
+  }
+  final Object object=handle.getObject();
+  final ObjectTypeConf typeConf=this.typeConfReg.getObjectTypeConf(this.entryPoint,object);
+  if (typeConf.isSupportsPropertyChangeListeners()) {
+    removePropertyChangeListener(handle,true);
+  }
+  if (activation != null) {
+    activation.getPropagationContext().releaseResources();
+  }
+  PropagationContext propagationContext=delete(handle,object,typeConf,rule,activation);
+  if (typeConf.isTMSEnabled() && key != null) {
+    TruthMaintenanceSystem tms=getTruthMaintenanceSystem();
+    key.removeFactHandle(handle);
+    handle.setEqualityKey(null);
+    if (key.isEmpty() && key.getLogicalFactHandle() == null) {
+      tms.remove(key);
+    }
+ else     if (key.getLogicalFactHandle() != null) {
+      final InternalFactHandle justifiedHandle=key.getLogicalFactHandle();
+      BeliefSet bs=justifiedHandle.getEqualityKey().getBeliefSet();
+      bs.getBeliefSystem().unstage(propagationContext,bs);
+    }
+  }
+  this.handleFactory.destroyFactHandle(handle);
+}

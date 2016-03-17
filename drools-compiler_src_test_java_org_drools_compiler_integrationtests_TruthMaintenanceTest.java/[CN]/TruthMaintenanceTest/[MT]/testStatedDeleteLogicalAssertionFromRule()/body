@@ -1,0 +1,11 @@
+{
+  String drl="global java.util.List list;\n" + "rule R1 when\n" + "then\n"+ "    insertLogical( \"test\" ); \n"+ "end\n"+ "rule R2 when\n"+ "    $s : String()\n"+ "then\n"+ "    list.add( $s ); \n"+ "    delete( $s, org.kie.api.runtime.rule.FactHandle.State.STATED ); \n"+ "end\n";
+  KieSession ksession=new KieHelper().addContent(drl,ResourceType.DRL).build().newKieSession();
+  List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  assertEquals("test",list.get(0));
+  Collection<FactHandle> fhs=ksession.getFactHandles(new ClassObjectFilter(String.class));
+  assertEquals(1,fhs.size());
+}

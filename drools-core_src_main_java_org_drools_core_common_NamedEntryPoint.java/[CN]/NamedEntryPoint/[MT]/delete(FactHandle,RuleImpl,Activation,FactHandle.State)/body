@@ -1,0 +1,33 @@
+{
+  if (factHandle == null) {
+    throw new IllegalArgumentException("FactHandle cannot be null ");
+  }
+  try {
+    this.kBase.readLock();
+    this.lock.lock();
+    this.wm.startOperation();
+    this.kBase.executeQueuedActions();
+    InternalFactHandle handle=(InternalFactHandle)factHandle;
+    if (handle.getId() == -1) {
+      return;
+    }
+    if (handle.isDisconnected()) {
+      handle=this.objectStore.reconnect(handle);
+    }
+    if (handle.getEntryPoint() != this) {
+      throw new IllegalArgumentException("Invalid Entry Point. You updated the FactHandle on entry point '" + handle.getEntryPoint().getEntryPointId() + "' instead of '"+ getEntryPointId()+ "'");
+    }
+    EqualityKey key=handle.getEqualityKey();
+    if (fhState.isStated()) {
+      deleteStated(rule,activation,handle,key);
+    }
+    if (fhState.isLogical()) {
+      deleteLogical(key);
+    }
+  }
+  finally {
+    this.wm.endOperation();
+    this.lock.unlock();
+    this.kBase.readUnlock();
+  }
+}
