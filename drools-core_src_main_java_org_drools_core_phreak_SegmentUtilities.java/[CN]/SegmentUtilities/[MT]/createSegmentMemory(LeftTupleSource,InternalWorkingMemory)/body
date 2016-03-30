@@ -1,37 +1,36 @@
 {
-synchronized (wm) {
-    SegmentMemory smem=wm.getNodeMemory((MemoryFactory)tupleSource).getSegmentMemory();
-    if (smem != null) {
-      return smem;
+  SegmentMemory smem=wm.getNodeMemory((MemoryFactory)tupleSource).getSegmentMemory();
+  if (smem != null) {
+    return smem;
+  }
+  while (!SegmentUtilities.isRootNode(tupleSource,null)) {
+    tupleSource=tupleSource.getLeftTupleSource();
+  }
+  LeftTupleSource segmentRoot=tupleSource;
+  int nodeTypesInSegment=0;
+  smem=restoreSegmentFromPrototype(wm,segmentRoot,nodeTypesInSegment);
+  if (smem != null) {
+    return smem;
+  }
+  smem=new SegmentMemory(segmentRoot);
+  long nodePosMask=1;
+  long allLinkedTestMask=0;
+  boolean updateNodeBit=true;
+  while (true) {
+    nodeTypesInSegment=updateNodeTypesMask(tupleSource,nodeTypesInSegment);
+    if (NodeTypeEnums.isBetaNode(tupleSource)) {
+      allLinkedTestMask=processBetaNode((BetaNode)tupleSource,wm,smem,nodePosMask,allLinkedTestMask,updateNodeBit);
     }
-    while (!SegmentUtilities.isRootNode(tupleSource,null)) {
-      tupleSource=tupleSource.getLeftTupleSource();
-    }
-    LeftTupleSource segmentRoot=tupleSource;
-    int nodeTypesInSegment=0;
-    smem=restoreSegmentFromPrototype(wm,segmentRoot,nodeTypesInSegment);
-    if (smem != null) {
-      return smem;
-    }
-    smem=new SegmentMemory(segmentRoot);
-    long nodePosMask=1;
-    long allLinkedTestMask=0;
-    boolean updateNodeBit=true;
-    while (true) {
-      nodeTypesInSegment=updateNodeTypesMask(tupleSource,nodeTypesInSegment);
-      if (NodeTypeEnums.isBetaNode(tupleSource)) {
-        allLinkedTestMask=processBetaNode((BetaNode)tupleSource,wm,smem,nodePosMask,allLinkedTestMask,updateNodeBit);
-      }
  else {
 switch (tupleSource.getType()) {
 case NodeTypeEnums.LeftInputAdapterNode:
-          allLinkedTestMask=processLiaNode((LeftInputAdapterNode)tupleSource,wm,smem,nodePosMask,allLinkedTestMask);
-        break;
+        allLinkedTestMask=processLiaNode((LeftInputAdapterNode)tupleSource,wm,smem,nodePosMask,allLinkedTestMask);
+      break;
 case NodeTypeEnums.EvalConditionNode:
-      processEvalNode((EvalConditionNode)tupleSource,wm,smem);
-    break;
+    processEvalNode((EvalConditionNode)tupleSource,wm,smem);
+  break;
 case NodeTypeEnums.ConditionalBranchNode:
-  updateNodeBit=processBranchNode((ConditionalBranchNode)tupleSource,wm,smem);
+updateNodeBit=processBranchNode((ConditionalBranchNode)tupleSource,wm,smem);
 break;
 case NodeTypeEnums.FromNode:
 processFromNode((FromNode)tupleSource,wm,smem);
@@ -95,5 +94,4 @@ smem.setPos(counter);
 nodeTypesInSegment=updateRiaAndTerminalMemory(tupleSource,tupleSource,smem,wm,false,nodeTypesInSegment);
 ((KnowledgeBaseImpl)wm.getKnowledgeBase()).registerSegmentPrototype(segmentRoot,smem);
 return smem;
-}
 }

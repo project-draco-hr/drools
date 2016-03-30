@@ -1,14 +1,15 @@
 {
-  if (!kbaseModificationsQueue.isEmpty() && lock.writeLock().tryLock()) {
-    try {
-      while (!kbaseModificationsQueue.isEmpty()) {
-        kbaseModificationsQueue.poll().run();
-      }
-    }
-  finally {
-      unlock();
-    }
-    return true;
+  if (kbaseModificationsQueue.isEmpty()) {
+    return false;
   }
-  return false;
+  try {
+    lockAndDeactivate();
+    while (!kbaseModificationsQueue.isEmpty()) {
+      kbaseModificationsQueue.poll().run();
+    }
+  }
+  finally {
+    unlockAndActivate();
+  }
+  return true;
 }

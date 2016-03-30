@@ -1,0 +1,15 @@
+{
+  if (sessionDeactivationsCounter.incrementAndGet() > 1) {
+    this.lock.writeLock().lock();
+    return true;
+  }
+  boolean locked=this.lock.writeLock().tryLock();
+  if (locked && !tryDeactivateAllSessions()) {
+    this.lock.writeLock().unlock();
+    locked=false;
+  }
+  if (!locked) {
+    sessionDeactivationsCounter.decrementAndGet();
+  }
+  return locked;
+}

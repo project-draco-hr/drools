@@ -3,20 +3,10 @@
   for (  InternalKnowledgePackage newPkg : newPkgs) {
     clonedPkgs.add(newPkg.deepCloneIfAlreadyInUse(rootClassLoader));
   }
-  if (lock.writeLock().tryLock()) {
-    try {
+  enqueueModification(new Runnable(){
+    @Override public void run(){
       internalAddPackages(clonedPkgs);
     }
-  finally {
-      unlock();
-    }
   }
- else {
-    enqueueModification(new Runnable(){
-      @Override public void run(){
-        internalAddPackages(clonedPkgs);
-      }
-    }
 );
-  }
 }
