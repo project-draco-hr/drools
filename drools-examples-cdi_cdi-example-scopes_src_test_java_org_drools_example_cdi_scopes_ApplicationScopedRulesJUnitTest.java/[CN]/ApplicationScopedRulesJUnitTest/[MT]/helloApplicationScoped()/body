@@ -1,0 +1,26 @@
+{
+  Assert.assertNotNull(myApplicationBean);
+  ContextControl ctxCtrl=BeanProvider.getContextualReference(ContextControl.class);
+  ctxCtrl.startContext(ApplicationScoped.class);
+  ctxCtrl.startContext(RequestScoped.class);
+  String myBeanId=myApplicationBean.getMyBean().getId();
+  long myKieSessionId=myApplicationBean.getkSession().getIdentifier();
+  int result=myApplicationBean.doSomething("hello 0");
+  assertEquals(1,result);
+  ctxCtrl.stopContext(RequestScoped.class);
+  ctxCtrl.startContext(RequestScoped.class);
+  assertEquals(myBeanId,myApplicationBean.getMyBean().getId());
+  assertEquals(myKieSessionId,myApplicationBean.getkSession().getIdentifier());
+  myBeanId=myApplicationBean.getMyBean().getId();
+  myKieSessionId=myApplicationBean.getkSession().getIdentifier();
+  result=myApplicationBean.doSomething("hello 1");
+  assertEquals(1,result);
+  ctxCtrl.stopContext(RequestScoped.class);
+  ctxCtrl.startContext(RequestScoped.class);
+  assertEquals(myBeanId,myApplicationBean.getMyBean().getId());
+  assertEquals(myKieSessionId,myApplicationBean.getkSession().getIdentifier());
+  result=myApplicationBean.doSomething("hello 2");
+  assertEquals(1,result);
+  ctxCtrl.stopContext(RequestScoped.class);
+  ctxCtrl.stopContext(ApplicationScoped.class);
+}
