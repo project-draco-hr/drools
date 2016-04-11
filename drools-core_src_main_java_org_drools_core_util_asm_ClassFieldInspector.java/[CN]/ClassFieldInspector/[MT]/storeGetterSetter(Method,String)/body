@@ -12,7 +12,12 @@
  else   if (!void.class.isAssignableFrom(method.getReturnType())) {
     Method existingMethod=getterMethods.get(fieldName);
     if (existingMethod != null && !isOverride(existingMethod,method)) {
-      addResult(fieldName,new GetterOverloadWarning(classUnderInspection,this.getterMethods.get(fieldName).getName(),this.fieldTypes.get(fieldName),method.getName(),method.getReturnType()));
+      if (method.getReturnType() != existingMethod.getReturnType() && method.getReturnType().isAssignableFrom(existingMethod.getReturnType())) {
+        return;
+      }
+ else {
+        addResult(fieldName,new GetterOverloadWarning(classUnderInspection,this.getterMethods.get(fieldName).getName(),this.fieldTypes.get(fieldName),method.getName(),method.getReturnType()));
+      }
     }
     this.getterMethods.put(fieldName,method);
     this.fieldTypes.put(fieldName,method.getReturnType());
