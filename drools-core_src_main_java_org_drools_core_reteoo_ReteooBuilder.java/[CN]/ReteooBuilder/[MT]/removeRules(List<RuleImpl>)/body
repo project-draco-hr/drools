@@ -1,0 +1,19 @@
+{
+  InternalWorkingMemory[] workingMemories=this.kBase.getWorkingMemories();
+  for (  RuleImpl rule : rulesToBeRemoved) {
+    if (rule.hasChildren() && !rulesToBeRemoved.containsAll(rule.getChildren())) {
+      throw new RuntimeException("Cannot remove parent rule " + rule + " without having removed all its chikdren");
+    }
+    final RuleRemovalContext context=new RuleRemovalContext(rule);
+    context.setKnowledgeBase(kBase);
+    for (    BaseNode node : rules.remove(rule.getFullyQualifiedName())) {
+      removeTerminalNode(context,(TerminalNode)node,workingMemories);
+    }
+    if (rule.isQuery()) {
+      this.queries.remove(rule.getName());
+    }
+    if (rule.getParent() != null && !rulesToBeRemoved.contains(rule.getParent())) {
+      rule.getParent().removeChild(rule);
+    }
+  }
+}
