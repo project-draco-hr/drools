@@ -1,28 +1,5 @@
 {
-  return agenda.executeCallable(new Callable<BaseNode[]>(){
-    @Override public BaseNode[] call() throws Exception {
-      BaseNode[] tnodes=kBase.getReteooBuilder().getTerminalNodesForQuery(queryName);
-      if (tnodes == null) {
-        throw new RuntimeException("Query '" + queryName + "' does not exist");
-      }
-      QueryTerminalNode tnode=(QueryTerminalNode)tnodes[0];
-      LeftTupleSource lts=tnode.getLeftTupleSource();
-      while (lts.getType() != NodeTypeEnums.LeftInputAdapterNode) {
-        lts=lts.getLeftTupleSource();
-      }
-      LeftInputAdapterNode lian=(LeftInputAdapterNode)lts;
-      LeftInputAdapterNode.LiaNodeMemory lmem=getNodeMemory(lian);
-      if (lmem.getSegmentMemory() == null) {
-        SegmentUtilities.createSegmentMemory(lts,StatefulKnowledgeSessionImpl.this);
-      }
-      LeftInputAdapterNode.doInsertObject(handle,pCtx,lian,StatefulKnowledgeSessionImpl.this,lmem,false,queryObject.isOpen());
-      for (      PathMemory rm : lmem.getSegmentMemory().getPathMemories()) {
-        RuleAgendaItem evaluator=agenda.createRuleAgendaItem(Integer.MAX_VALUE,rm,(TerminalNode)rm.getPathEndNode());
-        evaluator.getRuleExecutor().setDirty(true);
-        evaluator.getRuleExecutor().evaluateNetworkAndFire(StatefulKnowledgeSessionImpl.this,null,0,-1);
-      }
-      return tnodes;
-    }
-  }
-);
+  ExecuteQuery executeQuery=new ExecuteQuery(queryName,queryObject,handle,pCtx);
+  addPropagation(executeQuery);
+  return executeQuery.getResult();
 }
