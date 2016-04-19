@@ -1,17 +1,32 @@
 {
   final List<String> list=new ArrayList<String>();
   list.addAll(Arrays.asList(classes));
+  list.add(KieCDIExtension.class.getName());
+  list.add(KBase.class.getName());
+  list.add(KSession.class.getName());
+  list.add(KReleaseId.class.getName());
+  list.add(KieServices.class.getName());
   list.add(KieServicesImpl.class.getName());
   list.add(KieContainer.class.getName());
   list.add(KieContainerImpl.class.getName());
+  list.add(KieRepository.class.getName());
   list.add(KieRepositoryImpl.class.getName());
+  list.add(KieCommands.class.getName());
   list.add(CommandFactoryServiceImpl.class.getName());
   list.add(ResourceFactoryServiceImpl.class.getName());
-  Weld weld=new Weld(){
-    @Override protected Deployment createDeployment(    ResourceLoader resourceLoader,    Bootstrap bootstrap){
-      return new TestWeldSEDeployment(resourceLoader,bootstrap,list);
+  Weld weld=new Weld();
+  List<Class<?>> classList=new ArrayList<>();
+  for (  String className : list) {
+    try {
+      Class<?> clazz=Thread.currentThread().getContextClassLoader().loadClass(className);
+      classList.add(clazz);
+    }
+ catch (    ClassNotFoundException e) {
+      throw new RuntimeException(e);
     }
   }
-;
+  weld.beanClasses(classList.toArray(new Class[0]));
+  weld.addExtension(new KieCDIExtension());
+  weld.disableDiscovery();
   return weld;
 }
