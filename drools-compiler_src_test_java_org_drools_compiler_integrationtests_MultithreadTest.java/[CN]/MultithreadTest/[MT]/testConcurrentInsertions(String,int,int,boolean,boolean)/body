@@ -1,6 +1,5 @@
 {
-  String str="import org.drools.compiler.integrationtests.MultithreadTest.Bean\n" + "\n" + "rule \"R\"\n"+ "when\n"+ "    $a : Bean( seed != 1 )\n"+ "then\n"+ "end";
-  final KieSession ksession=new KieHelper().addContent(str,ResourceType.DRL).build().newKieSession();
+  final KieBase kieBase=new KieHelper().addContent(drl,ResourceType.DRL).build();
   Executor executor=Executors.newCachedThreadPool(new ThreadFactory(){
     public Thread newThread(    Runnable r){
       Thread t=new Thread(r);
@@ -9,9 +8,18 @@
     }
   }
 );
+  KieSession ksession=null;
   Callable<Boolean>[] tasks=new Callable[threadCount];
-  for (int i=0; i < threadCount; i++) {
-    tasks[i]=getTask(objectCount,ksession);
+  if (newSessionForEachThread) {
+    for (int i=0; i < threadCount; i++) {
+      tasks[i]=getTask(objectCount,kieBase,updateFacts);
+    }
+  }
+ else {
+    ksession=kieBase.newKieSession();
+    for (int i=0; i < threadCount; i++) {
+      tasks[i]=getTask(objectCount,ksession,false,updateFacts);
+    }
   }
   CompletionService<Boolean> ecs=new ExecutorCompletionService<Boolean>(executor);
   for (  Callable<Boolean> task : tasks) {
@@ -29,5 +37,7 @@
     }
   }
   assertEquals(threadCount,successCounter);
-  ksession.dispose();
+  if (ksession != null) {
+    ksession.dispose();
+  }
 }
