@@ -1,0 +1,13 @@
+{
+  String className=convertClassToResourcePath(functionClassName);
+  String innerClassName=className.substring(0,className.length() - ".class".length()) + "$";
+  for (  Map.Entry<String,byte[]> entry : runtime.getStore().entrySet()) {
+    if (entry.getKey().equals(className)) {
+      consumer.register(functionClassName,entry.getValue());
+    }
+ else     if (entry.getKey().startsWith(innerClassName)) {
+      String innerName=functionClassName + entry.getKey().substring(functionClassName.length(),entry.getKey().length() - ".class".length());
+      consumer.register(innerName,entry.getValue());
+    }
+  }
+}
