@@ -4,20 +4,19 @@
     context.addError(new DescrBuildError(context.getParentDescr(),base,null,"Unable to parse query '" + query.getName() + "', as postion "+ position+ " for expression '"+ expression+ "' does not exist on query size "+ arguments.size()));
     return;
   }
-  if (isVariable(expression)) {
-    Declaration declr=context.getDeclarationResolver().getDeclaration(query,expression);
-    if (declr != null) {
-      arguments.set(position,declr);
-      declrIndexes.add(position);
-      requiredDeclarations.add(declr);
-    }
- else {
-      arguments.set(position,Variable.v);
-      varIndexes.add(position);
-      declr=pattern.addDeclaration(expression);
-      ArrayElementReader reader=new ArrayElementReader(arrayReader,position,params[position].getDeclarationClass());
-      declr.setReadAccessor(reader);
-    }
+  boolean isVariable=isVariable(expression);
+  Declaration declr=isVariable ? context.getDeclarationResolver().getDeclaration(query,expression) : null;
+  if (declr != null) {
+    arguments.set(position,declr);
+    declrIndexes.add(position);
+    requiredDeclarations.add(declr);
+  }
+ else   if (isVariable && expression.indexOf('.') < 0) {
+    arguments.set(position,Variable.v);
+    varIndexes.add(position);
+    declr=pattern.addDeclaration(expression);
+    ArrayElementReader reader=new ArrayElementReader(arrayReader,position,params[position].getDeclarationClass());
+    declr.setReadAccessor(reader);
   }
  else {
     MVELDumper.MVELDumperContext mvelCtx=new MVELDumper.MVELDumperContext();
