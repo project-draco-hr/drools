@@ -1,0 +1,17 @@
+{
+  final KieSession ksession=new KieHelper().addContent(drl,ResourceType.DRL).build().newKieSession();
+  final MyFact fact0=new MyFact("target",0);
+  final MyFact fact1=new MyFact("src1",4);
+  final MyFact fact2=new MyFact("src2",5);
+  final FactHandle fh0=ksession.insert(fact0);
+  final FactHandle fh1=ksession.insert(fact1);
+  final FactHandle fh2=ksession.insert(fact2);
+  int fireCount=ksession.fireAllRules();
+  Assertions.assertThat(fact0.getCurrentValue().intValue()).isEqualTo(9);
+  Assertions.assertThat(fireCount).isEqualTo(2);
+  fact2.setCurrentValue(6);
+  ksession.update(fh2,fact2);
+  fireCount=ksession.fireAllRules();
+  Assertions.assertThat(fact0.getCurrentValue().intValue()).isEqualTo(10);
+  Assertions.assertThat(fireCount).isEqualTo(2);
+}
