@@ -1,0 +1,25 @@
+{
+  PomModel pomModel=init();
+  if (!isBuilt() && kModuleModel != null) {
+    trgMfs=new MemoryFileSystem();
+    writePomAndKModule();
+    addKBasesFilesToTrg();
+    markSource();
+    kModule=new MemoryKieModule(releaseId,kModuleModel,trgMfs);
+    if (kieDependencies != null && !kieDependencies.isEmpty()) {
+      for (      KieModule kieModule : kieDependencies) {
+        kModule.addKieDependency((InternalKieModule)kieModule);
+      }
+    }
+    if (pomModel != null) {
+      kModule.setPomModel(pomModel);
+    }
+    KieModuleKieProject kProject=new KieModuleKieProject(kModule,classLoader);
+    for (    ReleaseId unresolvedDep : kModule.getUnresolvedDependencies()) {
+      results.addMessage(Level.ERROR,"pom.xml","Unresolved dependency " + unresolvedDep);
+    }
+    compileJavaClasses(kProject.getClassLoader(),classFilter);
+    buildKieProject(kModule,results,kProject,trgMfs);
+  }
+  return this;
+}
