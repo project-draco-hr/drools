@@ -1,0 +1,14 @@
+{
+  final Resource decisionTable=KieBaseUtil.getDecisionTableResourceFromClasspath("sequential.csv",getClass(),DecisionTableInputType.CSV);
+  final KieBase kbase=KieBaseUtil.getKieBaseFromResources(true,decisionTable);
+  final KieSession ksession=kbase.newKieSession();
+  final OrderListener listener=new OrderListener();
+  ksession.addEventListener(listener);
+  ksession.insert("something");
+  ksession.fireAllRules();
+  Assertions.assertThat(listener.size()).as("Wrong number of rules fired").isEqualTo(3);
+  final String[] expected={"Rule1","Rule2","Rule3"};
+  for (int i=0; i < 3; i++) {
+    Assertions.assertThat(listener.get(i)).isEqualTo(expected[i]);
+  }
+}

@@ -1,0 +1,23 @@
+{
+  final Resource drlResource=KieServices.Factory.get().getResources().newReaderResource(new StringReader(drl));
+  drlResource.setTargetPath(TestConstants.DRL_TEST_TARGET_PATH);
+  final KieBase kbase=KieBaseUtil.getKieBaseFromResources(true,drlResource);
+  final KieSession session=kbase.newKieSession();
+  final List<String> list=new ArrayList<String>();
+  session.setGlobal("list",list);
+  session.insert(new Vegetable("tomato",350,8,3,Taste.GOOD));
+  session.insert(new Vegetable("tomato",150,8,3,Taste.BAD));
+  session.insert(new Vegetable("tomato",350,8,7,Taste.GOOD));
+  session.insert(new Vegetable("tomato",1000,8,6,Taste.EXCELENT));
+  session.insert(new Vegetable("cucumber",1500,19,5,Taste.EXCELENT));
+  session.insert(new Vegetable("cucumber",1500,21,5,Taste.EXCELENT));
+  session.insert(new Vegetable("carrot",1000,8,6,Taste.EXCELENT));
+  session.insert(new Vegetable("carrot",200,8,1,Taste.HORRIBLE));
+  session.insert(new Vegetable("onion",500,7,4,Taste.EXCELENT));
+  session.fireAllRules();
+  Assertions.assertThat(list.size()).isEqualTo(4);
+  final Collection<KiePackage> pkgs=kbase.getKiePackages();
+  Assertions.assertThat(pkgs.size()).isEqualTo(1);
+  final KiePackage pkg=pkgs.iterator().next();
+  Assertions.assertThat(pkg.getRules().size()).isEqualTo(3);
+}

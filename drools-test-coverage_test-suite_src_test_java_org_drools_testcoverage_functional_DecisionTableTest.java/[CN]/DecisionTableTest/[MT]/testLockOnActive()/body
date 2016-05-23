@@ -1,0 +1,14 @@
+{
+  final Resource decisionTable=KieBaseUtil.getDecisionTableResourceFromClasspath("agenda-group.csv",getClass(),DecisionTableInputType.CSV);
+  final KieBase kbase=KieBaseUtil.getKieBaseFromResources(true,decisionTable);
+  final KieSession ksession=kbase.newKieSession();
+  final OrderListener listener=new OrderListener();
+  ksession.addEventListener(listener);
+  ksession.insert("lockOnActive");
+  ksession.fireAllRules();
+  Assertions.assertThat(listener.size()).isEqualTo(3);
+  final String[] expected={"a","a2","a3"};
+  for (int i=0; i < listener.size(); i++) {
+    Assertions.assertThat(listener.get(i)).isEqualTo(expected[i]);
+  }
+}

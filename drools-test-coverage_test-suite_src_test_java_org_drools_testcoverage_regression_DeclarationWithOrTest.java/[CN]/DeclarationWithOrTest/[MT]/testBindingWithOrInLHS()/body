@@ -1,0 +1,17 @@
+{
+  final Resource resource=KieServices.Factory.get().getResources().newReaderResource(new StringReader(DRL));
+  resource.setTargetPath(TestConstants.DRL_TEST_TARGET_PATH);
+  final KieBuilder kbuilder=KieBaseUtil.getKieBuilderFromResources(true,resource);
+  final KieContainer kcontainer=KieServices.Factory.get().newKieContainer(kbuilder.getKieModule().getReleaseId());
+  final KieSession ksession=kcontainer.newKieSession();
+  final List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  try {
+    ksession.insert("y");
+    ksession.fireAllRules();
+  }
+  finally {
+    ksession.dispose();
+  }
+  Assertions.assertThat(list).as("Unexpected element in result global").containsExactly(FACT);
+}

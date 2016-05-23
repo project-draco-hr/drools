@@ -1,0 +1,18 @@
+{
+  final KieBase kbase=buildKieBase("declarative-agenda-count.drl");
+  final KieSession ksession=kbase.newKieSession();
+  final List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  final FactHandle go1=ksession.insert("go1");
+  ksession.fireAllRules();
+  Assertions.assertThat(list.size()).isEqualTo(3);
+  list.clear();
+  ksession.delete(go1);
+  ksession.fireAllRules();
+  Assertions.assertThat(list.size()).isEqualTo(0);
+  ksession.insert("go1");
+  ksession.insert("go2");
+  ksession.fireAllRules();
+  Assertions.assertThat(list.size()).isEqualTo(2);
+  ksession.dispose();
+}

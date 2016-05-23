@@ -1,0 +1,17 @@
+{
+  final KieModuleModel kieModule=kieServices.newKieModuleModel();
+  kieModule.newKieBaseModel("firstKBase").setDefault(true).newKieSessionModel("firstKSession").setDefault(true);
+  kieModule.newKieBaseModel("secondKBase").setDefault(true).newKieSessionModel("secondKSession");
+  buildKieModule(kieModule);
+  final KieContainer kieContainer=kieServices.newKieContainer(RELEASE_ID);
+  final KieSession firstKSession=kieContainer.newKieSession("firstKSession");
+  final KieSession secondKSession=kieContainer.newKieSession("secondKSession");
+  try {
+    Assertions.assertThat(firstKSession).isEqualTo(((InternalKieContainer)kieContainer).getKieSession());
+    Assertions.assertThat(secondKSession).isNotEqualTo(((InternalKieContainer)kieContainer).getKieSession());
+  }
+  finally {
+    firstKSession.dispose();
+    secondKSession.dispose();
+  }
+}

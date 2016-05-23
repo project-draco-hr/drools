@@ -1,0 +1,19 @@
+{
+  final Resource decisionTable=KieBaseUtil.getDecisionTableResourceFromClasspath("advanced_dt.xls",getClass(),DecisionTableInputType.XLS);
+  final KieBase kbase=KieBaseUtil.getKieBaseFromResources(true,decisionTable);
+  KieSession session=kbase.newKieSession();
+  final OrderListener listener=new OrderListener();
+  session.addEventListener(listener);
+  final Subject lili=new Subject("Lili");
+  lili.setAge(100);
+  final Sample sample=new Sample();
+  session.insert(lili);
+  session.insert(sample);
+  session.fireAllRules();
+  Assertions.assertThat(listener.size()).isEqualTo(4);
+  final String[] expected=new String[]{"HelloWorld_11","namedRule","b1","another rule"};
+  for (int i=0; i < 4; i++) {
+    Assertions.assertThat(listener.get(i)).isEqualTo(expected[i]);
+  }
+  session.dispose();
+}

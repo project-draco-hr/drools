@@ -1,0 +1,17 @@
+{
+  final KieBuilder kbuilder=build(factFieldValueForDrl);
+  Assertions.assertThat(kbuilder.getResults().getMessages(Level.ERROR).size()).isEqualTo(0);
+  final KieBase kbase=KieBaseUtil.getDefaultKieBaseFromKieBuilder(kbuilder);
+  final KieSession ksession=kbase.newKieSession();
+  try {
+    final FactType type=kbase.getFactType(TestConstants.PACKAGE_REGRESSION,"Fact");
+    final Object fact=type.newInstance();
+    type.set(fact,"field",factFieldValueForTest);
+    ksession.insert(fact);
+    final int count=ksession.fireAllRules();
+    Assertions.assertThat(count).isEqualTo(1);
+  }
+  finally {
+    ksession.dispose();
+  }
+}

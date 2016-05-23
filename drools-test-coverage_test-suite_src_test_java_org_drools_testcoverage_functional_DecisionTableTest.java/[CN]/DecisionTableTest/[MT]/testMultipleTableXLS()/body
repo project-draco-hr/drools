@@ -1,0 +1,22 @@
+{
+  final Resource decisionTable=KieBaseUtil.getDecisionTableResourceFromClasspath("multiple_tables.xls",getClass(),DecisionTableInputType.XLS);
+  final KieBase kbase=KieBaseUtil.getKieBaseFromResources(true,decisionTable);
+  Assertions.assertThat(2).isEqualTo(kbase.getKiePackages().size());
+  final KieSession session=kbase.newKieSession();
+  final Person person=new Person("Paul");
+  person.setId(1);
+  Assertions.assertThat(person.getName()).isEqualTo("Paul");
+  Assertions.assertThat(person.getId()).isEqualTo(1);
+  final Person person2=new Person("Helmut von Seireit");
+  person2.setId(1000);
+  Assertions.assertThat(person2.getName()).isEqualTo("Helmut von Seireit");
+  Assertions.assertThat(person2.getId()).isEqualTo(1000);
+  session.insert(person);
+  session.insert(person2);
+  session.fireAllRules();
+  Assertions.assertThat(person.getName()).isEqualTo("Paul");
+  Assertions.assertThat(person.getId()).isEqualTo(2);
+  Assertions.assertThat(person2.getName()).isEqualTo("Wilhelm von Seireit");
+  Assertions.assertThat(person2.getId()).isEqualTo(1000);
+  session.dispose();
+}

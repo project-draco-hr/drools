@@ -1,0 +1,10 @@
+{
+  final ExternalSpreadsheetCompiler converter=new ExternalSpreadsheetCompiler();
+  final String drl=converter.compile(getClass().getResourceAsStream("sample_cheese.xls"),getClass().getResourceAsStream("sample_cheese.drt"),2,2);
+  final Resource res=KieServices.Factory.get().getResources().newReaderResource(new StringReader(drl));
+  res.setTargetPath(TestConstants.DRL_TEST_TARGET_PATH);
+  final KieBase kbase=KieBaseUtil.getKieBaseFromResources(true,res);
+  Assertions.assertThat((long)kbase.getKiePackages().size()).as("Unexpected number of packages in kbase").isEqualTo((long)2);
+  verifyPackageWithRules(kbase,TestConstants.PACKAGE_FUNCTIONAL,2);
+  verifyPackageWithImports(kbase,TestConstants.PACKAGE_TESTCOVERAGE_MODEL);
+}

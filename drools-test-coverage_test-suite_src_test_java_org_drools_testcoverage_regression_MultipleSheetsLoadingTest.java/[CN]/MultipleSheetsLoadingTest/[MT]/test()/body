@@ -1,0 +1,16 @@
+{
+  final KieBuilder kbuilder=this.buildResources();
+  final Collection<Message> results=kbuilder.getResults().getMessages(Level.ERROR,Level.WARNING);
+  if (results.size() > 0) {
+    LOGGER.error(results.toString());
+  }
+  Assertions.assertThat(results.size()).as("Some errors/warnings found").isEqualTo(0);
+  final KieBase kbase=KieBaseUtil.getDefaultKieBaseFromKieBuilder(kbuilder);
+  final StatelessKieSession ksession=kbase.newStatelessKieSession();
+  final Set<String> resultSet=new HashSet<String>();
+  ksession.execute((Object)resultSet);
+  Assertions.assertThat(resultSet.size()).as("Wrong number of rules was fired").isEqualTo(2);
+  for (  String ruleName : new String[]{"rule1","rule2"}) {
+    Assertions.assertThat(resultSet.contains(ruleName)).as("Rule " + ruleName + " was not fired!").isTrue();
+  }
+}

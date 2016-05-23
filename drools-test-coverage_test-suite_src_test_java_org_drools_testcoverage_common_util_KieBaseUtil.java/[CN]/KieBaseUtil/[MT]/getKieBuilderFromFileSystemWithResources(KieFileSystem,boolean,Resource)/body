@@ -1,0 +1,23 @@
+{
+  for (  Resource res : resources) {
+    kfs.write(res);
+  }
+  final KieBuilder kbuilder=KieServices.Factory.get().newKieBuilder(kfs);
+  kbuilder.buildAll();
+  List<Message> msgs=kbuilder.getResults().getMessages(Message.Level.INFO);
+  if (msgs.size() > 0) {
+    LOGGER.info("KieBuilder information: {}",msgs.toString());
+  }
+  msgs=kbuilder.getResults().getMessages(Message.Level.WARNING);
+  if (msgs.size() > 0) {
+    LOGGER.warn("KieBuilder warnings: {}",msgs.toString());
+  }
+  msgs=kbuilder.getResults().getMessages(Message.Level.ERROR);
+  if (msgs.size() > 0) {
+    LOGGER.error("KieBuilder errors: {}",msgs.toString());
+  }
+  if (failIfBuildError) {
+    Assertions.assertThat(msgs.size()).as(msgs.toString()).isEqualTo(0);
+  }
+  return kbuilder;
+}

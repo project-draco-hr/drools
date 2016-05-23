@@ -1,0 +1,16 @@
+{
+  final KieModuleModel kieModule=kieServices.newKieModuleModel();
+  kieModule.newKieBaseModel("firstKBase").setDefault(true).newKieSessionModel("firstKSession").setType(KieSessionModel.KieSessionType.STATELESS).setDefault(true);
+  kieModule.newKieBaseModel("secondKBase").setDefault(true).newKieSessionModel("secondKSession").setDefault(false);
+  buildKieModule(kieModule);
+  final KieContainer kieContainer=kieServices.newKieContainer(RELEASE_ID);
+  final StatelessKieSession firstKSession=kieContainer.newStatelessKieSession("firstKSession");
+  final KieSession secondKSession=kieContainer.newKieSession("secondKSession");
+  try {
+    Assertions.assertThat(firstKSession).isEqualTo(((InternalKieContainer)kieContainer).getStatelessKieSession());
+    Assertions.assertThat(secondKSession).isNotEqualTo(((InternalKieContainer)kieContainer).getStatelessKieSession());
+  }
+  finally {
+    secondKSession.dispose();
+  }
+}

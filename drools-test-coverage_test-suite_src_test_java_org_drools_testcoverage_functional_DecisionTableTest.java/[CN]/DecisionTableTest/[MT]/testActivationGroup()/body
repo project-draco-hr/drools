@@ -1,0 +1,12 @@
+{
+  final Resource decisionTable=KieBaseUtil.getDecisionTableResourceFromClasspath("agenda-group.csv",getClass(),DecisionTableInputType.CSV);
+  final KieBase kbase=KieBaseUtil.getKieBaseFromResources(true,decisionTable);
+  final KieSession ksession=kbase.newKieSession();
+  final TrackingAgendaEventListener listener=new TrackingAgendaEventListener();
+  ksession.addEventListener(listener);
+  ksession.insert("activationGroup");
+  ksession.fireAllRules();
+  Assertions.assertThat(listener.isRuleFired("c1")).isFalse();
+  Assertions.assertThat(listener.isRuleFired("c2")).isTrue();
+  Assertions.assertThat(listener.isRuleFired("c3")).isFalse();
+}

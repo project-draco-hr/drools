@@ -1,0 +1,26 @@
+{
+  final KieBase kbase=buildKieBase("declarative-agenda-block.drl");
+  final KieSession ksession=kbase.newKieSession();
+  OrderListener listener=new OrderListener();
+  ksession.addEventListener(listener);
+  ksession.insert("startAgenda");
+  ksession.insert("fireRules");
+  final FactHandle fireBlockerRule=ksession.insert("fireBlockerRule");
+  ksession.fireAllRules();
+  Assertions.assertThat(listener.size()).isEqualTo(6);
+  final String[] expected={"startAgenda","catering1","sales1","salesBlocker","catering2","salesBlocker"};
+  for (int i=0; i < listener.size(); i++) {
+    Assertions.assertThat(listener.get(i)).isEqualTo(expected[i]);
+  }
+  ksession.delete(fireBlockerRule);
+  ksession.removeEventListener(listener);
+  listener=new OrderListener();
+  ksession.addEventListener(listener);
+  ksession.fireAllRules();
+  Assertions.assertThat(listener.size()).isEqualTo(1);
+  final String[] expected2={"sales2"};
+  for (int i=0; i < listener.size(); i++) {
+    Assertions.assertThat(listener.get(i)).isEqualTo(expected2[i]);
+  }
+  ksession.dispose();
+}

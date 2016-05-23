@@ -1,0 +1,17 @@
+{
+  final Resource drlResource=KieServices.Factory.get().getResources().newReaderResource(new StringReader(drl));
+  drlResource.setTargetPath(TestConstants.DRL_TEST_TARGET_PATH);
+  final KieBase kbase=KieBaseUtil.getKieBaseFromResources(true,drlResource);
+  final KieSession session=kbase.newKieSession();
+  final List<String> list=new ArrayList<String>();
+  session.setGlobal("list",list);
+  for (int i=0; i < 500; i++) {
+    session.insert(new Vegetable("tomato",350,8,3,Taste.BAD));
+  }
+  session.fireAllRules();
+  Assertions.assertThat(list.size()).isEqualTo(expectedResultListSize);
+  final Collection<KiePackage> pkgs=kbase.getKiePackages();
+  Assertions.assertThat(pkgs.size()).isEqualTo(1);
+  final KiePackage pkg=pkgs.iterator().next();
+  Assertions.assertThat(pkg.getRules().size()).isEqualTo(expectedRulesCount);
+}
