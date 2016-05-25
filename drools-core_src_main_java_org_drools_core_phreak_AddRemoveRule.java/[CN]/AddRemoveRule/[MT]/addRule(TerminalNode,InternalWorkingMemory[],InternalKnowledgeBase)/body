@@ -8,20 +8,20 @@
     return;
   }
   RuleImpl rule=tn.getRule();
-  LeftTupleNode firstSplit=getNetworkSplitPoint(tn,rule);
+  LeftTupleNode firstSplit=getNetworkSplitPoint(tn);
   PathEndNodes pathEndNodes=getPathEndNodes(kBase,firstSplit,tn,rule,hasProtos,hasWms);
   for (  InternalWorkingMemory wm : wms) {
     wm.flushPropagations();
-    if (NodeTypeEnums.LeftInputAdapterNode == firstSplit.getType() && firstSplit.getAssociatedRuleSize() == 1) {
+    if (NodeTypeEnums.LeftInputAdapterNode == firstSplit.getType() && firstSplit.getAssociationsSize() == 1) {
       insertLiaFacts(firstSplit,wm);
     }
  else {
-      PathEndNodeMemories tnms=getPathEndMemories(wm,pathEndNodes,false);
+      PathEndNodeMemories tnms=getPathEndMemories(wm,pathEndNodes);
       if (tnms.subjectPmem == null) {
         continue;
       }
       Map<PathMemory,SegmentMemory[]> prevSmemsLookup=reInitPathMemories(wm,tnms.otherPmems,null);
-      Set<SegmentMemory> smemsToNotify=handleExistingPaths(rule,prevSmemsLookup,tnms.otherPmems,wm,ExistingPathStrategy.ADD_STRATEGY);
+      Set<SegmentMemory> smemsToNotify=handleExistingPaths(tn,prevSmemsLookup,tnms.otherPmems,wm,ExistingPathStrategy.ADD_STRATEGY);
       addNewPaths(wm,smemsToNotify,tnms.subjectPmems);
       processLeftTuples(firstSplit,wm,true,rule);
       notifySegments(smemsToNotify,wm);
