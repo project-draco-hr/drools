@@ -1,26 +1,15 @@
 {
-  if (this.factHandle.isValid()) {
-    PropagationContextFactory pctxFactory=workingMemory.getKnowledgeBase().getConfiguration().getComponentFactory().getPropagationContextFactory();
-    final PropagationContext context=pctxFactory.createPropagationContext(workingMemory.getNextPropagationIdCounter(),PropagationContext.EXPIRATION,null,null,this.factHandle);
-    if (factHandle.getEqualityKey() == null || factHandle.getEqualityKey().getLogicalFactHandle() != factHandle) {
-      if (this.node != null) {
-        this.node.retractObject(factHandle,context,workingMemory);
-      }
- else {
-        workingMemory.getEntryPoint(factHandle.getEntryPoint().getEntryPointId()).delete(factHandle);
-      }
-      factHandle.decreaseOtnCount();
-      context.evaluateActionQueue(workingMemory);
-      if (factHandle.getOtnCount() == 0) {
-        factHandle.setExpired(true);
-        if (factHandle.getActivationsCount() == 0) {
-          factHandle.getEntryPoint().delete(factHandle);
-        }
-      }
+  if (!factHandle.isValid()) {
+    return;
+  }
+  retractRightTuples(workingMemory);
+  expireLeftTuples();
+  factHandle.decreaseOtnCount();
+  if (factHandle.getOtnCount() == 0) {
+    factHandle.setExpired(true);
+    if (factHandle.getActivationsCount() == 0) {
+      String epId=factHandle.getEntryPoint().getEntryPointId();
+      ((InternalWorkingMemoryEntryPoint)workingMemory.getEntryPoint(epId)).removeFromObjectStore(factHandle);
     }
- else {
-      ((NamedEntryPoint)factHandle.getEntryPoint()).getTruthMaintenanceSystem().delete(factHandle);
-    }
-    context.evaluateActionQueue(workingMemory);
   }
 }
