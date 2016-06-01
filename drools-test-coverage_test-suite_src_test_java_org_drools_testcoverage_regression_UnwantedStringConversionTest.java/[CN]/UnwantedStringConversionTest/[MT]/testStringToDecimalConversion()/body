@@ -1,0 +1,16 @@
+{
+  final Resource drlResource=KieServices.Factory.get().getResources().newClassPathResource("unwantedStringConversionTest.drl",getClass());
+  final KieBase kieBase=KieBaseUtil.getKieBaseAndBuildInstallModule(TestConstants.PACKAGE_REGRESSION,kieBaseTestConfiguration,drlResource);
+  final KieSession ksession=kieBase.newKieSession();
+  final TrackingAgendaEventListener listener=new TrackingAgendaEventListener();
+  ksession.addEventListener(listener);
+  final Message message=new Message();
+  final SomeEntity someEntity=new SomeEntity("1.5");
+  message.setSomeEntity(someEntity);
+  message.setMessage("1.5");
+  ksession.insert(message);
+  ksession.fireAllRules();
+  Assertions.assertThat(listener.isRuleFired("R1")).isFalse();
+  Assertions.assertThat(listener.isRuleFired("R2")).isFalse();
+  Assertions.assertThat(listener.rulesCount()).isEqualTo(0);
+}

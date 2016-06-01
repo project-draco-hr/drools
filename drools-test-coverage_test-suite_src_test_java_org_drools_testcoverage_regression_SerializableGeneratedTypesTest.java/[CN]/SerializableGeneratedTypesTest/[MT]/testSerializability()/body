@@ -1,0 +1,13 @@
+{
+  final Resource drlResource=KieServices.Factory.get().getResources().newClassPathResource("serializableGeneratedTypesTest.drl",getClass());
+  final KieBase kieBase=KieBaseUtil.getKieBaseAndBuildInstallModule(TestConstants.PACKAGE_REGRESSION,kieBaseTestConfiguration,drlResource);
+  final KieSession session=kieBase.newKieSession();
+  final FactType testEventType=session.getKieBase().getFactType(TestConstants.PACKAGE_REGRESSION,"TestEvent");
+  for (int i=0; i < 10; i++) {
+    final Object testEvent=testEventType.newInstance();
+    testEventType.set(testEvent,"id","id" + i);
+    final EntryPoint mainStream=session.getEntryPoint("test");
+    mainStream.insert(testEvent);
+    session.fireAllRules();
+  }
+}

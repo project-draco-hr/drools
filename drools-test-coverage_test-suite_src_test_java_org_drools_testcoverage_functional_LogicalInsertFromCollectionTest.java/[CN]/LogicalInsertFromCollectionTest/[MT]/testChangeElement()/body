@@ -1,0 +1,18 @@
+{
+  final KieSession ksession=getKieBaseForTest().newKieSession();
+  final Collection<SimplePerson> collection=new ArrayList<>();
+  for (int i=1; i < 5; i++) {
+    collection.add(new SimplePerson("Person " + i,10 * i));
+  }
+  final FactHandle handle=ksession.insert(collection);
+  ksession.fireAllRules();
+  Assertions.assertThat(ksession.getFactCount()).isEqualTo((long)5);
+  collection.iterator().next().setAge(80);
+  ksession.update(handle,collection);
+  ksession.fireAllRules();
+  Assertions.assertThat(ksession.getFactCount()).isEqualTo((long)4);
+  collection.iterator().next().setAge(30);
+  ksession.update(handle,collection);
+  ksession.fireAllRules();
+  Assertions.assertThat(ksession.getFactCount()).isEqualTo((long)5);
+}

@@ -1,0 +1,26 @@
+{
+  final KieServices kieServices=KieServices.Factory.get();
+  final Resource drlResource=kieServices.getResources().newClassPathResource("propertyListenerTest.drl",getClass());
+  final KieBase kieBase=KieBaseUtil.getKieBaseAndBuildInstallModule(TestConstants.PACKAGE_REGRESSION,kieBaseTestConfiguration,drlResource);
+  final KieSession session=kieBase.newKieSession();
+  final ArrayList<Person> people=new ArrayList<Person>();
+  people.add(new Person("Test 1"));
+  people.add(new Person("Test 2"));
+  LOGGER.info("== Listeners attached before rules ==");
+  for (  Person person : people) {
+    for (    PropertyChangeListener listener : person.getBoundSupport().getPropertyChangeListeners()) {
+      LOGGER.info("Listener attached of type: " + listener);
+    }
+  }
+  final List<Command<?>> commands=new ArrayList<Command<?>>();
+  commands.add(kieServices.getCommands().newInsert(people));
+  commands.add(kieServices.getCommands().newFireAllRules());
+  session.execute(kieServices.getCommands().newBatchExecution(commands,null));
+  session.dispose();
+  LOGGER.info("Session disposed");
+  LOGGER.info("== Listeners attached after rules (should be none) ==");
+  printAndAssertListenersFromPeople(people);
+  people.get(0).setName("Test 3");
+  LOGGER.info("== Listeners attached after updating name (should be none) ==");
+  printAndAssertListenersFromPeople(people);
+}

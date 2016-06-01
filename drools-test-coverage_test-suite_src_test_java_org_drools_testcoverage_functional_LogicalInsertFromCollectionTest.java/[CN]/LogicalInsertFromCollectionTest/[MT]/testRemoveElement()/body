@@ -1,0 +1,16 @@
+{
+  final KieSession ksession=getKieBaseForTest().newKieSession();
+  final Collection<Integer> collection=new ArrayList<Integer>();
+  for (int i=0; i < 4; i++) {
+    collection.add(i);
+  }
+  final FactHandle handle=ksession.insert(collection);
+  ksession.fireAllRules();
+  for (int i=5; i > 1; i--) {
+    Assertions.assertThat(ksession.getFactCount()).isEqualTo((long)i);
+    collection.remove(collection.iterator().next());
+    ksession.update(handle,collection);
+    ksession.fireAllRules();
+    Assertions.assertThat(ksession.getFactCount()).isEqualTo((long)(i - 1));
+  }
+}

@@ -1,0 +1,30 @@
+{
+  final Resource drlResource=KieServices.Factory.get().getResources().newClassPathResource("fusionAfterBeforeTest.drl",getClass());
+  final KieBase kieBase=KieBaseUtil.getKieBaseAndBuildInstallModule(TestConstants.PACKAGE_REGRESSION,kieBaseTestConfiguration,drlResource);
+  final KieSessionConfiguration ksconf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  ksconf.setOption(ClockTypeOption.get("pseudo"));
+  final KieSession ksession=kieBase.newKieSession(ksconf,null);
+  final TrackingAgendaEventListener listener=new TrackingAgendaEventListener();
+  ksession.addEventListener(listener);
+  final EntryPoint stream=ksession.getEntryPoint("EventStream");
+  SessionPseudoClock clock=ksession.getSessionClock();
+  try {
+    for (int i=0; i < 3; i++) {
+      final MessageEvent tc=new MessageEvent(MessageEvent.Type.received,new Message());
+      stream.insert(tc);
+      ksession.fireAllRules();
+      clock.advanceTime(8,TimeUnit.SECONDS);
+    }
+    ksession.fireAllRules();
+  }
+  finally {
+    ksession.dispose();
+  }
+  Assertions.assertThat(listener.isRuleFired("AfterMessageEvent")).as("Rule 'AfterMessageEvent' was no fired!").isTrue();
+  Assertions.assertThat(listener.isRuleFired("BeforeMessageEvent")).as("Rule 'BeforeMessageEvent' was no fired!").isTrue();
+  int firedCount=2;
+  int actuallyFired=listener.ruleFiredCount("AfterMessageEvent");
+  Assertions.assertThat(firedCount).as("Rule 'AfterMessageEvent' should be fired 2 times, but was fired " + firedCount + " time(s)!").isEqualTo(actuallyFired);
+  firedCount=listener.ruleFiredCount("BeforeMessageEvent");
+  Assertions.assertThat(firedCount).as("Rule 'BeforeMessageEvent' should be fired 2 times, but was fired " + firedCount + " time(s)!").isEqualTo(actuallyFired);
+}
