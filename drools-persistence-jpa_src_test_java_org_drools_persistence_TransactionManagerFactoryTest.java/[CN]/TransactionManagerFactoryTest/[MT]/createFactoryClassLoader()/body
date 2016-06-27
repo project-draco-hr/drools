@@ -1,6 +1,13 @@
 {
-  ArrayList<URL> urls=Lists.newArrayList(((URLClassLoader)getClass().getClassLoader()).getURLs());
-  return new URLClassLoader(urls.toArray(new URL[0]),getClass().getClassLoader()){
+  URL[] urls;
+  if (getClass().getClassLoader() instanceof URLClassLoader) {
+    final URLClassLoader ucl=(URLClassLoader)getClass().getClassLoader();
+    urls=ucl.getURLs();
+  }
+ else {
+    urls=getClassPathURLs();
+  }
+  return new URLClassLoader(urls,getClass().getClassLoader()){
     public Class<?> loadClass(    String name,    boolean resolve) throws ClassNotFoundException {
       if (name.endsWith("TransactionManagerFactory")) {
         Class<?> c=findLoadedClass(name);
