@@ -7,16 +7,17 @@
     constraints.updateFromTuple(contextEntry,wm,leftTuple);
     FastIterator it=joinNode.getRightIterator(rtm);
     RightTuple rightTuple=joinNode.getFirstRightTuple(leftTuple,rtm,null,it);
-    LeftTuple childLeftTuple=leftTuple.getFirstChild();
-    if (childLeftTuple != null && rtm.isIndexed() && !it.isFullIterator() && (rightTuple == null || (rightTuple.getMemory() != childLeftTuple.getRightParent().getMemory()))) {
-      while (childLeftTuple != null) {
+    if (rtm.isIndexed() && !it.isFullIterator()) {
+      for (LeftTuple childLeftTuple=leftTuple.getFirstChild(); childLeftTuple != null; ) {
         LeftTuple nextChild=childLeftTuple.getHandleNext();
-        RuleNetworkEvaluator.unlinkAndDeleteChildLeftTuple(childLeftTuple,trgLeftTuples,stagedLeftTuples);
+        if (rightTuple == null || rightTuple.getMemory() != childLeftTuple.getRightParent().getMemory()) {
+          RuleNetworkEvaluator.unlinkAndDeleteChildLeftTuple(childLeftTuple,trgLeftTuples,stagedLeftTuples);
+        }
         childLeftTuple=nextChild;
       }
     }
     if (rightTuple != null) {
-      doLeftUpdatesProcessChildren(childLeftTuple,leftTuple,rightTuple,stagedLeftTuples,contextEntry,constraints,sink,it,trgLeftTuples);
+      doLeftUpdatesProcessChildren(leftTuple.getFirstChild(),leftTuple,rightTuple,stagedLeftTuples,contextEntry,constraints,sink,it,trgLeftTuples);
     }
     leftTuple.clearStaged();
     leftTuple=next;
