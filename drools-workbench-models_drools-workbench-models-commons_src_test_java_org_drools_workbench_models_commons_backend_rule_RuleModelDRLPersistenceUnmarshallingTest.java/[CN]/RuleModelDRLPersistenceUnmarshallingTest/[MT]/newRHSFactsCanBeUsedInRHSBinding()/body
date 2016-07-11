@@ -1,0 +1,31 @@
+{
+  String drl="package org.mortgages;\n" + "rule \"r1\"\n" + "dialect \"mvel\"\n"+ "when\n"+ "$l : LoanApplication()\n"+ "then\n"+ "Applicant $a = new Applicant();\n"+ "insert( $a );\n"+ "modify( $l ) {\n"+ "  setApplicant( $a )"+ "}\n"+ "end";
+  addModelField("org.mortgages.Applicant","this","org.mortgages.Applicant",DataType.TYPE_THIS);
+  addModelField("org.mortgages.LoanApplication","this","org.mortgages.LoanApplication",DataType.TYPE_THIS);
+  addModelField("org.mortgages.LoanApplication","applicant","org.mortgages.Applicant","org.mortgages.Applicant");
+  when(dmo.getPackageName()).thenReturn("org.mortgages");
+  RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,Collections.emptyList(),dmo);
+  assertNotNull(m);
+  assertEquals("r1",m.name);
+  assertEquals(1,m.lhs.length);
+  IPattern p=m.lhs[0];
+  assertTrue(p instanceof FactPattern);
+  FactPattern fp=(FactPattern)p;
+  assertEquals("LoanApplication",fp.getFactType());
+  assertEquals(0,fp.getNumberOfConstraints());
+  assertEquals(2,m.rhs.length);
+  assertTrue(m.rhs[0] instanceof ActionInsertFact);
+  ActionInsertFact aif=(ActionInsertFact)m.rhs[0];
+  assertEquals("$a",aif.getBoundName());
+  assertEquals("Applicant",aif.getFactType());
+  assertEquals(0,aif.getFieldValues().length);
+  assertTrue(m.rhs[1] instanceof ActionUpdateField);
+  ActionUpdateField auf=(ActionUpdateField)m.rhs[1];
+  assertEquals("$l",auf.getVariable());
+  assertEquals(1,auf.getFieldValues().length);
+  ActionFieldValue afv0=auf.getFieldValues()[0];
+  assertEquals("applicant",afv0.getField());
+  assertEquals("=$a",afv0.getValue());
+  assertEquals(FieldNatureType.TYPE_VARIABLE,afv0.getNature());
+  assertEquals("Applicant",afv0.getType());
+}
