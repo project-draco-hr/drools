@@ -1,0 +1,29 @@
+{
+  long lastTimeInMillis=System.currentTimeMillis();
+  final Runtime runtime=Runtime.getRuntime();
+  int memoryRaiseCount=0;
+  long averageMemory=0;
+  final List<Long> averageMemoryFootprints=new ArrayList<Long>();
+  for (int i=1; i < numberOfIterations; i++) {
+    waitForMillis(waitEachIterationMillis,lastTimeInMillis);
+    lastTimeInMillis=System.currentTimeMillis();
+    final long usedMemory=runtime.totalMemory() - runtime.freeMemory();
+    averageMemory=averageMemory + usedMemory;
+    if ((i % numberOfAveragedIterations) == 0) {
+      averageMemory=averageMemory / numberOfAveragedIterations;
+      if (averageMemoryFootprints.size() > 0) {
+        final long previousAverageMemory=averageMemoryFootprints.get(averageMemoryFootprints.size() - 1);
+        if (averageMemory > previousAverageMemory) {
+          memoryRaiseCount++;
+        }
+ else {
+          memoryRaiseCount=0;
+        }
+        assertFalse("Memory raised during " + (acceptedNumberOfMemoryRaises + 1) + " consecutive measurements, there is probably some memory leak! "+ getMemoryMeasurementsString(averageMemoryFootprints),memoryRaiseCount > acceptedNumberOfMemoryRaises);
+      }
+      logger.debug("Average memory: " + averageMemory);
+      averageMemoryFootprints.add(averageMemory);
+      averageMemory=0;
+    }
+  }
+}

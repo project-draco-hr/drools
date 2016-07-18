@@ -1,0 +1,16 @@
+{
+  final KieServices kieServices=KieServices.Factory.get();
+  final MavenRepository repository=MavenRepository.getMavenRepository();
+  final KieModule kieModule=KieBaseUtil.buildAndInstallKieModuleIntoRepo(TestConstants.PACKAGE_FUNCTIONAL,KieBaseTestConfiguration.CLOUD_IDENTITY,"rule R when then end");
+  final ReleaseId releaseId=kieModule.getReleaseId();
+  repository.installArtifact(releaseId,(InternalKieModule)kieModule,MavenUtil.createPomXml(fileManager,releaseId));
+  final KieContainer kieContainer=kieServices.newKieContainer(releaseId);
+  final KieScanner kieScanner=kieServices.newKieScanner(kieContainer);
+  kieScanner.start(20);
+  try {
+    measureMemoryFootprint(1000,100,6,30);
+  }
+  finally {
+    kieScanner.stop();
+  }
+}
