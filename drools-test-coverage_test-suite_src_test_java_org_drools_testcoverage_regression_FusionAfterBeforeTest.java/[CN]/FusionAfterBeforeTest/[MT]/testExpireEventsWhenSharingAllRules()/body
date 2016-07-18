@@ -1,0 +1,20 @@
+{
+  final StringBuilder drlBuilder=new StringBuilder();
+  for (int i=0; i < 64; i++) {
+    drlBuilder.append(" import " + EventA.class.getCanonicalName() + ";\n");
+    drlBuilder.append(" import " + EventB.class.getCanonicalName() + ";\n");
+    drlBuilder.append(" declare " + EventA.class.getName() + " @role( event ) @duration(duration) end");
+    drlBuilder.append(" declare " + EventB.class.getName() + " @role( event ) @duration(duration) end");
+    drlBuilder.append(" rule R" + i + " when \n");
+    drlBuilder.append("   $event1: " + EventA.class.getName() + "()\n");
+    drlBuilder.append("   $event2: " + EventB.class.getName() + "(this != $event1, this after [1,10] $event1)\n");
+    drlBuilder.append("then end\n");
+  }
+  final SortedSet<Event> events=new TreeSet<Event>();
+  events.addAll(getEvents(EventA.class,64 / 2,2,100,0));
+  events.addAll(getEvents(EventB.class,64 / 2,5,100,0));
+  final KieSessionConfiguration sessionConf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
+  sessionConf.setOption(ClockTypeOption.get("pseudo"));
+  final KieSession kieSession=new KieHelper().addContent(drlBuilder.toString(),ResourceType.DRL).build(kieBaseTestConfiguration.getKieBaseConfiguration()).newKieSession(sessionConf,null);
+  Assertions.assertThat(insertEventsAndFire(kieSession,events)).isEqualTo(2048);
+}

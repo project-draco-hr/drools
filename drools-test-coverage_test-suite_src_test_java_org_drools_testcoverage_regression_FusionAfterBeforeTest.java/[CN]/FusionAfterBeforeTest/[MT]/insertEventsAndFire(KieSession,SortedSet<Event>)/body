@@ -1,0 +1,12 @@
+{
+  final SessionPseudoClock sessionClock=kieSession.getSessionClock();
+  final long startTime=sessionClock.getCurrentTime();
+  int fireCount=0;
+  for (  Event event : events) {
+    final long eventTime=startTime + event.getTimeValue();
+    sessionClock.advanceTime(eventTime - sessionClock.getCurrentTime(),TimeUnit.MILLISECONDS);
+    kieSession.insert(event);
+    fireCount+=kieSession.fireAllRules();
+  }
+  return fireCount;
+}
