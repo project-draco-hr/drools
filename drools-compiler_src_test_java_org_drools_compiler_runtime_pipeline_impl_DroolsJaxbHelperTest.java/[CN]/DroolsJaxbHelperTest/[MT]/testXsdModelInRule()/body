@@ -1,0 +1,72 @@
+{
+  final String s1="package test; " + "global java.util.List list; " + "rule Init when "+ "then "+ "  insert( new Sub() ); "+ "  insert( new Message() ); "+ "  insert( new Test() ); "+ "  insert( new Left() ); "+ "end\n"+ "rule CheckSub when "+ " $s : Sub() "+ "then "+ "  list.add( \"Sub\" );  "+ "end\n"+ "rule CheckMsg when "+ " $s : Message() "+ "then "+ "  list.add( \"Message\" );  "+ "end\n ";
+  KieHelper kh=new KieHelper();
+  kh.addContent(s1,ResourceType.DRL);
+  InputStream simpleXsdStream=getClass().getResourceAsStream(simpleXsdRelativePath);
+  assertNotNull("Could not find resource: " + simpleXsdRelativePath,simpleXsdStream);
+  BaseResource xsdResource=new InputStreamResource(simpleXsdStream);
+  Options xjcOptions=new Options();
+  xsdResource.setConfiguration(new JaxbConfigurationImpl(xjcOptions,"test-system-id"));
+  kh.addResource(xsdResource,ResourceType.XSD);
+  assertEquals(0,kh.verify().getMessages(Message.Level.ERROR).size());
+  assertEquals(0,kh.verify().getMessages(Message.Level.WARNING).size());
+  KieSession ks=kh.build().newKieSession();
+  List list=new ArrayList();
+  ks.setGlobal("list",list);
+  ks.fireAllRules();
+  assertEquals(2,list.size());
+  assertTrue(list.containsAll(asList("Sub","Message")));
+  Collection<FactHandle> fhs=ks.getFactHandles();
+  Iterator<FactHandle> iter=fhs.iterator();
+  DefaultFactHandle subFh=null, msgFh=null, leftFh=null, testFh=null;
+  while (iter.hasNext()) {
+    DefaultFactHandle dfh=(DefaultFactHandle)iter.next();
+    if (dfh.getObjectClassName().equals("test.Sub")) {
+      subFh=dfh;
+    }
+ else     if (dfh.getObjectClassName().equals("test.Message")) {
+      msgFh=dfh;
+    }
+ else     if (dfh.getObjectClassName().equals("test.Left")) {
+      leftFh=dfh;
+    }
+ else     if (dfh.getObjectClassName().equals("test.Test")) {
+      testFh=dfh;
+    }
+ else {
+      fail("Unexpected FH class: " + dfh.getObjectClassName());
+    }
+  }
+  assertNotNull("No FactHandle for Sub found!",subFh);
+  assertNotNull("No FactHandle for Message found!",msgFh);
+  Object xsdObj=subFh.getObject();
+  Class xsdClass=xsdObj.getClass();
+  try {
+    Method m2=xsdClass.getMethod("getFld");
+    assertNotNull(m2);
+    assertEquals(String.class,m2.getReturnType());
+    assertEquals(0,xsdClass.getFields().length);
+    java.lang.reflect.Field[] declaredFields=xsdClass.getDeclaredFields();
+    assertEquals(1,declaredFields.length);
+    assertEquals("fld",declaredFields[0].getName());
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+  xsdObj=msgFh.getObject();
+  xsdClass=xsdObj.getClass();
+  try {
+    Method m2=xsdClass.getMethod("getContent");
+    assertNotNull(m2);
+    assertEquals(List.class,m2.getReturnType());
+    assertEquals(0,xsdClass.getFields().length);
+    java.lang.reflect.Field[] declaredFields=xsdClass.getDeclaredFields();
+    assertEquals(1,declaredFields.length);
+    assertEquals("content",declaredFields[0].getName());
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+    fail(e.getMessage());
+  }
+}
