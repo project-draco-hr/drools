@@ -1,0 +1,30 @@
+{
+  Class<?> macOSXSimilar=null;
+  Iterator<Class<?>> iterator=forClasses.iterator();
+  while (iterator.hasNext()) {
+    Class<?> curElement=iterator.next();
+    if (curElement.getName().equalsIgnoreCase(name)) {
+      macOSXSimilar=curElement;
+    }
+  }
+  Class<?> loaded=null;
+  if (macOSXSimilar != null) {
+    loaded=wrappedRealClassLoader.loadClass(macOSXSimilar.getName());
+  }
+ else {
+    loaded=wrappedRealClassLoader.loadClass(name);
+  }
+  if (loaded.getName().equals(name)) {
+    return loaded;
+  }
+ else {
+    String resolvedPackage=loaded.getPackage().getName();
+    String declaringClasses="";
+    Class<?> p=loaded.getDeclaringClass();
+    while (p != null) {
+      declaringClasses=p.getSimpleName() + "$" + declaringClasses;
+      p=p.getDeclaringClass();
+    }
+    throw new NoClassDefFoundError(resolvedPackage.replace(".","/") + "/" + name.replace(resolvedPackage + ".","")+ " (wrong name: "+ resolvedPackage.replace(".","/")+ "/"+ declaringClasses+ loaded.getSimpleName()+ ")");
+  }
+}
