@@ -1,0 +1,26 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId releaseId=ks.newReleaseId("org.kie","scanner-test","1.0-SNAPSHOT");
+  InternalKieModule kJar1=createKieJarWithJavaClass(ks,releaseId,"KBase1",7);
+  MavenRepository repository=getMavenRepository();
+  repository.installArtifact(releaseId,kJar1,createKPom(fileManager,releaseId));
+  ks.getRepository().removeKieModule(releaseId);
+  KieContainer kieContainer=ks.newKieContainer(releaseId);
+  KieScanner scanner=ks.newKieScanner(kieContainer);
+  Class<?> beanClass=kieContainer.getClassLoader().loadClass("org.kie.test.Bean");
+  KieSession ksession=kieContainer.newKieSession("KSession1");
+  Object bean=beanClass.getDeclaredConstructors()[0].newInstance(2);
+  ksession.insert(bean);
+  checkKSession(ksession,14);
+  InternalKieModule kJar2=createKieJarWithJavaClass(ks,releaseId,differentKbases ? "KBase2" : "KBase1",5);
+  repository.installArtifact(releaseId,kJar2,createKPom(fileManager,releaseId));
+  ks.getRepository().removeKieModule(releaseId);
+  Class<?> beanClass1=Class.forName("org.kie.test.Bean",true,kieContainer.getClassLoader());
+  kieContainer.updateToVersion(releaseId);
+  beanClass=kieContainer.getClassLoader().loadClass("org.kie.test.Bean");
+  KieSession ksession2=kieContainer.newKieSession("KSession1");
+  bean=beanClass.getDeclaredConstructors()[0].newInstance(3);
+  ksession2.insert(bean);
+  checkKSession(ksession2,15);
+  ks.getRepository().removeKieModule(releaseId);
+}
