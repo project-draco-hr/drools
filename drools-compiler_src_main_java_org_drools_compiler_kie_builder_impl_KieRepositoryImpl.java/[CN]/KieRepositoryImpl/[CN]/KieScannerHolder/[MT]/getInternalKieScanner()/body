@@ -1,9 +1,15 @@
 {
-  try {
-    KieScannerFactoryService scannerFactoryService=ServiceRegistryImpl.getInstance().get(KieScannerFactoryService.class);
-    return (InternalKieScanner)scannerFactoryService.newKieScanner();
-  }
- catch (  Exception e) {
-    return new DummyKieScanner();
+synchronized (KieScannerHolder.class) {
+    if (kieScanner != null) {
+      return kieScanner;
+    }
+    try {
+      KieScannerFactoryService scannerFactoryService=ServiceRegistryImpl.getInstance().get(KieScannerFactoryService.class);
+      return (InternalKieScanner)scannerFactoryService.newKieScanner();
+    }
+ catch (    Exception e) {
+      log.debug("Cannot load a KieRepositoryScanner, using the DummyKieScanner",e);
+      return new DummyKieScanner();
+    }
   }
 }
