@@ -1,0 +1,33 @@
+{
+  String drl="rule R no-loop timer( int: 1s )\n" + "when\n" + "    String()\n"+ "then\n"+ "end";
+  KieHelper helper=new KieHelper();
+  helper.addContent(drl,ResourceType.DRL);
+  KieBase kbase=helper.build(EventProcessingOption.STREAM);
+  KieSessionConfiguration ksconf=KieServices.Factory.get().newKieSessionConfiguration();
+  ksconf.setOption(TimedRuleExectionOption.YES);
+  final KieSession ksession=kbase.newKieSession(ksconf,null);
+  new Thread(){
+    @Override public void run(){
+      try {
+        Thread.sleep(100);
+      }
+ catch (      InterruptedException _e) {
+      }
+      ksession.dispose();
+    }
+  }
+.start();
+  try {
+    int i=0;
+    while (true) {
+      ksession.insert("" + i++);
+      ksession.fireAllRules();
+    }
+  }
+ catch (  IllegalStateException e) {
+  }
+catch (  java.util.concurrent.RejectedExecutionException e) {
+    e.printStackTrace();
+    fail("java.util.concurrent.RejectedExecutionException should not happen");
+  }
+}
