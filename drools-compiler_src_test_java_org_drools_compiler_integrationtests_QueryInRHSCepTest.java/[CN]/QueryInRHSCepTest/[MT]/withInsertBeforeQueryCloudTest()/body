@@ -1,0 +1,21 @@
+{
+  String drl="package org.drools.compiler.integrationtests\n" + "import " + SolicitFirePojo.class.getCanonicalName() + "\n"+ "import "+ QueryItemPojo.class.getCanonicalName()+ "\n"+ "global java.util.List myGlobal \n"+ "query \"myQuery\"\n"+ "    $r : QueryItemPojo()\n"+ "end\n"+ "rule \"drools-usage/WLHxG8S\"\n"+ " no-loop\n"+ " when\n"+ " SolicitFirePojo()\n"+ " then\n"+ " insert(new QueryItemPojo());\n"+ " myGlobal.add(drools.getKieRuntime().getQueryResults(\"myQuery\"));\n"+ " end\n";
+  System.out.println(drl);
+  final KieServices ks=KieServices.Factory.get();
+  KieFileSystem kfs=ks.newKieFileSystem();
+  KieModuleModel kmodule=ks.newKieModuleModel();
+  KieBaseModel baseModel=kmodule.newKieBaseModel("defaultKBase").setDefault(true).setEventProcessingMode(EventProcessingOption.CLOUD);
+  baseModel.newKieSessionModel("defaultKSession").setDefault(true);
+  kfs.writeKModuleXML(kmodule.toXML());
+  kfs.write(ResourceFactory.newByteArrayResource(drl.getBytes()).setTargetPath("org/drools/compiler/integrationtests/" + this.getClass().getName() + ".drl"));
+  assertTrue(ks.newKieBuilder(kfs).buildAll().getResults().getMessages().isEmpty());
+  ksession=ks.newKieContainer(ks.getRepository().getDefaultReleaseId()).newKieSession();
+  myGlobal=new ArrayList<>();
+  ksession.setGlobal("myGlobal",myGlobal);
+  ksession.insert(new QueryItemPojo());
+  ksession.insert(new SolicitFirePojo());
+  int fired=ksession.fireAllRules();
+  assertEquals(1,fired);
+  assertEquals(1,myGlobal.size());
+  assertEquals(2,((QueryResults)myGlobal.get(0)).size());
+}
