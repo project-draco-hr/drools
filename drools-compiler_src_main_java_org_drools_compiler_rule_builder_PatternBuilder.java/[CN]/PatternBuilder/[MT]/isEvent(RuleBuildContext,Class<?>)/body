@@ -1,0 +1,18 @@
+{
+  String packageName=ClassUtils.getPackage(userProvidedClass);
+  KnowledgeBuilderImpl kbuilder=context.getKnowledgeBuilder();
+  PackageRegistry pkgr=kbuilder.getPackageRegistry(packageName);
+  TypeDeclaration typeDeclaration=pkgr != null ? pkgr.getPackage().getTypeDeclaration(userProvidedClass) : null;
+  if (typeDeclaration == null && kbuilder.getKnowledgeBase() != null) {
+    InternalKnowledgePackage pkg=kbuilder.getKnowledgeBase().getPackage(packageName);
+    typeDeclaration=pkg != null ? pkg.getTypeDeclaration(userProvidedClass) : null;
+  }
+  if (typeDeclaration == null) {
+    typeDeclaration=context.getPkg().getTypeDeclaration(userProvidedClass);
+  }
+  if (typeDeclaration != null) {
+    return typeDeclaration.getRole() == Role.Type.EVENT;
+  }
+  Role role=(Role)userProvidedClass.getAnnotation(Role.class);
+  return role != null && role.value() == Role.Type.EVENT;
+}
