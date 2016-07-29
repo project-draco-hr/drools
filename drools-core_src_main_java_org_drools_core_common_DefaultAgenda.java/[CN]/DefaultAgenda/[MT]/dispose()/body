@@ -1,10 +1,11 @@
 {
 synchronized (stateMachineLock) {
-    if (currentState == ExecutionState.DISPOSED) {
+    if (!currentState.isAlive()) {
       return false;
     }
     if (currentState.isFiring()) {
-      setCurrentState(ExecutionState.HALTING);
+      setCurrentState(ExecutionState.DISPOSING);
+      workingMemory.notifyWaitOnRest();
     }
     waitAndEnterExecutionState(ExecutionState.DISPOSED);
     return true;
