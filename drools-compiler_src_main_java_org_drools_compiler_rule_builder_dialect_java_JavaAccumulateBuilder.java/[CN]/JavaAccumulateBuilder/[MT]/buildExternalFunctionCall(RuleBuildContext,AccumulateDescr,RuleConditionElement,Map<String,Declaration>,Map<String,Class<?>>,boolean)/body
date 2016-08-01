@@ -24,6 +24,11 @@
     if (function == null) {
       return null;
     }
+    Class<?> returnType=function.getResultType();
+    if (!isPatternTypeCompatibleWithFromReturnType(pattern,returnType)) {
+      context.addError(new DescrBuildError(accumDescr,context.getRuleDescr(),null,"Pattern of type: '" + pattern.getObjectType() + "' on rule '"+ context.getRuleDescr().getName()+ "' is not compatible with type "+ returnType.getCanonicalName()+ " returned by accumulate function."));
+      return null;
+    }
     bindReaderToDeclaration(context,accumDescr,pattern,fc,new SelfReferenceClassFieldReader(function.getResultType()),function.getResultType(),-1);
     Accumulator accumulator=buildAccumulator(context,accumDescr,declsInScope,declCls,readLocalsFromTuple,sourceDeclArr,requiredDecl,fc,function);
     return new SingleAccumulate(source,requiredDecl.toArray(new Declaration[requiredDecl.size()]),accumulator);
