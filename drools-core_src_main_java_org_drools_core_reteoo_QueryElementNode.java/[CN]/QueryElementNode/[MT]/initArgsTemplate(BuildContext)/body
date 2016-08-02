@@ -1,17 +1,9 @@
 {
-  Object[] originalArgs=this.queryElement.getArgTemplate();
-  argsTemplate=new Object[originalArgs.length];
+  ClassLoader classLoader=context.getKnowledgeBase().getRootClassLoader();
+  QueryArgument[] originalArgs=this.queryElement.getArguments();
+  QueryArgument[] args=new QueryArgument[originalArgs.length];
   for (int i=0; i < originalArgs.length; i++) {
-    if (originalArgs[i] instanceof Class) {
-      try {
-        argsTemplate[i]=context.getKnowledgeBase().getRootClassLoader().loadClass(((Class)originalArgs[i]).getName());
-      }
- catch (      ClassNotFoundException e) {
-        throw new RuntimeException(e);
-      }
-    }
- else {
-      argsTemplate[i]=originalArgs[i];
-    }
+    args[i]=originalArgs[i] == null ? QueryArgument.NULL : originalArgs[i].normalize(classLoader);
   }
+  return args;
 }

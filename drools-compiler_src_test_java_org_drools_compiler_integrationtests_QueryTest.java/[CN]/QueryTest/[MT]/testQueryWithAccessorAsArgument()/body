@@ -1,0 +1,19 @@
+{
+  String str="import org.drools.compiler.Person\n" + "global java.util.List persons;\n" + "\n"+ "query contains(String $s, String $c)\n"+ "    $s := String( this.contains( $c ) )\n"+ "end\n"+ "\n"+ "rule R when\n"+ "    $p : Person()\n"+ "    contains( $p.name, \"a\"; )\n"+ "then\n"+ "    persons.add( $p );\n"+ "end\n";
+  KieHelper helper=new KieHelper();
+  helper.addContent(str,ResourceType.DRL);
+  KieSession ksession=helper.build().newKieSession();
+  List<Person> personsWithA=new ArrayList<Person>();
+  ksession.setGlobal("persons",personsWithA);
+  ksession.insert("Mark");
+  ksession.insert("Edson");
+  ksession.insert("Mario");
+  ksession.insert(new Person("Mark"));
+  ksession.insert(new Person("Edson"));
+  ksession.insert(new Person("Mario"));
+  ksession.fireAllRules();
+  assertEquals(2,personsWithA.size());
+  for (  Person p : personsWithA) {
+    assertTrue(p.getName().equals("Mark") || p.getName().equals("Mario"));
+  }
+}

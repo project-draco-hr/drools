@@ -18,36 +18,7 @@
   if (queryObject.getAction() != null) {
     return;
   }
-  Object[] argTemplate=this.queryElement.getArgTemplate();
-  Object[] args=new Object[argTemplate.length];
-  System.arraycopy(argTemplate,0,args,0,args.length);
-  int[] declIndexes=this.queryElement.getDeclIndexes();
-  for (  int declIndexe : declIndexes) {
-    Declaration declr=(Declaration)argTemplate[declIndexe];
-    Object tupleObject=leftTuple.get(declr).getObject();
-    Object o;
-    if (tupleObject instanceof DroolsQuery) {
-      ArrayElementReader arrayReader=(ArrayElementReader)declr.getExtractor();
-      if (((DroolsQuery)tupleObject).getVariables()[arrayReader.getIndex()] != null) {
-        o=Variable.v;
-      }
- else {
-        o=declr.getValue(workingMemory,tupleObject);
-      }
-    }
- else {
-      o=declr.getValue(workingMemory,tupleObject);
-    }
-    args[declIndexe]=o;
-  }
-  int[] varIndexes=this.queryElement.getVariableIndexes();
-  for (  int varIndexe : varIndexes) {
-    if (argTemplate[varIndexe] == Variable.v) {
-      args[varIndexe]=Variable.v;
-    }
-  }
-  queryObject.setParameters(args);
-  ((ReteUnificationNodeViewChangedEventListener)queryObject.getQueryResultCollector()).setVariables(varIndexes);
+  queryObject.setParameters(getActualArguments(leftTuple,workingMemory));
   QueryUpdateAction action=new QueryUpdateAction(context,handle,leftTuple,this);
   context.addInsertAction(action);
 }

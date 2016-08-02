@@ -1,0 +1,21 @@
+{
+  String str="import org.drools.compiler.Person\n" + "global java.util.List persons;\n" + "\n"+ "query checkLength(String $s, int $l)\n"+ "    $s := String( length == $l )\n"+ "end\n"+ "\n"+ "rule R when\n"+ "    $i : Integer()\n"+ "    $p : Person()\n"+ "    checkLength( $p.name, 1 + $i + $p.age; )\n"+ "then\n"+ "    persons.add( $p );\n"+ "end\n";
+  KieHelper helper=new KieHelper();
+  helper.addContent(str,ResourceType.DRL);
+  KieSession ksession=helper.build().newKieSession();
+  List<Person> list=new ArrayList<Person>();
+  ksession.setGlobal("persons",list);
+  ksession.insert(1);
+  ksession.insert("Mark");
+  ksession.insert("Edson");
+  ksession.insert("Mario");
+  ksession.insert(new Person("Mark",2));
+  ksession.insert(new Person("Edson",3));
+  ksession.insert(new Person("Mario",4));
+  ksession.fireAllRules();
+  System.out.println(list);
+  assertEquals(2,list.size());
+  for (  Person p : list) {
+    assertTrue(p.getName().equals("Mark") || p.getName().equals("Edson"));
+  }
+}

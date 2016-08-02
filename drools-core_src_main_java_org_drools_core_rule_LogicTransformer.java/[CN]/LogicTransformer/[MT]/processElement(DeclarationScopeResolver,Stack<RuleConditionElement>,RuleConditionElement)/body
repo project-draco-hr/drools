@@ -50,17 +50,20 @@
       }
     }
     List<Integer> varIndexes=asList(qe.getVariableIndexes());
-    for (int i=0; i < qe.getDeclIndexes().length; i++) {
-      Declaration declr=(Declaration)qe.getArgTemplate()[qe.getDeclIndexes()[i]];
+    for (int i=0; i < qe.getArguments().length; i++) {
+      if (!(qe.getArguments()[i] instanceof QueryArgument.Declr)) {
+        continue;
+      }
+      Declaration declr=((QueryArgument.Declr)qe.getArguments()[i]).getDeclaration();
       Declaration resolved=resolver.getDeclaration(null,declr.getIdentifier());
       if (resolved != declr && resolved.getPattern() != pattern) {
-        qe.getArgTemplate()[qe.getDeclIndexes()[i]]=resolved;
+        qe.getArguments()[i]=new QueryArgument.Declr(resolved);
       }
       if (ClassObjectType.DroolsQuery_ObjectType.isAssignableFrom(resolved.getPattern().getObjectType())) {
         declr=pattern.addDeclaration(declr.getIdentifier());
-        ArrayElementReader reader=new ArrayElementReader(new SelfReferenceClassFieldReader(Object[].class),qe.getDeclIndexes()[i],resolved.getDeclarationClass());
+        ArrayElementReader reader=new ArrayElementReader(new SelfReferenceClassFieldReader(Object[].class),i,resolved.getDeclarationClass());
         declr.setReadAccessor(reader);
-        varIndexes.add(qe.getDeclIndexes()[i]);
+        varIndexes.add(i);
       }
     }
     qe.setVariableIndexes(toIntArray(varIndexes));

@@ -1,0 +1,38 @@
+{
+  int pos=((ExprConstraintDescr)base).getPosition();
+  if (pos >= arguments.length) {
+    context.addError(new DescrBuildError(context.getParentDescr(),base,null,"Unable to parse query '" + query.getName() + "', as postion "+ pos+ " for expression '"+ expression+ "' does not exist on query size "+ arguments.length));
+    return;
+  }
+  boolean isVariable=isVariable(expression);
+  DeclarationScopeResolver declarationResolver=context.getDeclarationResolver();
+  Declaration declr=isVariable ? declarationResolver.getDeclaration(query,expression) : null;
+  if (declr != null) {
+    requiredDeclarations.add(declr);
+    arguments[pos]=new QueryArgument.Declr(declr);
+  }
+ else   if (isVariable && expression.indexOf('.') < 0) {
+    arguments[pos]=getVariableQueryArgument(arrayReader,params,pos,pattern,expression);
+  }
+ else {
+    AnalysisResult analysisResult=analyzeExpression(context,base,expression);
+    if (analysisResult == null || analysisResult.getIdentifiers().isEmpty()) {
+      arguments[pos]=getLiteralQueryArgument(context,base,result);
+    }
+ else {
+      List<Declaration> declarations=new ArrayList<Declaration>();
+      for (      String identifier : analysisResult.getIdentifiers()) {
+        Declaration declaration=declarationResolver.getDeclaration(query,identifier);
+        if (declaration != null) {
+          declarations.add(declaration);
+        }
+      }
+      if (declarations.size() == analysisResult.getIdentifiers().size()) {
+        arguments[pos]=new QueryArgument.Expression(declarations,expression,getParserContext(context));
+      }
+ else {
+        arguments[pos]=getLiteralQueryArgument(context,base,result);
+      }
+    }
+  }
+}

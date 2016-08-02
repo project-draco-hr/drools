@@ -1,0 +1,41 @@
+{
+  Declaration declr=context.getDeclarationResolver().getDeclaration(context.getRule(),bind.getVariable());
+  if (declr != null) {
+    int pos=getPos(bind.getExpression(),params);
+    if (pos >= 0) {
+      String slot=bind.getExpression();
+      String var=bind.getVariable();
+      bind.setVariable(slot);
+      bind.setExpression(var);
+    }
+ else {
+    }
+  }
+  int pos=getPos(bind.getVariable(),params);
+  if (pos >= 0) {
+    declr=context.getDeclarationResolver().getDeclaration(context.getRule(),bind.getExpression());
+    if (declr != null) {
+      requiredDeclarations.add(declr);
+      arguments[pos]=new QueryArgument.Declr(declr);
+    }
+ else {
+      DrlExprParser parser=new DrlExprParser(context.getConfiguration().getLanguageLevel());
+      ConstraintConnectiveDescr bresult=parser.parse(bind.getExpression());
+      if (parser.hasErrors()) {
+        for (        DroolsParserException error : parser.getErrors()) {
+          context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"Unable to parser pattern expression:\n" + error.getMessage()));
+        }
+        return;
+      }
+      arguments[pos]=getLiteralQueryArgument(context,descr,bresult);
+    }
+  }
+ else {
+    pos=getPos(bind.getExpression(),params);
+    if (pos < 0) {
+      context.addError(new DescrBuildError(context.getParentDescr(),descr,null,"named argument does not exist:\n" + bind.getExpression()));
+      return;
+    }
+    arguments[pos]=getVariableQueryArgument(arrayReader,params,pos,pattern,bind.getVariable());
+  }
+}
