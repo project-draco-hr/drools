@@ -1,0 +1,48 @@
+{
+  BaseNode node=null;
+  RuleBasePartitionId partition=null;
+  if (candidate.getType() == NodeTypeEnums.EntryPointNode) {
+    node=context.getKnowledgeBase().getRete().getEntryPointNode(((EntryPointNode)candidate).getEntryPoint());
+    partition=RuleBasePartitionId.MAIN_PARTITION;
+  }
+ else   if (candidate.getType() == NodeTypeEnums.ObjectTypeNode) {
+    Map<ObjectType,ObjectTypeNode> map=context.getKnowledgeBase().getRete().getObjectTypeNodes(context.getCurrentEntryPoint());
+    if (map != null) {
+      ObjectTypeNode otn=map.get(((ObjectTypeNode)candidate).getObjectType());
+      if (otn != null) {
+        otn.setExpirationOffset(Math.max(otn.getExpirationOffset(),((ObjectTypeNode)candidate).getExpirationOffset()));
+        node=otn;
+      }
+    }
+    partition=RuleBasePartitionId.MAIN_PARTITION;
+  }
+ else   if (isSharingEnabledForNode(context,candidate)) {
+    if ((context.getTupleSource() != null) && NodeTypeEnums.isLeftTupleSink(candidate)) {
+      node=context.getTupleSource().getSinkPropagator().getMatchingNode(candidate);
+    }
+ else     if ((context.getObjectSource() != null) && NodeTypeEnums.isObjectSink(candidate)) {
+      node=context.getObjectSource().getObjectSinkPropagator().getMatchingNode(candidate);
+    }
+ else {
+      throw new RuntimeException("This is a bug on node sharing verification. Please report to development team.");
+    }
+  }
+  if (node == null) {
+    node=candidate;
+    if (partition == null) {
+      if (context.getPartitionId() == null) {
+        context.setPartitionId(context.getKnowledgeBase().createNewPartitionId());
+      }
+      partition=context.getPartitionId();
+    }
+    node.setPartitionId(partition);
+    node.attach(context);
+    context.getNodes().add(node);
+  }
+ else {
+    mergeNodes(node,candidate);
+    context.releaseId(candidate.getId());
+  }
+  node.addAssociation(context,context.getRule());
+  return (T)node;
+}

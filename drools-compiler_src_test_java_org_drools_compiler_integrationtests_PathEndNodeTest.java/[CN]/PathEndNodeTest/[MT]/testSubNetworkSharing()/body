@@ -1,0 +1,18 @@
+{
+  String str="package org.test \n" + "rule xxx \n" + "when \n"+ "  $s : String()\n"+ "  not( Integer() and Long() )\n"+ "then \n"+ "end  \n"+ "rule yyy \n"+ "when \n"+ "  $s : String()\n"+ "  not( Integer() and Long() )\n"+ "then \n"+ "end  \n";
+  InternalKnowledgeBase kbase=(InternalKnowledgeBase)new KieHelper().addContent(str,ResourceType.DRL).build();
+  EntryPointNode epn=kbase.getRete().getEntryPointNode(EntryPointId.DEFAULT);
+  ObjectTypeNode otn=epn.getObjectTypeNodes().get(new ClassObjectType(Long.class));
+  BetaNode beta1=(BetaNode)otn.getObjectSinkPropagator().getSinks()[0];
+  RightInputAdapterNode rian=(RightInputAdapterNode)beta1.getSinkPropagator().getSinks()[0];
+  BetaNode beta2=(BetaNode)rian.getObjectSinkPropagator().getSinks()[0];
+  LeftTupleSink[] sinks=beta2.getSinkPropagator().getSinks();
+  RuleTerminalNode rtn1=(RuleTerminalNode)sinks[0];
+  RuleTerminalNode rtn2=(RuleTerminalNode)sinks[1];
+  assertEquals(3,rian.getPathEndNodes().length);
+  assertTrue(asList(rian.getPathEndNodes()).containsAll(asList(rtn1,rtn2,rian)));
+  kbase.removeRule("org.test","xxx");
+  assertEquals(2,rian.getPathEndNodes().length);
+  RuleTerminalNode remainingRTN=rtn1.getRule().getName().equals("yyy") ? rtn1 : rtn2;
+  assertTrue(asList(rian.getPathEndNodes()).containsAll(asList(remainingRTN,rian)));
+}

@@ -2,13 +2,13 @@
   final Accumulate accumulate=(Accumulate)rce;
   boolean existSubNetwort=false;
   context.pushRuleComponent(accumulate);
-  final List resultBetaConstraints=context.getBetaconstraints();
-  final List resultAlphaConstraints=context.getAlphaConstraints();
+  final List<BetaNodeFieldConstraint> resultBetaConstraints=context.getBetaconstraints();
+  final List<AlphaNodeFieldConstraint> resultAlphaConstraints=context.getAlphaConstraints();
   RuleConditionElement source=accumulate.getSource();
   if (source instanceof GroupElement) {
     GroupElement ge=(GroupElement)source;
     if (ge.isAnd() && ge.getChildren().size() == 1) {
-      source=(RuleConditionElement)ge.getChildren().get(0);
+      source=ge.getChildren().get(0);
     }
   }
   final ReteooComponentBuilder builder=utils.getBuilderFor(source);
@@ -17,22 +17,22 @@
   builder.build(context,utils,source);
   if (context.getObjectSource() == null) {
     RightInputAdapterNode riaNode=context.getComponentFactory().getNodeFactoryService().buildRightInputNode(context.getNextId(),context.getTupleSource(),tupleSource,context);
-    context.setObjectSource((ObjectSource)utils.attachNode(context,riaNode));
+    context.setObjectSource(utils.attachNode(context,riaNode));
     context.setTupleSource(tupleSource);
     final TupleStartEqualsConstraint constraint=TupleStartEqualsConstraint.getInstance();
-    final List betaConstraints=new ArrayList();
+    final List<BetaNodeFieldConstraint> betaConstraints=new ArrayList<BetaNodeFieldConstraint>();
     betaConstraints.add(constraint);
     context.setBetaconstraints(betaConstraints);
     existSubNetwort=true;
   }
   NodeFactory nfactory=context.getComponentFactory().getNodeFactoryService();
   if (!context.getKnowledgeBase().getConfiguration().isPhreakEnabled() && !context.isTupleMemoryEnabled() && existSubNetwort) {
-    context.setTupleSource((LeftTupleSource)utils.attachNode(context,nfactory.buildQueryRiaFixerNode(context.getNextId(),context.getTupleSource(),context)));
+    context.setTupleSource(utils.attachNode(context,nfactory.buildQueryRiaFixerNode(context.getNextId(),context.getTupleSource(),context)));
   }
   final BetaConstraints resultsBinder=utils.createBetaNodeConstraint(context,resultBetaConstraints,true);
   final BetaConstraints sourceBinder=utils.createBetaNodeConstraint(context,context.getBetaconstraints(),false);
-  AccumulateNode accNode=nfactory.buildAccumulateNode(context.getNextId(),context.getTupleSource(),context.getObjectSource(),(AlphaNodeFieldConstraint[])resultAlphaConstraints.toArray(new AlphaNodeFieldConstraint[resultAlphaConstraints.size()]),sourceBinder,resultsBinder,accumulate,existSubNetwort,context);
-  context.setTupleSource((LeftTupleSource)utils.attachNode(context,accNode));
+  AccumulateNode accNode=nfactory.buildAccumulateNode(context.getNextId(),context.getTupleSource(),context.getObjectSource(),resultAlphaConstraints.toArray(new AlphaNodeFieldConstraint[resultAlphaConstraints.size()]),sourceBinder,resultsBinder,accumulate,existSubNetwort,context);
+  context.setTupleSource(utils.attachNode(context,accNode));
   context.setObjectSource(null);
   context.setCurrentPatternOffset(currentPatternIndex);
   context.popRuleComponent();

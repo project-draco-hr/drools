@@ -2,8 +2,8 @@
   boolean existSubNetwort=false;
   final Collect collect=(Collect)rce;
   context.pushRuleComponent(collect);
-  final List resultBetaConstraints=context.getBetaconstraints();
-  final List resultAlphaConstraints=context.getAlphaConstraints();
+  final List<BetaNodeFieldConstraint> resultBetaConstraints=context.getBetaconstraints();
+  final List<AlphaNodeFieldConstraint> resultAlphaConstraints=context.getAlphaConstraints();
   final Pattern sourcePattern=collect.getSourcePattern();
   final Pattern resultPattern=collect.getResultPattern();
   final ReteooComponentBuilder builder=utils.getBuilderFor(sourcePattern);
@@ -12,10 +12,10 @@
   builder.build(context,utils,sourcePattern);
   if (context.getObjectSource() == null) {
     RightInputAdapterNode riaNode=context.getComponentFactory().getNodeFactoryService().buildRightInputNode(context.getNextId(),context.getTupleSource(),tupleSource,context);
-    context.setObjectSource((ObjectSource)utils.attachNode(context,riaNode));
+    context.setObjectSource(utils.attachNode(context,riaNode));
     context.setTupleSource(tupleSource);
     final TupleStartEqualsConstraint constraint=TupleStartEqualsConstraint.getInstance();
-    final List betaConstraints=new ArrayList();
+    final List<BetaNodeFieldConstraint> betaConstraints=new ArrayList<BetaNodeFieldConstraint>();
     betaConstraints.add(constraint);
     context.setBetaconstraints(betaConstraints);
     existSubNetwort=true;
@@ -24,8 +24,8 @@
   BetaConstraints resultBinder=utils.createBetaNodeConstraint(context,resultBetaConstraints,true);
   CollectAccumulator accumulator=new CollectAccumulator(collect,existSubNetwort);
   Accumulate accumulate=new SingleAccumulate(sourcePattern,sourcePattern.getRequiredDeclarations(),accumulator);
-  AccumulateNode accNode=context.getComponentFactory().getNodeFactoryService().buildAccumulateNode(context.getNextId(),context.getTupleSource(),context.getObjectSource(),(AlphaNodeFieldConstraint[])resultAlphaConstraints.toArray(new AlphaNodeFieldConstraint[resultAlphaConstraints.size()]),binder,resultBinder,accumulate,existSubNetwort,context);
-  context.setTupleSource((LeftTupleSource)utils.attachNode(context,accNode));
+  AccumulateNode accNode=context.getComponentFactory().getNodeFactoryService().buildAccumulateNode(context.getNextId(),context.getTupleSource(),context.getObjectSource(),resultAlphaConstraints.toArray(new AlphaNodeFieldConstraint[resultAlphaConstraints.size()]),binder,resultBinder,accumulate,existSubNetwort,context);
+  context.setTupleSource(utils.attachNode(context,accNode));
   context.setObjectSource(null);
   context.setCurrentPatternOffset(currentPatternIndex);
   context.popRuleComponent();
