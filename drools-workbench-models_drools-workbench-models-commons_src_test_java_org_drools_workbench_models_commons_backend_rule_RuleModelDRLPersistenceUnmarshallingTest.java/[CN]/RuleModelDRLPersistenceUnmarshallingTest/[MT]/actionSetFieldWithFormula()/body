@@ -1,0 +1,24 @@
+{
+  String drl="package org.mortgages;\n" + "rule \"r1\"\n" + "dialect \"mvel\"\n"+ "when\n"+ "$a : Application()\n"+ "then\n"+ "$a.setName( \"Pupa\" + 20 + \"Smurf\" );"+ "end";
+  addModelField("org.mortgages.Applicant","this","org.mortgages.Applicant",DataType.TYPE_THIS);
+  addModelField("org.mortgages.Applicant","name",String.class.getName(),DataType.TYPE_STRING);
+  when(dmo.getPackageName()).thenReturn("org.mortgages");
+  RuleModel m=RuleModelDRLPersistenceImpl.getInstance().unmarshal(drl,Collections.emptyList(),dmo);
+  assertNotNull(m);
+  assertEquals("r1",m.name);
+  assertEquals(1,m.lhs.length);
+  IPattern p=m.lhs[0];
+  assertTrue(p instanceof FactPattern);
+  FactPattern fp=(FactPattern)p;
+  assertEquals("Application",fp.getFactType());
+  assertEquals(0,fp.getNumberOfConstraints());
+  assertEquals(1,m.rhs.length);
+  assertTrue(m.rhs[0] instanceof ActionSetField);
+  ActionSetField asf=(ActionSetField)m.rhs[0];
+  assertEquals("$a",asf.getVariable());
+  assertEquals(1,asf.getFieldValues().length);
+  ActionFieldValue afv0=asf.getFieldValues()[0];
+  assertEquals("name",afv0.getField());
+  assertEquals("\"Pupa\" + 20 + \"Smurf\"",afv0.getValue());
+  assertEquals(FieldNatureType.TYPE_FORMULA,afv0.getNature());
+}
