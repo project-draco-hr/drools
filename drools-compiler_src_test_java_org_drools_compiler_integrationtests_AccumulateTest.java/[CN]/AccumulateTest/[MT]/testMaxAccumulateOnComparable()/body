@@ -1,0 +1,12 @@
+{
+  String drl1="import " + PersonWithBoxedAge.class.getCanonicalName() + ";\n"+ "global java.util.List list;\n"+ "rule R when\n"+ "  accumulate ( $p : PersonWithBoxedAge(), $result : max( $p ) )\n"+ "then\n"+ "  list.add($result);\n"+ "end";
+  KieSession ksession=new KieHelper().addContent(drl1,ResourceType.DRL).build().newKieSession();
+  List<PersonWithBoxedAge> list=new ArrayList<PersonWithBoxedAge>();
+  ksession.setGlobal("list",list);
+  ksession.insert(new PersonWithBoxedAge("me",30));
+  ksession.insert(new PersonWithBoxedAge("you",40));
+  ksession.insert(new PersonWithBoxedAge("she",25));
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  assertEquals("you",list.get(0).getName());
+}

@@ -1,0 +1,21 @@
+{
+  MVELDialectRuntimeData data=(MVELDialectRuntimeData)context.getPkg().getDialectRuntimeRegistry().getDialectData("mvel");
+  ParserConfiguration conf=data.getParserConfiguration();
+  conf.setClassLoader(context.getKnowledgeBuilder().getRootClassLoader());
+  ParserContext pctx=new ParserContext(conf);
+  pctx.setStrongTyping(true);
+  pctx.setStrictTypeEnforcement(true);
+  for (  Map.Entry<String,Class<?>> entry : declCls.entrySet()) {
+    pctx.addInput(entry.getKey(),entry.getValue());
+  }
+  for (  Declaration decl : source.getOuterDeclarations().values()) {
+    pctx.addInput(decl.getBindingName(),decl.getDeclarationClass());
+  }
+  try {
+    return MVEL.analyze(expression,pctx);
+  }
+ catch (  Exception e) {
+    log.warn("Unable to parse expression: " + expression,e);
+  }
+  return null;
+}
