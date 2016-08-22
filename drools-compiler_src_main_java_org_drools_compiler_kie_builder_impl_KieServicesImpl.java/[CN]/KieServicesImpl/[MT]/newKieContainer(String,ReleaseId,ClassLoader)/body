@@ -1,0 +1,25 @@
+{
+  InternalKieModule kieModule=(InternalKieModule)getRepository().getKieModule(releaseId);
+  if (kieModule == null) {
+    throw new RuntimeException("Cannot find KieModule: " + releaseId);
+  }
+  KieProject kProject=new KieModuleKieProject(kieModule,classLoader);
+  String createContainerWithId=containerId;
+  if (createContainerWithId == null) {
+    createContainerWithId=UUID.randomUUID().toString();
+  }
+  if (kContainers.get(createContainerWithId) == null) {
+    KieContainerImpl newContainer=new KieContainerImpl(createContainerWithId,kProject,getRepository(),releaseId);
+    KieContainer check=kContainers.putIfAbsent(createContainerWithId,newContainer);
+    if (check == null) {
+      return newContainer;
+    }
+ else {
+      newContainer.dispose();
+      throw new IllegalStateException("There's already another KieContainer created with the id " + createContainerWithId);
+    }
+  }
+ else {
+    throw new IllegalStateException("There's already another KieContainer created with the id " + createContainerWithId);
+  }
+}

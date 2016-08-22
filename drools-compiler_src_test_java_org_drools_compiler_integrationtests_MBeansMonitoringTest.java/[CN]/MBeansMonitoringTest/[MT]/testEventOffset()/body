@@ -1,12 +1,16 @@
 {
   String drl="package org.drools.compiler.test\n" + "import org.drools.compiler.StockTick\n" + "declare StockTick\n"+ "    @role(event)\n"+ "    @expires(10s)\n"+ "end\n"+ "rule X\n"+ "when\n"+ "    StockTick()\n"+ "then\n"+ "end";
-  KieBaseConfiguration conf=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
-  conf.setOption(EventProcessingOption.STREAM);
-  conf.setOption(MBeansOption.ENABLED);
-  KnowledgeBase kbase=loadKnowledgeBase("monitoredKbase",drl,conf);
+  KieServices ks=KieServices.Factory.get();
+  KieModuleModel kproj=ks.newKieModuleModel();
+  KieBaseModel kieBaseModel1=kproj.newKieBaseModel(KBASE1).setDefault(true).setEventProcessingMode(EventProcessingOption.STREAM);
+  KieSessionModel ksession1=kieBaseModel1.newKieSessionModel(KSESSION1).setDefault(true).setType(KieSessionModel.KieSessionType.STATEFUL).setClockType(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.getId()));
+  ReleaseId releaseId1=ks.newReleaseId("org.kie.test","mbeans","1.0.0");
+  createKJar(ks,kproj,releaseId1,null,drl);
+  KieContainer kc=ks.newKieContainer(releaseId1);
+  KieBase kiebase=kc.getKieBase(KBASE1);
   MBeanServer mbserver=ManagementFactory.getPlatformMBeanServer();
-  ObjectName kbOn=new ObjectName("org.drools.kbases:type=monitoredKbase");
+  ObjectName kbOn=DroolsManagementAgent.createObjectNameFor((InternalKnowledgeBase)kiebase);
   mbserver.invoke(kbOn,"startInternalMBeans",new Object[0],new String[0]);
-  Object expOffset=mbserver.getAttribute(new ObjectName("org.drools.kbases:type=monitoredKbase,group=EntryPoints,EntryPoint=DEFAULT,ObjectType=org.drools.compiler.StockTick"),"ExpirationOffset");
+  Object expOffset=mbserver.getAttribute(new ObjectName(kbOn + ",group=EntryPoints,EntryPoint=DEFAULT,ObjectType=org.drools.compiler.StockTick"),"ExpirationOffset");
   Assert.assertEquals(10001,((Number)expOffset).longValue());
 }

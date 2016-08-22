@@ -1,0 +1,26 @@
+{
+  if (classpathKContainer == null) {
+synchronized (lock) {
+      if (classpathKContainer == null) {
+        classpathClassLoader=classLoader;
+        if (containerId == null) {
+          classpathKContainerId=UUID.randomUUID().toString();
+        }
+ else {
+          classpathKContainerId=containerId;
+        }
+        classpathKContainer=newKieClasspathContainer(classpathKContainerId,classLoader);
+      }
+ else       if (classLoader != classpathClassLoader) {
+        throw new IllegalStateException("There's already another KieContainer created from a different ClassLoader");
+      }
+    }
+  }
+ else   if (classLoader != classpathClassLoader) {
+    throw new IllegalStateException("There's already another KieContainer created from a different ClassLoader");
+  }
+  if (containerId != null && !classpathKContainerId.equals(containerId)) {
+    throw new IllegalStateException("The default global singletong KieClasspathContainer was already created with id " + classpathKContainerId);
+  }
+  return classpathKContainer;
+}

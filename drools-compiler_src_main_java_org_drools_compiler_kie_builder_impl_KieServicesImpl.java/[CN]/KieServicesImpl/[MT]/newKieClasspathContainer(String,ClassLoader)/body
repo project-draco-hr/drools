@@ -1,0 +1,20 @@
+{
+  String createContainerWithId=containerId;
+  if (createContainerWithId == null) {
+    createContainerWithId=UUID.randomUUID().toString();
+  }
+  if (kContainers.get(createContainerWithId) == null) {
+    KieContainerImpl newContainer=new KieContainerImpl(createContainerWithId,new ClasspathKieProject(classLoader,listener),null);
+    KieContainer check=kContainers.putIfAbsent(createContainerWithId,newContainer);
+    if (check == null) {
+      return newContainer;
+    }
+ else {
+      newContainer.dispose();
+      throw new IllegalStateException("There's already another KieContainer created with the id " + createContainerWithId);
+    }
+  }
+ else {
+    throw new IllegalStateException("There's already another KieContainer created with the id " + createContainerWithId);
+  }
+}
