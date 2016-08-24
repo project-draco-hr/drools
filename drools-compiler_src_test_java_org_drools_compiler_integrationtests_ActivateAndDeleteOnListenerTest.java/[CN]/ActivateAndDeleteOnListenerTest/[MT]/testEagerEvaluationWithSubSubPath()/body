@@ -1,9 +1,10 @@
 {
-  String str="package org.simple \n" + "rule xxx \n" + "when \n"+ "  $s : String()\n"+ "  exists( Boolean() and exists(Integer() or Double()) )\n"+ "then \n"+ "end  \n";
+  String str="package org.simple \n" + "rule xxx \n" + "when \n"+ "  $s : String()\n"+ "  exists( Boolean() and not(not(Integer()) and not(Double())) )\n"+ "then \n"+ "end  \n";
   KieServices ks=KieServices.Factory.get();
   KieSessionConfiguration conf=KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
   conf.setOption(ForceEagerActivationOption.YES);
   KieSession ksession=new KieHelper().addContent(str,ResourceType.DRL).build().newKieSession(conf,null);
+  ReteDumper.dumpRete(ksession);
   final List list=new ArrayList();
   AgendaEventListener agendaEventListener=new org.kie.api.event.rule.DefaultAgendaEventListener(){
     public void matchCreated(    org.kie.api.event.rule.MatchCreatedEvent event){
@@ -12,9 +13,9 @@
   }
 ;
   ksession.addEventListener(agendaEventListener);
-  ksession.insert("test");
-  assertEquals(0,list.size());
   ksession.insert(Boolean.TRUE);
+  assertEquals(0,list.size());
+  ksession.insert("test");
   assertEquals(0,list.size());
   ksession.insert(1);
   assertEquals(1,list.size());
