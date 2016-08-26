@@ -1,6 +1,6 @@
 {
   String source="package t.x \n" + "\n" + "global java.util.List list; \n"+ "import org.drools.core.factmodel.traits.Thing\n"+ "import org.drools.core.factmodel.traits.Entity\n"+ "\n"+ "declare trait t.x.D\n"+ "    @propertyReactive\n"+ "\n"+ "end\n"+ ""+ "declare trait t.x.E\n"+ "    @propertyReactive\n"+ "\n"+ "end\n"+ ""+ "rule Init when\n"+ "then\n"+ "   Entity o = new Entity();\n"+ "   insert(o);\n"+ "   don( o, Thing.class ); \n"+ "   don( o, D.class ); \n"+ "end\n"+ ""+ "rule Don when\n"+ " $o : Entity() \n"+ "then \n"+ "end \n"+ ""+ "rule \"Rule 0 >> http://t/x#D\"\n"+ "when\n"+ "   $t : org.drools.core.factmodel.traits.Thing( $c : core, _isTop(), this not isA t.x.E.class, this isA t.x.D.class ) "+ "then\n"+ "   list.add( \"E\" ); \n"+ "   System.out.println( \"E due to \" + $t); \n"+ "   don( $t, E.class ); \n"+ "end\n"+ ""+ "rule React \n"+ "when $x : E() then \n"+ "   list.add( \"X\" ); \n"+ "end \n"+ ""+ "rule Shed \n"+ "when \n"+ "   $s : String() \n"+ "   $d : Entity() \n"+ "then \n"+ "   delete( $s ); \n"+ "   shed( $d, D.class );\n"+ "end \n"+ "";
-  StatefulKnowledgeSession ks=getSessionFromString(source);
+  KieSession ks=getSessionFromString(source);
   TraitFactory.setMode(mode,ks.getKieBase());
   List list=new ArrayList();
   ks.setGlobal("list",list);

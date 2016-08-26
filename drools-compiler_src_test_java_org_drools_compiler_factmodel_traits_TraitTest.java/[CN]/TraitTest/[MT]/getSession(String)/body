@@ -1,13 +1,7 @@
 {
-  KnowledgeBuilder knowledgeBuilder=KnowledgeBuilderFactory.newKnowledgeBuilder();
+  KieHelper kieHelper=new KieHelper();
   for (  String file : ruleFiles) {
-    knowledgeBuilder.add(ResourceFactory.newClassPathResource(file),ResourceType.DRL);
+    kieHelper.kfs.write(new ClassPathResource(file));
   }
-  if (knowledgeBuilder.hasErrors()) {
-    throw new RuntimeException(knowledgeBuilder.getErrors().toString());
-  }
-  KnowledgeBase kbase=KnowledgeBaseFactory.newKnowledgeBase();
-  kbase.addKnowledgePackages(knowledgeBuilder.getKnowledgePackages());
-  StatefulKnowledgeSession session=kbase.newStatefulKnowledgeSession();
-  return session;
+  return kieHelper.build().newKieSession();
 }

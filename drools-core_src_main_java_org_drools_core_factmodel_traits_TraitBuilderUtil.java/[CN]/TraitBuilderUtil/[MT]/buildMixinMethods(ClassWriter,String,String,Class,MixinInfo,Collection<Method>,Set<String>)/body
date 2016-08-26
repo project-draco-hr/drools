@@ -1,0 +1,28 @@
+{
+  for (  Method method : mixinMethods) {
+    String signature=TraitFactory.buildSignature(method);
+    String methodSignature=method.getName() + signature;
+    if (createdSignatures.contains(methodSignature)) {
+      if (mixinInfo.throwsErrorOnConflict()) {
+        throw new RuntimeException("Conflict on method: " + method.getName());
+      }
+      continue;
+    }
+    createdSignatures.add(methodSignature);
+{
+      MethodVisitor mv=cw.visitMethod(ACC_PUBLIC,method.getName(),signature,null,null);
+      mv.visitCode();
+      mv.visitVarInsn(ALOAD,0);
+      mv.visitFieldInsn(GETFIELD,BuildUtils.getInternalType(wrapperName),mixin,Type.getDescriptor(mixinClass));
+      int j=1;
+      for (      Class arg : method.getParameterTypes()) {
+        mv.visitVarInsn(BuildUtils.varType(arg.getName()),j++);
+      }
+      mv.visitMethodInsn(INVOKEVIRTUAL,Type.getInternalName(mixinClass),method.getName(),signature);
+      mv.visitInsn(BuildUtils.returnType(method.getReturnType().getName()));
+      int stack=TraitFactory.getStackSize(method);
+      mv.visitMaxs(0,0);
+      mv.visitEnd();
+    }
+  }
+}

@@ -4,41 +4,13 @@
   BitSet mask=traitRegistry.getFieldMask(getTrait().getName(),core.getDefinedClass().getName());
   String name=TraitFactory.getPropertyWrapperName(getTrait(),core);
   String masterName=TraitFactory.getProxyName(getTrait(),core);
+  Class<?> traitClass=getTrait().getDefinedClass();
   String internalWrapper=BuildUtils.getInternalType(name);
   String internalProxy=BuildUtils.getInternalType(masterName);
   String descrCore=Type.getDescriptor(core.getDefinedClass());
   String internalCore=Type.getInternalName(core.getDefinedClass());
-  String internalTrait=Type.getInternalName(getTrait().getDefinedClass());
-  Class mixinClass=null;
-  String mixin=null;
-  Set<Method> mixinMethods=new HashSet<Method>();
-  Map<String,Method> mixinGetSet=new HashMap<String,Method>();
-  try {
-    if (getTrait().getDefinedClass() != null) {
-      Trait annTrait=getAnnotation(getTrait().getDefinedClass(),Trait.class);
-      if (hasImpl(annTrait)) {
-        mixinClass=annTrait.impl();
-        mixin=mixinClass.getSimpleName().substring(0,1).toLowerCase() + mixinClass.getSimpleName().substring(1);
-        ClassFieldInspector cfi=new ClassFieldInspector(mixinClass);
-        for (        Method m : mixinClass.getMethods()) {
-          try {
-            getTrait().getDefinedClass().getMethod(m.getName(),m.getParameterTypes());
-            if (cfi.getGetterMethods().containsValue(m) || cfi.getSetterMethods().containsValue(m)) {
-              mixinGetSet.put(m.getName(),m);
-            }
- else {
-              mixinMethods.add(m);
-            }
-          }
- catch (          NoSuchMethodException e) {
-          }
-        }
-      }
-    }
-  }
- catch (  Exception e) {
-    e.printStackTrace();
-  }
+  String internalTrait=Type.getInternalName(traitClass);
+  MixinInfo mixinInfo=findMixinInfo(traitClass);
   ClassWriter cw=createClassWriter(classLoader,ACC_PUBLIC + ACC_SUPER,internalProxy,null,Type.getInternalName(proxyBaseClass),new String[]{internalTrait,Type.getInternalName(Serializable.class)});
 {
     fv=cw.visitField(ACC_PRIVATE + ACC_FINAL + ACC_STATIC,TraitType.traitNameField,Type.getDescriptor(String.class),null,null);
@@ -52,10 +24,12 @@
     fv=cw.visitField(ACC_PUBLIC + ACC_FINAL,"map",Type.getDescriptor(Map.class),"Ljava/util/Map<Ljava/lang/String;Ljava/lang/Object;>;",null);
     fv.visitEnd();
   }
-  if (mixinClass != null) {
+  if (mixinInfo != null) {
+    for (    Class<?> mixinClass : mixinInfo.mixinClasses) {
 {
-      fv=cw.visitField(ACC_PRIVATE,mixin,BuildUtils.getTypeDescriptor(mixinClass.getName()),null,null);
-      fv.visitEnd();
+        fv=cw.visitField(ACC_PRIVATE,getMixinName(mixinClass),BuildUtils.getTypeDescriptor(mixinClass.getName()),null,null);
+        fv.visitEnd();
+      }
     }
   }
 {
@@ -90,22 +64,25 @@
     mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(ExternalizableLinkedHashMap.class),"<init>","()V");
     mv.visitVarInsn(ASTORE,2);
     mv.visitLabel(l0);
-    if (mixinClass != null) {
-      try {
-        Class actualArg=getPossibleConstructor(mixinClass,trait.getDefinedClass());
-        mv.visitVarInsn(ALOAD,0);
-        mv.visitTypeInsn(NEW,Type.getInternalName(mixinClass));
-        mv.visitInsn(DUP);
-        mv.visitVarInsn(ALOAD,0);
-        mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(mixinClass),"<init>","(" + Type.getDescriptor(actualArg) + ")V");
-        mv.visitFieldInsn(PUTFIELD,internalProxy,mixin,Type.getDescriptor(mixinClass));
-      }
- catch (      NoSuchMethodException nsme) {
-        mv.visitVarInsn(ALOAD,0);
-        mv.visitTypeInsn(NEW,Type.getInternalName(mixinClass));
-        mv.visitInsn(DUP);
-        mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(mixinClass),"<init>","()V");
-        mv.visitFieldInsn(PUTFIELD,internalProxy,mixin,Type.getDescriptor(mixinClass));
+    if (mixinInfo != null) {
+      for (      Class<?> mixinClass : mixinInfo.mixinClasses) {
+        String mixin=getMixinName(mixinClass);
+        try {
+          Class actualArg=getPossibleConstructor(mixinClass,trait.getDefinedClass());
+          mv.visitVarInsn(ALOAD,0);
+          mv.visitTypeInsn(NEW,Type.getInternalName(mixinClass));
+          mv.visitInsn(DUP);
+          mv.visitVarInsn(ALOAD,0);
+          mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(mixinClass),"<init>","(" + Type.getDescriptor(actualArg) + ")V");
+          mv.visitFieldInsn(PUTFIELD,internalProxy,mixin,Type.getDescriptor(mixinClass));
+        }
+ catch (        NoSuchMethodException nsme) {
+          mv.visitVarInsn(ALOAD,0);
+          mv.visitTypeInsn(NEW,Type.getInternalName(mixinClass));
+          mv.visitInsn(DUP);
+          mv.visitMethodInsn(INVOKESPECIAL,Type.getInternalName(mixinClass),"<init>","()V");
+          mv.visitFieldInsn(PUTFIELD,internalProxy,mixin,Type.getDescriptor(mixinClass));
+        }
       }
     }
     mv.visitVarInsn(ALOAD,0);
@@ -256,50 +233,9 @@
     mv.visitMaxs(0,0);
     mv.visitEnd();
   }
-  int j=0;
-  for (  FieldDefinition field : trait.getFieldsDefinitions()) {
-    boolean hardField=!TraitRegistry.isSoftField(field,j++,mask);
-    if (core.isFullTraiting()) {
-      buildLogicalGetter(cw,field,masterName,trait,core);
-      if (hardField) {
-        buildHardSetter(cw,field,masterName,trait,core);
-      }
- else {
-        buildSoftSetter(cw,field,masterName,trait,core);
-      }
-    }
- else {
-      if (!hardField) {
-        if (!mixinGetSet.containsKey(BuildUtils.getterName(field.getName(),field.getTypeName()))) {
-          buildSoftGetter(cw,field,masterName,trait,core);
-          buildSoftSetter(cw,field,masterName,trait,core);
-        }
- else {
-        }
-      }
- else {
-        buildHardGetter(cw,field,masterName,trait,core);
-        buildHardSetter(cw,field,masterName,trait,core);
-      }
-    }
-  }
-  boolean hasKeys=false;
-  for (  FactField ff : trait.getFields()) {
-    if (ff.isKey()) {
-      hasKeys=true;
-      break;
-    }
-  }
-  if (!hasKeys) {
-    buildEqualityMethods(cw,masterName,core.getClassName());
-  }
- else {
-    buildKeyedEqualityMethods(cw,trait,masterName,core.getClassName());
-  }
-  if (mixinClass != null) {
-    buildMixinMethods(cw,masterName,mixin,mixinClass,mixinMethods);
-    buildMixinMethods(cw,masterName,mixin,mixinClass,mixinGetSet.values());
-  }
+  buildFields(core,mask,masterName,mixinInfo,cw);
+  buildKeys(core,masterName,cw);
+  buildMixinMethods(masterName,mixinInfo,cw);
   buildCommonMethods(cw,masterName,core.getClassName());
   buildExtendedMethods(cw,trait,core,mask);
   buildShadowMethods(cw,trait,core,mask);

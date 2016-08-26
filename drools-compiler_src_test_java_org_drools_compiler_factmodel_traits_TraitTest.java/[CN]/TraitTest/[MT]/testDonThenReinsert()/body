@@ -1,12 +1,9 @@
 {
   final String s1="package test;\n" + "import org.drools.core.factmodel.traits.*; \n" + "import org.drools.compiler.factmodel.traits.TraitTest.TBean;\n"+ "global java.util.List list;\n"+ ""+ "declare TBean "+ " @Traitable "+ " @propertyReactive "+ "end "+ ""+ "declare trait Mask "+ " @propertyReactive "+ "end "+ ""+ "rule 'Don ItemStyle' "+ "	when\n"+ "     $e : TBean( ) "+ "	then "+ "     System.out.println( 'Don' ); "+ "		don( $e, Mask.class );\n"+ "end\n"+ ""+ "rule \"React\" \n"+ "	when \n"+ "		$m : Mask() \n"+ "then \n"+ "     System.out.println( $m ); \n"+ "end\n"+ ""+ "rule Zero when not Object() then System.out.println( 'Clean' ); end ";
-  KieBaseConfiguration kbx=KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
-  final RuleBaseConfiguration conf=new RuleBaseConfiguration();
-  conf.setAssertBehaviour(RuleBaseConfiguration.AssertBehaviour.IDENTITY);
-  final KnowledgeBase kbase=getKieBaseFromString(s1,conf);
+  KieBase kbase=getKieBaseFromString(s1,EqualityBehaviorOption.IDENTITY);
   TraitFactory.setMode(mode,kbase);
   ArrayList list=new ArrayList();
-  StatefulKnowledgeSession knowledgeSession=kbase.newStatefulKnowledgeSession();
+  KieSession knowledgeSession=kbase.newKieSession();
   knowledgeSession.setGlobal("list",list);
   TBean e=new TBean("aaa");
   int n=knowledgeSession.fireAllRules();

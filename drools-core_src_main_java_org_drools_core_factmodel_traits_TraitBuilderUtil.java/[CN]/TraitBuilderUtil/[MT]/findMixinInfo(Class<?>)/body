@@ -1,0 +1,47 @@
+{
+  if (traitClass == null) {
+    return null;
+  }
+  Map<Class<?>,List<Method>> mixinMethodMap=findMixinMethodImpls(traitClass);
+  if (mixinMethodMap.isEmpty()) {
+    return null;
+  }
+  MixinInfo mixinInfo=new MixinInfo(traitClass);
+  try {
+    mixinInfo.mixinClasses=new ArrayList<Class<?>>();
+    mixinInfo.mixinClasses.addAll(mixinMethodMap.keySet());
+    mixinInfo.mixinMethods=new HashMap<Class<?>,Set<Method>>();
+    mixinInfo.mixinGetSet=new HashMap<Class<?>,Map<String,Method>>();
+    for (    Map.Entry<Class<?>,List<Method>> entry : mixinMethodMap.entrySet()) {
+      Class<?> mixinClass=entry.getKey();
+      ClassFieldInspector cfi=new ClassFieldInspector(mixinClass);
+      for (      Method m : entry.getValue()) {
+        try {
+          traitClass.getMethod(m.getName(),m.getParameterTypes());
+          if (cfi.getGetterMethods().containsValue(m) || cfi.getSetterMethods().containsValue(m)) {
+            Map<String,Method> map=mixinInfo.mixinGetSet.get(mixinClass);
+            if (map == null) {
+              map=new HashMap<String,Method>();
+              mixinInfo.mixinGetSet.put(mixinClass,map);
+            }
+            map.put(m.getName(),m);
+          }
+ else {
+            Set<Method> set=mixinInfo.mixinMethods.get(mixinClass);
+            if (set == null) {
+              set=new HashSet<Method>();
+              mixinInfo.mixinMethods.put(mixinClass,set);
+            }
+            set.add(m);
+          }
+        }
+ catch (        NoSuchMethodException e) {
+        }
+      }
+    }
+  }
+ catch (  Exception e) {
+    e.printStackTrace();
+  }
+  return mixinInfo;
+}

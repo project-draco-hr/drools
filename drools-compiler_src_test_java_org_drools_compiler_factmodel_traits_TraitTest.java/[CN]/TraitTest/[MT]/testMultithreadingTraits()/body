@@ -1,13 +1,13 @@
 {
   final String s1="package test;\n" + "import org.drools.core.factmodel.traits.TraitTest.Item;\n" + "declare Item end\n"+ "declare trait ItemStyle\n"+ "	id: String\n"+ "	adjustable: boolean\n"+ "end\n"+ "rule \"Don ItemStyle\"\n"+ "	no-loop true\n"+ "	when\n"+ "		$p : Item ()\n"+ "		not ItemStyle ( id == $p.id )\n"+ "	then\n"+ "		don($p, ItemStyle.class);\n"+ "end\n"+ "rule \"Item Style - Adjustable\""+ "	no-loop true"+ "	when"+ "		$style : ItemStyle ( !adjustable )"+ "		Item ("+ "			id == $style.id "+ "		)"+ "	then"+ "		modify($style) {"+ "			setAdjustable(true)"+ "		};"+ "end";
-  final KnowledgeBase kbase=getKieBaseFromString(s1);
+  KieBase kbase=getKieBaseFromString(s1);
   TraitFactory.setMode(mode,kbase);
   int MAX_THREADS=20;
   int MAX_REPETITIONS=100;
   int MAX_WAIT_SECONDS=60;
   final ExecutorService executorService=Executors.newFixedThreadPool(MAX_THREADS);
   for (int threadIndex=0; threadIndex < MAX_THREADS; threadIndex++) {
-    executorService.execute(new TraitRulesThread(threadIndex,MAX_REPETITIONS,kbase.newStatefulKnowledgeSession()));
+    executorService.execute(new TraitRulesThread(threadIndex,MAX_REPETITIONS,kbase.newKieSession()));
   }
   executorService.shutdown();
   executorService.awaitTermination(MAX_WAIT_SECONDS,TimeUnit.SECONDS);

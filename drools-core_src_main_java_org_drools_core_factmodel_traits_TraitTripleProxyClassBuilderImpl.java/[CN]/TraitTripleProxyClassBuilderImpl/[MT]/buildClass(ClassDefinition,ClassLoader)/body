@@ -4,41 +4,13 @@
   BitSet mask=traitRegistry.getFieldMask(getTrait().getName(),core.getDefinedClass().getName());
   String name=TraitFactory.getPropertyWrapperName(getTrait(),core);
   String masterName=TraitFactory.getProxyName(getTrait(),core);
+  Class<?> traitClass=getTrait().getDefinedClass();
   String internalWrapper=BuildUtils.getInternalType(name);
   String internalProxy=BuildUtils.getInternalType(masterName);
   String internalCore=Type.getInternalName(core.getDefinedClass());
   String descrCore=Type.getDescriptor(core.getDefinedClass());
   String internalTrait=Type.getInternalName(getTrait().getDefinedClass());
-  Class mixinClass=null;
-  String mixin=null;
-  Set<Method> mixinMethods=new HashSet<Method>();
-  Map<String,Method> mixinGetSet=new HashMap<String,Method>();
-  try {
-    if (getTrait().getDefinedClass() != null) {
-      Trait annTrait=getAnnotation(getTrait().getDefinedClass(),Trait.class);
-      if (hasImpl(annTrait)) {
-        mixinClass=annTrait.impl();
-        mixin=mixinClass.getSimpleName().substring(0,1).toLowerCase() + mixinClass.getSimpleName().substring(1);
-        ClassFieldInspector cfi=new ClassFieldInspector(mixinClass);
-        for (        Method m : mixinClass.getMethods()) {
-          try {
-            getTrait().getDefinedClass().getMethod(m.getName(),m.getParameterTypes());
-            if (cfi.getGetterMethods().containsValue(m) || cfi.getSetterMethods().containsValue(m)) {
-              mixinGetSet.put(m.getName(),m);
-            }
- else {
-              mixinMethods.add(m);
-            }
-          }
- catch (          NoSuchMethodException e) {
-          }
-        }
-      }
-    }
-  }
- catch (  Exception e) {
-    e.printStackTrace();
-  }
+  MixinInfo mixinInfo=findMixinInfo(traitClass);
   ClassWriter cw=createClassWriter(classLoader,ACC_PUBLIC + ACC_SUPER,internalProxy,null,Type.getInternalName(proxyBaseClass),new String[]{internalTrait,Type.getInternalName(Externalizable.class)});
 {
     fv=cw.visitField(ACC_PRIVATE + ACC_FINAL + ACC_STATIC,TraitType.traitNameField,Type.getDescriptor(String.class),null,null);
@@ -56,10 +28,12 @@
     fv=cw.visitField(ACC_PRIVATE,"storeId",Type.getDescriptor(String.class),null,null);
     fv.visitEnd();
   }
-  if (mixinClass != null) {
+  if (mixinInfo != null) {
+    for (    Class<?> mixinClass : mixinInfo.mixinClasses) {
 {
-      fv=cw.visitField(ACC_PRIVATE,mixin,Type.getDescriptor(mixinClass),null,null);
-      fv.visitEnd();
+        fv=cw.visitField(ACC_PRIVATE,getMixinName(mixinClass),Type.getDescriptor(mixinClass),null,null);
+        fv.visitEnd();
+      }
     }
   }
 {
@@ -88,7 +62,7 @@
     mv.visitVarInsn(ALOAD,2);
     mv.visitMethodInsn(INVOKEVIRTUAL,Type.getInternalName(TripleStore.class),"getId","()" + Type.getDescriptor(String.class));
     mv.visitFieldInsn(PUTFIELD,internalProxy,"storeId",Type.getDescriptor(String.class));
-    int size=buildConstructorCore(cw,mv,internalProxy,internalWrapper,internalCore,descrCore,mixin,mixinClass);
+    int size=buildConstructorCore(cw,mv,internalProxy,internalWrapper,internalCore,descrCore,mixinInfo);
     initFields(mv,internalProxy);
     mv.visitInsn(RETURN);
     mv.visitMaxs(0,0);
@@ -211,7 +185,7 @@
     mv.visitMaxs(0,0);
     mv.visitEnd();
   }
-  buildProxyAccessors(mask,cw,masterName,core,mixinGetSet);
+  buildProxyAccessors(mask,cw,masterName,core,mixinInfo);
   boolean hasKeys=false;
   for (  FactField ff : getTrait().getFields()) {
     if (ff.isKey()) {
@@ -225,10 +199,7 @@
  else {
     buildKeyedEqualityMethods(cw,getTrait(),masterName,core.getClassName());
   }
-  if (mixinClass != null) {
-    buildMixinMethods(cw,masterName,mixin,mixinClass,mixinMethods);
-    buildMixinMethods(cw,masterName,mixin,mixinClass,mixinGetSet.values());
-  }
+  buildMixinMethods(masterName,mixinInfo,cw);
   buildCommonMethods(cw,masterName);
   buildExtendedMethods(cw,getTrait(),core,mask);
   buildShadowMethods(cw,trait,core,mask);
