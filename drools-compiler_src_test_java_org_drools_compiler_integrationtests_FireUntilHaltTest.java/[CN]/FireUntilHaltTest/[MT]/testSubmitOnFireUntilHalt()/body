@@ -1,0 +1,37 @@
+{
+  String drl="import " + Person.class.getCanonicalName() + "\n"+ "global java.util.List list;"+ "rule R when\n"+ "    Person( happy, age >= 18 )\n"+ "then\n"+ "    list.add(\"happy adult\");"+ "end";
+  final KieSession kSession=new KieHelper().addContent(drl,ResourceType.DRL).build().newKieSession();
+  List<String> list=new ArrayList<String>();
+  kSession.setGlobal("list",list);
+  new Thread(new Runnable(){
+    @Override public void run(){
+      kSession.fireUntilHalt();
+    }
+  }
+).start();
+  final Person p=new Person("me",17,true);
+  final FactHandle fh=kSession.insert(p);
+  Thread.sleep(100L);
+  assertEquals(0,list.size());
+  kSession.submit(new KieSession.AtomicAction(){
+    @Override public void execute(    KieSession kieSession){
+      p.setAge(18);
+      p.setHappy(false);
+      kieSession.update(fh,p);
+    }
+  }
+);
+  Thread.sleep(100L);
+  assertEquals(0,list.size());
+  kSession.submit(new KieSession.AtomicAction(){
+    @Override public void execute(    KieSession kieSession){
+      p.setHappy(true);
+      kieSession.update(fh,p);
+    }
+  }
+);
+  Thread.sleep(100L);
+  assertEquals(1,list.size());
+  kSession.halt();
+  kSession.dispose();
+}
