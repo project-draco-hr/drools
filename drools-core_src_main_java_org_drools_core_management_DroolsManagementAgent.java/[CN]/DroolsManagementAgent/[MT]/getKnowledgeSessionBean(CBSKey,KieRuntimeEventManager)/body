@@ -1,0 +1,47 @@
+{
+  if (mbeansRefs.get(cbsKey) != null) {
+    return (GenericKieSessionMonitoringImpl)mbeansRefs.get(cbsKey);
+  }
+ else {
+    if (ksession instanceof StatelessKnowledgeSession) {
+synchronized (mbeansRefs) {
+        if (mbeansRefs.get(cbsKey) != null) {
+          return (GenericKieSessionMonitoringImpl)mbeansRefs.get(cbsKey);
+        }
+ else {
+          try {
+            StatelessKieSessionMonitoringImpl mbean=new StatelessKieSessionMonitoringImpl(cbsKey.kcontainerId,cbsKey.kbaseId,cbsKey.ksessionName);
+            final StandardMBean adapter=new StandardMBean(mbean,StatelessKieSessionMonitoringMBean.class);
+            registerMBean(cbsKey,adapter,mbean.getName());
+            mbeansRefs.put(cbsKey,mbean);
+            return mbean;
+          }
+ catch (          Exception e) {
+            logger.error("Unable to instantiate and register StatelessKieSessionMonitoringMBean");
+          }
+          return null;
+        }
+      }
+    }
+ else {
+synchronized (mbeansRefs) {
+        if (mbeansRefs.get(cbsKey) != null) {
+          return (GenericKieSessionMonitoringImpl)mbeansRefs.get(cbsKey);
+        }
+ else {
+          try {
+            KieSessionMonitoringImpl mbean=new KieSessionMonitoringImpl(cbsKey.kcontainerId,cbsKey.kbaseId,cbsKey.ksessionName);
+            final StandardMBean adapter=new StandardMBean(mbean,KieSessionMonitoringMBean.class);
+            registerMBean(cbsKey,adapter,mbean.getName());
+            mbeansRefs.put(cbsKey,mbean);
+            return mbean;
+          }
+ catch (          Exception e) {
+            logger.error("Unable to instantiate and register (stateful) KieSessionMonitoringMBean");
+          }
+          return null;
+        }
+      }
+    }
+  }
+}
