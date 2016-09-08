@@ -1,0 +1,20 @@
+{
+  final Message msg=new Message("Hello World!");
+  final FactHandle msgHandle=new DefaultFactHandle(1,null,10,10,20,msg);
+  final Message msg2=new Message("Hello World again!");
+  final FactHandle msgHandle2=new DefaultFactHandle(2,null,10,10,20,msg2);
+  List<FactHandle> factHandleList=new ArrayList<FactHandle>();
+  factHandleList.add(msgHandle);
+  factHandleList.add(msgHandle2);
+  HashMap<String,Object> factHandles=new LinkedHashMap<String,Object>();
+  ExecutionResultImpl executionResult=new ExecutionResultImpl();
+  executionResult.setFactHandles(factHandles);
+  HashMap<String,Object> results=new LinkedHashMap<String,Object>();
+  results.put("facts",factHandleList);
+  executionResult.setResults(results);
+  String xmlString=xstream.toXML(executionResult);
+  Assert.assertEquals("<execution-results>\n" + "  <result identifier=\"facts\">\n" + "    <list>\n"+ "      <fact-handle external-form=\"0:1:10:10:20:null:NON_TRAIT:org.drools.core.runtime.help.impl.XStreamXMLTest$Message\"/>\n"+ "      <fact-handle external-form=\"0:2:10:10:20:null:NON_TRAIT:org.drools.core.runtime.help.impl.XStreamXMLTest$Message\"/>\n"+ "    </list>\n"+ "  </result>\n"+ "</execution-results>",xmlString);
+  ExecutionResultImpl executionResult2=(ExecutionResultImpl)xstream.fromXML(xmlString);
+  Assert.assertEquals(executionResult.getFactHandles().size(),executionResult2.getFactHandles().size());
+  Assert.assertEquals(executionResult.getResults().size(),executionResult2.getResults().size());
+}
