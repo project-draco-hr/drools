@@ -1,0 +1,16 @@
+{
+  String drl1="global java.util.List list;\n" + "rule R1 when\n" + "  String()\n"+ "then\n"+ "  list.add(\"R1\");"+ "end\n";
+  String drl2="global java.util.List list;\n" + "rule R2 when\n" + "  String()\n"+ "then\n"+ "  list.add(\"R2\");"+ "end\n";
+  KieModuleModel kproj=ks.newKieModuleModel();
+  KieBaseModel kieBaseModel1=kproj.newKieBaseModel("kbase1").setDefault(true);
+  for (  String pkg : pkgs) {
+    kieBaseModel1.addPackage(pkg);
+  }
+  KieSessionModel ksession1=kieBaseModel1.newKieSessionModel("ksession1").setDefault(true);
+  KieFileSystem kfs=ks.newKieFileSystem();
+  kfs.writeKModuleXML(kproj.toXML());
+  kfs.generateAndWritePomXML(releaseId1);
+  kfs.write("src/main/resources/pkg1/r1.drl",drl1);
+  kfs.write("src/main/resources/pkg2/r2.drl",drl2);
+  KieModule km=deployJar(ks,buildKJar(ks,kfs,releaseId1));
+}

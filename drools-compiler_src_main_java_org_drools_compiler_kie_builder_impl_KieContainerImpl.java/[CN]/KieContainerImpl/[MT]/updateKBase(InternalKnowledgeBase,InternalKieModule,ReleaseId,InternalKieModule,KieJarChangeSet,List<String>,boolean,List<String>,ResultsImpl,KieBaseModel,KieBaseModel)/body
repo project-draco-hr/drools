@@ -1,23 +1,23 @@
 {
-  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(kBase,newKM.getBuilderConfiguration(kieBaseModel));
+  KnowledgeBuilder kbuilder=KnowledgeBuilderFactory.newKnowledgeBuilder(kBase,newKM.getBuilderConfiguration(newKieBaseModel));
   KnowledgeBuilderImpl pkgbuilder=(KnowledgeBuilderImpl)kbuilder;
   CompositeKnowledgeBuilder ckbuilder=kbuilder.batch();
-  boolean shouldRebuild=applyResourceChanges(currentKM,newKM,cs,modifiedClasses,kBase,kieBaseModel,pkgbuilder,ckbuilder,modifyingUsedClass);
+  boolean shouldRebuild=applyResourceChanges(currentKM,newKM,cs,modifiedClasses,kBase,newKieBaseModel,pkgbuilder,ckbuilder,modifyingUsedClass);
   for (  ResourceChangeSet rcs : cs.getChanges().values()) {
     if (rcs.getChangeType() == ChangeType.REMOVED) {
       String resourceName=rcs.getResourceName();
-      if (!resourceName.endsWith(".properties") && isFileInKBase(newKM,kieBaseModel,resourceName)) {
+      if (!resourceName.endsWith(".properties") && isFileInKBase(currentKM,currentKieBaseModel,resourceName)) {
         pkgbuilder.removeObjectsGeneratedFromResource(currentKM.getResource(resourceName));
       }
     }
   }
   if (shouldRebuild) {
     for (    String dslFile : unchangedResources) {
-      if (isFileInKBase(newKM,kieBaseModel,dslFile)) {
-        newKM.addResourceToCompiler(ckbuilder,kieBaseModel,dslFile);
+      if (isFileInKBase(newKM,newKieBaseModel,dslFile)) {
+        newKM.addResourceToCompiler(ckbuilder,newKieBaseModel,dslFile);
       }
     }
-    rebuildAll(newReleaseId,results,newKM,modifyingUsedClass,kieBaseModel,pkgbuilder,ckbuilder);
+    rebuildAll(newReleaseId,results,newKM,modifyingUsedClass,newKieBaseModel,pkgbuilder,ckbuilder);
   }
   kBase.setResolvedReleaseId(newReleaseId);
   for (  InternalWorkingMemory wm : kBase.getWorkingMemories()) {

@@ -6,20 +6,21 @@
   final boolean modifyingUsedClass=isModifyingUsedClass(modifiedClasses,getClassLoader());
   reinitModifiedClasses(newKM,modifiedClasses,getClassLoader());
   final List<String> unchangedResources=getUnchangedResources(newKM,cs);
-  ((KieModuleKieProject)kProject).updateToModule(newKM);
+  Map<String,KieBaseModel> currentKieBaseModels=((KieModuleKieProject)kProject).updateToModule(newKM);
   final ResultsImpl results=new ResultsImpl();
   List<String> kbasesToRemove=new ArrayList<String>();
   for (  Entry<String,KieBase> kBaseEntry : kBases.entrySet()) {
     String kbaseName=kBaseEntry.getKey();
-    final KieBaseModel kieBaseModel=kProject.getKieBaseModel(kbaseName);
-    if (kieBaseModel == null) {
+    final KieBaseModel newKieBaseModel=kProject.getKieBaseModel(kbaseName);
+    final KieBaseModel currentKieBaseModel=currentKieBaseModels.get(kbaseName);
+    if (newKieBaseModel == null) {
       kbasesToRemove.add(kbaseName);
     }
  else {
       final InternalKnowledgeBase kBase=(InternalKnowledgeBase)kBaseEntry.getValue();
       kBase.enqueueModification(new Runnable(){
         @Override public void run(){
-          updateKBase(kBase,currentKM,newReleaseId,newKM,cs,modifiedClasses,modifyingUsedClass,unchangedResources,results,kieBaseModel);
+          updateKBase(kBase,currentKM,newReleaseId,newKM,cs,modifiedClasses,modifyingUsedClass,unchangedResources,results,newKieBaseModel,currentKieBaseModel);
         }
       }
 );

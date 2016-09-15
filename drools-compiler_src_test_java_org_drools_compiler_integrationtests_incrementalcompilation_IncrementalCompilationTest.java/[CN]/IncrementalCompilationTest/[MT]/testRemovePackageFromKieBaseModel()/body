@@ -1,0 +1,24 @@
+{
+  KieServices ks=KieServices.Factory.get();
+  ReleaseId releaseId1=ks.newReleaseId("org.kie","test-remove-pkg","1.0");
+  ReleaseId releaseId2=ks.newReleaseId("org.kie","test-remove-pkg","1.1");
+  createKJarWIthPackages(ks,releaseId1,"pkg1","pkg2");
+  KieContainer container=ks.newKieContainer(releaseId1);
+  KieSession ksession=container.newKieSession();
+  List<String> list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  ksession.insert("test");
+  ksession.fireAllRules();
+  assertEquals(2,list.size());
+  assertTrue(list.containsAll(asList("R1","R2")));
+  createKJarWIthPackages(ks,releaseId2,"pkg2");
+  Results results=container.updateToVersion(releaseId2);
+  assertEquals(0,results.getMessages().size());
+  ksession=container.newKieSession();
+  list=new ArrayList<String>();
+  ksession.setGlobal("list",list);
+  ksession.insert("test");
+  ksession.fireAllRules();
+  assertEquals(1,list.size());
+  assertTrue(list.containsAll(asList("R2")));
+}
