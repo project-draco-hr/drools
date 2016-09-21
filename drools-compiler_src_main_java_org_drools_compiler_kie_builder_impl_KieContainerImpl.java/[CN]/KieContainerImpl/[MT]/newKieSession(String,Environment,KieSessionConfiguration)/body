@@ -1,11 +1,11 @@
 {
-  KieSessionModelImpl kSessionModel=(KieSessionModelImpl)getKieSessionModel(kSessionName);
+  KieSessionModelImpl kSessionModel=kSessionName != null ? (KieSessionModelImpl)getKieSessionModel(kSessionName) : (KieSessionModelImpl)findKieSessionModel(false);
   if (kSessionModel == null) {
     log.error("Unknown KieSession name: " + kSessionName);
     return null;
   }
   if (kSessionModel.getType() == KieSessionModel.KieSessionType.STATELESS) {
-    throw new RuntimeException("Trying to create a stateful KieSession from a stateless KieSessionModel: " + kSessionName);
+    throw new RuntimeException("Trying to create a stateful KieSession from a stateless KieSessionModel: " + kSessionModel.getName());
   }
   KieBase kBase=getKieBase(kSessionModel.getKieBaseModel().getName());
   if (kBase == null) {
@@ -17,7 +17,7 @@
     wireListnersAndWIHs(kSessionModel,kSession);
   }
   registerLoggers(kSessionModel,kSession);
-  ((StatefulKnowledgeSessionImpl)kSession).initMBeans(containerId,((InternalKnowledgeBase)kBase).getId(),kSessionName);
-  kSessions.put(kSessionName,kSession);
+  ((StatefulKnowledgeSessionImpl)kSession).initMBeans(containerId,((InternalKnowledgeBase)kBase).getId(),kSessionModel.getName());
+  kSessions.put(kSessionModel.getName(),kSession);
   return kSession;
 }
