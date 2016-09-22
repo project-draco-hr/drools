@@ -1,15 +1,15 @@
 {
   final BetaMemory memory=getBetaMemoryFromRightInput(this,wm);
   RightTuple rightTuple=createRightTuple(factHandle,this,pctx);
-  if (memory.getStagedRightTuples().isEmpty()) {
-    memory.setNodeDirtyWithoutNotify();
-  }
   boolean stagedInsertWasEmpty=memory.getStagedRightTuples().addInsert(rightTuple);
   if (isLogTraceEnabled) {
     log.trace("BetaNode stagedInsertWasEmpty={}",stagedInsertWasEmpty);
   }
   boolean shouldFlush=isStreamMode();
   if (memory.getAndIncCounter() == 0) {
+    if (stagedInsertWasEmpty) {
+      memory.setNodeDirtyWithoutNotify();
+    }
     shouldFlush=memory.linkNode(wm,!rightInputIsPassive) | shouldFlush;
   }
  else   if (stagedInsertWasEmpty) {
