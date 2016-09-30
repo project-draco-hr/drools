@@ -9,29 +9,22 @@
       if (wasPropagated) {
         LeftTuple childLeftTuple=leftTuple.getFirstChild();
         childLeftTuple.setPropagationContext(leftTuple.getPropagationContext());
-switch (childLeftTuple.getStagedType()) {
-case LeftTuple.INSERT:
-          stagedLeftTuples.removeInsert(childLeftTuple);
-        break;
-case LeftTuple.UPDATE:
-      stagedLeftTuples.removeUpdate(childLeftTuple);
-    break;
-}
-trgLeftTuples.addUpdate(childLeftTuple);
-}
+        normalizeStagedTuples(stagedLeftTuples,childLeftTuple);
+        trgLeftTuples.addUpdate(childLeftTuple);
+      }
  else {
-trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,sink,leftTuple.getPropagationContext(),true));
-}
-}
+        trgLeftTuples.addInsert(sink.createLeftTuple(leftTuple,sink,leftTuple.getPropagationContext(),true));
+      }
+    }
  else {
-if (wasPropagated) {
-leftTuple.setContextObject(EVAL_LEFT_TUPLE_DELETED);
-LeftTuple childLeftTuple=leftTuple.getFirstChild();
-childLeftTuple.setPropagationContext(leftTuple.getPropagationContext());
-RuleNetworkEvaluator.unlinkAndDeleteChildLeftTuple(childLeftTuple,trgLeftTuples,stagedLeftTuples);
-}
-}
-leftTuple.clearStaged();
-leftTuple=next;
-}
+      if (wasPropagated) {
+        leftTuple.setContextObject(EVAL_LEFT_TUPLE_DELETED);
+        LeftTuple childLeftTuple=leftTuple.getFirstChild();
+        childLeftTuple.setPropagationContext(leftTuple.getPropagationContext());
+        RuleNetworkEvaluator.unlinkAndDeleteChildLeftTuple(childLeftTuple,trgLeftTuples,stagedLeftTuples);
+      }
+    }
+    leftTuple.clearStaged();
+    leftTuple=next;
+  }
 }
