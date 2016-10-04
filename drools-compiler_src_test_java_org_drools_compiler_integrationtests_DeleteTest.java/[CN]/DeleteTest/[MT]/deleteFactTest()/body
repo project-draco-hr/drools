@@ -1,18 +1,11 @@
 {
-  KieFileSystem kfs=KieServices.Factory.get().newKieFileSystem();
-  kfs.write(KieServices.Factory.get().getResources().newClassPathResource("delete_test.drl",DeleteTest.class));
-  KieBuilder kbuilder=KieServices.Factory.get().newKieBuilder(kfs);
-  kbuilder.buildAll();
-  List<Message> res=kbuilder.getResults().getMessages(Level.ERROR);
-  assertEquals(res.toString(),0,res.size());
-  KieBase kbase=KieServices.Factory.get().newKieContainer(kbuilder.getKieModule().getReleaseId()).getKieBase();
-  KieSession ksession=kbase.newKieSession();
   ksession.insert(new Person("Petr",25));
   FactHandle george=ksession.insert(new Person("George",19));
-  QueryResults results=ksession.getQueryResults("informationsAboutPersons");
-  assertEquals(2L,results.iterator().next().get("$countOfPerson"));
+  QueryResults results=ksession.getQueryResults("informationAboutPersons");
+  assertThat(results).isNotEmpty();
+  assertThat(results.iterator().next().get("$countOfPerson")).isEqualTo(2L);
   ksession.delete(george);
-  results=ksession.getQueryResults("informationsAboutPersons");
-  assertEquals(1L,results.iterator().next().get("$countOfPerson"));
-  ksession.dispose();
+  results=ksession.getQueryResults("informationAboutPersons");
+  assertThat(results).isNotEmpty();
+  assertThat(results.iterator().next().get("$countOfPerson")).isEqualTo(1L);
 }
