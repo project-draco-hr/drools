@@ -1,0 +1,21 @@
+{
+  MBeanServer mbserver=ManagementFactory.getPlatformMBeanServer();
+  KieServices ks=KieServices.Factory.get();
+  String containerId="testcontainer-" + System.currentTimeMillis();
+  KieContainer kc=ks.newKieClasspathContainer(containerId);
+  KieContainerMonitorMXBean c1Monitor=JMX.newMXBeanProxy(mbserver,DroolsManagementAgent.createObjectNameBy(containerId),KieContainerMonitorMXBean.class);
+  KieBase kb=kc.getKieBase("org.kie.monitoring.kbase1");
+  StatefulKnowledgeSession statefulKieSession=JPAKnowledgeService.newStatefulKnowledgeSession(kb,null,env);
+  long sessionIdentifier=statefulKieSession.getIdentifier();
+  statefulKieSession.insert("String1");
+  statefulKieSession.fireAllRules();
+  KieSessionMonitoringMXBean statefulKieSessionMonitor=JMX.newMXBeanProxy(mbserver,DroolsManagementAgent.createObjectNameBy(containerId,"org.kie.monitoring.kbase1",KieSessionType.STATEFUL,"persistent"),KieSessionMonitoringMXBean.class);
+  assertEquals(1,statefulKieSessionMonitor.getTotalMatchesFired());
+  assertEquals(3,mbserver.queryNames(new ObjectName("org.kie:kcontainerId=" + ObjectName.quote(containerId) + ",*"),null).size());
+  statefulKieSession.dispose();
+  StatefulKnowledgeSession deserialized=JPAKnowledgeService.loadStatefulKnowledgeSession(sessionIdentifier,kb,null,createEnvironment(context));
+  deserialized.insert("String2");
+  deserialized.fireAllRules();
+  assertEquals(2,statefulKieSessionMonitor.getTotalMatchesFired());
+  kc.dispose();
+}
